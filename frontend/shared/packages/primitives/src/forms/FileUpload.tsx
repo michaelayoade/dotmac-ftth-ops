@@ -129,7 +129,10 @@ export const FileValidationUtils = {
   },
 
   isImageFile: (file: File): boolean => {
-    return file.type.startsWith("image/");
+    if (file.type && file.type.startsWith("image/")) {
+      return true;
+    }
+    return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(file.name);
   },
 
   getFileIcon: (file: File): string => {
@@ -342,10 +345,30 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onRemove, classN
       return;
     }
 
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+    let isActive = true;
 
-    return () => URL.revokeObjectURL(url);
+    if (typeof FileReader !== "undefined") {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (isActive) {
+          setPreviewUrl(typeof reader.result === "string" ? reader.result : null);
+        }
+      };
+      reader.readAsDataURL(file);
+
+      return () => {
+        isActive = false;
+        reader.abort();
+      };
+    }
+
+    if (typeof URL !== "undefined" && typeof URL.createObjectURL === "function") {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL?.(url);
+    }
+
+    return;
   }, [file]);
 
   return (

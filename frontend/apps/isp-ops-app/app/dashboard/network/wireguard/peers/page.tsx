@@ -43,12 +43,12 @@ import { PEER_STATUS_COLORS, formatBytes, getTimeAgo } from "@/types/wireguard";
 
 export default function WireGuardPeersPage() {
   const searchParams = useSearchParams();
-  const serverIdFromQuery = searchParams.get("server_id");
+  const serverIdFromQuery = searchParams.get("server_id") ?? undefined;
 
   const [filters, setFilters] = useState<ListPeersParams>({
     limit: 50,
     offset: 0,
-    server_id: serverIdFromQuery || null,
+    ...(serverIdFromQuery ? { server_id: serverIdFromQuery } : {}),
   });
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -60,9 +60,15 @@ export default function WireGuardPeersPage() {
 
   // Update filters when URL query param changes
   useEffect(() => {
-    if (serverIdFromQuery) {
-      setFilters((prev) => ({ ...prev, server_id: serverIdFromQuery }));
-    }
+    setFilters((prev) => {
+      const next = { ...prev };
+      if (serverIdFromQuery) {
+        next.server_id = serverIdFromQuery;
+      } else {
+        delete next.server_id;
+      }
+      return next;
+    });
   }, [serverIdFromQuery]);
 
   const handleSearch = () => {
@@ -70,11 +76,15 @@ export default function WireGuardPeersPage() {
   };
 
   const handleFilterChange = (key: keyof ListPeersParams, value: unknown) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value || undefined,
-      offset: 0,
-    }));
+    setFilters((prev) => {
+      const next = { ...prev, offset: 0 };
+      if (value === undefined || value === null || value === "") {
+        delete next[key];
+      } else {
+        next[key] = value as never;
+      }
+      return next;
+    });
   };
 
   const clearFilters = () => {

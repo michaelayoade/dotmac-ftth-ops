@@ -25,7 +25,7 @@ export function SubscriberDetailModal(props: SubscriberDetailModalProps) {
 
   // Use app-specific hook to fetch services
   const {
-    services,
+    data: services = [],
     isLoading: servicesLoading,
     refetch: refetchServices,
   } = useSubscriberServices(subscriber?.id || null);

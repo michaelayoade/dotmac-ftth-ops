@@ -4,6 +4,8 @@
  * Supports different variants (default, destructive, warning)
  */
 
+import { cn } from "../lib/utils";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +16,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./alert-dialog";
-import { cn } from "../lib/utils";
 
 export type ConfirmDialogVariant = "default" | "destructive" | "warning";
 

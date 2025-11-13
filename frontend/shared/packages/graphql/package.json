@@ -22,8 +22,8 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --clean --external @apollo/client --external react --external graphql",
     "dev": "tsup src/index.ts --format cjs,esm --watch --external @apollo/client --external react --external graphql",
-    "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "lint": "eslint \"src\" --ext .ts,.tsx --max-warnings=0",
+    "lint:fix": "eslint \"src\" --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -39,9 +39,14 @@
     "react": "^18.0.0"
   },
   "devDependencies": {
+    "@dotmac/eslint-plugin": "workspace:*",
+    "@dotmac/eslint-config": "workspace:*",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.12",
+    "@typescript-eslint/eslint-plugin": "^8.40.0",
+    "@typescript-eslint/parser": "^8.40.0",
     "eslint": "^8.57.1",
+    "eslint-plugin-import": "^2.32.0",
     "tsup": "^8.3.5",
     "typescript": "^5.9.2"
   },

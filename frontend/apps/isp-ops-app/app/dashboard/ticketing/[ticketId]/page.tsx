@@ -28,7 +28,7 @@ import {
   Send,
   Edit,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -74,6 +74,8 @@ interface TicketMessage {
 function TicketDetailsPageContent() {
   const params = useParams();
   const ticketId = params?.['ticketId'] as string;
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [newMessage, setNewMessage] = useState("");
@@ -81,12 +83,11 @@ function TicketDetailsPageContent() {
 
   // Fetch ticket details
   const { data: ticket, isLoading } = useQuery<TicketData>({
-    queryKey: ["ticket", ticketId],
+    queryKey: ["ticket", apiBaseUrl, ticketId],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/tickets/${ticketId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/tickets/${ticketId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch ticket");
       return response.json();
     },
@@ -95,11 +96,11 @@ function TicketDetailsPageContent() {
 
   // Fetch ticket messages
   const { data: messages = [] } = useQuery<TicketMessage[]>({
-    queryKey: ["ticket-messages", ticketId],
+    queryKey: ["ticket-messages", apiBaseUrl, ticketId],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/tickets/${ticketId}/messages`,
-        { credentials: "include" }
+        `${apiBaseUrl}/api/v1/tickets/${ticketId}/messages`,
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
@@ -112,20 +113,17 @@ function TicketDetailsPageContent() {
   // Update ticket mutation
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<TicketData>) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/tickets/${ticketId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(updates),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/tickets/${ticketId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updates),
+      });
       if (!response.ok) throw new Error("Failed to update ticket");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["ticket", apiBaseUrl, ticketId] });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast({ title: "Ticket updated successfully" });
     },
@@ -142,7 +140,7 @@ function TicketDetailsPageContent() {
   const addMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/tickets/${ticketId}/messages`,
+        `${apiBaseUrl}/api/v1/tickets/${ticketId}/messages`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -151,13 +149,13 @@ function TicketDetailsPageContent() {
             content,
             is_internal: isInternal,
           }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to add message");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ticket-messages", ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["ticket-messages", apiBaseUrl, ticketId] });
       setNewMessage("");
       setIsInternal(false);
       toast({ title: "Message added successfully" });

@@ -26,6 +26,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -43,8 +44,8 @@ export default function LoginPage() {
           password: credentials.password,
         }));
 
-      if (response.status !== 200) {
-        throw new Error(`Login failed with status ${response.status}`);
+      if (!response || response.status !== 200) {
+        throw new Error(`Login failed with status ${response?.status || 'unknown'}`);
       }
 
       const defaultHeaders = (apiClient.defaults?.headers as any)?.common;

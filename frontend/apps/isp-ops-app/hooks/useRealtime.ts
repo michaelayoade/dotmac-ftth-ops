@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "@dotmac/better-auth";
-import { platformConfig } from "../lib/config";
+import type { ExtendedUser } from "@dotmac/better-auth";
 import { SSEClient, SSEEndpoints } from "../lib/realtime/sse-client";
 import {
   WebSocketClient,
@@ -27,6 +27,7 @@ import {
   type SubscriberEvent,
   type TicketEvent,
 } from "../types/realtime";
+import { useApiConfig } from "@/hooks/useApiConfig";
 
 /**
  * Get auth token from operator auth storage
@@ -53,7 +54,7 @@ export function useSSE<T extends BaseEvent>(
   enabled = true,
 ) {
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<SSEClient | null>(null);
@@ -96,7 +97,7 @@ export function useSSE<T extends BaseEvent>(
       client.close();
       clientRef.current = null;
     };
-  }, [endpoint, eventType, enabled, user]);
+  }, [endpoint, eventType, handler, enabled, user]);
 
   const reconnect = useCallback(() => {
     if (clientRef.current) {
@@ -111,40 +112,40 @@ export function useSSE<T extends BaseEvent>(
  * Hook for ONU status updates
  */
 export function useONUStatusEvents(handler: EventHandler<ONUStatusEvent>, enabled = true) {
-  return useSSE(
-    platformConfig.api.buildUrl("/realtime/onu-status"),
-    "*", // Listen to all ONU events
-    handler,
-    enabled,
-  );
+  const { buildApiUrl } = useApiConfig();
+  return useSSE(buildApiUrl("/realtime/onu-status"), "*", handler, enabled);
 }
 
 /**
  * Hook for alerts
  */
 export function useAlertEvents(handler: EventHandler<AlertEvent>, enabled = true) {
-  return useSSE(platformConfig.api.buildUrl("/realtime/alerts"), "*", handler, enabled);
+  const { buildApiUrl } = useApiConfig();
+  return useSSE(buildApiUrl("/realtime/alerts"), "*", handler, enabled);
 }
 
 /**
  * Hook for ticket events
  */
 export function useTicketEvents(handler: EventHandler<TicketEvent>, enabled = true) {
-  return useSSE(platformConfig.api.buildUrl("/realtime/tickets"), "*", handler, enabled);
+  const { buildApiUrl } = useApiConfig();
+  return useSSE(buildApiUrl("/realtime/tickets"), "*", handler, enabled);
 }
 
 /**
  * Hook for subscriber events
  */
 export function useSubscriberEvents(handler: EventHandler<SubscriberEvent>, enabled = true) {
-  return useSSE(platformConfig.api.buildUrl("/realtime/subscribers"), "*", handler, enabled);
+  const { buildApiUrl } = useApiConfig();
+  return useSSE(buildApiUrl("/realtime/subscribers"), "*", handler, enabled);
 }
 
 /**
  * Hook for RADIUS session events
  */
 export function useRADIUSSessionEvents(handler: EventHandler<RADIUSSessionEvent>, enabled = true) {
-  return useSSE(platformConfig.api.buildUrl("/realtime/radius-sessions"), "*", handler, enabled);
+  const { buildApiUrl } = useApiConfig();
+  return useSSE(buildApiUrl("/realtime/radius-sessions"), "*", handler, enabled);
 }
 
 // ============================================================================
@@ -156,7 +157,7 @@ export function useRADIUSSessionEvents(handler: EventHandler<RADIUSSessionEvent>
  */
 export function useWebSocket(endpoint: string, enabled = true) {
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<WebSocketClient | null>(null);
@@ -234,10 +235,8 @@ export function useWebSocket(endpoint: string, enabled = true) {
  * Hook for RADIUS sessions WebSocket
  */
 export function useSessionsWebSocket(handler: EventHandler<RADIUSSessionEvent>, enabled = true) {
-  const { subscribe, ...rest } = useWebSocket(
-    platformConfig.api.buildUrl("/realtime/ws/sessions"),
-    enabled,
-  );
+  const { buildApiUrl } = useApiConfig();
+  const { subscribe, ...rest } = useWebSocket(buildApiUrl("/realtime/ws/sessions"), enabled);
 
   useEffect(() => {
     if (rest.isConnected) {
@@ -254,7 +253,8 @@ export function useSessionsWebSocket(handler: EventHandler<RADIUSSessionEvent>, 
  * Hook for job progress WebSocket with control commands
  */
 export function useJobWebSocket(jobId: string | null, enabled = true) {
-  const endpoint = jobId ? platformConfig.api.buildUrl(`/realtime/ws/jobs/${jobId}`) : "";
+  const { buildApiUrl } = useApiConfig();
+  const endpoint = jobId ? buildApiUrl(`/realtime/ws/jobs/${jobId}`) : "";
   const { client, subscribe, ...rest } = useWebSocket(endpoint, enabled && !!jobId);
   const [jobProgress, setJobProgress] = useState<JobProgressEvent | null>(null);
   const controlRef = useRef<JobControl | null>(null);
@@ -302,7 +302,8 @@ export function useJobWebSocket(jobId: string | null, enabled = true) {
  * Hook for campaign progress WebSocket with control commands
  */
 export function useCampaignWebSocket(campaignId: string | null, enabled = true) {
-  const endpoint = campaignId ? platformConfig.api.buildUrl(`/realtime/ws/campaigns/${campaignId}`) : "";
+  const { buildApiUrl } = useApiConfig();
+  const endpoint = campaignId ? buildApiUrl(`/realtime/ws/campaigns/${campaignId}`) : "";
   const { client, subscribe, ...rest } = useWebSocket(endpoint, enabled && !!campaignId);
   const [campaignProgress, setCampaignProgress] = useState<any>(null);
   const controlRef = useRef<CampaignControl | null>(null);

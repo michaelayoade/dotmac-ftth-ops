@@ -15,7 +15,7 @@ import {
   UserCheck,
   Clock,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 
 interface User {
@@ -52,10 +52,12 @@ function UsersPageContent() {
     message: "",
     type: "success",
   });
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/users`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/users`, {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -75,7 +77,7 @@ function UsersPageContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiBaseUrl]);
 
   useEffect(() => {
     fetchUsers();
@@ -122,7 +124,7 @@ function UsersPageContent() {
 
   const handleCreateUser = async () => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/users`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/users`, {
         method: "POST",
         credentials: "include",
         headers: {

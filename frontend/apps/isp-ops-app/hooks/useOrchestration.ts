@@ -139,12 +139,12 @@ export function useOrchestrationStats() {
 // ============================================================================
 
 interface UseWorkflowsOptions {
-  status?: WorkflowStatus;
-  workflowType?: WorkflowType;
-  page?: number;
-  pageSize?: number;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+  status?: WorkflowStatus | undefined;
+  workflowType?: WorkflowType | undefined;
+  page?: number | undefined;
+  pageSize?: number | undefined;
+  autoRefresh?: boolean | undefined;
+  refreshInterval?: number | undefined;
 }
 
 export function useWorkflows(options: UseWorkflowsOptions = {}) {
@@ -204,10 +204,10 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
     },
     enabled: !!workflowId,
     staleTime: 2000,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Only auto-refresh if enabled and workflow is still running
-      if (!autoRefresh || !data) return false;
-      if (data.status === "completed" || data.status === "failed") return false;
+      if (!autoRefresh || !query.state.data) return false;
+      if (query.state.data.status === "completed" || query.state.data.status === "failed") return false;
       return 2000; // Poll every 2 seconds for running workflows
     },
     refetchOnWindowFocus: true,

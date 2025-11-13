@@ -82,55 +82,6 @@ module.exports = {
       return componentPatterns.some((pattern) => minimatch(relativePath, pattern));
     }
 
-    // Infer category and portal from file path
-    function inferMetadata() {
-      const path = require("path");
-      const relativePath = path.relative(process.cwd(), filename);
-
-      let category = "component";
-      let portal = "shared";
-
-      // Infer category based on path structure
-      if (
-        relativePath.includes("/atoms/") ||
-        relativePath.includes("Button") ||
-        relativePath.includes("Input")
-      ) {
-        category = "atomic";
-      } else if (
-        relativePath.includes("/molecules/") ||
-        relativePath.includes("Form") ||
-        relativePath.includes("Card")
-      ) {
-        category = "molecule";
-      } else if (
-        relativePath.includes("/organisms/") ||
-        relativePath.includes("Header") ||
-        relativePath.includes("Footer")
-      ) {
-        category = "organism";
-      } else if (relativePath.includes("/templates/") || relativePath.includes("Layout")) {
-        category = "template";
-      } else if (
-        relativePath.includes("/pages/") ||
-        relativePath.includes("View") ||
-        relativePath.includes("Page")
-      ) {
-        category = "page";
-      }
-
-      // Infer portal based on path structure
-      if (relativePath.includes("/tenant/") || relativePath.includes("/customer/")) {
-        portal = "tenant";
-      } else if (relativePath.includes("/admin/") || relativePath.includes("/dashboard/")) {
-        portal = "admin";
-      } else if (relativePath.includes("/shared/") || relativePath.includes("/common/")) {
-        portal = "shared";
-      }
-
-      return { category, portal };
-    }
-
     // Check if component is registered
     function hasRegistrationDecorator(node) {
       if (!node.decorators) return false;
@@ -218,7 +169,7 @@ module.exports = {
         // Simple heuristic: if it has JSX in return statements
         let hasJSX = false;
 
-        function checkForJSX(n) {
+        const checkForJSX = (n) => {
           if (n.type === "JSXElement" || n.type === "JSXFragment") {
             hasJSX = true;
             return;
@@ -240,7 +191,7 @@ module.exports = {
               }
             }
           }
-        }
+        };
 
         if (functionNode.body) {
           checkForJSX(functionNode.body);

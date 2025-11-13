@@ -1,7 +1,5 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Save, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +19,9 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
+import { Save, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+
 import type { NASDevice, NASDeviceFormData } from "../types";
 import { NAS_TYPES, NAS_VENDORS } from "../types";
 

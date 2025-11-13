@@ -635,45 +635,45 @@ export interface ReturnResourceData {
 // ============================================================================
 
 export interface TechnicianFilter {
-  status?: TechnicianStatus[];
-  skillLevel?: SkillLevel[];
-  skills?: string[];
-  certifications?: string[];
-  serviceAreas?: string[];
-  isAvailable?: boolean;
-  search?: string;
+  status?: TechnicianStatus[] | undefined;
+  skillLevel?: SkillLevel[] | undefined;
+  skills?: string[] | undefined;
+  certifications?: string[] | undefined;
+  serviceAreas?: string[] | undefined;
+  isAvailable?: boolean | undefined;
+  search?: string | undefined;
 }
 
 export interface ScheduleFilter {
-  technicianId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  status?: ScheduleStatus[];
+  technicianId?: string | undefined;
+  dateFrom?: string | undefined;
+  dateTo?: string | undefined;
+  status?: ScheduleStatus[] | undefined;
 }
 
 export interface AssignmentFilter {
-  technicianId?: string;
-  taskId?: string;
-  status?: AssignmentStatus[];
-  dateFrom?: string;
-  dateTo?: string;
+  technicianId?: string | undefined;
+  taskId?: string | undefined;
+  status?: AssignmentStatus[] | undefined;
+  dateFrom?: string | undefined;
+  dateTo?: string | undefined;
 }
 
 export interface TimeEntryFilter {
-  technicianId?: string;
-  status?: TimeEntryStatus[];
-  entryType?: TimeEntryType[];
-  dateFrom?: string;
-  dateTo?: string;
-  projectId?: string;
+  technicianId?: string | undefined;
+  status?: TimeEntryStatus[] | undefined;
+  entryType?: TimeEntryType[] | undefined;
+  dateFrom?: string | undefined;
+  dateTo?: string | undefined;
+  projectId?: string | undefined;
 }
 
 export interface ResourceFilter {
-  status?: (EquipmentStatus | VehicleStatus)[];
-  category?: string[];
-  assignedToTechnicianId?: string;
-  isAvailable?: boolean;
-  search?: string;
+  status?: (EquipmentStatus | VehicleStatus)[] | undefined;
+  category?: string[] | undefined;
+  assignedToTechnicianId?: string | undefined;
+  isAvailable?: boolean | undefined;
+  search?: string | undefined;
 }
 
 // ============================================================================

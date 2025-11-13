@@ -21,7 +21,7 @@ import {
   Trash2,
   Play,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -65,13 +65,14 @@ function ProvisionPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
 
   // Fetch presets
   const { data: presets = [] } = useQuery<Preset[]>({
     queryKey: ["device-presets"],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/presets`,
+        `${apiBaseUrl}/api/v1/genieacs/presets`,
         { credentials: "include" }
       );
       if (!response.ok) return [];
@@ -84,7 +85,7 @@ function ProvisionPageContent() {
     queryKey: ["bulk-provision-jobs"],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/provision/bulk/jobs`,
+        `${apiBaseUrl}/api/v1/genieacs/provision/bulk/jobs`,
         { credentials: "include" }
       );
       if (!response.ok) return [];
@@ -97,7 +98,7 @@ function ProvisionPageContent() {
   const provisionMutation = useMutation({
     mutationFn: async (device: DeviceProvisionRequest) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/provision`,
+        `${apiBaseUrl}/api/v1/genieacs/provision`,
         {
           method: "POST",
           credentials: "include",
@@ -135,7 +136,7 @@ function ProvisionPageContent() {
       }
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/provision/bulk`,
+        `${apiBaseUrl}/api/v1/genieacs/provision/bulk`,
         {
           method: "POST",
           credentials: "include",

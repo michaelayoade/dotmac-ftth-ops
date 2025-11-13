@@ -85,8 +85,12 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
     if (!isValidTime(settings.business_hours_start) || !isValidTime(settings.business_hours_end)) {
       return 0;
     }
-    const [startHour, startMin] = settings.business_hours_start.split(":").map(Number);
-    const [endHour, endMin] = settings.business_hours_end.split(":").map(Number);
+    const startParts = settings.business_hours_start.split(":").map(Number);
+    const endParts = settings.business_hours_end.split(":").map(Number);
+    const startHour = startParts[0] ?? 0;
+    const startMin = startParts[1] ?? 0;
+    const endHour = endParts[0] ?? 0;
+    const endMin = endParts[1] ?? 0;
     const startMinutes = startHour * 60 + startMin;
     const endMinutes = endHour * 60 + endMin;
     return (endMinutes - startMinutes) / 60;

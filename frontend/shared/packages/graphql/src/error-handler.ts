@@ -140,8 +140,8 @@ function normalizeGraphQLError(error: unknown): NormalizedGraphQLError {
     const el = extractFirstError(error.errors);
     return {
       message: el?.message ?? error.message ?? DEFAULT_FALLBACK_MESSAGE,
-      code: el?.code,
-      path: el?.path,
+      ...(el?.code ? { code: el.code } : {}),
+      ...(el?.path ? { path: el.path } : {}),
     };
   }
 
@@ -149,10 +149,11 @@ function normalizeGraphQLError(error: unknown): NormalizedGraphQLError {
     // ApolloError & similar shapes
     if (Array.isArray((error as any).graphQLErrors)) {
       const el = extractFirstError((error as any).graphQLErrors);
+      const errorMsg = typeof (error as any)['message'] === "string" ? (error as any)['message'] : DEFAULT_FALLBACK_MESSAGE;
       return {
-        message: el?.message ?? (typeof error.message === "string" ? error.message : DEFAULT_FALLBACK_MESSAGE),
-        code: el?.code,
-        path: el?.path,
+        message: el?.message ?? errorMsg,
+        ...(el?.code ? { code: el.code } : {}),
+        ...(el?.path ? { path: el.path } : {}),
         isNetworkError: Boolean((error as any).networkError),
       };
     }
@@ -164,10 +165,10 @@ function normalizeGraphQLError(error: unknown): NormalizedGraphQLError {
       }
     }
 
-    if (typeof error.message === "string") {
+    if (typeof (error as any)['message'] === "string") {
       return {
-        message: error.message,
-        code: typeof (error as any).code === "string" ? (error as any).code : undefined,
+        message: (error as any)['message'],
+        ...(typeof (error as any)['code'] === "string" ? { code: (error as any)['code'] } : {}),
       };
     }
   }
@@ -314,15 +315,15 @@ export function handleGraphQLError(
       };
 
       if (normalized.code) {
-        logContext.code = normalized.code;
+        logContext['code'] = normalized.code;
       }
 
       if (normalized.path) {
-        logContext.path = normalized.path;
+        logContext['path'] = normalized.path;
       }
 
       if (operationName) {
-        logContext.operationName = operationName;
+        logContext['operationName'] = operationName;
       }
 
       const errorObject = error instanceof Error ? error : new Error(String(error));
@@ -367,7 +368,7 @@ export function handleGraphQLError(
   return {
     message,
     severity,
-    code: normalized.code,
+    ...(normalized.code ? { code: normalized.code } : {}),
     shouldToast,
     shouldLog,
   };

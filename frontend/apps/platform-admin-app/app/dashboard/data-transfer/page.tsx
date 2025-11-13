@@ -28,10 +28,10 @@ import {
   TrendingUp,
   Trash2,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useConfirmDialog } from "@dotmac/ui";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 interface TransferJob {
   job_id: string;
@@ -76,6 +76,8 @@ function DataTransferPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
   const confirmDialog = useConfirmDialog();
 
   // Fetch supported formats
@@ -83,7 +85,7 @@ function DataTransferPageContent() {
     queryKey: ["data-transfer-formats"],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/data-transfer/formats`,
+        `${apiBaseUrl}/api/v1/data-transfer/formats`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch formats");
@@ -96,7 +98,7 @@ function DataTransferPageContent() {
     queryKey: ["data-transfer-jobs"],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/data-transfer/jobs`,
+        `${apiBaseUrl}/api/v1/data-transfer/jobs`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch jobs");
@@ -111,7 +113,7 @@ function DataTransferPageContent() {
   const importMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/data-transfer/import`,
+        `${apiBaseUrl}/api/v1/data-transfer/import`,
         {
           method: "POST",
           credentials: "include",
@@ -146,7 +148,7 @@ function DataTransferPageContent() {
   const exportMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/data-transfer/export`,
+        `${apiBaseUrl}/api/v1/data-transfer/export`,
         {
           method: "POST",
           credentials: "include",
@@ -181,7 +183,7 @@ function DataTransferPageContent() {
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/data-transfer/jobs/${jobId}`,
+        `${apiBaseUrl}/api/v1/data-transfer/jobs/${jobId}`,
         {
           method: "DELETE",
           credentials: "include",

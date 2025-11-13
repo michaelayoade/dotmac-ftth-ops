@@ -33,7 +33,7 @@ import {
 import { format } from "date-fns";
 import { apiClient } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
-import platformConfig from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type DiscountType = "percentage" | "fixed_amount" | "fixed_price";
 
@@ -70,6 +70,8 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
   const { toast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -80,10 +82,10 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
     error,
     refetch,
   } = useQuery({
-    queryKey: ["pricing-rule", params['id']],
+    queryKey: ["pricing-rule", apiBaseUrl, params['id']],
     queryFn: async () => {
       const response = await apiClient.get<PricingRule>(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params['id']}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params['id']}`
       );
       return response.data;
     },
@@ -94,7 +96,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
     mutationFn: async (activate: boolean) => {
       const endpoint = activate ? "activate" : "deactivate";
       const response = await apiClient.post(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params['id']}/${endpoint}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params['id']}/${endpoint}`
       );
       return response.data;
     },
@@ -103,7 +105,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
         title: "Success",
         description: `Pricing rule ${activate ? "activated" : "deactivated"} successfully`,
       });
-      queryClient.invalidateQueries({ queryKey: ["pricing-rule", params['id']] });
+      queryClient.invalidateQueries({ queryKey: ["pricing-rule", apiBaseUrl, params['id']] });
       queryClient.invalidateQueries({ queryKey: ["pricing-rules"] });
     },
     onError: (error: any) => {
@@ -119,7 +121,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
   const deleteRuleMutation = useMutation({
     mutationFn: async () => {
       await apiClient.delete(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params['id']}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params['id']}`
       );
     },
     onSuccess: () => {

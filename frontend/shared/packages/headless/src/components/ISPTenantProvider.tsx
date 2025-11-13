@@ -3,7 +3,8 @@
  * Provides multi-tenant context to the entire application
  */
 
-import { ReactNode, useEffect } from "react";
+import { useEffect } from "react";
+import type { ReactNode } from "react";
 import { ISPTenantContext, useISPTenantProvider } from "../hooks/useISPTenant";
 import { usePortalIdAuth } from "../hooks/usePortalIdAuth";
 
@@ -21,6 +22,8 @@ export function ISPTenantProvider({
   const tenantHook = useISPTenantProvider();
   const { isAuthenticated, portalAccount, customerData, technicianData, resellerData } =
     usePortalIdAuth();
+  const extractTenantId = (record: any): string | undefined =>
+    record?.tenant_id ?? record?.tenantId;
 
   // Auto-load tenant when user authenticates
   useEffect(() => {
@@ -30,16 +33,11 @@ export function ISPTenantProvider({
     let targetTenantId = tenantId;
 
     if (!targetTenantId) {
-      // Extract tenant ID from user data based on account type
-      if (customerData?.tenant_id) {
-        targetTenantId = customerData.tenant_id;
-      } else if (technicianData?.tenant_id) {
-        targetTenantId = technicianData.tenant_id;
-      } else if (resellerData?.tenant_id) {
-        targetTenantId = resellerData.tenant_id;
-      } else if (portalAccount?.tenant_id) {
-        targetTenantId = portalAccount.tenant_id;
-      }
+      targetTenantId =
+        extractTenantId(customerData) ??
+        extractTenantId(technicianData) ??
+        extractTenantId(resellerData) ??
+        extractTenantId(portalAccount);
     }
 
     if (targetTenantId) {
@@ -53,10 +51,10 @@ export function ISPTenantProvider({
     autoLoadOnAuth,
     tenantHook,
     tenantHook.session,
-    customerData?.tenant_id,
-    technicianData?.tenant_id,
-    resellerData?.tenant_id,
-    portalAccount?.tenant_id,
+    customerData,
+    technicianData,
+    resellerData,
+    portalAccount,
   ]);
 
   // Clear tenant when user logs out

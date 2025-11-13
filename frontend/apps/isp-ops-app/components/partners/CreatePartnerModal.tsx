@@ -21,21 +21,34 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
     primary_email: "",
     tier: "bronze",
     commission_model: "revenue_share",
-  });
+    legal_name: undefined,
+    website: undefined,
+    billing_email: undefined,
+    phone: undefined,
+    default_commission_rate: undefined,
+    address_line1: undefined,
+    city: undefined,
+    state_province: undefined,
+    country: undefined,
+  } as any);
 
   useEffect(() => {
     if (partner) {
       setFormData({
         company_name: partner.company_name,
-        legal_name: partner.legal_name,
-        website: partner.website,
+        legal_name: partner.legal_name || undefined,
+        website: partner.website || undefined,
         primary_email: partner.primary_email,
-        billing_email: partner.billing_email,
-        phone: partner.phone,
+        billing_email: partner.billing_email || undefined,
+        phone: partner.phone || undefined,
         tier: partner.tier,
         commission_model: partner.commission_model,
-        default_commission_rate: partner.default_commission_rate,
-      });
+        default_commission_rate: partner.default_commission_rate || undefined,
+        address_line1: undefined,
+        city: undefined,
+        state_province: undefined,
+        country: undefined,
+      } as any);
     }
   }, [partner]);
 
@@ -47,12 +60,12 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
         await updatePartner.mutateAsync({
           partnerId: partner.id,
           data: {
-            company_name: formData.company_name,
+            company_name: formData.company_name || undefined,
             tier: formData.tier,
             default_commission_rate: formData.default_commission_rate,
             billing_email: formData.billing_email,
             phone: formData.phone,
-          },
+          } as any,
         });
       } else {
         await createPartner.mutateAsync(formData);
@@ -202,7 +215,7 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
                     default_commission_rate: e.target.value
                       ? parseFloat(e.target.value) / 100
                       : undefined,
-                  })
+                  } as any)
                 }
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 placeholder="15.00"

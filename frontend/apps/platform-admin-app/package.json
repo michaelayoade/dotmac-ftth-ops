@@ -4,8 +4,8 @@
   "private": true,
   "description": "Platform Admin Dashboard - Super-admin UI for platform management, feature flags, plugins, licensing, and deployment",
   "scripts": {
-    "dev": "NODE_OPTIONS='--no-deprecation' next dev -p 3002",
-    "dev:mock": "NODE_OPTIONS='--no-deprecation' NEXT_PUBLIC_MOCK_API=true next dev -p 3002",
+    "dev": "NODE_OPTIONS='--no-deprecation' next dev -H 127.0.0.1 -p 3002",
+    "dev:mock": "NODE_OPTIONS='--no-deprecation' NEXT_PUBLIC_MOCK_API=true next dev -H 127.0.0.1 -p 3002",
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "next lint",

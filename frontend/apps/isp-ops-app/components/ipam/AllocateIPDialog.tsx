@@ -37,12 +37,12 @@ export interface AllocateIPDialogProps {
 
 export interface IPAllocationData {
   mode: "single" | "dual-stack" | "bulk";
-  prefixId?: number;
-  ipv6PrefixId?: number;
-  description?: string;
-  dnsName?: string;
-  count?: number;
-  descriptionPrefix?: string;
+  prefixId?: number | undefined;
+  ipv6PrefixId?: number | undefined;
+  description?: string | undefined;
+  dnsName?: string | undefined;
+  count?: number | undefined;
+  descriptionPrefix?: string | undefined;
 }
 
 export function AllocateIPDialog({

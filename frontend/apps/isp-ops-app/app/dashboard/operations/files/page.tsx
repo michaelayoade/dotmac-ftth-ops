@@ -24,7 +24,7 @@ import { StatusBadge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 
 interface FileMetadata {
   file_id: string;
@@ -50,12 +50,13 @@ export default function FilesPage() {
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
   const confirmDialog = useConfirmDialog();
+  const { buildApiUrl } = useApiConfig();
 
   // Fetch files
   const { data, isLoading, error } = useQuery<FilesResponse>({
     queryKey: ["files"],
     queryFn: async () => {
-      const url = platformConfig.api.buildUrl("/files/storage");
+      const url = buildApiUrl("/files/storage");
       const response = await fetch(url, {
         credentials: "include",
       });
@@ -72,7 +73,7 @@ export default function FilesPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const url = platformConfig.api.buildUrl("/files/storage/upload");
+      const url = buildApiUrl("/files/storage/upload");
       const response = await fetch(url, {
         method: "POST",
         credentials: "include",
@@ -97,7 +98,7 @@ export default function FilesPage() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (fileId: string) => {
-      const url = platformConfig.api.buildUrl(`/files/storage/${fileId}`);
+      const url = buildApiUrl(`/files/storage/${fileId}`);
       const response = await fetch(url, {
         method: "DELETE",
         credentials: "include",
@@ -148,7 +149,7 @@ export default function FilesPage() {
   };
 
   const handleDownload = (fileId: string, fileName: string) => {
-    const url = platformConfig.api.buildUrl(`/files/storage/${fileId}/download`);
+    const url = buildApiUrl(`/files/storage/${fileId}/download`);
     window.open(url, "_blank");
     logger.info("File downloaded", { fileId, fileName });
   };

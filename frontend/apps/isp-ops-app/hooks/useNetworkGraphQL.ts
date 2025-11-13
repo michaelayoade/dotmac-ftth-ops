@@ -68,13 +68,13 @@ export function useNetworkOverviewGraphQL(options: UseNetworkOverviewOptions = {
 // ============================================================================
 
 export interface UseNetworkDeviceListOptions {
-  page?: number;
-  pageSize?: number;
-  deviceType?: DeviceTypeEnum;
-  status?: DeviceStatusEnum;
-  search?: string;
-  enabled?: boolean;
-  pollInterval?: number;
+  page?: number | undefined;
+  pageSize?: number | undefined;
+  deviceType?: DeviceTypeEnum | undefined;
+  status?: DeviceStatusEnum | undefined;
+  search?: string | undefined;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useNetworkDeviceListGraphQL(options: UseNetworkDeviceListOptions = {}) {
@@ -126,8 +126,8 @@ export function useNetworkDeviceListGraphQL(options: UseNetworkDeviceListOptions
 export interface UseDeviceDetailOptions {
   deviceId: string;
   deviceType: DeviceTypeEnum;
-  enabled?: boolean;
-  pollInterval?: number;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useDeviceDetailGraphQL(options: UseDeviceDetailOptions) {
@@ -203,14 +203,14 @@ export function useDeviceTrafficGraphQL(options: UseDeviceTrafficOptions) {
 // ============================================================================
 
 export interface UseNetworkAlertListOptions {
-  page?: number;
-  pageSize?: number;
-  severity?: AlertSeverityEnum;
-  activeOnly?: boolean;
-  deviceId?: string;
-  deviceType?: DeviceTypeEnum;
-  enabled?: boolean;
-  pollInterval?: number;
+  page?: number | undefined;
+  pageSize?: number | undefined;
+  severity?: AlertSeverityEnum | undefined;
+  activeOnly?: boolean | undefined;
+  deviceId?: string | undefined;
+  deviceType?: DeviceTypeEnum | undefined;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useNetworkAlertListGraphQL(options: UseNetworkAlertListOptions = {}) {
@@ -263,7 +263,7 @@ export function useNetworkAlertListGraphQL(options: UseNetworkAlertListOptions =
 
 export interface UseNetworkAlertDetailOptions {
   alertId: string;
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }
 
 export function useNetworkAlertDetailGraphQL(options: UseNetworkAlertDetailOptions) {
@@ -290,15 +290,15 @@ export function useNetworkAlertDetailGraphQL(options: UseNetworkAlertDetailOptio
 // ============================================================================
 
 export interface UseNetworkDashboardOptions {
-  devicePage?: number;
-  devicePageSize?: number;
-  deviceType?: DeviceTypeEnum;
-  deviceStatus?: DeviceStatusEnum;
-  alertPage?: number;
-  alertPageSize?: number;
-  alertSeverity?: AlertSeverityEnum;
-  enabled?: boolean;
-  pollInterval?: number;
+  devicePage?: number | undefined;
+  devicePageSize?: number | undefined;
+  deviceType?: DeviceTypeEnum | undefined;
+  deviceStatus?: DeviceStatusEnum | undefined;
+  alertPage?: number | undefined;
+  alertPageSize?: number | undefined;
+  alertSeverity?: AlertSeverityEnum | undefined;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useNetworkDashboardGraphQL(options: UseNetworkDashboardOptions = {}) {

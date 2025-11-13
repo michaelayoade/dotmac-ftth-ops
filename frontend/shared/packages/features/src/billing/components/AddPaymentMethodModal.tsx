@@ -7,7 +7,6 @@
 
 "use client";
 
-import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +22,7 @@ import { Alert, AlertDescription } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Checkbox } from "@dotmac/ui";
 import { CreditCard, Building2, Wallet, AlertCircle } from "lucide-react";
+import React, { useState } from "react";
 
 export interface AddPaymentMethodRequest {
   method_type: "card" | "bank_account" | "wallet";

@@ -111,7 +111,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
   const websocketRef = useRef<WebSocket | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
-  const { addNotification } = useNotifications();
+  const { notify } = useNotifications();
 
   // API Helper
   const apiCall = useCallback(
@@ -162,13 +162,8 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         setState((prev) => ({ ...prev, isConnected: true, error: null }));
         retryCountRef.current = 0;
 
-        addNotification({
-          type: "system",
-          priority: "low",
-          title: "Communication System",
-          message: "Real-time communication connected",
-          channel: ["browser"],
-          persistent: false,
+        notify.info("Communication System", "Real-time communication connected", {
+          metadata: { priority: "low", channel: ["browser"] },
         });
       };
 
@@ -249,7 +244,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         error: error instanceof Error ? error.message : "Connection failed",
       }));
     }
-  }, [websocketEndpoint, enableRealtime, apiKey, tenantId, maxRetries, addNotification]);
+  }, [websocketEndpoint, enableRealtime, apiKey, tenantId, maxRetries, notify]);
 
   // Load Channels
   const loadChannels = useCallback(async () => {
@@ -373,32 +368,26 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           messages: [newMessage, ...prev.messages],
         }));
 
-        addNotification({
-          type: "success",
-          priority: "medium",
-          title: "Message Sent",
-          message: `Message sent to ${messageData.recipient} via ${messageData.channel}`,
-          channel: ["browser"],
-          persistent: false,
-        });
+        notify.success(
+          "Message Sent",
+          `Message sent to ${messageData.recipient} via ${messageData.channel}`,
+          {
+            metadata: { priority: "medium", channel: ["browser"] },
+          },
+        );
 
         return newMessage;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to send message";
 
-        addNotification({
-          type: "error",
-          priority: "high",
-          title: "Message Failed",
-          message: `Failed to send message: ${errorMessage}`,
-          channel: ["browser"],
-          persistent: false,
+        notify.error("Message Failed", `Failed to send message: ${errorMessage}`, {
+          metadata: { priority: "high", channel: ["browser"] },
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification],
+    [apiCall, notify],
   );
 
   // Bulk Send Messages
@@ -436,14 +425,13 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           isLoading: false,
         }));
 
-        addNotification({
-          type: "success",
-          priority: "medium",
-          title: "Bulk Messages Sent",
-          message: `${newMessages.length} messages queued for delivery`,
-          channel: ["browser"],
-          persistent: false,
-        });
+        notify.success(
+          "Bulk Messages Sent",
+          `${newMessages.length} messages queued for delivery`,
+          {
+            metadata: { priority: "medium", channel: ["browser"] },
+          },
+        );
 
         return newMessages;
       } catch (error) {
@@ -452,19 +440,14 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         const errorMessage =
           error instanceof Error ? error.message : "Failed to send bulk messages";
 
-        addNotification({
-          type: "error",
-          priority: "high",
-          title: "Bulk Send Failed",
-          message: `Failed to send bulk messages: ${errorMessage}`,
-          channel: ["browser"],
-          persistent: false,
+        notify.error("Bulk Send Failed", `Failed to send bulk messages: ${errorMessage}`, {
+          metadata: { priority: "high", channel: ["browser"] },
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification],
+    [apiCall, notify],
   );
 
   // Create Template
@@ -558,33 +541,27 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           body: JSON.stringify(testData),
         });
 
-        addNotification({
-          type: data.success ? "success" : "error",
-          priority: "medium",
-          title: "Channel Test",
-          message:
-            data.message || `Channel ${channelId} test ${data.success ? "passed" : "failed"}`,
-          channel: ["browser"],
-          persistent: false,
-        });
+        const notifier = data.success ? notify.success : notify.error;
+        notifier(
+          "Channel Test",
+          data.message || `Channel ${channelId} test ${data.success ? "passed" : "failed"}`,
+          {
+            metadata: { priority: "medium", channel: ["browser"] },
+          },
+        );
 
         return data;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Channel test failed";
 
-        addNotification({
-          type: "error",
-          priority: "high",
-          title: "Channel Test Failed",
-          message: errorMessage,
-          channel: ["browser"],
-          persistent: false,
+        notify.error("Channel Test Failed", errorMessage, {
+          metadata: { priority: "high", channel: ["browser"] },
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification],
+    [apiCall, notify],
   );
 
   // Cancel Message
@@ -604,30 +581,20 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           ),
         }));
 
-        addNotification({
-          type: "info",
-          priority: "low",
-          title: "Message Cancelled",
-          message: "Message has been cancelled successfully",
-          channel: ["browser"],
-          persistent: false,
+        notify.info("Message Cancelled", "Message has been cancelled successfully", {
+          metadata: { priority: "low", channel: ["browser"] },
         });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to cancel message";
 
-        addNotification({
-          type: "error",
-          priority: "medium",
-          title: "Cancel Failed",
-          message: errorMessage,
-          channel: ["browser"],
-          persistent: false,
+        notify.error("Cancel Failed", errorMessage, {
+          metadata: { priority: "medium", channel: ["browser"] },
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification],
+    [apiCall, notify],
   );
 
   // Retry Failed Message
@@ -644,32 +611,22 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           messages: prev.messages.map((msg) => (msg.id === messageId ? retriedMessage : msg)),
         }));
 
-        addNotification({
-          type: "info",
-          priority: "low",
-          title: "Message Retried",
-          message: "Message has been queued for retry",
-          channel: ["browser"],
-          persistent: false,
+        notify.info("Message Retried", "Message has been queued for retry", {
+          metadata: { priority: "low", channel: ["browser"] },
         });
 
         return retriedMessage;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to retry message";
 
-        addNotification({
-          type: "error",
-          priority: "medium",
-          title: "Retry Failed",
-          message: errorMessage,
-          channel: ["browser"],
-          persistent: false,
+        notify.error("Retry Failed", errorMessage, {
+          metadata: { priority: "medium", channel: ["browser"] },
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification],
+    [apiCall, notify],
   );
 
   // Initialize

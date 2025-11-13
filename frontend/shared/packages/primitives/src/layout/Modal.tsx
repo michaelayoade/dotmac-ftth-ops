@@ -6,7 +6,7 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
-import React, { forwardRef, useCallback, useEffect, useState, useId } from "react";
+import React, { forwardRef, useCallback, useEffect, useState } from "react";
 
 // Modal variants
 const modalVariants = cva("modal-container", {
@@ -127,11 +127,11 @@ export const useModalState = (defaultOpen = false, onOpenChange?: (open: boolean
 export interface ModalBackdropProps extends React.HTMLAttributes<HTMLDivElement> {
   onClick?: () => void;
   closeOnClick?: boolean;
+  "data-testid"?: string;
 }
 
 export const ModalBackdrop = forwardRef<HTMLDivElement, ModalBackdropProps>(
-  ({ className, onClick, closeOnClick = true, ...props }, ref) => {
-    const id = useId();
+  ({ className, onClick, closeOnClick = true, "data-testid": dataTestId, ...props }, ref) => {
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
         if (closeOnClick && e.target === e.currentTarget) {
@@ -147,7 +147,7 @@ export const ModalBackdrop = forwardRef<HTMLDivElement, ModalBackdropProps>(
         className={clsx("modal-backdrop", className)}
         onClick={handleClick}
         onKeyDown={(e) => e.key === "Enter" && handleClick}
-        data-testid={`${id}-modal-backdrop`}
+        data-testid={dataTestId ?? "modal-backdrop"}
         {...props}
       />
     );
@@ -161,6 +161,7 @@ export interface ModalContentProps
   showClose?: boolean;
   closeOnEscape?: boolean;
   trapFocus?: boolean;
+  "data-testid"?: string;
   onClose?: () => void;
 }
 
@@ -175,11 +176,11 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
       closeOnEscape = true,
       trapFocus = true,
       onClose,
+      "data-testid": dataTestId,
       ...props
     },
     ref,
   ) => {
-    const id = useId();
     const contentRef = React.useRef<HTMLDivElement>(null);
     const combinedRef = (ref as React.RefObject<HTMLDivElement>) || contentRef;
 
@@ -215,7 +216,7 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
-        data-testid={`${id}-modal-content`}
+        data-testid={dataTestId ?? "modal-content"}
         {...props}
       >
         {children}
@@ -232,7 +233,7 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
               }
             }}
             aria-label="Close modal"
-            data-testid={`${id}-modal-close`}
+            data-testid="modal-close"
           >
             <span aria-hidden="true">×</span>
           </button>
@@ -243,15 +244,20 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
 );
 
 // Modal header component
-export interface ModalHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface ModalHeaderProps extends React.HTMLAttributes<HTMLElement> {
+  as?: keyof JSX.IntrinsicElements;
+}
 
-export const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
-      <div ref={ref} className={clsx("modal-header", className)} {...props}>
-        {children}
-      </div>
-    );
+export const ModalHeader = forwardRef<HTMLElement, ModalHeaderProps>(
+  ({ className, children, as: Component = "div", ...props }, ref) => {
+    const HeaderComponent = Component;
+    const componentProps = {
+      ref: ref as React.Ref<any>,
+      className: clsx("modal-header", className),
+      ...props,
+      children,
+    };
+    return React.createElement(HeaderComponent as any, componentProps);
   },
 );
 
@@ -259,11 +265,11 @@ export const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(
 export interface ModalTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
   level?: 1 | 2 | 3 | 4 | 5 | 6;
   as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  "data-testid"?: string;
 }
 
 export const ModalTitle = forwardRef<HTMLHeadingElement, ModalTitleProps>(
-  ({ className, level = 2, as, children, ...props }, ref) => {
-    const id = useId();
+  ({ className, level = 2, as, children, "data-testid": dataTestId, ...props }, ref) => {
     const clampedLevel = Math.min(Math.max(level, 1), 6);
     type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
     const HeadingTag: HeadingTag = as ?? (`h${clampedLevel}` as HeadingTag);
@@ -272,7 +278,7 @@ export const ModalTitle = forwardRef<HTMLHeadingElement, ModalTitleProps>(
       <HeadingTag
         ref={ref}
         className={clsx("modal-title", className)}
-        data-testid={`${id}-modal-title`}
+        data-testid={dataTestId ?? "modal-title"}
         {...props}
       >
         {children}
@@ -284,14 +290,13 @@ export const ModalTitle = forwardRef<HTMLHeadingElement, ModalTitleProps>(
 // Modal description component
 export const ModalDescription = forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, children, ...props }, ref) => {
-  const id = useId();
+  React.HTMLAttributes<HTMLParagraphElement> & { "data-testid"?: string }
+>(({ className, children, "data-testid": dataTestId, ...props }, ref) => {
   return (
     <p
       ref={ref}
       className={clsx("modal-description", className)}
-      data-testid={`${id}-modal-description`}
+      data-testid={dataTestId ?? "modal-description"}
       {...props}
     >
       {children}
@@ -300,14 +305,13 @@ export const ModalDescription = forwardRef<
 });
 
 // Modal body component
-export const ModalBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, children, ...props }, ref) => {
-    const id = useId();
+export const ModalBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { "data-testid"?: string }>(
+  ({ className, children, "data-testid": dataTestId, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={clsx("modal-body", className)}
-        data-testid={`${id}-modal-body`}
+        data-testid={dataTestId ?? "modal-body"}
         {...props}
       >
         {children}
@@ -317,14 +321,13 @@ export const ModalBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 
 // Modal footer component
-export const ModalFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, children, ...props }, ref) => {
-    const id = useId();
+export const ModalFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { "data-testid"?: string }>(
+  ({ className, children, "data-testid": dataTestId, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={clsx("modal-footer", className)}
-        data-testid={`${id}-modal-footer`}
+        data-testid={dataTestId ?? "modal-footer"}
         {...props}
       >
         {children}
@@ -336,11 +339,11 @@ export const ModalFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 // Modal trigger component
 export interface ModalTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
+  "data-testid"?: string;
 }
 
 export const ModalTrigger = forwardRef<HTMLButtonElement, ModalTriggerProps>(
-  ({ className, children, onClick, asChild = false, ...props }, ref) => {
-    const id = useId();
+  ({ className, children, onClick, asChild = false, "data-testid": dataTestId, ...props }, ref) => {
     if (asChild && React.isValidElement(children)) {
       return React.cloneElement(children, {
         ...children.props,
@@ -357,7 +360,7 @@ export const ModalTrigger = forwardRef<HTMLButtonElement, ModalTriggerProps>(
         ref={ref}
         className={clsx("modal-trigger", className)}
         onClick={onClick}
-        data-testid={`${id}-modal-trigger`}
+        data-testid={dataTestId ?? "modal-trigger"}
         {...props}
       >
         {children}
@@ -380,7 +383,6 @@ export const Modal: React.FC<ModalProps> = ({
   onOpenChange,
   children,
 }) => {
-  const id = useId();
   const { isOpen: uncontrolledOpen, open, close } = useModalState(defaultOpen, onOpenChange);
 
   // Use controlled state if provided, otherwise use internal state
@@ -444,7 +446,7 @@ export const Modal: React.FC<ModalProps> = ({
   });
 
   return (
-    <div className="modal-portal" data-testid={`${id}-modal-portal`}>
+    <div className="modal-portal" data-testid="modal-portal">
       {childrenWithProps}
     </div>
   );

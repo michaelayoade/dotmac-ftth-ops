@@ -4,9 +4,16 @@
  * Implements DRY principle by centralizing audit configuration and management
  */
 
-import React, { createContext, useContext, useEffect, ReactNode } from "react";
-import { useAuditLogger, UseAuditLoggerReturn } from "../hooks/useAuditLogger";
-import { AuditEventType, AuditOutcome, FrontendAuditEventType } from "../api/types/audit";
+import React, { createContext, useContext, useEffect } from "react";
+import type { ReactNode } from "react";
+import { useAuditLogger } from "../hooks/useAuditLogger";
+import type { UseAuditLoggerReturn } from "../hooks/useAuditLogger";
+import {
+  AuditEventType,
+  AuditOutcome,
+  FrontendAuditEventType,
+  AuditSeverity,
+} from "../api/types/audit";
 
 interface AuditContextType extends UseAuditLoggerReturn {
   serviceName: string;
@@ -49,6 +56,7 @@ export function AuditProvider({
         event_type: AuditEventType.SYSTEM_STARTUP,
         message: `Application ${serviceName} started`,
         outcome: AuditOutcome.SUCCESS,
+        severity: AuditSeverity.LOW,
         actor: { id: "system", type: "system" },
         context: {
           source: serviceName,

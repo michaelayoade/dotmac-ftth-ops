@@ -257,7 +257,7 @@ export function GlobalCommandPalette() {
                 <CommandItem
                   key={action.id}
                   onSelect={() => handleSelect(action.action)}
-                  keywords={action.keywords}
+                  {...(action.keywords ? { keywords: action.keywords } : {})}
                 >
                   <Icon className="mr-2 h-4 w-4" />
                   <span>{action.label}</span>

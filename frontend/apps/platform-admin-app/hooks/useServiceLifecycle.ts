@@ -94,7 +94,12 @@ export function useServiceInstances({
     queryKey: [
       "services",
       "instances",
-      { status, serviceType: serviceType ?? null, limit, offset },
+      {
+        ...(status !== undefined ? { status } : {}),
+        serviceType: serviceType ?? null,
+        limit,
+        offset
+      },
     ],
     queryFn: async () => {
       const response = await apiClient.get<ServiceInstanceSummary[]>(

@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Bot, Send, X, Minimize2, Maximize2, ThumbsUp, ThumbsDown, AlertCircle } from "lucide-react";
-import { Card } from "@dotmac/ui/components/card";
-import { Button } from "@dotmac/ui/components/button";
-import { Input } from "@dotmac/ui/components/input";
-import { ScrollArea } from "@dotmac/ui/components/scroll-area";
-import { Badge } from "@dotmac/ui/components/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@dotmac/ui/components/tooltip";
+import { Card } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { ScrollArea } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@dotmac/ui";
 
 interface Message {
   role: "user" | "assistant";

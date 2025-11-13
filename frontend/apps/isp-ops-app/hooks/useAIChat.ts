@@ -24,8 +24,8 @@ export interface ChatSession {
 
 export interface SendMessageRequest {
   message: string;
-  session_id?: number;
-  context?: Record<string, any>;
+  session_id?: number | undefined;
+  context?: Record<string, any> | undefined;
 }
 
 export interface SendMessageResponse {
@@ -39,15 +39,20 @@ export interface SendMessageResponse {
 }
 
 export interface CreateSessionRequest {
-  session_type?: "customer_support" | "admin_assistant" | "network_diagnostics" | "analytics";
-  context?: Record<string, any>;
-  customer_id?: number;
+  session_type?:
+    | "customer_support"
+    | "admin_assistant"
+    | "network_diagnostics"
+    | "analytics"
+    | undefined;
+  context?: Record<string, any> | undefined;
+  customer_id?: number | undefined;
 }
 
 export interface SubmitFeedbackRequest {
   session_id: number;
   rating: number;
-  feedback?: string;
+  feedback?: string | undefined;
 }
 
 /**

@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 // Types
 export interface Territory {
@@ -320,7 +321,11 @@ export const useTerritory = (options: UseTerritoryOptions) => {
   const [selectedTerritoryId, setSelectedTerritoryId] = useState<string | null>(null);
 
   // Query configuration
-  const queryConfig = {
+  type SharedQueryConfig = Pick<
+    UseQueryOptions<unknown, Error, unknown, any>,
+    "staleTime" | "cacheTime" | "refetchInterval" | "retry" | "enabled"
+  >;
+  const queryConfig: SharedQueryConfig = {
     staleTime: 60000, // 1 minute
     cacheTime: 300000, // 5 minutes
     refetchInterval: autoRefresh ? refreshInterval : false,

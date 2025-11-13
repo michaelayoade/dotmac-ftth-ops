@@ -4,8 +4,8 @@
  */
 
 import { useCallback, useMemo } from "react";
-import {
-  useAppStore,
+import { useAppStore } from "@dotmac/headless/stores";
+import type {
   FilterState,
   PaginationState,
   SelectionState,
@@ -48,28 +48,28 @@ export const useAppNotifications = () => {
 
   const addSuccess = useCallback(
     (message: string) => {
-      addNotification({ type: "success", message });
+      addNotification({ type: "success", title: "Success", message });
     },
     [addNotification],
   );
 
   const addError = useCallback(
     (message: string) => {
-      addNotification({ type: "error", message });
+      addNotification({ type: "error", title: "Error", message });
     },
     [addNotification],
   );
 
   const addWarning = useCallback(
     (message: string) => {
-      addNotification({ type: "warning", message });
+      addNotification({ type: "warning", title: "Warning", message });
     },
     [addNotification],
   );
 
   const addInfo = useCallback(
     (message: string) => {
-      addNotification({ type: "info", message });
+      addNotification({ type: "info", title: "Info", message });
     },
     [addNotification],
   );
@@ -412,7 +412,7 @@ export const useDataTable = <T = string>(context: string) => {
 // Hook for form state patterns
 export const useFormState = (context: string) => {
   const loading = useLoading(context);
-  const { addSuccess, addError } = useNotifications();
+  const { addSuccess, addError } = useAppNotifications();
 
   const handleSubmit = useCallback(
     async (

@@ -8,8 +8,7 @@ import * as ToastPrimitive from "@radix-ui/react-toast";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
-import type React from "react";
-import { createContext, forwardRef, useCallback, useContext, useState } from "react";
+import React, { createContext, forwardRef, useCallback, useContext, useEffect, useState } from "react";
 
 // Toast variants
 const toastVariants = cva("", {
@@ -80,6 +79,144 @@ const loadingVariants = cva("", {
     size: "md",
   },
 });
+
+const feedbackVariants = cva(
+  "feedback relative flex flex-col gap-3 rounded-lg border bg-background p-4 text-sm shadow-sm",
+  {
+    variants: {
+      variant: {
+        default: "variant-default border-border text-foreground",
+        success: "variant-success border-emerald-200 bg-emerald-50 text-emerald-900",
+        error: "variant-error border-red-200 bg-red-50 text-red-900",
+        warning: "variant-warning border-amber-200 bg-amber-50 text-amber-900",
+        info: "variant-info border-blue-200 bg-blue-50 text-blue-900",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+export interface FeedbackProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof feedbackVariants> {
+  dismissible?: boolean;
+  onDismiss?: () => void;
+  autoHide?: boolean;
+  autoHideDelay?: number;
+  loading?: boolean;
+}
+
+export const Feedback = forwardRef<HTMLDivElement, FeedbackProps>(
+  (
+    {
+      className,
+      variant,
+      dismissible = false,
+      onDismiss,
+      autoHide = false,
+      autoHideDelay = 5000,
+      loading = false,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const [visible, setVisible] = useState(true);
+
+    const handleDismiss = useCallback(() => {
+      if (!visible) {
+        return;
+      }
+      onDismiss?.();
+      setVisible(false);
+    }, [onDismiss, visible]);
+
+    useEffect(() => {
+      if (!autoHide || !visible) {
+        return;
+      }
+
+      const timer = setTimeout(() => {
+        handleDismiss();
+      }, autoHideDelay);
+
+      return () => clearTimeout(timer);
+    }, [autoHide, autoHideDelay, handleDismiss, visible]);
+
+    if (!visible) {
+      return null;
+    }
+
+    return (
+      <div ref={ref} className={clsx(feedbackVariants({ variant }), className)} {...props}>
+        <div className="flex flex-col gap-2">{children}</div>
+        {loading ? (
+          <div
+            role="progressbar"
+            aria-hidden="true"
+            className="feedback-loading h-1 w-full overflow-hidden rounded bg-muted"
+          >
+            <span className="sr-only">Loading</span>
+          </div>
+        ) : null}
+        {dismissible ? (
+          <button
+            type="button"
+            className="feedback-dismiss absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={handleDismiss}
+            aria-label="Dismiss feedback"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+    );
+  },
+);
+Feedback.displayName = "Feedback";
+
+type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+
+export interface FeedbackTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  as?: HeadingTag;
+}
+
+export const FeedbackTitle = forwardRef<HTMLHeadingElement, FeedbackTitleProps>(
+  ({ as: Tag = "h3", className, ...props }, ref) => {
+    const Component = Tag;
+    return React.createElement(Component, {
+      ...props,
+      ref,
+      className: clsx("feedback-title font-semibold leading-snug", className),
+    });
+  },
+);
+FeedbackTitle.displayName = "FeedbackTitle";
+
+export const FeedbackDescription = forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={clsx("feedback-description text-sm text-muted-foreground", className)}
+    {...props}
+  />
+));
+FeedbackDescription.displayName = "FeedbackDescription";
+
+export const FeedbackActions = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={clsx("feedback-actions flex flex-wrap gap-2", className)}
+      {...props}
+    />
+  ),
+);
+FeedbackActions.displayName = "FeedbackActions";
 
 // Toast Context
 interface ToastContextValue {

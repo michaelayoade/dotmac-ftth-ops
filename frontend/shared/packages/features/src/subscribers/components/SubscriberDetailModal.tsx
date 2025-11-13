@@ -7,7 +7,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
@@ -16,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
+import { format } from "date-fns";
 import {
   User,
   MapPin,
@@ -35,7 +35,7 @@ import {
   Ban,
   XCircle,
 } from "lucide-react";
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
 
 export type SubscriberStatus = "active" | "suspended" | "pending" | "inactive" | "terminated";
 export type ConnectionType = "ftth" | "fttb" | "wireless" | "hybrid";

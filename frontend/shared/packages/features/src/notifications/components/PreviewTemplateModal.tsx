@@ -6,8 +6,6 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { Eye, Code, Copy, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +19,9 @@ import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
+import { Eye, Code, Copy, Check } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+
 import { sanitizeRichHtml } from "../../utils/sanitize";
 
 export interface RenderedTemplateContent {

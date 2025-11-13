@@ -1,11 +1,12 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
-import { ArrowUpRight, AlertCircle, TrendingUp } from "lucide-react";
-import { cn } from "../lib/utils";
 import { AnimatedCounter, AnimatedCard, FadeInWhenVisible } from "@dotmac/primitives";
+import { AlertCircle, ArrowUpRight, TrendingUp, type LucideIcon } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
+
+import { cn } from "../lib/utils";
+
 
 interface MetricCardEnhancedProps {
   title: string;

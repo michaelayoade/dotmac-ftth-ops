@@ -38,6 +38,7 @@ import type {
   EquipmentStatus,
   VehicleStatus,
   ResourceFilter,
+  AssignResourceData,
 } from "@/types/field-service";
 import { format, parseISO, isPast } from "date-fns";
 
@@ -275,26 +276,38 @@ interface AssignmentModalProps {
   resourceType: "equipment" | "vehicle";
   resourceId: string;
   onClose: () => void;
-  onAssign: (data: any) => void;
 }
 
-function AssignmentModal({ resourceType, resourceId, onClose, onAssign }: AssignmentModalProps) {
+function AssignmentModal({ resourceType, resourceId, onClose }: AssignmentModalProps) {
   const [technicianId, setTechnicianId] = useState("");
   const [expectedReturn, setExpectedReturn] = useState("");
   const [notes, setNotes] = useState("");
 
   const { data: techniciansData } = useTechnicians();
-  const assignMutation = useAssignResource();
+  const assignResourceMutation = useAssignResource();
 
   const handleSubmit = async () => {
-    const data = {
-      technicianId,
-      [resourceType === "equipment" ? "equipmentId" : "vehicleId"]: resourceId,
-      expectedReturnAt: expectedReturn || null,
-      assignmentNotes: notes || null,
-    };
+    if (!technicianId) {
+      return;
+    }
 
-    await assignMutation.mutateAsync(data);
+    const payload: AssignResourceData = {
+      technicianId,
+    };
+    if (resourceType === "equipment") {
+      payload.equipmentId = resourceId;
+    } else {
+      payload.vehicleId = resourceId;
+    }
+    const trimmedNotes = notes.trim();
+    if (trimmedNotes) {
+      payload.assignmentNotes = trimmedNotes;
+    }
+    if (expectedReturn) {
+      payload.expectedReturnAt = expectedReturn;
+    }
+
+    await assignResourceMutation.mutateAsync(payload);
     onClose();
   };
 
@@ -344,9 +357,9 @@ function AssignmentModal({ resourceType, resourceId, onClose, onAssign }: Assign
             <Button
               className="flex-1"
               onClick={handleSubmit}
-              disabled={!technicianId || assignMutation.isPending}
+              disabled={!technicianId || assignResourceMutation.isPending}
             >
-              {assignMutation.isPending ? "Assigning..." : "Assign"}
+              {assignResourceMutation.isPending ? "Assigning..." : "Assign"}
             </Button>
             <Button className="flex-1" variant="outline" onClick={onClose}>
               Cancel
@@ -370,7 +383,6 @@ export default function ResourcesPage() {
 
   const { data: equipmentData, isLoading: loadingEquipment } = useEquipment(filter);
   const { data: vehiclesData, isLoading: loadingVehicles } = useVehicles(filter);
-  const assignMutation = useAssignResource();
 
   const equipment = equipmentData?.equipment || [];
   const vehicles = vehiclesData?.vehicles || [];
@@ -387,11 +399,6 @@ export default function ResourcesPage() {
     available: vehicles.filter((v) => v.status === "available").length,
     inUse: vehicles.filter((v) => v.status === "in_use").length,
     maintenance: vehicles.filter((v) => v.status === "maintenance" || v.status === "repair").length,
-  };
-
-  const handleAssign = async (data: any) => {
-    await assignMutation.mutateAsync(data);
-    setAssigningResource(null);
   };
 
   return (
@@ -548,7 +555,6 @@ export default function ResourcesPage() {
           resourceType={assigningResource.type}
           resourceId={assigningResource.id}
           onClose={() => setAssigningResource(null)}
-          onAssign={handleAssign}
         />
       )}
     </div>

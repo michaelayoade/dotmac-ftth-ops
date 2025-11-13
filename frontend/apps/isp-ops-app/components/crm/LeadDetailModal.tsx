@@ -104,22 +104,19 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
     }
   };
 
-  const sharedProps: SharedLeadDetailModalProps = {
-    isOpen,
-    onClose,
-    lead: lead as any,
-    quotes,
-    surveys,
-    onSave: handleSave,
-    onQualify: handleQualify,
-    onDisqualify: handleDisqualify,
-    onConvert: handleConvert,
-    isSaving,
-  };
-
-  if (onUpdate) {
-    sharedProps.onUpdate = onUpdate;
-  }
-
-  return <SharedLeadDetailModal {...sharedProps} />;
+  return (
+    <SharedLeadDetailModal
+      isOpen={isOpen}
+      onClose={onClose}
+      lead={lead as any}
+      quotes={quotes as any}
+      surveys={surveys as any}
+      onSave={handleSave}
+      onQualify={handleQualify}
+      onDisqualify={handleDisqualify}
+      onConvert={handleConvert}
+      isSaving={isSaving}
+      onUpdate={onUpdate || (() => {})}
+    />
+  );
 }

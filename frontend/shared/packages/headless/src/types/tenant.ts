@@ -192,18 +192,24 @@ export interface TenantUser {
 
 export interface TenantSession {
   tenant: ISPTenant;
-  user: TenantUser;
-  portal_type: "ADMIN" | "CUSTOMER" | "RESELLER" | "TECHNICIAN";
-  permissions: string[];
-  features: string[];
-  limits: Record<string, number>;
-  branding: {
+  user: TenantUser | null;
+  portal_type?: "ADMIN" | "CUSTOMER" | "RESELLER" | "TECHNICIAN";
+  permissions?: string[];
+  features?: string[];
+  limits?: Record<string, number>;
+  branding?: {
     logo_url?: string;
     primary_color: string;
     secondary_color: string;
     company_name: string;
     white_label: boolean;
   };
+  isActive?: boolean;
+  expiresAt?: string;
+  lastActivity?: string;
+  sessionId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TenantPermissions {
@@ -310,6 +316,7 @@ export interface TenantNotification {
   action_url?: string;
   expires_at?: string;
   created_at: string;
+  read_at?: string;
   read: boolean;
 }
 

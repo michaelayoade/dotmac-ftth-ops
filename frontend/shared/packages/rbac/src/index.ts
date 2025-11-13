@@ -3,6 +3,8 @@
  * Provides React components and hooks for permission-based UI rendering
  */
 
+import { useCallback, useMemo } from "react";
+
 // Export types
 export interface Role {
   id: string;
@@ -24,30 +26,45 @@ export interface User {
 
 // Export hooks and components (placeholder implementations)
 export const usePermissions = () => {
-  return {
-    hasPermission: (permission: string): boolean => {
-      // Implementation will be added later
-      console.log("Checking permission:", permission);
-      return true; // Placeholder
-    },
-    hasRole: (role: string): boolean => {
-      // Implementation will be added later
-      console.log("Checking role:", role);
-      return true; // Placeholder
-    },
-  };
+  const hasPermission = useCallback((permission: string): boolean => {
+    // Implementation will be added later
+    console.log("Checking permission:", permission);
+    return true; // Placeholder
+  }, []);
+
+  const hasRole = useCallback((role: string): boolean => {
+    // Implementation will be added later
+    console.log("Checking role:", role);
+    return true; // Placeholder
+  }, []);
+
+  return useMemo(
+    () => ({
+      hasPermission,
+      hasRole,
+    }),
+    [hasPermission, hasRole],
+  );
 };
 
 export const useRBAC = () => {
   const permissions = usePermissions();
 
-  return {
-    ...permissions,
-    canAccess: (resource: string, action: string): boolean => {
+  const canAccess = useCallback(
+    (resource: string, action: string): boolean => {
       const permission = `${resource}:${action}`;
       return permissions.hasPermission(permission);
     },
-  };
+    [permissions],
+  );
+
+  return useMemo(
+    () => ({
+      ...permissions,
+      canAccess,
+    }),
+    [permissions, canAccess],
+  );
 };
 
 // Utility functions

@@ -8,7 +8,6 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
@@ -24,6 +23,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export interface MetricsData {
   subscriber_metrics: {

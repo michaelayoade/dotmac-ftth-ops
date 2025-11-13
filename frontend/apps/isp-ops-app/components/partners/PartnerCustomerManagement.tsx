@@ -34,13 +34,21 @@ export default function PartnerCustomerManagement({
     e.preventDefault();
 
     try {
-      const result = await createPartnerCustomer.mutateAsync({
+      const payload: {
+        partnerId: string;
+        customerData: PartnerCustomerInput;
+        engagementType?: string;
+        customCommissionRate?: number;
+        tenantId?: string;
+      } = {
         partnerId,
         customerData: formData,
-        engagementType,
-        customCommissionRate,
-        tenantId,
-      });
+      };
+      if (engagementType) payload.engagementType = engagementType;
+      if (customCommissionRate !== undefined) payload.customCommissionRate = customCommissionRate;
+      if (tenantId) payload.tenantId = tenantId;
+
+      const result = await createPartnerCustomer.mutateAsync(payload);
 
       alert(
         `Customer created successfully!\nCustomer ID: ${result.customer_id}\nQuota remaining: ${result.quota_remaining}`,

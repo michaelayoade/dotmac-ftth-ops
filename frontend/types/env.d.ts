@@ -56,6 +56,7 @@ declare namespace NodeJS {
     NEXT_PUBLIC_ERROR_ENDPOINT?: string;
     NEXT_PUBLIC_FAVICON?: string;
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?: string;
+    NEXT_PUBLIC_GRAPHQL_URL?: string;
     NEXT_PUBLIC_JWT_AUDIENCE?: string;
     NEXT_PUBLIC_JWT_ISSUER?: string;
     NEXT_PUBLIC_MANAGEMENT_API_URL?: string;
@@ -63,6 +64,7 @@ declare namespace NodeJS {
     NEXT_PUBLIC_MSW_ENABLED?: string;
     NEXT_PUBLIC_OTEL_ENDPOINT?: string;
     NEXT_PUBLIC_TENANT_ID?: string;
+    NEXT_PUBLIC_TENANT_NAME?: string;
     NEXT_PUBLIC_WEBSOCKET_URL?: string;
     NEXT_PUBLIC_WS_URL?: string;
     NODE_ENV?: "development" | "production" | "test";
@@ -79,6 +81,7 @@ declare namespace NodeJS {
     RATE_LIMIT_ENABLED?: string;
     RATE_LIMIT_MAX_ATTEMPTS?: string;
     RATE_LIMIT_WINDOW?: string;
+    TENANT_SLUG?: string;
     REACT_APP_ACCENT_COLOR?: string;
     REACT_APP_BRAND_COLOR?: string;
     REACT_APP_BRAND_NAME?: string;

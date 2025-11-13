@@ -5,6 +5,7 @@
  */
 
 import { Badge } from "@dotmac/ui";
+
 import type { Lead, Quote, SiteSurvey } from "../types";
 
 export function LeadStatusBadge({ status }: { status: Lead["status"] }) {

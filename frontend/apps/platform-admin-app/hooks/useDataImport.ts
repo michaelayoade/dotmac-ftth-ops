@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useToast } from "@dotmac/ui";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 // Types matching backend models
 export type ImportJobType = "customers" | "invoices" | "subscriptions" | "payments" | "products" | "mixed";
@@ -69,6 +69,10 @@ export function useDataImport() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [pollingJobId, setPollingJobId] = useState<string | null>(null);
+  const { api } = useAppConfig();
+  const buildUrl = api.buildUrl;
+  const apiBaseUrl = api.baseUrl;
+  const apiPrefix = api.prefix;
 
   // Upload import file
   const uploadMutation = useMutation({
@@ -79,7 +83,7 @@ export function useDataImport() {
       formData.append("dry_run", String(params.dry_run || false));
       formData.append("use_async", String(params.use_async || true));
 
-      const url = platformConfig.api.buildUrl(`/data-import/upload/${params.entity_type}`);
+      const url = buildUrl(`/data-import/upload/${params.entity_type}`);
       const response = await fetch(url, {
         method: "POST",
         body: formData,
@@ -122,7 +126,7 @@ export function useDataImport() {
     offset?: number;
   }) => {
     return useQuery({
-      queryKey: ["import-jobs", params],
+      queryKey: ["import-jobs", params, apiBaseUrl, apiPrefix],
       queryFn: async () => {
         const searchParams = new URLSearchParams();
         if (params?.status) searchParams.append("status", params.status);
@@ -130,7 +134,7 @@ export function useDataImport() {
         if (params?.limit) searchParams.append("limit", String(params.limit));
         if (params?.offset) searchParams.append("offset", String(params.offset));
 
-        const url = platformConfig.api.buildUrl(`/data-import/jobs?${searchParams.toString()}`);
+        const url = buildUrl(`/data-import/jobs?${searchParams.toString()}`);
         const response = await fetch(url, {
           credentials: "include",
         });
@@ -148,11 +152,11 @@ export function useDataImport() {
   // Get single import job
   const useImportJob = (jobId: string | null) => {
     return useQuery({
-      queryKey: ["import-job", jobId],
+      queryKey: ["import-job", jobId, apiBaseUrl, apiPrefix],
       queryFn: async () => {
         if (!jobId) return null;
 
-        const url = platformConfig.api.buildUrl(`/data-import/jobs/${jobId}`);
+        const url = buildUrl(`/data-import/jobs/${jobId}`);
         const response = await fetch(url, {
           credentials: "include",
         });
@@ -178,11 +182,11 @@ export function useDataImport() {
   // Get import job status
   const useImportJobStatus = (jobId: string | null) => {
     return useQuery({
-      queryKey: ["import-job-status", jobId],
+      queryKey: ["import-job-status", jobId, apiBaseUrl, apiPrefix],
       queryFn: async () => {
         if (!jobId) return null;
 
-        const url = platformConfig.api.buildUrl(`/data-import/jobs/${jobId}/status`);
+        const url = buildUrl(`/data-import/jobs/${jobId}/status`);
         const response = await fetch(url, {
           credentials: "include",
         });
@@ -207,11 +211,11 @@ export function useDataImport() {
   // Get import failures
   const useImportFailures = (jobId: string | null) => {
     return useQuery({
-      queryKey: ["import-failures", jobId],
+      queryKey: ["import-failures", jobId, apiBaseUrl, apiPrefix],
       queryFn: async () => {
         if (!jobId) return [];
 
-        const url = platformConfig.api.buildUrl(`/data-import/jobs/${jobId}/failures`);
+        const url = buildUrl(`/data-import/jobs/${jobId}/failures`);
         const response = await fetch(url, {
           credentials: "include",
         });
@@ -229,7 +233,7 @@ export function useDataImport() {
   // Cancel import job
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      const url = platformConfig.api.buildUrl(`/data-import/jobs/${jobId}`);
+      const url = buildUrl(`/data-import/jobs/${jobId}`);
       const response = await fetch(url, {
         method: "DELETE",
         credentials: "include",
@@ -261,7 +265,7 @@ export function useDataImport() {
   // Download failures
   const downloadFailures = async (jobId: string, format: "csv" | "json" = "csv") => {
     try {
-      const url = platformConfig.api.buildUrl(`/data-import/jobs/${jobId}/export-failures?format=${format}`);
+      const url = buildUrl(`/data-import/jobs/${jobId}/export-failures?format=${format}`);
       const response = await fetch(url, {
         credentials: "include",
       });

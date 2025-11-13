@@ -8,7 +8,7 @@ import { useHealth } from "@/hooks/useHealth";
 import { useSystemHealth } from "@/hooks/useOperations";
 import { useNetboxHealth } from "@/hooks/useNetworkInventory";
 import { useRBAC } from "@/contexts/RBACContext";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type NormalizedStatus = "healthy" | "degraded" | "unhealthy" | "unknown";
 
@@ -56,8 +56,8 @@ export default function InfrastructureStatusPage() {
     refetch: refetchSystemHealth,
   } = useSystemHealth();
 
-  const shouldQueryNetbox =
-    platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const shouldQueryNetbox = features.enableNetwork && hasPermission("isp.ipam.read");
 
   const {
     data: netboxHealth,

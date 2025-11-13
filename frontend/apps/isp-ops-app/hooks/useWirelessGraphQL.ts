@@ -37,13 +37,13 @@ import {
 // ============================================================================
 
 export interface UseAccessPointListOptions {
-  limit?: number;
-  offset?: number;
-  status?: AccessPointStatus;
-  siteId?: string;
-  search?: string;
-  enabled?: boolean;
-  pollInterval?: number;
+  limit?: number | undefined;
+  offset?: number | undefined;
+  status?: AccessPointStatus | undefined;
+  siteId?: string | undefined;
+  search?: string | undefined;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useAccessPointListGraphQL(options: UseAccessPointListOptions = {}) {
@@ -92,8 +92,8 @@ export function useAccessPointListGraphQL(options: UseAccessPointListOptions = {
 
 export interface UseAccessPointDetailOptions {
   id: string;
-  enabled?: boolean;
-  pollInterval?: number;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useAccessPointDetailGraphQL(options: UseAccessPointDetailOptions) {

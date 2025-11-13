@@ -31,11 +31,15 @@ import {
 } from "@/hooks/useCustomerPortal";
 
 export default function CustomerDashboard() {
-  const { profile, loading: profileLoading } = useCustomerProfile();
-  const { service, loading: serviceLoading } = useCustomerService();
+  const { profile: rawProfile, loading: profileLoading } = useCustomerProfile();
+  const { service: rawService, loading: serviceLoading } = useCustomerService();
   const { usage, loading: usageLoading } = useCustomerUsage();
   const { invoices, loading: invoicesLoading } = useCustomerInvoices();
   const { tickets, loading: ticketsLoading } = useCustomerTickets();
+
+  // Type assertions to work around inference issues
+  const profile = rawProfile as any;
+  const service = rawService as any;
 
   const loading =
     profileLoading || serviceLoading || usageLoading || invoicesLoading || ticketsLoading;

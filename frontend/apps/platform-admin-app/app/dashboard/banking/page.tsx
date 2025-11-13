@@ -23,7 +23,7 @@ import {
   FileText,
   CheckSquare,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 
@@ -87,6 +87,8 @@ const paymentMethods = [
 
 export default function BankingPage() {
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
   const [activeTab, setActiveTab] = useState("accounts");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<BankAccountSummary | null>(null);
@@ -138,7 +140,7 @@ export default function BankingPage() {
   const loadBankAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/bank-accounts`, {
         credentials: "include",
       });
 
@@ -158,12 +160,12 @@ export default function BankingPage() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [apiBaseUrl, toast]);
 
   const loadAccountSummary = useCallback(async (accountId: number) => {
     try {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`,
+        `${apiBaseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`,
         {
           credentials: "include",
         },
@@ -183,12 +185,12 @@ export default function BankingPage() {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [apiBaseUrl, toast]);
 
   const loadManualPayments = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/payments/search`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/payments/search`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -213,7 +215,7 @@ export default function BankingPage() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [apiBaseUrl, toast]);
 
   useEffect(() => {
     if (activeTab === "accounts") {
@@ -225,7 +227,7 @@ export default function BankingPage() {
 
   const handleCreateAccount = async () => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/bank-accounts`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -259,7 +261,7 @@ export default function BankingPage() {
 
   const handleRecordPayment = async () => {
     try {
-      const endpoint = `${platformConfig.api.baseUrl}/api/v1/billing/payments/${selectedPaymentMethod.replace("_", "-")}`;
+      const endpoint = `${apiBaseUrl}/api/v1/billing/payments/${selectedPaymentMethod.replace("_", "-")}`;
 
       const paymentData = {
         ...paymentForm,
@@ -302,7 +304,7 @@ export default function BankingPage() {
   const handleVerifyAccount = async (accountId: number) => {
     try {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/verify`,
+        `${apiBaseUrl}/api/v1/billing/bank-accounts/${accountId}/verify`,
         {
           method: "POST",
           credentials: "include",
@@ -334,7 +336,7 @@ export default function BankingPage() {
   const handleVerifyPayment = async (paymentId: number) => {
     try {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/payments/${paymentId}/verify`,
+        `${apiBaseUrl}/api/v1/billing/payments/${paymentId}/verify`,
         {
           method: "POST",
           credentials: "include",

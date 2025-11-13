@@ -307,9 +307,13 @@ export function useNotifications(options?: {
 
       // Update local state
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: false, read_at: undefined } : n,
-        ),
+        prev.map((n) => {
+          if (n.id !== notificationId) {
+            return n;
+          }
+          const { read_at: _ignored, ...rest } = n;
+          return { ...rest, is_read: false };
+        }),
       );
       setUnreadCount((prev) => prev + 1);
 

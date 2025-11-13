@@ -54,11 +54,11 @@ function MetricCard({
       <div className="bg-card border border-border p-6 rounded-lg">
         <div className="animate-pulse">
           <div className="flex items-center justify-between mb-4">
-            <div className="h-4 bg-muted rounded w-24"></div>
-            <div className="h-8 w-8 bg-muted rounded"></div>
+            <div className="h-4 bg-muted rounded w-24" />
+            <div className="h-8 w-8 bg-muted rounded" />
           </div>
-          <div className="h-8 bg-muted rounded w-20 mb-2"></div>
-          <div className="h-4 bg-muted rounded w-16"></div>
+          <div className="h-8 bg-muted rounded w-20 mb-2" />
+          <div className="h-4 bg-muted rounded w-16" />
         </div>
       </div>
     );
@@ -176,7 +176,7 @@ export default function CustomersMetrics({ metrics, loading }: CustomersMetricsP
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-3 h-3 rounded-full ${statusColors[status] || "bg-muted"}`}
-                    ></div>
+                     />
                     <span className="text-foreground capitalize">{status}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ export default function CustomersMetrics({ metrics, loading }: CustomersMetricsP
               return (
                 <div key={tier} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${tierColors[tier] || "bg-muted"}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${tierColors[tier] || "bg-muted"}`} />
                     <span className="text-foreground capitalize">{tier}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export default function CustomersMetrics({ metrics, loading }: CustomersMetricsP
               return (
                 <div key={type} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${typeColors[type] || "bg-muted"}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${typeColors[type] || "bg-muted"}`} />
                     <span className="text-foreground capitalize">{type}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export default function CustomersMetrics({ metrics, loading }: CustomersMetricsP
                 className="flex items-center justify-between p-3 bg-muted rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full" />
                   <span className="text-foreground font-medium">
                     {segment.name || "Unknown Segment"}
                   </span>

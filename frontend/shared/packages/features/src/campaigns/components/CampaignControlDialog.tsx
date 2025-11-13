@@ -7,7 +7,6 @@
 
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,7 @@ import { Button } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
 
 export interface DunningCampaign {
   id: string;

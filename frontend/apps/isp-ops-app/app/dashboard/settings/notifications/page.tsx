@@ -740,11 +740,11 @@ export default function NotificationSettingsPage() {
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-8">
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={
+                            checked={Boolean(
                               preferences.email.categories[
                                 category.id as keyof typeof preferences.email.categories
-                              ]
-                            }
+                              ],
+                            )}
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("email", category.id, checked)
                             }
@@ -754,11 +754,11 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={
+                            checked={Boolean(
                               preferences.push.categories[
                                 category.id as keyof typeof preferences.push.categories
-                              ]
-                            }
+                              ],
+                            )}
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("push", category.id, checked)
                             }
@@ -768,11 +768,11 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={
+                            checked={Boolean(
                               preferences.inApp.categories[
                                 category.id as keyof typeof preferences.inApp.categories
-                              ]
-                            }
+                              ],
+                            )}
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("inApp", category.id, checked)
                             }
@@ -782,11 +782,11 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={
+                            checked={Boolean(
                               preferences.sms.categories[
                                 category.id as keyof typeof preferences.sms.categories
-                              ]
-                            }
+                              ],
+                            )}
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("sms", category.id, checked)
                             }
@@ -796,11 +796,11 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={
+                            checked={Boolean(
                               preferences.slack.categories[
                                 category.id as keyof typeof preferences.slack.categories
-                              ]
-                            }
+                              ],
+                            )}
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("slack", category.id, checked)
                             }

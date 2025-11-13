@@ -180,9 +180,9 @@ export function DeviceList({
                   <DeviceRow
                     key={device.id}
                     device={device}
-                    onEdit={onEditDevice}
-                    onDelete={onDeleteDevice}
-                    onViewMetrics={onViewMetrics}
+                    {...(onEditDevice ? { onEdit: onEditDevice } : {})}
+                    {...(onDeleteDevice ? { onDelete: onDeleteDevice } : {})}
+                    {...(onViewMetrics ? { onViewMetrics } : {})}
                   />
                 ))
               )}

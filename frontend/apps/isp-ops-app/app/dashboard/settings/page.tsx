@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 const toError = (error: unknown) =>
@@ -216,7 +217,7 @@ interface TenantStats {
 
 function SettingsHubPageContent() {
   const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const [tenantStats, setTenantStats] = useState<TenantStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 

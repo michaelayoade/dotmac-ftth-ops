@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   RefreshCw,
   Plus,
@@ -131,12 +131,14 @@ const getStatusColor = (status: DunningExecution["status"]): string => {
 function DunningManagementContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   const { data: stats, isLoading: statsLoading } = useQuery<DunningStats>({
-    queryKey: ["dunning", "stats"],
+    queryKey: ["dunning", "stats", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/stats`,
+        `${apiBaseUrl}/api/v1/billing/dunning/stats`,
         {
           credentials: "include",
         }
@@ -152,10 +154,10 @@ function DunningManagementContent() {
   const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<
     DunningCampaign[]
   >({
-    queryKey: ["dunning", "campaigns"],
+    queryKey: ["dunning", "campaigns", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns`,
         {
           credentials: "include",
         }
@@ -171,10 +173,10 @@ function DunningManagementContent() {
   const { data: executions = [], isLoading: executionsLoading } = useQuery<
     DunningExecution[]
   >({
-    queryKey: ["dunning", "executions"],
+    queryKey: ["dunning", "executions", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/executions`,
+        `${apiBaseUrl}/api/v1/billing/dunning/executions`,
         {
           credentials: "include",
         }
@@ -196,7 +198,7 @@ function DunningManagementContent() {
       isActive: boolean;
     }) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           method: "PATCH",
           credentials: "include",

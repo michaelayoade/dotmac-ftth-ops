@@ -18,47 +18,52 @@ import {
 } from "../Chart";
 
 // Mock Recharts to avoid canvas dependencies in tests
-jest.mock("recharts", () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="responsive-container">{children}</div>
-  ),
-  LineChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
-    <div data-testid="line-chart" data-chart-items={data.length}>
-      {children}
-    </div>
-  ),
-  BarChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
-    <div data-testid="bar-chart" data-chart-items={data.length}>
-      {children}
-    </div>
-  ),
-  AreaChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
-    <div data-testid="area-chart" data-chart-items={data.length}>
-      {children}
-    </div>
-  ),
-  PieChart: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="pie-chart">{children}</div>
-  ),
-  CartesianGrid: () => <div data-testid="cartesian-grid" />,
-  XAxis: ({ dataKey }: { dataKey: string }) => <div data-testid="x-axis" data-key={dataKey} />,
-  YAxis: ({ domain }: { domain?: unknown }) => <div data-testid="y-axis" data-domain={domain} />,
-  tooltip: () => <div data-testid="tooltip" />,
-  Legend: () => <div data-testid="legend" />,
-  Line: ({ dataKey, stroke }: { dataKey: string; stroke?: string }) => (
-    <div data-testid={`line-${dataKey}`} data-stroke={stroke} />
-  ),
-  Bar: ({ dataKey, fill }: { dataKey: string; fill?: string }) => (
-    <div data-testid={`bar-${dataKey}`} data-fill={fill} />
-  ),
-  Area: ({ dataKey, fill }: { dataKey: string; fill?: string }) => (
-    <div data-testid={`area-${dataKey}`} data-fill={fill} />
-  ),
-  Pie: ({ data, dataKey }: { data: unknown[]; dataKey: string }) => (
-    <div data-testid="pie" data-key={dataKey} data-items={data.length} />
-  ),
-  Cell: ({ fill }: { fill: string }) => <div data-testid="pie-cell" data-fill={fill} />,
-}));
+jest.mock("recharts", () => {
+  const mockModule = {
+    __esModule: true,
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="responsive-container">{children}</div>
+    ),
+    LineChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
+      <div data-testid="line-chart" data-chart-items={data.length}>
+        {children}
+      </div>
+    ),
+    BarChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
+      <div data-testid="bar-chart" data-chart-items={data.length}>
+        {children}
+      </div>
+    ),
+    AreaChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
+      <div data-testid="area-chart" data-chart-items={data.length}>
+        {children}
+      </div>
+    ),
+    PieChart: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="pie-chart">{children}</div>
+    ),
+    CartesianGrid: () => <div data-testid="cartesian-grid" />,
+    XAxis: ({ dataKey }: { dataKey: string }) => <div data-testid="x-axis" data-key={dataKey} />,
+    YAxis: ({ domain }: { domain?: unknown }) => <div data-testid="y-axis" data-domain={domain} />,
+    Tooltip: () => <div data-testid="tooltip" />,
+    Legend: () => <div data-testid="legend" />,
+    Line: ({ dataKey, stroke }: { dataKey: string; stroke?: string }) => (
+      <div data-testid={`line-${dataKey}`} data-stroke={stroke} />
+    ),
+    Bar: ({ dataKey, fill }: { dataKey: string; fill?: string }) => (
+      <div data-testid={`bar-${dataKey}`} data-fill={fill} />
+    ),
+    Area: ({ dataKey, fill }: { dataKey: string; fill?: string }) => (
+      <div data-testid={`area-${dataKey}`} data-fill={fill} />
+    ),
+    Pie: ({ data, dataKey }: { data: unknown[]; dataKey: string }) => (
+      <div data-testid="pie" data-key={dataKey} data-items={data.length} />
+    ),
+    Cell: ({ fill }: { fill: string }) => <div data-testid="pie-cell" data-fill={fill} />,
+  };
+
+  return { ...mockModule, default: mockModule };
+});
 
 // Sample test data
 const sampleData = [

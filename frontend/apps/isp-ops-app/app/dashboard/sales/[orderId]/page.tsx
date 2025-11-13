@@ -25,7 +25,7 @@ import {
   Calendar,
   DollarSign,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -94,13 +94,15 @@ function OrderDetailsPageContent() {
   const orderId = params?.['orderId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch order details
   const { data: order, isLoading } = useQuery<Order>({
-    queryKey: ["sales-order", orderId],
+    queryKey: ["sales-order", orderId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders/${orderId}`,
+        `${apiBaseUrl}/api/v1/orders/${orderId}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch order");
@@ -111,10 +113,10 @@ function OrderDetailsPageContent() {
 
   // Fetch activation progress
   const { data: progress } = useQuery<ActivationProgress>({
-    queryKey: ["sales-order-progress", orderId],
+    queryKey: ["sales-order-progress", orderId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders/${orderId}/activations/progress`,
+        `${apiBaseUrl}/api/v1/orders/${orderId}/activations/progress`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch progress");
@@ -123,7 +125,7 @@ function OrderDetailsPageContent() {
     enabled: !!orderId,
     refetchInterval: (query) => {
       // Auto-refresh while in progress
-      if ((query as any)?.state?.data && ((query as any).state.data.in_progress > 0 || (query as any).state.data.pending > 0)) {
+      if (query?.state?.data && (query.state.data.in_progress > 0 || query.state.data.pending > 0)) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -134,7 +136,7 @@ function OrderDetailsPageContent() {
   const processMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders/${orderId}/process`,
+        `${apiBaseUrl}/api/v1/orders/${orderId}/process`,
         {
           method: "POST",
           credentials: "include",
@@ -161,7 +163,7 @@ function OrderDetailsPageContent() {
   const retryMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders/${orderId}/activations/retry`,
+        `${apiBaseUrl}/api/v1/orders/${orderId}/activations/retry`,
         {
           method: "POST",
           credentials: "include",

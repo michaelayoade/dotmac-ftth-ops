@@ -6,6 +6,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TimeTrackingPage from "../page";
+import { TimeEntryType } from "@/types/field-service";
 import * as useFieldServiceHooks from "@/hooks/useFieldService";
 
 // Mock the hooks
@@ -97,7 +98,7 @@ describe("TimeTrackingPage", () => {
         id: "entry-1",
         technicianId: mockTechnicianId,
         clockIn: new Date().toISOString(),
-        entryType: "regular",
+        entryType: TimeEntryType.REGULAR,
         status: "draft",
         breakDurationMinutes: 0,
         isActive: true,
@@ -155,7 +156,7 @@ describe("TimeTrackingPage", () => {
         id: "entry-1",
         technicianId: mockTechnicianId,
         clockIn: new Date().toISOString(),
-        entryType: "regular",
+        entryType: TimeEntryType.REGULAR,
         status: "draft",
         breakDurationMinutes: 0,
         isActive: true,
@@ -215,7 +216,7 @@ describe("TimeTrackingPage", () => {
           clockIn: "2025-11-08T09:00:00Z",
           clockOut: "2025-11-08T17:00:00Z",
           status: "submitted",
-          entryType: "regular",
+          entryType: TimeEntryType.REGULAR,
           breakDurationMinutes: 60,
           durationMinutes: 420,
           totalHours: 7,
@@ -228,7 +229,7 @@ describe("TimeTrackingPage", () => {
           clockIn: "2025-11-07T09:00:00Z",
           clockOut: "2025-11-07T17:00:00Z",
           status: "approved",
-          entryType: "regular",
+          entryType: TimeEntryType.REGULAR,
           breakDurationMinutes: 60,
           durationMinutes: 420,
           totalHours: 7,
@@ -267,7 +268,7 @@ describe("TimeTrackingPage", () => {
         clockIn: "2025-11-08T09:00:00Z",
         clockOut: "2025-11-08T17:00:00Z",
         status: "submitted",
-        entryType: "regular",
+        entryType: TimeEntryType.REGULAR,
         clockInLat: 6.5244,
         clockInLng: 3.3792,
         clockOutLat: 6.5245,
@@ -305,7 +306,7 @@ describe("TimeTrackingPage", () => {
         clockIn: "2025-11-08T09:00:00Z",
         clockOut: "2025-11-08T17:00:00Z",
         status: "draft",
-        entryType: "regular",
+        entryType: TimeEntryType.REGULAR,
         breakDurationMinutes: 60,
         totalHours: 7,
         isActive: false,
@@ -352,7 +353,7 @@ describe("TimeTrackingPage", () => {
         clockIn: "2025-11-08T09:00:00Z",
         clockOut: "2025-11-08T17:00:00Z",
         status: "submitted",
-        entryType: "regular",
+        entryType: TimeEntryType.REGULAR,
         breakDurationMinutes: 60,
         totalHours: 7,
         isActive: false,
@@ -388,7 +389,7 @@ describe("TimeTrackingPage", () => {
           clockIn: "2025-11-08T09:00:00Z",
           clockOut: "2025-11-08T17:00:00Z",
           status: "submitted",
-          entryType: "regular",
+          entryType: TimeEntryType.REGULAR,
           breakDurationMinutes: 60,
           durationMinutes: 420,
           totalHours: 7,
@@ -401,7 +402,7 @@ describe("TimeTrackingPage", () => {
           clockIn: "2025-11-07T09:00:00Z",
           clockOut: "2025-11-07T17:00:00Z",
           status: "approved",
-          entryType: "regular",
+          entryType: TimeEntryType.REGULAR,
           breakDurationMinutes: 60,
           durationMinutes: 420,
           totalHours: 7,

@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { platformConfig } from "@/lib/config";
-
-const API_BASE = platformConfig.api.baseUrl;
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 interface AssignAccountModalProps {
   partnerId: string;
@@ -20,29 +18,10 @@ interface AssignAccountInput {
   notes: string | undefined;
 }
 
-async function assignAccount(partnerId: string, data: AssignAccountInput): Promise<void> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/accounts`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      partner_id: partnerId,
-      ...data,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || "Failed to assign account");
-  }
-
-  return response.json();
-}
-
 export default function AssignAccountModal({ partnerId, onClose }: AssignAccountModalProps) {
   const queryClient = useQueryClient();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
   const [formData, setFormData] = useState<AssignAccountInput>({
     customer_id: "",
     engagement_type: "direct",
@@ -53,7 +32,26 @@ export default function AssignAccountModal({ partnerId, onClose }: AssignAccount
   });
 
   const assignMutation = useMutation({
-    mutationFn: (data: AssignAccountInput) => assignAccount(partnerId, data),
+    mutationFn: async (data: AssignAccountInput) => {
+      const response = await fetch(`${apiBaseUrl}/api/v1/partners/accounts`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          partner_id: partnerId,
+          ...data,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to assign account");
+      }
+
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner", partnerId] });
       queryClient.invalidateQueries({

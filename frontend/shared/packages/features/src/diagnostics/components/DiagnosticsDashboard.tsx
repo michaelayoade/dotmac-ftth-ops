@@ -7,7 +7,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import {
   Activity,
   Wifi,
@@ -23,10 +26,8 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
-import { Button } from "@dotmac/ui";
-import { Badge } from "@dotmac/ui";
-import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
+import { useState } from "react";
+
 import {
   DiagnosticRun,
   DiagnosticType,

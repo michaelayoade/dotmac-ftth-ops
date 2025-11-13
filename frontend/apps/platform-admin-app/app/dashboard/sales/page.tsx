@@ -28,7 +28,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useConfirmDialog } from "@dotmac/ui";
@@ -78,17 +78,19 @@ function SalesOrdersPageContent() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch orders
   const { data: orders = [], isLoading, refetch } = useQuery<Order[]>({
-    queryKey: ["sales-orders", statusFilter, searchQuery],
+    queryKey: ["sales-orders", statusFilter, searchQuery, apiBaseUrl],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (searchQuery) params.append("customer_email", searchQuery);
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders?${params.toString()}`,
+        `${apiBaseUrl}/api/v1/orders?${params.toString()}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch orders");
@@ -98,10 +100,10 @@ function SalesOrdersPageContent() {
 
   // Fetch statistics
   const { data: stats } = useQuery<OrderStats>({
-    queryKey: ["sales-stats"],
+    queryKey: ["sales-stats", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders/stats/summary`,
+        `${apiBaseUrl}/api/v1/orders/stats/summary`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch stats");
@@ -113,7 +115,7 @@ function SalesOrdersPageContent() {
   const processMutation = useMutation({
     mutationFn: async (orderId: number) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders/${orderId}/process`,
+        `${apiBaseUrl}/api/v1/orders/${orderId}/process`,
         {
           method: "POST",
           credentials: "include",
@@ -140,7 +142,7 @@ function SalesOrdersPageContent() {
   const cancelMutation = useMutation({
     mutationFn: async (orderId: number) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/orders/${orderId}`,
+        `${apiBaseUrl}/api/v1/orders/${orderId}`,
         {
           method: "DELETE",
           credentials: "include",

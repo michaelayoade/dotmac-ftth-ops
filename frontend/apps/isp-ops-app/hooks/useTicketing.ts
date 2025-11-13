@@ -120,9 +120,9 @@ export interface AddMessageRequest {
 // ============================================================================
 
 interface UseTicketsOptions {
-  status?: TicketStatus;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+  status?: TicketStatus | undefined;
+  autoRefresh?: boolean | undefined;
+  refreshInterval?: number | undefined;
 }
 
 export function useTickets(options: UseTicketsOptions = {}) {

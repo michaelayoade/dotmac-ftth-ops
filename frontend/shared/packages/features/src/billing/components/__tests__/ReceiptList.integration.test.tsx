@@ -3,20 +3,31 @@
  * Tests receipt list display and interactions
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ReceiptList from "../ReceiptList";
-import { createBillingDependencies } from "../../../test/mocks/dependencies";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
 import { createMockReceipt } from "../../../test/factories/billing";
+import { createBillingDependencies } from "../../../test/mocks/dependencies";
+import ReceiptList from "../ReceiptList";
 
 // Mock UI components
 vi.mock("@dotmac/ui", async () => {
   const actual = await vi.importActual("@dotmac/ui");
+  const { simpleSelectMocks } = await import("@dotmac/testing-utils/react/simpleSelectMocks");
   return {
     ...actual,
-    EnhancedDataTable: ({ data, columns, loading, error, errorMessage, onRowClick }: any) => {
-      if (loading) return <div>Loading...</div>;
+    ...simpleSelectMocks,
+    EnhancedDataTable: ({
+      data,
+      columns,
+      loading,
+      isLoading,
+      error,
+      errorMessage,
+      onRowClick,
+    }: any) => {
+      if (loading || isLoading) return <div>Loading...</div>;
       if (error) return <div role="alert">Error: {errorMessage || error}</div>;
       if (!data || data.length === 0) return <div>No receipts found</div>;
 
@@ -263,7 +274,7 @@ describe("ReceiptList Integration Tests", () => {
   });
 
   describe("Loading States", () => {
-    it.skip("should show loading state while fetching data", () => {
+    it("should show loading state while fetching data", async () => {
       // Arrange
       let resolvePromise: any;
       const promise = new Promise((resolve) => {
@@ -283,10 +294,13 @@ describe("ReceiptList Integration Tests", () => {
       );
 
       // Assert
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
+      expect(screen.getByText("Loading receipts...")).toBeInTheDocument();
 
       // Cleanup
       resolvePromise({ data: { receipts: [] } });
+      await waitFor(() => {
+        expect(screen.queryByText("Loading receipts...")).not.toBeInTheDocument();
+      });
     });
   });
 

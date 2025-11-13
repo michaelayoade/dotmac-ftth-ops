@@ -5,6 +5,7 @@ import { useAppConfig } from "./AppConfigContext";
 import { applyBrandingConfig, applyThemeTokens } from "@/lib/theme";
 import { useTenantBrandingQuery, type TenantBrandingConfigDto } from "@/hooks/useTenantBranding";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 
 interface BrandingProviderProps {
   children: ReactNode;
@@ -82,7 +83,7 @@ function updateFavicon(faviconUrl?: string) {
 export function BrandingProvider({ children }: BrandingProviderProps) {
   const { branding: defaultBranding } = useAppConfig();
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const brandingQuery = useTenantBrandingQuery({ enabled: Boolean(user?.tenant_id) });
 
   const mergedBranding = useMemo(

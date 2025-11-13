@@ -5,11 +5,13 @@
  * Provides both single date and date range selection.
  */
 
-import * as React from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { DateRange } from "react-day-picker";
+import * as React from "react";
+import type { DateRange } from "react-day-picker";
+
 import { cn } from "../lib/utils";
+
 import { Button } from "./button";
 import { Calendar } from "./calendar";
 import {
@@ -33,6 +35,13 @@ export function DatePicker({
   disabled = false,
   className,
 }: DatePickerProps) {
+  const handleSelect = React.useCallback(
+    (selectedDate?: Date) => {
+      onDateChange?.(selectedDate);
+    },
+    [onDateChange],
+  );
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -53,8 +62,9 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={date}
-          onSelect={onDateChange}
-          initialFocus
+          onSelect={handleSelect}
+          required={false}
+          initialFocus={true}
         />
       </PopoverContent>
     </Popover>
@@ -76,6 +86,13 @@ export function DateRangePicker({
   disabled = false,
   className,
 }: DateRangePickerProps) {
+  const handleRangeSelect = React.useCallback(
+    (range?: DateRange) => {
+      onDateRangeChange?.(range);
+    },
+    [onDateRangeChange],
+  );
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -105,11 +122,12 @@ export function DateRangePicker({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
-          initialFocus
+          initialFocus={true}
           mode="range"
-          defaultMonth={dateRange?.from}
+          {...(dateRange?.from ? { defaultMonth: dateRange.from } : {})}
+          required={false}
           selected={dateRange}
-          onSelect={onDateRangeChange}
+          onSelect={handleRangeSelect}
           numberOfMonths={2}
         />
       </PopoverContent>

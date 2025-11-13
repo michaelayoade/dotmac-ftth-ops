@@ -23,12 +23,13 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
         throw new Error("Processor ID is required for tokenization");
       }
 
-      if (!hasPermission("billing:write")) {
+      if (!hasPermission("billing.payments.process")) {
         throw new Error("Insufficient permissions for tokenization");
       }
 
       try {
-        const response = await ispApiClient.tokenizePaymentMethod({
+        const client = ispApiClient.get().billing;
+        const response = await client.tokenizePaymentMethod({
           processor_id: processorId,
           payment_method_data: cardData,
           tenant_id: tenant?.id,
@@ -50,12 +51,13 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
         throw new Error("Data is required for encryption");
       }
 
-      if (!hasPermission("billing:write")) {
+      if (!hasPermission("billing.payments.process")) {
         throw new Error("Insufficient permissions for encryption");
       }
 
       try {
-        const response = await ispApiClient.encryptBillingData({
+        const client = ispApiClient.get().billing;
+        const response = await client.encryptBillingData({
           data,
           tenant_id: tenant?.id,
         });
@@ -73,7 +75,7 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
   const validateProcessorAccess = useCallback(
     (processorId: string): boolean => {
       if (!processorId || !tenant) return false;
-      return hasPermission("billing:read");
+      return hasPermission("billing.payments.read");
     },
     [hasPermission, tenant],
   );

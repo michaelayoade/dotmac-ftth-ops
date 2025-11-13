@@ -6,7 +6,6 @@
 
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +27,8 @@ import {
 } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 import { Receipt } from "lucide-react";
+import { useState } from "react";
+
 import { type Invoice } from "../types";
 import { formatCurrency } from "../utils";
 

@@ -47,13 +47,53 @@ export interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageEl
  * falls back to regular img tag with optimization hints
  */
 export const OptimizedImage = React.forwardRef<HTMLImageElement, OptimizedImageProps>(
-  ({ src, alt, width, height, priority = false, className, ...props }, ref) => {
+  (
+    {
+      src,
+      alt,
+      width,
+      height,
+      priority = false,
+      className,
+      onLoadStart,
+      role,
+      ...props
+    },
+    ref,
+  ) => {
+    const internalRef = React.useRef<HTMLImageElement | null>(null);
+    const setRefs = React.useCallback(
+      (node: HTMLImageElement | null) => {
+        internalRef.current = node;
+        if (typeof ref === "function") {
+          ref(node);
+        } else if (ref) {
+          (ref as React.MutableRefObject<HTMLImageElement | null>).current = node;
+        }
+      },
+      [ref],
+    );
+
+    React.useEffect(() => {
+      const node = internalRef.current;
+      if (!node || !onLoadStart) {
+        return;
+      }
+
+      const handler = (event: Event) => {
+        onLoadStart(event as unknown as React.SyntheticEvent<HTMLImageElement>);
+      };
+
+      node.addEventListener("loadstart", handler);
+      return () => node.removeEventListener("loadstart", handler);
+    }, [onLoadStart]);
+
     // Enhanced fallback img with optimization attributes
     // Note: Next.js Image should be used in Next.js apps, this is a fallback
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        ref={ref}
+        ref={setRefs}
         src={src}
         alt={alt}
         width={width}
@@ -61,6 +101,7 @@ export const OptimizedImage = React.forwardRef<HTMLImageElement, OptimizedImageP
         className={className}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
+        role={role ?? "img"}
         {...props}
       />
     );

@@ -119,20 +119,33 @@ export default function CreatePeerPage() {
     }
 
     // Prepare request data
+    const peerName = (formData['peer_name'] || formData['name'] || "").trim();
+    const allowedIps = formData['allowed_ips'];
+    const allowedIpsStr = typeof allowedIps === 'string' ? allowedIps.trim() : (Array.isArray(allowedIps) ? allowedIps[0] : "0.0.0.0/0, ::/0");
     const requestData: CreateWireGuardPeerRequest = {
       server_id: formData['server_id'],
-      name: formData['peer_name'] || "",
-      peer_name: formData['peer_name'],
-      allowed_ips: formData['allowed_ips'] || "0.0.0.0/0, ::/0",
-      persistent_keepalive: formData['persistent_keepalive'] || 25,
+      name: peerName || "WireGuard Peer",
+      allowed_ips: allowedIpsStr || "0.0.0.0/0, ::/0",
+      persistent_keepalive:
+        formData['persistent_keepalive'] !== undefined ? formData['persistent_keepalive'] : 25,
     };
 
-    if (hasCustomerInfo && formData['customer_id']) {
-      requestData.customer_id = formData['customer_id'];
+    if (peerName) {
+      requestData.peer_name = peerName;
+    }
+
+    if (hasCustomerInfo) {
+      const customerId = formData['customer_id']?.trim();
+      if (customerId) {
+        requestData.customer_id = customerId;
+      }
     }
 
     if (formData['notes']) {
-      requestData.notes = formData['notes'];
+      const trimmedNotes = formData['notes'].trim();
+      if (trimmedNotes) {
+        requestData.notes = trimmedNotes;
+      }
     }
 
     if (formData['expiration_date']) {

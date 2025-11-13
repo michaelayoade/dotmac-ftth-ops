@@ -7,6 +7,7 @@ import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getISPApiClient } from "../api/isp-client";
 import type { QueryParams } from "../types";
+import type { GeoLocation } from "../api/clients/FieldOpsApiClient";
 
 export function useISPModules() {
   const queryClient = useQueryClient();
@@ -60,9 +61,10 @@ export function useISPModules() {
   // ============================================================================
 
   const useInvoices = (customerId?: string, params?: QueryParams) => {
+    const queryParams = customerId ? { ...(params || {}), customerId } : params;
     return useQuery({
       queryKey: ["billing", "invoices", customerId, params],
-      queryFn: () => ispClient.getInvoices(customerId, params),
+      queryFn: () => ispClient.getInvoices(queryParams),
     });
   };
 
@@ -223,9 +225,10 @@ export function useISPModules() {
   };
 
   const useSalesAnalytics = (period?: string) => {
+    const params = period ? { period } : undefined;
     return useQuery({
       queryKey: ["sales", "analytics", period],
-      queryFn: () => ispClient.getSalesAnalytics(period),
+      queryFn: () => ispClient.getSalesAnalytics(params),
     });
   };
 
@@ -304,9 +307,10 @@ export function useISPModules() {
   };
 
   const useResellerCommissions = (resellerId: string, period?: string) => {
+    const params = { resellerId, ...(period ? { period } : {}) };
     return useQuery({
       queryKey: ["resellers", resellerId, "commissions", period],
-      queryFn: () => ispClient.getResellerCommissions(resellerId, period),
+      queryFn: () => ispClient.getResellerCommissions(params),
       enabled: !!resellerId,
     });
   };
@@ -314,7 +318,7 @@ export function useISPModules() {
   const useResellerPerformance = (resellerId: string) => {
     return useQuery({
       queryKey: ["resellers", resellerId, "performance"],
-      queryFn: () => ispClient.getResellerPerformance(resellerId),
+      queryFn: () => ispClient.getResellerPerformance({ resellerId }),
       enabled: !!resellerId,
     });
   };
@@ -432,7 +436,7 @@ export function useISPModules() {
         location,
       }: {
         technicianId: string;
-        location: [number, number];
+        location: GeoLocation;
       }) => ispClient.updateTechnicianLocation(technicianId, location),
       onSuccess: (_, { technicianId }) => {
         queryClient.invalidateQueries({
@@ -520,8 +524,8 @@ export function useISPModules() {
 
   const useValidateLicense = () => {
     return useCallback(
-      async (feature: string) => {
-        return await ispClient.validateLicense(feature);
+      async (payload: Record<string, any>) => {
+        return ispClient.validateLicense(payload);
       },
       [ispClient],
     );

@@ -6,15 +6,6 @@
 
 "use client";
 
-import * as React from "react";
-import type {
-  ColumnDef,
-  ColumnFiltersState,
-  Column,
-  SortingState,
-  TableOptions,
-  VisibilityState,
-} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
@@ -22,8 +13,18 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  type Column,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type TableOptions,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown } from "lucide-react";
+import * as React from "react";
+
+import { cn } from "../lib/utils";
+
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -40,7 +41,6 @@ import {
   TableHeader,
   TableRow,
 } from "./table";
-import { cn } from "../lib/utils";
 
 interface DataTableProps<TData, TValue> {
   /**

@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api/client";
-import platformConfig from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type DiscountType = "percentage" | "fixed_amount" | "fixed_price";
 
@@ -76,6 +76,8 @@ export default function PriceSimulatorPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [calculationResult, setCalculationResult] = useState<PriceCalculationResult | null>(null);
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   const [formData, setFormData] = useState({
     product_id: "",
@@ -89,7 +91,7 @@ export default function PriceSimulatorPage() {
   const calculatePriceMutation = useMutation({
     mutationFn: async (data: PriceCalculationRequest) => {
       const response = await apiClient.post<PriceCalculationResult>(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/calculate`,
+        `${apiBaseUrl}/api/v1/billing/pricing/calculate`,
         data
       );
       return response.data;
@@ -130,16 +132,16 @@ export default function PriceSimulatorPage() {
       return;
     }
 
-    const customerSegments = formData.customer_segments
+    const segments = formData.customer_segments
       ? formData.customer_segments.split(",").map((s) => s.trim())
       : undefined;
 
     const requestData: PriceCalculationRequest = {
       product_id: formData.product_id,
-      customer_id: formData["customer_id"],
+      customer_id: formData['customer_id'],
       quantity,
       currency: formData.currency,
-      ...(customerSegments ? { customer_segments: customerSegments } : {}),
+      ...(segments && { customer_segments: segments }),
     };
 
     calculatePriceMutation.mutate(requestData);

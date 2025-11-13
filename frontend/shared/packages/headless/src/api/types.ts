@@ -28,17 +28,18 @@ export interface ApiError {
   path?: string;
 }
 
-export interface RequestConfig {
+export interface RequestConfig extends Omit<RequestInit, "cache" | "headers" | "body"> {
   retries?: number;
   timeout?: number;
   validateResponse?: boolean;
   skipRetryOn?: number[];
-  headers?: Record<string, string>;
-  params?: Record<string, string | number | boolean>;
+  headers?: HeadersInit;
+  params?: Record<string, unknown>;
   cache?: boolean;
   cacheTTL?: number;
   portal?: string;
   tenantId?: string;
+  body?: BodyInit | Record<string, unknown> | null;
 }
 
 export interface RetryConfig {
@@ -61,6 +62,7 @@ export interface ApiClientConfig {
   apiKey?: string;
   portal?: string;
   tenantId?: string;
+  metadata?: Record<string, unknown>;
   defaultHeaders?: Record<string, string>;
   timeout?: number;
   retries?: number;
@@ -77,7 +79,7 @@ export interface ApiClientConfig {
   onUnauthorized?: () => void;
   onError?: (error: ApiError) => void;
   interceptors?: {
-    request?: (config: RequestInit & RequestConfig) => RequestInit & RequestConfig;
+    request?: (config: RequestConfig) => RequestConfig;
     response?: <T>(response: ApiResponse<T>) => ApiResponse<T>;
     error?: (error: ApiError) => ApiError;
   };

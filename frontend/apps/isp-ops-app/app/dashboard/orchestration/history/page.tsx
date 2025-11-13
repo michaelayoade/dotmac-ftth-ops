@@ -376,12 +376,20 @@ export default function WorkflowHistoryPage() {
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
   const confirmDialog = useConfirmDialog();
 
-  const { workflows, total, totalPages, loading, refetch } = useWorkflows({
+  const {
+    data: workflowResponse,
+    isLoading: loading,
+    refetch,
+  } = useWorkflows({
     status: statusFilter !== "all" ? statusFilter : undefined,
     workflowType: typeFilter !== "all" ? typeFilter : undefined,
     page,
     pageSize,
   });
+  const workflowList = workflowResponse?.workflows;
+  const workflows = useMemo(() => workflowList ?? [], [workflowList]);
+  const total = workflowResponse?.total ?? 0;
+  const totalPages = workflowResponse?.total_pages ?? 0;
 
   // Client-side filtering for search and date range
   const filteredWorkflows = useMemo(() => {
@@ -520,7 +528,7 @@ export default function WorkflowHistoryPage() {
             Export {selectedIds.size > 0 ? `(${selectedIds.size})` : "All"}
           </button>
           <button
-            onClick={refetch}
+            onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
           >
             <RefreshCw className="h-4 w-4" />

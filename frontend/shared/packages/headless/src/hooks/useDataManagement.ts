@@ -151,7 +151,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           ...currentFilters?.customFilters,
         };
 
-        const response = await apiClient.get<PaginatedResponse<T>>(endpoint, {
+        const response = await apiClient.get<ApiResponse<PaginatedResponse<T>>>(endpoint, {
           params: requestParams,
           cache: true,
           cacheTTL: cacheTimeout,
@@ -206,7 +206,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
   // Reload function
   const reload = useCallback(() => {
     // Clear cache for this endpoint
-    apiClient.cache?.invalidateEndpoint(endpoint);
+    apiClient.invalidateEndpointCache(endpoint);
     return load();
   }, [apiClient, endpoint, load]);
 
@@ -216,7 +216,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, "Creating...");
 
       try {
-        const response = await apiClient.post<T>(endpoint, data);
+        const response = await apiClient.post<ApiResponse<T>>(endpoint, data);
 
         if (response?.data) {
           // Add to local state
@@ -224,7 +224,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           appStore.setContextData(contextId, [response.data, ...currentData]);
 
           // Invalidate cache and reload for consistency
-          apiClient.cache?.invalidateEndpoint(endpoint);
+          apiClient.invalidateEndpointCache(endpoint);
           await load();
 
           appStore.addNotification({
@@ -257,7 +257,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, "Updating...");
 
       try {
-        const response = await apiClient.put<T>(`${endpoint}/${id}`, data);
+        const response = await apiClient.put<ApiResponse<T>>(`${endpoint}/${id}`, data);
 
         if (response?.data) {
           // Update local state
@@ -268,8 +268,8 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           appStore.setContextData(contextId, updatedData);
 
           // Invalidate cache
-          apiClient.cache?.invalidatePattern(new RegExp(`${endpoint}/${id}`));
-          apiClient.cache?.invalidateEndpoint(endpoint);
+          apiClient.invalidateCacheByPattern(new RegExp(`${endpoint}/${id}`));
+          apiClient.invalidateEndpointCache(endpoint);
 
           appStore.addNotification({
             type: "success",
@@ -313,7 +313,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, "Deleting...");
 
       try {
-        const response = await apiClient.delete(`${endpoint}/${id}`);
+        const response = await apiClient.delete<ApiResponse<void>>(`${endpoint}/${id}`);
 
         if (response.status >= 200 && response.status < 300) {
           // Remove from local state
@@ -322,8 +322,8 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           appStore.setContextData(contextId, filteredData);
 
           // Invalidate cache
-          apiClient.cache?.invalidatePattern(new RegExp(`${endpoint}/${id}`));
-          apiClient.cache?.invalidateEndpoint(endpoint);
+          apiClient.invalidateCacheByPattern(new RegExp(`${endpoint}/${id}`));
+          apiClient.invalidateEndpointCache(endpoint);
 
           appStore.addNotification({
             type: "success",
@@ -356,7 +356,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, `Creating ${items.length} items...`);
 
       try {
-        const response = await apiClient.post<T[]>(`${endpoint}/bulk`, {
+        const response = await apiClient.post<ApiResponse<T[]>>(`${endpoint}/bulk`, {
           items,
         });
 
@@ -394,7 +394,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, `Updating ${updates.length} items...`);
 
       try {
-        const response = await apiClient.put<T[]>(`${endpoint}/bulk`, {
+        const response = await apiClient.put<ApiResponse<T[]>>(`${endpoint}/bulk`, {
           updates,
         });
 
@@ -444,7 +444,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, `Deleting ${ids.length} items...`);
 
       try {
-        const response = await apiClient.delete(`${endpoint}/bulk`, {
+        const response = await apiClient.delete<ApiResponse<void>>(`${endpoint}/bulk`, {
           data: { ids },
         });
 

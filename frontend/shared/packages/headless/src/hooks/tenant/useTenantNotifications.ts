@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { TenantNotification, TenantSession } from "../../types/tenant";
+import type { TenantNotification, TenantSession } from "../../types/tenant";
 import { getISPApiClient } from "../../api/isp-client";
 
 export interface UseTenantNotificationsReturn {

@@ -41,9 +41,11 @@ export function useBusinessValidation(partnerId?: string) {
       const errors: string[] = [];
       const suggestions: string[] = [];
 
+      let territoryValidation: CustomerBusinessValidation["territoryValidation"];
+      let commissionEstimate: CustomerBusinessValidation["commissionEstimate"];
+
       try {
         // Territory validation
-        let territoryValidation;
         if (customer.address && partnerId) {
           try {
             // Parse address for validation
@@ -51,9 +53,8 @@ export function useBusinessValidation(partnerId?: string) {
             if (addressParts.length >= 3) {
               const street = addressParts[0];
               const city = addressParts[1];
-              const stateZip = addressParts[2].split(" ");
-              const state = stateZip[0];
-              const zipCode = stateZip[1];
+              const stateZip = addressParts[2]?.split(" ") ?? [];
+              const [state, zipCode] = stateZip;
 
               if (street && city && state && zipCode) {
                 const address = { street, city, state, zipCode };
@@ -91,7 +92,6 @@ export function useBusinessValidation(partnerId?: string) {
         }
 
         // Commission estimation
-        let commissionEstimate;
         if (customer.plan && customer.mrr && partnerId) {
           try {
             // Get partner's current tier (defaulting to Bronze for estimation)
@@ -280,9 +280,8 @@ export function useBusinessValidation(partnerId?: string) {
 
         const street = addressParts[0];
         const city = addressParts[1];
-        const stateZip = addressParts[2].split(" ");
-        const state = stateZip[0];
-        const zipCode = stateZip[1];
+        const stateZip = addressParts[2]?.split(" ") ?? [];
+        const [state, zipCode] = stateZip;
 
         if (!street || !city || !state || !zipCode) {
           errors.push("Incomplete address information");

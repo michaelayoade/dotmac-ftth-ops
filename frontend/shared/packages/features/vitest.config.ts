@@ -33,6 +33,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      "@dotmac/ui": resolve(__dirname, "../ui/src"),
+      "@dotmac/testing-utils": resolve(__dirname, "../testing-utils/src"),
     },
   },
 });

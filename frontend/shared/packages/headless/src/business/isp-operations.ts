@@ -378,6 +378,7 @@ export class ISPBusinessService implements ISPBusinessOperations {
 
   // Customer Service Operations
   customerService = {
+    apiClient: this.apiClient,
     async getCustomerProfile(customerId: string): Promise<CustomerProfile> {
       try {
         const response = await this.apiClient.request<{
@@ -554,6 +555,7 @@ export class ISPBusinessService implements ISPBusinessOperations {
 
   // Service Operations
   serviceOperations = {
+    apiClient: this.apiClient,
     async getServiceStatus(customerId: string): Promise<ServiceStatus> {
       try {
         const response = await this.apiClient.request<{ data: ServiceStatus }>(
@@ -704,6 +706,7 @@ export class ISPBusinessService implements ISPBusinessOperations {
 
   // Network Operations
   networkOperations = {
+    apiClient: this.apiClient,
     async getNetworkHealth(): Promise<NetworkStatus> {
       try {
         const response = await this.apiClient.request<{ data: NetworkStatus }>("/network/health");
@@ -868,6 +871,7 @@ export class ISPBusinessService implements ISPBusinessOperations {
 
   // Billing Operations
   billingOperations = {
+    apiClient: this.apiClient,
     async calculateRevenue(params: RevenueParams): Promise<RevenueData> {
       try {
         const response = await this.apiClient.request<{ data: RevenueData }>(

@@ -259,14 +259,17 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
       ),
 
       logBusinessProcess: useCallback(
-        async (process: string, outcome: AuditOutcome, metadata?: any) => {
+        async (workflow: string, outcome: AuditOutcome, metadata?: any) => {
           await logEvent({
             event_type: AuditEventType.BUSINESS_WORKFLOW_START,
-            message: `Business process: ${process}`,
+            message: `Business process: ${workflow}`,
             outcome,
             severity: AuditSeverity.LOW,
             actor: { id: "system", type: "system" },
-            context: { source: "business_process" },
+            context: {
+              source: "business_process",
+              environment: process.env["NODE_ENV"] || "development",
+            },
             metadata,
           });
         },

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useCallback } from "react";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
-export type NotificationType = "success" | "error" | "warning" | "info";
+export type NotificationType = "success" | "error" | "warning" | "info" | "system";
 
 export interface Notification {
   id: string;
@@ -16,6 +16,7 @@ export interface Notification {
     action: () => void;
     primary?: boolean;
   }[];
+  priority?: "low" | "medium" | "high" | "critical";
   metadata?: Record<string, unknown>;
   timestamp: Date;
 }
@@ -72,7 +73,7 @@ const useNotificationStore = create<NotificationStore>()(
       }));
     },
 
-    updateNotification: (id, _updates) => {
+    updateNotification: (id, updates) => {
       set((state) => ({
         notifications: state.notifications.map((n) => (n.id === id ? { ...n, ...updates } : n)),
       }));
@@ -128,6 +129,7 @@ export function useNotifications() {
   return {
     notifications: store.notifications,
     notify,
+    addNotification: store.addNotification,
     remove: store.removeNotification,
     clear: store.clearNotifications,
     markAsRead: store.markAsRead,
@@ -138,15 +140,27 @@ export function useNotifications() {
 // Hook for API error notifications
 export function useApiErrorNotifications() {
   const { notify } = useNotifications();
+  const parseApiError = (error: unknown): { status?: number; message?: string } => {
+    if (typeof error === "object" && error !== null) {
+      const candidate = error as { status?: number; message?: string };
+      return {
+        status: typeof candidate.status === "number" ? candidate.status : undefined,
+        message: typeof candidate.message === "string" ? candidate.message : undefined,
+      };
+    }
+    return {};
+  };
 
   const notifyApiError = useCallback(
     (error: unknown, context?: string) => {
-      const isNetworkError = error?.status === 0 || !navigator.onLine;
-      const isServerError = error?.status >= 500;
-      const isAuthError = error?.status === 401 || error?.status === 403;
+      const parsed = parseApiError(error);
+      const status = parsed.status;
+      const isNetworkError = status === 0 || !navigator.onLine;
+      const isServerError = typeof status === "number" && status >= 500;
+      const isAuthError = status === 401 || status === 403;
 
       let title = "Something went wrong";
-      let message = error?.message || "An unexpected error occurred";
+      let message = parsed.message || "An unexpected error occurred";
 
       if (isNetworkError) {
         title = "Connection Problem";
@@ -182,7 +196,7 @@ export function useApiErrorNotifications() {
         metadata: {
           error,
           context,
-          status: error?.status,
+          status,
           isNetworkError,
           isServerError,
           isAuthError,

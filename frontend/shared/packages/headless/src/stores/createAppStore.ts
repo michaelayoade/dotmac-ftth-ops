@@ -521,6 +521,24 @@ export function createAppStore(config: AppStoreConfig) {
               });
             },
 
+            setTimezone: (timezone: string) => {
+              set((state) => {
+                state.preferences.timezone = timezone;
+              });
+            },
+
+            toggleCompactMode: () => {
+              set((state) => {
+                state.preferences.compactMode = !state.preferences.compactMode;
+              });
+            },
+
+            toggleAdvancedFeatures: () => {
+              set((state) => {
+                state.preferences.showAdvancedFeatures = !state.preferences.showAdvancedFeatures;
+              });
+            },
+
             // Context actions
             createContext: (contextId: string, initialData: any[] = []) => {
               set((state) => {
@@ -557,6 +575,12 @@ export function createAppStore(config: AppStoreConfig) {
               });
             },
 
+            resetContext: (contextId: string) => {
+              set((state) => {
+                state.contexts[contextId] = createDefaultContext();
+              });
+            },
+
             refreshContext: async (contextId: string) => {
               // This would be implemented by specific portal stores
               console.warn(`refreshContext not implemented for ${contextId}`);
@@ -575,6 +599,42 @@ export function createAppStore(config: AppStoreConfig) {
             // Utility methods
             getContext: (contextId: string) => {
               return get().contexts[contextId] || null;
+            },
+
+            getFilterState: (contextId: string) => {
+              if (!get().contexts[contextId]) {
+                set((state) => {
+                  state.contexts[contextId] = createDefaultContext();
+                });
+              }
+              return get().contexts[contextId]!.filters;
+            },
+
+            getPaginationState: (contextId: string) => {
+              if (!get().contexts[contextId]) {
+                set((state) => {
+                  state.contexts[contextId] = createDefaultContext();
+                });
+              }
+              return get().contexts[contextId]!.pagination;
+            },
+
+            getSelectionState: <T>(contextId: string) => {
+              if (!get().contexts[contextId]) {
+                set((state) => {
+                  state.contexts[contextId] = createDefaultContext();
+                });
+              }
+              return get().contexts[contextId]!.selection as SelectionState<T>;
+            },
+
+            getLoadingState: (contextId: string) => {
+              if (!get().contexts[contextId]) {
+                set((state) => {
+                  state.contexts[contextId] = createDefaultContext();
+                });
+              }
+              return get().contexts[contextId]!.loading;
             },
 
             getFilteredData: (contextId: string, customFilter?: (item: any) => boolean) => {

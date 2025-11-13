@@ -27,7 +27,7 @@ import {
   Users,
   Calendar,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -67,6 +67,8 @@ function LicensingPageContent() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   // Fetch licenses
   const { data, isLoading, refetch } = useQuery({
@@ -77,10 +79,9 @@ function LicensingPageContent() {
       if (typeFilter !== "all") params.append("license_type", typeFilter);
       if (searchQuery) params.append("search", searchQuery);
 
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/licensing/licenses?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/licensing/licenses?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch licenses");
       return response.json();
     },
@@ -93,13 +94,13 @@ function LicensingPageContent() {
   const suspendMutation = useMutation({
     mutationFn: async ({ licenseId, reason }: { licenseId: string; reason: string }) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/licensing/licenses/${licenseId}/suspend`,
+        `${apiBaseUrl}/api/licensing/licenses/${licenseId}/suspend`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ reason }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to suspend license");
       return response.json();

@@ -90,12 +90,17 @@ export function useServiceInstances({
     params['service_type'] = serviceType;
   }
 
+  const queryFilters: ServiceListKey[2] = {
+    serviceType: serviceType ?? null,
+    limit,
+    offset,
+  };
+  if (status) {
+    queryFilters.status = status;
+  }
+
   return useQuery<ServiceInstanceSummary[], Error, ServiceInstanceSummary[], ServiceListKey>({
-    queryKey: [
-      "services",
-      "instances",
-      { status, serviceType: serviceType ?? null, limit, offset },
-    ],
+    queryKey: ["services", "instances", queryFilters],
     queryFn: async () => {
       const response = await apiClient.get<ServiceInstanceSummary[]>(
         "/services/lifecycle/services",

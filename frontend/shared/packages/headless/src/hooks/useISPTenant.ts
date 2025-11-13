@@ -5,7 +5,7 @@
  */
 
 import { useContext, createContext, useMemo } from "react";
-import {
+import type {
   TenantSession,
   TenantPermissions,
   TenantLimitsUsage,

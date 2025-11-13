@@ -1,9 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { platformConfig } from "@/lib/config";
-
-const API_BASE = platformConfig.api.baseUrl;
+import type { PlatformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 export interface CreditNoteSummary {
   id: string;
@@ -18,11 +17,13 @@ export interface CreditNoteSummary {
   downloadUrl: string;
 }
 
-async function fetchCreditNotes(limit: number): Promise<CreditNoteSummary[]> {
-  const url = new URL(`${API_BASE}/api/v1/billing/credit-notes`);
-  url.searchParams.set("limit", String(limit));
+type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
 
-  const response = await fetch(url.toString(), {
+async function fetchCreditNotes(limit: number, buildUrl: BuildApiUrl): Promise<CreditNoteSummary[]> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  const endpoint = buildUrl(`/billing/credit-notes?${params.toString()}`);
+
+  const response = await fetch(endpoint, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -54,9 +55,10 @@ async function fetchCreditNotes(limit: number): Promise<CreditNoteSummary[]> {
 }
 
 export function useCreditNotes(limit = 5) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["credit-notes", limit],
-    queryFn: () => fetchCreditNotes(limit),
+    queryKey: ["credit-notes", limit, api.baseUrl, api.prefix],
+    queryFn: () => fetchCreditNotes(limit, api.buildUrl),
     staleTime: 60_000,
   });
 }

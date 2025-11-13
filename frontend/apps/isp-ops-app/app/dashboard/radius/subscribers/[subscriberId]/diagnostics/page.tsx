@@ -23,7 +23,7 @@ import {
   AlertCircle,
   Server,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -55,13 +55,14 @@ function DiagnosticsPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
 
   // Fetch latest diagnostic runs
   const { data: latestRuns = [], refetch: refetchRuns } = useQuery<DiagnosticRun[]>({
     queryKey: ["diagnostics", subscriberId],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs?subscriber_id=${subscriberId}&limit=10`,
+        `${apiBaseUrl}/api/v1/diagnostics/runs?subscriber_id=${subscriberId}&limit=10`,
         { credentials: "include" }
       );
       if (!response.ok) return [];
@@ -74,7 +75,7 @@ function DiagnosticsPageContent() {
   const healthCheckMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/health-check`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/health-check`,
         {
           method: "GET",
           credentials: "include",
@@ -103,7 +104,7 @@ function DiagnosticsPageContent() {
         setRunningChecks((prev) => new Set([...prev, checkName]));
         const method = endpoint.includes("restart") ? "POST" : "GET";
         const response = await fetch(
-          `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/${endpoint}`,
+          `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/${endpoint}`,
           {
             method,
             credentials: "include",

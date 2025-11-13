@@ -6,6 +6,7 @@
  */
 
 import type { ReactNode } from 'react';
+
 import type { NormalizedQueryResult } from './query-helpers';
 
 export interface QueryBoundaryProps<TData> {
@@ -197,7 +198,7 @@ export function ListQueryBoundary<TData, TItem>({
     <QueryBoundary
       result={result}
       loadingComponent={loadingComponent}
-      errorComponent={errorComponent}
+      {...(errorComponent ? { errorComponent } : {})}
       emptyComponent={emptyComponent}
       isEmpty={(d) => Array.isArray(data) && data.length === 0}
     >

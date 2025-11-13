@@ -1,9 +1,8 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { platformConfig } from "@/lib/config";
-
-const API_BASE = platformConfig.api.baseUrl;
+import type { PlatformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 // Types
 export interface PartnerDashboardStats {
@@ -123,6 +122,8 @@ export interface PartnerPayoutRecord {
   updated_at: string;
 }
 
+type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
+
 function normaliseDecimal(value: unknown): number {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : 0;
@@ -138,8 +139,8 @@ function normaliseDecimal(value: unknown): number {
 }
 
 // API Functions
-async function fetchPartnerDashboard(): Promise<PartnerDashboardStats> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/portal/dashboard`, {
+async function fetchPartnerDashboard(buildUrl: BuildApiUrl): Promise<PartnerDashboardStats> {
+  const response = await fetch(buildUrl("/partners/portal/dashboard"), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -153,8 +154,8 @@ async function fetchPartnerDashboard(): Promise<PartnerDashboardStats> {
   return response.json();
 }
 
-async function fetchPartnerProfile(): Promise<PartnerProfile> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/portal/profile`, {
+async function fetchPartnerProfile(buildUrl: BuildApiUrl): Promise<PartnerProfile> {
+  const response = await fetch(buildUrl("/partners/portal/profile"), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -168,8 +169,11 @@ async function fetchPartnerProfile(): Promise<PartnerProfile> {
   return response.json();
 }
 
-async function updatePartnerProfile(data: Partial<PartnerProfile>): Promise<PartnerProfile> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/portal/profile`, {
+async function updatePartnerProfile(
+  buildUrl: BuildApiUrl,
+  data: Partial<PartnerProfile>,
+): Promise<PartnerProfile> {
+  const response = await fetch(buildUrl("/partners/portal/profile"), {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -186,12 +190,18 @@ async function updatePartnerProfile(data: Partial<PartnerProfile>): Promise<Part
   return response.json();
 }
 
-async function fetchPartnerReferrals(limit?: number, offset?: number): Promise<PartnerReferral[]> {
+async function fetchPartnerReferrals(
+  buildUrl: BuildApiUrl,
+  limit?: number,
+  offset?: number,
+): Promise<PartnerReferral[]> {
   const params = new URLSearchParams();
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = `${API_BASE}/api/v1/partners/portal/referrals${params.toString() ? `?${params.toString()}` : ""}`;
+  const url = buildUrl(
+    `/partners/portal/referrals${params.toString() ? `?${params.toString()}` : ""}`,
+  );
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -206,15 +216,18 @@ async function fetchPartnerReferrals(limit?: number, offset?: number): Promise<P
   return response.json();
 }
 
-async function submitReferral(data: {
-  lead_name: string;
-  lead_email: string;
-  lead_phone?: string;
-  company_name?: string;
-  estimated_value?: number;
-  notes?: string;
-}): Promise<PartnerReferral> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/portal/referrals`, {
+async function submitReferral(
+  buildUrl: BuildApiUrl,
+  data: {
+    lead_name: string;
+    lead_email: string;
+    lead_phone?: string;
+    company_name?: string;
+    estimated_value?: number;
+    notes?: string;
+  },
+): Promise<PartnerReferral> {
+  const response = await fetch(buildUrl("/partners/portal/referrals"), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -232,6 +245,7 @@ async function submitReferral(data: {
 }
 
 async function fetchPartnerCommissions(
+  buildUrl: BuildApiUrl,
   limit?: number,
   offset?: number,
 ): Promise<PartnerCommission[]> {
@@ -239,7 +253,9 @@ async function fetchPartnerCommissions(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = `${API_BASE}/api/v1/partners/portal/commissions${params.toString() ? `?${params.toString()}` : ""}`;
+  const url = buildUrl(
+    `/partners/portal/commissions${params.toString() ? `?${params.toString()}` : ""}`,
+  );
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -254,12 +270,18 @@ async function fetchPartnerCommissions(
   return response.json();
 }
 
-async function fetchPartnerCustomers(limit?: number, offset?: number): Promise<PartnerCustomer[]> {
+async function fetchPartnerCustomers(
+  buildUrl: BuildApiUrl,
+  limit?: number,
+  offset?: number,
+): Promise<PartnerCustomer[]> {
   const params = new URLSearchParams();
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = `${API_BASE}/api/v1/partners/portal/customers${params.toString() ? `?${params.toString()}` : ""}`;
+  const url = buildUrl(
+    `/partners/portal/customers${params.toString() ? `?${params.toString()}` : ""}`,
+  );
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -275,6 +297,7 @@ async function fetchPartnerCustomers(limit?: number, offset?: number): Promise<P
 }
 
 async function fetchPartnerStatements(
+  buildUrl: BuildApiUrl,
   limit?: number,
   offset?: number,
 ): Promise<PartnerStatement[]> {
@@ -282,7 +305,9 @@ async function fetchPartnerStatements(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = `${API_BASE}/api/v1/partners/portal/statements${params.toString() ? `?${params.toString()}` : ""}`;
+  const url = buildUrl(
+    `/partners/portal/statements${params.toString() ? `?${params.toString()}` : ""}`,
+  );
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -314,6 +339,7 @@ async function fetchPartnerStatements(
 }
 
 async function fetchPartnerPayoutHistory(
+  buildUrl: BuildApiUrl,
   limit?: number,
   offset?: number,
 ): Promise<PartnerPayoutRecord[]> {
@@ -321,7 +347,9 @@ async function fetchPartnerPayoutHistory(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = `${API_BASE}/api/v1/partners/portal/payouts${params.toString() ? `?${params.toString()}` : ""}`;
+  const url = buildUrl(
+    `/partners/portal/payouts${params.toString() ? `?${params.toString()}` : ""}`,
+  );
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -360,24 +388,27 @@ async function fetchPartnerPayoutHistory(
 
 // Hooks
 export function usePartnerDashboard() {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner-portal-dashboard"],
-    queryFn: fetchPartnerDashboard,
+    queryKey: ["partner-portal-dashboard", api.baseUrl, api.prefix],
+    queryFn: () => fetchPartnerDashboard(api.buildUrl),
   });
 }
 
 export function usePartnerProfile() {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner-portal-profile"],
-    queryFn: fetchPartnerProfile,
+    queryKey: ["partner-portal-profile", api.baseUrl, api.prefix],
+    queryFn: () => fetchPartnerProfile(api.buildUrl),
   });
 }
 
 export function useUpdatePartnerProfile() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: updatePartnerProfile,
+    mutationFn: (data: Partial<PartnerProfile>) => updatePartnerProfile(api.buildUrl, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner-portal-profile"] });
       queryClient.invalidateQueries({ queryKey: ["partner-portal-dashboard"] });
@@ -386,17 +417,20 @@ export function useUpdatePartnerProfile() {
 }
 
 export function usePartnerReferrals(limit?: number, offset?: number) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner-portal-referrals", limit, offset],
-    queryFn: () => fetchPartnerReferrals(limit, offset),
+    queryKey: ["partner-portal-referrals", limit, offset, api.baseUrl, api.prefix],
+    queryFn: () => fetchPartnerReferrals(api.buildUrl, limit, offset),
   });
 }
 
 export function useSubmitReferral() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: submitReferral,
+    mutationFn: (payload: Parameters<typeof submitReferral>[1]) =>
+      submitReferral(api.buildUrl, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner-portal-referrals"] });
       queryClient.invalidateQueries({ queryKey: ["partner-portal-dashboard"] });
@@ -405,29 +439,33 @@ export function useSubmitReferral() {
 }
 
 export function usePartnerCommissions(limit?: number, offset?: number) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner-portal-commissions", limit, offset],
-    queryFn: () => fetchPartnerCommissions(limit, offset),
+    queryKey: ["partner-portal-commissions", limit, offset, api.baseUrl, api.prefix],
+    queryFn: () => fetchPartnerCommissions(api.buildUrl, limit, offset),
   });
 }
 
 export function usePartnerCustomers(limit?: number, offset?: number) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner-portal-customers", limit, offset],
-    queryFn: () => fetchPartnerCustomers(limit, offset),
+    queryKey: ["partner-portal-customers", limit, offset, api.baseUrl, api.prefix],
+    queryFn: () => fetchPartnerCustomers(api.buildUrl, limit, offset),
   });
 }
 
 export function usePartnerStatements(limit?: number, offset?: number) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner-portal-statements", limit, offset],
-    queryFn: () => fetchPartnerStatements(limit, offset),
+    queryKey: ["partner-portal-statements", limit, offset, api.baseUrl, api.prefix],
+    queryFn: () => fetchPartnerStatements(api.buildUrl, limit, offset),
   });
 }
 
 export function usePartnerPayoutHistory(limit?: number, offset?: number) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner-portal-payouts", limit, offset],
-    queryFn: () => fetchPartnerPayoutHistory(limit, offset),
+    queryKey: ["partner-portal-payouts", limit, offset, api.baseUrl, api.prefix],
+    queryFn: () => fetchPartnerPayoutHistory(api.buildUrl, limit, offset),
   });
 }

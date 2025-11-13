@@ -207,8 +207,8 @@ export function useTickets(options: UseTicketsOptions = {}) {
   const { status, autoRefresh = false, refreshInterval = 30000 } = options;
 
   const query = useQuery({
-    queryKey: ticketingKeys.list({ status }),
-    queryFn: () => ticketingApi.fetchTickets({ status }),
+    queryKey: ticketingKeys.list(status ? { status } : {}),
+    queryFn: () => ticketingApi.fetchTickets(status ? { status } : {}),
     staleTime: 60000, // 1 minute
     refetchInterval: autoRefresh ? refreshInterval : false,
   });
@@ -269,11 +269,11 @@ export function useCreateTicket() {
         priority: newTicket.priority || "normal",
         origin_type: "platform",
         target_type: newTicket.target_type,
-        tenant_id: newTicket.tenant_id,
-        partner_id: newTicket.partner_id,
+        ...(newTicket.tenant_id ? { tenant_id: newTicket.tenant_id } : {}),
+        ...(newTicket.partner_id ? { partner_id: newTicket.partner_id } : {}),
         context: newTicket.metadata || {},
-        ticket_type: newTicket.ticket_type,
-        service_address: newTicket.service_address,
+        ...(newTicket.ticket_type ? { ticket_type: newTicket.ticket_type } : {}),
+        ...(newTicket.service_address ? { service_address: newTicket.service_address } : {}),
         sla_breached: false,
         escalation_level: 0,
         created_at: new Date().toISOString(),

@@ -37,7 +37,7 @@ export class TenantResolver {
 
     // Extract tenant from subdomain (e.g., tenant.example.com -> tenant)
     if (parts.length > 2) {
-      return parts[0];
+      return parts[0] || null;
     }
 
     return null;
@@ -47,18 +47,20 @@ export class TenantResolver {
     if (typeof window === "undefined") return null;
 
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("tenant") || urlParams.get("tenantId");
+    const tenant = urlParams.get("tenant") || urlParams.get("tenantId");
+    return tenant || null;
   }
 
   private extractTenantFromCookie(): string | null {
-    return Cookies.get("tenant-id") || Cookies.get("tenantId") || null;
+    const cookie = Cookies.get("tenant-id") || Cookies.get("tenantId");
+    return cookie || null;
   }
 
   static fromHostname(): TenantResolver {
     const tenantId = typeof window !== "undefined" ? window.location.hostname.split(".")[0] : "";
 
     return new TenantResolver({
-      tenantId,
+      tenantId: tenantId || "",
       source: "subdomain",
     });
   }

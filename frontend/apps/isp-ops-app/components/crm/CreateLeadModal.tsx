@@ -30,7 +30,7 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess, onCreate }: Create
 
     try {
       const payload: HookLeadCreateRequest = {
-        ...data,
+        ...data as any,
       };
       await onCreate(payload);
 

@@ -3,16 +3,19 @@
  * Tests lead creation workflow with form validation
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
 import { CreateLeadModal } from "../CreateLeadModal";
 
 // Mock UI components
 vi.mock("@dotmac/ui", async () => {
   const actual = await vi.importActual("@dotmac/ui");
+  const { simpleSelectMocks } = await import("@dotmac/testing-utils/react/simpleSelectMocks");
   return {
     ...actual,
+    ...simpleSelectMocks,
     Dialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
     DialogContent: ({ children }: any) => <div>{children}</div>,
     DialogHeader: ({ children }: any) => <div>{children}</div>,
@@ -40,33 +43,15 @@ vi.mock("@dotmac/ui", async () => {
         placeholder={placeholder}
       />
     ),
-    Select: ({ children, onValueChange, value }: any) => (
-      <select
-        onChange={(e) => onValueChange?.(e.target.value)}
-        value={value}
-      >
-        {children}
-      </select>
+    Tabs: ({ children, value, onValueChange }: any) => (
+      <div data-active-tab={value}>{children}</div>
     ),
-    SelectTrigger: ({ children }: any) => <div>{children}</div>,
-    SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
-    SelectContent: ({ children }: any) => <>{children}</>,
-    SelectItem: ({ children, value }: any) => (
-      <option value={value}>{children}</option>
-    ),
-    Tabs: ({ children, value, onValueChange }: any) => {
-      const React = require('react');
-      return <div data-active-tab={value}>{children}</div>;
-    },
     TabsList: ({ children }: any) => <div role="tablist">{children}</div>,
-    TabsTrigger: ({ children, value, onClick }: any) => {
-      const React = require('react');
-      return (
-        <button role="tab" onClick={onClick} data-value={value}>
-          {children}
-        </button>
-      );
-    },
+    TabsTrigger: ({ children, value, onClick }: any) => (
+      <button role="tab" onClick={onClick} data-value={value}>
+        {children}
+      </button>
+    ),
     TabsContent: ({ children, value }: any) => (
       <div role="tabpanel" data-value={value}>
         {children}
@@ -492,6 +477,9 @@ describe("CreateLeadModal Integration Tests", () => {
       // Assert
       await waitFor(() => {
         expect(onCreate).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(onSuccess).toHaveBeenCalled();
       });
     });
   });

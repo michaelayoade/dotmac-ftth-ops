@@ -25,7 +25,7 @@ export function NotificationCenter(props: NotificationCenterProps) {
   return (
     <SharedNotificationCenter
       {...props}
-      useNotifications={useNotifications}
+      useNotifications={useNotifications as any}
       useConfirmDialog={useConfirmDialog}
       cn={cn}
     />
@@ -33,5 +33,5 @@ export function NotificationCenter(props: NotificationCenterProps) {
 }
 
 export function NotificationBadge() {
-  return <SharedNotificationBadge useNotifications={useNotifications} />;
+  return <SharedNotificationBadge useNotifications={useNotifications as any} />;
 }

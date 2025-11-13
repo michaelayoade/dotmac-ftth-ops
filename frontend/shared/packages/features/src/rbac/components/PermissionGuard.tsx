@@ -4,8 +4,8 @@
  * Shared between ISP Ops and Platform Admin applications.
  */
 
-import React from "react";
 import { AlertCircle, Lock } from "lucide-react";
+import React from "react";
 
 // Note: PermissionCategory and PermissionAction are enums in the RBAC context
 // We use string here to allow compatibility with enum values

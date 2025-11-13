@@ -11,7 +11,7 @@ export function ONUListView() {
       apiClient={apiClient}
       useToast={useToast}
       useConfirmDialog={useConfirmDialog}
-      Link={Link}
+      Link={Link as any}
     />
   );
 }

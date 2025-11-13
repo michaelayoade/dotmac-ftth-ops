@@ -10,10 +10,11 @@ import {
 } from "@dotmac/ui";
 import { usePartnerTenant } from "@/contexts/PartnerTenantContext";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 
 export function TenantSelector() {
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const {
     activeTenantId,
     managedTenants,

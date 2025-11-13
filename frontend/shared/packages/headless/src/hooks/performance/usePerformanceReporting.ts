@@ -4,11 +4,12 @@
  */
 
 import { useCallback, useEffect, useRef } from "react";
+import type { MutableRefObject } from "react";
 import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
 import { reportMetrics } from "./reportingUtils";
 
 export function usePerformanceReporting(
-  metrics: React.MutableRefObject<PerformanceMetrics>,
+  metrics: MutableRefObject<PerformanceMetrics>,
   config: PerformanceObserverConfig,
 ) {
   const reportingTimerRef = useRef<NodeJS.Timeout>();
@@ -26,6 +27,7 @@ export function usePerformanceReporting(
         }
       };
     }
+    return undefined;
   }, [config, metrics]);
 
   const reportNow = useCallback(() => {

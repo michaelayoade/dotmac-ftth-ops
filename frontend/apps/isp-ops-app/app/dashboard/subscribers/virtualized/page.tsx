@@ -9,10 +9,9 @@ import { useMemo } from "react";
 import { VirtualizedTable } from "@dotmac/primitives";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import { useRADIUSSubscribers } from "@/hooks/useRADIUS";
+import { useRADIUSSubscribers, type RADIUSSubscriber } from "@/hooks/useRADIUS";
 import { Eye, Edit, Trash2, Wifi } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { Subscriber } from "@/hooks/useSubscribers";
 
 export default function VirtualizedSubscribersPage() {
   const { data: subscribersData, isLoading } = useRADIUSSubscribers(0, 10000); // Fetch large dataset
@@ -24,77 +23,73 @@ export default function VirtualizedSubscribersPage() {
       key: "subscriber_id",
       label: "Subscriber ID",
       width: 200,
-      render: (row: Subscriber) => (
+      render: (row: RADIUSSubscriber) => (
         <span className="font-mono text-sm">{row.subscriber_id}</span>
       ),
     },
     {
-      key: "name",
-      label: "Name",
+      key: "username",
+      label: "Username",
       width: 250,
-      render: (row: Subscriber) => (
+      render: (row: RADIUSSubscriber) => (
         <div>
-          <div className="font-medium">{row.name || "—"}</div>
-          {row.email && (
-            <div className="text-sm text-muted-foreground">{row.email}</div>
-          )}
+          <div className="font-medium">{row.username || "—"}</div>
+          <div className="text-sm text-muted-foreground">ID: {row.id}</div>
         </div>
       ),
-    },
-    {
-      key: "status",
-      label: "Status",
-      width: 120,
-      render: (row: Subscriber) => {
-        const statusConfig = {
-          active: { variant: "default" as const, label: "Active" },
-          suspended: { variant: "destructive" as const, label: "Suspended" },
-          pending: { variant: "secondary" as const, label: "Pending" },
-          inactive: { variant: "outline" as const, label: "Inactive" },
-        };
-        const config = statusConfig[row.status] || statusConfig.inactive;
-        return <Badge variant={config.variant}>{config.label}</Badge>;
-      },
     },
     {
       key: "enabled",
-      label: "Enabled",
+      label: "Status",
+      width: 120,
+      render: (row: RADIUSSubscriber) => (
+        <Badge variant={row.enabled ? "default" : "destructive"}>
+          {row.enabled ? "Enabled" : "Disabled"}
+        </Badge>
+      ),
+    },
+    {
+      key: "connection",
+      label: "Connection",
       width: 100,
-      render: (row: Subscriber) => (
-        <div className="flex items-center gap-2">
-          {row.enabled ? (
-            <Wifi className="h-4 w-4 text-green-500" />
-          ) : (
-            <Wifi className="h-4 w-4 text-gray-400" />
-          )}
-          <span className="text-sm">{row.enabled ? "Yes" : "No"}</span>
-        </div>
+      render: (row: RADIUSSubscriber) => {
+        const isEnabled = row.enabled;
+        return (
+          <div className="flex items-center gap-2">
+            {isEnabled ? (
+              <Wifi className="h-4 w-4 text-green-500" />
+            ) : (
+              <Wifi className="h-4 w-4 text-gray-400" />
+            )}
+            <span className="text-sm">{isEnabled ? "Active" : "Inactive"}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "bandwidth_profile_id",
+      label: "Bandwidth Profile",
+      width: 150,
+      render: (row: RADIUSSubscriber) => row.bandwidth_profile_id || "—",
+    },
+    {
+      key: "framed_ipv4_address",
+      label: "IPv4 Address",
+      width: 150,
+      render: (row: RADIUSSubscriber) => (
+        <span className="font-mono text-sm">{row.framed_ipv4_address || "Dynamic"}</span>
       ),
     },
     {
-      key: "bandwidth_profile",
-      label: "Bandwidth",
-      width: 150,
-      render: (row: Subscriber) => row.bandwidth_profile_name || "—",
-    },
-    {
-      key: "ip_address",
-      label: "IP Address",
-      width: 150,
-      render: (row: Subscriber) => (
-        <span className="font-mono text-sm">{row.ip_address || "Dynamic"}</span>
-      ),
-    },
-    {
-      key: "last_seen",
-      label: "Last Seen",
+      key: "created_at",
+      label: "Created",
       width: 180,
-      render: (row: Subscriber) => {
-        if (!row.last_seen) return <span className="text-muted-foreground">Never</span>;
+      render: (row: RADIUSSubscriber) => {
+        if (!row.created_at) return <span className="text-muted-foreground">—</span>;
         try {
           return (
             <span className="text-sm">
-              {formatDistanceToNow(new Date(row.last_seen), { addSuffix: true })}
+              {formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}
             </span>
           );
         } catch {
@@ -106,7 +101,7 @@ export default function VirtualizedSubscribersPage() {
       key: "actions",
       label: "Actions",
       width: 150,
-      render: (row: Subscriber) => (
+      render: (row: RADIUSSubscriber) => (
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <Eye className="h-4 w-4" />
@@ -151,7 +146,7 @@ export default function VirtualizedSubscribersPage() {
 
         <VirtualizedTable
           data={subscribers}
-          columns={columns}
+          columns={columns as any}
           rowHeight={64}
           height={600}
           loading={isLoading}

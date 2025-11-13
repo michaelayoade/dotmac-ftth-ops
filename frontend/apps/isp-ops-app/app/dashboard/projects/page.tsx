@@ -195,9 +195,10 @@ export default function ProjectDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<ProjectFilter>({});
 
+  const trimmedSearch = searchQuery.trim();
   const { data: projectsData, isLoading } = useProjects({
     ...filter,
-    search: searchQuery || null,
+    ...(trimmedSearch ? { search: trimmedSearch } : {}),
   });
   const { data: metrics } = useProjectMetrics();
 

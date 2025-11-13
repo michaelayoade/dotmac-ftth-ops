@@ -122,10 +122,10 @@ export function useDeviceTraffic(deviceId: string | undefined) {
 // ============================================================================
 
 interface UseAlertsParams {
-  severity?: AlertSeverity;
-  active_only?: boolean;
-  device_id?: string;
-  limit?: number;
+  severity?: AlertSeverity | undefined;
+  active_only?: boolean | undefined;
+  device_id?: string | undefined;
+  limit?: number | undefined;
 }
 
 export function useNetworkAlerts(params: UseAlertsParams = {}) {

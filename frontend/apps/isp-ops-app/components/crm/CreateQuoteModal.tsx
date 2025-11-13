@@ -65,9 +65,9 @@ export function CreateQuoteModal({
       onClose={onClose}
       onSuccess={onSuccess}
       onCreate={handleCreate}
-      quote={quote}
+      quote={quote as any}
       leadId={leadId}
-      leads={leads}
+      leads={leads as any}
       isSubmitting={isSubmitting}
     />
   );

@@ -7,19 +7,6 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  WifiOff,
-  Server,
-  TrendingUp,
-  TrendingDown,
-  RefreshCw,
-  Bell,
-  BellOff,
-} from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
@@ -32,6 +19,19 @@ import {
   TableHeader,
   TableRow,
 } from "@dotmac/ui";
+import {
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  WifiOff,
+  Server,
+  TrendingUp,
+  TrendingDown,
+  RefreshCw,
+  Bell,
+  BellOff,
+} from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
 export enum DeviceStatus {
   ONLINE = "online",

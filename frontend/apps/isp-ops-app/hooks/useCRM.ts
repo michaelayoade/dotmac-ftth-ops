@@ -268,49 +268,49 @@ export interface QuoteCreateRequest {
   service_plan_name: string;
   bandwidth: string;
   monthly_recurring_charge: number;
-  installation_fee?: number;
-  equipment_fee?: number;
-  activation_fee?: number;
-  contract_term_months?: number;
-  early_termination_fee?: number;
-  promo_discount_months?: number;
-  promo_monthly_discount?: number;
+  installation_fee?: number | undefined;
+  equipment_fee?: number | undefined;
+  activation_fee?: number | undefined;
+  contract_term_months?: number | undefined;
+  early_termination_fee?: number | undefined;
+  promo_discount_months?: number | undefined;
+  promo_monthly_discount?: number | undefined;
   valid_until: string;
   line_items?: Array<{
     description: string;
     quantity: number;
     unit_price: number;
     total: number;
-  }>;
-  metadata?: Record<string, any>;
-  notes?: string;
+  }> | undefined;
+  metadata?: Record<string, any> | undefined;
+  notes?: string | undefined;
 }
 
 export interface SiteSurveyScheduleRequest {
   lead_id: string;
   scheduled_date: string;
-  technician_id?: string;
-  notes?: string;
+  technician_id?: string | undefined;
+  notes?: string | undefined;
 }
 
 export interface SiteSurveyCompleteRequest {
   serviceability: Serviceability;
-  nearest_fiber_distance_meters?: number;
-  requires_fiber_extension?: boolean;
-  fiber_extension_cost?: number;
-  nearest_olt_id?: string;
-  available_pon_ports?: number;
-  estimated_installation_time_hours?: number;
-  special_equipment_required?: string[];
-  installation_complexity?: "simple" | "moderate" | "complex";
+  nearest_fiber_distance_meters?: number | undefined;
+  requires_fiber_extension?: boolean | undefined;
+  fiber_extension_cost?: number | undefined;
+  nearest_olt_id?: string | undefined;
+  available_pon_ports?: number | undefined;
+  estimated_installation_time_hours?: number | undefined;
+  special_equipment_required?: string[] | undefined;
+  installation_complexity?: "simple" | "moderate" | "complex" | undefined;
   photos?: Array<{
     url: string;
-    description?: string;
+    description?: string | undefined;
     timestamp: string;
-  }>;
-  recommendations?: string;
-  obstacles?: string;
-  notes?: string;
+  }> | undefined;
+  recommendations?: string | undefined;
+  obstacles?: string | undefined;
+  notes?: string | undefined;
 }
 
 // ============================================================================
@@ -318,12 +318,12 @@ export interface SiteSurveyCompleteRequest {
 // ============================================================================
 
 export interface UseLeadsOptions {
-  status?: LeadStatus;
-  source?: LeadSource;
-  assignedToId?: string;
-  partnerId?: string;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+  status?: LeadStatus | undefined;
+  source?: LeadSource | undefined;
+  assignedToId?: string | undefined;
+  partnerId?: string | undefined;
+  autoRefresh?: boolean | undefined;
+  refreshInterval?: number | undefined;
 }
 
 export function useLeads(options: UseLeadsOptions = {}) {
@@ -475,12 +475,12 @@ export function useLeads(options: UseLeadsOptions = {}) {
         setLeads((prev) =>
           prev.map((l) =>
             l.id === id
-              ? {
+              ? ({
                   ...l,
                   is_serviceable: serviceability,
                   serviceability_checked_at: new Date().toISOString(),
                   serviceability_notes: notes || undefined,
-                }
+                } as Lead)
               : l,
           ),
         );
@@ -626,12 +626,12 @@ export function useQuotes(options: UseQuotesOptions = {}) {
         setQuotes((prev) =>
           prev.map((q) =>
             q.id === id
-              ? {
+              ? ({
                   ...q,
                   status: "accepted" as QuoteStatus,
                   accepted_at: new Date().toISOString(),
                   signature_data: signatureData || undefined,
-                }
+                } as Quote)
               : q,
           ),
         );
@@ -770,12 +770,12 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
         setSurveys((prev) =>
           prev.map((s) =>
             s.id === id
-              ? {
+              ? ({
                   ...s,
                   status: "completed" as SiteSurveyStatus,
                   completed_date: new Date().toISOString(),
                   ...data,
-                }
+                } as SiteSurvey)
               : s,
           ),
         );

@@ -21,7 +21,7 @@ import {
   Clock,
   Router as RouterIcon,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -64,6 +64,7 @@ function DevicesPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
 
   // Fetch devices
   const { data: devices = [], isLoading } = useQuery<Device[]>({
@@ -74,7 +75,7 @@ function DevicesPageContent() {
       if (manufacturerFilter !== "all") params.append("manufacturer", manufacturerFilter);
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices?${params.toString()}`,
+        `${apiBaseUrl}/api/v1/genieacs/devices?${params.toString()}`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -92,7 +93,7 @@ function DevicesPageContent() {
     queryKey: ["genieacs-stats", refreshKey],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/stats`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/stats`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -108,7 +109,7 @@ function DevicesPageContent() {
   const refreshMutation = useMutation({
     mutationFn: async (deviceId: string) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
         {
           method: "POST",
           credentials: "include",

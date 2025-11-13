@@ -29,9 +29,13 @@ import {
   useCustomerTicketsQuery,
   useCustomerBillingQuery,
   useCustomer360ViewQuery,
-} from "@dotmac/graphql/generated/react-query";
+} from "@shared/packages/graphql/generated/react-query";
 
-import { CustomerStatusEnum } from "@dotmac/graphql/generated";
+import { CustomerStatusEnum } from "@shared/packages/graphql/generated";
+import type { CustomerListQuery } from "@shared/packages/graphql/generated/graphql";
+
+type CustomerListItem =
+  NonNullable<NonNullable<CustomerListQuery["customers"]>["customers"]>[number];
 
 // ============================================================================
 // Customer List Hook
@@ -97,7 +101,7 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     });
   }, [error, toast, limit, offset, status, includeActivities, includeNotes, search]);
 
-  const customers = data?.customers?.customers ?? [];
+  const customers = (data?.customers?.customers ?? []) as CustomerListItem[];
   const totalCount = data?.customers?.totalCount ?? 0;
   const hasNextPage = data?.customers?.hasNextPage ?? false;
 

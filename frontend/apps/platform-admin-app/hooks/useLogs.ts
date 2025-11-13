@@ -11,10 +11,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useToast } from "@dotmac/ui";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { logger } from "@/lib/logger";
-
-const API_BASE_URL = platformConfig.api.baseUrl;
 
 export interface LogMetadata {
   request_id?: string;
@@ -75,10 +73,12 @@ export function useLogs(filters: LogsFilter = {}) {
   const serializedFilters = JSON.stringify(filters ?? {});
   const normalizedFilters = useMemo(() => filters, [serializedFilters]);
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch logs
   const logsQuery = useQuery({
-    queryKey: logsKeys.list(normalizedFilters),
+    queryKey: [...logsKeys.list(normalizedFilters), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
@@ -92,7 +92,7 @@ export function useLogs(filters: LogsFilter = {}) {
           params.append("page_size", normalizedFilters.page_size.toString());
 
         const response = await axios.get<LogsResponse>(
-          `${API_BASE_URL}/api/v1/monitoring/logs?${params.toString()}`,
+          `${apiBaseUrl}/api/v1/monitoring/logs?${params.toString()}`,
           { withCredentials: true },
         );
 
@@ -112,11 +112,11 @@ export function useLogs(filters: LogsFilter = {}) {
 
   // Fetch stats
   const statsQuery = useQuery({
-    queryKey: logsKeys.stats(),
+    queryKey: [...logsKeys.stats(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
         const response = await axios.get<LogStats>(
-          `${API_BASE_URL}/api/v1/monitoring/logs/stats`,
+          `${apiBaseUrl}/api/v1/monitoring/logs/stats`,
           { withCredentials: true },
         );
         return response.data;
@@ -133,11 +133,11 @@ export function useLogs(filters: LogsFilter = {}) {
 
   // Fetch services
   const servicesQuery = useQuery({
-    queryKey: logsKeys.services(),
+    queryKey: [...logsKeys.services(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
         const response = await axios.get<string[]>(
-          `${API_BASE_URL}/api/v1/monitoring/logs/services`,
+          `${apiBaseUrl}/api/v1/monitoring/logs/services`,
           { withCredentials: true },
         );
         return response.data;

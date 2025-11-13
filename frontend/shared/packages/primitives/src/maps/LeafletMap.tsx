@@ -5,9 +5,7 @@
 
 "use client";
 
-import React, { useMemo, useCallback, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, useMap } from "react-leaflet";
-import L from "leaflet";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -25,14 +23,50 @@ import {
 import { cn } from "../utils/cn";
 import type { Coordinates, Bounds, MapMarker, ServiceArea, NetworkNode, Route } from "./UniversalMap";
 
-// Fix for default marker icons in Leaflet
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
+type LeafletModule = typeof import("leaflet");
+type ReactLeafletModule = typeof import("react-leaflet");
+
+let leafletModule: LeafletModule | null = null;
+let reactLeafletModule: ReactLeafletModule | null = null;
+let leafletIconsInitialized = false;
+
+const patchLeafletIcons = (leaflet: LeafletModule) => {
+  if (leafletIconsInitialized) {
+    return;
+  }
+  // Fix for default marker icons in Leaflet
+  // @ts-ignore
+  delete leaflet.Icon.Default.prototype._getIconUrl;
+  leaflet.Icon.Default.mergeOptions({
+    iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  });
+  leafletIconsInitialized = true;
+};
+
+const loadLeafletModules = async () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  if (!leafletModule) {
+    const leafletImport = await import("leaflet");
+    const resolvedLeaflet =
+      (leafletImport as { default?: LeafletModule }).default ?? (leafletImport as LeafletModule);
+    leafletModule = resolvedLeaflet;
+    patchLeafletIcons(resolvedLeaflet);
+  }
+
+  if (!reactLeafletModule) {
+    reactLeafletModule = await import("react-leaflet");
+  }
+
+  return {
+    leaflet: leafletModule,
+    reactLeaflet: reactLeafletModule,
+  };
+};
 
 export interface LeafletMapProps {
   // Map Configuration
@@ -66,7 +100,11 @@ export interface LeafletMapProps {
 }
 
 // Custom marker icons for different types
-const createCustomIcon = (type: MapMarker["type"], status?: string): L.DivIcon => {
+const createCustomIcon = (
+  leaflet: LeafletModule,
+  type: MapMarker["type"],
+  status?: string,
+): import("leaflet").DivIcon => {
   const statusColors: Record<string, string> = {
     active: "#10B981",
     online: "#10B981",
@@ -102,7 +140,7 @@ const createCustomIcon = (type: MapMarker["type"], status?: string): L.DivIcon =
     </div>
   `;
 
-  return L.divIcon({
+  return leaflet.divIcon({
     html: iconHtml,
     className: "custom-marker-icon",
     iconSize: [30, 30],
@@ -150,20 +188,6 @@ const MapControls: React.FC<{
   );
 };
 
-// Map Controller Component (handles programmatic map control)
-const MapController: React.FC<{
-  center: Coordinates;
-  zoom: number;
-}> = ({ center, zoom }) => {
-  const map = useMap();
-
-  React.useEffect(() => {
-    map.setView([center.lat, center.lng], zoom);
-  }, [center, zoom, map]);
-
-  return null;
-};
-
 export const LeafletMap: React.FC<LeafletMapProps> = ({
   center = { lat: 0, lng: 0 },
   zoom = 13,
@@ -187,6 +211,52 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 }) => {
   const [mapZoom, setMapZoom] = useState(zoom);
   const [mapCenter, setMapCenter] = useState(center);
+  const [modules, setModules] = useState<{ leaflet: LeafletModule; reactLeaflet: ReactLeafletModule } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (modules || typeof window === "undefined") {
+      return;
+    }
+    void loadLeafletModules().then((loaded) => {
+      if (!cancelled && loaded) {
+        setModules(loaded);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [modules]);
+
+  if (!modules) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg",
+          className
+        )}
+        style={{ height }}
+      >
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Loading interactive map...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { leaflet: L, reactLeaflet } = modules;
+  const { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, useMap } = reactLeaflet;
+
+  const MapControllerComponent: React.FC<{ center: Coordinates; zoom: number }> = ({ center, zoom }) => {
+    const map = useMap();
+
+    useEffect(() => {
+      map.setView([center.lat, center.lng], zoom);
+    }, [center, zoom, map]);
+
+    return null;
+  };
 
   // Variant colors
   const variantStyles = {
@@ -222,7 +292,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       );
     }
     return undefined;
-  }, [bounds]);
+  }, [bounds, L]);
 
   // Service area colors
   const getAreaColor = (area: ServiceArea): string => {
@@ -299,7 +369,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          <MapController center={mapCenter} zoom={mapZoom} />
+          <MapControllerComponent center={mapCenter} zoom={mapZoom} />
 
           {/* Render Service Areas */}
           {serviceAreas.map((area) => (
@@ -362,7 +432,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={node.id}
               position={[node.position.lat, node.position.lng]}
-              icon={createCustomIcon("fiber", node.status)}
+              icon={createCustomIcon(L, "fiber", node.status)}
               eventHandlers={{
                 click: () => onNodeClick?.(node),
               }}
@@ -402,7 +472,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={marker.id}
               position={[marker.position.lat, marker.position.lng]}
-              icon={createCustomIcon(marker.type, marker.status)}
+              icon={createCustomIcon(L, marker.type, marker.status)}
               eventHandlers={{
                 click: () => {
                   onMarkerClick?.(marker);

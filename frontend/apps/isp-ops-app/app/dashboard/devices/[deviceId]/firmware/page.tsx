@@ -15,7 +15,7 @@ import {
   FileCode,
   Play,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -45,12 +45,13 @@ function FirmwarePageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
 
   const { data: device } = useQuery({
     queryKey: ["device", deviceId],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch device");
@@ -62,7 +63,7 @@ function FirmwarePageContent() {
     queryKey: ["firmware-versions", device?.summary?.model],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/firmware/versions?model=${device?.summary?.model}`,
+        `${apiBaseUrl}/api/v1/genieacs/firmware/versions?model=${device?.summary?.model}`,
         { credentials: "include" }
       );
       if (!response.ok) return [];
@@ -75,7 +76,7 @@ function FirmwarePageContent() {
     queryKey: ["firmware-upgrade", deviceId],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/firmware/status`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/firmware/status`,
         { credentials: "include" }
       );
       if (!response.ok) return null;
@@ -87,7 +88,7 @@ function FirmwarePageContent() {
   const upgradeMutation = useMutation({
     mutationFn: async (version: string) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/firmware/upgrade`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/firmware/upgrade`,
         {
           method: "POST",
           credentials: "include",

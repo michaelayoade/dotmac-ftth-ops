@@ -15,6 +15,13 @@ interface RequestDescriptor<TResponse> {
   execute: () => Promise<TResponse>;
 }
 
+type ApiMutationOptions<TResponse, TVariables> = Omit<
+  UseMutationOptions<TResponse, ApiError, TVariables>,
+  "mutationFn"
+> & {
+  invalidateQueries?: QueryKey[];
+};
+
 export function createApiQuery<TResponse>(
   request: () => Promise<TResponse>,
 ): RequestDescriptor<TResponse> {
@@ -37,21 +44,22 @@ export function useApiQuery<TResponse>(
 
 export function useApiMutation<TResponse, TVariables = void>(
   descriptor: (variables: TVariables) => Promise<TResponse>,
-  options?: Omit<UseMutationOptions<TResponse, ApiError, TVariables>, "mutationFn">,
+  options?: ApiMutationOptions<TResponse, TVariables>,
 ) {
   const queryClient = useQueryClient();
 
   return useMutation<TResponse, ApiError, TVariables>({
     mutationFn: descriptor,
-    onError: (error, variables, context) => {
-      options?.onError?.(error, variables, context);
+    ...options,
+    onError: (error, variables, context, mutation) => {
+      options?.onError?.(error, variables, context, mutation);
     },
-    onSuccess: (data, variables, context) => {
-      options?.onSuccess?.(data, variables, context);
+    onSuccess: (data, variables, context, mutation) => {
+      options?.onSuccess?.(data, variables, context, mutation);
     },
-    onSettled: async (data, error, variables, context) => {
+    onSettled: async (data, error, variables, context, mutation) => {
       if (options?.onSettled) {
-        await options.onSettled(data, error, variables, context);
+        await options.onSettled(data, error, variables, context, mutation);
       }
       if (options?.invalidateQueries) {
         await Promise.all(
@@ -61,7 +69,6 @@ export function useApiMutation<TResponse, TVariables = void>(
         );
       }
     },
-    ...options,
   });
 }
 

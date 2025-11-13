@@ -1,17 +1,18 @@
 "use client";
 
-import React, { Component, ReactNode } from "react";
+import React, { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
-  errorInfo: React.ErrorInfo | null;
+  errorInfo: ErrorInfo | null;
 }
 
 export class GlobalErrorBoundary extends Component<Props, State> {
@@ -32,7 +33,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log to console in development
     if (process.env["NODE_ENV"] === "development") {
       console.error("GlobalErrorBoundary caught error:", error, errorInfo);
@@ -51,7 +52,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     });
   }
 
-  private logErrorToService(error: Error, errorInfo: React.ErrorInfo) {
+  private logErrorToService(error: Error, errorInfo: ErrorInfo) {
     // Send to monitoring endpoint
     if (typeof window !== "undefined" && process.env["NEXT_PUBLIC_ERROR_ENDPOINT"]) {
       const errorData = {
@@ -82,7 +83,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     }
   }
 
-  render() {
+  override render(): ReactNode {
     if (this.state.hasError) {
       // Custom fallback UI
       if (this.props.fallback) {
@@ -141,7 +142,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
 // Hook for error reporting
 export function useErrorHandler() {
-  return (error: Error, errorInfo?: React.ErrorInfo) => {
+  return (error: Error, errorInfo?: ErrorInfo) => {
     // Log to console in development
     if (process.env["NODE_ENV"] === "development") {
       console.error("Error handled:", error, errorInfo);

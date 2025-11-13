@@ -7,6 +7,7 @@
 
 import { useMemo, useCallback } from "react";
 import { useApiClient } from "./useApiClient";
+import type { ApiClient } from "../api/client";
 import { createISPBusinessService, type ISPBusinessOperations } from "../business/isp-operations";
 import type {
   CustomerProfile,
@@ -35,6 +36,7 @@ export interface UseISPBusinessOptions {
 }
 
 export interface UseISPBusinessReturn extends ISPBusinessOperations {
+  apiClient: ApiClient;
   // Convenience methods for common operations
   customerOperations: {
     // Customer Portal - frequently used operations
@@ -167,7 +169,7 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
         const [customers, revenue, commissions] = await Promise.all([
           apiClient.request<{ data: CustomerProfile[] }>(`/resellers/${resellerId}/customers`),
           businessService.billingOperations.calculateRevenue({
-            ...period,
+            dateRange: period,
             resellerId,
           }),
           businessService.billingOperations.generateCommissions(resellerId, period),
@@ -210,7 +212,7 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
       },
 
       getDeviceList: async (regionId?: string) => {
-        const params = regionId ? { regionId } : {};
+        const params = regionId ? { regionId } : undefined;
         const response = await apiClient.request<{ data: DeviceStatus[] }>("/network/devices", {
           params,
         });
@@ -300,6 +302,7 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
   );
 
   return {
+    apiClient,
     // Core business operations
     ...businessService,
 

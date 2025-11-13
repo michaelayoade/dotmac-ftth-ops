@@ -29,9 +29,8 @@ export default function ManagedTenantsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const { isPartnerUser } = usePartnerTenant();
-  const { data, isLoading, error } = useManagedTenants({
-    status: statusFilter,
-  });
+  const managedTenantParams = statusFilter ? { status: statusFilter } : {};
+  const { data, isLoading, error } = useManagedTenants(managedTenantParams);
 
   // Filter tenants by search query
   const filteredTenants = data?.tenants.filter((tenant) =>

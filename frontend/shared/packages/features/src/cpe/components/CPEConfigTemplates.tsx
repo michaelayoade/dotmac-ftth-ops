@@ -1,20 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Settings,
-  Wifi,
-  Network,
-  Save,
-  Edit,
-  Trash2,
-  Copy,
-  Plus,
-  Loader2,
-  CheckCircle2,
-  AlertTriangle,
-  Router,
-} from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import {
   Dialog,
@@ -40,6 +25,22 @@ import {
 } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
+import {
+  Settings,
+  Wifi,
+  Network,
+  Save,
+  Edit,
+  Trash2,
+  Copy,
+  Plus,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+  Router,
+} from "lucide-react";
+import { useState } from "react";
+
 import {
   WiFiConfig,
   LANConfig,

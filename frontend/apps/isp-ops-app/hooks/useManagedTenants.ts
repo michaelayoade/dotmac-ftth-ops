@@ -36,9 +36,9 @@ export interface ManagedTenantsResponse {
 }
 
 export interface UseManagedTenantsParams {
-  status?: string;
-  offset?: number;
-  limit?: number;
+  status?: string | undefined;
+  offset?: number | undefined;
+  limit?: number | undefined;
 }
 
 /**

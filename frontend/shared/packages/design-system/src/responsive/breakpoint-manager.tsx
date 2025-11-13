@@ -179,16 +179,20 @@ export class BreakpointManager {
     // Fall back to largest available breakpoint that's smaller than current
     for (let i = currentIndex; i >= 0; i--) {
       const breakpoint = breakpointOrder[i];
-      if (responsive[breakpoint] !== undefined) {
-        return responsive[breakpoint];
+      if (!breakpoint) continue;
+      const value = responsive[breakpoint];
+      if (value !== undefined) {
+        return value;
       }
     }
 
     // If no smaller breakpoint found, try larger ones
     for (let i = currentIndex + 1; i < breakpointOrder.length; i++) {
       const breakpoint = breakpointOrder[i];
-      if (responsive[breakpoint] !== undefined) {
-        return responsive[breakpoint];
+      if (!breakpoint) continue;
+      const value = responsive[breakpoint];
+      if (value !== undefined) {
+        return value;
       }
     }
 
@@ -396,13 +400,17 @@ export const Responsive: React.FC<{
 export const withResponsive = <P extends object>(
   Component: React.ComponentType<P>,
   responsiveProps: ResponsiveValue<Partial<P>>,
-) => {
-  return React.forwardRef<any, P>((props, ref) => {
+): React.FC<P> => {
+  const ResponsiveComponent: React.FC<P> = (props) => {
     const resolvedProps = useResponsiveValue(responsiveProps);
     const mergedProps = { ...props, ...resolvedProps };
 
-    return <Component ref={ref} {...mergedProps} />;
-  });
+    return <Component {...(mergedProps as P)} />;
+  };
+
+  ResponsiveComponent.displayName = `withResponsive(${Component.displayName || Component.name || "Component"})`;
+
+  return ResponsiveComponent;
 };
 
 export default BreakpointManager;

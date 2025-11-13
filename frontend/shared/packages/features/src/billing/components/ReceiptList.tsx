@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  EnhancedDataTable,
+  type ColumnDef,
+  type BulkAction,
+  type QuickFilter,
+  type Row,
+} from "@dotmac/ui";
 import {
   Calendar,
   CreditCard,
@@ -12,14 +18,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import {
-  EnhancedDataTable,
-  type ColumnDef,
-  type BulkAction,
-  type QuickFilter,
-  type Row,
-} from "@dotmac/ui";
+import { useState, useEffect, useCallback, useMemo } from "react";
+
 import { formatCurrency } from "../utils";
+
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
 
 // ============================================================================
@@ -364,23 +366,11 @@ export default function ReceiptList({
         label: "Download Selected",
         icon: DownloadIcon,
         action: handleBulkDownload,
-        disabled: undefined,
-        variant: undefined,
-        confirmMessage: undefined,
-        confirmTitle: undefined,
-        confirmConfirmText: undefined,
-        confirmVariant: undefined,
       },
       {
         label: "Email Selected",
         icon: MailIcon,
         action: handleBulkEmail,
-        disabled: undefined,
-        variant: undefined,
-        confirmMessage: undefined,
-        confirmTitle: undefined,
-        confirmConfirmText: undefined,
-        confirmVariant: undefined,
       },
     ],
     [handleBulkDownload, handleBulkEmail],
@@ -390,9 +380,6 @@ export default function ReceiptList({
     (): QuickFilter<Receipt>[] => [
       {
         label: "This Month",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (receipt: Receipt) => {
           const issueDate = new Date(receipt.issue_date);
           const now = new Date();
@@ -403,9 +390,6 @@ export default function ReceiptList({
       },
       {
         label: "Last 7 Days",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (receipt: Receipt) => {
           const issueDate = new Date(receipt.issue_date);
           const sevenDaysAgo = new Date();
@@ -415,18 +399,12 @@ export default function ReceiptList({
       },
       {
         label: "Card Payments",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (receipt: Receipt) =>
           receipt.payment_method.toLowerCase().includes("card") ||
           receipt.payment_method === "stripe",
       },
       {
         label: "Completed",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (receipt: Receipt) =>
           receipt.payment_status === "completed" || receipt.payment_status === "succeeded",
       },
@@ -513,30 +491,11 @@ export default function ReceiptList({
         bulkActions={bulkActions}
         quickFilters={quickFilters}
         searchConfig={searchConfig}
-        onRowClick={onReceiptSelect || undefined}
+        {...(onReceiptSelect ? { onRowClick: onReceiptSelect } : {})}
         isLoading={loading || bulkLoading}
         emptyMessage="No receipts found"
         getRowId={(receipt: Receipt) => receipt.receipt_id}
-        searchable={undefined}
-        searchPlaceholder={undefined}
-        searchColumn={undefined}
-        searchKey={undefined}
-        paginated={undefined}
-        pagination={undefined}
-        pageSizeOptions={undefined}
-        defaultPageSize={undefined}
-        selectable={undefined}
-        filterable={undefined}
-        filters={undefined}
-        exportable={undefined}
-        exportFilename={undefined}
-        exportColumns={undefined}
-        columnVisibility={undefined}
-        className={undefined}
-        toolbarActions={undefined}
-        errorMessage={error}
-        error={error ? true : undefined}
-        hideToolbar={undefined}
+        {...(error ? { errorMessage: error } : {})}
       />
     </div>
   );

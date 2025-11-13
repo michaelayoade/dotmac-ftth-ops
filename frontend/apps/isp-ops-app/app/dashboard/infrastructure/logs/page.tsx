@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { useLogs } from "@/hooks/useLogs";
+import type { LogsFilter } from "@/hooks/useLogs";
 
 export default function LogsPage() {
   const { toast } = useToast();
@@ -33,15 +34,27 @@ export default function LogsPage() {
   const [autoScroll, setAutoScroll] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const buildFilters = useCallback(() => {
+    const nextFilters: LogsFilter = {
+      page: 1,
+      page_size: 100,
+    };
+    if (levelFilter !== "all") {
+      nextFilters.level = levelFilter;
+    }
+    if (serviceFilter !== "all") {
+      nextFilters.service = serviceFilter;
+    }
+    const trimmedSearch = searchTerm.trim();
+    if (trimmedSearch.length > 0) {
+      nextFilters.search = trimmedSearch;
+    }
+    return nextFilters;
+  }, [levelFilter, searchTerm, serviceFilter]);
+  const [filters, setFilters] = useState<LogsFilter>(() => buildFilters());
 
   // Use the real API hook
-  const { logs, stats, services, isLoading, error, pagination, refetch } = useLogs({
-    level: levelFilter !== "all" ? levelFilter : undefined,
-    service: serviceFilter !== "all" ? serviceFilter : undefined,
-    search: searchTerm || undefined,
-    page: 1,
-    page_size: 100,
-  });
+  const { logs, stats, services, isLoading, error, pagination, refetch } = useLogs(filters);
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
@@ -53,15 +66,11 @@ export default function LogsPage() {
   // Refetch when filters change
   useEffect(() => {
     const timer = setTimeout(() => {
-      refetch({
-        level: levelFilter !== "all" ? levelFilter : undefined,
-        service: serviceFilter !== "all" ? serviceFilter : undefined,
-        search: searchTerm || undefined,
-      });
+      setFilters(buildFilters());
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [levelFilter, serviceFilter, searchTerm, refetch]);
+  }, [buildFilters]);
 
   const handleExport = () => {
     const exportData = JSON.stringify(logs, null, 2);

@@ -236,11 +236,11 @@ export interface ONUProvisionRequest {
   serial_number: string;
   olt_device_id: string;
   pon_port: number;
-  subscriber_id?: string;
-  vlan?: number;
-  line_profile_id?: string;
-  service_profile_id?: string;
-  bandwidth_profile?: string;
+  subscriber_id?: string | undefined;
+  vlan?: number | undefined;
+  line_profile_id?: string | undefined;
+  service_profile_id?: string | undefined;
+  bandwidth_profile?: string | undefined;
 }
 
 export interface ONUProvisionResponse {

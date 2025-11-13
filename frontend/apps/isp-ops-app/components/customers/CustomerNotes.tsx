@@ -18,10 +18,10 @@ export function CustomerNotes({ customerId }: CustomerNotesProps) {
   return (
     <SharedCustomerNotes
       customerId={customerId}
-      notes={notes}
+      notes={notes as any}
       loading={loading}
       error={normalizedError}
-      addNote={addNote}
+      addNote={addNote as any}
     />
   );
 }

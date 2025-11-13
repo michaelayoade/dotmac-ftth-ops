@@ -4,9 +4,9 @@ import { getApiClient } from "@dotmac/headless/api";
 
 import { useApiErrorNotifications } from "./useNotifications";
 
-interface UseApiDataOptions {
+interface UseApiDataOptions<T> {
   ttl?: number;
-  fallbackData?: unknown;
+  fallbackData?: T | null;
   enabled?: boolean;
   retryCount?: number;
   retryDelay?: number;
@@ -25,7 +25,7 @@ const cache = new Map<string, { data: unknown; timestamp: number }>();
 export function useApiData<T>(
   key: string,
   fetcher: () => Promise<T>,
-  options: UseApiDataOptions = {
+  options: UseApiDataOptions<T> = {
     // Implementation pending
   },
 ): UseApiDataResult<T> {
@@ -37,7 +37,7 @@ export function useApiData<T>(
     retryDelay = 1000,
   } = options;
 
-  const [data, setData] = useState<T | null>(fallbackData || null);
+  const [data, setData] = useState<T | null>(() => fallbackData ?? null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -52,7 +52,7 @@ export function useApiData<T>(
     const now = Date.now();
 
     if (cached && now - cached.timestamp < ttl) {
-      setData(cached.data);
+      setData(cached.data as T);
       setLastUpdated(new Date(cached.timestamp));
       return true;
     }
@@ -90,7 +90,7 @@ export function useApiData<T>(
 
   // Helper to handle fallback data
   const useFallbackData = useCallback(() => {
-    if (fallbackData && mountedRef.current && !data) {
+    if (fallbackData !== undefined && fallbackData !== null && mountedRef.current && !data) {
       setData(fallbackData);
       setLastUpdated(new Date());
       setError(null);
@@ -101,9 +101,6 @@ export function useApiData<T>(
         timestamp: Date.now(),
       });
 
-      if (fallbackData && mountedRef.current && !data) {
-        // Use fallback data when available
-      }
       return true;
     }
     return false;

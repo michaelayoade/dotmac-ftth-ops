@@ -35,7 +35,7 @@ export default function CustomerSettingsPage() {
   });
 
   useEffect(() => {
-    if (customerProfile) {
+    if (customerProfile && typeof customerProfile === 'object' && 'first_name' in customerProfile) {
       setProfile({
         firstName: customerProfile.first_name,
         lastName: customerProfile.last_name,
@@ -124,7 +124,10 @@ export default function CustomerSettingsPage() {
     }
 
     try {
-      await changePassword(security.currentPassword, security.newPassword);
+      await changePassword({
+        currentPassword: security.currentPassword,
+        newPassword: security.newPassword
+      });
       toast({
         title: "Password Changed",
         description: "Your password has been updated successfully.",

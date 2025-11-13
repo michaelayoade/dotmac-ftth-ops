@@ -337,7 +337,7 @@ export const components = {
 export const lightTheme = {
   colors: {
     background: colors.neutral[50],
-    surface: colors.neutral[0] || "#ffffff",
+    surface: colors.neutral[50],
     surfaceVariant: colors.neutral[100],
     primary: colors.primary[600],
     primaryVariant: colors.primary[700],

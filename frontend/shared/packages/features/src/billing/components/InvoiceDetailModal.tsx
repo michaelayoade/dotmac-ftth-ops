@@ -7,9 +7,6 @@
 
 "use client";
 
-import { useState } from "react";
-import type { LucideIcon } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +24,8 @@ import {
   TableHeader,
   TableRow,
 } from "@dotmac/ui";
+import { formatDistanceToNow } from "date-fns";
+import type { LucideIcon } from "lucide-react";
 import {
   FileText,
   Send,
@@ -43,6 +42,8 @@ import {
   Bell,
   Receipt,
 } from "lucide-react";
+import { useState } from "react";
+
 import { type Invoice, InvoiceStatus } from "../types";
 import { formatCurrency } from "../utils";
 

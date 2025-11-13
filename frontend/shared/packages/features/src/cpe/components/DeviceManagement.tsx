@@ -1,18 +1,5 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import {
-  Server,
-  RefreshCw,
-  Trash2,
-  Info,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  Search,
-  Filter,
-  Power,
-} from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import {
   Dialog,
@@ -28,6 +15,20 @@ import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
+import {
+  Server,
+  RefreshCw,
+  Trash2,
+  Info,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Search,
+  Filter,
+  Power,
+} from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+
 import {
   DeviceInfo,
   DeviceListResponse,

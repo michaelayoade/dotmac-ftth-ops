@@ -213,6 +213,9 @@ export interface PreferencesActions {
   resetPreferences: () => void;
   exportPreferences: () => PreferencesState;
   importPreferences: (preferences: Partial<PreferencesState>) => void;
+  setTimezone: (timezone: string) => void;
+  toggleCompactMode: () => void;
+  toggleAdvancedFeatures: () => void;
 }
 
 export interface ContextActions {
@@ -222,6 +225,7 @@ export interface ContextActions {
   setContextData: <T>(contextId: string, data: T[]) => void;
   clearContext: (contextId: string) => void;
   removeContext: (contextId: string) => void;
+  resetContext: (contextId: string) => void;
 
   // Bulk context operations
   refreshContext: (contextId: string) => Promise<void>;
@@ -241,6 +245,10 @@ export interface AppStore
     ContextActions {
   // Utility methods
   getContext: <T>(contextId: string) => ContextState<T> | null;
+  getFilterState: (contextId: string) => FilterState;
+  getPaginationState: (contextId: string) => PaginationState;
+  getSelectionState: <T>(contextId: string) => SelectionState<T>;
+  getLoadingState: (contextId: string) => LoadingState;
   getFilteredData: <T>(contextId: string, customFilter?: (item: T) => boolean) => T[];
   getSelectedItems: <T>(contextId: string) => T[];
   isContextLoading: (contextId: string) => boolean;

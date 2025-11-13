@@ -25,9 +25,9 @@ export interface SearchResponse {
 
 export interface SearchParams {
   q: string;
-  type?: string;
-  limit?: number;
-  page?: number;
+  type?: string | undefined;
+  limit?: number | undefined;
+  page?: number | undefined;
 }
 
 export interface IndexContentRequest {

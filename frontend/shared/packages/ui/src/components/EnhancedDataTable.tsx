@@ -27,15 +27,6 @@
 
 "use client";
 
-import * as React from "react";
-import type {
-  ColumnDef,
-  ColumnFiltersState,
-  Row,
-  SortingState,
-  VisibilityState,
-  TableOptions,
-} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
@@ -43,9 +34,22 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type Row,
+  type SortingState,
+  type TableOptions,
+  type VisibilityState,
 } from "@tanstack/react-table";
-import { Download, FileText, Filter, MoreHorizontal, Trash2, X } from "lucide-react";
+import { Download, Filter } from "lucide-react";
+import * as React from "react";
+
+import { cn } from "../lib/utils";
+
 import { Button } from "./button";
+import { Checkbox } from "./checkbox";
+import type { ConfirmDialogVariant } from "./confirm-dialog";
+import { useConfirmDialog } from "./confirm-dialog-provider";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -64,10 +68,6 @@ import {
   TableHeader,
   TableRow,
 } from "./table";
-import { Checkbox } from "./checkbox";
-import { cn } from "../lib/utils";
-import { useConfirmDialog } from "./confirm-dialog-provider";
-import type { ConfirmDialogVariant } from "./confirm-dialog";
 
 // ============================================================================
 // Types
@@ -75,21 +75,21 @@ import type { ConfirmDialogVariant } from "./confirm-dialog";
 
 export interface BulkAction<TData> {
   label: string;
-  icon: React.ComponentType<{ className?: string }> | undefined;
+  icon?: React.ElementType;
   action: (selectedRows: TData[]) => void | Promise<void>;
-  variant: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | undefined;
-  disabled: ((selectedRows: TData[]) => boolean) | undefined;
-  confirmMessage: string | undefined;
-  confirmTitle: string | undefined;
-  confirmConfirmText: string | undefined;
-  confirmVariant: ConfirmDialogVariant | undefined;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  disabled?: (selectedRows: TData[]) => boolean;
+  confirmMessage?: string;
+  confirmTitle?: string;
+  confirmConfirmText?: string;
+  confirmVariant?: ConfirmDialogVariant;
 }
 
 export interface QuickFilter<TData> {
   label: string;
-  icon: React.ComponentType<{ className?: string }> | undefined;
-  description: string | undefined;
-  defaultActive: boolean | undefined;
+  icon?: React.ComponentType<{ className?: string }>;
+  description?: string;
+  defaultActive?: boolean;
   filter: (row: TData) => boolean;
 }
 
@@ -97,12 +97,12 @@ export interface FilterConfig {
   column: string;
   label: string;
   type: "text" | "select" | "date" | "number";
-  options: { label: string; value: string }[] | undefined;
+  options?: { label: string; value: string }[];
 }
 
 export interface SearchConfig<TData> {
-  placeholder: string | undefined;
-  searchableFields: (keyof TData)[] | undefined;
+  placeholder?: string;
+  searchableFields?: (keyof TData)[];
 }
 
 export interface EnhancedDataTableProps<TData, TValue> {
@@ -110,45 +110,45 @@ export interface EnhancedDataTableProps<TData, TValue> {
   data: TData[];
 
   // Search
-  searchable: boolean | undefined;
-  searchPlaceholder: string | undefined;
-  searchColumn: string | undefined;
-  searchKey: string | undefined;
-  searchConfig: SearchConfig<TData> | undefined;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  searchColumn?: string;
+  searchKey?: string;
+  searchConfig?: SearchConfig<TData>;
 
   // Pagination
-  paginated: boolean | undefined;
-  pagination: boolean | undefined;
-  pageSizeOptions: number[] | undefined;
-  defaultPageSize: number | undefined;
+  paginated?: boolean;
+  pagination?: boolean;
+  pageSizeOptions?: number[];
+  defaultPageSize?: number;
 
   // Selection & Bulk Actions
-  selectable: boolean | undefined;
-  bulkActions: BulkAction<TData>[] | undefined;
+  selectable?: boolean;
+  bulkActions?: BulkAction<TData>[];
 
   // Filtering
-  filterable: boolean | undefined;
-  filters: FilterConfig[] | undefined;
-  quickFilters: QuickFilter<TData>[] | undefined;
+  filterable?: boolean;
+  filters?: FilterConfig[];
+  quickFilters?: QuickFilter<TData>[];
 
   // Export
-  exportable: boolean | undefined;
-  exportFilename: string | undefined;
-  exportColumns: (keyof TData)[] | undefined;
+  exportable?: boolean;
+  exportFilename?: string;
+  exportColumns?: (keyof TData)[];
 
   // Additional features
-  columnVisibility: boolean | undefined;
-  emptyMessage: string | undefined;
-  className: string | undefined;
-  isLoading: boolean | undefined;
-  onRowClick: ((row: TData) => void) | undefined;
-  getRowId: ((row: TData, index: number, parent?: Row<TData>) => string | number) | undefined;
+  columnVisibility?: boolean;
+  emptyMessage?: string;
+  className?: string;
+  isLoading?: boolean;
+  onRowClick?: (row: TData) => void;
+  getRowId?: (row: TData, index: number, parent?: Row<TData>) => string | number;
 
   // Toolbar actions
-  toolbarActions: React.ReactNode | undefined;
-  errorMessage: string | undefined;
-  error: string | undefined;
-  hideToolbar: boolean | undefined;
+  toolbarActions?: React.ReactNode;
+  errorMessage?: string;
+  error?: string;
+  hideToolbar?: boolean;
 }
 
 // ============================================================================

@@ -6,10 +6,6 @@
 
 "use client";
 
-import { Download, Mail, Printer, FileText, Calendar, CreditCard, User } from "lucide-react";
-import { Receipt } from "../types";
-import { formatCurrency } from "../utils";
-import { PaymentStatusBadge } from "./PaymentStatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
@@ -21,6 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from "@dotmac/ui";
+import { Download, Mail, Printer, FileText, Calendar, CreditCard, User } from "lucide-react";
+
+import { Receipt } from "../types";
+import { formatCurrency } from "../utils";
+
+import { PaymentStatusBadge } from "./PaymentStatusBadge";
 
 export interface ReceiptDetailModalProps {
   receipt: Receipt | null;

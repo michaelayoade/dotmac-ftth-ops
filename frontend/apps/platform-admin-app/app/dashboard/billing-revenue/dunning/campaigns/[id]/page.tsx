@@ -47,7 +47,7 @@ import { Textarea } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   ArrowLeft,
   Edit,
@@ -236,16 +236,18 @@ function CampaignDetailsContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const campaignId = params['id'] as string;
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch campaign details
   const { data: campaign, isLoading: campaignLoading } = useQuery<DunningCampaign>({
-    queryKey: ["dunning", "campaigns", campaignId],
+    queryKey: ["dunning", "campaigns", campaignId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           credentials: "include",
         }
@@ -260,10 +262,10 @@ function CampaignDetailsContent() {
 
   // Fetch campaign statistics
   const { data: stats, isLoading: statsLoading } = useQuery<DunningCampaignStats>({
-    queryKey: ["dunning", "campaigns", campaignId, "stats"],
+    queryKey: ["dunning", "campaigns", campaignId, "stats", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}/stats`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}/stats`,
         {
           credentials: "include",
         }
@@ -278,10 +280,10 @@ function CampaignDetailsContent() {
 
   // Fetch campaign executions
   const { data: executions = [], isLoading: executionsLoading } = useQuery<DunningExecution[]>({
-    queryKey: ["dunning", "campaigns", campaignId, "executions"],
+    queryKey: ["dunning", "campaigns", campaignId, "executions", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/executions?campaign_id=${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/executions?campaign_id=${campaignId}`,
         {
           credentials: "include",
         }
@@ -313,7 +315,7 @@ function CampaignDetailsContent() {
   const updateCampaignMutation = useMutation({
     mutationFn: async (data: CampaignFormValues) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           method: "PATCH",
           credentials: "include",
@@ -350,7 +352,7 @@ function CampaignDetailsContent() {
   const deleteCampaignMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -380,7 +382,7 @@ function CampaignDetailsContent() {
   const toggleActiveMutation = useMutation({
     mutationFn: async (isActive: boolean) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           method: "PATCH",
           credentials: "include",

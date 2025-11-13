@@ -8,7 +8,7 @@ import {
   createPortalAuthFetch,
   DEFAULT_PORTAL_TOKEN_KEY,
 } from "../utils/portalAuth";
-import {
+import type {
   PortalLoginCredentials,
   PortalAuthResponse,
   PortalAccount,
@@ -16,9 +16,8 @@ import {
   PortalAuthError,
   PortalIdValidation,
   DeviceFingerprint,
-  PORTAL_ID_CONFIG,
-  RISK_THRESHOLDS,
 } from "../types/portal-auth";
+import { PORTAL_ID_CONFIG, RISK_THRESHOLDS } from "../types/portal-auth";
 
 interface UsePortalIdAuthState {
   isAuthenticated: boolean;

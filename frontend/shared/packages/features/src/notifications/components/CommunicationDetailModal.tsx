@@ -7,7 +7,18 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
+import { ScrollArea } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { formatDistanceToNow, format } from "date-fns";
 import {
   Mail,
@@ -27,18 +38,8 @@ import {
   Hash,
   FileText,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
-import { Button } from "@dotmac/ui";
-import { Badge } from "@dotmac/ui";
-import { Separator } from "@dotmac/ui";
-import { ScrollArea } from "@dotmac/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { useMemo, useState } from "react";
+
 import { sanitizeRichHtml } from "../../utils/sanitize";
 
 export interface CommunicationDetailModalProps<TLog = any> {

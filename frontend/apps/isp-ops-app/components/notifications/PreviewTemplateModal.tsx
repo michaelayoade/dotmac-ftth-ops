@@ -22,7 +22,7 @@ export function PreviewTemplateModal(props: PreviewTemplateModalProps) {
   return (
     <SharedPreviewTemplateModal
       {...props}
-      renderTemplatePreview={renderTemplatePreview}
+      renderTemplatePreview={renderTemplatePreview as any}
     />
   );
 }

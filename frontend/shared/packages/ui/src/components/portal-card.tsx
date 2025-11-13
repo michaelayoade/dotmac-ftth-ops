@@ -8,6 +8,7 @@
 "use client";
 
 import * as React from "react";
+
 import { usePortalTheme } from "../lib/design-system/portal-themes";
 import { cn } from "../lib/utils";
 
@@ -74,7 +75,7 @@ PortalCardHeader.displayName = "PortalCardHeader";
 const PortalCardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   const { theme } = usePortalTheme();
 
   return (
@@ -86,7 +87,9 @@ const PortalCardTitle = React.forwardRef<
         lineHeight: theme.fontSize.lg[1].lineHeight,
       }}
       {...props}
-    />
+    >
+      {children}
+    </h3>
   );
 });
 PortalCardTitle.displayName = "PortalCardTitle";

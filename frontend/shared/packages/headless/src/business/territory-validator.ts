@@ -197,7 +197,16 @@ export class TerritoryValidator {
 
     const warnings: string[] = [];
 
-    // Check for conflicts
+    if (matchingTerritories.length === 0) {
+      return ValidationResultSchema.parse({
+        isValid: false,
+        validationMethod: "state",
+        confidence: 0,
+        warnings: warnings.length > 0 ? warnings : undefined,
+      });
+    }
+
+    const bestMatch = matchingTerritories[0]!;
     const conflictingTerritories = matchingTerritories.slice(1).map((mt) => ({
       territoryId: mt.territory.id,
       territoryName: mt.territory.name,
@@ -210,24 +219,22 @@ export class TerritoryValidator {
     }
 
     // Check partner access
-    if (requestingPartnerId && matchingTerritories.length > 0) {
-      const assignedPartnerId = matchingTerritories[0].territory.partnerId;
+    if (requestingPartnerId) {
+      const assignedPartnerId = bestMatch.territory.partnerId;
       if (assignedPartnerId !== requestingPartnerId) {
         warnings.push(`Address is in territory assigned to partner ${assignedPartnerId}`);
       }
     }
 
-    const bestMatch = matchingTerritories[0];
-
     return ValidationResultSchema.parse({
-      isValid: matchingTerritories.length > 0,
-      assignedPartnerId: bestMatch?.territory.partnerId,
-      territoryId: bestMatch?.territory.id,
-      territoryName: bestMatch?.territory.name,
+      isValid: true,
+      assignedPartnerId: bestMatch.territory.partnerId,
+      territoryId: bestMatch.territory.id,
+      territoryName: bestMatch.territory.name,
       conflictingTerritories:
         conflictingTerritories.length > 0 ? conflictingTerritories : undefined,
-      validationMethod: bestMatch?.method || "state",
-      confidence: bestMatch?.confidence || 0,
+      validationMethod: bestMatch.method || "state",
+      confidence: bestMatch.confidence || 0,
       warnings: warnings.length > 0 ? warnings : undefined,
     });
   }
@@ -257,15 +264,20 @@ export class TerritoryValidator {
     point: { lat: number; lng: number },
     polygon: Array<{ lat: number; lng: number }>,
   ): boolean {
+    if (polygon.length < 3) {
+      return false;
+    }
+
     let inside = false;
 
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const current = polygon[i]!;
+      const previous = polygon[j]!;
       if (
-        polygon[i].lng > point.lng !== polygon[j].lng > point.lng &&
+        current.lng > point.lng !== previous.lng > point.lng &&
         point.lat <
-          ((polygon[j].lat - polygon[i].lat) * (point.lng - polygon[i].lng)) /
-            (polygon[j].lng - polygon[i].lng) +
-            polygon[i].lat
+          ((previous.lat - current.lat) * (point.lng - current.lng)) / (previous.lng - current.lng) +
+            current.lat
       ) {
         inside = !inside;
       }

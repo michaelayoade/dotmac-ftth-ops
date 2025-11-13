@@ -7,8 +7,6 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +27,7 @@ import {
 } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
+import { formatDistanceToNow } from "date-fns";
 import {
   CheckCircle2,
   XCircle,
@@ -45,6 +44,11 @@ import {
   MessageSquare,
   ExternalLink,
 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+
+
+import { type Lead, type Quote, type SiteSurvey } from "../types";
+
 import {
   LeadStatusBadge,
   LeadSourceBadge,
@@ -52,7 +56,6 @@ import {
   QuoteStatusBadge,
   SurveyStatusBadge,
 } from "./Badges";
-import { type Lead, type Quote, type SiteSurvey } from "../types";
 
 export interface LeadUpdateRequest {
   first_name?: string;

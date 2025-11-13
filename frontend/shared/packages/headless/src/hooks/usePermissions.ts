@@ -6,7 +6,6 @@
 import { useMemo, useCallback } from "react";
 import { useAuth } from "@dotmac/headless/auth";
 import { useApiClient } from "../api";
-import type { ApiResponse } from "../api/types";
 
 export interface Permission {
   id: string;
@@ -146,19 +145,21 @@ export const PORTAL_CONTEXTS = {
 
 export function usePermissions() {
   const { user, portal, tenantId } = useAuth();
+  const portalKey = typeof portal === "string" ? portal : portal?.type;
   const apiClient = useApiClient();
 
   // Get user's permissions
-  const userPermissions = useMemo(() => {
+  const userPermissions = useMemo<Permission[]>(() => {
     if (!user) return [];
 
     // Combine direct permissions and role-based permissions
-    const directPermissions = user.permissions || [];
-    const rolePermissions = user.roles?.flatMap((role) => role.permissions || []) || [];
+    const directPermissions = ((user.permissions || []) as Permission[]).filter(Boolean);
+    const rolePermissions =
+      user.roles?.flatMap((role: Role) => role.permissions || []) ?? [];
 
     // Merge and deduplicate
-    const allPermissions = [...directPermissions, ...rolePermissions];
-    const uniquePermissions = allPermissions.reduce((acc, permission) => {
+    const allPermissions: Permission[] = [...directPermissions, ...rolePermissions];
+    const uniquePermissions = allPermissions.reduce<Permission[]>((acc, permission) => {
       const key = `${permission.resource}:${permission.action}`;
       if (!acc.some((p) => `${p.resource}:${p.action}` === key)) {
         acc.push(permission);
@@ -177,7 +178,7 @@ export function usePermissions() {
       }
 
       // System admins have all permissions
-      if (user.isSuperAdmin || user.roles?.some((role) => role.name === "super_admin")) {
+      if (user.isSuperAdmin || user.roles?.some((role: Role) => role.name === "super_admin")) {
         return true;
       }
 
@@ -272,7 +273,7 @@ export function usePermissions() {
 
   // Portal-specific permission helpers
   const portalPermissions = useMemo(() => {
-    if (!portal || !PORTAL_CONTEXTS[portal as keyof typeof PORTAL_CONTEXTS]) {
+    if (!portalKey || !PORTAL_CONTEXTS[portalKey as keyof typeof PORTAL_CONTEXTS]) {
       return {
         canViewBilling: false,
         canManageUsers: false,
@@ -332,7 +333,7 @@ export function usePermissions() {
       canAssignTickets: hasPermission(COMMON_PERMISSIONS.TICKETS_ASSIGN),
       canResolveTickets: hasPermission(COMMON_PERMISSIONS.TICKETS_RESOLVE),
     };
-  }, [portal, hasPermission]);
+  }, [portalKey, hasPermission]);
 
   // Load user permissions from API
   const refreshPermissions = useCallback(async (): Promise<Permission[]> => {
@@ -342,7 +343,7 @@ export function usePermissions() {
         { cache: true, cacheTTL: 5 * 60 * 1000 }, // Cache for 5 minutes
       );
 
-      return response?.data?.permissions ?? [];
+      return response?.permissions ?? [];
     } catch (error) {
       console.error("Failed to refresh permissions:", error);
       return [];
@@ -364,7 +365,7 @@ export function usePermissions() {
           context: context || {},
         });
 
-        return response?.data?.allowed === true;
+        return response?.allowed === true;
       } catch (error) {
         console.error("Permission check API call failed:", error);
         return false;
@@ -433,7 +434,7 @@ export function usePermissions() {
     // User context
     isAuthenticated: !!user,
     isSuperAdmin: user?.isSuperAdmin || false,
-    currentPortal: portal,
+    currentPortal: portalKey,
     currentTenant: tenantId,
     userId: user?.id,
     userRoles: user?.roles?.map((role) => role.name) || [],

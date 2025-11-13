@@ -8,7 +8,7 @@
 
 import { CustomersList as SharedCustomersList } from "@dotmac/features/customers";
 import { Customer } from "@/types";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { logger } from "@/lib/logger";
 import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 import { impersonateCustomer as impersonateCustomerUtil } from "../../../../shared/utils/customerImpersonation";
@@ -33,7 +33,8 @@ const buildAuthHeaders = (): Record<string, string> => {
 };
 
 export function CustomersList(props: CustomersListProps) {
-  const apiBaseUrl = platformConfig.api.baseUrl || "";
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   const handleImpersonateCustomer = async (customerId: string) => {
     logger.info("Impersonating customer", { customerId });

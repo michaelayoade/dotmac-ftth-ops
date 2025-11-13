@@ -3,8 +3,9 @@
  * Provides standardized loading indicators across the application
  */
 
-import React from "react";
 import { Loader2, AlertCircle, CheckCircle, InfoIcon } from "lucide-react";
+import React from "react";
+
 import { cn } from "../lib/utils";
 
 interface LoadingSpinnerProps {

@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useCallback } from "react";
-import { TenantPermissions, TenantSession } from "../../types/tenant";
+import type { TenantPermissions, TenantSession } from "../../types/tenant";
 
 export interface UseTenantPermissionsReturn {
   hasPermission: (permission: keyof TenantPermissions) => boolean;
@@ -16,54 +16,48 @@ export interface UseTenantPermissionsReturn {
 }
 
 export function useTenantPermissions(session: TenantSession | null): UseTenantPermissionsReturn {
-  const effectivePermissions = useMemo(() => {
-    if (!session?.tenant?.permissions) return null;
-    return session.tenant.permissions;
-  }, [session?.tenant?.permissions]);
+  const permissionsList = useMemo(() => session?.permissions ?? [], [session?.permissions]);
 
   const hasPermission = useCallback(
     (permission: keyof TenantPermissions): boolean => {
-      if (!effectivePermissions) return false;
-      return Boolean(effectivePermissions[permission]);
+      return permissionsList.includes(permission as string);
     },
-    [effectivePermissions],
+    [permissionsList],
   );
 
   const hasAnyPermission = useCallback(
     (permissions: (keyof TenantPermissions)[]): boolean => {
-      if (!effectivePermissions) return false;
-      return permissions.some((permission) => effectivePermissions[permission]);
+      return permissions.some((permission) => permissionsList.includes(permission as string));
     },
-    [effectivePermissions],
+    [permissionsList],
   );
 
   const hasAllPermissions = useCallback(
     (permissions: (keyof TenantPermissions)[]): boolean => {
-      if (!effectivePermissions) return false;
-      return permissions.every((permission) => effectivePermissions[permission]);
+      return permissions.every((permission) => permissionsList.includes(permission as string));
     },
-    [effectivePermissions],
+    [permissionsList],
   );
 
   const hasFeature = useCallback(
     (feature: string): boolean => {
-      if (!session?.tenant?.subscription?.features) return false;
-      return session.tenant.subscription.features.includes(feature);
+      const featureMap = session?.tenant?.features as Record<string, boolean> | undefined;
+      return Boolean(featureMap?.[feature]);
     },
-    [session?.tenant?.subscription?.features],
+    [session?.tenant?.features],
   );
 
   const hasModule = useCallback(
     (module: string): boolean => {
-      if (!session?.tenant?.subscription?.modules) return false;
-      return session.tenant.subscription.modules.includes(module);
+      const featureMap = session?.tenant?.features as Record<string, boolean> | undefined;
+      return Boolean(featureMap?.[module]);
     },
-    [session?.tenant?.subscription?.modules],
+    [session?.tenant?.features],
   );
 
   const getEffectivePermissions = useCallback((): TenantPermissions | null => {
-    return effectivePermissions;
-  }, [effectivePermissions]);
+    return null;
+  }, []);
 
   return {
     hasPermission,

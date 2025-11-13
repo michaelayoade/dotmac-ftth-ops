@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
@@ -47,7 +47,7 @@ import { Textarea } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   ArrowLeft,
   Edit,
@@ -236,16 +236,18 @@ function CampaignDetailsContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const campaignId = params['id'] as string;
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch campaign details
   const { data: campaign, isLoading: campaignLoading } = useQuery<DunningCampaign>({
-    queryKey: ["dunning", "campaigns", campaignId],
+    queryKey: ["dunning", "campaigns", campaignId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           credentials: "include",
         }
@@ -260,10 +262,10 @@ function CampaignDetailsContent() {
 
   // Fetch campaign statistics
   const { data: stats, isLoading: statsLoading } = useQuery<DunningCampaignStats>({
-    queryKey: ["dunning", "campaigns", campaignId, "stats"],
+    queryKey: ["dunning", "campaigns", campaignId, "stats", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}/stats`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}/stats`,
         {
           credentials: "include",
         }
@@ -278,10 +280,10 @@ function CampaignDetailsContent() {
 
   // Fetch campaign executions
   const { data: executions = [], isLoading: executionsLoading } = useQuery<DunningExecution[]>({
-    queryKey: ["dunning", "campaigns", campaignId, "executions"],
+    queryKey: ["dunning", "campaigns", campaignId, "executions", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/executions?campaign_id=${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/executions?campaign_id=${campaignId}`,
         {
           credentials: "include",
         }
@@ -296,38 +298,24 @@ function CampaignDetailsContent() {
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      trigger_after_days: 1,
-      max_retries: 1,
-      retry_interval_days: 1,
-      priority: 1,
-      is_active: true,
-    },
+    ...(campaign && {
+      values: {
+        name: campaign.name,
+        description: campaign.description || "",
+        trigger_after_days: campaign.trigger_after_days,
+        max_retries: campaign.max_retries,
+        retry_interval_days: campaign.retry_interval_days,
+        priority: campaign.priority,
+        is_active: campaign.is_active,
+      },
+    }),
   });
-
-  useEffect(() => {
-    if (!campaign) {
-      return;
-    }
-
-    form.reset({
-      name: campaign.name,
-      description: campaign.description || "",
-      trigger_after_days: campaign.trigger_after_days,
-      max_retries: campaign.max_retries,
-      retry_interval_days: campaign.retry_interval_days,
-      priority: campaign.priority,
-      is_active: campaign.is_active,
-    });
-  }, [campaign, form]);
 
   // Update campaign mutation
   const updateCampaignMutation = useMutation({
     mutationFn: async (data: CampaignFormValues) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           method: "PATCH",
           credentials: "include",
@@ -364,7 +352,7 @@ function CampaignDetailsContent() {
   const deleteCampaignMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -394,7 +382,7 @@ function CampaignDetailsContent() {
   const toggleActiveMutation = useMutation({
     mutationFn: async (isActive: boolean) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
         {
           method: "PATCH",
           credentials: "include",
@@ -434,10 +422,11 @@ function CampaignDetailsContent() {
     });
   };
 
-  const formContext = form as any;
-
-  const onSubmit = (data: CampaignFormValues) => {
-    updateCampaignMutation.mutate(data);
+  const onSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    form.handleSubmit((data: CampaignFormValues) => {
+      updateCampaignMutation.mutate(data);
+    })(e);
   };
 
   const handleDeleteConfirm = () => {
@@ -968,10 +957,10 @@ function CampaignDetailsContent() {
             <DialogTitle>Edit Campaign</DialogTitle>
             <DialogDescription>Update campaign settings</DialogDescription>
           </DialogHeader>
-          <Form {...formContext}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={onSubmit} className="space-y-4">
               <FormField
-                control={formContext.control}
+                control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
@@ -985,7 +974,7 @@ function CampaignDetailsContent() {
               />
 
               <FormField
-                control={formContext.control}
+                control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
@@ -1000,7 +989,7 @@ function CampaignDetailsContent() {
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
-                  control={formContext.control}
+                  control={form.control}
                   name="trigger_after_days"
                   render={({ field }) => (
                     <FormItem>
@@ -1014,7 +1003,7 @@ function CampaignDetailsContent() {
                 />
 
                 <FormField
-                  control={formContext.control}
+                  control={form.control}
                   name="max_retries"
                   render={({ field }) => (
                     <FormItem>
@@ -1030,7 +1019,7 @@ function CampaignDetailsContent() {
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
-                  control={formContext.control}
+                  control={form.control}
                   name="retry_interval_days"
                   render={({ field }) => (
                     <FormItem>
@@ -1044,7 +1033,7 @@ function CampaignDetailsContent() {
                 />
 
                 <FormField
-                  control={formContext.control}
+                  control={form.control}
                   name="priority"
                   render={({ field }) => (
                     <FormItem>
@@ -1059,7 +1048,7 @@ function CampaignDetailsContent() {
               </div>
 
               <FormField
-                control={formContext.control}
+                control={form.control}
                 name="is_active"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">

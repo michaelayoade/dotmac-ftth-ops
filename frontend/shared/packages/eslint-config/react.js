@@ -9,7 +9,7 @@ module.exports = {
 
   extends: [
     "eslint:recommended",
-    "@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
     "plugin:jsx-a11y/recommended",
@@ -89,7 +89,7 @@ module.exports = {
         allowBind: false,
       },
     ],
-    "react/jsx-no-constructed-props": "error",
+    "react/jsx-no-constructed-context-values": "error",
     "react/jsx-no-duplicate-props": "error",
     "react/jsx-no-undef": "error",
     "react/jsx-uses-react": "off", // Not needed with new JSX transform

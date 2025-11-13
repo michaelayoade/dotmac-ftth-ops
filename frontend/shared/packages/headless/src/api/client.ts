@@ -15,7 +15,7 @@ import type {
 } from "./types";
 import { PORTAL_ENDPOINTS } from "./types";
 import { ApiCache } from "./cache";
-import { RateLimiter } from "../auth/rateLimiter";
+import { RateLimiter } from "../utils/rate-limiter";
 
 // Legacy types for compatibility
 import type {
@@ -62,6 +62,7 @@ const DEFAULT_CONFIG: Required<Omit<ApiClientConfig, "interceptors" | "portal" |
     refreshEndpoint: "/auth/refresh",
     autoRefresh: true,
   },
+  metadata: {},
   onUnauthorized: () => {
     if (typeof window !== "undefined") {
       window.location.href = "/login";
@@ -113,7 +114,11 @@ export class ApiClient {
 
     // Setup rate limiting if enabled
     if (this.config.rateLimiting) {
-      this.rateLimiter = new RateLimiter();
+      this.rateLimiter = new RateLimiter({
+        windowMs: 60_000,
+        maxRequests: 60,
+        keyPrefix: "api-client",
+      });
     }
 
     // Get portal-specific endpoints
@@ -173,7 +178,7 @@ export class ApiClient {
 
   private buildHeaders(
     method: string,
-    options: RequestInit = {
+    options: Pick<RequestConfig, "headers"> = {
       // Implementation pending
     },
   ): HeadersInit {
@@ -280,19 +285,29 @@ export class ApiClient {
     await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000));
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {
-      // Implementation pending
-    },
-  ): Promise<T> {
-    const url = `${this.config.baseUrl}${endpoint}`;
+  public async request<T>(endpoint: string, options: RequestConfig = {}): Promise<T> {
+    const { params, cache: useCache, cacheTTL, ...rest } = options;
+
+    let url = `${this.config.baseUrl}${endpoint}`;
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
+      const query = searchParams.toString();
+      if (query) {
+        url += url.includes("?") ? `&${query}` : `?${query}`;
+      }
+    }
+
     const method = options.method || "GET";
     const sanitizedBody = this.sanitizeBody(options.body);
     const headers = this.buildHeaders(method, options);
 
     const requestOptions: RequestInit = {
-      ...options,
+      ...rest,
       method,
       headers,
       body: sanitizedBody,
@@ -328,6 +343,54 @@ export class ApiClient {
     }
 
     throw lastError;
+  }
+
+  public async get<T>(endpoint: string, config: RequestConfig = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...config, method: "GET" });
+  }
+
+  public async post<T>(
+    endpoint: string,
+    data?: RequestConfig["body"],
+    config: RequestConfig = {},
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...config,
+      method: "POST",
+      body: data ?? config.body,
+    });
+  }
+
+  public async put<T>(
+    endpoint: string,
+    data?: RequestConfig["body"],
+    config: RequestConfig = {},
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...config,
+      method: "PUT",
+      body: data ?? config.body,
+    });
+  }
+
+  public async delete<T>(
+    endpoint: string,
+    data?: RequestConfig["body"],
+    config: RequestConfig = {},
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...config,
+      method: "DELETE",
+      body: data ?? config.body,
+    });
+  }
+
+  public invalidateEndpointCache(endpoint: string): void {
+    this.cache?.invalidateEndpoint(endpoint);
+  }
+
+  public invalidateCacheByPattern(pattern: string | RegExp): void {
+    this.cache?.invalidatePattern(pattern);
   }
 
   // Authentication
@@ -840,7 +903,9 @@ export class ApiClient {
   ): Promise<ApiResponse<PluginInstallationResponse>> {
     // Basic rate limiting - can be enhanced with actual rate limiter if needed
     if (this.rateLimiter) {
-      const limitResult = this.rateLimiter.checkLimit("plugin-update", installationId);
+      const limitResult = await this.rateLimiter.checkLimit(
+        `plugin-update:${installationId}`,
+      );
       if (!limitResult.allowed) {
         throw new ISPError({
           message: "Rate limit exceeded. Please wait before making another plugin update request.",

@@ -4,9 +4,11 @@
  * Supports dark mode and various use cases
  */
 
-import type { ReactNode } from "react";
-import { cn } from "../lib/utils";
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { cn } from "../lib/utils";
+
 import { Button } from "./button";
 
 interface EmptyStateProps {
@@ -175,7 +177,7 @@ EmptyState.List = function EmptyStateList({
       {...actionProps}
       title={`No ${entityName} found`}
       description={`Get started by creating your first ${entityName.toLowerCase()}.`}
-      className={className}
+      {...(className ? { className } : {})}
     />
   );
 };
@@ -219,7 +221,7 @@ EmptyState.Search = function EmptyStateSearch({
         )
       }
       size="sm"
-      className={className}
+      {...(className ? { className } : {})}
     />
   );
 };
@@ -258,7 +260,7 @@ EmptyState.Error = function EmptyStateError({
       {...actionProps}
       title={title}
       description={description}
-      className={className}
+      {...(className ? { className } : {})}
     />
   );
 };

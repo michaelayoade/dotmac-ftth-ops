@@ -7,8 +7,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { formatDistanceToNow, differenceInDays } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +17,7 @@ import {
   Badge,
   useConfirmDialog,
 } from "@dotmac/ui";
-import { QuoteStatusBadge } from "./Badges";
-import { type Quote } from "../types";
-import { QuotePDFGenerator } from "../utils/quote-pdf";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
 import {
   Send,
   Edit,
@@ -36,6 +32,13 @@ import {
   FileText,
   Building,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+
+import { type Quote } from "../types";
+import { QuotePDFGenerator } from "../utils/quote-pdf";
+
+import { QuoteStatusBadge } from "./Badges";
+
 
 export interface QuoteDetailModalProps {
   isOpen: boolean;

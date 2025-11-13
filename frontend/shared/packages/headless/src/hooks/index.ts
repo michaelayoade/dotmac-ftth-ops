@@ -13,7 +13,7 @@ export * from "./useAuditLogger"; // Integrated audit logging
 export * from "./useAuditInterceptor"; // Automatic audit interception
 
 // Existing business logic hooks
-export * from "./useBilling"; // Comprehensive billing operations
+export { useBilling } from "./useBilling"; // Comprehensive billing operations
 export * from "./useCommunication";
 
 // ISP Business Operations (DRY-compliant centralized business logic)

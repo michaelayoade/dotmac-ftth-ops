@@ -28,14 +28,22 @@ export function RecordPaymentModal(props: RecordPaymentModalWrapperProps) {
   const sharedInvoices: SharedInvoice[] = props.invoices.map((invoice) => ({
     invoice_id: invoice.invoice_id,
     invoice_number: invoice.invoice_number,
+    customer_id: invoice.customer_id,
+    billing_email: invoice.billing_email ?? "",
+    total_amount: invoice.total_amount,
     amount_due: invoice.amount_due,
+    amount_paid: invoice.amount_paid,
+    currency: invoice.currency ?? "USD",
     due_date: invoice.due_date,
+    created_at: invoice.created_at,
+    status: invoice.status,
+    payment_status: invoice.payment_status ?? "pending",
   }));
 
   return (
     <SharedRecordPaymentModal
       {...props}
-      invoices={sharedInvoices}
+      invoices={sharedInvoices as any}
       apiClient={apiClient}
       useToast={useToast}
       logger={logger}

@@ -217,7 +217,10 @@ export function CustomerEditModalRefactored({
   };
 
   const mutation = useFormMutation(
-    form,
+    {
+      reset: form.reset,
+      setError: (field, errorDetails) => form.setError(field as any, errorDetails),
+    },
     {
       mutationFn,
       ...invalidateQueries(queryClient, invalidateTargets),

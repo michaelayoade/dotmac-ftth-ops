@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { X, UserPlus, Search, Users, Calendar, Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
 // ============================================================================
 // Types

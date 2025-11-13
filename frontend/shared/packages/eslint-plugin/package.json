@@ -1,0 +1,28 @@
+{
+  "name": "@dotmac/eslint-plugin",
+  "version": "1.0.0",
+  "description": "Custom ESLint rules for DotMac projects",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "rules"
+  ],
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint . --ext .js"
+  },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "dotmac"
+  ],
+  "author": "DotMac Framework Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=8.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.33.0",
+    "jest": "^29.7.0"
+  }
+}

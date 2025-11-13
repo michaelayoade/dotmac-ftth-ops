@@ -6,12 +6,21 @@
  */
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { EnhancedDataTable } from "./EnhancedDataTable";
-import type { BulkAction } from "./EnhancedDataTable";
-import { createSortableHeader } from "./data-table";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Download,
+  Edit,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
+
 import { Badge } from "./badge";
 import { Button } from "./button";
-import { Send, X, CheckCircle, AlertTriangle, Clock, Download, Edit, Trash2 } from "lucide-react";
+import { createSortableHeader } from "./data-table";
+import { EnhancedDataTable, type BulkAction } from "./EnhancedDataTable";
 
 // ============================================================================
 // Example 1: Invoice List with Bulk Actions

@@ -5,8 +5,8 @@
  * Parent components handle API calls and types via callbacks.
  */
 
-import { useState } from "react";
 import { X, Save, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export interface CreateCustomerModalProps<T = any, CreateInput = any, UpdateInput = any> {
   onClose: () => void;

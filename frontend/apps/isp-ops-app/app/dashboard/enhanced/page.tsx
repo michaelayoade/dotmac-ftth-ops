@@ -25,16 +25,18 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 import { useRADIUSSubscribers, useRADIUSSessions } from "@/hooks/useRADIUS";
 import { useServiceStatistics } from "@/hooks/useServiceLifecycle";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useRBAC } from "@/contexts/RBACContext";
 
 export default function EnhancedDashboardPage() {
   const router = useRouter();
   const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const { hasPermission } = useRBAC();
+  const { features } = useAppConfig();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const dashboardUser = (() => {
     if (user) {
@@ -54,7 +56,7 @@ export default function EnhancedDashboardPage() {
     };
   })();
 
-  const hasRadiusAccess = platformConfig.features.enableRadius && hasPermission("isp.radius.read");
+  const hasRadiusAccess = features.enableRadius && hasPermission("isp.radius.read");
 
   const { data: radiusSubscribers, isLoading: subscribersLoading, refetch: refetchSubscribers } = useRADIUSSubscribers(0, 100, {
     enabled: hasRadiusAccess,

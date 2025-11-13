@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   X,
   Key,
@@ -12,6 +11,7 @@ import {
   Loader2,
   Plus,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export interface APIKey {
   id: string;

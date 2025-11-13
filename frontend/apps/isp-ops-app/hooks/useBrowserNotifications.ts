@@ -115,14 +115,18 @@ export function useBrowserNotifications(): UseBrowserNotificationsReturn {
       }
 
       try {
-        const notification = new Notification(options.title, {
+        const notificationOptions: globalThis.NotificationOptions = {
           body: options.body,
           icon: options.icon || "/favicon.ico",
-          tag: options.tag,
           requireInteraction: options.requireInteraction || false,
           silent: options.silent || false,
           data: options.data,
-        });
+        };
+        if (options.tag) {
+          notificationOptions.tag = options.tag;
+        }
+
+        const notification = new Notification(options.title, notificationOptions);
 
         // Handle click
         if (options.onClick) {

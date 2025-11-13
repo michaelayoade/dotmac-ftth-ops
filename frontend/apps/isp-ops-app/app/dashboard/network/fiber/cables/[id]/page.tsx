@@ -18,7 +18,7 @@ import {
 } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useFiberCableDetailsAggregated } from "@/hooks/useFiberGraphQL";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   Cable,
   MapPin,
@@ -37,7 +37,8 @@ interface PageProps {
 export default function FiberCableDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasFiberAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   const { cable, healthMetrics, splicePoints, isLoading, error, refetch } =
     useFiberCableDetailsAggregated(id);

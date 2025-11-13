@@ -33,17 +33,12 @@ const TestForm = ({ onSubmit = jest.fn() }: { onSubmit?: jest.fn }) => {
   });
 
   return (
-    <Form form={form} onSubmit={onSubmit}>
+    <Form form={form} onSubmit={onSubmit} aria-label="Test Form">
       <FormField name="email" rules={{ required: "Email is required" }}>
         {({ value, onChange, error, invalid }) => (
           <FormItem>
             <FormLabel required>Email</FormLabel>
-            <input
-              value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
-              data-testid="email-input"
-              aria-invalid={invalid}
-            />
+            <Input value={value || ""} onChange={(e) => onChange(e.target.value)} data-testid="email-input" />
             {error && <FormMessage data-testid="email-error">{error}</FormMessage>}
           </FormItem>
         )}
@@ -53,11 +48,7 @@ const TestForm = ({ onSubmit = jest.fn() }: { onSubmit?: jest.fn }) => {
         {({ value, onChange }) => (
           <FormItem>
             <FormLabel>Name</FormLabel>
-            <input
-              value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
-              data-testid="name-input"
-            />
+            <Input value={value || ""} onChange={(e) => onChange(e.target.value)} data-testid="name-input" />
           </FormItem>
         )}
       </FormField>
@@ -236,7 +227,7 @@ describe("Form Components", () => {
               {({ value, onChange }) => (
                 <FormItem>
                   <FormLabel>Controlled Input</FormLabel>
-                  <input
+                  <Input
                     value={value || ""}
                     onChange={(e) => onChange(e.target.value)}
                     data-testid="controlled-input"
@@ -736,13 +727,16 @@ describe("Form Components", () => {
         return <div data-testid="has-context">{form ? "Has form" : "No form"}</div>;
       };
 
-      const form = useForm();
+      const Wrapper = () => {
+        const form = useForm();
+        return (
+          <Form form={form} onSubmit={jest.fn()}>
+            <TestComponent />
+          </Form>
+        );
+      };
 
-      render(
-        <Form form={form} onSubmit={jest.fn()}>
-          <TestComponent />
-        </Form>,
-      );
+      render(<Wrapper />);
 
       expect(screen.getByTestId("has-context")).toHaveTextContent("Has form");
     });
@@ -750,42 +744,51 @@ describe("Form Components", () => {
 
   describe("Form Layout and Variants", () => {
     it("applies layout and size variants", () => {
-      const form = useForm();
-      const { container } = render(
-        <Form
-          form={form}
-          onSubmit={jest.fn()}
-          layout="horizontal"
-          size="lg"
-          className="custom-form"
-        >
-          <div>Content</div>
-        </Form>,
-      );
+      const Wrapper = () => {
+        const form = useForm();
+        return (
+          <Form
+            form={form}
+            onSubmit={jest.fn()}
+            layout="horizontal"
+            size="lg"
+            className="custom-form"
+          >
+            <div>Content</div>
+          </Form>
+        );
+      };
+      const { container } = render(<Wrapper />);
 
       const formElement = container.querySelector("form");
       expect(formElement).toHaveClass("custom-form");
     });
 
     it("renders as child component when asChild is true", () => {
-      const form = useForm();
+      const Wrapper = () => {
+        const form = useForm();
+        return (
+          <Form form={form} onSubmit={jest.fn()} asChild>
+            <div data-testid="custom-wrapper">Custom form wrapper</div>
+          </Form>
+        );
+      };
 
-      render(
-        <Form form={form} onSubmit={jest.fn()} asChild>
-          <div data-testid="custom-wrapper">Custom form wrapper</div>
-        </Form>,
-      );
+      render(<Wrapper />);
 
       expect(screen.getByTestId("custom-wrapper")).toBeInTheDocument();
     });
 
     it("sets noValidate on form element", () => {
-      const form = useForm();
-      const { container } = render(
-        <Form form={form} onSubmit={jest.fn()}>
-          <div>Content</div>
-        </Form>,
-      );
+      const Wrapper = () => {
+        const form = useForm();
+        return (
+          <Form form={form} onSubmit={jest.fn()}>
+            <div>Content</div>
+          </Form>
+        );
+      };
+      const { container } = render(<Wrapper />);
 
       const formElement = container.querySelector("form");
       expect(formElement).toHaveAttribute("noValidate");

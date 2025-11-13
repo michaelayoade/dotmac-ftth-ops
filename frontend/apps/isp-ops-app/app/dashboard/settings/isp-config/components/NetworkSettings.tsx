@@ -160,7 +160,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Pool: {settings.ipv4_pool_prefix}
-                {" "}(~{Math.pow(2, 32 - parseInt(settings.ipv4_pool_prefix.split("/")[1])).toLocaleString()} addresses)
+                {" "}(~{Math.pow(2, 32 - parseInt(settings.ipv4_pool_prefix.split("/")[1] || "24")).toLocaleString()} addresses)
               </AlertDescription>
             </Alert>
           )}

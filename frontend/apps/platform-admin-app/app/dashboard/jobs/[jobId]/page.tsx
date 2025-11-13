@@ -22,12 +22,12 @@ import {
   RefreshCw,
   RotateCcw,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type JobStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 
@@ -57,15 +57,16 @@ function JobDetailsPageContent() {
   const jobId = params?.['jobId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   // Fetch job details
   const { data: job, isLoading } = useQuery<Job>({
     queryKey: ["job", jobId],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/jobs/${jobId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/jobs/${jobId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch job");
       return response.json();
     },
@@ -82,13 +83,10 @@ function JobDetailsPageContent() {
   // Cancel job mutation
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/jobs/${jobId}/cancel`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/jobs/${jobId}/cancel`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to cancel job");
       return response.json();
     },
@@ -109,13 +107,10 @@ function JobDetailsPageContent() {
   // Retry job mutation
   const retryMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/jobs/${jobId}/retry`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/jobs/${jobId}/retry`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to retry job");
       return response.json();
     },

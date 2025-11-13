@@ -19,5 +19,13 @@
         ]
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/__tests__/**/*.{ts,tsx}", "**/*.test.{ts,tsx}"],
+      "rules": {
+        "react/display-name": "off"
+      }
+    }
+  ]
 }

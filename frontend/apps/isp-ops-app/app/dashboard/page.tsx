@@ -18,10 +18,11 @@ import { useSystemHealth } from "@/hooks/useOperations";
 import { useServiceInstances, useServiceStatistics } from "@/hooks/useServiceLifecycle";
 import { useRADIUSSessions, useRADIUSSubscribers } from '@/hooks/useRADIUS';
 import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useFeatureFlag } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 
 function formatDate(value?: string | null): string {
   if (!value) {
@@ -38,16 +39,17 @@ export default function DashboardPage() {
   const router = useRouter();
   const { hasPermission } = useRBAC();
   const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
 
   // Feature flags
   const { enabled: radiusSessionsEnabled } = useFeatureFlag('radius-sessions');
   const { enabled: radiusSubscribersEnabled } = useFeatureFlag('radius-subscribers');
 
-  const hasRadiusAccess = platformConfig.features.enableRadius && hasPermission("isp.radius.read");
-  const hasNetworkAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasRadiusAccess = features.enableRadius && hasPermission("isp.radius.read");
+  const hasNetworkAccess = features.enableNetwork && hasPermission("isp.ipam.read");
   const hasLifecycleAccess =
-    platformConfig.features.enableAutomation && hasPermission("isp.automation.read");
+    features.enableAutomation && hasPermission("isp.automation.read");
 
   const { data: serviceStats, isLoading: serviceStatsLoading } = useServiceStatistics({
     enabled: hasLifecycleAccess,

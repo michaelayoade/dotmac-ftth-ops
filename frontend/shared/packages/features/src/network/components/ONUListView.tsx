@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
@@ -13,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Wifi,
   Search,
@@ -27,6 +26,8 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useState } from "react";
+
 import { Device, DeviceListResponse } from "../types/voltha";
 
 // ============================================================================
@@ -98,7 +99,7 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
   const operateMutation = useMutation({
     mutationFn: async ({ device, operation }: { device: Device; operation: DeviceOperation }) => {
       const oltId =
-        device.metadata?.olt_id || device.parent_id || (device.metadata?.root_device_id as string | undefined);
+        device.metadata?.['olt_id'] || device.parent_id || (device.metadata?.['root_device_id'] as string | undefined);
       const baseUrl = `/access/devices/${encodeURIComponent(device.id)}/${operation}`;
       const url = oltId ? `${baseUrl}?olt_id=${encodeURIComponent(oltId)}` : baseUrl;
       const response = await apiClient.post(url);
@@ -135,8 +136,8 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
       onu.id.toLowerCase().includes(needle) ||
       (onu.serial_number || "").toLowerCase().includes(needle) ||
       (onu.vendor || "").toLowerCase().includes(needle) ||
-      String(metadata.olt_id || "").toLowerCase().includes(needle) ||
-      String(metadata.pon_port || "").toLowerCase().includes(needle);
+      String(metadata['olt_id'] || "").toLowerCase().includes(needle) ||
+      String(metadata['pon_port'] || "").toLowerCase().includes(needle);
 
     const matchesStatus = statusFilter === "all" || (onu.oper_status || "").toUpperCase() === statusFilter;
 
@@ -310,8 +311,8 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
         ) : (
           filteredONUs.map((onu) => {
             const metadata = onu.metadata || {};
-            const supportedOperations: string[] = Array.isArray(metadata.supported_operations)
-              ? metadata.supported_operations
+            const supportedOperations: string[] = Array.isArray(metadata['supported_operations'])
+              ? metadata['supported_operations']
               : [];
 
             const canPerform = (operation: DeviceOperation) => supportedOperations.includes(operation);
@@ -350,11 +351,11 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">OLT:</span>
-                      <span className="font-medium">{metadata.olt_id || onu.parent_id || "N/A"}</span>
+                      <span className="font-medium">{metadata['olt_id'] || onu.parent_id || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">PON Port:</span>
-                      <span className="font-medium">{metadata.pon_port ?? onu.parent_port_no ?? "N/A"}</span>
+                      <span className="font-medium">{metadata['pon_port'] ?? onu.parent_port_no ?? "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Supported Ops:</span>

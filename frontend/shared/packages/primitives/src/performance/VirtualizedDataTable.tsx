@@ -1,8 +1,16 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Card, Skeleton } from "@dotmac/primitives";
 import { Search, ChevronUp } from "lucide-react";
+
+// Define minimal components inline to avoid circular dependencies
+const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
+  <div className={`border rounded-lg p-4 ${className}`}>{children}</div>
+);
+
+const Skeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+);
 
 export interface VirtualizedColumn<T = Record<string, unknown>> {
   key: keyof T | string;

@@ -32,6 +32,7 @@ import type {
   ProjectTemplate,
   TaskTemplate,
   KanbanColumn,
+  CreateTemplateData,
 } from "@/types/project-management";
 import {
   TaskType,
@@ -374,14 +375,14 @@ export function TemplateBuilder({
   const handleUpdateTask = (taskId: string, updatedTask: TaskTemplate) => {
     setTemplate({
       ...template,
-      taskTemplates: template.taskTemplates?.map((t) => (t.id === taskId ? updatedTask : t)),
+      taskTemplates: (template.taskTemplates ?? []).map((t) => (t.id === taskId ? updatedTask : t)),
     });
   };
 
   const handleDeleteTask = (taskId: string) => {
     setTemplate({
       ...template,
-      taskTemplates: template.taskTemplates?.filter((t) => t.id !== taskId),
+      taskTemplates: (template.taskTemplates ?? []).filter((t) => t.id !== taskId),
     });
   };
 
@@ -403,14 +404,14 @@ export function TemplateBuilder({
   const handleUpdateColumn = (columnId: string, updatedColumn: KanbanColumn) => {
     setTemplate({
       ...template,
-      columns: template.columns?.map((c) => (c.id === columnId ? updatedColumn : c)),
+      columns: (template.columns ?? []).map((c) => (c.id === columnId ? updatedColumn : c)),
     });
   };
 
   const handleDeleteColumn = (columnId: string) => {
     setTemplate({
       ...template,
-      columns: template.columns?.filter((c) => c.id !== columnId),
+      columns: (template.columns ?? []).filter((c) => c.id !== columnId),
     });
   };
 
@@ -420,7 +421,7 @@ export function TemplateBuilder({
       return;
     }
 
-    const templateData = {
+    const templateData: CreateTemplateData = {
       name: template.name,
       description: template.description || "",
       category: template.category,
@@ -428,9 +429,14 @@ export function TemplateBuilder({
       columns: template.columns || [],
       isPublic: template.isPublic || false,
       tags: template.tags || [],
-      defaultDuration: template.defaultDuration,
-      estimatedHours: template.estimatedHours,
     };
+
+    if (template.defaultDuration !== undefined) {
+      templateData.defaultDuration = template.defaultDuration;
+    }
+    if (template.estimatedHours !== undefined) {
+      templateData.estimatedHours = template.estimatedHours;
+    }
 
     createTemplate(templateData, {
       onSuccess: (data) => {

@@ -7,7 +7,6 @@
 
 "use client";
 
-import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -29,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@dotmac/ui";
 import { MoreHorizontal, Search, Copy, CheckCircle2 } from "lucide-react";
+import React, { useState } from "react";
 
 export interface IPAddress {
   id: number;

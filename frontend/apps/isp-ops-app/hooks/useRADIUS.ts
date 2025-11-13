@@ -5,8 +5,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { platformConfig } from '@/lib/config';
 import { getOperatorAccessToken } from '../../../shared/utils/operatorAuth';
+import { useAppConfig } from '@/providers/AppConfigContext';
 
 export interface RADIUSSubscriber {
   id: number;
@@ -45,8 +45,10 @@ interface UseRADIUSOptions {
 }
 
 export function useRADIUSSubscribers(offset: number, limit: number, options?: UseRADIUSOptions) {
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
   return useQuery({
-    queryKey: ['radius-subscribers', offset, limit],
+    queryKey: ['radius-subscribers', offset, limit, api.baseUrl, api.prefix],
     queryFn: async () => {
       const token = getOperatorAccessToken();
       const headers: Record<string, string> = {
@@ -55,33 +57,34 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/radius/subscribers?offset=${offset}&limit=${limit}`,
+        `${apiBaseUrl}/api/v1/radius/subscribers?offset=${offset}&limit=${limit}`,
         {
           credentials: 'include',
           headers,
         },
       );
 
-      if (!response['ok']) {
-        throw new Error(`Failed to fetch RADIUS subscribers: ${response['statusText']}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch RADIUS subscribers: ${response.statusText}`);
       }
 
       const data = await response.json();
       return {
         data: data as RADIUSSubscriber[],
-        total: data['length'],
+        total: data.length,
       };
     },
-    enabled: options?.['enabled'] ?? true,
+    enabled: options?.enabled ?? true,
     staleTime: 30000, // 30 seconds
   });
 }
 
 export function useRADIUSSessions(options?: UseRADIUSOptions) {
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
   return useQuery({
-    queryKey: ['radius-sessions'],
+    queryKey: ['radius-sessions', api.baseUrl, api.prefix],
     queryFn: async () => {
       const token = getOperatorAccessToken();
       const headers: Record<string, string> = {
@@ -90,22 +93,22 @@ export function useRADIUSSessions(options?: UseRADIUSOptions) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/radius/sessions`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/radius/sessions`, {
         credentials: 'include',
         headers,
       });
 
-      if (!response['ok']) {
-        throw new Error(`Failed to fetch RADIUS sessions: ${response['statusText']}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch RADIUS sessions: ${response.statusText}`);
       }
 
       const data = await response.json();
       return {
         data: data as RADIUSSession[],
-        total: data['length'],
+        total: data.length,
       };
     },
-    enabled: options?.['enabled'] ?? true,
+    enabled: options?.enabled ?? true,
     staleTime: 10000, // 10 seconds (sessions change frequently)
   });
 }
