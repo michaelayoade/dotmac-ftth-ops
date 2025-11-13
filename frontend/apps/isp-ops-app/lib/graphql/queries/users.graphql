@@ -1,0 +1,428 @@
+# ============================================================================
+# User Management GraphQL Queries
+# ============================================================================
+# These queries replace REST API calls for user management with efficient
+# batched loading and conditional field loading.
+#
+# Backend: src/dotmac/platform/graphql/queries/user.py
+# DataLoaders: user_roles_loader, user_permissions_loader, user_teams_loader
+# Note: Only using fields that actually exist in the schema
+# ============================================================================
+
+# ============================================================================
+# User List Query
+# ============================================================================
+
+query UserList(
+  $page: Int = 1
+  $pageSize: Int = 10
+  $isActive: Boolean
+  $isVerified: Boolean
+  $isSuperuser: Boolean
+  $isPlatformAdmin: Boolean
+  $search: String
+  $includeMetadata: Boolean = false
+  $includeRoles: Boolean = false
+  $includePermissions: Boolean = false
+  $includeTeams: Boolean = false
+) {
+  users(
+    page: $page
+    pageSize: $pageSize
+    isActive: $isActive
+    isVerified: $isVerified
+    isSuperuser: $isSuperuser
+    isPlatformAdmin: $isPlatformAdmin
+    search: $search
+    includeMetadata: $includeMetadata
+    includeRoles: $includeRoles
+    includePermissions: $includePermissions
+    includeTeams: $includeTeams
+  ) {
+    users {
+      id
+      username
+      email
+      fullName
+      firstName
+      lastName
+      displayName
+
+      # Status flags
+      isActive
+      isVerified
+      isSuperuser
+      isPlatformAdmin
+      status
+
+      # Contact info
+      phoneNumber
+      phone
+      phoneVerified
+      avatarUrl
+      timezone
+      location
+      bio
+      website
+
+      # Security
+      mfaEnabled
+      lastLogin
+      lastLoginIp
+      failedLoginAttempts
+      lockedUntil
+
+      # Preferences
+      language
+
+      # Tenant
+      tenantId
+      primaryRole
+
+      # Timestamps
+      createdAt
+      updatedAt
+
+      # Metadata (optional)
+      metadata @include(if: $includeMetadata)
+
+      # Conditionally loaded relationships
+      roles @include(if: $includeRoles) {
+        id
+        name
+        displayName
+        description
+        priority
+        isSystem
+        isActive
+        isDefault
+        createdAt
+        updatedAt
+      }
+
+      permissions @include(if: $includePermissions) {
+        id
+        name
+        displayName
+        description
+        category
+        isActive
+        isSystem
+        createdAt
+        updatedAt
+      }
+
+      teams @include(if: $includeTeams) {
+        teamId
+        teamName
+        role
+        joinedAt
+      }
+    }
+    totalCount
+    hasNextPage
+    hasPrevPage
+    page
+    pageSize
+  }
+}
+
+# ============================================================================
+# User Detail Query
+# ============================================================================
+
+query UserDetail($id: ID!) {
+  user(
+    id: $id
+    includeMetadata: true
+    includeRoles: true
+    includePermissions: true
+    includeTeams: true
+    includeProfileChanges: true
+  ) {
+    id
+    username
+    email
+    fullName
+    firstName
+    lastName
+    displayName
+
+    # Status flags
+    isActive
+    isVerified
+    isSuperuser
+    isPlatformAdmin
+    status
+
+    # Contact info
+    phoneNumber
+    phone
+    phoneVerified
+    avatarUrl
+    timezone
+    location
+    bio
+    website
+
+    # Security
+    mfaEnabled
+    lastLogin
+    lastLoginIp
+    failedLoginAttempts
+    lockedUntil
+
+    # Preferences
+    language
+
+    # Tenant
+    tenantId
+    primaryRole
+
+    # Timestamps
+    createdAt
+    updatedAt
+
+    # Metadata
+    metadata
+
+    # Relationships
+    roles {
+      id
+      name
+      displayName
+      description
+      priority
+      isSystem
+      isActive
+      isDefault
+      createdAt
+      updatedAt
+    }
+
+    permissions {
+      id
+      name
+      displayName
+      description
+      category
+      isActive
+      isSystem
+      createdAt
+      updatedAt
+    }
+
+    teams {
+      teamId
+      teamName
+      role
+      joinedAt
+    }
+
+    profileChanges {
+      id
+      fieldName
+      oldValue
+      newValue
+      createdAt
+      changedByUsername
+    }
+  }
+}
+
+# ============================================================================
+# User Metrics Query
+# ============================================================================
+
+query UserMetrics {
+  userMetrics {
+    totalUsers
+    activeUsers
+    suspendedUsers
+    invitedUsers
+    verifiedUsers
+    mfaEnabledUsers
+    platformAdmins
+    superusers
+    regularUsers
+    usersLoggedInLast24h
+    usersLoggedInLast7d
+    usersLoggedInLast30d
+    neverLoggedIn
+    newUsersThisMonth
+    newUsersLastMonth
+  }
+}
+
+# ============================================================================
+# Roles List Query
+# ============================================================================
+
+query RoleList(
+  $page: Int = 1
+  $pageSize: Int = 20
+  $isActive: Boolean
+  $isSystem: Boolean
+  $search: String
+) {
+  roles(
+    page: $page
+    pageSize: $pageSize
+    isActive: $isActive
+    isSystem: $isSystem
+    search: $search
+  ) {
+    roles {
+      id
+      name
+      displayName
+      description
+      priority
+      isSystem
+      isActive
+      isDefault
+      createdAt
+      updatedAt
+    }
+    totalCount
+    hasNextPage
+    hasPrevPage
+    page
+    pageSize
+  }
+}
+
+# ============================================================================
+# Permissions by Category Query
+# ============================================================================
+
+query PermissionsByCategory($category: PermissionCategoryEnum) {
+  permissionsByCategory(category: $category) {
+    category
+    count
+    permissions {
+      id
+      name
+      displayName
+      description
+      category
+      isActive
+      isSystem
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+# ============================================================================
+# User Dashboard Query (Combined)
+# ============================================================================
+
+query UserDashboard(
+  $page: Int = 1
+  $pageSize: Int = 10
+  $isActive: Boolean
+  $search: String
+) {
+  users(
+    page: $page
+    pageSize: $pageSize
+    isActive: $isActive
+    search: $search
+    includeMetadata: false
+    includeRoles: true
+    includePermissions: false
+    includeTeams: false
+  ) {
+    users {
+      id
+      username
+      email
+      fullName
+      isActive
+      isVerified
+      isSuperuser
+      lastLogin
+      createdAt
+
+      roles {
+        id
+        name
+        displayName
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+
+  userMetrics {
+    totalUsers
+    activeUsers
+    suspendedUsers
+    verifiedUsers
+    mfaEnabledUsers
+    platformAdmins
+    superusers
+    regularUsers
+    usersLoggedInLast24h
+    usersLoggedInLast7d
+    newUsersThisMonth
+  }
+}
+
+# ============================================================================
+# User Roles Query
+# ============================================================================
+
+query UserRoles($id: ID!) {
+  user(id: $id, includeRoles: true) {
+    id
+    username
+    roles {
+      id
+      name
+      displayName
+      description
+      priority
+      isSystem
+      isActive
+      createdAt
+    }
+  }
+}
+
+# ============================================================================
+# User Permissions Query
+# ============================================================================
+
+query UserPermissions($id: ID!) {
+  user(id: $id, includePermissions: true) {
+    id
+    username
+    permissions {
+      id
+      name
+      displayName
+      description
+      category
+      isActive
+    }
+  }
+}
+
+# ============================================================================
+# User Teams Query
+# ============================================================================
+
+query UserTeams($id: ID!) {
+  user(id: $id, includeTeams: true) {
+    id
+    username
+    teams {
+      teamId
+      teamName
+      role
+      joinedAt
+    }
+  }
+}

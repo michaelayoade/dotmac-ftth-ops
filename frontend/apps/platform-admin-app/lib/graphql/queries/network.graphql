@@ -1,0 +1,431 @@
+# ============================================================================
+# Network Monitoring GraphQL Queries
+# ============================================================================
+# Simplified version using only fields that exist in the schema
+# Backend: src/dotmac/platform/graphql/queries/network.py
+# ============================================================================
+
+# ============================================================================
+# Network Overview Dashboard Query
+# ============================================================================
+
+query NetworkOverview {
+  networkOverview {
+    # Device counts
+    totalDevices
+    onlineDevices
+    offlineDevices
+
+    # Alert summary
+    activeAlerts
+    criticalAlerts
+    warningAlerts
+
+    # Bandwidth
+    totalBandwidthGbps
+    uptimePercentage
+
+    # Data sources
+    dataSourceStatus {
+      name
+      status
+    }
+
+    # Device type breakdown
+    deviceTypeSummary {
+      deviceType
+      totalCount
+      onlineCount
+      avgCpuUsage
+      avgMemoryUsage
+    }
+
+    # Recent alerts
+    recentAlerts {
+      alertId
+      severity
+      title
+      description
+      deviceName
+      deviceId
+      deviceType
+      triggeredAt
+      acknowledgedAt
+      resolvedAt
+      isActive
+    }
+  }
+}
+
+# ============================================================================
+# Network Devices List Query
+# ============================================================================
+
+query NetworkDeviceList(
+  $page: Int = 1
+  $pageSize: Int = 20
+  $deviceType: DeviceTypeEnum
+  $status: DeviceStatusEnum
+  $search: String
+) {
+  networkDevices(
+    page: $page
+    pageSize: $pageSize
+    deviceType: $deviceType
+    status: $status
+    search: $search
+  ) {
+    devices {
+      deviceId
+      deviceName
+      deviceType
+      status
+      ipAddress
+      firmwareVersion
+      model
+      location
+      tenantId
+
+      # Health metrics
+      cpuUsagePercent
+      memoryUsagePercent
+      temperatureCelsius
+      powerStatus
+      pingLatencyMs
+      packetLossPercent
+      uptimeSeconds
+      uptimeDays
+      lastSeen
+      isHealthy
+    }
+    totalCount
+    hasNextPage
+    hasPrevPage
+    page
+    pageSize
+  }
+}
+
+# ============================================================================
+# Device Detail Query
+# ============================================================================
+
+query DeviceDetail(
+  $deviceId: String!
+  $deviceType: DeviceTypeEnum!
+) {
+  deviceHealth(deviceId: $deviceId, deviceType: $deviceType) {
+    deviceId
+    deviceName
+    deviceType
+    status
+    ipAddress
+    firmwareVersion
+    model
+    location
+    tenantId
+
+    # Health metrics
+    cpuUsagePercent
+    memoryUsagePercent
+    temperatureCelsius
+    powerStatus
+    pingLatencyMs
+    packetLossPercent
+    uptimeSeconds
+    uptimeDays
+    lastSeen
+    isHealthy
+  }
+
+  deviceTraffic(deviceId: $deviceId, deviceType: $deviceType) {
+    deviceId
+    deviceName
+    totalBandwidthGbps
+    currentRateInMbps
+    currentRateOutMbps
+    totalBytesIn
+    totalBytesOut
+    totalPacketsIn
+    totalPacketsOut
+    peakRateInBps
+    peakRateOutBps
+    peakTimestamp
+    timestamp
+  }
+}
+
+# ============================================================================
+# Device Traffic Stats Query
+# ============================================================================
+
+query DeviceTraffic(
+  $deviceId: String!
+  $deviceType: DeviceTypeEnum!
+  $includeInterfaces: Boolean = false
+) {
+  deviceTraffic(
+    deviceId: $deviceId
+    deviceType: $deviceType
+    includeInterfaces: $includeInterfaces
+  ) {
+    deviceId
+    deviceName
+    totalBandwidthGbps
+    currentRateInMbps
+    currentRateOutMbps
+    totalBytesIn
+    totalBytesOut
+    totalPacketsIn
+    totalPacketsOut
+    peakRateInBps
+    peakRateOutBps
+    peakTimestamp
+    timestamp
+
+    interfaces @include(if: $includeInterfaces) {
+      interfaceName
+      status
+      rateInBps
+      rateOutBps
+      bytesIn
+      bytesOut
+      errorsIn
+      errorsOut
+      dropsIn
+      dropsOut
+    }
+  }
+}
+
+# ============================================================================
+# Network Alerts Query
+# ============================================================================
+
+query NetworkAlertList(
+  $page: Int = 1
+  $pageSize: Int = 50
+  $severity: AlertSeverityEnum
+  $activeOnly: Boolean = true
+  $deviceId: String
+  $deviceType: DeviceTypeEnum
+) {
+  networkAlerts(
+    page: $page
+    pageSize: $pageSize
+    severity: $severity
+    activeOnly: $activeOnly
+    deviceId: $deviceId
+    deviceType: $deviceType
+  ) {
+    alerts {
+      alertId
+      alertRuleId
+      severity
+      title
+      description
+      deviceName
+      deviceId
+      deviceType
+      metricName
+      currentValue
+      thresholdValue
+      triggeredAt
+      acknowledgedAt
+      resolvedAt
+      isActive
+      isAcknowledged
+      tenantId
+    }
+    totalCount
+    hasNextPage
+    hasPrevPage
+    page
+    pageSize
+  }
+}
+
+# ============================================================================
+# Single Alert Query
+# ============================================================================
+
+query NetworkAlertDetail($alertId: String!) {
+  networkAlert(alertId: $alertId) {
+    alertId
+    alertRuleId
+    severity
+    title
+    description
+    deviceName
+    deviceId
+    deviceType
+    metricName
+    currentValue
+    thresholdValue
+    triggeredAt
+    acknowledgedAt
+    resolvedAt
+    isActive
+    isAcknowledged
+    tenantId
+  }
+}
+
+# ============================================================================
+# Network Dashboard Combined Query
+# ============================================================================
+
+query NetworkDashboard(
+  $devicePage: Int = 1
+  $devicePageSize: Int = 10
+  $deviceType: DeviceTypeEnum
+  $deviceStatus: DeviceStatusEnum
+  $alertPage: Int = 1
+  $alertPageSize: Int = 20
+  $alertSeverity: AlertSeverityEnum
+) {
+  networkOverview {
+    totalDevices
+    onlineDevices
+    offlineDevices
+    activeAlerts
+    criticalAlerts
+    warningAlerts
+    totalBandwidthGbps
+    uptimePercentage
+
+    dataSourceStatus {
+      name
+      status
+    }
+
+    deviceTypeSummary {
+      deviceType
+      totalCount
+      onlineCount
+      avgCpuUsage
+      avgMemoryUsage
+    }
+
+    recentAlerts {
+      alertId
+      severity
+      title
+      deviceName
+      triggeredAt
+      isActive
+    }
+  }
+
+  networkDevices(
+    page: $devicePage
+    pageSize: $devicePageSize
+    deviceType: $deviceType
+    status: $deviceStatus
+  ) {
+    devices {
+      deviceId
+      deviceName
+      deviceType
+      status
+      ipAddress
+      cpuUsagePercent
+      memoryUsagePercent
+      uptimeSeconds
+      isHealthy
+      lastSeen
+    }
+    totalCount
+    hasNextPage
+  }
+
+  networkAlerts(
+    page: $alertPage
+    pageSize: $alertPageSize
+    severity: $alertSeverity
+    activeOnly: true
+  ) {
+    alerts {
+      alertId
+      severity
+      title
+      description
+      deviceName
+      deviceType
+      triggeredAt
+      isActive
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+# ============================================================================
+# Real-Time GraphQL Subscriptions
+# ============================================================================
+
+# ============================================================================
+# Device Updates Subscription
+# ============================================================================
+
+subscription DeviceUpdates($deviceType: DeviceTypeEnum, $status: DeviceStatusEnum) {
+  deviceUpdated(deviceType: $deviceType, status: $status) {
+    deviceId
+    deviceName
+    deviceType
+    status
+    ipAddress
+    firmwareVersion
+    model
+    location
+    tenantId
+
+    # Health metrics
+    cpuUsagePercent
+    memoryUsagePercent
+    temperatureCelsius
+    powerStatus
+    pingLatencyMs
+    packetLossPercent
+    uptimeSeconds
+    uptimeDays
+    lastSeen
+    isHealthy
+
+    # Update metadata
+    changeType
+    previousValue
+    newValue
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Network Alert Updates Subscription
+# ============================================================================
+
+subscription NetworkAlertUpdates($severity: AlertSeverityEnum, $deviceId: String) {
+  networkAlertUpdated(severity: $severity, deviceId: $deviceId) {
+    action
+    alert {
+      alertId
+      alertRuleId
+      severity
+      title
+      description
+      deviceName
+      deviceId
+      deviceType
+      metricName
+      currentValue
+      thresholdValue
+      triggeredAt
+      acknowledgedAt
+      resolvedAt
+      isActive
+      isAcknowledged
+      tenantId
+    }
+    updatedAt
+  }
+}

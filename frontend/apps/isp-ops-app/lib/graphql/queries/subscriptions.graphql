@@ -1,0 +1,428 @@
+# ============================================================================
+# Subscription Management GraphQL Queries
+# ============================================================================
+# These queries replace REST API calls with efficient batched loading
+# and conditional field loading.
+#
+# Backend: src/dotmac/platform/graphql/queries/subscription.py
+# DataLoaders: subscription_customer_loader, subscription_plan_loader, subscription_invoices_loader
+# ============================================================================
+
+# ============================================================================
+# Subscription List Query
+# ============================================================================
+# Replaces: GET /subscriptions with multiple filters
+# Benefits:
+# - Single query vs multiple REST calls
+# - Conditional loading of customer/plan/invoices
+# - Batched loading prevents N+1 queries
+# ============================================================================
+
+query SubscriptionList(
+  $page: Int = 1
+  $pageSize: Int = 10
+  $status: SubscriptionStatusEnum
+  $billingCycle: BillingCycleEnum
+  $search: String
+  $includeCustomer: Boolean = true
+  $includePlan: Boolean = true
+  $includeInvoices: Boolean = false
+) {
+  subscriptions(
+    page: $page
+    pageSize: $pageSize
+    status: $status
+    billingCycle: $billingCycle
+    search: $search
+    includeCustomer: $includeCustomer
+    includePlan: $includePlan
+    includeInvoices: $includeInvoices
+  ) {
+    subscriptions {
+      id
+      subscriptionId
+      customerId
+      planId
+      tenantId
+
+      # Billing period
+      currentPeriodStart
+      currentPeriodEnd
+
+      # Status
+      status
+
+      # Trial information
+      trialEnd
+      isInTrial
+
+      # Cancellation
+      cancelAtPeriodEnd
+      canceledAt
+      endedAt
+
+      # Pricing
+      customPrice
+
+      # Usage tracking
+      usageRecords
+
+      # Timestamps
+      createdAt
+      updatedAt
+
+      # Computed properties
+      isActive
+      daysUntilRenewal
+      isPastDue
+
+      # Conditionally loaded relationships
+      customer @include(if: $includeCustomer) {
+        id
+        customerId
+        name
+        email
+        phone
+        createdAt
+      }
+
+      plan @include(if: $includePlan) {
+        id
+        planId
+        productId
+        name
+        description
+        billingCycle
+        price
+        currency
+        setupFee
+        trialDays
+        isActive
+        hasTrial
+        hasSetupFee
+        includedUsage
+        overageRates
+        createdAt
+        updatedAt
+      }
+
+      recentInvoices @include(if: $includeInvoices) {
+        id
+        invoiceId
+        invoiceNumber
+        amount
+        currency
+        status
+        dueDate
+        paidAt
+        createdAt
+      }
+    }
+    totalCount
+    hasNextPage
+    hasPrevPage
+    page
+    pageSize
+  }
+}
+
+# ============================================================================
+# Subscription Detail Query
+# ============================================================================
+# Replaces:
+# - GET /subscriptions/{id}
+# - GET /subscriptions/{id}/customer
+# - GET /subscriptions/{id}/invoices
+#
+# Benefits:
+# - 3+ REST calls → 1 GraphQL query (66% reduction)
+# - Customer, plan, and invoices batched via DataLoaders
+# ============================================================================
+
+query SubscriptionDetail($id: ID!) {
+  subscription(
+    id: $id
+    includeCustomer: true
+    includePlan: true
+    includeInvoices: true
+  ) {
+    id
+    subscriptionId
+    customerId
+    planId
+    tenantId
+
+    # Billing period
+    currentPeriodStart
+    currentPeriodEnd
+
+    # Status
+    status
+
+    # Trial information
+    trialEnd
+    isInTrial
+
+    # Cancellation
+    cancelAtPeriodEnd
+    canceledAt
+    endedAt
+
+    # Pricing
+    customPrice
+
+    # Usage tracking
+    usageRecords
+
+    # Timestamps
+    createdAt
+    updatedAt
+
+    # Computed properties
+    isActive
+    daysUntilRenewal
+    isPastDue
+
+    # Relationships (always loaded for detail view)
+    customer {
+      id
+      customerId
+      name
+      email
+      phone
+      createdAt
+    }
+
+    plan {
+      id
+      planId
+      productId
+      name
+      description
+      billingCycle
+      price
+      currency
+      setupFee
+      trialDays
+      isActive
+      hasTrial
+      hasSetupFee
+      includedUsage
+      overageRates
+      createdAt
+      updatedAt
+    }
+
+    recentInvoices {
+      id
+      invoiceId
+      invoiceNumber
+      amount
+      currency
+      status
+      dueDate
+      paidAt
+      createdAt
+    }
+  }
+}
+
+# ============================================================================
+# Subscription Metrics Query
+# ============================================================================
+# Replaces: Custom aggregation logic in components
+# Benefits:
+# - Server-side aggregation
+# - Real-time metrics
+# - Single efficient query
+# ============================================================================
+
+query SubscriptionMetrics {
+  subscriptionMetrics {
+    # Counts by status
+    totalSubscriptions
+    activeSubscriptions
+    trialingSubscriptions
+    pastDueSubscriptions
+    canceledSubscriptions
+    pausedSubscriptions
+
+    # Revenue metrics
+    monthlyRecurringRevenue
+    annualRecurringRevenue
+    averageRevenuePerUser
+
+    # Growth metrics
+    newSubscriptionsThisMonth
+    newSubscriptionsLastMonth
+    churnRate
+    growthRate
+
+    # Billing cycle distribution
+    monthlySubscriptions
+    quarterlySubscriptions
+    annualSubscriptions
+
+    # Trial metrics
+    trialConversionRate
+    activeTrials
+  }
+}
+
+# ============================================================================
+# Subscription Plans Query
+# ============================================================================
+# Replaces: GET /plans
+# Benefits:
+# - Filtered results from server
+# - Pagination support
+# ============================================================================
+
+query PlanList(
+  $page: Int = 1
+  $pageSize: Int = 20
+  $isActive: Boolean
+  $billingCycle: BillingCycleEnum
+) {
+  plans(
+    page: $page
+    pageSize: $pageSize
+    isActive: $isActive
+    billingCycle: $billingCycle
+  ) {
+    plans {
+      id
+      planId
+      productId
+      name
+      description
+      billingCycle
+      price
+      currency
+      setupFee
+      trialDays
+      isActive
+      createdAt
+      updatedAt
+      hasTrial
+      hasSetupFee
+      includedUsage
+      overageRates
+    }
+    totalCount
+    hasNextPage
+    hasPrevPage
+    page
+    pageSize
+  }
+}
+
+# ============================================================================
+# Products Query
+# ============================================================================
+# Replaces: GET /products
+# Benefits:
+# - Filtered results from server
+# - Pagination support
+# ============================================================================
+
+query ProductList(
+  $page: Int = 1
+  $pageSize: Int = 20
+  $isActive: Boolean
+  $category: String
+) {
+  products(
+    page: $page
+    pageSize: $pageSize
+    isActive: $isActive
+    category: $category
+  ) {
+    products {
+      id
+      productId
+      sku
+      name
+      description
+      category
+      productType
+      basePrice
+      currency
+      isActive
+      createdAt
+      updatedAt
+    }
+    totalCount
+    hasNextPage
+    hasPrevPage
+    page
+    pageSize
+  }
+}
+
+# ============================================================================
+# Subscription Dashboard Query (Combined)
+# ============================================================================
+# Combined query for dashboard that needs both list and metrics
+# Benefits:
+# - 2+ REST calls → 1 GraphQL query
+# - Single round trip
+# ============================================================================
+
+query SubscriptionDashboard(
+  $page: Int = 1
+  $pageSize: Int = 10
+  $status: SubscriptionStatusEnum
+  $search: String
+) {
+  subscriptions(
+    page: $page
+    pageSize: $pageSize
+    status: $status
+    search: $search
+    includeCustomer: true
+    includePlan: true
+    includeInvoices: false
+  ) {
+    subscriptions {
+      id
+      subscriptionId
+      status
+      currentPeriodStart
+      currentPeriodEnd
+      isActive
+      isInTrial
+      cancelAtPeriodEnd
+      createdAt
+
+      customer {
+        id
+        name
+        email
+      }
+
+      plan {
+        id
+        name
+        price
+        currency
+        billingCycle
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+
+  subscriptionMetrics {
+    totalSubscriptions
+    activeSubscriptions
+    trialingSubscriptions
+    pastDueSubscriptions
+    monthlyRecurringRevenue
+    annualRecurringRevenue
+    averageRevenuePerUser
+    newSubscriptionsThisMonth
+    churnRate
+    growthRate
+  }
+}
