@@ -18,6 +18,7 @@ eggs/
 lib/
 !frontend/apps/*/lib/
 !frontend/shared/lib/
+!frontend/shared/packages/*/src/lib/
 lib64/
 parts/
 sdist/
