@@ -32,8 +32,8 @@ jest.mock("../../../../shared/utils/operatorAuth", () => ({
   getOperatorAccessToken: jest.fn(),
 }));
 
-// Mock global fetch
-global.fetch = jest.fn();
+const originalFetch = global.fetch;
+const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -47,6 +47,18 @@ const createWrapper = () => {
 };
 
 describe("useRADIUS", () => {
+  beforeAll(() => {
+    global.fetch = fetchMock;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });

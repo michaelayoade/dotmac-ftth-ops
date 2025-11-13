@@ -35,10 +35,18 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-// Mock fetch globally
-global.fetch = jest.fn();
+const originalFetch = global.fetch;
+const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 describe("usePartners", () => {
+  beforeAll(() => {
+    global.fetch = fetchMock;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
   function createWrapper() {
     const queryClient = new QueryClient({
       defaultOptions: {
@@ -58,6 +66,7 @@ describe("usePartners", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    fetchMock.mockReset();
   });
 
   afterEach(() => {

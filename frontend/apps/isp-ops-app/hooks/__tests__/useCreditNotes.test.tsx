@@ -7,8 +7,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCreditNotes } from "../useCreditNotes";
 
-// Mock fetch
-global.fetch = jest.fn();
+const originalFetch = global.fetch;
+const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 const mockBuildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
@@ -41,6 +41,18 @@ const createWrapper = () => {
 };
 
 describe("useCreditNotes", () => {
+  beforeAll(() => {
+    global.fetch = fetchMock;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });

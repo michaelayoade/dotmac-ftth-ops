@@ -19,8 +19,8 @@ import {
   useAssignResource,
 } from "../useFieldService";
 
-// Mock fetch
-global.fetch = jest.fn();
+const originalFetch = global.fetch;
+const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 // Create a wrapper for React Query
 const createWrapper = () => {
@@ -38,8 +38,17 @@ const createWrapper = () => {
 };
 
 describe("useFieldService hooks", () => {
+  beforeAll(() => {
+    global.fetch = fetchMock;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    fetchMock.mockReset();
   });
 
   // ============================================================================

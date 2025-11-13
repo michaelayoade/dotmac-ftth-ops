@@ -713,14 +713,18 @@ export function runUseNotificationsSuite(
         expect(apiClient.get).toHaveBeenCalledTimes(1);
 
         // Fast-forward 5 seconds
-        jest.advanceTimersByTime(5000);
+        act(() => {
+          jest.advanceTimersByTime(5000);
+        });
 
         await waitFor(() => {
           expect(apiClient.get).toHaveBeenCalledTimes(2);
         });
 
         // Fast-forward another 5 seconds
-        jest.advanceTimersByTime(5000);
+        act(() => {
+          jest.advanceTimersByTime(5000);
+        });
 
         await waitFor(() => {
           expect(apiClient.get).toHaveBeenCalledTimes(3);

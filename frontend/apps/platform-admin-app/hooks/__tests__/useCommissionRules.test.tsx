@@ -48,6 +48,16 @@ const { getOperatorAccessToken } = require("../../../../shared/utils/operatorAut
 
 describe("useCommissionRules", () => {
   const mockToken = "test-token-123";
+  const originalFetch = global.fetch;
+  const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
+
+  beforeAll(() => {
+    global.fetch = fetchMock;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
 
   function createWrapper() {
     const queryClient = new QueryClient({
@@ -69,7 +79,7 @@ describe("useCommissionRules", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getOperatorAccessToken as jest.Mock).mockReturnValue(mockToken);
-    global.fetch = jest.fn();
+    fetchMock.mockReset();
   });
 
   afterEach(() => {
