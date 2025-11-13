@@ -1,0 +1,87 @@
+# Subscriber Dashboard Query
+# Fetches all subscriber data in a single optimized request
+
+query SubscriberDashboard($limit: Int = 50, $search: String) {
+  # Get subscribers with their active sessions (batched)
+  subscribers(limit: $limit, search: $search) {
+    id
+    subscriberId
+    username
+    enabled
+    framedIpAddress
+    bandwidthProfileId
+    createdAt
+    updatedAt
+
+    # Sessions are loaded via DataLoader (no N+1 problem)
+    sessions {
+      radacctid
+      username
+      nasipaddress
+      acctsessionid
+      acctsessiontime
+      acctinputoctets
+      acctoutputoctets
+      acctstarttime
+    }
+  }
+
+  # Get aggregated metrics
+  subscriberMetrics {
+    totalCount
+    enabledCount
+    disabledCount
+    activeSessionsCount
+    totalDataUsageMb
+  }
+}
+
+# Individual Subscriber Query
+query Subscriber($username: String!) {
+  subscribers(limit: 1, search: $username) {
+    id
+    subscriberId
+    username
+    enabled
+    framedIpAddress
+    bandwidthProfileId
+    createdAt
+    updatedAt
+    sessions {
+      radacctid
+      username
+      nasipaddress
+      acctsessionid
+      acctsessiontime
+      acctinputoctets
+      acctoutputoctets
+      acctstarttime
+      acctstoptime
+    }
+  }
+}
+
+# Active Sessions Query
+query ActiveSessions($limit: Int = 100, $username: String) {
+  sessions(limit: $limit, username: $username) {
+    radacctid
+    username
+    nasipaddress
+    acctsessionid
+    acctsessiontime
+    acctinputoctets
+    acctoutputoctets
+    acctstarttime
+  }
+}
+
+# Subscriber Metrics Only
+query SubscriberMetrics {
+  subscriberMetrics {
+    totalCount
+    enabledCount
+    disabledCount
+    activeSessionsCount
+    totalDataUsageMb
+  }
+}

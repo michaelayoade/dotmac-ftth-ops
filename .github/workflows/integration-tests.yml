@@ -4,19 +4,21 @@ on:
   push:
     branches: [main, develop, feature/*]
     paths:
-      - 'frontend/apps/base-app/**'
+      - 'frontend/apps/isp-ops-app/**'
+      - 'frontend/apps/platform-admin-app/**'
       - 'frontend/shared/**'
       - '.github/workflows/integration-tests.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'frontend/apps/base-app/**'
+      - 'frontend/apps/isp-ops-app/**'
+      - 'frontend/apps/platform-admin-app/**'
       - 'frontend/shared/**'
       - '.github/workflows/integration-tests.yml'
 
 env:
   NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  PNPM_VERSION: '10'
 
 jobs:
   integration-tests:
@@ -81,6 +83,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
+        working-directory: frontend
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Setup Python
@@ -128,35 +131,35 @@ jobs:
           # Wait for backend to be ready
           timeout 30 bash -c 'until curl -f http://localhost:8000/health; do sleep 1; done'
 
-      - name: Build frontend
-        working-directory: frontend/apps/base-app
+      - name: Build ISP Ops frontend
+        working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
-        run: pnpm build
+        run: pnpm --filter @dotmac/isp-ops-app build
 
-      - name: Start frontend server
-        working-directory: frontend/apps/base-app
+      - name: Start ISP Ops frontend server
+        working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
         run: |
-          pnpm start &
-          echo $! > frontend.pid
+          pnpm --filter @dotmac/isp-ops-app start &
+          echo $! > ../frontend.pid
           # Wait for frontend to be ready
-          timeout 30 bash -c 'until curl -f http://localhost:3000; do sleep 1; done'
+          timeout 30 bash -c 'until curl -f http://localhost:3001; do sleep 1; done'
 
       - name: Run integration tests
-        working-directory: frontend/apps/base-app
+        working-directory: frontend
         env:
-          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          ISP_OPS_URL: http://localhost:3001
           API_BASE_URL: http://localhost:8000
-        run: pnpm exec playwright test --project=chromium
+        run: pnpm e2e -- --project=chromium
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
-          path: frontend/apps/base-app/playwright-report/
+          path: frontend/playwright-report/
           retention-days: 30
 
       - name: Upload test results
@@ -164,7 +167,7 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: frontend/apps/base-app/test-results/
+          path: frontend/test-results/
           retention-days: 30
 
       - name: Cleanup
@@ -213,11 +216,9 @@ jobs:
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Test Suites" >> $GITHUB_STEP_SUMMARY
-          echo "- Authentication Tests" >> $GITHUB_STEP_SUMMARY
-          echo "- WireGuard Server CRUD Tests" >> $GITHUB_STEP_SUMMARY
-          echo "- WireGuard Peer CRUD Tests" >> $GITHUB_STEP_SUMMARY
-          echo "- WireGuard Dashboard Tests" >> $GITHUB_STEP_SUMMARY
-          echo "- WireGuard Provisioning Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ISP Ops Auth & Session Flows" >> $GITHUB_STEP_SUMMARY
+          echo "- Tenant Provisioning & Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "- Billing & Communications Workflows" >> $GITHUB_STEP_SUMMARY
 
   prevent-flaky-tests:
     name: Prevent Flaky Tests

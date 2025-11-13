@@ -1,0 +1,568 @@
+# ============================================================================
+# Customer Management GraphQL Queries
+# ============================================================================
+# These queries replace REST API calls with efficient batched loading
+# and conditional field loading.
+#
+# Backend: src/dotmac/platform/graphql/queries/customer.py
+# DataLoaders: customer_activity_loader, customer_note_loader
+# ============================================================================
+
+# ============================================================================
+# Customer List Query
+# ============================================================================
+
+query CustomerList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $status: CustomerStatusEnum
+  $search: String
+  $includeActivities: Boolean = false
+  $includeNotes: Boolean = false
+) {
+  customers(
+    limit: $limit
+    offset: $offset
+    status: $status
+    search: $search
+    includeActivities: $includeActivities
+    includeNotes: $includeNotes
+  ) {
+    customers {
+      id
+      customerNumber
+      firstName
+      lastName
+      middleName
+      displayName
+      companyName
+      status
+      customerType
+      tier
+      email
+      emailVerified
+      phone
+      phoneVerified
+      mobile
+      addressLine1
+      addressLine2
+      city
+      stateProvince
+      postalCode
+      country
+      taxId
+      industry
+      employeeCount
+      lifetimeValue
+      totalPurchases
+      averageOrderValue
+      lastPurchaseDate
+      createdAt
+      updatedAt
+      acquisitionDate
+      lastContactDate
+
+      activities @include(if: $includeActivities) {
+        id
+        customerId
+        activityType
+        title
+        description
+        performedBy
+        createdAt
+      }
+
+      notes @include(if: $includeNotes) {
+        id
+        customerId
+        subject
+        content
+        isInternal
+        createdById
+        createdAt
+        updatedAt
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+# ============================================================================
+# Customer Detail Query
+# ============================================================================
+
+query CustomerDetail($id: ID!) {
+  customer(id: $id, includeActivities: true, includeNotes: true) {
+    id
+    customerNumber
+    firstName
+    lastName
+    middleName
+    displayName
+    companyName
+    status
+    customerType
+    tier
+    email
+    emailVerified
+    phone
+    phoneVerified
+    mobile
+    addressLine1
+    addressLine2
+    city
+    stateProvince
+    postalCode
+    country
+    taxId
+    industry
+    employeeCount
+    lifetimeValue
+    totalPurchases
+    averageOrderValue
+    lastPurchaseDate
+    createdAt
+    updatedAt
+    acquisitionDate
+    lastContactDate
+
+    activities {
+      id
+      customerId
+      activityType
+      title
+      description
+      performedBy
+      createdAt
+    }
+
+    notes {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+# ============================================================================
+# Customer Metrics Query
+# ============================================================================
+
+query CustomerMetrics {
+  customerMetrics {
+    totalCustomers
+    activeCustomers
+    newCustomers
+    churnedCustomers
+    totalCustomerValue
+    averageCustomerValue
+  }
+}
+
+# ============================================================================
+# Customer Activities Query
+# ============================================================================
+
+query CustomerActivities($id: ID!) {
+  customer(id: $id, includeActivities: true, includeNotes: false) {
+    id
+    activities {
+      id
+      customerId
+      activityType
+      title
+      description
+      performedBy
+      createdAt
+    }
+  }
+}
+
+# ============================================================================
+# Customer Notes Query
+# ============================================================================
+
+query CustomerNotes($id: ID!) {
+  customer(id: $id, includeActivities: false, includeNotes: true) {
+    id
+    notes {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+# ============================================================================
+# Customer Dashboard Query
+# ============================================================================
+
+query CustomerDashboard(
+  $limit: Int = 20
+  $offset: Int = 0
+  $status: CustomerStatusEnum
+  $search: String
+) {
+  customers(
+    limit: $limit
+    offset: $offset
+    status: $status
+    search: $search
+    includeActivities: false
+    includeNotes: false
+  ) {
+    customers {
+      id
+      customerNumber
+      firstName
+      lastName
+      companyName
+      email
+      phone
+      status
+      customerType
+      tier
+      lifetimeValue
+      totalPurchases
+      lastContactDate
+      createdAt
+    }
+    totalCount
+    hasNextPage
+  }
+
+  customerMetrics {
+    totalCustomers
+    activeCustomers
+    newCustomers
+    churnedCustomers
+    totalCustomerValue
+    averageCustomerValue
+  }
+}
+
+# ============================================================================
+# Customer 360° View Queries
+# ============================================================================
+
+# ============================================================================
+# Customer Subscriptions Query
+# ============================================================================
+
+query CustomerSubscriptions($customerId: ID!, $status: String, $limit: Int = 50) {
+  customerSubscriptions(customerId: $customerId, status: $status, limit: $limit) {
+    id
+    subscriptionId
+    customerId
+    planId
+    tenantId
+    currentPeriodStart
+    currentPeriodEnd
+    status
+    trialEnd
+    isInTrial
+    cancelAtPeriodEnd
+    canceledAt
+    endedAt
+    createdAt
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Customer Network Info Query
+# ============================================================================
+# Returns JSON scalar - parse the response to access fields
+
+query CustomerNetworkInfo($customerId: ID!) {
+  customerNetworkInfo(customerId: $customerId)
+}
+
+# ============================================================================
+# Customer Devices Query
+# ============================================================================
+# Returns JSON scalar - parse the response to access fields
+
+query CustomerDevices($customerId: ID!, $deviceType: String, $activeOnly: Boolean = true) {
+  customerDevices(customerId: $customerId, deviceType: $deviceType, activeOnly: $activeOnly)
+}
+
+# ============================================================================
+# Customer Tickets Query
+# ============================================================================
+# Returns JSON scalar - parse the response to access fields
+# Note: Backend uses 'limit' not 'offset'
+
+query CustomerTickets(
+  $customerId: ID!
+  $limit: Int = 50
+  $status: String
+) {
+  customerTickets(
+    customerId: $customerId
+    limit: $limit
+    status: $status
+  )
+}
+
+# ============================================================================
+# Customer Billing Query
+# ============================================================================
+# Returns JSON scalar - parse the response to access fields
+# Note: Backend uses 'invoiceLimit' and 'includeInvoices' parameters
+
+query CustomerBilling($customerId: ID!, $includeInvoices: Boolean = true, $invoiceLimit: Int = 50) {
+  customerBilling(customerId: $customerId, includeInvoices: $includeInvoices, invoiceLimit: $invoiceLimit)
+}
+
+# ============================================================================
+# Customer 360° Complete View Query
+# ============================================================================
+
+query Customer360View($customerId: ID!) {
+  customer(id: $customerId, includeActivities: true, includeNotes: true) {
+    id
+    customerNumber
+    firstName
+    lastName
+    middleName
+    displayName
+    companyName
+    status
+    customerType
+    tier
+    email
+    emailVerified
+    phone
+    phoneVerified
+    mobile
+    addressLine1
+    addressLine2
+    city
+    stateProvince
+    postalCode
+    country
+    taxId
+    industry
+    employeeCount
+    lifetimeValue
+    totalPurchases
+    averageOrderValue
+    lastPurchaseDate
+    createdAt
+    updatedAt
+    acquisitionDate
+    lastContactDate
+
+    activities {
+      id
+      customerId
+      activityType
+      title
+      description
+      performedBy
+      createdAt
+    }
+
+    notes {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdAt
+      updatedAt
+    }
+  }
+
+  customerSubscriptions(customerId: $customerId, limit: 10) {
+    id
+    subscriptionId
+    customerId
+    planId
+    status
+    currentPeriodStart
+    currentPeriodEnd
+    isInTrial
+    cancelAtPeriodEnd
+    createdAt
+  }
+
+  customerNetworkInfo(customerId: $customerId)
+
+  customerDevices(customerId: $customerId, activeOnly: true)
+
+  customerTickets(customerId: $customerId, limit: 10)
+
+  customerBilling(customerId: $customerId, includeInvoices: true, invoiceLimit: 10)
+}
+
+# ============================================================================
+# Customer Mutations
+# ============================================================================
+
+# ============================================================================
+# Delete Customer Mutation
+# ============================================================================
+# Note: Customer deletion is handled via REST API, not GraphQL
+# Commented out until backend mutation is implemented
+
+# mutation DeleteCustomer($id: ID!) {
+#   deleteCustomer(id: $id) {
+#     id
+#     success
+#     message
+#   }
+# }
+
+# ============================================================================
+# Real-Time GraphQL Subscriptions
+# ============================================================================
+
+# ============================================================================
+# Network Status Subscription
+# ============================================================================
+
+subscription CustomerNetworkStatusUpdated($customerId: ID!) {
+  customerNetworkStatusUpdated(customerId: $customerId) {
+    customerId
+    connectionStatus
+    lastSeenAt
+    ipv4Address
+    ipv6Address
+    macAddress
+    vlanId
+    signalStrength
+    signalQuality
+    uptimeSeconds
+    uptimePercentage
+    bandwidthUsageMbps
+    downloadSpeedMbps
+    uploadSpeedMbps
+    packetLoss
+    latencyMs
+    jitter
+    ontRxPower
+    ontTxPower
+    oltRxPower
+    serviceStatus
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Device Status Subscription
+# ============================================================================
+
+subscription CustomerDevicesUpdated($customerId: ID!) {
+  customerDevicesUpdated(customerId: $customerId) {
+    customerId
+    deviceId
+    deviceType
+    deviceName
+    status
+    healthStatus
+    isOnline
+    lastSeenAt
+    signalStrength
+    temperature
+    cpuUsage
+    memoryUsage
+    uptimeSeconds
+    firmwareVersion
+    needsFirmwareUpdate
+    changeType
+    previousValue
+    newValue
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Ticket Updates Subscription
+# ============================================================================
+
+subscription CustomerTicketUpdated($customerId: ID!) {
+  customerTicketUpdated(customerId: $customerId) {
+    customerId
+    action
+    ticket {
+      id
+      ticketNumber
+      title
+      description
+      status
+      priority
+      category
+      subCategory
+      assignedTo
+      assignedToName
+      assignedTeam
+      createdAt
+      updatedAt
+      resolvedAt
+      closedAt
+      customerId
+      customerName
+    }
+    changedBy
+    changedByName
+    changes
+    comment
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Activity Updates Subscription
+# ============================================================================
+
+subscription CustomerActivityAdded($customerId: ID!) {
+  customerActivityAdded(customerId: $customerId) {
+    id
+    customerId
+    activityType
+    title
+    description
+    performedBy
+    performedByName
+    createdAt
+  }
+}
+
+# ============================================================================
+# Note Updates Subscription
+# ============================================================================
+
+subscription CustomerNoteUpdated($customerId: ID!) {
+  customerNoteUpdated(customerId: $customerId) {
+    customerId
+    action
+    note {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdByName
+      createdAt
+      updatedAt
+    }
+    changedBy
+    changedByName
+    updatedAt
+  }
+}

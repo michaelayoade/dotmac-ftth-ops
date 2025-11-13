@@ -64,7 +64,7 @@ jobs:
           cache-dependency-path: 'frontend/pnpm-lock.yaml'
 
       - name: Install pnpm
-        run: npm install -g pnpm@8
+        run: npm install -g pnpm@10
 
       # Backend Tests
       - name: Install Python dependencies
@@ -99,18 +99,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint frontend
-        working-directory: frontend/apps/base-app
+        working-directory: frontend
         run: pnpm lint || true
 
       - name: Type check frontend
-        working-directory: frontend/apps/base-app
+        working-directory: frontend
         run: pnpm type-check
 
       - name: Build frontend
-        working-directory: frontend/apps/base-app
+        working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: https://staging-api.yourdomain.com
-        run: pnpm build
+        run: pnpm --filter @dotmac/isp-ops-app build
 
       - name: Upload test coverage
         uses: codecov/codecov-action@v3
@@ -194,7 +194,7 @@ PY
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          file: ./frontend/apps/base-app/Dockerfile
+          file: ./frontend/apps/isp-ops-app/Dockerfile
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}

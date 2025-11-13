@@ -24,7 +24,7 @@ env:
   COV_BASE_THRESHOLD: 75  # Base repo-wide threshold
   DIFF_COV_THRESHOLD: 80  # PR diff coverage (enforces gradual improvement)
   NODE_VERSION: 20
-  PNPM_VERSION: 9
+  PNPM_VERSION: 10
   PYTHON_VERSION: 3.12
 
 jobs:
@@ -610,16 +610,22 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        working-directory: frontend/apps/base-app
+        working-directory: frontend
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Build frontend
-        working-directory: frontend/apps/base-app
-        run: pnpm run build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: pnpm --filter @dotmac/isp-ops-app build
 
       - name: Run visual regression tests
-        working-directory: frontend/apps/base-app
-        run: pnpm exec playwright test e2e/visual.spec.ts --project=chromium
+        working-directory: frontend
+        env:
+          ISP_OPS_URL: http://localhost:3001
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+          E2E_USE_DEV_SERVER: "true"
+        run: pnpm e2e -- e2e/tests/visual.spec.ts --project=chromium
         continue-on-error: true
         id: visual_tests
 
@@ -629,8 +635,8 @@ jobs:
         with:
           name: visual-test-results
           path: |
-            frontend/apps/base-app/playwright-report/
-            frontend/apps/base-app/test-results/
+            frontend/playwright-report/
+            frontend/test-results/
           retention-days: 30
 
       - name: Upload screenshot baselines (on main branch)
@@ -638,7 +644,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: screenshot-baselines-${{ github.sha }}
-          path: frontend/apps/base-app/e2e/__screenshots__/
+          path: frontend/e2e/__screenshots__/
           retention-days: 90
 
       - name: Comment PR with visual test results
@@ -735,10 +741,12 @@ jobs:
 
       - name: Build frontend packages
         working-directory: frontend
-        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: pnpm --filter @dotmac/isp-ops-app build
 
       - name: Install Playwright browsers
-        working-directory: frontend/apps/base-app
+        working-directory: frontend
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       - name: Setup test database
@@ -758,31 +766,32 @@ jobs:
           DOTMAC_LOG_LEVEL: WARNING
 
       - name: Start frontend server
-        working-directory: frontend/apps/base-app
-        run: |
-          pnpm dev &
-          echo $! > frontend.pid
+        working-directory: frontend
         env:
           NODE_ENV: test
-          E2E_BASE_URL: http://localhost:3000
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+          ISP_OPS_URL: http://localhost:3001
+        run: |
+          pnpm --filter @dotmac/isp-ops-app dev &
+          echo $! > frontend.pid
 
       - name: Wait for services
         run: |
           timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
-          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:3001; do sleep 2; done'
 
       - name: Run E2E tests
-        working-directory: frontend/apps/base-app
-        run: pnpm exec playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/4
+        working-directory: frontend
         env:
-          E2E_BASE_URL: http://localhost:3000
+          ISP_OPS_URL: http://localhost:3001
+        run: pnpm e2e -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/4
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-results-${{ matrix.browser }}-${{ matrix.shard }}
-          path: frontend/apps/base-app/test-results/
+          path: frontend/test-results/
           retention-days: 30
 
       - name: Stop platform dependencies
