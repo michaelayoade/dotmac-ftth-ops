@@ -54,7 +54,11 @@ COPY shared/packages/ui/package.json shared/packages/ui/
 RUN pnpm install --filter @dotmac/platform-admin-app... --frozen-lockfile
 
 # Copy the rest of the workspace
-COPY . .
+COPY apps ./apps
+COPY shared ./shared
+COPY tsconfig.json ./
+COPY postcss.config.js ./
+COPY tailwind.config.ts ./
 
 # Build the platform admin app from its directory
 WORKDIR /app/apps/platform-admin-app
