@@ -17,7 +17,7 @@ class Logger {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === "development";
+    this.isDevelopment = process.env['NODE_ENV'] === "development";
   }
 
   /**

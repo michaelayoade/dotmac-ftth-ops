@@ -202,7 +202,7 @@ export const useFeatureFlag = (flag: FeatureFlag) => {
  * Toggle feature flag at runtime (for development/testing)
  */
 export const toggleFeatureFlag = (flag: FeatureFlag, enabled: boolean): void => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     logger.warn('Cannot toggle feature flags in production');
     return;
   }

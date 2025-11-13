@@ -298,8 +298,8 @@ let wsClient: WebSocketClient | null = null;
  */
 function getWebSocketUrl(): string {
   // Check for explicit environment variable first
-  if (process.env.NEXT_PUBLIC_WS_URL) {
-    return process.env.NEXT_PUBLIC_WS_URL;
+  if (process.env['NEXT_PUBLIC_WS_URL']) {
+    return process.env['NEXT_PUBLIC_WS_URL'];
   }
 
   // Auto-detect based on current page protocol (for production)

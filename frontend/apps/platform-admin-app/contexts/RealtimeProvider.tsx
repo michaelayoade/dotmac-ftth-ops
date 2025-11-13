@@ -149,7 +149,7 @@ export function useRealtime(): RealtimeContextValue {
 
   if (!context) {
     // Log warning in development
-    if (process.env.NODE_ENV === "development") {
+    if (process.env['NODE_ENV'] === "development") {
       console.warn(
         "useRealtime (or useRealtimeHealth/useRealtimeConnections) is being used outside of RealtimeProvider. " +
         "Returning disconnected state. Wrap your component tree with <RealtimeProvider> to enable realtime connections."

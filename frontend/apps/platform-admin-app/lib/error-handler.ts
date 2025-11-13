@@ -313,7 +313,7 @@ export const createErrorBoundaryHandler = (
     });
 
     // In production, you might want to send this to an error tracking service
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env['NODE_ENV'] === 'production') {
       // Send to error tracking service (e.g., Sentry)
       // sendToErrorTracking(error, { componentName, ...errorInfo });
     }
