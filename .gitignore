@@ -14,9 +14,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-# Python virtualenv lib (but not frontend app lib directories)
+# Python virtualenv lib (but not frontend lib directories)
 lib/
 !frontend/apps/*/lib/
+!frontend/shared/lib/
 lib64/
 parts/
 sdist/

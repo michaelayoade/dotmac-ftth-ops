@@ -1,0 +1,41 @@
+{
+  "name": "@dotmac/better-auth",
+  "version": "1.0.0",
+  "description": "Better Auth configuration and utilities for DotMac FTTH platform",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": {
+      "import": "./index.ts",
+      "require": "./index.ts",
+      "types": "./index.ts"
+    },
+    "./auth": {
+      "import": "./auth.ts",
+      "require": "./auth.ts",
+      "types": "./auth.ts"
+    },
+    "./client": {
+      "import": "./client.ts",
+      "require": "./client.ts",
+      "types": "./client.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "better-auth": "*",
+    "react": "^18.0.0",
+    "pg": "^8.0.0"
+  },
+  "keywords": [
+    "better-auth",
+    "authentication",
+    "authorization",
+    "multi-tenant"
+  ],
+  "author": "DotMac",
+  "license": "UNLICENSED",
+  "private": true
+}
