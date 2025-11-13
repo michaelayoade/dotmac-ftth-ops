@@ -35,8 +35,8 @@ function resolveGraphQLEndpoint(preferred?: string): string {
     return preferred;
   }
 
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return `${process.env.NEXT_PUBLIC_API_URL}/api/v1/graphql`;
+  if (process.env['NEXT_PUBLIC_API_URL']) {
+    return `${process.env['NEXT_PUBLIC_API_URL']}/api/v1/graphql`;
   }
 
   return "/api/v1/graphql";
@@ -235,7 +235,7 @@ export function createApolloClient(
       },
     },
     devtools: {
-      enabled: process.env.NODE_ENV === "development",
+      enabled: process.env['NODE_ENV'] === "development",
     },
   });
 
