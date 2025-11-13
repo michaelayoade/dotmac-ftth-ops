@@ -1,9 +1,10 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "./button";
+import { AlertCircle, RefreshCw, type LucideIcon } from "lucide-react";
+
 import { cn } from "../lib/utils";
+
+import { Button } from "./button";
 
 interface ErrorStateProps {
   title?: string;

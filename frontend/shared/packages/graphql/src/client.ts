@@ -43,7 +43,7 @@ export interface GraphQLClientConfig {
    * Underlying HTTP client instance
    * If not provided, creates a default instance with auth and tenant resolution
    */
-  httpClient?: HttpClient;
+  httpClient?: InstanceType<typeof HttpClient>;
 }
 
 /**
@@ -52,7 +52,7 @@ export interface GraphQLClientConfig {
 export class GraphQLClient {
   private endpoint: string;
   private headers: Record<string, string>;
-  private httpClient: HttpClient;
+  private httpClient: InstanceType<typeof HttpClient>;
 
   constructor(config: GraphQLClientConfig = {}) {
     // Default to /api/v1/graphql (matching backend route)
@@ -101,7 +101,7 @@ export class GraphQLClient {
     };
 
     try {
-      const response = await this.httpClient.post<GraphQLResponse<TData>>(
+      const response = await this.httpClient.post(
         this.endpoint,
         body,
         {
@@ -137,7 +137,7 @@ export class GraphQLClient {
   /**
    * Get the underlying HTTP client (for advanced usage)
    */
-  getHttpClient(): HttpClient {
+  getHttpClient(): InstanceType<typeof HttpClient> {
     return this.httpClient;
   }
 

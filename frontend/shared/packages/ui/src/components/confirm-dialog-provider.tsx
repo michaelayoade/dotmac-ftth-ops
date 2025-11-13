@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+
 import { ConfirmDialog, type ConfirmDialogVariant } from "./confirm-dialog";
 
 export interface ConfirmDialogOptions {

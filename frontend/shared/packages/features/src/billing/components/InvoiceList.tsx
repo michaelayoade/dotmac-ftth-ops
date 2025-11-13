@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  EnhancedDataTable,
+  type ColumnDef,
+  type BulkAction,
+  type QuickFilter,
+  type Row,
+} from "@dotmac/ui";
 import {
   Calendar,
   CreditCard,
@@ -11,14 +17,10 @@ import {
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import {
-  EnhancedDataTable,
-  type ColumnDef,
-  type BulkAction,
-  type QuickFilter,
-  type Row,
-} from "@dotmac/ui";
+import { useState, useEffect, useCallback, useMemo } from "react";
+
 import { formatCurrency } from "../utils";
+
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
 
@@ -343,11 +345,6 @@ export default function InvoiceList({
         icon: MailIcon,
         action: handleBulkSend,
         disabled: (selected) => selected.every((inv) => inv.status === "void"),
-        variant: undefined,
-        confirmMessage: undefined,
-        confirmTitle: undefined,
-        confirmConfirmText: undefined,
-        confirmVariant: undefined,
       },
       {
         label: "Void Invoices",
@@ -355,22 +352,11 @@ export default function InvoiceList({
         action: handleBulkVoid,
         disabled: (selected) =>
           selected.every((inv) => inv.status === "void" || inv.status === "paid"),
-        variant: undefined,
-        confirmMessage: undefined,
-        confirmTitle: undefined,
-        confirmConfirmText: undefined,
-        confirmVariant: undefined,
       },
       {
         label: "Download Selected",
         icon: DownloadIcon,
         action: handleBulkDownload,
-        disabled: undefined,
-        variant: undefined,
-        confirmMessage: undefined,
-        confirmTitle: undefined,
-        confirmConfirmText: undefined,
-        confirmVariant: undefined,
       },
     ],
     [handleBulkDownload, handleBulkSend, handleBulkVoid],
@@ -380,9 +366,6 @@ export default function InvoiceList({
     (): QuickFilter<Invoice>[] => [
       {
         label: "Overdue",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (invoice: Invoice) => {
           const dueDate = new Date(invoice.due_date);
           return dueDate < new Date() && invoice.amount_due > 0;
@@ -390,16 +373,10 @@ export default function InvoiceList({
       },
       {
         label: "Unpaid",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (invoice: Invoice) => invoice.amount_due > 0 && invoice.status !== "void",
       },
       {
         label: "This Month",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (invoice: Invoice) => {
           const createdDate = new Date(invoice.created_at);
           const now = new Date();
@@ -411,9 +388,6 @@ export default function InvoiceList({
       },
       {
         label: "Paid",
-        icon: undefined,
-        description: undefined,
-        defaultActive: undefined,
         filter: (invoice: Invoice) => invoice.status === "paid",
       },
     ],
@@ -497,30 +471,10 @@ export default function InvoiceList({
         bulkActions={bulkActions}
         quickFilters={quickFilters}
         searchConfig={searchConfig}
-        onRowClick={onInvoiceSelect || undefined}
+        {...(onInvoiceSelect ? { onRowClick: onInvoiceSelect } : {})}
         isLoading={bulkLoading}
         emptyMessage="No invoices found"
         getRowId={(invoice: Invoice) => invoice.invoice_id}
-        searchable={undefined}
-        searchPlaceholder={undefined}
-        searchColumn={undefined}
-        searchKey={undefined}
-        paginated={undefined}
-        pagination={undefined}
-        pageSizeOptions={undefined}
-        defaultPageSize={undefined}
-        selectable={undefined}
-        filterable={undefined}
-        filters={undefined}
-        exportable={undefined}
-        exportFilename={undefined}
-        exportColumns={undefined}
-        columnVisibility={undefined}
-        className={undefined}
-        toolbarActions={undefined}
-        errorMessage={undefined}
-        error={undefined}
-        hideToolbar={undefined}
       />
     </div>
   );

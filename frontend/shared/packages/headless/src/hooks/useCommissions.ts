@@ -98,17 +98,17 @@ export interface CommissionFilters {
     start: string;
     end: string;
   };
-  status?: string[];
-  serviceTypes?: string[];
-  transactionTypes?: string[];
-  resellerId?: string;
+  status?: string[] | undefined;
+  serviceTypes?: string[] | undefined;
+  transactionTypes?: string[] | undefined;
+  resellerId?: string | undefined;
 }
 
 export interface UseCommissionsOptions {
   resellerId: string;
-  filters?: CommissionFilters;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+  filters?: CommissionFilters | undefined;
+  autoRefresh?: boolean | undefined;
+  refreshInterval?: number | undefined;
 }
 
 // API functions
@@ -254,7 +254,13 @@ export const useCommissions = (options: UseCommissionsOptions) => {
   const queryClient = useQueryClient();
 
   // Query configuration
-  const queryConfig = {
+  const queryConfig: {
+    staleTime: number;
+    cacheTime: number;
+    refetchInterval: number | false;
+    retry: number;
+    enabled: boolean;
+  } = {
     staleTime: 60000, // 1 minute
     cacheTime: 300000, // 5 minutes
     refetchInterval: autoRefresh ? refreshInterval : false,
@@ -263,25 +269,25 @@ export const useCommissions = (options: UseCommissionsOptions) => {
   };
 
   // Fetch commission data
-  const rulesQuery = useQuery({
+  const rulesQuery = useQuery<CommissionRule[]>({
     queryKey: ["commissions", "rules", resellerId],
     queryFn: () => fetchCommissionRules(resellerId),
     ...queryConfig,
   });
 
-  const transactionsQuery = useQuery({
+  const transactionsQuery = useQuery<CommissionTransaction[]>({
     queryKey: ["commissions", "transactions", resellerId, filters],
     queryFn: () => fetchCommissionTransactions(resellerId, filters),
     ...queryConfig,
   });
 
-  const payoutsQuery = useQuery({
+  const payoutsQuery = useQuery<CommissionPayout[]>({
     queryKey: ["commissions", "payouts", resellerId],
     queryFn: () => fetchCommissionPayouts(resellerId),
     ...queryConfig,
   });
 
-  const summaryQuery = useQuery({
+  const summaryQuery = useQuery<CommissionSummary>({
     queryKey: ["commissions", "summary", resellerId, filters],
     queryFn: () => fetchCommissionSummary(resellerId, filters),
     ...queryConfig,
@@ -353,8 +359,9 @@ export const useCommissions = (options: UseCommissionsOptions) => {
         if (!acc[t.serviceId]) {
           acc[t.serviceId] = { count: 0, amount: 0 };
         }
-        acc[t.serviceId].count++;
-        acc[t.serviceId].amount += t.commissionAmount;
+        const stats = acc[t.serviceId]!;
+        stats.count += 1;
+        stats.amount += t.commissionAmount;
         return acc;
       },
       {} as Record<string, { count: number; amount: number }>,

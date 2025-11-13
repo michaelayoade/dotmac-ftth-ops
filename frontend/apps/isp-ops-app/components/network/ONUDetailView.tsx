@@ -20,7 +20,7 @@ export function ONUDetailView({ onuId }: ONUDetailViewProps) {
       useToast={useToast}
       useConfirmDialog={useConfirmDialog}
       router={router}
-      Link={Link}
+      Link={Link as any}
     />
   );
 }

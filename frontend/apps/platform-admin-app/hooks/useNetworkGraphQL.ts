@@ -26,13 +26,13 @@ import {
   useNetworkAlertListQuery,
   useNetworkAlertDetailQuery,
   useNetworkDashboardQuery,
-} from "@dotmac/graphql/generated/react-query";
+} from "@shared/packages/graphql/generated/react-query";
 
 import {
   DeviceTypeEnum,
   DeviceStatusEnum,
   AlertSeverityEnum,
-} from "@dotmac/graphql/generated";
+} from "@shared/packages/graphql/generated";
 
 // ============================================================================
 // Network Overview Hook

@@ -241,7 +241,7 @@ export default function PartnerOnboardingWorkflow() {
                   onChange={(e) =>
                     setPartnerData({
                       ...partnerData,
-                      tier: e.target.value as CreatePartnerInput["tier"],
+                      tier: e.target.value as NonNullable<CreatePartnerInput["tier"]>,
                     })
                   }
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"

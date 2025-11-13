@@ -4,9 +4,10 @@ Platform Configuration Router.
 Exposes public platform configuration for frontend consumption.
 """
 
+from datetime import datetime, timezone
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from ..settings import Settings, get_settings
 from ..settings import settings as runtime_settings
@@ -72,6 +73,124 @@ _PLATFORM_HEALTH_SUMMARY: dict[str, str] = {
     "version": runtime_settings.app_version,
     "environment": runtime_settings.environment.value,
 }
+
+_RUNTIME_CONFIG_CACHE_SECONDS = 60
+_DEFAULT_API_PREFIX = "/api/v1"
+
+
+def _sanitize_base_url(value: str | None) -> str:
+    if not value:
+        return ""
+    cleaned = value.strip()
+    if not cleaned:
+        return ""
+    return cleaned.rstrip("/")
+
+
+def _join_url(base_url: str, path: str) -> str:
+    if not path:
+        return base_url or "/"
+    if not base_url:
+        return path if path.startswith("/") else f"/{path}"
+    normalized_path = path if path.startswith("/") else f"/{path}"
+    return f"{base_url}{normalized_path}"
+
+
+def _as_websocket_url(url: str | None) -> str:
+    if not url:
+        return ""
+    if url.startswith("http://"):
+        return f"ws://{url.removeprefix('http://')}"
+    if url.startswith("https://"):
+        return f"wss://{url.removeprefix('https://')}"
+    return url
+
+
+def _build_branding_payload(settings: Settings) -> dict[str, Any]:
+    brand = settings.brand
+    return {
+        "companyName": brand.company_name,
+        "productName": brand.product_name,
+        "productTagline": brand.product_tagline,
+        "supportEmail": brand.support_email,
+        "successEmail": brand.success_email,
+        "operationsEmail": brand.operations_email,
+        "partnerSupportEmail": brand.partner_support_email,
+        "notificationDomain": brand.notification_domain,
+    }
+
+
+@router.get("/runtime-config", include_in_schema=False)
+async def get_runtime_frontend_config(
+    response: Response,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, Any]:
+    """
+    Return tenant-aware runtime configuration for frontend apps.
+
+    This allows shipping a single artifact while injecting tenant metadata,
+    feature flags, and API endpoints at deploy time.
+    """
+
+    features_payload = {flag: getattr(settings.features, flag) for flag in PUBLIC_FEATURE_FLAGS}
+
+    api_base = _sanitize_base_url(settings.frontend_api_base_url)
+    api_prefix = _DEFAULT_API_PREFIX
+    rest_url = _join_url(api_base, api_prefix) if api_base else api_prefix
+    graphql_url = settings.tenant_graphql_url or _join_url(rest_url, "/graphql")
+    realtime_ws = ""
+    if api_base:
+        realtime_ws = _join_url(_as_websocket_url(api_base), "/realtime/ws")
+    if not realtime_ws:
+        base_from_graphql = graphql_url.rsplit("/graphql", 1)[0] if "/graphql" in graphql_url else ""
+        websocket_base = _as_websocket_url(base_from_graphql or api_base)
+        realtime_ws = _join_url(websocket_base, "/realtime/ws")
+
+    tenant_slug = settings.tenant_slug or settings.tenant.default_tenant_id
+    tenant_name = settings.tenant_display_name or settings.brand.product_name
+
+    sse_url = _join_url(restUrl, "/realtime/events")
+
+    runtime_payload = {
+        "version": settings.app_version,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "cache_ttl_seconds": _RUNTIME_CONFIG_CACHE_SECONDS,
+        "tenant": {
+            "id": settings.TENANT_ID or settings.tenant.default_tenant_id,
+            "slug": tenant_slug,
+            "name": tenant_name,
+        },
+        "api": {
+            "base_url": api_base,
+            "rest_path": api_prefix,
+            "rest_url": rest_url,
+            "graphql_url": graphql_url,
+            "websocket_url": realtime_ws,
+        },
+        "realtime": {
+            "ws_url": realtime_ws,
+            "sse_url": sse_url,
+            "alerts_channel": f"tenant-{tenant_slug or 'global'}",
+        },
+        "deployment": {
+            "mode": settings.DEPLOYMENT_MODE,
+            "tenant_id": settings.TENANT_ID,
+            "platform_routes_enabled": settings.ENABLE_PLATFORM_ROUTES,
+        },
+        "license": {
+            "allow_multi_tenant": settings.DEPLOYMENT_MODE != "single_tenant",
+            "enforce_platform_admin": settings.ENABLE_PLATFORM_ROUTES,
+        },
+        "features": features_payload,
+        "branding": _build_branding_payload(settings),
+        "app": {
+            "name": settings.app_name,
+            "environment": settings.environment.value,
+        },
+    }
+
+    response.headers["Cache-Control"] = f"public, max-age={_RUNTIME_CONFIG_CACHE_SECONDS}"
+    return runtime_payload
 
 
 @router.get("/config")

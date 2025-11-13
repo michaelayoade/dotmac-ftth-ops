@@ -569,7 +569,7 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
               <p className="font-semibold mb-1">What is FUP?</p>
               <p className="text-muted-foreground">
                 FUP automatically throttles user speeds after they exceed a data threshold. Unlike data caps,
-                FUP doesn't stop service - it just reduces speed to maintain network quality for all users.
+              FUP doesn’t stop service – it just reduces speed to maintain network quality for all users.
               </p>
             </div>
 
@@ -681,7 +681,7 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                 className="h-4 w-4"
               />
               <label htmlFor="has_time_restrictions" className="text-sm font-medium cursor-pointer">
-                Enable Time-Based Restrictions (e.g., "Unlimited Nights")
+                Enable Time-Based Restrictions (e.g., “Unlimited Nights”)
               </label>
             </div>
 
@@ -721,7 +721,7 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                       className="h-4 w-4"
                     />
                     <label htmlFor="unrestricted_data_unlimited" className="text-sm cursor-pointer">
-                      Unlimited data during unrestricted hours (doesn't count toward FUP/data cap)
+                      Unlimited data during unrestricted hours (doesn’t count toward FUP/data cap)
                     </label>
                   </div>
 

@@ -27,7 +27,7 @@ import {
 import { useRBAC } from "@/contexts/RBACContext";
 import { useDistributionPointListGraphQL } from "@/hooks/useFiberGraphQL";
 import { DistributionPointType, FiberCableStatus } from "@/lib/graphql/generated";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { MapPin, Search, Filter, ChevronLeft, ChevronRight, Cable } from "lucide-react";
 import Link from "next/link";
 
@@ -52,7 +52,8 @@ const POINT_STATUSES: FiberCableStatus[] = [
 
 export default function DistributionPointsPage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasFiberAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -62,15 +63,24 @@ export default function DistributionPointsPage() {
   const [offset, setOffset] = useState(0);
 
   // Fetch distribution points with filters
+  const distributionListOptions: Parameters<typeof useDistributionPointListGraphQL>[0] = {
+    limit,
+    offset,
+    pollInterval: 60000,
+  };
+  if (pointType) {
+    distributionListOptions.pointType = pointType;
+  }
+  if (status) {
+    distributionListOptions.status = status;
+  }
+  const trimmedSearch = search.trim();
+  if (trimmedSearch) {
+    distributionListOptions.search = trimmedSearch;
+  }
+
   const { distributionPoints, totalCount, hasNextPage, loading, error, refetch } =
-    useDistributionPointListGraphQL({
-      limit,
-      offset,
-      pointType,
-      status,
-      search,
-      pollInterval: 60000,
-    });
+    useDistributionPointListGraphQL(distributionListOptions);
 
   if (!hasFiberAccess) {
     return (

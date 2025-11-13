@@ -4,8 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { TenantBranding, TenantSession } from "../../types/tenant";
-import { getISPApiClient } from "../../api/isp-client";
+import type { TenantBranding, TenantSession } from "../../types/tenant";
 
 export interface UseTenantSettingsReturn {
   getTenantSetting: <T = any>(key: string, defaultValue?: T) => T;
@@ -19,49 +18,45 @@ export function useTenantSettings(session: TenantSession | null): UseTenantSetti
   const [isLoading, setIsLoading] = useState(false);
   const [cachedSettings, setCachedSettings] = useState<Record<string, any>>({});
 
-  // Load settings when session changes
+  const storageKey = session?.tenant?.id ? `tenant-settings-${session.tenant.id}` : null;
+
   useEffect(() => {
-    if (session?.tenant?.settings) {
-      setCachedSettings(session.tenant.settings);
+    if (!storageKey || typeof window === "undefined") {
+      setCachedSettings({});
+      return;
     }
-  }, [session?.tenant?.settings]);
+
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      setCachedSettings(stored ? JSON.parse(stored) : {});
+    } catch {
+      setCachedSettings({});
+    }
+  }, [storageKey]);
 
   const getTenantSetting = useCallback(
     <T = any>(key: string, defaultValue?: T): T => {
-      if (!session?.tenant?.settings) {
-        return defaultValue as T;
-      }
-
-      return session.tenant.settings[key] ?? defaultValue;
+      return (cachedSettings[key] ?? defaultValue) as T;
     },
-    [session?.tenant?.settings],
+    [cachedSettings],
   );
 
   const updateTenantSetting = useCallback(
     async (key: string, value: any): Promise<void> => {
-      if (!session?.tenant?.id) {
-        throw new Error("No active tenant session");
+      if (!storageKey || typeof window === "undefined") {
+        setCachedSettings((prev) => ({ ...prev, [key]: value }));
+        return;
       }
 
       setIsLoading(true);
-
-      try {
-        const apiClient = getISPApiClient();
-        await apiClient.updateTenantSettings(session.tenant.id, {
-          [key]: value,
-        });
-
-        // Update local cache
-        setCachedSettings((prev) => ({ ...prev, [key]: value }));
-      } catch (error) {
-        throw new Error(
-          `Failed to update setting: ${error instanceof Error ? error.message : "Unknown error"}`,
-        );
-      } finally {
-        setIsLoading(false);
-      }
+      setCachedSettings((prev) => {
+        const next = { ...prev, [key]: value };
+        window.localStorage.setItem(storageKey, JSON.stringify(next));
+        return next;
+      });
+      setIsLoading(false);
     },
-    [session?.tenant?.id],
+    [storageKey],
   );
 
   const getBranding = useCallback((): TenantBranding => {
@@ -70,11 +65,10 @@ export function useTenantSettings(session: TenantSession | null): UseTenantSetti
       primary_color: "#0ea5e9",
       secondary_color: "#64748b",
       accent_color: "#06b6d4",
-      font_family: "Inter, sans-serif",
       custom_css: "",
       favicon_url: "",
-      login_background: "",
       company_name: "ISP Portal",
+      white_label: false,
     };
 
     if (!session?.tenant?.branding) {
@@ -97,7 +91,6 @@ export function useTenantSettings(session: TenantSession | null): UseTenantSetti
     root.style.setProperty("--primary-color", branding.primary_color);
     root.style.setProperty("--secondary-color", branding.secondary_color);
     root.style.setProperty("--accent-color", branding.accent_color);
-    root.style.setProperty("--font-family", branding.font_family);
 
     // Update page title and favicon
     if (branding.company_name) {

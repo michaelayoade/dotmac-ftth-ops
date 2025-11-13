@@ -134,7 +134,10 @@ export function extractDashboardData<TQuery, TExtractors extends Record<string, 
   return (query: TQuery) => {
     const result = {} as any;
     for (const key in extractors) {
-      result[key] = extractors[key](query);
+      const extractor = extractors[key];
+      if (extractor) {
+        result[key] = extractor(query);
+      }
     }
     return result;
   };

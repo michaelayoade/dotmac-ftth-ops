@@ -22,7 +22,7 @@ import {
   Info,
   Activity,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useConfirmDialog } from "@dotmac/ui";
@@ -48,13 +48,15 @@ function FeatureFlagDetailsPageContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
   const confirmDialog = useConfirmDialog();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch flag details
   const { data: flag, isLoading, refetch } = useQuery<FeatureFlag>({
-    queryKey: ["feature-flag", flagName],
+    queryKey: ["feature-flag", flagName, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
         { credentials: "include" }
       );
       if (!response.ok) {
@@ -74,7 +76,7 @@ function FeatureFlagDetailsPageContent() {
   const toggleFlagMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -110,7 +112,7 @@ function FeatureFlagDetailsPageContent() {
   const updateDescriptionMutation = useMutation({
     mutationFn: async (description: string) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -147,7 +149,7 @@ function FeatureFlagDetailsPageContent() {
   const deleteFlagMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
         {
           method: "DELETE",
           credentials: "include",

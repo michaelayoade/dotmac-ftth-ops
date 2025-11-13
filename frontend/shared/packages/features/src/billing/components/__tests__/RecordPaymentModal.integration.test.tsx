@@ -3,18 +3,21 @@
  * Tests payment recording workflow with form validation
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { RecordPaymentModal } from "../RecordPaymentModal";
-import { createBillingDependencies } from "../../../test/mocks/dependencies";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
 import { createMockInvoice } from "../../../test/factories/billing";
+import { createBillingDependencies } from "../../../test/mocks/dependencies";
+import { RecordPaymentModal } from "../RecordPaymentModal";
 
 // Mock UI components
 vi.mock("@dotmac/ui", async () => {
   const actual = await vi.importActual("@dotmac/ui");
+  const { simpleSelectMocks } = await import("@dotmac/testing-utils/react/simpleSelectMocks");
   return {
     ...actual,
+    ...simpleSelectMocks,
     Dialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
     DialogContent: ({ children }: any) => <div>{children}</div>,
     DialogHeader: ({ children }: any) => <div>{children}</div>,
@@ -37,20 +40,6 @@ vi.mock("@dotmac/ui", async () => {
     Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,
     Textarea: ({ value, onChange, placeholder }: any) => (
       <textarea value={value} onChange={onChange} placeholder={placeholder} />
-    ),
-    Select: ({ children, onValueChange, value }: any) => (
-      <select
-        onChange={(e) => onValueChange?.(e.target.value)}
-        value={value}
-      >
-        {children}
-      </select>
-    ),
-    SelectTrigger: ({ children }: any) => <div>{children}</div>,
-    SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
-    SelectContent: ({ children }: any) => <>{children}</>,
-    SelectItem: ({ children, value }: any) => (
-      <option value={value}>{children}</option>
     ),
     Badge: ({ children }: any) => <span>{children}</span>,
   };
@@ -277,6 +266,11 @@ describe("RecordPaymentModal Integration Tests", () => {
           })
         );
       });
+
+      await waitFor(() => {
+        expect(onSuccess).toHaveBeenCalled();
+        expect(onClose).toHaveBeenCalled();
+      });
     });
 
     it("should handle payment submission errors", async () => {
@@ -284,12 +278,15 @@ describe("RecordPaymentModal Integration Tests", () => {
       const invoice = createMockInvoice({ amount_due: 150.0 });
       const error = new Error("Payment failed");
       deps.apiClient.post.mockRejectedValue(error);
+      const onSuccess = vi.fn();
+      const onClose = vi.fn();
 
       render(
         <RecordPaymentModal
           isOpen={true}
-          onClose={vi.fn()}
+          onClose={onClose}
           invoices={[invoice]}
+          onSuccess={onSuccess}
           apiClient={deps.apiClient}
           useToast={deps.useToast}
           logger={deps.logger}
@@ -313,6 +310,8 @@ describe("RecordPaymentModal Integration Tests", () => {
           error,
           expect.any(Object)
         );
+        expect(onSuccess).not.toHaveBeenCalled();
+        expect(onClose).not.toHaveBeenCalled();
       });
     });
   });
@@ -394,8 +393,11 @@ describe("RecordPaymentModal Integration Tests", () => {
         />
       );
 
-      // Assert - form should be reset (if component implements this)
-      // This is a placeholder - actual implementation may vary
+      // Assert - amount field should reset to default invoice total
+      await waitFor(() => {
+        const amountAfterReset = screen.getByLabelText(/payment amount/i) as HTMLInputElement;
+        expect(parseFloat(amountAfterReset.value)).toBeCloseTo(invoice.amount_due, 2);
+      });
     });
   });
 });

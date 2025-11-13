@@ -9,6 +9,7 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 
 export interface TenantBrandingConfigDto {
   product_name?: string | null;
@@ -45,7 +46,7 @@ type BrandingQueryOptions = Omit<
 
 export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
 
   return useQuery<TenantBrandingResponseDto, Error, TenantBrandingResponseDto, BrandingQueryKey>({
     queryKey: ["tenant-branding"],

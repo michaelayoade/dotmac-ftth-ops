@@ -5,7 +5,7 @@
  * Displayed when the app is offline and no cached version is available
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { WifiOff, RefreshCw, Clock, CheckCircle2 } from "lucide-react";
@@ -16,11 +16,7 @@ export default function OfflinePage() {
   const { isOnline, getPendingData } = usePWA();
   const [pendingCount, setPendingCount] = useState({ timeEntries: 0, locations: 0 });
 
-  useEffect(() => {
-    loadPendingData();
-  }, []);
-
-  const loadPendingData = async () => {
+  const loadPendingData = useCallback(async () => {
     try {
       const [timeEntries, locations] = await Promise.all([
         getPendingData.timeEntries(),
@@ -33,7 +29,11 @@ export default function OfflinePage() {
     } catch (error) {
       console.error("Failed to load pending data:", error);
     }
-  };
+  }, [getPendingData]);
+
+  useEffect(() => {
+    loadPendingData();
+  }, [loadPendingData]);
 
   const handleRetry = async () => {
     setIsChecking(true);

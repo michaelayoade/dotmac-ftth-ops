@@ -21,7 +21,7 @@ export function IPAddressList(props: IPAddressListProps) {
   return (
     <SharedIPAddressList
       {...props}
-      ipUtilities={{ detectIPFamily, formatIPAddress }}
+      ipUtilities={{ detectIPFamily: detectIPFamily as any, formatIPAddress }}
       DualStackBadge={DualStackBadge}
     />
   );

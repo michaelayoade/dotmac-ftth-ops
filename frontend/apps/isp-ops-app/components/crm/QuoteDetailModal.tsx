@@ -162,13 +162,14 @@ export function QuoteDetailModal({
       onClose={onClose}
       quote={quote as any}
       onUpdate={onUpdate}
-      onEdit={onEdit}
+      onEdit={onEdit as any}
       onSend={handleSend}
       onAccept={handleAccept}
       onReject={handleReject}
       onDelete={handleDelete}
       onFetchCompanyInfo={handleFetchCompanyInfo}
       isProcessing={isProcessing}
+      companyInfo={undefined}
     />
   );
 }

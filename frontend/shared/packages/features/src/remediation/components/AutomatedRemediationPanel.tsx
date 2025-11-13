@@ -7,7 +7,11 @@
 
 "use client";
 
-import { useState } from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
+import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import {
   Wrench,
   Zap,
@@ -19,11 +23,7 @@ import {
   Settings,
   History,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
-import { Button } from "@dotmac/ui";
-import { Badge } from "@dotmac/ui";
-import { Switch } from "@dotmac/ui";
-import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
+import { useState } from "react";
 
 export interface RemediationAction {
   id: string;

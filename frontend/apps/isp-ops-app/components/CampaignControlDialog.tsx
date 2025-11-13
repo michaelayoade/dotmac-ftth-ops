@@ -20,8 +20,8 @@ export function CampaignControlDialog(props: CampaignControlDialogProps) {
   return (
     <SharedCampaignControlDialog
       {...props}
-      useCampaignWebSocket={useCampaignWebSocket}
-      useUpdateCampaign={useUpdateCampaign}
+      useCampaignWebSocket={useCampaignWebSocket as any}
+      useUpdateCampaign={useUpdateCampaign as any}
     />
   );
 }

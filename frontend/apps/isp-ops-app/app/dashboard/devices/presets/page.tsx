@@ -21,7 +21,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -57,6 +57,7 @@ function PresetsPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
   const confirmDialog = useConfirmDialog();
 
   // Fetch presets
@@ -64,7 +65,7 @@ function PresetsPageContent() {
     queryKey: ["device-presets"],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/presets`,
+        `${apiBaseUrl}/api/v1/genieacs/presets`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch presets");
@@ -83,7 +84,7 @@ function PresetsPageContent() {
       }
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/presets`,
+        `${apiBaseUrl}/api/v1/genieacs/presets`,
         {
           method: "POST",
           credentials: "include",
@@ -124,7 +125,7 @@ function PresetsPageContent() {
       }
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/presets/${id}`,
+        `${apiBaseUrl}/api/v1/genieacs/presets/${id}`,
         {
           method: "PUT",
           credentials: "include",
@@ -159,7 +160,7 @@ function PresetsPageContent() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/presets/${id}`,
+        `${apiBaseUrl}/api/v1/genieacs/presets/${id}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -185,7 +186,7 @@ function PresetsPageContent() {
   const duplicateMutation = useMutation({
     mutationFn: async (preset: Preset) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/presets`,
+        `${apiBaseUrl}/api/v1/genieacs/presets`,
         {
           method: "POST",
           credentials: "include",

@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   Activity,
   Search,
@@ -155,8 +155,11 @@ function DiagnosticHistoryContent() {
   const offset = currentPage * limit;
 
   // Fetch diagnostic runs with filters
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
+
   const { data: runsData, isLoading } = useQuery<{ total: number; items: DiagnosticRun[] }>({
-    queryKey: ["diagnostics-history", subscriberIdFilter, typeFilter, statusFilter, offset],
+    queryKey: ["diagnostics-history", apiBaseUrl, subscriberIdFilter, typeFilter, statusFilter, offset],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (subscriberIdFilter) params.append("subscriber_id", subscriberIdFilter);
@@ -166,7 +169,7 @@ function DiagnosticHistoryContent() {
       params.append("offset", offset.toString());
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
+        `${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch diagnostic runs");

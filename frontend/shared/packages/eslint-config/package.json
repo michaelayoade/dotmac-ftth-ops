@@ -16,6 +16,7 @@
     "lint:fix": "echo 'No linting needed for ESLint config files'"
   },
   "dependencies": {
+    "@dotmac/eslint-plugin": "workspace:*",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
     "@next/eslint-plugin-next": "^14.2.18",

@@ -101,9 +101,6 @@ export const useFeatureFlags = (enabledOnly = false) => {
         const response = await apiClient.get<FeatureFlag[]>(
           `/feature-flags/flags${enabledParam ? "?enabled_only=true" : ""}`,
         );
-        if (response?.error?.message) {
-          throw createExposedError(response.error.message);
-        }
         return normalizeFlagsResponse(response);
       } catch (err) {
         const message = normalizeApiError(err, "Failed to fetch feature flags");
@@ -124,9 +121,6 @@ export const useFeatureFlags = (enabledOnly = false) => {
     queryFn: async () => {
       try {
         const response = await apiClient.get<FlagStatus>("/feature-flags/status");
-        if (response?.error?.message) {
-          throw createExposedError(response.error.message);
-        }
         return normalizeStatusResponse(response);
       } catch (err) {
         const message = normalizeApiError(err, "Failed to fetch flag status");

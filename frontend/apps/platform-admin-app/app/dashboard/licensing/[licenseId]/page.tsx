@@ -21,7 +21,7 @@ import {
   RefreshCw,
   Loader,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -69,15 +69,16 @@ function LicenseDetailsPageContent() {
   const licenseId = params?.['licenseId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   // Fetch license details
   const { data: licenseData, isLoading } = useQuery({
-    queryKey: ["license", licenseId],
+    queryKey: ["license", apiBaseUrl, licenseId],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/licensing/licenses/${licenseId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/licensing/licenses/${licenseId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch license");
       return response.json();
     },
@@ -88,11 +89,11 @@ function LicenseDetailsPageContent() {
 
   // Fetch activations
   const { data: activationsData } = useQuery({
-    queryKey: ["license-activations", licenseId],
+    queryKey: ["license-activations", apiBaseUrl, licenseId],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/licensing/licenses/${licenseId}/activations`,
-        { credentials: "include" }
+        `${apiBaseUrl}/api/licensing/licenses/${licenseId}/activations`,
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch activations");
       return response.json();
@@ -105,20 +106,17 @@ function LicenseDetailsPageContent() {
   // Suspend license mutation
   const suspendMutation = useMutation({
     mutationFn: async (reason: string) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/licensing/licenses/${licenseId}/suspend`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ reason }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/licensing/licenses/${licenseId}/suspend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reason }),
+      });
       if (!response.ok) throw new Error("Failed to suspend license");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["license", licenseId] });
+      queryClient.invalidateQueries({ queryKey: ["license", apiBaseUrl, licenseId] });
       toast({ title: "License suspended successfully" });
     },
     onError: (error: Error) => {
@@ -134,7 +132,7 @@ function LicenseDetailsPageContent() {
   const renewMutation = useMutation({
     mutationFn: async (duration: number) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/licensing/licenses/${licenseId}/renew`,
+        `${apiBaseUrl}/api/licensing/licenses/${licenseId}/renew`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -146,7 +144,7 @@ function LicenseDetailsPageContent() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["license", licenseId] });
+      queryClient.invalidateQueries({ queryKey: ["license", apiBaseUrl, licenseId] });
       toast({ title: "License renewed successfully" });
     },
     onError: (error: Error) => {

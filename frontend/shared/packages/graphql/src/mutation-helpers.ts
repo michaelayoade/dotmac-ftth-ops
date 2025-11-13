@@ -35,6 +35,7 @@ import {
   type QueryClient,
   type QueryKey,
 } from '@tanstack/react-query';
+
 import { handleGraphQLError } from './error-handler';
 import type { GraphQLToastFn } from './error-handler';
 
@@ -176,7 +177,7 @@ export function useMutationWithToast<
 
       // Call original mutation's onSuccess if it exists
       if (mutationOptions.onSuccess) {
-        await mutationOptions.onSuccess(data, variables, context);
+        await (mutationOptions.onSuccess as any)(data, variables, context);
       }
     },
     onError: (error, variables, context) => {
@@ -188,13 +189,15 @@ export function useMutationWithToast<
 
         handleGraphQLError(error, {
           toast,
-          logger: logger ? {
-            error: (message: string, err?: unknown, ctx?: Record<string, unknown>) => {
-              logger.error(message, err as Error);
+          ...(logger ? {
+            logger: {
+              error: (message: string, err?: unknown, ctx?: Record<string, unknown>) => {
+                logger.error(message, err as Error);
+              }
             }
-          } : undefined,
+          } : {}),
           operationName,
-          customMessage,
+          ...(customMessage ? { customMessage } : {}),
           context: { variables },
         });
       }
@@ -206,7 +209,7 @@ export function useMutationWithToast<
 
       // Call original mutation's onError if it exists
       if (mutationOptions.onError) {
-        mutationOptions.onError(error, variables, context);
+        (mutationOptions.onError as any)(error, variables, context);
       }
     },
     onSettled: (data, error, variables, context) => {
@@ -217,7 +220,7 @@ export function useMutationWithToast<
 
       // Call original mutation's onSettled if it exists
       if (mutationOptions.onSettled) {
-        mutationOptions.onSettled(data, error, variables, context);
+        (mutationOptions.onSettled as any)(data, error, variables, context);
       }
     },
   });

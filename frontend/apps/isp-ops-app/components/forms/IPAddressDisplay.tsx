@@ -20,12 +20,12 @@ import {
 import { cn } from "@/lib/utils";
 
 export interface IPAddressDisplayProps {
-  ipv4?: string | null;
-  ipv6?: string | null;
+  ipv4?: string | null | undefined;
+  ipv6?: string | null | undefined;
   className?: string;
-  showBadges?: boolean;
-  compress?: boolean;
-  layout?: "inline" | "stacked" | "card";
+  showBadges?: boolean | undefined;
+  compress?: boolean | undefined;
+  layout?: "inline" | "stacked" | "card" | undefined;
 }
 
 export function IPAddressDisplay({

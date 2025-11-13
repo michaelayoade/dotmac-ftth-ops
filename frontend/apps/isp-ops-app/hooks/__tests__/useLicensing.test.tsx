@@ -787,8 +787,8 @@ describe("useLicensing", () => {
       await waitFor(() => expect(result.current.modulesLoading).toBe(false));
 
       await act(async () => {
-        const module = await result.current.getModule("mod-1");
-        expect(module).toEqual(mockModule);
+        const fetchedModule = await result.current.getModule("mod-1");
+        expect(fetchedModule).toEqual(mockModule);
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/licensing/modules/mod-1");

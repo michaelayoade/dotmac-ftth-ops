@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
+import React from "react";
 
 /**
  * Skeleton loader for subscription card

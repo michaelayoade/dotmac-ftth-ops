@@ -27,7 +27,7 @@ import {
   AlertCircle,
   Info,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
 
@@ -66,15 +66,18 @@ function DiagnosticsHistoryPageContent() {
   const [severityFilter, setSeverityFilter] = useState<string>("all");
 
   // Fetch diagnostic runs
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
+
   const { data: runsData, isLoading, refetch } = useQuery<{ total: number; items: DiagnosticRun[] }>({
-    queryKey: ["diagnostics-all", typeFilter, statusFilter],
+    queryKey: ["diagnostics-all", apiBaseUrl, typeFilter, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (typeFilter !== "all") params.append("diagnostic_type", typeFilter);
       params.append("limit", "100");
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
+        `${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch diagnostics");

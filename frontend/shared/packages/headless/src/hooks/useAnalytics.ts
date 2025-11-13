@@ -214,10 +214,12 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
   const [realTimeUpdates, setRealTimeUpdates] = useState<Partial<AnalyticsData>>({});
 
   // Query configuration
+  const refetchInterval: number | false = isRealTimeActive ? refreshInterval : false;
+
   const queryConfig = {
     staleTime,
     cacheTime,
-    refetchInterval: isRealTimeActive ? refreshInterval : false,
+    refetchInterval,
     retry: 3,
     retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
   };
@@ -310,6 +312,9 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
     if (!timeSeriesData.length) return null;
 
     const latestData = timeSeriesData[timeSeriesData.length - 1];
+    if (!latestData) {
+      return null;
+    }
     const previousData = timeSeriesData[timeSeriesData.length - 2];
 
     const totalRevenue = timeSeriesData.reduce((sum, data) => sum + data.revenue, 0);
@@ -349,6 +354,9 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
     if (!timeSeriesData.length) return baseMetrics;
 
     const latestData = timeSeriesData[timeSeriesData.length - 1];
+    if (!latestData) {
+      return baseMetrics;
+    }
     const previousData = timeSeriesData[timeSeriesData.length - 2];
 
     return baseMetrics.map((metric) => {
@@ -491,10 +499,14 @@ export const useRevenueAnalytics = (filters: AnalyticsFilters) => {
 
     // Calculate revenue growth trend
     const revenueData = timeSeriesData.map((d) => d.revenue);
-    const trend =
-      revenueData.length > 1
-        ? calculateTrend(revenueData[revenueData.length - 1], revenueData[0])
-        : "stable";
+    let trend: "up" | "down" | "stable" = "stable";
+    if (revenueData.length > 1) {
+      const latestValue = revenueData[revenueData.length - 1];
+      const firstValue = revenueData[0];
+      if (latestValue !== undefined && firstValue !== undefined) {
+        trend = calculateTrend(latestValue, firstValue);
+      }
+    }
 
     return {
       total: totalRevenue,

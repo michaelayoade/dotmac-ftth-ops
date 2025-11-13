@@ -3,25 +3,35 @@
  * Tests the complete invoice list workflow with mocked dependencies
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import InvoiceList from "../InvoiceList";
-import { createBillingDependencies } from "../../../test/mocks/dependencies";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
 import {
   createMockInvoice,
   createMockInvoices,
   createOverdueInvoice,
   createPaidInvoice,
 } from "../../../test/factories/billing";
+import { createBillingDependencies } from "../../../test/mocks/dependencies";
+import InvoiceList from "../InvoiceList";
 
 // Mock the UI components that we're not testing
 vi.mock("@dotmac/ui", async () => {
   const actual = await vi.importActual("@dotmac/ui");
+  const { simpleSelectMocks } = await import("@dotmac/testing-utils/react/simpleSelectMocks");
   return {
     ...actual,
-    EnhancedDataTable: ({ data, columns, loading, error, onRowClick }: any) => {
-      if (loading) return <div>Loading...</div>;
+    ...simpleSelectMocks,
+    EnhancedDataTable: ({
+      data,
+      columns,
+      loading,
+      isLoading,
+      error,
+      onRowClick,
+    }: any) => {
+      if (loading || isLoading) return <div>Loading...</div>;
       if (error) return <div role="alert">Error: {error}</div>;
       if (!data || data.length === 0) return <div>No invoices found</div>;
 
@@ -291,7 +301,7 @@ describe("InvoiceList Integration Tests", () => {
   });
 
   describe("Loading States", () => {
-    it.skip("should show loading state while fetching data", async () => {
+    it("should show loading state while fetching data", async () => {
       // Arrange
       let resolvePromise: any;
       const promise = new Promise((resolve) => {
@@ -309,12 +319,12 @@ describe("InvoiceList Integration Tests", () => {
       );
 
       // Assert - should show loading
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
+      expect(screen.getByText("Loading invoices...")).toBeInTheDocument();
 
       // Cleanup
       resolvePromise({ data: { invoices: [] } });
       await waitFor(() => {
-        expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+        expect(screen.queryByText("Loading invoices...")).not.toBeInTheDocument();
       });
     });
   });

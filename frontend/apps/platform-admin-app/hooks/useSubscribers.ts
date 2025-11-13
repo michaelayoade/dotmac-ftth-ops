@@ -452,7 +452,9 @@ export function useSubscriberOperations() {
       return true;
     },
     suspendSubscriber: async (subscriberId: string, reason?: string) => {
-      await suspendMutation.mutateAsync({ subscriberId, reason });
+      await suspendMutation.mutateAsync(
+        reason ? { subscriberId, reason } : { subscriberId }
+      );
       return true;
     },
     activateSubscriber: async (subscriberId: string) => {
@@ -460,7 +462,9 @@ export function useSubscriberOperations() {
       return true;
     },
     terminateSubscriber: async (subscriberId: string, reason?: string) => {
-      await terminateMutation.mutateAsync({ subscriberId, reason });
+      await terminateMutation.mutateAsync(
+        reason ? { subscriberId, reason } : { subscriberId }
+      );
       return true;
     },
     isLoading:

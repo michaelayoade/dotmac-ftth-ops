@@ -32,7 +32,8 @@ import {
   useApproveTimeEntry,
   useRejectTimeEntry,
 } from "@/hooks/useFieldService";
-import type { TimeEntry, TimeEntryType, TimeEntryStatus, TimeEntryFilter } from "@/types/field-service";
+import type { TimeEntry, TimeEntryStatus, TimeEntryFilter } from "@/types/field-service";
+import { TimeEntryType } from "@/types/field-service";
 import { format, formatDuration, intervalToDuration } from "date-fns";
 
 // ============================================================================
@@ -45,7 +46,7 @@ interface ClockInOutProps {
 }
 
 function ClockInOut({ technicianId, activeEntry }: ClockInOutProps) {
-  const [entryType, setEntryType] = useState<TimeEntryType>("regular");
+  const [entryType, setEntryType] = useState<TimeEntryType>(TimeEntryType.REGULAR);
   const [description, setDescription] = useState("");
   const [breakMinutes, setBreakMinutes] = useState("0");
 
@@ -86,7 +87,7 @@ function ClockInOut({ technicianId, activeEntry }: ClockInOutProps) {
       await clockInMutation.mutateAsync({
         technicianId,
         entryType,
-        description: description || null,
+        ...(description ? { description } : {}),
         latitude: loc.latitude,
         longitude: loc.longitude,
       });
@@ -157,11 +158,11 @@ function ClockInOut({ technicianId, activeEntry }: ClockInOutProps) {
                 value={entryType}
                 onChange={(e) => setEntryType(e.target.value as TimeEntryType)}
               >
-                <option value="regular">Regular</option>
-                <option value="overtime">Overtime</option>
-                <option value="travel">Travel</option>
-                <option value="training">Training</option>
-                <option value="administrative">Administrative</option>
+                <option value={TimeEntryType.REGULAR}>Regular</option>
+                <option value={TimeEntryType.OVERTIME}>Overtime</option>
+                <option value={TimeEntryType.TRAVEL}>Travel</option>
+                <option value={TimeEntryType.TRAINING}>Training</option>
+                <option value={TimeEntryType.ADMINISTRATIVE}>Administrative</option>
               </select>
             </div>
 
@@ -515,7 +516,7 @@ export default function TimeTrackingPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Clock In/Out */}
         <div className="lg:col-span-1">
-          <ClockInOut technicianId={technicianId} activeEntry={activeEntry} />
+          <ClockInOut technicianId={technicianId} activeEntry={activeEntry as any} />
         </div>
 
         {/* Time Entries List */}

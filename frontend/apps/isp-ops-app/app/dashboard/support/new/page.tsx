@@ -58,10 +58,9 @@ export default function NewTicketPage() {
       message: formData.message,
       target_type: formData.targetType,
       priority: formData.priority,
-      ticket_type: formData.ticketType || null,
-      service_address: formData.serviceAddress || null,
-      affected_services:
-        formData.affectedServices.length > 0 ? formData.affectedServices : undefined,
+      ...(formData.ticketType ? { ticket_type: formData.ticketType } : {}),
+      ...(formData.serviceAddress ? { service_address: formData.serviceAddress } : {}),
+      ...(formData.affectedServices.length > 0 ? { affected_services: formData.affectedServices } : {}),
     });
 
     if (result) {

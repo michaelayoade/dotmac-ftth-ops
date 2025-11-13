@@ -17,7 +17,7 @@ import {
   Lock,
   AlertTriangle,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { logger } from "@/lib/logger";
 
@@ -56,10 +56,12 @@ function SecretsPageContent() {
     message: "",
     type: "success",
   });
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   const fetchSecrets = useCallback(async () => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/secrets`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/secrets`, {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -79,7 +81,7 @@ function SecretsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiBaseUrl]);
 
   useEffect(() => {
     fetchSecrets();
@@ -98,7 +100,7 @@ function SecretsPageContent() {
   const fetchSecretValue = async (path: string) => {
     try {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/secrets/${encodeURIComponent(path)}`,
+        `${apiBaseUrl}/api/v1/secrets/${encodeURIComponent(path)}`,
         {
           credentials: "include",
           headers: {
@@ -142,7 +144,7 @@ function SecretsPageContent() {
 
   const handleCreateSecret = async () => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/secrets`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/secrets`, {
         method: "POST",
         credentials: "include",
         headers: {

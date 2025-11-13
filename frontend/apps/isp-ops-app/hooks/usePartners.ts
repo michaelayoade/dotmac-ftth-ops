@@ -1,9 +1,8 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { platformConfig } from "@/lib/config";
-
-const API_BASE = platformConfig.api.baseUrl;
+import type { PlatformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 // Types
 export interface Partner {
@@ -187,6 +186,8 @@ export interface CommissionRecordInput {
   metadata?: Record<string, any>;
 }
 
+type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
+
 export interface CommissionRecordResult {
   commission_id: string;
   partner_id: string;
@@ -227,6 +228,7 @@ export interface PartnerOnboardingResult {
 
 // API functions
 async function fetchPartners(
+  buildUrl: BuildApiUrl,
   status?: string,
   page: number = 1,
   pageSize: number = 50,
@@ -240,7 +242,7 @@ async function fetchPartners(
     params.append("status", status);
   }
 
-  const response = await fetch(`${API_BASE}/api/v1/partners?${params.toString()}`, {
+  const response = await fetch(buildUrl(`/partners?${params.toString()}`), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -254,8 +256,8 @@ async function fetchPartners(
   return response.json();
 }
 
-async function fetchPartner(partnerId: string): Promise<Partner> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/${partnerId}`, {
+async function fetchPartner(buildUrl: BuildApiUrl, partnerId: string): Promise<Partner> {
+  const response = await fetch(buildUrl(`/partners/${partnerId}`), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -269,8 +271,8 @@ async function fetchPartner(partnerId: string): Promise<Partner> {
   return response.json();
 }
 
-async function createPartner(data: CreatePartnerInput): Promise<Partner> {
-  const response = await fetch(`${API_BASE}/api/v1/partners`, {
+async function createPartner(buildUrl: BuildApiUrl, data: CreatePartnerInput): Promise<Partner> {
+  const response = await fetch(buildUrl("/partners"), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -287,8 +289,12 @@ async function createPartner(data: CreatePartnerInput): Promise<Partner> {
   return response.json();
 }
 
-async function updatePartner(partnerId: string, data: UpdatePartnerInput): Promise<Partner> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/${partnerId}`, {
+async function updatePartner(
+  buildUrl: BuildApiUrl,
+  partnerId: string,
+  data: UpdatePartnerInput,
+): Promise<Partner> {
+  const response = await fetch(buildUrl(`/partners/${partnerId}`), {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -305,8 +311,8 @@ async function updatePartner(partnerId: string, data: UpdatePartnerInput): Promi
   return response.json();
 }
 
-async function deletePartner(partnerId: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/${partnerId}`, {
+async function deletePartner(buildUrl: BuildApiUrl, partnerId: string): Promise<void> {
+  const response = await fetch(buildUrl(`/partners/${partnerId}`), {
     method: "DELETE",
     credentials: "include",
     headers: {
@@ -321,6 +327,7 @@ async function deletePartner(partnerId: string): Promise<void> {
 
 // Workflow API functions
 async function checkLicenseQuota(
+  buildUrl: BuildApiUrl,
   partnerId: string,
   requestedLicenses: number,
   tenantId?: string,
@@ -333,15 +340,12 @@ async function checkLicenseQuota(
     params.append("tenant_id", tenantId);
   }
 
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/${partnerId}/quota/check?${params.toString()}`,
-    {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
+  const response = await fetch(buildUrl(`/partners/${partnerId}/quota/check?${params.toString()}`), {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -352,13 +356,14 @@ async function checkLicenseQuota(
 }
 
 async function createPartnerCustomer(
+  buildUrl: BuildApiUrl,
   partnerId: string,
   customerData: PartnerCustomerInput,
   engagementType: string = "managed",
   customCommissionRate?: number,
   tenantId?: string,
 ): Promise<PartnerCustomerResult> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/${partnerId}/customers`, {
+  const response = await fetch(buildUrl(`/partners/${partnerId}/customers`), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -381,9 +386,10 @@ async function createPartnerCustomer(
 }
 
 async function allocateLicensesFromPartner(
+  buildUrl: BuildApiUrl,
   data: LicenseAllocationInput,
 ): Promise<LicenseAllocationResult> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/${data.partner_id}/licenses/allocate`, {
+  const response = await fetch(buildUrl(`/partners/${data.partner_id}/licenses/allocate`), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -407,9 +413,10 @@ async function allocateLicensesFromPartner(
 }
 
 async function provisionPartnerTenant(
+  buildUrl: BuildApiUrl,
   data: TenantProvisioningInput,
 ): Promise<TenantProvisioningResult> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/${data.partner_id}/tenants/provision`, {
+  const response = await fetch(buildUrl(`/partners/${data.partner_id}/tenants/provision`), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -435,9 +442,10 @@ async function provisionPartnerTenant(
 }
 
 async function recordPartnerCommission(
+  buildUrl: BuildApiUrl,
   data: CommissionRecordInput,
 ): Promise<CommissionRecordResult> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/${data.partner_id}/commissions`, {
+  const response = await fetch(buildUrl(`/partners/${data.partner_id}/commissions`), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -463,9 +471,10 @@ async function recordPartnerCommission(
 }
 
 async function completePartnerOnboarding(
+  buildUrl: BuildApiUrl,
   data: PartnerOnboardingInput,
 ): Promise<PartnerOnboardingResult> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/onboarding/complete`, {
+  const response = await fetch(buildUrl("/partners/onboarding/complete"), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -484,25 +493,28 @@ async function completePartnerOnboarding(
 
 // Hooks
 export function usePartners(status?: string, page: number = 1, pageSize: number = 50) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partners", status, page, pageSize],
-    queryFn: () => fetchPartners(status, page, pageSize),
+    queryKey: ["partners", status, page, pageSize, api.baseUrl, api.prefix],
+    queryFn: () => fetchPartners(api.buildUrl, status, page, pageSize),
   });
 }
 
 export function usePartner(partnerId: string | undefined) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["partner", partnerId],
-    queryFn: () => fetchPartner(partnerId!),
+    queryKey: ["partner", partnerId, api.baseUrl, api.prefix],
+    queryFn: () => fetchPartner(api.buildUrl, partnerId!),
     enabled: !!partnerId,
   });
 }
 
 export function useCreatePartner() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createPartner,
+    mutationFn: (data: CreatePartnerInput) => createPartner(api.buildUrl, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
     },
@@ -510,11 +522,12 @@ export function useCreatePartner() {
 }
 
 export function useUpdatePartner() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ partnerId, data }: { partnerId: string; data: UpdatePartnerInput }) =>
-      updatePartner(partnerId, data),
+      updatePartner(api.buildUrl, partnerId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({
@@ -525,10 +538,11 @@ export function useUpdatePartner() {
 }
 
 export function useDeletePartner() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deletePartner,
+    mutationFn: (partnerId: string) => deletePartner(api.buildUrl, partnerId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
     },
@@ -537,6 +551,7 @@ export function useDeletePartner() {
 
 // Workflow hooks
 export function useCheckLicenseQuota() {
+  const { api } = useAppConfig();
   return useMutation({
     mutationFn: ({
       partnerId,
@@ -546,11 +561,12 @@ export function useCheckLicenseQuota() {
       partnerId: string;
       requestedLicenses: number;
       tenantId?: string;
-    }) => checkLicenseQuota(partnerId, requestedLicenses, tenantId),
+    }) => checkLicenseQuota(api.buildUrl, partnerId, requestedLicenses, tenantId),
   });
 }
 
 export function useCreatePartnerCustomer() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -568,6 +584,7 @@ export function useCreatePartnerCustomer() {
       tenantId?: string;
     }) =>
       createPartnerCustomer(
+        api.buildUrl,
         partnerId,
         customerData,
         engagementType,
@@ -585,10 +602,12 @@ export function useCreatePartnerCustomer() {
 }
 
 export function useAllocateLicenses() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: allocateLicensesFromPartner,
+    mutationFn: (data: LicenseAllocationInput) =>
+      allocateLicensesFromPartner(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner_id] });
@@ -601,10 +620,12 @@ export function useAllocateLicenses() {
 }
 
 export function useProvisionPartnerTenant() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: provisionPartnerTenant,
+    mutationFn: (data: TenantProvisioningInput) =>
+      provisionPartnerTenant(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner_id] });
@@ -615,10 +636,12 @@ export function useProvisionPartnerTenant() {
 }
 
 export function useRecordCommission() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: recordPartnerCommission,
+    mutationFn: (data: CommissionRecordInput) =>
+      recordPartnerCommission(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner_id] });
@@ -628,10 +651,12 @@ export function useRecordCommission() {
 }
 
 export function useCompletePartnerOnboarding() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: completePartnerOnboarding,
+    mutationFn: (data: PartnerOnboardingInput) =>
+      completePartnerOnboarding(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner.id] });

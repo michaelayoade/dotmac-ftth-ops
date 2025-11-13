@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 import { signOut } from "@dotmac/better-auth";
 import {
   useUpdateProfile,
@@ -62,7 +63,7 @@ import { logger } from "@/lib/logger";
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
   const { data: session, refetch: refreshSession } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const { data: sessionsData, isLoading: sessionsLoading } = useListSessions();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();

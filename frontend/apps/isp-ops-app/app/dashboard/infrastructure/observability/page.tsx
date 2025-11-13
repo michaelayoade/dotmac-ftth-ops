@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -46,13 +46,15 @@ export default function ObservabilityPage() {
   const [selectedService, setSelectedService] = useState("all");
 
   // Use real API hooks
+  const traceFilters = useMemo(
+    () => (selectedService !== "all" ? { service: selectedService } : {}),
+    [selectedService],
+  );
   const {
     traces,
     isLoading: tracesLoading,
     refetch: refetchTraces,
-  } = useTraces({
-    service: selectedService !== "all" ? selectedService : undefined,
-  });
+  } = useTraces(traceFilters);
   const { metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useMetrics();
   const { serviceMap, isLoading: serviceMapLoading, refetch: refetchServiceMap } = useServiceMap();
   const {

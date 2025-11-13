@@ -16,6 +16,7 @@
     "jsxImportSource": "react",
     "types": ["react", "react-dom"],
     "outDir": "dist",
+    "rootDir": "src",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

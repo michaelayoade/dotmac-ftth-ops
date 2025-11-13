@@ -19,7 +19,7 @@ import {
   Calendar,
   AlertCircle,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -57,13 +57,15 @@ function WorkflowDetailsPageContent() {
   const workflowId = params?.['workflowId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch workflow details
   const { data: workflow, isLoading } = useQuery<Workflow>({
-    queryKey: ["workflow", workflowId],
+    queryKey: ["workflow", workflowId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/workflows/${workflowId}`,
+        `${apiBaseUrl}/api/v1/workflows/${workflowId}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch workflow");
@@ -74,10 +76,10 @@ function WorkflowDetailsPageContent() {
 
   // Fetch recent executions
   const { data: executions = [] } = useQuery<WorkflowExecution[]>({
-    queryKey: ["workflow-executions", workflowId],
+    queryKey: ["workflow-executions", workflowId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/workflows/executions?workflow_id=${workflowId}&limit=20`,
+        `${apiBaseUrl}/api/v1/workflows/executions?workflow_id=${workflowId}&limit=20`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch executions");
@@ -87,7 +89,7 @@ function WorkflowDetailsPageContent() {
     enabled: !!workflowId,
     refetchInterval: (query) => {
       // Auto-refresh if there are running executions
-      if ((query as any)?.state?.data && (query as any).state.data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
+      if (query?.state?.data && query.state.data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -98,7 +100,7 @@ function WorkflowDetailsPageContent() {
   const executeMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/workflows/${workflowId}/execute`,
+        `${apiBaseUrl}/api/v1/workflows/${workflowId}/execute`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -130,7 +132,7 @@ function WorkflowDetailsPageContent() {
   const toggleActiveMutation = useMutation({
     mutationFn: async (isActive: boolean) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/workflows/${workflowId}`,
+        `${apiBaseUrl}/api/v1/workflows/${workflowId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

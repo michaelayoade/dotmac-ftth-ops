@@ -281,13 +281,6 @@ export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType
     pollInterval: 10000, // Fast polling for device details
   });
 
-  // Show toast when device status changes
-  useEffect(() => {
-    if (device) {
-      // Could track previous status and show toast on change
-    }
-  }, [device?.status]);
-
   return {
     data: device,
     traffic: traffic

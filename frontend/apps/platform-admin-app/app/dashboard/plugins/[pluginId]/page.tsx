@@ -20,7 +20,7 @@ import {
   Shield,
   Info,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -63,13 +63,15 @@ function PluginDetailsPageContent() {
   const pluginId = params?.['pluginId'] as string;
   const { toast } = useToast();
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch plugin instance details
   const { data: plugin, isLoading, refetch } = useQuery<PluginInstance>({
-    queryKey: ["plugin-instance", pluginId],
+    queryKey: ["plugin-instance", pluginId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/plugins/instances/${pluginId}`,
+        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}`,
         { credentials: "include" }
       );
       if (!response.ok) {
@@ -85,10 +87,10 @@ function PluginDetailsPageContent() {
 
   // Fetch plugin configuration
   const { data: config } = useQuery<PluginConfiguration>({
-    queryKey: ["plugin-configuration", pluginId],
+    queryKey: ["plugin-configuration", pluginId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/plugins/instances/${pluginId}/configuration`,
+        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/configuration`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch plugin configuration");
@@ -101,7 +103,7 @@ function PluginDetailsPageContent() {
   const healthCheckMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/plugins/instances/${pluginId}/health`,
+        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/health`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to perform health check");
@@ -128,7 +130,7 @@ function PluginDetailsPageContent() {
   const testConnectionMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/plugins/instances/${pluginId}/test`,
+        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/test`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

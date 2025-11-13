@@ -176,36 +176,36 @@ export interface WireGuardServerUpdate {
 export interface WireGuardPeerCreate {
   server_id: string;
   name: string;
-  peer_name?: string; // Alias for name
-  description?: string | null;
-  customer_id?: string | null;
-  subscriber_id?: string | null;
-  generate_keys?: boolean;
-  public_key?: string;
-  peer_ipv4?: string;
-  peer_ipv6?: string | null;
-  allowed_ips?: string | string[]; // Accept both string (form input) and string[] (array)
-  persistent_keepalive?: number; // WireGuard keepalive setting
-  expires_at?: string | null;
-  expiration_date?: string | null; // Alias for expires_at
-  metadata?: Record<string, unknown>;
-  notes?: string | null;
+  peer_name?: string | undefined; // Alias for name
+  description?: string | null | undefined;
+  customer_id?: string | null | undefined;
+  subscriber_id?: string | null | undefined;
+  generate_keys?: boolean | undefined;
+  public_key?: string | undefined;
+  peer_ipv4?: string | undefined;
+  peer_ipv6?: string | null | undefined;
+  allowed_ips?: (string | string[]) | undefined; // Accept both string (form input) and string[] (array)
+  persistent_keepalive?: number | undefined; // WireGuard keepalive setting
+  expires_at?: string | null | undefined;
+  expiration_date?: string | null | undefined; // Alias for expires_at
+  metadata?: Record<string, unknown> | undefined;
+  notes?: string | null | undefined;
 }
 
 export interface WireGuardPeerUpdate {
-  peerId?: string; // For update operations
-  id?: string; // Alternative for peerId
-  name?: string;
-  peer_name?: string; // Alias for name
-  description?: string | null;
-  enabled?: boolean;
-  status?: WireGuardPeerStatus;
-  allowed_ips?: string | string[]; // Accept both string (form input) and string[] (array)
-  persistent_keepalive?: number; // WireGuard keepalive setting
-  expires_at?: string | null;
-  expiration_date?: string | null; // Alias for expires_at
-  metadata?: Record<string, unknown>;
-  notes?: string | null;
+  peerId?: string | undefined; // For update operations
+  id?: string | undefined; // Alternative for peerId
+  name?: string | undefined;
+  peer_name?: string | undefined; // Alias for name
+  description?: string | null | undefined;
+  enabled?: boolean | undefined;
+  status?: WireGuardPeerStatus | undefined;
+  allowed_ips?: (string | string[]) | undefined; // Accept both string (form input) and string[] (array)
+  persistent_keepalive?: number | undefined; // WireGuard keepalive setting
+  expires_at?: string | null | undefined;
+  expiration_date?: string | null | undefined; // Alias for expires_at
+  metadata?: Record<string, unknown> | undefined;
+  notes?: string | null | undefined;
 }
 
 // ============================================================================

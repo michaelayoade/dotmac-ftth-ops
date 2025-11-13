@@ -4,9 +4,9 @@
  * Split into focused sub-hooks for better maintainability
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useISPTenant } from "./useISPTenant";
-import { ispApiClient } from "../api/isp-client";
+import { getISPApiClient } from "../api/isp-client";
 import { usePaymentCache } from "./payment/usePaymentCache";
 import { usePaymentValidation } from "./payment/usePaymentValidation";
 import { usePaymentSecurity } from "./payment/usePaymentSecurity";
@@ -61,6 +61,7 @@ export function usePaymentProcessor(
   const cache = usePaymentCache();
   const validation = usePaymentValidation();
   const security = usePaymentSecurity();
+  const ispClient = useMemo(() => getISPApiClient(), []);
 
   // Core state
   const [processors, setProcessors] = useState<PaymentProcessor[]>([]);
@@ -84,7 +85,7 @@ export function usePaymentProcessor(
   });
 
   const loadProcessors = useCallback(async () => {
-    if (!tenant || !hasPermission("billing:read")) return;
+    if (!tenant || !hasPermission("billing.payments.read")) return;
 
     setIsLoading(true);
     setError(null);
@@ -95,7 +96,7 @@ export function usePaymentProcessor(
         return cachedData;
       }
 
-      const response = await ispApiClient.getBillingProcessors({
+      const response = await ispClient.getBillingProcessors({
         tenant_id: tenant.id,
       });
 
@@ -114,7 +115,7 @@ export function usePaymentProcessor(
     }
 
     setIsLoading(false);
-  }, [tenant, hasPermission, cache, errorHandler]);
+  }, [tenant, hasPermission, cache, errorHandler, ispClient]);
 
   const selectProcessor = useCallback(
     (processorId: string) => {
@@ -129,7 +130,7 @@ export function usePaymentProcessor(
 
   const loadPaymentMethods = useCallback(
     async (customerId: string) => {
-      if (!selectedProcessor || !hasPermission("billing:read")) return;
+      if (!selectedProcessor || !hasPermission("billing.payments.read")) return;
 
       const customerValidation = validation.validateCustomerId(customerId);
       if (!customerValidation.isValid) {
@@ -147,7 +148,7 @@ export function usePaymentProcessor(
           return;
         }
 
-        const response = await ispApiClient.getCustomerPaymentMethods(customerId, {
+        const response = await ispClient.getCustomerPaymentMethods(customerId, {
           processor_id: selectedProcessor.id,
           tenant_id: tenant?.id,
         });
@@ -160,12 +161,12 @@ export function usePaymentProcessor(
         setIsLoading(false);
       }
     },
-    [selectedProcessor, hasPermission, tenant, validation, cache],
+    [selectedProcessor, hasPermission, tenant, validation, cache, ispClient],
   );
 
   const createPaymentIntent = useCallback(
     async (amount: number, currency: string, customerId: string): Promise<PaymentIntent> => {
-      if (!selectedProcessor || !hasPermission("billing:write")) {
+      if (!selectedProcessor || !hasPermission("billing.payments.process")) {
         throw new Error("Insufficient permissions");
       }
 
@@ -178,7 +179,7 @@ export function usePaymentProcessor(
         throw new Error(paymentValidation.errors.join(", "));
       }
 
-      const response = await ispApiClient.createPaymentIntent({
+      const response = await ispClient.createPaymentIntent({
         amount,
         currency,
         customer_id: customerId,
@@ -188,16 +189,16 @@ export function usePaymentProcessor(
 
       return response.data;
     },
-    [selectedProcessor, hasPermission, tenant, validation],
+    [selectedProcessor, hasPermission, tenant, validation, ispClient],
   );
 
   const loadTransactions = useCallback(
     async (filters: any = {}) => {
-      if (!hasPermission("billing:read")) return;
+      if (!hasPermission("billing.payments.read")) return;
 
       setIsLoading(true);
       try {
-        const response = await ispApiClient.getTransactions({
+        const response = await ispClient.getTransactions({
           ...filters,
           tenant_id: tenant?.id,
           limit: filters.limit || 50,
@@ -210,7 +211,7 @@ export function usePaymentProcessor(
         setIsLoading(false);
       }
     },
-    [hasPermission, tenant],
+    [hasPermission, tenant, ispClient],
   );
 
   const formatAmount = useCallback((amount: number, currency: string): string => {

@@ -61,7 +61,7 @@ import { format } from "date-fns";
 import { apiClient } from "@/lib/api/client";
 import { useToast as useToastHook } from "@dotmac/ui";
 import { useRouter } from "next/navigation";
-import platformConfig from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type DiscountType = "percentage" | "fixed_amount" | "fixed_price";
 
@@ -118,6 +118,8 @@ export default function PricingPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedRule, setSelectedRule] = useState<PricingRule | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   const [formData, setFormData] = useState<RuleFormData>({
     name: "",
@@ -142,14 +144,14 @@ export default function PricingPage() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["pricing-rules", discountTypeFilter, statusFilter, appliesToFilter],
+    queryKey: ["pricing-rules", apiBaseUrl, discountTypeFilter, statusFilter, appliesToFilter],
     queryFn: async () => {
       const params: any = {};
       if (statusFilter === "active") params.active_only = true;
       if (appliesToFilter !== "all") params.category = appliesToFilter;
 
       const response = await apiClient.get<PricingRule[]>(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules`,
+        `${apiBaseUrl}/api/v1/billing/pricing/rules`,
         { params }
       );
       return response.data;
@@ -201,7 +203,7 @@ export default function PricingPage() {
   const createRuleMutation = useMutation({
     mutationFn: async (data: Partial<PricingRule>) => {
       const response = await apiClient.post(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules`,
+        `${apiBaseUrl}/api/v1/billing/pricing/rules`,
         data
       );
       return response.data;
@@ -228,7 +230,7 @@ export default function PricingPage() {
   const updateRuleMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<PricingRule> }) => {
       const response = await apiClient.patch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${id}`,
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${id}`,
         data
       );
       return response.data;
@@ -256,7 +258,7 @@ export default function PricingPage() {
   const deleteRuleMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiClient.delete(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${id}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${id}`
       );
     },
     onSuccess: () => {
@@ -282,7 +284,7 @@ export default function PricingPage() {
     mutationFn: async ({ id, activate }: { id: string; activate: boolean }) => {
       const endpoint = activate ? "activate" : "deactivate";
       const response = await apiClient.post(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${id}/${endpoint}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${id}/${endpoint}`
       );
       return response.data;
     },

@@ -23,7 +23,7 @@ import {
   getSignalQualityLabel,
   getFrequencyBandLabel,
 } from "@/hooks/useWirelessGraphQL";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   Wifi,
   MapPin,
@@ -44,7 +44,8 @@ interface PageProps {
 export default function AccessPointDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { hasPermission } = useRBAC();
-  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasWirelessAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Fetch access point details
   const {

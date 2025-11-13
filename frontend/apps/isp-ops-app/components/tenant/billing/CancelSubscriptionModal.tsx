@@ -86,8 +86,8 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
     try {
       const request: SubscriptionCancelRequest = {
         cancel_at_period_end: cancelationType === "at_period_end",
-        reason: reason || undefined,
-        feedback: feedback || undefined,
+        ...(reason ? { reason } : {}),
+        ...(feedback ? { feedback } : {}),
       };
 
       await onConfirmCancel(request);

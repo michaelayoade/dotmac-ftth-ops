@@ -11,7 +11,7 @@ import { clsx } from "clsx";
 import { forwardRef } from "react";
 
 const cardVariants = cva(
-  "rounded-lg border bg-card text-card-foreground shadow-sm transition-colors",
+  "relative rounded-lg border bg-card text-card-foreground shadow-sm transition-colors",
   {
     variants: {
       variant: {
@@ -164,7 +164,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     };
 
     // Accessibility props for interactive cards
-    const interactiveProps = interactive
+    const interactiveAttributes = interactive
       ? {
           tabIndex: tabIndex ?? 0,
           role: role ?? "button",
@@ -172,31 +172,33 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           onKeyDown: handleKeyDown,
         }
       : {
+          tabIndex,
           role,
           "aria-label": ariaLabel,
           onKeyDown,
         };
 
-    return (
-      <div className="relative">
-        <Comp
-          ref={ref}
-          className={clsx(cardVariants({ variant, padding, interactive, className }))}
-          onClick={onClick}
-          tabIndex={tabIndex}
-          {...interactiveProps}
-          {...props}
-        >
-          {isLoading && loadingComponent ? loadingComponent : children}
-        </Comp>
-
-        {/* Loading Overlay */}
+    const content = (
+      <>
         {isLoading && showLoadingOverlay && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg">
-            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-background/50">
+            <div className="animate-spin h-6 w-6 rounded-full border-2 border-primary border-t-transparent" />
           </div>
         )}
-      </div>
+        {isLoading && loadingComponent ? loadingComponent : children}
+      </>
+    );
+
+    return (
+      <Comp
+        ref={ref}
+        className={clsx(cardVariants({ variant, padding, interactive, className }))}
+        onClick={onClick}
+        {...interactiveAttributes}
+        {...props}
+      >
+        {content}
+      </Comp>
     );
   },
 );

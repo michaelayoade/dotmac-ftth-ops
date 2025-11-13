@@ -14,7 +14,7 @@
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "echo 'Linting disabled pending ESLint configuration'",
     "lint:fix": "echo 'Linting disabled pending ESLint configuration'",
-    "type-check": "echo 'Type checking disabled pending Axios/React Query type fixes'",
+    "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch"
   },

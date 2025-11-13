@@ -22,20 +22,21 @@ import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import { DiscoveredONU, ONUProvisionRequest } from "@/types/voltha";
 
-type ProvisionForm = Pick<
-  ONUProvisionRequest,
-  "serial_number" | "olt_device_id" | "pon_port" | "subscriber_id" | "vlan" | "bandwidth_profile" | "line_profile_id" | "service_profile_id"
->;
+interface ProvisionForm {
+  serial_number: string;
+  olt_device_id: string;
+  pon_port: number;
+  subscriber_id?: string | undefined;
+  vlan?: number | undefined;
+  bandwidth_profile?: string | undefined;
+  line_profile_id?: string | undefined;
+  service_profile_id?: string | undefined;
+}
 
 const initialForm: ProvisionForm = {
   serial_number: "",
   olt_device_id: "",
   pon_port: 0,
-  subscriber_id: undefined,
-  vlan: undefined,
-  bandwidth_profile: undefined,
-  line_profile_id: undefined,
-  service_profile_id: undefined,
 };
 
 const normalizeDiscovery = (onu: DiscoveredONU): DiscoveredONU => ({
@@ -69,12 +70,22 @@ function ONUDiscoverPageContent() {
         serial_number: form['serial_number'],
         olt_device_id: form['olt_device_id'],
         pon_port: form['pon_port'],
-        subscriber_id: form['subscriber_id'],
-        vlan: form['vlan'],
-        bandwidth_profile: form['bandwidth_profile'],
-        line_profile_id: form['line_profile_id'],
-        service_profile_id: form['service_profile_id'],
       };
+      if (form['subscriber_id']) {
+        payload.subscriber_id = form['subscriber_id'];
+      }
+      if (form['vlan'] !== undefined) {
+        payload.vlan = form['vlan'];
+      }
+      if (form['bandwidth_profile']) {
+        payload.bandwidth_profile = form['bandwidth_profile'];
+      }
+      if (form['line_profile_id']) {
+        payload.line_profile_id = form['line_profile_id'];
+      }
+      if (form['service_profile_id']) {
+        payload.service_profile_id = form['service_profile_id'];
+      }
       const response = await apiClient.post(
         `/access/olts/${encodeURIComponent(form['olt_device_id'])}/onus`,
         payload,
@@ -118,16 +129,27 @@ function ONUDiscoverPageContent() {
     const metadata = onu['metadata'] || {};
     const ponPort = Number(metadata['pon_port'] ?? metadata['port'] ?? 0);
     setSelectedONU(onu);
-    setProvisionForm({
+    const nextForm: ProvisionForm = {
       serial_number: onu['serial_number'],
       olt_device_id: String(metadata['olt_id'] ?? onu['onu_id'].split(":")[0] ?? ""),
       pon_port: Number.isFinite(ponPort) ? ponPort : 0,
-      subscriber_id: metadata['subscriber_id'],
-      vlan: metadata['vlan'],
-      bandwidth_profile: metadata['bandwidth_profile'],
-      line_profile_id: metadata['line_profile_id'],
-      service_profile_id: metadata['service_profile_id'],
-    });
+    };
+    if (metadata['subscriber_id']) {
+      nextForm.subscriber_id = metadata['subscriber_id'];
+    }
+    if (metadata['vlan'] !== undefined && metadata['vlan'] !== null) {
+      nextForm.vlan = Number(metadata['vlan']);
+    }
+    if (metadata['bandwidth_profile']) {
+      nextForm.bandwidth_profile = metadata['bandwidth_profile'];
+    }
+    if (metadata['line_profile_id']) {
+      nextForm.line_profile_id = metadata['line_profile_id'];
+    }
+    if (metadata['service_profile_id']) {
+      nextForm.service_profile_id = metadata['service_profile_id'];
+    }
+    setProvisionForm(nextForm);
   };
 
   const handleProvision = () => {
@@ -305,9 +327,18 @@ function ONUDiscoverPageContent() {
                     id="subscriber"
                     placeholder="Enter subscriber ID"
                     value={provisionForm.subscriber_id || ""}
-                    onChange={(e) =>
-                      setProvisionForm({ ...provisionForm, subscriber_id: e.target.value || undefined })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.trim();
+                      setProvisionForm((prev) => {
+                        const next = { ...prev };
+                        if (value) {
+                          next.subscriber_id = value;
+                        } else {
+                          delete next.subscriber_id;
+                        }
+                        return next;
+                      });
+                    }}
                   />
                 </div>
 
@@ -318,12 +349,23 @@ function ONUDiscoverPageContent() {
                     type="number"
                     placeholder="e.g., 100"
                     value={provisionForm.vlan ?? ""}
-                    onChange={(e) =>
-                      setProvisionForm({
-                        ...provisionForm,
-                        vlan: e.target.value ? parseInt(e.target.value, 10) : undefined,
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setProvisionForm((prev) => {
+                        const next = { ...prev };
+                        if (value) {
+                          const parsed = parseInt(value, 10);
+                          if (!Number.isNaN(parsed)) {
+                            next.vlan = parsed;
+                          } else {
+                            delete next.vlan;
+                          }
+                        } else {
+                          delete next.vlan;
+                        }
+                        return next;
+                      });
+                    }}
                   />
                 </div>
 
@@ -333,12 +375,18 @@ function ONUDiscoverPageContent() {
                     id="bandwidth"
                     placeholder="e.g., 100M"
                     value={provisionForm.bandwidth_profile || ""}
-                    onChange={(e) =>
-                      setProvisionForm({
-                        ...provisionForm,
-                        bandwidth_profile: e.target.value || null,
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.trim();
+                      setProvisionForm((prev) => {
+                        const next = { ...prev };
+                        if (value) {
+                          next.bandwidth_profile = value;
+                        } else {
+                          delete next.bandwidth_profile;
+                        }
+                        return next;
+                      });
+                    }}
                   />
                 </div>
 
@@ -348,12 +396,18 @@ function ONUDiscoverPageContent() {
                     id="line-profile"
                     placeholder="Driver-specific line profile"
                     value={provisionForm.line_profile_id || ""}
-                    onChange={(e) =>
-                      setProvisionForm({
-                        ...provisionForm,
-                        line_profile_id: e.target.value || null,
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.trim();
+                      setProvisionForm((prev) => {
+                        const next = { ...prev };
+                        if (value) {
+                          next.line_profile_id = value;
+                        } else {
+                          delete next.line_profile_id;
+                        }
+                        return next;
+                      });
+                    }}
                   />
                 </div>
 
@@ -363,12 +417,18 @@ function ONUDiscoverPageContent() {
                     id="service-profile"
                     placeholder="Driver-specific service profile"
                     value={provisionForm.service_profile_id || ""}
-                    onChange={(e) =>
-                      setProvisionForm({
-                        ...provisionForm,
-                        service_profile_id: e.target.value || null,
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.trim();
+                      setProvisionForm((prev) => {
+                        const next = { ...prev };
+                        if (value) {
+                          next.service_profile_id = value;
+                        } else {
+                          delete next.service_profile_id;
+                        }
+                        return next;
+                      });
+                    }}
                   />
                 </div>
 

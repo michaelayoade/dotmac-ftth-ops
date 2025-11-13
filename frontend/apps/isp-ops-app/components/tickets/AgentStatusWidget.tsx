@@ -91,18 +91,22 @@ export function AgentStatusWidget() {
   });
 
   const handleStatusChange = (newStatus: AgentStatus) => {
-    updateStatusMutation.mutate({
-      status: newStatus,
-      status_message: statusMessage || undefined,
-    });
+    const payload: { status: AgentStatus; status_message?: string } = { status: newStatus };
+    if (statusMessage) {
+      payload.status_message = statusMessage;
+    }
+    updateStatusMutation.mutate(payload);
   };
 
   const handleMessageUpdate = () => {
     if (availability) {
-      updateStatusMutation.mutate({
+      const payload: { status: AgentStatus; status_message?: string } = {
         status: availability.status,
-        status_message: statusMessage || undefined,
-      });
+      };
+      if (statusMessage) {
+        payload.status_message = statusMessage;
+      }
+      updateStatusMutation.mutate(payload);
     }
   };
 

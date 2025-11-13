@@ -185,7 +185,8 @@ export enum FrontendAuditEventType {
 // Utility type for creating frontend audit events
 export type CreateFrontendAuditEvent = Omit<
   AuditEvent,
-  "event_id" | "timestamp" | "service_name"
+  "event_id" | "timestamp" | "service_name" | "event_type"
 > & {
   event_type: AuditEventType | FrontendAuditEventType;
+  service_name?: string;
 };

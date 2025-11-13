@@ -8,13 +8,14 @@ import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useFiberDashboardGraphQL } from "@/hooks/useFiberGraphQL";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { Activity, AlertTriangle, Cable, MapPin, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 export default function FiberInfrastructurePage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasFiberAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   const {
     dashboard,

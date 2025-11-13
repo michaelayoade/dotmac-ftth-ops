@@ -57,10 +57,27 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     );
   }
 
+  const displayName = customer.displayName ?? customer.companyName;
+  const headerCustomer = {
+    id: customer.id,
+    ...(displayName ? { display_name: displayName } : {}),
+    email: customer.email,
+    status: customer.status,
+  };
+
+  const overviewCustomer = {
+    id: customer.id,
+    ...(displayName ? { display_name: displayName } : {}),
+    email: customer.email,
+    ...(customer.phone !== undefined && customer.phone !== null ? { phone: customer.phone } : {}),
+    ...(customer.createdAt ? { createdAt: customer.createdAt } : {}),
+    ...(customer.tier ? { tier: customer.tier } : {}),
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Header: Customer name, status badge, health score */}
-      <CustomerHeader customer={customer} onRefresh={refetch} />
+      <CustomerHeader customer={headerCustomer} onRefresh={refetch} />
 
       {/* Quick Actions Bar */}
       <QuickActionsCard
@@ -71,7 +88,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
 
       {/* 360° Dashboard Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <CustomerOverviewCard customer={customer} />
+        <CustomerOverviewCard customer={overviewCustomer} />
 
         <SubscriptionCard
           subscription={subscriptions.current}

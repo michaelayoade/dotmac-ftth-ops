@@ -13,13 +13,14 @@ import {
   useChannelUtilizationGraphQL,
   getFrequencyBandLabel,
 } from "@/hooks/useWirelessGraphQL";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { Activity, BarChart3, Radio, RefreshCw, Signal, TrendingUp, Zap } from "lucide-react";
 import Link from "next/link";
 
 export default function RFAnalyticsPage() {
   const { hasPermission } = useRBAC();
-  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasWirelessAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Fetch RF analytics
   const {

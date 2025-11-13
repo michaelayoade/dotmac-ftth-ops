@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { platformConfig } from "@/lib/config";
-
-const API_BASE = platformConfig.api.baseUrl;
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 interface Commission {
   id: string;
@@ -32,43 +30,41 @@ interface CommissionTrackingViewProps {
   partnerId: string;
 }
 
-async function fetchCommissions(
-  partnerId: string,
-  status?: string,
-  page: number = 1,
-  pageSize: number = 20,
-): Promise<CommissionListResponse> {
-  const params = new URLSearchParams({
-    partner_id: partnerId,
-    page: page.toString(),
-    page_size: pageSize.toString(),
-  });
-
-  if (status) {
-    params.append("status", status);
-  }
-
-  const response = await fetch(`${API_BASE}/api/v1/partners/commissions?${params.toString()}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch commissions");
-  }
-
-  return response.json();
-}
-
 export default function CommissionTrackingView({ partnerId }: CommissionTrackingViewProps) {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [page, setPage] = useState(1);
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["partner-commissions", partnerId, statusFilter, page],
-    queryFn: () => fetchCommissions(partnerId, statusFilter, page),
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        partner_id: partnerId,
+        page: page.toString(),
+        page_size: "20",
+      });
+
+      if (statusFilter) {
+        params.append("status", statusFilter);
+      }
+
+      const response = await fetch(
+        `${apiBaseUrl}/api/v1/partners/commissions?${params.toString()}`,
+        {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch commissions");
+      }
+
+      return response.json() as Promise<CommissionListResponse>;
+    },
   });
 
   if (isLoading) {

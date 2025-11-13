@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
+import { useQuery } from "@tanstack/react-query";
 import {
   Server,
   Search,
@@ -18,6 +17,8 @@ import {
   Zap,
   Activity,
 } from "lucide-react";
+import { useMemo, useState } from "react";
+
 import { Device, DeviceListResponse, LogicalDevice, LogicalDeviceListResponse } from "../types/voltha";
 
 // ============================================================================
@@ -55,7 +56,7 @@ function getOLTStatus(
   rootDeviceMap: Map<string, Device>
 ): { label: string; color: string; icon: typeof CheckCircle } {
   const ports = olt.ports ?? [];
-  const activePortCount = ports.filter((port) => port?.ofp_port?.state === 0).length;
+  const activePortCount = ports.filter((port) => port?.ofp_port?.["state"] === 0).length;
 
   if (ports.length > 0) {
     if (activePortCount === 0) {
@@ -133,8 +134,8 @@ export function OLTManagement({ apiClient, Link }: OLTManagementProps) {
       .filter((device) => device.root)
       .forEach((device) => {
         map.set(device.id, device);
-        if (device.metadata?.olt_id) {
-          map.set(String(device.metadata.olt_id), device);
+        if (device.metadata?.["olt_id"]) {
+          map.set(String(device.metadata["olt_id"]), device);
         }
       });
     return map;
@@ -253,7 +254,7 @@ export function OLTManagement({ apiClient, Link }: OLTManagementProps) {
             const status = getOLTStatus(olt, rootDeviceMap);
             const StatusIcon = status.icon;
             const ports = olt.ports ?? [];
-            const activePorts = ports.filter((p) => p?.ofp_port?.state === 0).length;
+            const activePorts = ports.filter((p) => p?.ofp_port?.["state"] === 0).length;
             const flowsCount = Array.isArray(olt.flows) ? olt.flows.length : 0;
             const datapath = olt.datapath_id || "N/A";
             const datapathDisplay = datapath.length > 12 ? `${datapath.slice(0, 12)}...` : datapath;

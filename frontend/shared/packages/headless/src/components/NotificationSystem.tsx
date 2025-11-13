@@ -63,7 +63,7 @@ const NotificationRenderers = {
   }) =>
     actions && actions.length > 0 ? (
       <div className="mt-3 flex space-x-2">
-        {actions.map((action, _idx) => {
+        {actions.map((action, index) => {
           const handleActionClick = () => {
             action.action();
             if (!action.primary) {
@@ -74,15 +74,14 @@ const NotificationRenderers = {
           return (
             <button
               type="button"
-              key={`action-${idx}-${action.label}`}
+              key={`action-${index}-${action.label}`}
               onClick={handleActionClick}
-              onKeyDown={(e) => e.key === "Enter" && handleActionClick}
+              onKeyDown={(event) => event.key === "Enter" && handleActionClick()}
               className={`rounded-md px-3 py-1 font-medium text-xs transition-colors ${
                 action.primary
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-              }
-            `}
+              }`}
             >
               {action.label}
             </button>
@@ -163,7 +162,8 @@ function NotificationComponent({ notification, onDismiss }: NotificationComponen
   const renderBody = () => (
     <>
       {notification.message && NotificationRenderers.message({ message: notification.message })}
-      {notification.actions && NotificationRenderers.actions({ actions: notification.actions })}
+      {notification.actions &&
+        NotificationRenderers.actions({ actions: notification.actions, onDismiss: handleDismiss })}
     </>
   );
 
@@ -190,7 +190,7 @@ function NotificationComponent({ notification, onDismiss }: NotificationComponen
 }
 
 export function NotificationContainer() {
-  const { notifications, _remove } = useNotifications();
+  const { notifications, remove } = useNotifications();
 
   if (notifications.length === 0) {
     return null;

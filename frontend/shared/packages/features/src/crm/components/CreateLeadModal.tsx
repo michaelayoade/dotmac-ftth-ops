@@ -7,8 +7,6 @@
 
 "use client";
 
-import { useState } from "react";
-import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +27,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@dotmac/ui";
+import { X } from "lucide-react";
+import { useState } from "react";
+
 import { type LeadSource } from "../types";
 
 export interface LeadCreateRequest {

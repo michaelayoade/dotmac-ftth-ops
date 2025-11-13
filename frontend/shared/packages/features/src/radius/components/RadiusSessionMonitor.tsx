@@ -1,15 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Activity,
-  Search,
-  RefreshCw,
-  XCircle,
-  Download,
-  Upload,
-  Clock,
-} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
@@ -22,6 +12,17 @@ import {
   TableRow,
 } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
+import {
+  Activity,
+  Search,
+  RefreshCw,
+  XCircle,
+  Download,
+  Upload,
+  Clock,
+} from "lucide-react";
+import React, { useState } from "react";
+
 import type { RADIUSSession } from "../types";
 
 export interface RadiusSessionMonitorProps {
@@ -37,7 +38,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))  } ${  sizes[i]}`;
 }
 
 function formatDuration(seconds: number): string {

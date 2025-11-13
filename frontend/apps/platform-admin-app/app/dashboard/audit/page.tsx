@@ -27,10 +27,10 @@ import {
   Eye,
   Shield,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { formatDistanceToNow, format } from "date-fns";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type ActivityType =
   | "login"
@@ -80,6 +80,8 @@ function AuditPageContent() {
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [daysFilter, setDaysFilter] = useState<number>(30);
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   // Fetch audit activities
   const { data, isLoading, refetch } = useQuery({
@@ -91,10 +93,9 @@ function AuditPageContent() {
       params.append("days", daysFilter.toString());
       params.append("per_page", "100");
 
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/audit/activities?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/audit/activities?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch audit activities");
       return response.json();
     },

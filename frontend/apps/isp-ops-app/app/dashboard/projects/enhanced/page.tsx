@@ -131,7 +131,7 @@ export default function EnhancedProjectsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <GanttChart projectId={projectId} />
+              <GanttChart projectId={projectId} project={undefined as any} />
             </CardContent>
           </Card>
         </TabsContent>

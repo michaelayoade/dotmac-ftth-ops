@@ -395,7 +395,8 @@ export function useSubscriberOperations() {
   // Suspend subscriber mutation
   const suspendMutation = useMutation({
     mutationFn: async ({ subscriberId, reason }: { subscriberId: string; reason?: string }): Promise<void> => {
-      await apiClient.post(`/subscribers/${subscriberId}/suspend`, { reason });
+      const payload = reason ? { reason } : {};
+      await apiClient.post(`/subscribers/${subscriberId}/suspend`, payload);
     },
     onSuccess: (_, { subscriberId }) => {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.detail(subscriberId) });
@@ -431,7 +432,8 @@ export function useSubscriberOperations() {
       subscriberId: string;
       reason?: string;
     }): Promise<void> => {
-      await apiClient.post(`/subscribers/${subscriberId}/terminate`, { reason });
+      const payload = reason ? { reason } : {};
+      await apiClient.post(`/subscribers/${subscriberId}/terminate`, payload);
     },
     onSuccess: (_, { subscriberId }) => {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.detail(subscriberId) });
@@ -452,7 +454,7 @@ export function useSubscriberOperations() {
       return true;
     },
     suspendSubscriber: async (subscriberId: string, reason?: string) => {
-      await suspendMutation.mutateAsync({ subscriberId, reason });
+      await suspendMutation.mutateAsync(reason ? { subscriberId, reason } : { subscriberId });
       return true;
     },
     activateSubscriber: async (subscriberId: string) => {
@@ -460,7 +462,7 @@ export function useSubscriberOperations() {
       return true;
     },
     terminateSubscriber: async (subscriberId: string, reason?: string) => {
-      await terminateMutation.mutateAsync({ subscriberId, reason });
+      await terminateMutation.mutateAsync(reason ? { subscriberId, reason } : { subscriberId });
       return true;
     },
     isLoading:

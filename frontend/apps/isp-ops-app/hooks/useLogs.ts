@@ -7,13 +7,12 @@
  * - Better error handling
  * - Reduced boilerplate (154 lines → 110 lines)
  */
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useToast } from "@dotmac/ui";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { logger } from "@/lib/logger";
-
-const API_BASE_URL = platformConfig.api.baseUrl;
 
 export interface LogMetadata {
   request_id?: string;
@@ -71,24 +70,29 @@ export const logsKeys = {
 };
 
 export function useLogs(filters: LogsFilter = {}) {
+  const serializedFilters = JSON.stringify(filters ?? {});
+  const normalizedFilters = useMemo(() => filters, [serializedFilters]);
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch logs
   const logsQuery = useQuery({
-    queryKey: logsKeys.list(filters),
+    queryKey: [...logsKeys.list(normalizedFilters), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
-        if (filters.level) params.append("level", filters.level);
-        if (filters.service) params.append("service", filters.service);
-        if (filters.search) params.append("search", filters.search);
-        if (filters.start_time) params.append("start_time", filters.start_time);
-        if (filters.end_time) params.append("end_time", filters.end_time);
-        if (filters.page) params.append("page", filters.page.toString());
-        if (filters.page_size) params.append("page_size", filters.page_size.toString());
+        if (normalizedFilters.level) params.append("level", normalizedFilters.level);
+        if (normalizedFilters.service) params.append("service", normalizedFilters.service);
+        if (normalizedFilters.search) params.append("search", normalizedFilters.search);
+        if (normalizedFilters.start_time) params.append("start_time", normalizedFilters.start_time);
+        if (normalizedFilters.end_time) params.append("end_time", normalizedFilters.end_time);
+        if (normalizedFilters.page) params.append("page", normalizedFilters.page.toString());
+        if (normalizedFilters.page_size)
+          params.append("page_size", normalizedFilters.page_size.toString());
 
         const response = await axios.get<LogsResponse>(
-          `${API_BASE_URL}/api/v1/monitoring/logs?${params.toString()}`,
+          `${apiBaseUrl}/api/v1/monitoring/logs?${params.toString()}`,
           { withCredentials: true },
         );
 
@@ -108,11 +112,11 @@ export function useLogs(filters: LogsFilter = {}) {
 
   // Fetch stats
   const statsQuery = useQuery({
-    queryKey: logsKeys.stats(),
+    queryKey: [...logsKeys.stats(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
         const response = await axios.get<LogStats>(
-          `${API_BASE_URL}/api/v1/monitoring/logs/stats`,
+          `${apiBaseUrl}/api/v1/monitoring/logs/stats`,
           { withCredentials: true },
         );
         return response.data;
@@ -129,11 +133,11 @@ export function useLogs(filters: LogsFilter = {}) {
 
   // Fetch services
   const servicesQuery = useQuery({
-    queryKey: logsKeys.services(),
+    queryKey: [...logsKeys.services(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
         const response = await axios.get<string[]>(
-          `${API_BASE_URL}/api/v1/monitoring/logs/services`,
+          `${apiBaseUrl}/api/v1/monitoring/logs/services`,
           { withCredentials: true },
         );
         return response.data;

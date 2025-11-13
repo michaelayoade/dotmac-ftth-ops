@@ -5,6 +5,7 @@
  */
 
 import { Badge } from "@dotmac/ui";
+
 import { InvoiceStatus } from "../types";
 import { getInvoiceStatusColor, getInvoiceStatusLabel } from "../utils";
 

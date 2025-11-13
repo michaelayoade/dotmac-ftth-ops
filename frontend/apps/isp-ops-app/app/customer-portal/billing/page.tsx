@@ -43,15 +43,13 @@ import {
 import { useToast } from "@dotmac/ui";
 import { AddPaymentMethodModal } from "@/components/tenant/billing/AddPaymentMethodModal";
 import { PaymentMethodCard } from "@/components/tenant/billing/PaymentMethodCard";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import type { AddPaymentMethodRequest } from "@/hooks/useTenantPaymentMethods";
 import {
   CUSTOMER_PORTAL_TOKEN_KEY,
   getPortalAuthToken,
   setPortalAuthToken,
 } from "../../../../../shared/utils/operatorAuth";
-
-const API_BASE = platformConfig.api.baseUrl;
 
 export default function CustomerBillingPage() {
   const { toast } = useToast();
@@ -76,6 +74,7 @@ export default function CustomerBillingPage() {
   const [isUpdatingMethod, setIsUpdatingMethod] = useState(false);
 
   const loading = invoicesLoading || paymentsLoading || paymentMethodsLoading;
+  const { apiBaseUrl } = useApiConfig();
 
   const outstandingInvoice = useMemo(
     () => invoices?.find((inv) => inv.status !== "paid") ?? null,
@@ -126,7 +125,11 @@ export default function CustomerBillingPage() {
     }
 
     try {
-      await makePayment(outstandingInvoice.invoice_id, outstandingInvoice.amount_due, defaultMethodId);
+      await makePayment({
+        invoiceId: outstandingInvoice.invoice_id,
+        amount: outstandingInvoice.amount_due,
+        paymentMethodId: defaultMethodId
+      });
       toast({
         title: "Payment Successful",
         description: `Payment of ${formatCurrency(outstandingInvoice.amount_due)} has been processed.`,
@@ -163,7 +166,7 @@ export default function CustomerBillingPage() {
       if (!token) {
         throw new Error("Customer session expired");
       }
-      const response = await fetch(`${API_BASE}/api/v1/customer/invoices/${invoiceId}/download`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/customer/invoices/${invoiceId}/download`, {
         method: "GET",
         headers: {
           "Content-Type": "application/pdf",

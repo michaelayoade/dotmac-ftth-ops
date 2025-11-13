@@ -46,7 +46,7 @@ export function EditTemplateModal({
     html_template: template.html_template,
     required_variables: template.required_variables,
     is_active: template.is_active,
-  });
+  } as TemplateUpdateRequest);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newVariable, setNewVariable] = useState("");
 
@@ -60,7 +60,7 @@ export function EditTemplateModal({
       html_template: template.html_template,
       required_variables: template.required_variables,
       is_active: template.is_active,
-    });
+    } as TemplateUpdateRequest);
   }, [template]);
 
   const handleSubmit = async (e: React.FormEvent) => {

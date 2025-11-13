@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { platformConfig } from "@/lib/config";
-
-const API_BASE = platformConfig.api.baseUrl;
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 interface ReferralSubmissionFormProps {
   partnerId: string;
@@ -20,32 +18,13 @@ interface ReferralInput {
   notes: string | undefined;
 }
 
-async function submitReferral(partnerId: string, data: ReferralInput): Promise<void> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/referrals`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      partner_id: partnerId,
-      ...data,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || "Failed to submit referral");
-  }
-
-  return response.json();
-}
-
 export default function ReferralSubmissionForm({
   partnerId,
   onSuccess,
 }: ReferralSubmissionFormProps) {
   const queryClient = useQueryClient();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
   const [formData, setFormData] = useState<ReferralInput>({
     lead_name: "",
     lead_email: "",
@@ -57,7 +36,26 @@ export default function ReferralSubmissionForm({
   const [showSuccess, setShowSuccess] = useState(false);
 
   const submitMutation = useMutation({
-    mutationFn: (data: ReferralInput) => submitReferral(partnerId, data),
+    mutationFn: async (data: ReferralInput) => {
+      const response = await fetch(`${apiBaseUrl}/api/v1/partners/referrals`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          partner_id: partnerId,
+          ...data,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to submit referral");
+      }
+
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner", partnerId] });
       queryClient.invalidateQueries({

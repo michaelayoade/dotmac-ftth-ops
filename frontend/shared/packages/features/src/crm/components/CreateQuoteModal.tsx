@@ -7,7 +7,6 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +27,8 @@ import {
 } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Plus, X, Calculator, DollarSign, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+
 import { type Quote, type Lead } from "../types";
 
 export interface QuoteCreateRequest {

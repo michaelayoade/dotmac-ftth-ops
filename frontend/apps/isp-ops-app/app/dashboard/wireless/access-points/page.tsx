@@ -27,7 +27,7 @@ import {
 import { useRBAC } from "@/contexts/RBACContext";
 import { useAccessPointListGraphQL, getSignalQualityLabel } from "@/hooks/useWirelessGraphQL";
 import { AccessPointStatus, type FrequencyBand } from "@/lib/graphql/generated";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { Wifi, Search, Filter, ChevronLeft, ChevronRight, RefreshCw, Activity } from "lucide-react";
 import Link from "next/link";
 
@@ -40,7 +40,8 @@ const ACCESS_POINT_STATUSES: AccessPointStatus[] = [
 
 export default function AccessPointsPage() {
   const { hasPermission } = useRBAC();
-  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasWirelessAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
   const [search, setSearch] = useState("");

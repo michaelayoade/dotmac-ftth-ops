@@ -19,13 +19,23 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
 // Mock dependencies
-jest.mock("@/lib/config", () => ({
-  platformConfig: {
+const buildUrl = (path: string) => {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+  return `http://localhost:8000${prefixed}`;
+};
+
+jest.mock("@/providers/AppConfigContext", () => ({
+  useAppConfig: () => ({
     api: {
       baseUrl: "http://localhost:8000",
-      buildUrl: (path: string) => `http://localhost:8000${path}`,
+      prefix: "/api/v1",
+      buildUrl,
     },
-  },
+    features: {},
+    branding: {},
+    tenant: {},
+  }),
 }));
 
 // Mock getOperatorAccessToken
@@ -105,7 +115,7 @@ describe("useCommissionRules", () => {
       expect(result.current.data?.rules[0].rule_name).toBe("Revenue Share Rule");
       expect(result.current.data?.total).toBe(1);
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/?",
+        "http://localhost:8000/api/v1/partners/commission-rules/?",
         {
           headers: {
             "Content-Type": "application/json",
@@ -130,7 +140,7 @@ describe("useCommissionRules", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/?page=2&page_size=25",
+        "http://localhost:8000/api/v1/partners/commission-rules/?page=2&page_size=25",
         expect.any(Object)
       );
     });
@@ -149,7 +159,7 @@ describe("useCommissionRules", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/?partner_id=partner-123",
+        "http://localhost:8000/api/v1/partners/commission-rules/?partner_id=partner-123",
         expect.any(Object)
       );
     });
@@ -168,7 +178,7 @@ describe("useCommissionRules", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/?is_active=true",
+        "http://localhost:8000/api/v1/partners/commission-rules/?is_active=true",
         expect.any(Object)
       );
     });
@@ -308,7 +318,7 @@ describe("useCommissionRules", () => {
 
       expect(result.current.data).toEqual(mockRule);
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/rule-1",
+        "http://localhost:8000/api/v1/partners/commission-rules/rule-1",
         {
           headers: {
             "Content-Type": "application/json",
@@ -451,7 +461,7 @@ describe("useCommissionRules", () => {
 
       expect(result.current.data).toHaveLength(2);
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/partners/partner-123/applicable?",
+        "http://localhost:8000/api/v1/partners/commission-rules/partners/partner-123/applicable?",
         {
           headers: {
             "Content-Type": "application/json",
@@ -480,7 +490,7 @@ describe("useCommissionRules", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/partners/partner-123/applicable?product_id=product-1",
+        "http://localhost:8000/api/v1/partners/commission-rules/partners/partner-123/applicable?product_id=product-1",
         expect.any(Object)
       );
     });
@@ -503,7 +513,7 @@ describe("useCommissionRules", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/partners/partner-123/applicable?customer_id=customer-1",
+        "http://localhost:8000/api/v1/partners/commission-rules/partners/partner-123/applicable?customer_id=customer-1",
         expect.any(Object)
       );
     });
@@ -601,7 +611,7 @@ describe("useCommissionRules", () => {
 
       expect(createdRule).toEqual(mockNewRule);
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/",
+        "http://localhost:8000/api/v1/partners/commission-rules/",
         {
           method: "POST",
           headers: {
@@ -928,7 +938,7 @@ describe("useCommissionRules", () => {
 
       expect(updatedRule).toEqual(mockUpdatedRule);
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/rule-1",
+        "http://localhost:8000/api/v1/partners/commission-rules/rule-1",
         {
           method: "PATCH",
           headers: {
@@ -1175,7 +1185,7 @@ describe("useCommissionRules", () => {
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/partners/commission-rules/rule-1",
+        "http://localhost:8000/api/v1/partners/commission-rules/rule-1",
         {
           method: "DELETE",
           headers: {

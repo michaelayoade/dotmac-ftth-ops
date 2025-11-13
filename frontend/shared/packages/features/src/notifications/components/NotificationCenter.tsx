@@ -7,9 +7,6 @@
 
 "use client";
 
-import { useState } from "react";
-import { Bell, Check, CheckCheck, Archive, Trash2, ExternalLink, Loader2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import {
@@ -21,6 +18,9 @@ import {
 } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
+import { formatDistanceToNow } from "date-fns";
+import { Bell, Check, CheckCheck, Archive, Trash2, ExternalLink, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 // ============================================================================
 // Types

@@ -12,7 +12,7 @@ import {
 import { Badge } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { NetworkTopologyMap } from "@dotmac/primitives";
 import type { NetworkTopologyNode as NetworkNode } from "@dotmac/primitives";
 import { logger } from "@/lib/logger";
@@ -20,7 +20,8 @@ import { NetworkProfileStats } from "@/components/network/NetworkProfileStats";
 
 export default function NetworkOverviewPage() {
   const { hasPermission } = useRBAC();
-  const hasNetworkAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasNetworkAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   const { data: netboxHealth, isLoading: healthLoading } = useNetboxHealth({
     enabled: hasNetworkAccess,

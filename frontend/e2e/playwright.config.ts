@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const ISP_BASE_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
-const useDevServer = process.env.E2E_USE_DEV_SERVER === "true";
+const useExternalServers = process.env.E2E_USE_DEV_SERVER === "true";
 const testTimeout = parseInt(process.env.E2E_TEST_TIMEOUT || "120000", 10);
 const expectTimeout = parseInt(process.env.E2E_EXPECT_TIMEOUT || "20000", 10);
 const actionTimeout = parseInt(process.env.E2E_ACTION_TIMEOUT || "30000", 10);
@@ -34,14 +34,25 @@ export default defineConfig({
     },
   ],
 
-  webServer: useDevServer
-    ? {
-        command: "pnpm --filter @dotmac/isp-ops-app dev",
-        url: "http://localhost:3001",
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-      }
-    : undefined,
+  webServer: useExternalServers
+    ? undefined
+    : [
+        {
+          command: "pnpm --filter @dotmac/isp-ops-app dev",
+          url: "http://localhost:3001",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+        },
+        {
+          command: "pnpm --filter @dotmac/platform-admin-app dev",
+          url: "http://localhost:3002",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+        },
+      ],
+
+  globalSetup: require.resolve("./global-setup"),
+  globalTeardown: require.resolve("./global-teardown"),
 
   timeout: testTimeout,
   expect: {

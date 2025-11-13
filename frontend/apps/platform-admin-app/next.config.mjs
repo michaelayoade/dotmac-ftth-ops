@@ -9,11 +9,13 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const sharedPackageAliases = {
+  '@shared': '../../shared',
   '@dotmac/ui': '../../shared/packages/ui/src',
   '@dotmac/primitives': '../../shared/packages/primitives/src',
   '@dotmac/headless': '../../shared/packages/headless/src',
   '@dotmac/features': '../../shared/packages/features/src',
   '@dotmac/graphql': '../../shared/packages/graphql/src',
+  '@dotmac/graphql/generated': '../../shared/packages/graphql/generated',
   '@dotmac/http-client': '../../shared/packages/http-client/src',
   '@dotmac/design-system': '../../shared/packages/design-system/src',
   '@dotmac/providers': '../../shared/packages/providers/src',
@@ -80,6 +82,14 @@ const nextConfig = {
     for (const [pkg, relativePath] of Object.entries(sharedPackageAliases)) {
       config.resolve.alias[pkg] = path.resolve(dir, relativePath);
     }
+
+    // Ensure generated GraphQL helpers resolve to the source files
+    const graphqlGeneratedDir = path.resolve(dir, '../../shared/packages/graphql/generated');
+    config.resolve.alias['@dotmac/graphql/generated'] = graphqlGeneratedDir;
+    config.resolve.alias['@dotmac/graphql/generated/react-query$'] = path.resolve(
+      graphqlGeneratedDir,
+      'react-query.ts',
+    );
 
     config.resolve.alias['react-window'] = require.resolve('react-window');
     config.resolve.extensionAlias = {

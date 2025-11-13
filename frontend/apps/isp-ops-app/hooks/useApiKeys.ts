@@ -261,11 +261,11 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
     }
   }, [keysQuery.isLoading, scopesQuery.isLoading]);
   const error = keysQuery.error instanceof Error ? keysQuery.error.message : null;
-  const isCreating = createMutation.isPending ?? createMutation.status === "pending";
-  const isUpdating = updateMutation.isPending ?? updateMutation.status === "pending";
-  const isRevoking = revokeMutation.isPending ?? revokeMutation.status === "pending";
-  const isLoadingKeys = keysQuery.isLoading ?? keysQuery.isPending ?? keysQuery.status === "pending";
-  const isLoadingScopes = scopesQuery.isLoading ?? scopesQuery.isPending ?? scopesQuery.status === "pending";
+  const isCreating = createMutation.isPending ?? false;
+  const isUpdating = updateMutation.isPending ?? false;
+  const isRevoking = revokeMutation.isPending ?? false;
+  const isLoadingKeys = keysQuery.isLoading || keysQuery.isPending || false;
+  const isLoadingScopes = scopesQuery.isLoading || scopesQuery.isPending || false;
 
   return {
     apiKeys: derivedApiKeys,

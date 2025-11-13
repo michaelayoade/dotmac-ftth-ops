@@ -71,8 +71,8 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
             <div className="space-y-2">
               <Label>IP Addresses</Label>
               <IPAddressDisplay
-                ipv4={metrics.ipv4_address}
-                ipv6={metrics.ipv6_address}
+                ipv4={metrics.ipv4_address ?? undefined}
+                ipv6={metrics.ipv6_address ?? undefined}
                 layout="card"
                 showBadges={true}
               />
@@ -101,13 +101,13 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
               <TabsTrigger value="ipv4" disabled={!hasIPv4}>
                 IPv4{" "}
                 {hasIPv4 && (
-                  <ConnectivityIndicator connected={metrics.connectivity.ipv4?.reachable} />
+                  <ConnectivityIndicator connected={metrics.connectivity.ipv4?.reachable ?? undefined} />
                 )}
               </TabsTrigger>
               <TabsTrigger value="ipv6" disabled={!hasIPv6}>
                 IPv6{" "}
                 {hasIPv6 && (
-                  <ConnectivityIndicator connected={metrics.connectivity.ipv6?.reachable} />
+                  <ConnectivityIndicator connected={metrics.connectivity.ipv6?.reachable ?? undefined} />
                 )}
               </TabsTrigger>
             </TabsList>
@@ -139,18 +139,18 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="CPU Usage"
-          value={metrics.cpu_usage_percent}
+          value={metrics.cpu_usage_percent ?? undefined}
           unit="%"
           threshold={{ warning: 70, critical: 90 }}
         />
         <MetricCard
           title="Memory Usage"
-          value={metrics.memory_usage_percent}
+          value={metrics.memory_usage_percent ?? undefined}
           unit="%"
           threshold={{ warning: 80, critical: 95 }}
         />
-        <MetricCard title="Bandwidth In" value={metrics.bandwidth_in_mbps} unit="Mbps" />
-        <MetricCard title="Bandwidth Out" value={metrics.bandwidth_out_mbps} unit="Mbps" />
+        <MetricCard title="Bandwidth In" value={metrics.bandwidth_in_mbps ?? undefined} unit="Mbps" />
+        <MetricCard title="Bandwidth Out" value={metrics.bandwidth_out_mbps ?? undefined} unit="Mbps" />
       </div>
 
       {/* Interface Status */}
@@ -207,7 +207,7 @@ function StatusBadge({ status }: { status: DeviceMetrics["status"] }) {
   );
 }
 
-function ConnectivityIndicator({ connected }: { connected?: boolean }) {
+function ConnectivityIndicator({ connected }: { connected?: boolean | undefined }) {
   if (connected === undefined) return null;
 
   return (
@@ -288,9 +288,9 @@ function ConnectivityCard({ family, address, connectivity }: ConnectivityCardPro
 
 interface MetricCardProps {
   title: string;
-  value?: number;
+  value?: number | undefined;
   unit?: string;
-  threshold?: { warning: number; critical: number };
+  threshold?: { warning: number; critical: number } | undefined;
 }
 
 function MetricCard({ title, value, unit = "", threshold }: MetricCardProps) {

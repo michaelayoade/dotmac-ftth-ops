@@ -3,6 +3,8 @@
  * Provides React components and hooks for analytics and metrics tracking
  */
 
+import { useCallback, useMemo } from "react";
+
 // Export types
 export interface AnalyticsEvent {
   name: string;
@@ -18,25 +20,37 @@ export interface MetricsData {
 
 // Export hooks and components (placeholder implementations)
 export const useAnalytics = () => {
-  return {
-    track: (event: AnalyticsEvent) => {
-      // Implementation will be added later
-      console.log("Tracking event:", event);
-    },
-    identify: (userId: string, traits?: Record<string, unknown>) => {
-      // Implementation will be added later
-      console.log("Identifying user:", userId, traits);
-    },
-  };
+  const track = useCallback((event: AnalyticsEvent) => {
+    // Implementation will be added later
+    console.log("Tracking event:", event);
+  }, []);
+
+  const identify = useCallback((userId: string, traits?: Record<string, unknown>) => {
+    // Implementation will be added later
+    console.log("Identifying user:", userId, traits);
+  }, []);
+
+  return useMemo(
+    () => ({
+      track,
+      identify,
+    }),
+    [track, identify],
+  );
 };
 
 export const useMetrics = () => {
-  return {
-    record: (metric: string, data: MetricsData) => {
-      // Implementation will be added later
-      console.log("Recording metric:", metric, data);
-    },
-  };
+  const record = useCallback((metric: string, data: MetricsData) => {
+    // Implementation will be added later
+    console.log("Recording metric:", metric, data);
+  }, []);
+
+  return useMemo(
+    () => ({
+      record,
+    }),
+    [record],
+  );
 };
 
 // Default export

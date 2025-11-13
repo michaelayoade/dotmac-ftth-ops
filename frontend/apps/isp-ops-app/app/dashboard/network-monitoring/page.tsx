@@ -84,7 +84,7 @@ export default function NetworkMonitoringPage() {
     pageSize: 100,
     status: statusFilter,
     deviceType: typeFilter,
-    search: searchTerm || null,
+    search: searchTerm || undefined,
     pollInterval: 30000,
   });
 

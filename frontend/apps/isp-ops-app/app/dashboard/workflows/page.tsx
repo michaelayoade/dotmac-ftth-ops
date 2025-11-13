@@ -28,7 +28,7 @@ import {
   Zap,
   FileCode,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useConfirmDialog } from "@dotmac/ui";
@@ -63,17 +63,19 @@ function WorkflowsPageContent() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch workflows
   const { data: workflows = [], isLoading, refetch } = useQuery<Workflow[]>({
-    queryKey: ["workflows", activeFilter],
+    queryKey: ["workflows", activeFilter, apiBaseUrl],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (activeFilter === "active") params.append("is_active", "true");
       if (activeFilter === "inactive") params.append("is_active", "false");
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/workflows?${params.toString()}`,
+        `${apiBaseUrl}/api/v1/workflows?${params.toString()}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch workflows");
@@ -84,10 +86,10 @@ function WorkflowsPageContent() {
 
   // Fetch statistics
   const { data: stats } = useQuery<WorkflowStats>({
-    queryKey: ["workflow-stats"],
+    queryKey: ["workflow-stats", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/workflows/stats`,
+        `${apiBaseUrl}/api/v1/workflows/stats`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch stats");
@@ -99,7 +101,7 @@ function WorkflowsPageContent() {
   const deleteMutation = useMutation({
     mutationFn: async (workflowId: number) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/workflows/${workflowId}`,
+        `${apiBaseUrl}/api/v1/workflows/${workflowId}`,
         {
           method: "DELETE",
           credentials: "include",

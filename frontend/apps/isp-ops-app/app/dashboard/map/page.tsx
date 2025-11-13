@@ -5,7 +5,7 @@
  * Visual map interface showing technician locations, assignments, and routes
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -21,7 +21,7 @@ import {
   Package,
 } from "lucide-react";
 import { useTechnicians, useAssignments } from "@/hooks/useFieldService";
-import type { Technician, TaskAssignment } from "@/types/field-service";
+import type { Technician, TaskAssignment, TechnicianFilter } from "@/types/field-service";
 import { format, parseISO, isToday } from "date-fns";
 
 // Dynamically import map component (client-side only)
@@ -42,9 +42,9 @@ const MapComponent = dynamic(() => import("@/components/map/TechnicianMap"), {
 // ============================================================================
 
 interface TechnicianWithLocation extends Technician {
-  currentAssignment?: TaskAssignment;
-  distanceToTask?: number;
-  eta?: number;
+  currentAssignment?: TaskAssignment | undefined;
+  distanceToTask?: number | undefined;
+  eta?: number | undefined;
 }
 
 interface MapFilters {
@@ -59,7 +59,7 @@ interface MapFilters {
 
 interface SidebarProps {
   technicians: TechnicianWithLocation[];
-  selectedTechnicianId?: string;
+  selectedTechnicianId?: string | undefined;
   onSelectTechnician: (id: string) => void;
   filters: MapFilters;
   onFilterChange: (filters: MapFilters) => void;
@@ -241,10 +241,16 @@ export default function MapDashboard() {
   });
 
   // Fetch technicians
-  const { data: techniciansData } = useTechnicians({
-    status: filters.status as any,
-    isAvailable: filters.showAvailableOnly ? true : undefined,
-  });
+  const technicianFilters = useMemo(() => {
+    const next: TechnicianFilter = {
+      status: filters.status as any,
+    };
+    if (filters.showAvailableOnly) {
+      next.isAvailable = true;
+    }
+    return next;
+  }, [filters]);
+  const { data: techniciansData } = useTechnicians(technicianFilters);
 
   // Fetch today's assignments
   const today = format(new Date(), "yyyy-MM-dd");
@@ -281,11 +287,14 @@ export default function MapDashboard() {
       );
     }
 
-    return {
-      ...tech,
-      currentAssignment,
-      distanceToTask,
-    };
+    const withExtras: TechnicianWithLocation = { ...tech };
+    if (currentAssignment) {
+      withExtras.currentAssignment = currentAssignment;
+    }
+    if (distanceToTask !== undefined) {
+      withExtras.distanceToTask = distanceToTask;
+    }
+    return withExtras;
   });
 
   // Apply filters

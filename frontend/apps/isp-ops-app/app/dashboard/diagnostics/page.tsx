@@ -27,7 +27,7 @@ import {
   AlertCircle,
   Info,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
 
@@ -66,18 +66,21 @@ function DiagnosticsHistoryPageContent() {
   const [severityFilter, setSeverityFilter] = useState<string>("all");
 
   // Fetch diagnostic runs
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
+
   const { data: runsData, isLoading, refetch } = useQuery<{ total: number; items: DiagnosticRun[] }>({
-    queryKey: ["diagnostics-all", typeFilter, statusFilter],
+    queryKey: ["diagnostics-all", apiBaseUrl, typeFilter, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (typeFilter !== "all") params.append("diagnostic_type", typeFilter);
       params.append("limit", "100");
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
+        `${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
         { credentials: "include" }
       );
-      if (!response['ok']) throw new Error("Failed to fetch diagnostics");
+      if (!response.ok) throw new Error("Failed to fetch diagnostics");
       return response.json();
     },
   });
@@ -111,9 +114,9 @@ function DiagnosticsHistoryPageContent() {
   const filteredRuns = runs.filter((run) => {
     const matchesSearch =
       !searchQuery ||
-      (run.subscriber_id ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      run.subscriber_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       run.diagnostic_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (run.summary ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      run.summary?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || run.status === statusFilter;
     const matchesSeverity = severityFilter === "all" || run.severity === severityFilter;
@@ -130,11 +133,11 @@ function DiagnosticsHistoryPageContent() {
       timeout: { icon: AlertTriangle, color: "bg-amber-100 text-amber-800", label: "Timeout" },
     };
     const config = badges[status as keyof typeof badges] || badges.pending;
-    const Icon = config['icon'];
+    const Icon = config.icon;
     return (
-      <Badge className={config['color']}>
+      <Badge className={config.color}>
         <Icon className={`h-3 w-3 mr-1 ${status === "running" ? "animate-spin" : ""}`} />
-        {config['label']}
+        {config.label}
       </Badge>
     );
   };
@@ -148,11 +151,11 @@ function DiagnosticsHistoryPageContent() {
       critical: { icon: XCircle, color: "bg-red-600 text-white", label: "Critical" },
     };
     const config = badges[severity as keyof typeof badges];
-    const Icon = config['icon'];
+    const Icon = config.icon;
     return (
-      <Badge className={config['color']}>
+      <Badge className={config.color}>
         <Icon className="h-3 w-3 mr-1" />
-        {config['label']}
+        {config.label}
       </Badge>
     );
   };
@@ -216,7 +219,7 @@ function DiagnosticsHistoryPageContent() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats['total']}</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
@@ -227,9 +230,9 @@ function DiagnosticsHistoryPageContent() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats['successRate']}%</div>
+            <div className="text-2xl font-bold">{stats.successRate}%</div>
             <p className="text-xs text-muted-foreground">
-              {stats['byStatus']['completed'] || 0} completed
+              {stats.byStatus['completed'] || 0} completed
             </p>
           </CardContent>
         </Card>
@@ -240,7 +243,7 @@ function DiagnosticsHistoryPageContent() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats['avgDuration']}ms</div>
+            <div className="text-2xl font-bold">{stats.avgDuration}ms</div>
             <p className="text-xs text-muted-foreground">Per diagnostic</p>
           </CardContent>
         </Card>
@@ -252,10 +255,10 @@ function DiagnosticsHistoryPageContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {stats['bySeverity']['critical'] || 0}
+              {stats.bySeverity['critical'] || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats['bySeverity']['error'] || 0} errors
+              {stats.bySeverity['error'] || 0} errors
             </p>
           </CardContent>
         </Card>

@@ -206,13 +206,13 @@ function OverviewTab() {
               </div>
               <div>
                 <p className="text-sm text-slate-400 mb-1">Strict Mode</p>
-                <Badge variant={config.strict_mode ? "default" : "outline"}>
+                <Badge variant={config.strict_mode ? "default" : "outline"} className="text-xs">
                   {config.strict_mode ? "Enabled" : "Disabled"}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm text-slate-400 mb-1">Auto Upgrade</p>
-                <Badge variant={config.auto_upgrade ? "default" : "outline"}>
+                <Badge variant={config.auto_upgrade ? "default" : "outline"} className="text-xs">
                   {config.auto_upgrade ? "Enabled" : "Disabled"}
                 </Badge>
               </div>

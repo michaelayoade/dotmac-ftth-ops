@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { TenantSession, ISPTenant } from "../../types/tenant";
+import type { TenantSession, ISPTenant } from "../../types/tenant";
 import { getISPApiClient } from "../../api/isp-client";
 
 export interface UseTenantSessionReturn {

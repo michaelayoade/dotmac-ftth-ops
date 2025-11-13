@@ -27,11 +27,11 @@ import {
   Package,
   Link as LinkIcon,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type IntegrationStatus = "healthy" | "degraded" | "error" | "unknown";
 type IntegrationType = "payment" | "sms" | "email" | "storage" | "monitoring" | "crm" | "other";
@@ -64,15 +64,16 @@ function IntegrationsPageContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   // Fetch integrations
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["integrations"],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/integrations`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/integrations`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch integrations");
       return response.json();
     },

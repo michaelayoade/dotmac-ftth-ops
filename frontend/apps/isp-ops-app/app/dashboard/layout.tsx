@@ -66,6 +66,7 @@ import { RealtimeAlerts } from "@/components/realtime/RealtimeAlerts";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
 import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 import { signOut } from "@dotmac/better-auth";
 import { TenantSelector } from "@/components/partner/TenantSelector";
 import { RealtimeProvider } from "@/contexts/RealtimeProvider";
@@ -74,9 +75,9 @@ interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
-  badge?: string;
-  permission?: string;
-  portals?: PortalType[];
+  badge?: string | undefined;
+  permission?: string | undefined;
+  portals?: PortalType[] | undefined;
 }
 
 interface NavSection {
@@ -84,9 +85,9 @@ interface NavSection {
   label: string;
   icon: React.ElementType;
   href: string;
-  items?: NavItem[];
-  permission?: string | string[];
-  portals?: PortalType[];
+  items?: NavItem[] | undefined;
+  permission?: string | string[] | undefined;
+  portals?: PortalType[] | undefined;
 }
 
 const sections: NavSection[] = [
@@ -309,7 +310,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { branding } = useBranding();
   const portalType = getPortalType();
   const { data: session, isPending: authLoading } = useSession();
-  const userData = session?.user;
+  const userData = session?.user as ExtendedUser | undefined;
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -321,10 +322,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     () =>
       sections
         .filter((section) => portalAllows(section.portals, portalType))
-        .map((section) => ({
-          ...section,
-          items: section.items?.filter((item) => portalAllows(item.portals, portalType)),
-        })),
+        .map((section) => {
+          const filteredItems = section.items?.filter((item) =>
+            portalAllows(item.portals, portalType),
+          );
+          return filteredItems !== undefined ? { ...section, items: filteredItems } : { ...section };
+        }),
     [portalType],
   );
 

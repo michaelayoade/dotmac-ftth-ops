@@ -234,7 +234,17 @@ export function useWebSocketTechnicianLocations(
       setIsConnecting(false);
       setError(err instanceof Error ? err.message : "Failed to connect");
     }
-  }, [enabled, getWebSocketUrl, onConnect, onDisconnect, onError, autoReconnect, reconnectInterval]);
+  }, [
+    autoReconnect,
+    enableNotifications,
+    enabled,
+    getWebSocketUrl,
+    handleGeofenceEvent,
+    onConnect,
+    onDisconnect,
+    onError,
+    reconnectInterval,
+  ]);
 
   /**
    * Disconnect from WebSocket
@@ -284,7 +294,7 @@ export function useWebSocketTechnicianLocations(
     return () => {
       disconnect();
     };
-  }, [enabled]); // Only depend on enabled to avoid reconnect loops
+  }, [connect, disconnect, enabled]);
 
   return {
     technicians,

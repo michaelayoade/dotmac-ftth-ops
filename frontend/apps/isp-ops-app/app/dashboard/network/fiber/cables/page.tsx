@@ -27,7 +27,7 @@ import {
 import { useRBAC } from "@/contexts/RBACContext";
 import { useFiberCableListGraphQL } from "@/hooks/useFiberGraphQL";
 import { FiberCableStatus, FiberType, CableInstallationType } from "@/lib/graphql/generated";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { Cable, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -53,7 +53,8 @@ const INSTALLATION_TYPES: CableInstallationType[] = [
 
 export default function FiberCablesPage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasFiberAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -66,15 +67,23 @@ export default function FiberCablesPage() {
   const [offset, setOffset] = useState(0);
 
   // Fetch cables with filters
+  const cableListOptions: Parameters<typeof useFiberCableListGraphQL>[0] = {
+    limit,
+    offset,
+    pollInterval: 60000, // Refresh every minute
+  };
+  if (status) {
+    cableListOptions.status = status;
+  }
+  if (fiberType) {
+    cableListOptions.fiberType = fiberType;
+  }
+  if (installationType) {
+    cableListOptions.installationType = installationType;
+  }
+
   const { cables, totalCount, hasNextPage, loading, error, refetch, fetchMore } =
-    useFiberCableListGraphQL({
-      limit,
-      offset,
-      status,
-      fiberType,
-      installationType,
-      pollInterval: 60000, // Refresh every minute
-    });
+    useFiberCableListGraphQL(cableListOptions);
 
   const searchLower = search.trim().toLowerCase();
   const filteredCables = searchLower

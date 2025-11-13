@@ -19,12 +19,12 @@ import {
   RefreshCw,
   Activity,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type IntegrationStatus = "healthy" | "degraded" | "error" | "unknown";
 
@@ -46,14 +46,16 @@ function IntegrationDetailsPageContent() {
   const params = useParams();
   const integrationName = decodeURIComponent(params?.['integrationName'] as string);
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   // Fetch integration details
   const { data: integration, isLoading, refetch } = useQuery<Integration>({
     queryKey: ["integration", integrationName],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/integrations/${encodeURIComponent(integrationName)}`,
-        { credentials: "include" }
+        `${apiBaseUrl}/api/v1/integrations/${encodeURIComponent(integrationName)}`,
+        { credentials: "include" },
       );
       if (!response.ok) {
         if (response.status === 404) {

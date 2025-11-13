@@ -34,7 +34,7 @@ import {
 import { Textarea } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   ArrowLeft,
   RefreshCw,
@@ -191,6 +191,8 @@ function ExecutionDetailsContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const executionId = params['id'] as string;
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
@@ -203,10 +205,10 @@ function ExecutionDetailsContent() {
 
   // Fetch execution details
   const { data: execution, isLoading: executionLoading } = useQuery<DunningExecution>({
-    queryKey: ["dunning", "executions", executionId],
+    queryKey: ["dunning", "executions", executionId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/executions/${executionId}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/executions/${executionId}`,
         {
           credentials: "include",
         }
@@ -225,10 +227,10 @@ function ExecutionDetailsContent() {
 
   // Fetch campaign details
   const { data: campaign } = useQuery<DunningCampaign>({
-    queryKey: ["dunning", "campaigns", execution?.campaign_id],
+    queryKey: ["dunning", "campaigns", execution?.campaign_id, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/campaigns/${execution?.campaign_id}`,
+        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${execution?.campaign_id}`,
         {
           credentials: "include",
         }
@@ -243,10 +245,10 @@ function ExecutionDetailsContent() {
 
   // Fetch action logs
   const { data: actionLogs = [], isLoading: logsLoading } = useQuery<DunningActionLog[]>({
-    queryKey: ["dunning", "executions", executionId, "logs"],
+    queryKey: ["dunning", "executions", executionId, "logs", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/executions/${executionId}/logs`,
+        `${apiBaseUrl}/api/v1/billing/dunning/executions/${executionId}/logs`,
         {
           credentials: "include",
         }
@@ -268,7 +270,7 @@ function ExecutionDetailsContent() {
   const cancelExecutionMutation = useMutation({
     mutationFn: async (data: CancelFormValues) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/billing/dunning/executions/${executionId}/cancel`,
+        `${apiBaseUrl}/api/v1/billing/dunning/executions/${executionId}/cancel`,
         {
           method: "POST",
           credentials: "include",

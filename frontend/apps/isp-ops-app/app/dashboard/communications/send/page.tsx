@@ -94,13 +94,16 @@ export default function SendEmailPage() {
     () => sanitizeRichHtml(previewHtml),
     [previewHtml],
   );
+  const selectedTemplateData = selectedTemplate.data;
+  const bodyText = formData['body_text'] || "";
+  const bodyHtml = formData.body_html || "";
 
   // Extract variables when template or manual content changes
   useEffect(() => {
-    if (enableTemplate && selectedTemplate.data) {
-      const htmlVars = extractTemplateVariables(selectedTemplate.data.body_html || "");
-      const textVars = extractTemplateVariables(selectedTemplate.data.body_text || "");
-      const subjectVars = extractTemplateVariables(selectedTemplate.data.subject || "");
+    if (enableTemplate && selectedTemplateData) {
+      const htmlVars = extractTemplateVariables(selectedTemplateData.body_html || "");
+      const textVars = extractTemplateVariables(selectedTemplateData.body_text || "");
+      const subjectVars = extractTemplateVariables(selectedTemplateData.subject || "");
       const allVars = [...new Set([...htmlVars, ...textVars, ...subjectVars])];
       setTemplateVariables(allVars);
 
@@ -109,12 +112,12 @@ export default function SendEmailPage() {
       allVars.forEach((v) => (vars[v] = ""));
       setFormData((prev) => ({ ...prev, variables: vars }));
     } else if (!enableTemplate) {
-      const textVars = extractTemplateVariables(formData['body_text'] || "");
-      const htmlVars = extractTemplateVariables(formData.body_html || "");
+      const textVars = extractTemplateVariables(bodyText);
+      const htmlVars = extractTemplateVariables(bodyHtml);
       const allVars = [...new Set([...textVars, ...htmlVars])];
       setTemplateVariables(allVars);
     }
-  }, [enableTemplate, selectedTemplate.data, formData['body_text'], formData.body_html]);
+  }, [enableTemplate, selectedTemplateData, bodyText, bodyHtml]);
 
   const validate = (): boolean => {
     const newErrors: EmailFormErrors = {};

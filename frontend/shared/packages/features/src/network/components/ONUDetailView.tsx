@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Wifi,
@@ -16,6 +15,8 @@ import {
   RotateCw,
   Trash2,
 } from "lucide-react";
+import { useState } from "react";
+
 import { Device, DeviceDetailResponse, Port } from "../types/voltha";
 
 // ============================================================================
@@ -111,7 +112,7 @@ export function ONUDetailView({
       }
       const device = deviceDetail.device;
       const oltId =
-        device.metadata?.olt_id || device.parent_id || (device.metadata?.root_device_id as string | undefined);
+        device.metadata?.["olt_id"] || device.parent_id || (device.metadata?.["root_device_id"] as string | undefined);
       const baseUrl = `/api/v1/access/devices/${encodeURIComponent(onuId)}/${operation}`;
       const url = oltId ? `${baseUrl}?olt_id=${encodeURIComponent(oltId)}` : baseUrl;
       const response = await apiClient.post(url);
@@ -152,8 +153,8 @@ export function ONUDetailView({
 
   const device: Device = deviceDetail.device;
   const ports: Port[] = deviceDetail.ports ?? [];
-  const supportedOperations: string[] = Array.isArray(device.metadata?.supported_operations)
-    ? device.metadata?.supported_operations
+  const supportedOperations: string[] = Array.isArray(device.metadata?.["supported_operations"])
+    ? device.metadata?.["supported_operations"]
     : ["enable", "disable", "reboot", "delete"];
 
   const canPerform = (op: DeviceOperation) => supportedOperations.includes(op);
@@ -304,7 +305,7 @@ export function ONUDetailView({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Parent OLT</p>
-            <p className="font-medium">{device.parent_id || device.metadata?.olt_id || "Unknown"}</p>
+            <p className="font-medium">{device.parent_id || device.metadata?.["olt_id"] || "Unknown"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Parent Port</p>
@@ -334,7 +335,7 @@ export function ONUDetailView({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Driver</p>
-            <p className="font-medium">{device.metadata?.driver_id || "Unknown"}</p>
+            <p className="font-medium">{device.metadata?.["driver_id"] || "Unknown"}</p>
           </div>
           <div className="md:col-span-2">
             <p className="text-sm text-muted-foreground">Supported Operations</p>

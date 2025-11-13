@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useCallback } from "react";
-import { TenantLimitsUsage, TenantSession } from "../../types/tenant";
+import type { TenantLimitsUsage, TenantSession } from "../../types/tenant";
 
 export interface UseTenantLimitsReturn {
   getLimitsUsage: () => TenantLimitsUsage;
@@ -20,14 +20,15 @@ export function useTenantLimits(session: TenantSession | null): UseTenantLimitsR
     if (!session?.tenant) {
       return {
         customers: { limit: 0, used: 0, percentage: 0 },
+        services: { limit: 0, used: 0, percentage: 0 },
         users: { limit: 0, used: 0, percentage: 0 },
         storage: { limit: 0, used: 0, percentage: 0 },
         bandwidth: { limit: 0, used: 0, percentage: 0 },
-        api_calls: { limit: 0, used: 0, percentage: 0 },
+        api_requests: { limit: 0, used: 0, percentage: 0 },
       };
     }
 
-    const limits = session.tenant.subscription?.limits || {};
+    const limits = session.tenant.limits || {};
     const usage = session.tenant.usage || {};
 
     const calculatePercentage = (used: number, limit: number): number => {
@@ -36,29 +37,37 @@ export function useTenantLimits(session: TenantSession | null): UseTenantLimitsR
 
     return {
       customers: {
-        limit: limits.max_customers || 0,
+        limit: limits.customers || 0,
         used: usage.customers || 0,
-        percentage: calculatePercentage(usage.customers || 0, limits.max_customers || 0),
+        percentage: calculatePercentage(usage.customers || 0, limits.customers || 0),
+      },
+      services: {
+        limit: limits.services || 0,
+        used: usage.services || 0,
+        percentage: calculatePercentage(usage.services || 0, limits.services || 0),
       },
       users: {
-        limit: limits.max_users || 0,
+        limit: limits.users || 0,
         used: usage.users || 0,
-        percentage: calculatePercentage(usage.users || 0, limits.max_users || 0),
+        percentage: calculatePercentage(usage.users || 0, limits.users || 0),
       },
       storage: {
-        limit: limits.max_storage_gb || 0,
-        used: usage.storage_gb || 0,
-        percentage: calculatePercentage(usage.storage_gb || 0, limits.max_storage_gb || 0),
+        limit: limits.storage_gb || 0,
+        used: usage.storage_used_gb || 0,
+        percentage: calculatePercentage(usage.storage_used_gb || 0, limits.storage_gb || 0),
       },
       bandwidth: {
-        limit: limits.max_bandwidth_gb || 0,
-        used: usage.bandwidth_gb || 0,
-        percentage: calculatePercentage(usage.bandwidth_gb || 0, limits.max_bandwidth_gb || 0),
+        limit: limits.bandwidth_gb || 0,
+        used: usage.bandwidth_used_gb || 0,
+        percentage: calculatePercentage(usage.bandwidth_used_gb || 0, limits.bandwidth_gb || 0),
       },
-      api_calls: {
-        limit: limits.max_api_calls || 0,
-        used: usage.api_calls || 0,
-        percentage: calculatePercentage(usage.api_calls || 0, limits.max_api_calls || 0),
+      api_requests: {
+        limit: limits.api_requests_per_hour || 0,
+        used: usage.api_requests_this_hour || 0,
+        percentage: calculatePercentage(
+          usage.api_requests_this_hour || 0,
+          limits.api_requests_per_hour || 0,
+        ),
       },
     };
   }, [session?.tenant]);
@@ -84,12 +93,12 @@ export function useTenantLimits(session: TenantSession | null): UseTenantLimitsR
   );
 
   const isTrialExpiring = useCallback((): boolean => {
-    if (!session?.tenant?.subscription) return false;
+    const subscription = session?.tenant?.subscription;
+    if (!subscription || subscription.status !== "TRIAL" || !subscription.trial_ends_at) {
+      return false;
+    }
 
-    const { subscription } = session.tenant;
-    if (subscription.type !== "TRIAL") return false;
-
-    const trialEndDate = new Date(subscription.trial_end_date);
+    const trialEndDate = new Date(subscription.trial_ends_at);
     const now = new Date();
     const daysLeft = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -97,14 +106,15 @@ export function useTenantLimits(session: TenantSession | null): UseTenantLimitsR
   }, [session?.tenant?.subscription]);
 
   const getTrialDaysLeft = useCallback((): number => {
-    if (!session?.tenant?.subscription?.trial_end_date) return 0;
+    const trialEnd = session?.tenant?.subscription?.trial_ends_at;
+    if (!trialEnd) return 0;
 
-    const trialEndDate = new Date(session.tenant.subscription.trial_end_date);
+    const trialEndDate = new Date(trialEnd);
     const now = new Date();
     const daysLeft = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     return Math.max(0, daysLeft);
-  }, [session?.tenant?.subscription?.trial_end_date]);
+  }, [session?.tenant?.subscription?.trial_ends_at]);
 
   const isTenantActive = useCallback((): boolean => {
     return session?.tenant?.status === "ACTIVE";

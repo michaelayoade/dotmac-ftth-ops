@@ -3,7 +3,7 @@
  */
 
 import { getApiClient } from "./client";
-import type { ApiResponse } from "../types/api";
+import type { ApiResponse } from "./types/api";
 import {
   CustomerSchema,
   CreateCustomerSchema,
@@ -19,9 +19,16 @@ import {
   type UpdateCustomer,
   type DashboardData,
 } from "../validation/partner-schemas";
+import type { CommissionRecord } from "../validation/partner-schemas";
 
 // Use types from validation schemas instead of duplicating
 export type { DashboardData as PartnerDashboardData } from "../validation/partner-schemas";
+export type {
+  Customer,
+  CreateCustomer,
+  UpdateCustomer,
+  CommissionRecord as PartnerCommissionRecord,
+} from "../validation/partner-schemas";
 
 export class PartnerApiClient {
   private _client: ReturnType<typeof getApiClient> | null = null;
@@ -35,9 +42,12 @@ export class PartnerApiClient {
 
   async getDashboard(partnerId: string): Promise<ApiResponse<DashboardData>> {
     const sanitizedPartnerId = sanitizeInput(partnerId);
-    const response = await this.client.request(`/api/v1/partners/${sanitizedPartnerId}/dashboard`, {
-      method: "GET",
-    });
+    const response = await this.client.request<ApiResponse<DashboardData>>(
+      `/api/v1/partners/${sanitizedPartnerId}/dashboard`,
+      {
+        method: "GET",
+      },
+    );
 
     // Validate response data
     try {
@@ -73,7 +83,9 @@ export class PartnerApiClient {
     if (validatedParams.search) searchParams.append("search", validatedParams.search);
     if (validatedParams.status) searchParams.append("status", validatedParams.status);
 
-    const response = await this.client.request(
+    const response = await this.client.request<
+      ApiResponse<{ customers: Customer[]; total: number; pagination: any }>
+    >(
       `/api/v1/partners/${sanitizedPartnerId}/customers?${searchParams.toString()}`,
       {
         method: "GET",
@@ -94,7 +106,7 @@ export class PartnerApiClient {
     const sanitizedPartnerId = sanitizeInput(partnerId);
     const sanitizedCustomerId = sanitizeInput(customerId);
 
-    const response = await this.client.request(
+    const response = await this.client.request<ApiResponse<Customer>>(
       `/api/v1/partners/${sanitizedPartnerId}/customers/${sanitizedCustomerId}`,
       {
         method: "GET",
@@ -115,10 +127,13 @@ export class PartnerApiClient {
     // Validate input data
     const validatedData = CreateCustomerSchema.parse(customerData);
 
-    const response = await this.client.request(`/api/v1/partners/${sanitizedPartnerId}/customers`, {
-      method: "POST",
-      body: validatedData,
-    });
+    const response = await this.client.request<ApiResponse<Customer>>(
+      `/api/v1/partners/${sanitizedPartnerId}/customers`,
+      {
+        method: "POST",
+        body: JSON.stringify(validatedData),
+      },
+    );
 
     // Validate response data
     const validatedCustomer = CustomerSchema.parse(response.data);
@@ -136,11 +151,11 @@ export class PartnerApiClient {
     // Validate input data
     const validatedData = UpdateCustomerSchema.parse(customerData);
 
-    const response = await this.client.request(
+    const response = await this.client.request<ApiResponse<Customer>>(
       `/api/v1/partners/${sanitizedPartnerId}/customers/${sanitizedCustomerId}`,
       {
         method: "PUT",
-        body: validatedData,
+        body: JSON.stringify(validatedData),
       },
     );
 
@@ -170,7 +185,9 @@ export class PartnerApiClient {
     if (params?.period) searchParams.append("period", params.period);
     if (params?.status) searchParams.append("status", params.status);
 
-    return this.client.request(
+    return this.client.request<
+      ApiResponse<{ commissions: CommissionRecord[]; total: number; summary: any }>
+    >(
       `/api/v1/partners/${partnerId}/commissions?${searchParams.toString()}`,
       {
         method: "GET",
@@ -191,7 +208,7 @@ export class PartnerApiClient {
       params.metrics.forEach((metric) => searchParams.append("metrics", metric));
     }
 
-    return this.client.request(
+    return this.client.request<ApiResponse<any>>(
       `/api/v1/partners/${partnerId}/analytics?${searchParams.toString()}`,
       {
         method: "GET",
@@ -209,10 +226,13 @@ export class PartnerApiClient {
       address,
     });
 
-    return this.client.request(`/api/v1/partners/${validatedData.partnerId}/validate-territory`, {
-      method: "POST",
-      body: { address: validatedData.address },
-    });
+    return this.client.request<ApiResponse<{ valid: boolean; territory: string }>>(
+      `/api/v1/partners/${validatedData.partnerId}/validate-territory`,
+      {
+        method: "POST",
+        body: JSON.stringify({ address: validatedData.address }),
+      },
+    );
   }
 }
 

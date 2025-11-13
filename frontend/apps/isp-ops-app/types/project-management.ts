@@ -269,7 +269,7 @@ export interface ProjectTemplate extends BaseEntity {
   name: string;
   description: string;
   category: TemplateCategory;
-  thumbnail?: string;
+  thumbnail?: string | undefined;
 
   // Template structure
   taskTemplates: TaskTemplate[];
@@ -281,8 +281,8 @@ export interface ProjectTemplate extends BaseEntity {
 
   // Metadata
   tags: string[];
-  defaultDuration?: number; // in days
-  estimatedHours?: number;
+  defaultDuration?: number | undefined; // in days
+  estimatedHours?: number | undefined;
 }
 
 export enum TemplateCategory {
@@ -300,12 +300,12 @@ export interface TaskTemplate {
   description: string;
   type: TaskType;
   priority: TaskPriority;
-  estimatedHours?: number;
+  estimatedHours?: number | undefined;
   position: number;
   columnId: string;
   dependencies: string[]; // Template task IDs
-  assignToRole?: TeamRole;
-  daysFromStart?: number; // Auto-set due date based on project start
+  assignToRole?: TeamRole | undefined;
+  daysFromStart?: number | undefined; // Auto-set due date based on project start
 }
 
 // ============================================================================
@@ -326,8 +326,8 @@ export interface KanbanColumn {
   name: string;
   status: TaskStatus;
   position: number;
-  color?: string;
-  wipLimit?: number; // Work In Progress limit
+  color?: string | undefined;
+  wipLimit?: number | undefined; // Work In Progress limit
   tasks: Task[];
 }
 

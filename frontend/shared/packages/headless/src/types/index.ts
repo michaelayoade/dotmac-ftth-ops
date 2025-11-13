@@ -6,7 +6,7 @@
 // Re-export primary tenant and API types
 export * from "./tenant";
 export * from "../api/types/api";
-export * from "@dotmac/headless/auth";
+export * from "./auth";
 export * from "./portal-auth";
 export * from "./migration";
 export * from "./plugins";

@@ -5,6 +5,8 @@
  * themes, logos, custom domains, and feature toggles.
  */
 
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -44,6 +46,14 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
   const isValidColor = (color: string): boolean => {
     return /^#[0-9A-Fa-f]{6}$/.test(color);
   };
+
+  const [logoPreviewError, setLogoPreviewError] = useState(false);
+  const [portalLogoError, setPortalLogoError] = useState(false);
+
+  useEffect(() => {
+    setLogoPreviewError(false);
+    setPortalLogoError(false);
+  }, [settings.logo_url]);
 
   return (
     <div className="space-y-6">
@@ -162,16 +172,19 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
           {settings.logo_url && (
             <div className="p-4 bg-muted rounded">
               <p className="text-sm text-muted-foreground mb-2">Logo Preview:</p>
-              <img
-                src={settings.logo_url}
-                alt="Logo preview"
-                className="h-12 object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.parentElement!.querySelector(".error-msg")!.classList.remove("hidden");
-                }}
-              />
-              <p className="text-sm text-red-600 hidden error-msg">Failed to load logo image</p>
+              {!logoPreviewError ? (
+                <Image
+                  src={settings.logo_url}
+                  alt="Logo preview"
+                  width={240}
+                  height={48}
+                  className="h-12 w-auto object-contain"
+                  unoptimized
+                  onError={() => setLogoPreviewError(true)}
+                />
+              ) : (
+                <p className="text-sm text-red-600">Failed to load logo image</p>
+              )}
             </div>
           )}
 
@@ -360,8 +373,16 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
         <CardContent>
           <div className="border rounded-lg p-6" style={{ borderColor: settings.theme_primary_color }}>
             <div className="flex items-center justify-between mb-4">
-              {settings.logo_url ? (
-                <img src={settings.logo_url} alt="Logo" className="h-8" />
+              {settings.logo_url && !portalLogoError ? (
+                <Image
+                  src={settings.logo_url}
+                  alt="Logo"
+                  width={128}
+                  height={32}
+                  className="h-8 w-auto object-contain"
+                  unoptimized
+                  onError={() => setPortalLogoError(true)}
+                />
               ) : (
                 <div className="h-8 w-32 bg-muted rounded" />
               )}

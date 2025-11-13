@@ -19,7 +19,7 @@ import {
 import { useRBAC } from "@/contexts/RBACContext";
 import { useServiceAreaListGraphQL } from "@/hooks/useFiberGraphQL";
 import { ServiceAreaType } from "@/lib/graphql/generated";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   MapPin,
   Search,
@@ -41,7 +41,8 @@ const SERVICE_AREA_TYPES: ServiceAreaType[] = [
 
 export default function ServiceAreasPage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const { features } = useAppConfig();
+  const hasFiberAccess = features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
   const [search, setSearch] = useState("");
@@ -50,14 +51,21 @@ export default function ServiceAreasPage() {
   const [offset, setOffset] = useState(0);
 
   // Fetch service areas with filters
+  const serviceAreaOptions: Parameters<typeof useServiceAreaListGraphQL>[0] = {
+    limit,
+    offset,
+    pollInterval: 60000,
+  };
+  if (areaType) {
+    serviceAreaOptions.areaType = areaType;
+  }
+  const trimmedSearch = search.trim();
+  if (trimmedSearch) {
+    serviceAreaOptions.search = trimmedSearch;
+  }
+
   const { serviceAreas, totalCount, hasNextPage, loading, error, refetch } =
-    useServiceAreaListGraphQL({
-      limit,
-      offset,
-      areaType,
-      search,
-      pollInterval: 60000,
-    });
+    useServiceAreaListGraphQL(serviceAreaOptions);
 
   if (!hasFiberAccess) {
     return (

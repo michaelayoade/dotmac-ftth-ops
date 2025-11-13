@@ -268,18 +268,26 @@ export default function CreditNotesPage() {
     () => [
       {
         label: "Draft",
+        description: "Show credit notes still in draft state",
+        defaultActive: false,
         filter: (cn: CreditNote) => cn.status === "draft",
       },
       {
         label: "Issued",
+        description: "Show credit notes that have been issued",
+        defaultActive: false,
         filter: (cn: CreditNote) => cn.status === "issued",
       },
       {
         label: "Applied",
+        description: "Show credit applied to invoices",
+        defaultActive: false,
         filter: (cn: CreditNote) => cn.status === "applied",
       },
       {
         label: "Available Credit",
+        description: "Show credit notes with remaining balance",
+        defaultActive: false,
         filter: (cn: CreditNote) => cn.available_credit > 0,
       },
     ],

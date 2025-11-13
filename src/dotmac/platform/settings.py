@@ -12,7 +12,15 @@ import os
 from enum import Enum
 from typing import Any, cast
 
-from pydantic import BaseModel, ConfigDict, Field, PostgresDsn, RedisDsn, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    PostgresDsn,
+    RedisDsn,
+    field_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -556,6 +564,30 @@ class Settings(BaseSettings):
     TENANT_ID: str | None = Field(
         None,
         description="Fixed tenant ID for single-tenant deployments (None for multi-tenant)",
+    )
+    tenant_slug: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TENANT_SLUG"),
+        description="Tenant slug used for routing/branding overrides",
+    )
+    tenant_display_name: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TENANT_DISPLAY_NAME", "NEXT_PUBLIC_TENANT_NAME"),
+        description="Human-readable tenant/brand name for runtime config",
+    )
+    tenant_graphql_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TENANT_GRAPHQL_URL", "NEXT_PUBLIC_GRAPHQL_URL"),
+        description="Absolute GraphQL endpoint exposed to frontends",
+    )
+    frontend_api_base_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "FRONTEND_API_BASE_URL",
+            "NEXT_PUBLIC_API_BASE_URL",
+            "API_BASE_URL",
+        ),
+        description="Absolute REST API base URL exposed to frontends",
     )
     ENABLE_PLATFORM_ROUTES: bool = Field(
         True,

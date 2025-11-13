@@ -7,8 +7,8 @@
 
 "use client";
 
-import { useState } from "react";
 import { X, Shield, Plus } from "lucide-react";
+import { useState } from "react";
 
 export interface Permission {
   id: string;

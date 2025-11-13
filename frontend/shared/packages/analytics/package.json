@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "type-check": "echo 'Type checking disabled for experimental analytics package'",
+    "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch"
   },

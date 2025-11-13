@@ -6,8 +6,9 @@
 
 "use client";
 
-import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
+
 import { usePortalTheme } from "../lib/design-system/portal-themes";
 import { cn } from "../lib/utils";
 

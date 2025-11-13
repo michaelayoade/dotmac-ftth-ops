@@ -4,10 +4,11 @@
  */
 
 import { useEffect, useRef } from "react";
+import type { MutableRefObject } from "react";
 import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
 
 export function usePerformanceObservers(
-  metrics: React.MutableRefObject<PerformanceMetrics>,
+  metrics: MutableRefObject<PerformanceMetrics>,
   config: PerformanceObserverConfig,
 ) {
   const observersRef = useRef<PerformanceObserver[]>([]);
@@ -108,9 +109,10 @@ function createNavigationObserver(metrics: PerformanceMetrics): PerformanceObser
   const observer = new PerformanceObserver((list) => {
     const navEntries = list.getEntries() as PerformanceNavigationTiming[];
     for (const entry of navEntries) {
-      metrics.navigationStart = entry.navigationStart;
-      metrics.domContentLoaded = entry.domContentLoadedEventEnd - entry.navigationStart;
-      metrics.loadComplete = entry.loadEventEnd - entry.navigationStart;
+      const start = entry.startTime;
+      metrics.navigationStart = start;
+      metrics.domContentLoaded = entry.domContentLoadedEventEnd - start;
+      metrics.loadComplete = entry.loadEventEnd - start;
     }
   });
 

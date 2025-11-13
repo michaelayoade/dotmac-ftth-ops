@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export interface SwitchProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  checked?: boolean;
+  checked?: boolean | undefined;
   onCheckedChange?: (checked: boolean) => void;
 }
 

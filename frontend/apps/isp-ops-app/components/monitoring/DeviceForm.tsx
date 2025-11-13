@@ -182,7 +182,7 @@ export function DeviceForm({
               value={watch("management_ip") || ""}
               onChange={(value) => setValue("management_ip", value)}
               required={true}
-              error={errors.management_ip?.message}
+              {...(errors.management_ip?.message ? { error: errors.management_ip.message } : {})}
               helpText="Primary IP for device management and monitoring"
             />
           </div>

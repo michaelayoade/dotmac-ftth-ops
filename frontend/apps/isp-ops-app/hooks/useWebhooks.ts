@@ -342,7 +342,7 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       updateMutation.mutateAsync({ id, data }),
     deleteWebhook: deleteMutation.mutateAsync,
     testWebhook: async (id: string, eventType: string, payload?: Record<string, unknown>) =>
-      testMutation.mutateAsync({ id, eventType, payload }),
+      testMutation.mutateAsync(payload ? { id, eventType, payload } : { id, eventType }),
     getAvailableEvents: async () => eventsQuery.data ?? ({} as AvailableEvents),
   };
 }

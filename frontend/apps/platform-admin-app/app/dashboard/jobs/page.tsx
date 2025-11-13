@@ -29,13 +29,13 @@ import {
   Download,
   Settings,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useConfirmDialog } from "@dotmac/ui";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@dotmac/ui";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 type JobStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 type JobType = "bulk_import" | "bulk_export" | "firmware_upgrade" | "batch_provisioning" | "data_migration" | "report_generation" | "custom";
@@ -77,6 +77,8 @@ function JobsPageContent() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
   const confirmDialog = useConfirmDialog();
 
   // Fetch jobs
@@ -87,10 +89,9 @@ function JobsPageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (typeFilter !== "all") params.append("job_type", typeFilter);
 
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/jobs?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/jobs?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch jobs");
       return response.json();
     },
@@ -110,10 +111,9 @@ function JobsPageContent() {
   const { data: statsData } = useQuery({
     queryKey: ["job-statistics"],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/jobs/statistics`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/jobs/statistics`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch statistics");
       return response.json();
     },
@@ -131,13 +131,10 @@ function JobsPageContent() {
   // Cancel job mutation
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/jobs/${jobId}/cancel`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/jobs/${jobId}/cancel`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to cancel job");
       return response.json();
     },

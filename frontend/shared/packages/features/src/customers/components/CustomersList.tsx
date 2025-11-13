@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useToast } from "@dotmac/ui";
 import {
   Mail,
   Phone,
@@ -26,7 +26,7 @@ import {
   Key,
   ExternalLink,
 } from "lucide-react";
-import { useToast } from "@dotmac/ui";
+import { useState } from "react";
 
 export interface CustomersListProps<TCustomer = any> {
   customers: TCustomer[];
@@ -502,7 +502,7 @@ function CustomerRow<TCustomer = any>({
                 </button>
 
                 {/* Divider */}
-                <div className="border-t border-slate-700 my-1"></div>
+                <div className="border-t border-slate-700 my-1" />
 
                 {/* Standard Actions */}
                 <div className="px-3 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -534,7 +534,7 @@ function CustomerRow<TCustomer = any>({
                 )}
                 {onDelete && (
                   <>
-                    <div className="border-t border-slate-700 my-1"></div>
+                    <div className="border-t border-slate-700 my-1" />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -562,39 +562,39 @@ function LoadingSkeleton() {
     <tr className="animate-pulse">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="h-10 w-10 bg-slate-700 rounded-full"></div>
+          <div className="h-10 w-10 bg-slate-700 rounded-full" />
           <div className="ml-4 space-y-2">
-            <div className="h-4 bg-slate-700 rounded w-32"></div>
-            <div className="h-3 bg-slate-700 rounded w-24"></div>
+            <div className="h-4 bg-slate-700 rounded w-32" />
+            <div className="h-3 bg-slate-700 rounded w-24" />
           </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="space-y-2">
-          <div className="h-4 bg-slate-700 rounded w-40"></div>
-          <div className="h-3 bg-slate-700 rounded w-32"></div>
+          <div className="h-4 bg-slate-700 rounded w-40" />
+          <div className="h-3 bg-slate-700 rounded w-32" />
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="h-4 bg-slate-700 rounded w-24"></div>
+        <div className="h-4 bg-slate-700 rounded w-24" />
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="space-y-2">
-          <div className="h-6 bg-slate-700 rounded-full w-16"></div>
-          <div className="h-6 bg-slate-700 rounded-full w-12"></div>
+          <div className="h-6 bg-slate-700 rounded-full w-16" />
+          <div className="h-6 bg-slate-700 rounded-full w-12" />
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="space-y-2">
-          <div className="h-4 bg-slate-700 rounded w-20"></div>
-          <div className="h-3 bg-slate-700 rounded w-16"></div>
+          <div className="h-4 bg-slate-700 rounded w-20" />
+          <div className="h-3 bg-slate-700 rounded w-16" />
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="h-4 bg-slate-700 rounded w-20"></div>
+        <div className="h-4 bg-slate-700 rounded w-20" />
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="h-4 bg-slate-700 rounded w-4"></div>
+        <div className="h-4 bg-slate-700 rounded w-4" />
       </td>
     </tr>
   );

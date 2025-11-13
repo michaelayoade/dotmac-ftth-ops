@@ -1,16 +1,17 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createPortalAuthFetch,
   CUSTOMER_PORTAL_TOKEN_KEY,
   PortalAuthError,
 } from "../../../shared/utils/operatorAuth";
-import { platformConfig } from "@/lib/config";
+import type { PlatformConfig } from "@/lib/config";
 import { logger } from "@/lib/logger";
-
-const API_BASE = platformConfig.api.baseUrl;
+import { useAppConfig } from "@/providers/AppConfigContext";
 const customerPortalFetch = createPortalAuthFetch(CUSTOMER_PORTAL_TOKEN_KEY);
+type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
 
 const toError = (error: unknown) =>
   error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
@@ -122,9 +123,10 @@ export const customerPortalKeys = {
 // API Functions
 // ============================================================================
 
-const customerPortalApi = {
+function createCustomerPortalApi(buildUrl: BuildApiUrl) {
+  return {
   fetchProfile: async (): Promise<CustomerProfile> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`);
+    const response = await customerPortalFetch(buildUrl("/customer/profile"));
     if (!response.ok) {
       throw new Error("Failed to fetch profile");
     }
@@ -132,7 +134,7 @@ const customerPortalApi = {
   },
 
   updateProfile: async (updates: Partial<CustomerProfile>): Promise<CustomerProfile> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`, {
+    const response = await customerPortalFetch(buildUrl("/customer/profile"), {
       method: "PUT",
       body: JSON.stringify(updates),
     });
@@ -143,7 +145,7 @@ const customerPortalApi = {
   },
 
   fetchService: async (): Promise<CustomerService> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service`);
+    const response = await customerPortalFetch(buildUrl("/customer/service"));
     if (!response.ok) {
       throw new Error("Failed to fetch service");
     }
@@ -151,10 +153,13 @@ const customerPortalApi = {
   },
 
   upgradePlan: async (planId: string): Promise<CustomerService> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service/upgrade`, {
-      method: "POST",
-      body: JSON.stringify({ plan_id: planId }),
-    });
+    const response = await customerPortalFetch(
+      buildUrl("/customer/service/upgrade"),
+      {
+        method: "POST",
+        body: JSON.stringify({ plan_id: planId }),
+      },
+    );
     if (!response.ok) {
       throw new Error("Failed to upgrade plan");
     }
@@ -162,7 +167,7 @@ const customerPortalApi = {
   },
 
   fetchInvoices: async (): Promise<CustomerInvoice[]> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/invoices`);
+    const response = await customerPortalFetch(buildUrl("/customer/invoices"));
     if (!response.ok) {
       throw new Error("Failed to fetch invoices");
     }
@@ -170,7 +175,7 @@ const customerPortalApi = {
   },
 
   fetchPayments: async (): Promise<CustomerPayment[]> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payments`);
+    const response = await customerPortalFetch(buildUrl("/customer/payments"));
     if (!response.ok) {
       throw new Error("Failed to fetch payments");
     }
@@ -182,7 +187,7 @@ const customerPortalApi = {
     amount: number,
     paymentMethodId: string,
   ): Promise<CustomerPayment> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payments`, {
+    const response = await customerPortalFetch(buildUrl("/customer/payments"), {
       method: "POST",
       body: JSON.stringify({
         invoice_id: invoiceId,
@@ -197,7 +202,7 @@ const customerPortalApi = {
   },
 
   fetchUsage: async (): Promise<CustomerUsage> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/usage`);
+    const response = await customerPortalFetch(buildUrl("/customer/usage"));
     if (!response.ok) {
       throw new Error("Failed to fetch usage");
     }
@@ -205,7 +210,7 @@ const customerPortalApi = {
   },
 
   fetchTickets: async (): Promise<CustomerTicket[]> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/tickets`);
+    const response = await customerPortalFetch(buildUrl("/customer/tickets"));
     if (!response.ok) {
       throw new Error("Failed to fetch tickets");
     }
@@ -218,7 +223,7 @@ const customerPortalApi = {
     category: string;
     priority: string;
   }): Promise<CustomerTicket> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/tickets`, {
+    const response = await customerPortalFetch(buildUrl("/customer/tickets"), {
       method: "POST",
       body: JSON.stringify(ticketData),
     });
@@ -229,7 +234,7 @@ const customerPortalApi = {
   },
 
   fetchSettings: async (): Promise<any> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/settings`);
+    const response = await customerPortalFetch(buildUrl("/customer/settings"));
     if (!response.ok) {
       throw new Error("Failed to fetch settings");
     }
@@ -237,7 +242,7 @@ const customerPortalApi = {
   },
 
   updateSettings: async (updates: any): Promise<any> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/settings`, {
+    const response = await customerPortalFetch(buildUrl("/customer/settings"), {
       method: "PUT",
       body: JSON.stringify(updates),
     });
@@ -248,19 +253,33 @@ const customerPortalApi = {
   },
 
   changePassword: async (currentPassword: string, newPassword: string): Promise<any> => {
-    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/change-password`, {
-      method: "POST",
-      body: JSON.stringify({
-        current_password: currentPassword,
-        new_password: newPassword,
-      }),
-    });
+    const response = await customerPortalFetch(
+      buildUrl("/customer/change-password"),
+      {
+        method: "POST",
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      },
+    );
     if (!response.ok) {
       throw new Error("Failed to change password");
     }
     return response.json();
   },
-};
+  };
+}
+
+function useCustomerPortalApiContext() {
+  const { api } = useAppConfig();
+  const portalApi = useMemo(() => createCustomerPortalApi(api.buildUrl), [api.baseUrl, api.prefix]);
+  return {
+    portalApi,
+    apiBaseUrl: api.baseUrl,
+    apiPrefix: api.prefix,
+  };
+}
 
 // ============================================================================
 // useCustomerProfile Hook
@@ -268,16 +287,17 @@ const customerPortalApi = {
 
 export function useCustomerProfile() {
   const queryClient = useQueryClient();
+  const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
 
   const query = useQuery({
-    queryKey: customerPortalKeys.profile(),
-    queryFn: customerPortalApi.fetchProfile,
+    queryKey: [...customerPortalKeys.profile(), apiBaseUrl, apiPrefix],
+    queryFn: portalApi.fetchProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes - profile data doesn't change often
     retry: 1,
   });
 
   const updateMutation = useMutation({
-    mutationFn: customerPortalApi.updateProfile,
+    mutationFn: portalApi.updateProfile,
     onMutate: async (updates) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: customerPortalKeys.profile() });
@@ -331,16 +351,17 @@ export function useCustomerProfile() {
 
 export function useCustomerService() {
   const queryClient = useQueryClient();
+  const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
 
   const query = useQuery({
-    queryKey: customerPortalKeys.service(),
-    queryFn: customerPortalApi.fetchService,
+    queryKey: [...customerPortalKeys.service(), apiBaseUrl, apiPrefix],
+    queryFn: portalApi.fetchService,
     staleTime: 3 * 60 * 1000, // 3 minutes - service details may change with plan upgrades
     retry: 1,
   });
 
   const upgradeMutation = useMutation({
-    mutationFn: customerPortalApi.upgradePlan,
+    mutationFn: portalApi.upgradePlan,
     onMutate: async (planId) => {
       await queryClient.cancelQueries({ queryKey: customerPortalKeys.service() });
       const previousService = queryClient.getQueryData<CustomerService>(
@@ -379,9 +400,10 @@ export function useCustomerService() {
 // ============================================================================
 
 export function useCustomerInvoices() {
+  const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
   const query = useQuery({
-    queryKey: customerPortalKeys.invoices(),
-    queryFn: customerPortalApi.fetchInvoices,
+    queryKey: [...customerPortalKeys.invoices(), apiBaseUrl, apiPrefix],
+    queryFn: portalApi.fetchInvoices,
     staleTime: 2 * 60 * 1000, // 2 minutes - invoices may be updated with payments
     retry: 1,
   });
@@ -400,10 +422,11 @@ export function useCustomerInvoices() {
 
 export function useCustomerPayments() {
   const queryClient = useQueryClient();
+  const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
 
   const query = useQuery({
-    queryKey: customerPortalKeys.payments(),
-    queryFn: customerPortalApi.fetchPayments,
+    queryKey: [...customerPortalKeys.payments(), apiBaseUrl, apiPrefix],
+    queryFn: portalApi.fetchPayments,
     staleTime: 1 * 60 * 1000, // 1 minute - payments may change frequently
     retry: 1,
   });
@@ -417,7 +440,7 @@ export function useCustomerPayments() {
       invoiceId: string;
       amount: number;
       paymentMethodId: string;
-    }) => customerPortalApi.makePayment(invoiceId, amount, paymentMethodId),
+    }) => portalApi.makePayment(invoiceId, amount, paymentMethodId),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: customerPortalKeys.payments() });
       logger.info("Making payment");
@@ -450,9 +473,10 @@ export function useCustomerPayments() {
 // ============================================================================
 
 export function useCustomerUsage() {
+  const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
   const query = useQuery({
-    queryKey: customerPortalKeys.usage(),
-    queryFn: customerPortalApi.fetchUsage,
+    queryKey: [...customerPortalKeys.usage(), apiBaseUrl, apiPrefix],
+    queryFn: portalApi.fetchUsage,
     staleTime: 30 * 1000, // 30 seconds - usage data changes frequently
     retry: 1,
   });
@@ -471,16 +495,17 @@ export function useCustomerUsage() {
 
 export function useCustomerTickets() {
   const queryClient = useQueryClient();
+  const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
 
   const query = useQuery({
-    queryKey: customerPortalKeys.tickets(),
-    queryFn: customerPortalApi.fetchTickets,
+    queryKey: [...customerPortalKeys.tickets(), apiBaseUrl, apiPrefix],
+    queryFn: portalApi.fetchTickets,
     staleTime: 1 * 60 * 1000, // 1 minute - tickets may be updated frequently
     retry: 1,
   });
 
   const createTicketMutation = useMutation({
-    mutationFn: customerPortalApi.createTicket,
+    mutationFn: portalApi.createTicket,
     onMutate: async (ticketData) => {
       await queryClient.cancelQueries({ queryKey: customerPortalKeys.tickets() });
       logger.info("Creating ticket", { ticketData });
@@ -512,16 +537,17 @@ export function useCustomerTickets() {
 
 export function useCustomerSettings() {
   const queryClient = useQueryClient();
+  const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
 
   const query = useQuery({
-    queryKey: customerPortalKeys.settings(),
-    queryFn: customerPortalApi.fetchSettings,
+    queryKey: [...customerPortalKeys.settings(), apiBaseUrl, apiPrefix],
+    queryFn: portalApi.fetchSettings,
     staleTime: 5 * 60 * 1000, // 5 minutes - settings don't change often
     retry: 1,
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: customerPortalApi.updateSettings,
+    mutationFn: portalApi.updateSettings,
     onMutate: async (updates) => {
       await queryClient.cancelQueries({ queryKey: customerPortalKeys.settings() });
       const previousSettings = queryClient.getQueryData(customerPortalKeys.settings());
@@ -554,7 +580,7 @@ export function useCustomerSettings() {
 
   const changePasswordMutation = useMutation({
     mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
-      customerPortalApi.changePassword(currentPassword, newPassword),
+      portalApi.changePassword(currentPassword, newPassword),
     onMutate: () => {
       logger.info("Changing password");
     },

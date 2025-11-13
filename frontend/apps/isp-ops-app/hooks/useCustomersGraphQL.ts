@@ -34,14 +34,14 @@ import { CustomerStatusEnum } from "@dotmac/graphql/generated";
 // ============================================================================
 
 export interface UseCustomerListOptions {
-  limit?: number;
-  offset?: number;
-  status?: CustomerStatusEnum;
-  search?: string;
-  includeActivities?: boolean;
-  includeNotes?: boolean;
-  enabled?: boolean;
-  pollInterval?: number;
+  limit?: number | undefined;
+  offset?: number | undefined;
+  status?: CustomerStatusEnum | undefined;
+  search?: string | undefined;
+  includeActivities?: boolean | undefined;
+  includeNotes?: boolean | undefined;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
@@ -93,7 +93,7 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
 
 export interface UseCustomerDetailOptions {
   customerId: string;
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }
 
 export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
@@ -123,8 +123,8 @@ export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
 // ============================================================================
 
 export interface UseCustomerMetricsOptions {
-  enabled?: boolean;
-  pollInterval?: number;
+  enabled?: boolean | undefined;
+  pollInterval?: number | undefined;
 }
 
 export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {}) {

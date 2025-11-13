@@ -46,6 +46,10 @@ export default function AssignAccountModal({ partnerId, onClose }: AssignAccount
   const [formData, setFormData] = useState<AssignAccountInput>({
     customer_id: "",
     engagement_type: "direct",
+    custom_commission_rate: undefined,
+    start_date: undefined,
+    end_date: undefined,
+    notes: undefined,
   });
 
   const assignMutation = useMutation({

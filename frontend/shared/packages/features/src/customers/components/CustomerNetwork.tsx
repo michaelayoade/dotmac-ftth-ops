@@ -5,7 +5,10 @@
  * Shared between ISP Ops and Platform Admin applications.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useToast } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import {
   Wifi,
   WifiOff,
@@ -22,10 +25,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
-import { useToast } from "@dotmac/ui";
-import { Button } from "@dotmac/ui";
-import { Badge } from "@dotmac/ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { useState, useEffect, useCallback } from "react";
 
 export interface NetworkInfo {
   connection_status: "online" | "offline" | "degraded";

@@ -29,6 +29,7 @@ import {
   useClockOut,
 } from "@/hooks/useFieldService";
 import type { TaskAssignment, TimeEntry } from "@/types/field-service";
+import { TimeEntryType } from "@/types/field-service";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 
 // ============================================================================
@@ -36,9 +37,9 @@ import { format, isToday, isTomorrow, parseISO } from "date-fns";
 // ============================================================================
 
 interface ActiveTimeEntryProps {
-  entry?: TimeEntry;
-  onClockIn: () => void;
-  onClockOut: () => void;
+  entry?: TimeEntry | undefined;
+  onClockIn: (() => void) | undefined;
+  onClockOut: (() => void) | undefined;
 }
 
 function ActiveTimeEntry({ entry, onClockIn, onClockOut }: ActiveTimeEntryProps) {
@@ -144,7 +145,9 @@ function TodaysSchedule({ assignments, onStartTask, onCompleteTask }: TodaysSche
       upcoming: { className: "bg-gray-100 text-gray-600", label: "Upcoming" },
     };
 
-    const { className, label } = config[status];
+    const statusConfig = config[status];
+    if (!statusConfig) return null;
+    const { className, label } = statusConfig;
     return <Badge className={className}>{label}</Badge>;
   };
 
@@ -159,7 +162,7 @@ function TodaysSchedule({ assignments, onStartTask, onCompleteTask }: TodaysSche
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Today's Schedule</CardTitle>
+        <CardTitle>Today&apos;s Schedule</CardTitle>
       </CardHeader>
       <CardContent>
         {assignments.length === 0 ? (
@@ -367,7 +370,7 @@ export default function TechnicianDashboard() {
     try {
       await clockInMutation.mutateAsync({
         technicianId,
-        entryType: "regular",
+        entryType: TimeEntryType.REGULAR,
       });
     } catch (error) {
       console.error("Clock in failed:", error);
@@ -401,7 +404,7 @@ export default function TechnicianDashboard() {
     <div className="container mx-auto py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">My Dashboard</h1>
-        <p className="text-gray-600">Welcome back! Here's your schedule for today.</p>
+        <p className="text-gray-600">Welcome back! Here&apos;s your schedule for today.</p>
       </div>
 
       {/* Quick Stats */}

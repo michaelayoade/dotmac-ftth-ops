@@ -121,7 +121,7 @@ export default function OrganizationSettingsPage() {
     try {
       setIsSaving(true);
 
-      await tenantService.updateTenant(currentTenant.id, {
+      const updatePayload = {
         name: formData['name'],
         slug: formData.slug,
         description: formData['description'],
@@ -133,7 +133,13 @@ export default function OrganizationSettingsPage() {
         company_size: formData.company_size,
         tax_id: formData.tax_id,
         billing_email: formData.billing_email,
-      });
+      };
+
+      const sanitizedPayload = Object.fromEntries(
+        Object.entries(updatePayload).filter(([, value]) => value !== undefined),
+      ) as Partial<Tenant>;
+
+      await tenantService.updateTenant(currentTenant.id, sanitizedPayload);
 
       await loadTenantData();
       await refreshTenant();

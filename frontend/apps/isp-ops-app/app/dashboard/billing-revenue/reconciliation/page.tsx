@@ -53,7 +53,7 @@ import {
 import { Input } from '@dotmac/ui';
 import { Label } from '@dotmac/ui';
 import { Textarea } from '@dotmac/ui';
-import { platformConfig } from '@/lib/config';
+import { useAppConfig } from '@/providers/AppConfigContext';
 import { useToast } from '@dotmac/ui';
 import { useConfirmDialog } from '@dotmac/ui';
 
@@ -121,9 +121,9 @@ interface ReconciliationListResponse {
 }
 
 // API Functions
-const API_BASE = `${platformConfig.api.baseUrl}/api/v1/billing/reconciliations`;
+const buildApiBase = (apiBaseUrl: string) => `${apiBaseUrl}/api/v1/billing/reconciliations`;
 
-const fetchReconciliations = async (params: {
+const fetchReconciliations = async (apiBaseUrl: string, params: {
   page?: number;
   page_size?: number;
   bank_account_id?: number;
@@ -141,23 +141,26 @@ const fetchReconciliations = async (params: {
   if (params.end_date) queryParams.append('end_date', params.end_date);
   if (params.search) queryParams.append('search', params.search);
 
-  const response = await fetch(`${API_BASE}?${queryParams.toString()}`, {
+  const response = await fetch(`${buildApiBase(apiBaseUrl)}?${queryParams.toString()}`, {
     credentials: 'include',
   });
   if (!response.ok) throw new Error('Failed to fetch reconciliations');
   return response.json();
 };
 
-const fetchReconciliationSummary = async (): Promise<ReconciliationSummary> => {
-  const response = await fetch(`${API_BASE}/summary`, {
+const fetchReconciliationSummary = async (apiBaseUrl: string): Promise<ReconciliationSummary> => {
+  const response = await fetch(`${buildApiBase(apiBaseUrl)}/summary`, {
     credentials: 'include',
   });
   if (!response.ok) throw new Error('Failed to fetch reconciliation summary');
   return response.json();
 };
 
-const createReconciliation = async (data: ReconciliationStart): Promise<ReconciliationSession> => {
-  const response = await fetch(API_BASE, {
+const createReconciliation = async (
+  apiBaseUrl: string,
+  data: ReconciliationStart,
+): Promise<ReconciliationSession> => {
+  const response = await fetch(buildApiBase(apiBaseUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -167,8 +170,11 @@ const createReconciliation = async (data: ReconciliationStart): Promise<Reconcil
   return response.json();
 };
 
-const completeReconciliation = async (id: number): Promise<ReconciliationSession> => {
-  const response = await fetch(`${API_BASE}/${id}/complete`, {
+const completeReconciliation = async (
+  apiBaseUrl: string,
+  id: number,
+): Promise<ReconciliationSession> => {
+  const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}/complete`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -176,8 +182,11 @@ const completeReconciliation = async (id: number): Promise<ReconciliationSession
   return response.json();
 };
 
-const approveReconciliation = async (id: number): Promise<ReconciliationSession> => {
-  const response = await fetch(`${API_BASE}/${id}/approve`, {
+const approveReconciliation = async (
+  apiBaseUrl: string,
+  id: number,
+): Promise<ReconciliationSession> => {
+  const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}/approve`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -216,6 +225,8 @@ export default function ReconciliationPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [filters, setFilters] = useState({
@@ -238,49 +249,28 @@ export default function ReconciliationPage() {
 
   // Queries
   const { data: summary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['reconciliation-summary'],
-    queryFn: fetchReconciliationSummary,
+    queryKey: ['reconciliation-summary', apiBaseUrl],
+    queryFn: () => fetchReconciliationSummary(apiBaseUrl),
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
   const { data: reconciliations, isLoading: listLoading, refetch } = useQuery({
-    queryKey: ['reconciliations', page, pageSize, filters],
-    queryFn: () => {
-      const params: {
-        page: number;
-        page_size: number;
-        bank_account_id?: number;
-        status?: string;
-        start_date?: string;
-        end_date?: string;
-        search?: string;
-      } = {
-        page,
-        page_size: pageSize,
-      };
-      if (filters.bank_account_id !== undefined) {
-        params.bank_account_id = filters.bank_account_id;
-      }
-      if (filters.status !== 'all') {
-        params.status = filters.status;
-      }
-      if (filters.start_date) {
-        params.start_date = filters.start_date;
-      }
-      if (filters.end_date) {
-        params.end_date = filters.end_date;
-      }
-      if (filters.search) {
-        params.search = filters.search;
-      }
-      return fetchReconciliations(params);
-    },
+    queryKey: ['reconciliations', apiBaseUrl, page, pageSize, filters],
+    queryFn: () => fetchReconciliations(apiBaseUrl, {
+      page,
+      page_size: pageSize,
+      ...(filters.bank_account_id !== undefined && { bank_account_id: filters.bank_account_id }),
+      ...(filters.status !== 'all' && { status: filters.status }),
+      ...(filters.start_date && { start_date: filters.start_date }),
+      ...(filters.end_date && { end_date: filters.end_date }),
+      ...(filters.search && { search: filters.search }),
+    }),
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: createReconciliation,
+    mutationFn: (data: ReconciliationStart) => createReconciliation(apiBaseUrl, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
@@ -294,7 +284,7 @@ export default function ReconciliationPage() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: completeReconciliation,
+    mutationFn: (id: number) => completeReconciliation(apiBaseUrl, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
@@ -306,7 +296,7 @@ export default function ReconciliationPage() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: approveReconciliation,
+    mutationFn: (id: number) => approveReconciliation(apiBaseUrl, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });

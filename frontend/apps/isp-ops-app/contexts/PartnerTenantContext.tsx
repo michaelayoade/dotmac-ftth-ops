@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 import { logger } from "@/lib/logger";
 
 interface ManagedTenant {
@@ -25,7 +26,7 @@ const PartnerTenantContext = createContext<PartnerTenantContextType | undefined>
 
 export function PartnerTenantProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user as ExtendedUser | undefined;
   const [activeTenantId, setActiveTenantId] = useState<string | null>(null);
   const [managedTenants, setManagedTenants] = useState<ManagedTenant[]>([]);
   const [loading, setLoading] = useState(false);

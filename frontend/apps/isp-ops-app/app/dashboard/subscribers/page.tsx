@@ -51,10 +51,11 @@ function SubscribersDashboardContent() {
   const { toast } = useToast();
 
   // Single GraphQL query replaces multiple REST calls
+  const trimmedSearch = search.trim();
   const { subscribers, sessions, metrics, loading, error, refetch } = useSubscriberDashboardGraphQL(
     {
       limit: 50,
-      search: search.trim() || null,
+      ...(trimmedSearch ? { search: trimmedSearch } : {}),
       enabled: radiusEnabled,
     },
   );

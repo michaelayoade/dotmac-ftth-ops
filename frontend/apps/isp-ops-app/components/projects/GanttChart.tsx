@@ -204,16 +204,19 @@ export function GanttChart({ projectId, project }: GanttChartProps) {
 
     return tasksData.tasks
       .filter((task) => task.startDate && task.dueDate)
-      .map((task) => ({
-        id: task.id,
-        name: task.title,
-        start: new Date(task.startDate!),
-        end: new Date(task.dueDate!),
-        progress: task.progress,
-        priority: task.priority,
-        assignee: task.assignee?.name,
-        dependencies: task.dependencies.map((d) => d.dependsOnTaskId),
-      }));
+      .map((task) => {
+        const assigneeName = task.assignee?.name;
+        return {
+          id: task.id,
+          name: task.title,
+          start: new Date(task.startDate!),
+          end: new Date(task.dueDate!),
+          progress: task.progress,
+          priority: task.priority,
+          ...(assigneeName ? { assignee: assigneeName } : {}),
+          dependencies: task.dependencies.map((d) => d.dependsOnTaskId),
+        };
+      });
   }, [tasksData]);
 
   const timeline: TimelineConfig = useMemo(() => {

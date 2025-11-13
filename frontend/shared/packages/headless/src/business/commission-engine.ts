@@ -295,7 +295,17 @@ export class CommissionEngine {
       .filter((tier) => lifetimeRevenue >= tier.minimumRevenue)
       .sort((a, b) => b.minimumRevenue - a.minimumRevenue);
 
-    return eligibleTiers[0] || this.tiers[0]; // Default to lowest tier
+    const bestTier = eligibleTiers[0];
+    if (bestTier) {
+      return bestTier;
+    }
+
+    const fallbackTier = this.tiers[0];
+    if (fallbackTier) {
+      return fallbackTier;
+    }
+
+    throw new Error("No commission tiers configured");
   }
 
   // Simulate commission for what-if scenarios

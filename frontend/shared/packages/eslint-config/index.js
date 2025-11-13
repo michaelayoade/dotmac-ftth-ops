@@ -2,10 +2,8 @@
  * Base ESLint configuration for DotMac projects
  */
 
-const rules = require("./rules");
-
 module.exports = {
-  plugins: ["@dotmac"],
+  plugins: ["@dotmac", "import"],
 
   // Register custom rules
   rules: {
@@ -116,7 +114,4 @@ module.exports = {
       },
     },
   },
-
-  // Expose custom rules for plugin registration
-  customRules: rules,
 };

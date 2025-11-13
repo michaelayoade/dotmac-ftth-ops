@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@dotmac/ui";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 // Types matching backend models
 export type WorkflowType =
@@ -111,6 +111,10 @@ export interface WorkflowStats {
 export function useOrchestrationWorkflows() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { api } = useAppConfig();
+  const buildUrl = api.buildUrl;
+  const apiBaseUrl = api.baseUrl;
+  const apiPrefix = api.prefix;
 
   // List workflows
   const useWorkflows = (params?: {
@@ -120,7 +124,7 @@ export function useOrchestrationWorkflows() {
     offset?: number;
   }) => {
     return useQuery({
-      queryKey: ["orchestration-workflows", params],
+      queryKey: ["orchestration-workflows", params, apiBaseUrl, apiPrefix],
       queryFn: async () => {
         const searchParams = new URLSearchParams();
         if (params?.workflow_type) searchParams.append("workflow_type", params.workflow_type);
@@ -128,7 +132,7 @@ export function useOrchestrationWorkflows() {
         if (params?.limit) searchParams.append("limit", String(params.limit));
         if (params?.offset) searchParams.append("offset", String(params.offset));
 
-        const url = platformConfig.api.buildUrl(`/orchestration/workflows?${searchParams.toString()}`);
+        const url = buildUrl(`/orchestration/workflows?${searchParams.toString()}`);
         const response = await fetch(url, {
           credentials: "include",
         });
@@ -139,10 +143,10 @@ export function useOrchestrationWorkflows() {
 
         return response.json() as Promise<WorkflowListResponse>;
       },
-      refetchInterval: (data) => {
+      refetchInterval: (query) => {
         // Poll more frequently if there are active workflows
-        const hasActiveWorkflows = data?.workflows.some(
-          (w) => w.status === "running" || w.status === "pending" || w.status === "rolling_back"
+        const hasActiveWorkflows = query.state.data?.workflows.some(
+          (w: Workflow) => w.status === "running" || w.status === "pending" || w.status === "rolling_back"
         );
         return hasActiveWorkflows ? 2000 : 10000;
       },
@@ -152,11 +156,11 @@ export function useOrchestrationWorkflows() {
   // Get single workflow
   const useWorkflow = (workflowId: string | null) => {
     return useQuery({
-      queryKey: ["orchestration-workflow", workflowId],
+      queryKey: ["orchestration-workflow", workflowId, apiBaseUrl, apiPrefix],
       queryFn: async () => {
         if (!workflowId) return null;
 
-        const url = platformConfig.api.buildUrl(`/orchestration/workflows/${workflowId}`);
+        const url = buildUrl(`/orchestration/workflows/${workflowId}`);
         const response = await fetch(url, {
           credentials: "include",
         });
@@ -168,12 +172,12 @@ export function useOrchestrationWorkflows() {
         return response.json() as Promise<Workflow>;
       },
       enabled: !!workflowId,
-      refetchInterval: (data) => {
+      refetchInterval: (query) => {
         // Poll while workflow is active
         if (
-          data?.status === "running" ||
-          data?.status === "pending" ||
-          data?.status === "rolling_back"
+          query.state.data?.status === "running" ||
+          query.state.data?.status === "pending" ||
+          query.state.data?.status === "rolling_back"
         ) {
           return 1000; // Poll every second
         }
@@ -185,9 +189,9 @@ export function useOrchestrationWorkflows() {
   // Get workflow statistics
   const useWorkflowStats = () => {
     return useQuery({
-      queryKey: ["orchestration-stats"],
+      queryKey: ["orchestration-stats", apiBaseUrl, apiPrefix],
       queryFn: async () => {
-        const url = platformConfig.api.buildUrl("/orchestration/statistics");
+        const url = buildUrl("/orchestration/statistics");
         const response = await fetch(url, {
           credentials: "include",
         });
@@ -205,7 +209,7 @@ export function useOrchestrationWorkflows() {
   // Retry workflow
   const retryWorkflow = useMutation({
     mutationFn: async (workflowId: string) => {
-      const url = platformConfig.api.buildUrl(`/orchestration/workflows/${workflowId}/retry`);
+      const url = buildUrl(`/orchestration/workflows/${workflowId}/retry`);
       const response = await fetch(url, {
         method: "POST",
         credentials: "include",
@@ -237,7 +241,7 @@ export function useOrchestrationWorkflows() {
   // Cancel workflow
   const cancelWorkflow = useMutation({
     mutationFn: async (workflowId: string) => {
-      const url = platformConfig.api.buildUrl(`/orchestration/workflows/${workflowId}/cancel`);
+      const url = buildUrl(`/orchestration/workflows/${workflowId}/cancel`);
       const response = await fetch(url, {
         method: "POST",
         credentials: "include",
@@ -281,7 +285,7 @@ export function useOrchestrationWorkflows() {
       if (params?.status) searchParams.append("status_filter", params.status);
       if (params?.limit) searchParams.append("limit", String(params.limit));
 
-      const url = platformConfig.api.buildUrl(`/orchestration/export/${format}?${searchParams.toString()}`);
+      const url = buildUrl(`/orchestration/export/${format}?${searchParams.toString()}`);
       const response = await fetch(url, {
         credentials: "include",
       });

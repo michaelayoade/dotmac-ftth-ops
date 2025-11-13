@@ -19,7 +19,7 @@ import {
   FileText,
   AlertCircle,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -52,13 +52,14 @@ function ParametersPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
 
   // Fetch device parameters
   const { data: parametersData, isLoading } = useQuery<ParameterGroup[]>({
     queryKey: ["device-parameters", deviceId, refreshKey],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -74,7 +75,7 @@ function ParametersPageContent() {
     queryKey: ["device", deviceId],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -89,7 +90,7 @@ function ParametersPageContent() {
   const updateMutation = useMutation({
     mutationFn: async ({ path, value }: { path: string; value: string }) => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`,
         {
           method: "PUT",
           credentials: "include",
@@ -122,7 +123,7 @@ function ParametersPageContent() {
   const refreshMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
         {
           method: "POST",
           credentials: "include",

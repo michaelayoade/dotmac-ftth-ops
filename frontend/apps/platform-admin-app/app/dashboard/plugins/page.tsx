@@ -27,7 +27,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useConfirmDialog } from "@dotmac/ui";
@@ -62,13 +62,15 @@ function PluginsPageContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch plugin instances
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["plugin-instances"],
+    queryKey: ["plugin-instances", apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/plugins/instances`,
+        `${apiBaseUrl}/api/v1/plugins/instances`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch plugin instances");
@@ -133,7 +135,7 @@ function PluginsPageContent() {
 
     try {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/plugins/instances/${pluginId}`,
+        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}`,
         {
           method: "DELETE",
           credentials: "include",

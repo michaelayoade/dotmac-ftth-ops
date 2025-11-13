@@ -14,7 +14,12 @@ import {
   Calendar,
   RefreshCw,
 } from "lucide-react";
-import { useOrchestrationStats, useWorkflows, type WorkflowType } from "@/hooks/useOrchestration";
+import {
+  useOrchestrationStats,
+  useWorkflows,
+  type WorkflowType,
+  type Workflow,
+} from "@/hooks/useOrchestration";
 
 // ============================================================================
 // Utility Functions
@@ -198,7 +203,7 @@ function StatusDistributionChart({ stats }: { stats: any }) {
 // Performance Metrics Component
 // ============================================================================
 
-function PerformanceMetrics({ workflows }: { workflows: any[] }) {
+function PerformanceMetrics({ workflows }: { workflows: Workflow[] }) {
   const metrics = useMemo(() => {
     const completed = workflows.filter((w) => w.status === "completed");
     const failed = workflows.filter((w) => w.status === "failed");
@@ -206,8 +211,8 @@ function PerformanceMetrics({ workflows }: { workflows: any[] }) {
     const durations = completed
       .filter((w) => w.started_at && w.completed_at)
       .map((w) => {
-        const start = new Date(w.started_at).getTime();
-        const end = new Date(w.completed_at).getTime();
+        const start = new Date(w.started_at!).getTime();
+        const end = new Date(w.completed_at!).getTime();
         return (end - start) / 1000; // seconds
       });
 
@@ -296,21 +301,26 @@ function PerformanceMetrics({ workflows }: { workflows: any[] }) {
 export default function OrchestrationAnalyticsPage() {
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d" | "90d">("7d");
 
-  const { stats, loading: statsLoading, refetch: refetchStats } = useOrchestrationStats();
   const {
-    workflows,
-    loading: workflowsLoading,
+    data: stats,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = useOrchestrationStats();
+  const {
+    data: workflowResponse,
+    isLoading: workflowsLoading,
     refetch: refetchWorkflows,
   } = useWorkflows({
     pageSize: 100, // Get more data for analytics
   });
+  const workflows: Workflow[] = workflowResponse?.workflows ?? [];
 
   const handleExportReport = () => {
     const report = {
       generated_at: new Date().toISOString(),
       time_range: timeRange,
       summary: stats,
-      workflows: workflows.map((w) => ({
+      workflows: workflows.map((w: Workflow) => ({
         id: w.workflow_id,
         type: w.workflow_type,
         status: w.status,

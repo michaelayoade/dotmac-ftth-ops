@@ -26,7 +26,7 @@ export function CreateApiKeyModal(props: CreateApiKeyModalProps) {
     <SharedCreateApiKeyModal
       {...props}
       onApiKeyCreated={handleApiKeyCreated}
-      createApiKey={createApiKey}
+      createApiKey={createApiKey as any}
       updateApiKey={updateApiKey}
       getAvailableScopes={getAvailableScopes}
     />

@@ -19,13 +19,23 @@ jest.mock("@dotmac/ui", () => ({
   }),
 }));
 
-jest.mock("@/lib/config", () => ({
-  platformConfig: {
+const buildUrl = (path: string) => {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+  return `https://api.example.com${prefixed}`;
+};
+
+jest.mock("@/providers/AppConfigContext", () => ({
+  useAppConfig: () => ({
     api: {
       baseUrl: "https://api.example.com",
-      buildUrl: (path: string) => `https://api.example.com${path}`,
+      prefix: "/api/v1",
+      buildUrl,
     },
-  },
+    features: {},
+    branding: {},
+    tenant: {},
+  }),
 }));
 
 const fetchMock = jest.fn();
@@ -69,7 +79,7 @@ describe("Platform Admin useOrchestrationWorkflows hook", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.com/orchestration/workflows/wf-1/retry",
+      "https://api.example.com/api/v1/orchestration/workflows/wf-1/retry",
       expect.objectContaining({ method: "POST" }),
     );
     expect(toastMock).toHaveBeenCalledWith(

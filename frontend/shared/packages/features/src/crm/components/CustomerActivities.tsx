@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Clock,
   Plus,
@@ -14,6 +13,7 @@ import {
   Tag,
   Loader2,
 } from "lucide-react";
+import { useState } from "react";
 
 // ============================================================================
 // Types
@@ -300,12 +300,12 @@ function ActivityItem({ activity }: { activity: CustomerActivity }) {
 function LoadingSkeleton() {
   return (
     <div className="flex gap-3 p-4 bg-slate-800 rounded-lg animate-pulse">
-      <div className="w-8 h-8 bg-slate-700 rounded-full"></div>
+      <div className="w-8 h-8 bg-slate-700 rounded-full" />
       <div className="flex-1 space-y-2">
-        <div className="h-4 bg-slate-700 rounded w-3/4"></div>
-        <div className="h-3 bg-slate-700 rounded w-1/2"></div>
+        <div className="h-4 bg-slate-700 rounded w-3/4" />
+        <div className="h-3 bg-slate-700 rounded w-1/2" />
       </div>
-      <div className="h-3 bg-slate-700 rounded w-16"></div>
+      <div className="h-3 bg-slate-700 rounded w-16" />
     </div>
   );
 }

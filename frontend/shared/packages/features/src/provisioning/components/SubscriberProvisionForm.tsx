@@ -6,10 +6,6 @@
  * Complete subscriber provisioning including RADIUS, IP allocation, and service activation
  */
 
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +20,11 @@ import { Input } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { Checkbox } from "@dotmac/ui";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 // ============================================================================
 // Types

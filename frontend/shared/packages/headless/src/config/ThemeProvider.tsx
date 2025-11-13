@@ -40,12 +40,12 @@ export function ThemeProvider({
     return defaultThemeName;
   });
 
-  const [customizations, setCustomizations] = useState<Partial<ThemeConfig>>(_props);
+  const [customizations, setCustomizations] = useState<Partial<ThemeConfig>>({});
 
   // Load theme customizations from localStorage
   useEffect(() => {
-    if (allowCustomization) {
-      const savedCustomizations = localStorage.getItem(`dotmac-theme-${currentTheme}`);
+    if (allowCustomization && typeof window !== "undefined") {
+      const savedCustomizations = window.localStorage.getItem(`dotmac-theme-${currentTheme}`);
       if (savedCustomizations) {
         try {
           const parsed = JSON.parse(savedCustomizations);
@@ -53,6 +53,8 @@ export function ThemeProvider({
         } catch (_error) {
           // Silently ignore parse errors for corrupted localStorage data
         }
+      } else {
+        setCustomizations({});
       }
     }
   }, [currentTheme, allowCustomization]);
@@ -117,7 +119,7 @@ export function ThemeProvider({
 
   const setTheme = (themeName: ThemeName) => {
     setCurrentTheme(themeName);
-    setCustomizations(_props);
+    setCustomizations({});
   };
 
   const customizeTheme = (newCustomizations: Partial<ThemeConfig>) => {
@@ -134,15 +136,22 @@ export function ThemeProvider({
 
     // Save to localStorage
     try {
-      localStorage.setItem(`dotmac-theme-${currentTheme}`, JSON.stringify(updatedCustomizations));
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          `dotmac-theme-${currentTheme}`,
+          JSON.stringify(updatedCustomizations),
+        );
+      }
     } catch (_error) {
       // Silently ignore localStorage write errors (e.g., quota exceeded)
     }
   };
 
   const resetTheme = () => {
-    setCustomizations(_props);
-    localStorage.removeItem(`dotmac-theme-${currentTheme}`);
+    setCustomizations({});
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(`dotmac-theme-${currentTheme}`);
+    }
   };
 
   const theme = {

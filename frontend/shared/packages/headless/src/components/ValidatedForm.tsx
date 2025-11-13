@@ -1,6 +1,7 @@
 "use client";
 
-import React, { FormEvent, ReactNode } from "react";
+import React, { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 /**
  * Form data structure for key-value pairs
@@ -117,24 +118,51 @@ export const ValidatedForm: React.FC<ValidatedFormProps> = ({
   children,
   className,
 }) => {
-  const [formState, setFormState] = React.useState<FormState>({
+  const [formState, setFormState] = useState<FormState>({
     data: initialData,
     errors: {},
     isSubmitting: false,
     isValid: true,
   });
 
-  const handleSubmit = (e?: FormEvent) => {
+  const runValidation = (data: FormData) => {
+    const errors = validate ? validate(data) : {};
+    const isValid = Object.keys(errors).length === 0;
+    return { errors, isValid };
+  };
+
+  const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
-    // Rest of the handleSubmit implementation
+
+    setFormState((prev) => ({ ...prev, isSubmitting: true }));
+    const { errors, isValid } = runValidation(formState.data);
+
+    setFormState((prev) => ({
+      ...prev,
+      errors,
+      isValid,
+    }));
+
+    if (isValid) {
+      await onSubmit(formState.data);
+    }
+
+    setFormState((prev) => ({ ...prev, isSubmitting: false }));
   };
 
   const handleChange = (name: string, value: any) => {
-    // Rest of the handleChange implementation
+    setFormState((prev) => {
+      const data = { ...prev.data, [name]: value };
+      const { errors, isValid } = runValidation(data);
+      return { ...prev, data, errors, isValid };
+    });
   };
 
-  const handleBlur = (name: string) => {
-    // Rest of the handleBlur implementation
+  const handleBlur = (_name: string) => {
+    setFormState((prev) => {
+      const { errors, isValid } = runValidation(prev.data);
+      return { ...prev, errors, isValid };
+    });
   };
 
   return (

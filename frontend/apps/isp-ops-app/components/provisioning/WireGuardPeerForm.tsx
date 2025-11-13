@@ -172,10 +172,10 @@ export function WireGuardPeerForm({
                   label="IPv4 Address (CIDR)"
                   value={peerIPv4 || ""}
                   onChange={(value) => setValue("peer_ipv4", value || null)}
-                  allowIPv4={true}
+                  allowIPv4
                   allowIPv6={false}
                   placeholder="10.8.0.2/32"
-                  error={errors.peer_ipv4?.message}
+                  {...(errors.peer_ipv4?.message ? { error: errors.peer_ipv4.message } : {})}
                 />
 
                 {serverSupportsIPv6 && (
@@ -184,9 +184,9 @@ export function WireGuardPeerForm({
                     value={peerIPv6 || ""}
                     onChange={(value) => setValue("peer_ipv6", value || null)}
                     allowIPv4={false}
-                    allowIPv6={true}
+                    allowIPv6
                     placeholder="fd00:8::2/128"
-                    error={errors.peer_ipv6?.message}
+                    {...(errors.peer_ipv6?.message ? { error: errors.peer_ipv6.message } : {})}
                   />
                 )}
               </div>

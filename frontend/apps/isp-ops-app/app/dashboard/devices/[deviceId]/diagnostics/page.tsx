@@ -21,7 +21,7 @@ import {
   Clock,
   Play,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -51,12 +51,13 @@ function DiagnosticsPageContent() {
   const [speedTestResult, setSpeedTestResult] = useState<DiagnosticResult | null>(null);
 
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
 
   // Ping test
   const pingMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/ping`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/ping`,
         {
           method: "POST",
           credentials: "include",
@@ -80,7 +81,7 @@ function DiagnosticsPageContent() {
   const tracerouteMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/traceroute`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/traceroute`,
         {
           method: "POST",
           credentials: "include",
@@ -104,7 +105,7 @@ function DiagnosticsPageContent() {
   const dnsLookupMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/dns`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/dns`,
         {
           method: "POST",
           credentials: "include",
@@ -128,7 +129,7 @@ function DiagnosticsPageContent() {
   const speedTestMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/speedtest`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/diagnostics/speedtest`,
         {
           method: "POST",
           credentials: "include",

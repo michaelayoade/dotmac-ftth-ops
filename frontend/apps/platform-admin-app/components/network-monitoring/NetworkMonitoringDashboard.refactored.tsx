@@ -47,7 +47,7 @@ import {
   DeviceStatusEnum,
   AlertSeverityEnum,
   type NetworkDashboardQuery,
-} from "@dotmac/graphql/generated";
+} from "@shared/packages/graphql/generated";
 
 // Helper functions for status badges
 const getStatusBadge = (status: DeviceStatusEnum) => {

@@ -28,7 +28,7 @@ import {
   Users,
   MessageSquare,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -75,10 +75,12 @@ function TicketingPageContent() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl;
 
   // Fetch tickets
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["tickets", statusFilter, priorityFilter, searchQuery],
+    queryKey: ["tickets", apiBaseUrl, statusFilter, priorityFilter, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
@@ -86,8 +88,8 @@ function TicketingPageContent() {
       if (searchQuery) params.append("search", searchQuery);
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/tickets?${params.toString()}`,
-        { credentials: "include" }
+        `${apiBaseUrl}/api/v1/tickets?${params.toString()}`,
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch tickets");
       return response.json();
@@ -99,12 +101,11 @@ function TicketingPageContent() {
 
   // Fetch statistics
   const { data: statsData } = useQuery({
-    queryKey: ["ticket-stats"],
+    queryKey: ["ticket-stats", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/tickets/stats`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/tickets/stats`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
     },

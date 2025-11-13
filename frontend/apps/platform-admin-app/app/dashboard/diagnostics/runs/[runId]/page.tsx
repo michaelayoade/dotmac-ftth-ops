@@ -9,7 +9,7 @@ import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   ArrowLeft,
   RefreshCw,
@@ -141,13 +141,15 @@ function DiagnosticRunDetailsContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const runId = params['runId'] as string;
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   // Fetch diagnostic run details
   const { data: run, isLoading } = useQuery<DiagnosticRun>({
-    queryKey: ["diagnostic-run", runId],
+    queryKey: ["diagnostic-run", runId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs/${runId}`,
+        `${apiBaseUrl}/api/v1/diagnostics/runs/${runId}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch diagnostic run");

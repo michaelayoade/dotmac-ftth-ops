@@ -24,7 +24,7 @@ import {
 } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   ArrowLeft,
   RefreshCw,
@@ -147,20 +147,22 @@ function SubscriberDiagnosticsContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const subscriberId = params['subscriberId'] as string;
+  const { api } = useAppConfig();
+  const apiBaseUrl = api.baseUrl || "";
 
   const [isRestartDialogOpen, setIsRestartDialogOpen] = useState(false);
   const [latestRunId, setLatestRunId] = useState<string | null>(null);
 
   // Fetch recent runs for this subscriber
   const { data: runsData, isLoading: runsLoading } = useQuery<{ total: number; items: DiagnosticRun[] }>({
-    queryKey: ["diagnostics-runs", subscriberId],
+    queryKey: ["diagnostics-runs", subscriberId, apiBaseUrl],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("subscriber_id", subscriberId);
       params.append("limit", "10");
 
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
+        `${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch diagnostic runs");
@@ -177,10 +179,10 @@ function SubscriberDiagnosticsContent() {
 
   // Fetch the latest diagnostic run details
   const { data: latestRun } = useQuery<DiagnosticRun>({
-    queryKey: ["diagnostic-run", latestRunId],
+    queryKey: ["diagnostic-run", latestRunId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs/${latestRunId}`,
+        `${apiBaseUrl}/api/v1/diagnostics/runs/${latestRunId}`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to fetch diagnostic run");
@@ -206,7 +208,7 @@ function SubscriberDiagnosticsContent() {
   const runConnectivityCheckMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/connectivity`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/connectivity`,
         {
           method: "POST",
           credentials: "include",
@@ -230,7 +232,7 @@ function SubscriberDiagnosticsContent() {
   const getRadiusSessionsMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/radius-sessions`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/radius-sessions`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to get RADIUS sessions");
@@ -250,7 +252,7 @@ function SubscriberDiagnosticsContent() {
   const getOnuStatusMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/onu-status`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/onu-status`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to get ONU status");
@@ -270,7 +272,7 @@ function SubscriberDiagnosticsContent() {
   const getCpeStatusMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/cpe-status`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/cpe-status`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to get CPE status");
@@ -290,7 +292,7 @@ function SubscriberDiagnosticsContent() {
   const getIpVerificationMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/ip-verification`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/ip-verification`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to verify IP");
@@ -310,7 +312,7 @@ function SubscriberDiagnosticsContent() {
   const restartCpeMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/restart-cpe`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/restart-cpe`,
         {
           method: "POST",
           credentials: "include",
@@ -335,7 +337,7 @@ function SubscriberDiagnosticsContent() {
   const runHealthCheckMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/health-check`,
+        `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/health-check`,
         { credentials: "include" }
       );
       if (!response.ok) throw new Error("Failed to run health check");

@@ -7,7 +7,6 @@
 
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
 import {
   X,
   Edit,
@@ -28,6 +27,7 @@ import {
   Ticket,
   FileText,
 } from "lucide-react";
+import { useState, useEffect, ReactNode } from "react";
 
 export interface CustomerDetailModalProps<TCustomer = any> {
   customer: TCustomer;

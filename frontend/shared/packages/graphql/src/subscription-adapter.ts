@@ -92,23 +92,23 @@ export function useGraphQLSubscription<TData = any, TVariables extends Operation
   // Use Apollo's useSubscription under the hood
   const result = useSubscription<TData, TVariables>(subscription, {
     variables: variables as any,
-    skip,
-    onData: onData
-      ? ({ data }) => {
-          // Apollo wraps the data in a nested structure
-          const actualData = data?.data || null;
-          onData({ data: actualData as TData | null });
-        }
-      : undefined,
-    onError,
-    onComplete,
+    ...(skip !== undefined ? { skip } : {}),
+    ...(onData ? {
+      onData: ({ data }) => {
+        // Apollo wraps the data in a nested structure
+        const actualData = data?.data || null;
+        onData({ data: actualData as TData | null });
+      }
+    } : {}),
+    ...(onError ? { onError } : {}),
+    ...(onComplete ? { onComplete } : {}),
   });
 
   // Normalize the result to match our interface
   return {
     data: result.data || null,
     loading: result.loading,
-    error: result.error,
+    ...(result.error ? { error: result.error } : {}),
   };
 }
 

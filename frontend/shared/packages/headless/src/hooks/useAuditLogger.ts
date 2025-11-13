@@ -7,15 +7,14 @@
 import { useCallback, useRef, useEffect } from "react";
 import { AuditApiClient } from "../api/clients/AuditApiClient";
 import {
-  AuditEvent,
   AuditEventType,
   FrontendAuditEventType,
   AuditSeverity,
   AuditOutcome,
-  CreateFrontendAuditEvent,
 } from "../api/types/audit";
+import type { CreateFrontendAuditEvent, AuditContext, AuditEvent } from "../api/types/audit";
 import { useISPTenant } from "./useISPTenant";
-import { useAuth } from "../auth/useAuth";
+import { useAuth } from "@dotmac/headless/auth";
 
 interface AuditLoggerConfig {
   serviceName: string;
@@ -25,7 +24,7 @@ interface AuditLoggerConfig {
   enableConsoleLogging?: boolean;
 }
 
-interface UseAuditLoggerReturn {
+export interface UseAuditLoggerReturn {
   // Core logging methods
   logEvent: (event: CreateFrontendAuditEvent) => Promise<void>;
   logBatch: (events: CreateFrontendAuditEvent[]) => Promise<void>;
@@ -74,7 +73,8 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
     enableConsoleLogging = false,
   } = config;
 
-  const { tenant, tenantId } = useISPTenant();
+  const { tenant } = useISPTenant();
+  const tenantId = tenant?.id;
   const { user, sessionId } = useAuth();
 
   const auditClientRef = useRef<AuditApiClient | null>(null);
@@ -198,13 +198,16 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
   const logEvent = useCallback(
     async (event: CreateFrontendAuditEvent) => {
       try {
+        const incomingContext = event.context as AuditContext | undefined;
+        const resolvedContext = incomingContext ?? createContext();
         const fullEvent: CreateFrontendAuditEvent = {
           ...event,
           actor: event.actor || createActor(),
-          context: event.context || createContext(event.context?.additional),
+          context: resolvedContext,
           tenant_id: event.tenant_id || tenantId,
           severity: event.severity || AuditSeverity.LOW,
           outcome: event.outcome || AuditOutcome.SUCCESS,
+          service_name: event.service_name || serviceName,
         };
 
         // Store locally and log to console
@@ -234,7 +237,8 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
     batchQueueRef.current = [];
 
     try {
-      await auditClientRef.current.logEventsBatch(eventsToSend);
+      const payload = eventsToSend as Omit<AuditEvent, "event_id" | "timestamp">[];
+      await auditClientRef.current.logEventsBatch(payload);
       isHealthyRef.current = true;
     } catch (error) {
       console.error("Failed to send audit batch:", error);

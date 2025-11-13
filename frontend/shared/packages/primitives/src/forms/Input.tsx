@@ -8,7 +8,7 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
-import { forwardRef, useState, useCallback, useId } from "react";
+import { forwardRef, useState, useCallback, useId, useEffect } from "react";
 import { Eye, EyeOff, AlertCircle, Check } from "lucide-react";
 
 const inputVariants = cva(
@@ -97,6 +97,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       onBlur,
       id,
       "aria-describedby": ariaDescribedBy,
+      "aria-label": ariaLabel,
+      role: roleAttr,
+      tabIndex,
       ...props
     },
     ref,
@@ -214,6 +217,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const showCharCountDisplay = showCharCount && maxLength;
     const isCharLimitExceeded = maxLength && charCount > maxLength;
 
+    useEffect(() => {
+      if (typeof value === "string") {
+        setCharCount(value.length);
+      } else if (typeof value === "number") {
+        setCharCount(value.toString().length);
+      } else if (value == null) {
+        setCharCount(0);
+      }
+    }, [value]);
+
     return (
       <div className="space-y-1">
         {/* Label */}
@@ -257,6 +270,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             maxLength={maxLength}
             aria-invalid={currentError ? "true" : "false"}
             aria-describedby={describedBy}
+            aria-label={ariaLabel ?? (label ? undefined : "Input field")}
+            role={roleAttr ?? (type === "password" ? "textbox" : undefined)}
+            tabIndex={tabIndex ?? 0}
             {...props}
           />
 

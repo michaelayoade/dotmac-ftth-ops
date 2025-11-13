@@ -19,7 +19,7 @@ import { useEffect } from "react";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 import { handleGraphQLError } from "@dotmac/graphql";
-import { useSubscriberDashboardQuery } from "@dotmac/graphql/generated/react-query";
+import { useSubscriberDashboardQuery } from "@shared/packages/graphql/generated/react-query";
 
 interface UseSubscriberDashboardOptions {
   limit?: number;

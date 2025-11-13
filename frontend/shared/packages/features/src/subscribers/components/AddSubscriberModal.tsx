@@ -7,7 +7,6 @@
 
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -29,8 +28,9 @@ import {
 } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
-import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@dotmac/ui";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export type ConnectionType = "ftth" | "fttb" | "wireless" | "hybrid";
 

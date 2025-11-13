@@ -136,7 +136,7 @@ export const faultsKeys = {
 // ============================================================================
 
 export function useAlarms(params?: AlarmQueryParams) {
-  return useQuery({
+  const query = useQuery<Alarm[], Error>({
     queryKey: faultsKeys.alarms(params),
     queryFn: async () => {
       try {
@@ -170,6 +170,11 @@ export function useAlarms(params?: AlarmQueryParams) {
     refetchInterval: 30000, // Auto-refresh every 30 seconds
     refetchOnWindowFocus: true,
   });
+
+  return {
+    ...query,
+    alarms: query.data ?? [],
+  };
 }
 
 // ============================================================================
@@ -177,7 +182,7 @@ export function useAlarms(params?: AlarmQueryParams) {
 // ============================================================================
 
 export function useAlarmStatistics() {
-  return useQuery({
+  const query = useQuery<AlarmStatistics, Error>({
     queryKey: faultsKeys.statistics(),
     queryFn: async () => {
       try {
@@ -195,6 +200,11 @@ export function useAlarmStatistics() {
     refetchInterval: 60000, // Auto-refresh every minute
     refetchOnWindowFocus: true,
   });
+
+  return {
+    ...query,
+    statistics: query.data,
+  };
 }
 
 // ============================================================================
@@ -202,7 +212,7 @@ export function useAlarmStatistics() {
 // ============================================================================
 
 export function useSLACompliance(params?: SLAComplianceQueryParams) {
-  return useQuery({
+  return useQuery<SLACompliance[], Error>({
     queryKey: faultsKeys.slaCompliance(params),
     queryFn: async () => {
       try {
@@ -236,7 +246,7 @@ export function useSLACompliance(params?: SLAComplianceQueryParams) {
 // ============================================================================
 
 export function useSLARollupStats(days: number = 30, targetPercentage: number = 99.9) {
-  return useQuery({
+  const query = useQuery<SLARollupStats | null, Error>({
     queryKey: faultsKeys.slaRollup(days, targetPercentage),
     queryFn: async () => {
       try {
@@ -256,6 +266,11 @@ export function useSLARollupStats(days: number = 30, targetPercentage: number = 
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: true,
   });
+
+  return {
+    ...query,
+    stats: query.data ?? null,
+  };
 }
 
 // ============================================================================
@@ -333,7 +348,8 @@ export function useAlarmOperations() {
   // Acknowledge alarms mutation
   const acknowledgeMutation = useMutation({
     mutationFn: async ({ alarmIds, note }: { alarmIds: string[]; note?: string }) => {
-      const promises = alarmIds.map((id) => apiClient.post(`/faults/alarms/${id}/acknowledge`, { note }));
+      const payload = note ? { note } : {};
+      const promises = alarmIds.map((id) => apiClient.post(`/faults/alarms/${id}/acknowledge`, payload));
       await Promise.all(promises);
     },
     onSuccess: () => {
@@ -380,7 +396,7 @@ export function useAlarmOperations() {
   return {
     acknowledgeAlarms: async (alarmIds: string[], note?: string) => {
       try {
-        await acknowledgeMutation.mutateAsync({ alarmIds, note });
+        await acknowledgeMutation.mutateAsync(note ? { alarmIds, note } : { alarmIds });
         return true;
       } catch {
         return false;

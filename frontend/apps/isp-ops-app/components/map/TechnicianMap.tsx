@@ -103,13 +103,13 @@ const createTaskIcon = (status: string) => {
 // ============================================================================
 
 interface TechnicianWithLocation extends Technician {
-  currentAssignment?: TaskAssignment;
-  distanceToTask?: number;
+  currentAssignment?: TaskAssignment | undefined;
+  distanceToTask?: number | undefined;
 }
 
 interface TechnicianMapProps {
   technicians: TechnicianWithLocation[];
-  selectedTechnicianId?: string;
+  selectedTechnicianId?: string | undefined;
   onSelectTechnician: (id: string) => void;
 }
 

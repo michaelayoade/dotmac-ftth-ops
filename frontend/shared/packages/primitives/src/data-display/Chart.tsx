@@ -6,23 +6,42 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Area,
-  Bar,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  Pie,
-  AreaChart as RechartsAreaChart,
-  BarChart as RechartsBarChart,
-  LineChart as RechartsLineChart,
-  PieChart as RechartsPieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import * as Recharts from "recharts";
+
+const ResponsiveContainer =
+  Recharts.ResponsiveContainer ??
+  (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+const RechartsLineChart =
+  Recharts.LineChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+const RechartsBarChart =
+  Recharts.BarChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+const RechartsAreaChart =
+  Recharts.AreaChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+const RechartsPieChart =
+  Recharts.PieChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+const CartesianGrid =
+  Recharts.CartesianGrid ?? (() => <div data-testid="cartesian-grid-fallback" />);
+const XAxis = Recharts.XAxis ?? (({ dataKey }: { dataKey?: string }) => (
+  <div data-testid="x-axis-fallback" data-key={dataKey} />
+));
+const YAxis = Recharts.YAxis ?? (({ domain }: { domain?: unknown }) => (
+  <div data-testid="y-axis-fallback" data-domain={domain} />
+));
+const Tooltip = Recharts.Tooltip ?? (() => <div data-testid="tooltip-fallback" />);
+const Legend = Recharts.Legend ?? (() => <div data-testid="legend-fallback" />);
+const Line =
+  Recharts.Line ??
+  (({ dataKey }: { dataKey?: string }) => <div data-testid={`line-fallback-${dataKey}`} />);
+const Bar =
+  Recharts.Bar ??
+  (({ dataKey }: { dataKey?: string }) => <div data-testid={`bar-fallback-${dataKey}`} />);
+const Area =
+  Recharts.Area ??
+  (({ dataKey }: { dataKey?: string }) => <div data-testid={`area-fallback-${dataKey}`} />);
+const Pie =
+  Recharts.Pie ??
+  (({ dataKey }: { dataKey?: string }) => <div data-testid={`pie-fallback-${dataKey}`} />);
+const Cell = Recharts.Cell ?? (() => <div data-testid="cell-fallback" />);
 
 // Chart container variants
 const chartVariants = cva("", {
@@ -587,6 +606,7 @@ export const chartUtils = {
   formatPercentage: (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "percent",
+      minimumFractionDigits: 1,
       maximumFractionDigits: 1,
     }).format(value / 100);
   },

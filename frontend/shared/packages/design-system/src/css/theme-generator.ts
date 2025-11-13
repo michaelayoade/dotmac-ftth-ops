@@ -3,6 +3,7 @@
  * Generates CSS custom properties and theme utilities
  */
 
+import * as React from "react";
 import { designTokens, lightTheme, darkTheme } from "../tokens/design-tokens";
 
 export interface ThemeConfig {

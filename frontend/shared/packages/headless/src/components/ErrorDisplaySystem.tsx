@@ -6,6 +6,7 @@
 "use client";
 
 import React from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import {
   EnhancedISPError,
   type EnhancedErrorResponse,
@@ -307,6 +308,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
       const timer = setTimeout(onDismiss, duration);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [duration, onDismiss, errorData.error.severity]);
 
   const positionClasses = {
@@ -356,12 +358,12 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
 
 // Error boundary with enhanced error display
 export interface EnhancedErrorBoundaryProps {
-  children: React.ReactNode;
+  children: ReactNode;
   fallback?: React.ComponentType<{
     error: EnhancedISPError;
     resetError: () => void;
   }>;
-  onError?: (error: EnhancedISPError, errorInfo: React.ErrorInfo) => void;
+  onError?: (error: EnhancedISPError, errorInfo: ErrorInfo) => void;
 }
 
 interface EnhancedErrorBoundaryState {
@@ -400,13 +402,13 @@ export class EnhancedErrorBoundary extends React.Component<
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     if (this.props.onError && this.state.error) {
       this.props.onError(this.state.error, errorInfo);
     }
   }
 
-  render() {
+  override render(): ReactNode {
     if (this.state.hasError && this.state.error) {
       const resetError = () => {
         this.setState({ hasError: false, error: null });

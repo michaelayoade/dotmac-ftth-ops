@@ -50,6 +50,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    "types/**/*.d.ts",
     "../shared/**/*.ts",
     "../shared/**/*.tsx",
     "../../types/**/*.d.ts"

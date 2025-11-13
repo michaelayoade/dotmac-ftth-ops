@@ -35,7 +35,7 @@ import { Slot } from "@radix-ui/react-slot";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { clsx } from "clsx";
-import type { FieldValues, RegisterOptions, UseFormReturn } from "react-hook-form";
+import { Controller, type FieldValues, type RegisterOptions, type UseFormReturn } from "react-hook-form";
 
 import type { ValidationRule } from "../types";
 // useId is already destructured from React above
@@ -61,24 +61,27 @@ const formVariants = cva("", {
 });
 
 // Input variants
-const inputVariants = cva("", {
+const inputBaseClass =
+  "form-input flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+
+const inputVariants = cva(inputBaseClass, {
   variants: {
     variant: {
-      default: "",
-      outlined: "",
-      filled: "",
-      underlined: "",
+      default: "variant-default",
+      outlined: "variant-outlined outlined border-2 border-primary/60",
+      filled: "variant-filled filled bg-muted",
+      underlined: "variant-underlined underlined border-0 border-b border-input focus-visible:ring-0",
     },
     size: {
-      sm: "",
-      md: "",
-      lg: "",
+      sm: "size-sm sm h-8 text-xs",
+      md: "size-md md h-10 text-sm",
+      lg: "size-lg lg h-12 text-base",
     },
     state: {
-      default: "",
-      error: "",
-      success: "",
-      warning: "",
+      default: "state-default",
+      error: "state-error error border-destructive text-destructive",
+      success: "state-success success border-success text-success",
+      warning: "state-warning warning border-warning text-warning",
     },
   },
   defaultVariants: {
@@ -95,12 +98,43 @@ interface FormContextValue {
 
 const FormContext = createContext<FormContextValue | null>(null);
 
+interface FormFieldContextValue {
+  name: string;
+  error: string;
+  invalid: boolean;
+}
+
+const FormFieldContext = createContext<FormFieldContextValue | null>(null);
+
+interface FormItemContextValue {
+  id: string;
+}
+
+const FormItemContext = createContext<FormItemContextValue | null>(null);
+
 export const useFormContext = () => {
   const context = useContext(FormContext);
   if (!context) {
     throw new Error("Form components must be used within a Form");
   }
   return context;
+};
+
+const useFormFieldState = () => {
+  const fieldContext = useContext(FormFieldContext);
+  const itemContext = useContext(FormItemContext);
+
+  if (!fieldContext || !itemContext) {
+    return null;
+  }
+
+  return {
+    ...fieldContext,
+    formItemId: itemContext.id,
+    formDescriptionId: `${itemContext.id}-description`,
+    formMessageId: `${itemContext.id}-message`,
+    inputId: `${itemContext.id}-control`,
+  };
 };
 
 /**
@@ -174,6 +208,8 @@ export function Form<TFieldValues extends FieldValues = FieldValues>({
 // Form Field
 export interface FormFieldProps {
   name: string;
+  rules?: ValidationRule;
+  defaultValue?: unknown;
   children: (field: {
     value: unknown;
     onChange: (value: unknown) => void;
@@ -183,29 +219,38 @@ export interface FormFieldProps {
   }) => React.ReactNode;
 }
 
-export function FormField({ name, children }: FormFieldProps) {
+export function FormField({ name, rules, defaultValue, children }: FormFieldProps) {
   const { form } = useFormContext();
-  const {
-    register,
-    formState: { errors },
-    watch,
-    setValue,
-    trigger,
-  } = form;
+  const validationRules = rules ? createValidationRules(rules) : undefined;
 
-  const value = watch(name);
-  const error = errors[name]?.message as string | undefined;
+  const controllerProps: any = {
+    name: name as any,
+    control: form.control,
+    defaultValue: defaultValue as any,
+    ...(validationRules && { rules: validationRules }),
+  };
 
   return (
-    <>
-      {children({
-        value,
-        onChange: (newValue) => setValue(name, newValue),
-        onBlur: () => void trigger(name),
-        ...(error && { error }),
-        invalid: !!error,
-      })}
-    </>
+    <Controller
+      {...controllerProps}
+      render={({ field, fieldState }) => (
+        <FormFieldContext.Provider
+          value={{
+            name,
+            error: fieldState.error?.message ?? "",
+            invalid: fieldState.invalid,
+          }}
+        >
+          {children({
+            value: field.value,
+            onChange: (value) => field.onChange(value),
+            onBlur: field.onBlur,
+            error: fieldState.error?.message ?? "",
+            invalid: fieldState.invalid,
+          })}
+        </FormFieldContext.Provider>
+      )}
+    />
   );
 }
 
@@ -217,8 +262,13 @@ export interface FormItemProps extends React.HTMLAttributes<HTMLDivElement> {
 export const FormItem = forwardRef<HTMLDivElement, FormItemProps>(
   ({ className, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "div";
+    const id = useUniqueId("form-item");
 
-    return <Comp ref={ref} className={clsx("form-item", className)} {...props} />;
+    return (
+      <FormItemContext.Provider value={{ id }}>
+        <Comp ref={ref} className={clsx("form-item space-y-2", className)} {...props} />
+      </FormItemContext.Provider>
+    );
   },
 );
 
@@ -228,35 +278,81 @@ export interface FormLabelProps extends React.ComponentPropsWithoutRef<typeof La
 }
 
 export const FormLabel = forwardRef<React.ElementRef<typeof LabelPrimitive.Root>, FormLabelProps>(
-  ({ className, required, children, ...props }, ref) => (
-    <LabelPrimitive.Root
-      ref={ref}
-      className={clsx("form-label", { required }, className)}
-      {...props}
-    >
-      {children}
-      {required ? <span className="required-indicator">*</span> : null}
-    </LabelPrimitive.Root>
-  ),
+  ({ className, required, children, htmlFor, ...props }, ref) => {
+    const field = useFormFieldState();
+
+    return (
+      <LabelPrimitive.Root
+        ref={ref}
+        htmlFor={htmlFor ?? field?.inputId}
+        className={clsx("form-label", { required }, field?.invalid && "text-destructive", className)}
+        {...props}
+      >
+        {children}
+        {required ? <span className="required-indicator">*</span> : null}
+      </LabelPrimitive.Root>
+    );
+  },
 );
 
 // Form Description
 export const FormDescription = forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p ref={ref} className={clsx("form-description", className)} {...props} />
-));
+>(({ className, ...props }, ref) => {
+  const field = useFormFieldState();
+
+  return (
+    <p
+      ref={ref}
+      id={field?.formDescriptionId}
+      className={clsx("form-description text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  );
+});
 
 // Form Message (Error/Success/Warning)
 export interface FormMessageProps extends React.HTMLAttributes<HTMLParagraphElement> {
   variant?: "error" | "success" | "warning" | "info";
 }
 
+const messageVariantClasses: Record<NonNullable<FormMessageProps["variant"]>, string> = {
+  error: "text-destructive",
+  success: "text-success",
+  warning: "text-warning",
+  info: "text-info",
+};
+
 export const FormMessage = forwardRef<HTMLParagraphElement, FormMessageProps>(
-  ({ className, variant = "error", ...props }, ref) => (
-    <p ref={ref} className={clsx("form-message", `variant-${variant}`, className)} {...props} />
-  ),
+  ({ className, variant = "error", children, ...props }, ref) => {
+    const field = useFormFieldState();
+    const body = children ?? field?.error;
+
+    if (!body) {
+      return null;
+    }
+
+    const shouldAnnounce = variant === "error" || field?.invalid;
+
+    return (
+      <p
+        ref={ref}
+        id={field?.formMessageId}
+        role={shouldAnnounce ? "alert" : undefined}
+        aria-live={shouldAnnounce ? "assertive" : undefined}
+        className={clsx(
+          "form-message text-sm",
+          `variant-${variant}`,
+          messageVariantClasses[variant],
+          className,
+        )}
+        {...props}
+      >
+        {body}
+      </p>
+    );
+  },
 );
 
 /**
@@ -312,32 +408,43 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       endIcon,
       asChild = false,
       "aria-invalid": ariaInvalid,
+      "aria-describedby": ariaDescribedBy,
+      name,
       ...props
     },
     ref,
   ) => {
     const Comp = asChild ? Slot : "input";
-    const inputId = useUniqueId("input");
+    const generatedId = useUniqueId("input");
+    const field = useFormFieldState();
 
-    // Automatically set aria-invalid based on state
-    const invalid = ariaInvalid ?? state === "error";
+    const controlId = field?.inputId ?? generatedId;
+    const isInvalid = field ? field.invalid : ariaInvalid ?? state === "error";
+    const describedBy = [
+      ariaDescribedBy,
+      field?.formDescriptionId,
+      field?.error ? field?.formMessageId : null,
+    ]
+      .filter(Boolean)
+      .join(" ") || undefined;
+
+    const resolvedName = name ?? field?.name;
+    const sharedProps = {
+      id: controlId,
+      name: resolvedName,
+      "aria-invalid": (isInvalid ? "true" : "false") as "true" | "false",
+      "aria-describedby": describedBy,
+    };
 
     if (startIcon || endIcon) {
       return (
-        <div className={clsx("input-wrapper", inputVariants({ variant, size, state }))}>
+        <div className={clsx("input-wrapper", inputVariants({ variant, size, state }), className)}>
           {startIcon ? (
             <span className="input-start-icon" aria-hidden="true" role="presentation">
               {startIcon}
             </span>
           ) : null}
-          <Comp
-            id={inputId}
-            type={type}
-            className={clsx("input-element", className)}
-            ref={ref}
-            aria-invalid={invalid}
-            {...props}
-          />
+          <Comp type={type} ref={ref} {...sharedProps} {...props} className="input-element" />
           {endIcon ? (
             <span className="input-end-icon" aria-hidden="true" role="presentation">
               {endIcon}
@@ -349,12 +456,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <Comp
-        id={inputId}
         type={type}
-        className={clsx(inputVariants({ variant, size, state }), className)}
         ref={ref}
-        aria-invalid={invalid}
+        {...sharedProps}
         {...props}
+        className={clsx(inputVariants({ variant, size, state }), className)}
       />
     );
   },
@@ -369,11 +475,42 @@ export interface TextareaProps
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, variant, size, state, resize = "vertical", asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      state,
+      resize = "vertical",
+      asChild = false,
+      "aria-invalid": ariaInvalid,
+      "aria-describedby": ariaDescribedBy,
+      name,
+      ...props
+    },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : "textarea";
+    const generatedId = useUniqueId("textarea");
+    const field = useFormFieldState();
+    const controlId = field?.inputId ?? generatedId;
+    const isInvalid = field ? field.invalid : ariaInvalid ?? state === "error";
+    const describedBy = [
+      ariaDescribedBy,
+      field?.formDescriptionId,
+      field?.error ? field?.formMessageId : null,
+    ]
+      .filter(Boolean)
+      .join(" ") || undefined;
+
+    const resolvedName = name ?? field?.name;
 
     return (
       <Comp
+        id={controlId}
+        name={resolvedName}
+        aria-invalid={isInvalid ? "true" : "false"}
+        aria-describedby={describedBy}
         className={clsx(inputVariants({ variant, size, state }), `resize-${resize}`, className)}
         ref={ref}
         {...props}
@@ -402,14 +539,33 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       options = [],
       children,
       asChild = false,
+      "aria-invalid": ariaInvalid,
+      "aria-describedby": ariaDescribedBy,
+      name,
       ...props
     },
     ref,
   ) => {
     const Comp = asChild ? Slot : "select";
+    const generatedId = useUniqueId("select");
+    const field = useFormFieldState();
+    const controlId = field?.inputId ?? generatedId;
+    const isInvalid = field ? field.invalid : ariaInvalid ?? state === "error";
+    const describedBy = [
+      ariaDescribedBy,
+      field?.formDescriptionId,
+      field?.error ? field?.formMessageId : null,
+    ]
+      .filter(Boolean)
+      .join(" ") || undefined;
+    const resolvedName = name ?? field?.name;
 
     return (
       <Comp
+        id={controlId}
+        name={resolvedName}
+        aria-invalid={isInvalid ? "true" : "false"}
+        aria-describedby={describedBy}
         className={clsx(inputVariants({ variant, size, state }), className)}
         ref={ref}
         {...props}
@@ -432,6 +588,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
 // Checkbox Component
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+  "data-testid"?: string;
   label?: string;
   description?: string;
   indeterminate?: boolean;
@@ -439,17 +596,68 @@ export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputE
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, label, description, indeterminate, id, ...props }, ref) => {
+  (
+    {
+      className,
+      label,
+      description,
+      indeterminate,
+      id,
+      "data-testid": dataTestId,
+      "aria-invalid": ariaInvalid,
+      "aria-describedby": ariaDescribedBy,
+      name,
+      ...props
+    },
+    ref,
+  ) => {
     const generatedId = useUniqueId();
     const checkboxId = id || `checkbox-${generatedId}`;
+    const field = useFormFieldState();
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+    const controlId = field?.inputId ?? checkboxId;
+    const isInvalid = field ? field.invalid : ariaInvalid ?? false;
+    const describedBy = [
+      ariaDescribedBy,
+      field?.formDescriptionId,
+      field?.error ? field?.formMessageId : null,
+    ]
+      .filter(Boolean)
+      .join(" ") || undefined;
+    const resolvedName = name ?? field?.name;
+
+    React.useEffect(() => {
+      if (inputRef.current) {
+        inputRef.current.indeterminate = !!indeterminate;
+      }
+    }, [indeterminate]);
+
+    const assignRef = (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
+      }
+    };
 
     return (
-      <div className={clsx("checkbox-wrapper", className)}>
-        <input type="checkbox" ref={ref} id={checkboxId} className="checkbox-input" {...props} />
+      <div className={clsx("checkbox-wrapper space-y-1.5", className)} data-testid={dataTestId}>
+        <input
+          type="checkbox"
+          ref={assignRef}
+          id={controlId}
+          name={resolvedName}
+          aria-invalid={isInvalid ? "true" : "false"}
+          aria-describedby={describedBy}
+          className="checkbox-input"
+          {...props}
+        />
         {label || description ? (
           <div className="checkbox-content">
             {label ? (
-              <label htmlFor={checkboxId} className="checkbox-label">
+              <label htmlFor={controlId} className="checkbox-label">
                 {label}
               </label>
             ) : null}
@@ -463,23 +671,58 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 
 // Radio Component
 export interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+  "data-testid"?: string;
   label?: string;
   description?: string;
   id?: string;
 }
 
 export const Radio = forwardRef<HTMLInputElement, RadioProps>(
-  ({ className, label, description, id, ...props }, ref) => {
+  (
+    {
+      className,
+      label,
+      description,
+      id,
+      "data-testid": dataTestId,
+      "aria-invalid": ariaInvalid,
+      "aria-describedby": ariaDescribedBy,
+      name,
+      ...props
+    },
+    ref,
+  ) => {
     const generatedId = useUniqueId();
     const radioId = id || `radio-${generatedId}`;
+    const field = useFormFieldState();
+
+    const controlId = field?.inputId ?? radioId;
+    const isInvalid = field ? field.invalid : ariaInvalid ?? false;
+    const describedBy = [
+      ariaDescribedBy,
+      field?.formDescriptionId,
+      field?.error ? field?.formMessageId : null,
+    ]
+      .filter(Boolean)
+      .join(" ") || undefined;
+    const resolvedName = name ?? field?.name;
 
     return (
-      <div className={clsx("radio-wrapper", className)}>
-        <input type="radio" ref={ref} id={radioId} className="radio-input" {...props} />
+      <div className={clsx("radio-wrapper space-y-1.5", className)} data-testid={dataTestId}>
+        <input
+          type="radio"
+          ref={ref}
+          id={controlId}
+          name={resolvedName}
+          aria-invalid={isInvalid ? "true" : "false"}
+          aria-describedby={describedBy}
+          className="radio-input"
+          {...props}
+        />
         {label || description ? (
           <div className="radio-content">
             {label ? (
-              <label htmlFor={radioId} className="radio-label">
+              <label htmlFor={controlId} className="radio-label">
                 {label}
               </label>
             ) : null}

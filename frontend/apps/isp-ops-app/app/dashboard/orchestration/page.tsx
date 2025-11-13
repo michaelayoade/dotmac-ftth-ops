@@ -25,6 +25,7 @@ import {
   type Workflow,
   type WorkflowStatus,
   type WorkflowType,
+  type WorkflowStep,
 } from "@/hooks/useOrchestration";
 
 // ============================================================================
@@ -119,7 +120,9 @@ function StatsCard({ title, value, subtitle, icon: Icon, trend }: any) {
 // ============================================================================
 
 function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onClose: () => void }) {
-  const { workflow, loading } = useWorkflow(workflowId, true);
+  const workflowQuery = useWorkflow(workflowId, true);
+  const workflow = workflowQuery.data;
+  const loading = workflowQuery.isLoading;
 
   if (loading || !workflow) {
     return (
@@ -195,7 +198,7 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-4">Workflow Steps</h3>
           <div className="space-y-3">
-            {workflow.steps?.map((step, index) => {
+            {workflow.steps?.map((step: WorkflowStep, index: number) => {
               const StepIcon = getStatusIcon(step['status'] as any);
               return (
                 <div
@@ -385,26 +388,32 @@ export default function OrchestrationDashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
 
-  const { stats, loading: statsLoading, refetch: refetchStats } = useOrchestrationStats();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = useOrchestrationStats();
 
   const {
-    workflows: runningWorkflows,
-    loading: runningLoading,
+    data: runningResponse,
+    isLoading: runningLoading,
     refetch: refetchRunning,
   } = useWorkflows({
     status: "running",
     autoRefresh: autoRefresh,
     refreshInterval: 3000,
   });
+  const runningWorkflows = runningResponse?.workflows ?? [];
 
   const {
-    workflows: failedWorkflows,
-    loading: failedLoading,
+    data: failedResponse,
+    isLoading: failedLoading,
     refetch: refetchFailed,
   } = useWorkflows({
     status: "failed",
     pageSize: 10,
   });
+  const failedWorkflows = failedResponse?.workflows ?? [];
 
   const { retryWorkflow } = useRetryWorkflow();
   const { cancelWorkflow } = useCancelWorkflow();

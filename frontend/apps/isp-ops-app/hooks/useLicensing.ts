@@ -361,7 +361,7 @@ export function useLicensing(): UseLicensingReturn {
     calculatePlanPrice,
 
     // Subscriptions
-    currentSubscription: subscriptionQuery.data,
+    ...(subscriptionQuery.data ? { currentSubscription: subscriptionQuery.data } : {}),
     subscriptionLoading: subscriptionQuery.isLoading,
     subscriptionError: subscriptionQuery.error,
     createSubscription: createSubscriptionMutation.mutateAsync,

@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { platformConfig } from "@/lib/config";
+import type { PlatformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 // Types
 export type CommissionModel = "revenue_share" | "flat_fee" | "tiered" | "hybrid";
@@ -64,6 +65,8 @@ export interface UpdateCommissionRuleInput {
   priority?: number;
 }
 
+type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
+
 // Fetch headers helper
 const getAuthHeaders = () => {
   if (typeof window === "undefined") return {};
@@ -77,12 +80,15 @@ const getAuthHeaders = () => {
 };
 
 // API Functions
-async function fetchCommissionRules(params?: {
+async function fetchCommissionRules(
+  buildUrl: BuildApiUrl,
+  params?: {
   partner_id?: string;
   is_active?: boolean;
   page?: number;
   page_size?: number;
-}): Promise<CommissionRuleListResponse> {
+},
+): Promise<CommissionRuleListResponse> {
   const queryParams = new URLSearchParams();
   if (params?.partner_id) queryParams.append("partner_id", params.partner_id);
   if (params?.is_active !== undefined)
@@ -90,7 +96,7 @@ async function fetchCommissionRules(params?: {
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.page_size) queryParams.append("page_size", String(params.page_size));
 
-  const url = platformConfig.api.buildUrl(`/partners/commission-rules/?${queryParams}`);
+  const url = buildUrl(`/partners/commission-rules/?${queryParams}`);
   const res = await fetch(url, { headers: getAuthHeaders(), credentials: "include" });
 
   if (!res.ok) {
@@ -101,8 +107,8 @@ async function fetchCommissionRules(params?: {
   return res.json();
 }
 
-async function fetchCommissionRule(ruleId: string): Promise<CommissionRule> {
-  const url = platformConfig.api.buildUrl(`/partners/commission-rules/${ruleId}`);
+async function fetchCommissionRule(buildUrl: BuildApiUrl, ruleId: string): Promise<CommissionRule> {
+  const url = buildUrl(`/partners/commission-rules/${ruleId}`);
   const res = await fetch(url, {
     headers: getAuthHeaders(),
     credentials: "include",
@@ -117,9 +123,10 @@ async function fetchCommissionRule(ruleId: string): Promise<CommissionRule> {
 }
 
 async function createCommissionRule(
-  data: CreateCommissionRuleInput
+  buildUrl: BuildApiUrl,
+  data: CreateCommissionRuleInput,
 ): Promise<CommissionRule> {
-  const url = platformConfig.api.buildUrl("/partners/commission-rules/");
+  const url = buildUrl("/partners/commission-rules/");
   const res = await fetch(url, {
     method: "POST",
     headers: getAuthHeaders(),
@@ -136,10 +143,11 @@ async function createCommissionRule(
 }
 
 async function updateCommissionRule(
+  buildUrl: BuildApiUrl,
   ruleId: string,
-  data: UpdateCommissionRuleInput
+  data: UpdateCommissionRuleInput,
 ): Promise<CommissionRule> {
-  const url = platformConfig.api.buildUrl(`/partners/commission-rules/${ruleId}`);
+  const url = buildUrl(`/partners/commission-rules/${ruleId}`);
   const res = await fetch(url, {
     method: "PATCH",
     headers: getAuthHeaders(),
@@ -155,8 +163,8 @@ async function updateCommissionRule(
   return res.json();
 }
 
-async function deleteCommissionRule(ruleId: string): Promise<void> {
-  const url = platformConfig.api.buildUrl(`/partners/commission-rules/${ruleId}`);
+async function deleteCommissionRule(buildUrl: BuildApiUrl, ruleId: string): Promise<void> {
+  const url = buildUrl(`/partners/commission-rules/${ruleId}`);
   const res = await fetch(url, {
     method: "DELETE",
     headers: getAuthHeaders(),
@@ -169,16 +177,21 @@ async function deleteCommissionRule(ruleId: string): Promise<void> {
   }
 }
 
-async function fetchApplicableRules(params: {
+async function fetchApplicableRules(
+  buildUrl: BuildApiUrl,
+  params: {
   partner_id: string;
   product_id?: string;
   customer_id?: string;
-}): Promise<CommissionRule[]> {
+},
+): Promise<CommissionRule[]> {
   const queryParams = new URLSearchParams();
   if (params.product_id) queryParams.append("product_id", params.product_id);
   if (params.customer_id) queryParams.append("customer_id", params.customer_id);
 
-  const url = platformConfig.api.buildUrl(`/partners/commission-rules/partners/${params.partner_id}/applicable?${queryParams}`);
+  const url = buildUrl(
+    `/partners/commission-rules/partners/${params.partner_id}/applicable?${queryParams}`,
+  );
   const res = await fetch(url, { headers: getAuthHeaders(), credentials: "include" });
 
   if (!res.ok) {
@@ -198,16 +211,18 @@ export function useCommissionRules(params?: {
   page?: number;
   page_size?: number;
 }) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["commission-rules", params],
-    queryFn: () => fetchCommissionRules(params),
+    queryKey: ["commission-rules", params, api.baseUrl, api.prefix],
+    queryFn: () => fetchCommissionRules(api.buildUrl, params),
   });
 }
 
 export function useCommissionRule(ruleId: string | undefined) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["commission-rules", ruleId],
-    queryFn: () => fetchCommissionRule(ruleId!),
+    queryKey: ["commission-rules", ruleId, api.baseUrl, api.prefix],
+    queryFn: () => fetchCommissionRule(api.buildUrl, ruleId!),
     enabled: !!ruleId,
   });
 }
@@ -217,18 +232,21 @@ export function useApplicableRules(params: {
   product_id?: string;
   customer_id?: string;
 }) {
+  const { api } = useAppConfig();
   return useQuery({
-    queryKey: ["commission-rules", "applicable", params],
-    queryFn: () => fetchApplicableRules(params),
+    queryKey: ["commission-rules", "applicable", params, api.baseUrl, api.prefix],
+    queryFn: () => fetchApplicableRules(api.buildUrl, params),
     enabled: !!params.partner_id,
   });
 }
 
 export function useCreateCommissionRule() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createCommissionRule,
+    mutationFn: (payload: CreateCommissionRuleInput) =>
+      createCommissionRule(api.buildUrl, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["commission-rules"] });
     },
@@ -236,11 +254,12 @@ export function useCreateCommissionRule() {
 }
 
 export function useUpdateCommissionRule() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ ruleId, data }: { ruleId: string; data: UpdateCommissionRuleInput }) =>
-      updateCommissionRule(ruleId, data),
+      updateCommissionRule(api.buildUrl, ruleId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["commission-rules"] });
     },
@@ -248,10 +267,11 @@ export function useUpdateCommissionRule() {
 }
 
 export function useDeleteCommissionRule() {
+  const { api } = useAppConfig();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteCommissionRule,
+    mutationFn: (ruleId: string) => deleteCommissionRule(api.buildUrl, ruleId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["commission-rules"] });
     },

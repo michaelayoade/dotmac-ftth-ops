@@ -37,13 +37,23 @@ jest.mock("../../../../shared/utils/jwtUtils", () => ({
   resolveTenantId: jest.fn(() => "test-tenant"),
 }));
 
-jest.mock("@/lib/config", () => ({
-  platformConfig: {
+const buildUrl = (path: string) => {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+  return `${prefixed}`;
+};
+
+jest.mock("@/providers/AppConfigContext", () => ({
+  useAppConfig: () => ({
     api: {
-      prefix: "/api/v1",
       baseUrl: "",
+      prefix: "/api/v1",
+      buildUrl,
     },
-  },
+    features: {},
+    branding: {},
+    tenant: {},
+  }),
 }));
 
 // Mock dependencies

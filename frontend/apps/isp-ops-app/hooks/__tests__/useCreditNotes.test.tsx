@@ -10,13 +10,23 @@ import { useCreditNotes } from "../useCreditNotes";
 // Mock fetch
 global.fetch = jest.fn();
 
-// Mock platform config
-jest.mock("@/lib/config", () => ({
-  platformConfig: {
+const mockBuildUrl = (path: string) => {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+  return `http://localhost:8000${prefixed}`;
+};
+
+jest.mock("@/providers/AppConfigContext", () => ({
+  useAppConfig: () => ({
     api: {
       baseUrl: "http://localhost:8000",
+      prefix: "/api/v1",
+      buildUrl: mockBuildUrl,
     },
-  },
+    features: {},
+    branding: {},
+    tenant: {},
+  }),
 }));
 
 const createWrapper = () => {

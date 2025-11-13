@@ -3,8 +3,9 @@
  * Provides comprehensive audit logging integration with backend audit system
  */
 
-import { BaseApiClient, RequestConfig } from "./BaseApiClient";
-import {
+import { BaseApiClient } from "./BaseApiClient";
+import type { RequestConfig } from "./BaseApiClient";
+import type {
   AuditEvent,
   AuditEventQuery,
   AuditEventResponse,

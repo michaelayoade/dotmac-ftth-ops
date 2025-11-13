@@ -3,7 +3,8 @@
  * Provides consistent error boundary handling with ISP Framework patterns
  */
 
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import { ISPError, classifyError, logError } from "../utils/errorUtils";
 
 export interface ErrorBoundaryState {
@@ -55,7 +56,7 @@ export class StandardErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const { onError, context } = this.props;
     const ispError = classifyError(error, context || "Error Boundary");
 
@@ -75,7 +76,7 @@ export class StandardErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     });
   }
 
-  componentWillUnmount(): void {
+  override componentWillUnmount(): void {
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId);
     }
@@ -112,7 +113,7 @@ export class StandardErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     });
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     const { hasError, error, errorId, retryCount } = this.state;
     const {
       children,

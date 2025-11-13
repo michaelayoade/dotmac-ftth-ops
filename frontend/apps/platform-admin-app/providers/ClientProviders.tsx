@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
@@ -20,10 +20,22 @@ import {
   KeyboardShortcuts,
 } from "@/lib/design-system/accessibility";
 import { ConfirmDialogProvider } from "@dotmac/ui";
+import { useRuntimeConfigState } from "@shared/runtime/RuntimeConfigContext";
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [queryClient] = useState(() => new QueryClient());
+  const { runtimeConfig } = useRuntimeConfigState();
+
+  const appConfigValue = useMemo(() => {
+    return {
+      ...platformConfig,
+      api: { ...platformConfig.api },
+      features: { ...platformConfig.features },
+      branding: { ...platformConfig.branding },
+      tenant: { ...platformConfig.tenant },
+    };
+  }, [runtimeConfig?.generatedAt]);
 
   const shouldWrapWithRBAC =
     pathname?.startsWith("/dashboard") ||
@@ -31,7 +43,7 @@ export function ClientProviders({ children }: { children: ReactNode }) {
     pathname?.startsWith("/partner");
 
   const appProviders = (
-    <AppConfigProvider value={platformConfig}>
+    <AppConfigProvider value={appConfigValue}>
       <ConfirmDialogProvider>
         <BrandingProvider>
           <SkipToMainContent />

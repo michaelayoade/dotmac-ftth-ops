@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { X, Save, User, Building } from "lucide-react";
+import { useState } from "react";
 
 export interface CustomerEditModalProps<TCustomer = any> {
   customer?: TCustomer | null;

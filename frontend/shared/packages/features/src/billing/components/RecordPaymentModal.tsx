@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,7 @@ import {
 } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { DollarSign, CreditCard, Building2, Wallet, Check, Upload, X } from "lucide-react";
+import { useState, useMemo } from "react";
 
 // ============================================================================
 // Types

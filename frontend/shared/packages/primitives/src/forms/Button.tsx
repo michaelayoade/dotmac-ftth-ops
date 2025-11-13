@@ -107,6 +107,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       showAsyncLoading = true,
       disabled,
       onClick,
+      onKeyDown,
       type = "button",
       children,
       ...props
@@ -180,6 +181,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Custom loading spinner matching UI package behavior
     const LoadingIcon = loadingComponent || (
       <svg
+        data-testid="loader"
         className="animate-spin h-4 w-4"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
@@ -202,6 +204,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       </svg>
     );
 
+    const handleKeyDownEvent = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if ([" ", "Spacebar", "Space"].includes(event.key)) {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    };
+
     // When using asChild, pass only children to avoid Slot conflicts
     if (asChild) {
       return (
@@ -211,6 +220,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           disabled={disabled} // Don't modify disabled when asChild
           type={type}
           onClick={onClick} // Use original onClick when asChild
+          onKeyDown={onKeyDown}
           aria-disabled={disabled ? "true" : undefined}
           {...props}
         >
@@ -258,6 +268,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isButtonDisabled}
         type={type}
         onClick={handleClick}
+        onKeyDown={(event: React.KeyboardEvent<HTMLButtonElement>) => {
+          onKeyDown?.(event);
+          handleKeyDownEvent(event);
+        }}
         aria-disabled={isButtonDisabled ? "true" : undefined}
         {...props}
       >

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { MapPin, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 // Type declaration for Google Maps API
 declare const google: any;

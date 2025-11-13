@@ -258,7 +258,7 @@ export function usePlanSubscriptions(
   const fullParams: ListSubscriptionsParams = {
     ...params,
     plan_id: planId || undefined,
-  };
+  } as ListSubscriptionsParams;
 
   return useQuery({
     queryKey: internetPlanKeys.subscriptions.list(fullParams),
@@ -305,7 +305,7 @@ export function useCustomerSubscriptions(
   const fullParams: ListSubscriptionsParams = {
     ...params,
     customer_id: customerId || undefined,
-  };
+  } as ListSubscriptionsParams;
 
   return useQuery({
     queryKey: internetPlanKeys.subscriptions.list(fullParams),

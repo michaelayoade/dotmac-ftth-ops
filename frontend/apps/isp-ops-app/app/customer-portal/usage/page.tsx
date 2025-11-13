@@ -41,7 +41,7 @@ import {
 import { format } from "date-fns";
 import { useCustomerUsage } from "@/hooks/useCustomerPortal";
 import { useToast } from "@dotmac/ui";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import {
   CUSTOMER_PORTAL_TOKEN_KEY,
   getPortalAuthToken,
@@ -52,7 +52,7 @@ export default function CustomerUsagePage() {
   const [timeRange, setTimeRange] = useState("7d");
   const { usage, loading } = useCustomerUsage();
   const { toast } = useToast();
-  const API_BASE = platformConfig.api.baseUrl;
+  const { apiBaseUrl } = useApiConfig();
   const [usageHistory, setUsageHistory] = useState<{
     dailyUsage: Array<{ date: string; download: number; upload: number }>;
     hourlyUsage: Array<{ hour: string; download: number; upload: number }>;
@@ -77,7 +77,7 @@ export default function CustomerUsagePage() {
         }
 
         const response = await fetch(
-          `${API_BASE}/api/v1/customer/usage/history?time_range=${timeRange}`,
+          `${apiBaseUrl}/api/v1/customer/usage/history?time_range=${timeRange}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -106,7 +106,7 @@ export default function CustomerUsagePage() {
     };
 
     fetchUsageHistory();
-  }, [API_BASE, timeRange, loading]);
+  }, [apiBaseUrl, timeRange, loading]);
 
   if (loading) {
     return (
@@ -174,7 +174,7 @@ export default function CustomerUsagePage() {
       if (!token) {
         throw new Error("Customer session expired");
       }
-      const response = await fetch(`${API_BASE}/api/v1/customer/usage/report`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/customer/usage/report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

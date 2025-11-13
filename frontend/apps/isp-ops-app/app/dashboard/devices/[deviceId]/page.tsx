@@ -22,7 +22,7 @@ import {
   Clock,
   MapPin,
 } from "lucide-react";
-import { platformConfig } from "@/lib/config";
+import { useApiConfig } from "@/hooks/useApiConfig";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
@@ -93,13 +93,14 @@ function DeviceDetailsPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { apiBaseUrl } = useApiConfig();
 
   // Fetch device details
   const { data: device, isLoading } = useQuery<DeviceDetails>({
     queryKey: ["device", deviceId, refreshKey],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -116,7 +117,7 @@ function DeviceDetailsPageContent() {
     queryKey: ["device-events", deviceId, refreshKey],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/events`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/events`,
         {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -131,7 +132,7 @@ function DeviceDetailsPageContent() {
   const refreshMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
         {
           method: "POST",
           credentials: "include",
@@ -158,7 +159,7 @@ function DeviceDetailsPageContent() {
   const rebootMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/genieacs/devices/${deviceId}/reboot`,
+        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/reboot`,
         {
           method: "POST",
           credentials: "include",
