@@ -130,6 +130,11 @@ export function seedOperationsData(
   }
 }
 
+// Helper to get stored log stats (used by logs handler)
+export function getStoredLogStats(period: string): LogStats | undefined {
+  return logStats[period];
+}
+
 export const operationsHandlers = [
   // GET /api/v1/monitoring/metrics - Get monitoring metrics
   rest.get('*/api/v1/monitoring/metrics', (req, res, ctx) => {

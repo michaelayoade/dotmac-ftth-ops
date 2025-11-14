@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { usePermissions } from "./usePermissions";
-import { useUniversalAuth } from "./useUniversalAuth";
+import { usePortalIdAuth } from "./usePortalIdAuth";
 
 interface RouteConfig {
   path: string;
@@ -325,7 +325,7 @@ const RouteHelpers = {
 export function useRouteProtection(): RouteProtectionResult {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, currentPortal, isLoading: authLoading } = usePortalAuth();
+  const { user, currentPortal, isLoading: authLoading } = usePortalIdAuth();
   const { checkAnyRole, hasAnyPermission, _hasFeature } = usePermissions();
 
   const [protectionResult, setProtectionResult] = useState<RouteProtectionResult>({
@@ -443,7 +443,7 @@ export function useRouteProtection(): RouteProtectionResult {
 // Hook for protecting specific routes with custom configuration
 export function useCustomRouteProtection(config: Omit<RouteConfig, "path">): RouteProtectionResult {
   const pathname = usePathname();
-  const { user, currentPortal, isLoading: authLoading } = usePortalAuth();
+  const { user, currentPortal, isLoading: authLoading } = usePortalIdAuth();
   const { checkAnyRole, hasAnyPermission, _hasFeature } = usePermissions();
 
   const [protectionResult, setProtectionResult] = useState<RouteProtectionResult>({

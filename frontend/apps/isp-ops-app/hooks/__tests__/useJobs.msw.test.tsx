@@ -6,11 +6,7 @@
  */
 
 import { renderHook, waitFor, act } from "@testing-library/react";
-import {
-  useJobs,
-  useFieldInstallationJobs,
-  useCancelJob,
-} from "../useJobs";
+import { useJobs, useFieldInstallationJobs, useCancelJob } from "../useJobs";
 import {
   createTestQueryClient,
   createMockJob,
@@ -21,6 +17,19 @@ import {
 } from "../../__tests__/test-utils";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
+
+// The jobs hook re-exports useJobWebSocket, which pulls in the BetterAuth client.
+// That bundle depends on ESM-only packages (nanostores) that Jest can't parse in CJS mode.
+// Mock the realtime hook so the tests can focus purely on the REST interactions.
+jest.mock("../useRealtime", () => ({
+  useJobWebSocket: jest.fn(() => ({
+    isConnected: false,
+    connectionError: null,
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+    send: jest.fn(),
+  })),
+}));
 
 describe("useJobs (MSW)", () => {
   // Helper to create wrapper with QueryClient
@@ -509,7 +518,7 @@ describe("useJobs (MSW)", () => {
         await cancelResult.current.mutateAsync("job-1");
       });
 
-      expect(cancelResult.current.isSuccess).toBe(true);
+      await waitFor(() => expect(cancelResult.current.isSuccess).toBe(true));
     });
 
     it("should handle field installation with full details", async () => {

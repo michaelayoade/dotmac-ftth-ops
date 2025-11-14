@@ -12,6 +12,11 @@ import type {
   LogStats,
   LogMetadata,
 } from '../../../hooks/useLogs';
+// Import operations helpers to handle operations-style log stats
+import {
+  createMockLogStats as createMockOperationsLogStats,
+  getStoredLogStats as getStoredOperationsLogStats
+} from './operations';
 
 // In-memory storage for test data
 let logs: LogEntry[] = [];
@@ -84,7 +89,22 @@ function getUniqueServices(): string[] {
 export const logsHandlers = [
   // GET /api/v1/monitoring/logs/stats - Get log statistics
   // NOTE: This MUST come before /api/v1/monitoring/logs to avoid matching "/stats" as a query param
+  // NOTE: This handler serves two different APIs:
+  // 1. Without 'period' param: Returns log stats for useLogs (by_level, by_service, time_range)
+  // 2. With 'period' param: Returns operations log stats for useLogStats (critical_logs, auth_logs, etc.)
   rest.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
+    const url = new URL(req.url);
+    const period = url.searchParams.get('period') as '1h' | '24h' | '7d' | null;
+
+    // If period parameter is present, return operations-style log stats
+    if (period) {
+      // Check if there's seeded data from operations tests
+      const storedStats = getStoredOperationsLogStats(period);
+      const operationsStats = storedStats || createMockOperationsLogStats(period);
+      return res(ctx.json(operationsStats));
+    }
+
+    // Without period parameter, return logs-style stats
     const stats = createLogStats();
     return res(ctx.json(stats));
   }),

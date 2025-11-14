@@ -88,12 +88,7 @@ export const billingPlansHandlers = [
       filtered = filtered.filter((plan) => plan.product_id === productId);
     }
 
-    return res(
-      ctx.json({
-        success: true,
-        data: filtered,
-      })
-    );
+    return res(ctx.json(filtered));
   }),
 
   // GET /billing/catalog/products - List products
@@ -107,11 +102,7 @@ export const billingPlansHandlers = [
       filtered = filtered.filter((product) => product.is_active);
     }
 
-    return res(
-      ctx.json({
-        data: filtered,
-      })
-    );
+    return res(ctx.json(filtered));
   }),
 
   // POST /billing/subscriptions/plans - Create plan
@@ -125,13 +116,7 @@ export const billingPlansHandlers = [
 
     billingPlans.push(newPlan);
 
-    return res(
-      ctx.status(201),
-      ctx.json({
-        success: true,
-        data: newPlan,
-      })
-    );
+    return res(ctx.status(201), ctx.json(newPlan));
   }),
 
   // PATCH /billing/subscriptions/plans/:id - Update plan
@@ -154,11 +139,7 @@ export const billingPlansHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(
-      ctx.json({
-        data: billingPlans[index],
-      })
-    );
+    return res(ctx.json(billingPlans[index]));
   }),
 
   // DELETE /billing/subscriptions/plans/:id - Delete plan
