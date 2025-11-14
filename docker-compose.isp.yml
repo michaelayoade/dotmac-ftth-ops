@@ -8,26 +8,26 @@ services:
     environment:
       ENVIRONMENT: ${ISP_ENVIRONMENT:-development}
       LOG_LEVEL: ${ISP_LOG_LEVEL:-debug}
-      DATABASE__HOST: ${ISP_DATABASE__HOST:-host.docker.internal}
+      DATABASE__HOST: ${ISP_DATABASE__HOST:-dotmac-postgres}
       DATABASE__PORT: ${ISP_DATABASE__PORT:-5432}
       DATABASE__DATABASE: ${ISP_DATABASE__DATABASE:-dotmac}
       DATABASE__USERNAME: ${ISP_DATABASE__USERNAME:-dotmac_user}
       DATABASE__PASSWORD: ${ISP_DATABASE__PASSWORD:-change-me}
-      REDIS__HOST: ${ISP_REDIS__HOST:-host.docker.internal}
+      REDIS__HOST: ${ISP_REDIS__HOST:-dotmac-redis}
       REDIS__PORT: ${ISP_REDIS__PORT:-6379}
       REDIS__DB: ${ISP_REDIS__DB:-0}
-      STORAGE__ENDPOINT: ${ISP_STORAGE__ENDPOINT:-http://host.docker.internal:9000}
+      STORAGE__ENDPOINT: ${ISP_STORAGE__ENDPOINT:-http://dotmac-minio:9000}
       STORAGE__ACCESS_KEY: ${ISP_STORAGE__ACCESS_KEY:-minioadmin}
       STORAGE__SECRET_KEY: ${ISP_STORAGE__SECRET_KEY:-minioadmin123}
       STORAGE__BUCKET: ${ISP_STORAGE__BUCKET:-dotmac}
       STORAGE__USE_SSL: ${ISP_STORAGE__USE_SSL:-false}
       VAULT__ENABLED: ${ISP_VAULT__ENABLED:-false}
-      VAULT__URL: ${ISP_VAULT__URL:-http://host.docker.internal:8200}
+      VAULT__URL: ${ISP_VAULT__URL:-http://dotmac-vault:8200}
       VAULT__TOKEN: ${ISP_VAULT__TOKEN:-dev-token-12345}
       SECRET_KEY: ${ISP_SECRET_KEY:-dev-secret-change-me}
       AUTH__JWT_SECRET_KEY: ${ISP_AUTH__JWT_SECRET_KEY:-dev-jwt-secret-change-me}
-      CELERY__BROKER_URL: ${ISP_CELERY__BROKER_URL:-redis://host.docker.internal:6379/2}
-      CELERY__RESULT_BACKEND: ${ISP_CELERY__RESULT_BACKEND:-redis://host.docker.internal:6379/3}
+      CELERY__BROKER_URL: ${ISP_CELERY__BROKER_URL:-redis://dotmac-redis:6379/2}
+      CELERY__RESULT_BACKEND: ${ISP_CELERY__RESULT_BACKEND:-redis://dotmac-redis:6379/3}
       REQUIRE_REDIS_SESSIONS: ${ISP_REQUIRE_REDIS_SESSIONS:-false}
     ports:
       - "${ISP_BACKEND_PORT:-8000}:8000"
@@ -59,4 +59,5 @@ volumes:
 
 networks:
   default:
-    name: ${COMPOSE_PROJECT_NAME:-dotmac-isp}-network
+    name: dotmac-network
+    external: true

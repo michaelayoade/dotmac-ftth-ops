@@ -8,27 +8,27 @@ services:
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-debug}
-      DATABASE__HOST: ${DATABASE__HOST:-host.docker.internal}
+      DATABASE__HOST: ${DATABASE__HOST:-dotmac-postgres}
       DATABASE__PORT: ${DATABASE__PORT:-5432}
       DATABASE__DATABASE: ${DATABASE__DATABASE:-dotmac}
       DATABASE__USERNAME: ${DATABASE__USERNAME:-dotmac_user}
       DATABASE__PASSWORD: ${DATABASE__PASSWORD:-change-me}
-      REDIS__HOST: ${REDIS__HOST:-host.docker.internal}
+      REDIS__HOST: ${REDIS__HOST:-dotmac-redis}
       REDIS__PORT: ${REDIS__PORT:-6379}
       REDIS__DB: ${REDIS__DB:-0}
-      STORAGE__ENDPOINT: ${STORAGE__ENDPOINT:-http://host.docker.internal:9000}
+      STORAGE__ENDPOINT: ${STORAGE__ENDPOINT:-http://dotmac-minio:9000}
       STORAGE__ACCESS_KEY: ${STORAGE__ACCESS_KEY:-minioadmin}
       STORAGE__SECRET_KEY: ${STORAGE__SECRET_KEY:-minioadmin123}
       STORAGE__BUCKET: ${STORAGE__BUCKET:-dotmac}
       STORAGE__USE_SSL: ${STORAGE__USE_SSL:-false}
       VAULT__ENABLED: ${VAULT__ENABLED:-false}
-      VAULT__URL: ${VAULT__URL:-http://host.docker.internal:8200}
+      VAULT__URL: ${VAULT__URL:-http://dotmac-vault:8200}
       VAULT__TOKEN: ${VAULT__TOKEN:-dev-token-12345}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
       AUTH__JWT_SECRET_KEY: ${AUTH__JWT_SECRET_KEY:-dev-jwt-secret-change-me}
-      CELERY__BROKER_URL: ${CELERY__BROKER_URL:-redis://host.docker.internal:6379/2}
-      CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://host.docker.internal:6379/3}
-      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://host.docker.internal:4317}
+      CELERY__BROKER_URL: ${CELERY__BROKER_URL:-redis://dotmac-redis:6379/2}
+      CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://dotmac-redis:6379/3}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://dotmac-jaeger:4317}
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dotmac-platform}
       REQUIRE_REDIS_SESSIONS: ${REQUIRE_REDIS_SESSIONS:-false}
     ports:
@@ -81,4 +81,5 @@ volumes:
 
 networks:
   default:
-    name: ${COMPOSE_PROJECT_NAME:-dotmac-platform}-network
+    name: dotmac-network
+    external: true
