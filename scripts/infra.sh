@@ -40,6 +40,15 @@ INFRA_SERVICES=(
     "postgres:5432:PostgreSQL Database"
     "redis:6379:Redis Cache"
     "minio:9000:MinIO Object Storage"
+    "freeradius:1812:FreeRADIUS (Auth/Acct)"
+    "mongodb:27017:MongoDB (GenieACS)"
+    "genieacs:7567:GenieACS UI"
+    "netbox:8080:NetBox (IPAM/DCIM)"
+    "meilisearch:7700:MeiliSearch"
+    "prometheus:9090:Prometheus"
+    "grafana:3000:Grafana Dashboards"
+    "loki:3100:Loki (Logs)"
+    "jaeger:16686:Jaeger UI (Tracing)"
 )
 
 PLATFORM_SERVICES=(

@@ -1,6 +1,10 @@
 version: '3.8'
 
 services:
+  # =================================================================
+  # CORE INFRASTRUCTURE
+  # =================================================================
+
   postgres:
     image: postgres:15-alpine
     container_name: dotmac-postgres
@@ -59,10 +63,243 @@ services:
     networks:
       - dotmac-network
 
+  # =================================================================
+  # RADIUS SERVICES
+  # =================================================================
+
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    container_name: dotmac-freeradius
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: dotmac
+      POSTGRES_USER: dotmac_user
+      POSTGRES_PASSWORD: dev_local_pg_password_123
+    ports:
+      - "1812:1812/udp"  # Auth
+      - "1813:1813/udp"  # Accounting
+      - "3799:3799/udp"  # CoA/DM
+    volumes:
+      - freeradius_config:/etc/raddb
+    depends_on:
+      - postgres
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # CPE MANAGEMENT (TR-069)
+  # =================================================================
+
+  mongodb:
+    image: mongo:7
+    container_name: dotmac-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: dev_local_mongo_password
+      MONGO_INITDB_DATABASE: genieacs
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dotmac-network
+
+  genieacs:
+    image: drumsergio/genieacs:latest
+    container_name: dotmac-genieacs
+    restart: unless-stopped
+    environment:
+      GENIEACS_CWMP_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-cwmp-access.log
+      GENIEACS_NBI_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-nbi-access.log
+      GENIEACS_FS_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-fs-access.log
+      GENIEACS_UI_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-ui-access.log
+      GENIEACS_DEBUG_FILE: /var/log/genieacs/genieacs-debug.yaml
+      GENIEACS_MONGODB_CONNECTION_URL: mongodb://admin:dev_local_mongo_password@mongodb:27017/genieacs?authSource=admin
+    ports:
+      - "7547:7547"  # CWMP
+      - "7557:7557"  # NBI
+      - "7567:7567"  # UI
+      - "7577:7577"  # FS
+    volumes:
+      - genieacs_data:/opt/genieacs/ext
+      - genieacs_logs:/var/log/genieacs
+    depends_on:
+      - mongodb
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # IPAM / DCIM (NetBox)
+  # =================================================================
+
+  netbox-postgres:
+    image: postgres:15-alpine
+    container_name: dotmac-netbox-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: netbox
+      POSTGRES_USER: netbox
+      POSTGRES_PASSWORD: dev_local_netbox_pg_password
+    volumes:
+      - netbox_postgres_data:/var/lib/postgresql/data
+    networks:
+      - dotmac-network
+
+  netbox-redis-cache:
+    image: redis:7-alpine
+    container_name: dotmac-netbox-redis-cache
+    restart: unless-stopped
+    command: redis-server --requirepass dev_local_netbox_redis_password
+    networks:
+      - dotmac-network
+
+  netbox:
+    image: netboxcommunity/netbox:latest
+    container_name: dotmac-netbox
+    restart: unless-stopped
+    environment:
+      DB_HOST: netbox-postgres
+      DB_NAME: netbox
+      DB_USER: netbox
+      DB_PASSWORD: dev_local_netbox_pg_password
+      REDIS_HOST: netbox-redis-cache
+      REDIS_PASSWORD: dev_local_netbox_redis_password
+      SECRET_KEY: dev_local_netbox_secret_key_that_is_longer_than_50_chars!!
+      SUPERUSER_NAME: admin
+      SUPERUSER_EMAIL: admin@example.com
+      SUPERUSER_PASSWORD: admin
+      SKIP_SUPERUSER: false
+    ports:
+      - "8080:8080"
+    volumes:
+      - netbox_media:/opt/netbox/netbox/media
+    depends_on:
+      - netbox-postgres
+      - netbox-redis-cache
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # SEARCH SERVICES
+  # =================================================================
+
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: dotmac-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: dev_local_meili_master_key
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # MONITORING & OBSERVABILITY
+  # =================================================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: dotmac-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./config/prometheus:/etc/prometheus
+    networks:
+      - dotmac-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dotmac-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - dotmac-network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: dotmac-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - dotmac-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: dotmac-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: :9411
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"  # UI
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - dotmac-network
+
 volumes:
+  # Core
   postgres_data:
   redis_data:
   minio_data:
+
+  # RADIUS
+  freeradius_config:
+
+  # CPE Management
+  mongodb_data:
+  genieacs_data:
+  genieacs_logs:
+
+  # NetBox
+  netbox_postgres_data:
+  netbox_media:
+
+  # Search
+  meilisearch_data:
+
+  # Monitoring
+  prometheus_data:
+  grafana_data:
+  loki_data:
 
 networks:
   dotmac-network:

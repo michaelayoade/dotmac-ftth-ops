@@ -1,118 +1,52 @@
-# Prometheus Configuration for ISP Platform
-# Collects metrics from all services
-
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'isp-platform'
-    environment: 'production'
+    cluster: 'dotmac-platform'
+    environment: 'development'
 
 # Alertmanager configuration
 alerting:
   alertmanagers:
     - static_configs:
-        - targets:
-            - 'alertmanager:9093'
+        - targets: []
 
-# Load alert rules
+# Load rules once and periodically evaluate them
 rule_files:
-  - '/etc/prometheus/alerts.yml'
+  # - "alerts/*.yml"
 
 # Scrape configurations
 scrape_configs:
+  # Platform backend
+  - job_name: 'platform-backend'
+    static_configs:
+      - targets: ['host.docker.internal:8001']
+        labels:
+          service: 'platform-backend'
+
+  # ISP backend
+  - job_name: 'isp-backend'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+        labels:
+          service: 'isp-backend'
+
   # Prometheus itself
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  # Node Exporter - Server metrics
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['node-exporter:9100']
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-
-  # cAdvisor - Container metrics
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets: ['cadvisor:8080']
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-
-  # PostgreSQL Exporter (if deployed)
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['postgres-exporter:9187']
-
-  # Redis Exporter (if deployed)
+  # Redis
   - job_name: 'redis'
     static_configs:
-      - targets: ['redis-exporter:9121']
+      - targets: ['redis:6379']
 
-  # FastAPI Backend - Application metrics
-  - job_name: 'fastapi-backend'
-    static_configs:
-      - targets: ['backend:8000']
-    metrics_path: '/metrics'
+  # PostgreSQL (requires postgres_exporter)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
 
-  # Celery Exporter (if deployed)
-  - job_name: 'celery'
-    static_configs:
-      - targets: ['celery-exporter:9808']
-
-  # FreeRADIUS Exporter (if deployed)
-  - job_name: 'freeradius'
-    static_configs:
-      - targets: ['freeradius-exporter:9812']
-
-  # NetBox (built-in metrics)
-  - job_name: 'netbox'
-    static_configs:
-      - targets: ['netbox:8080']
-    metrics_path: '/metrics'
-
-  # GenieACS (custom exporter if available)
-  - job_name: 'genieacs'
-    static_configs:
-      - targets: ['genieacs-exporter:9100']
-
-  # Jaeger (tracing metrics)
-  - job_name: 'jaeger'
-    static_configs:
-      - targets: ['jaeger:14269']
-
-  # Loki (log metrics)
-  - job_name: 'loki'
-    static_configs:
-      - targets: ['loki:3100']
-
-  # Alertmanager
-  - job_name: 'alertmanager'
-    static_configs:
-      - targets: ['alertmanager:9093']
-
-  # LibreNMS (if exporter available)
-  - job_name: 'librenms'
-    static_configs:
-      - targets: ['librenms-exporter:9100']
-
-  # MongoDB Exporter (for GenieACS)
-  - job_name: 'mongodb'
-    static_configs:
-      - targets: ['mongodb-exporter:9216']
-
-  # TimescaleDB/PostgreSQL metrics
-  - job_name: 'timescaledb'
-    static_configs:
-      - targets: ['timescale-exporter:9187']
-
-  # Service discovery for dynamic services
-  - job_name: 'service-discovery'
-    dns_sd_configs:
-      - names:
-          - 'tasks.backend'
-        type: 'A'
-        port: 8000
+  # FreeRADIUS (if it exposes metrics)
+  # - job_name: 'freeradius'
+  #   static_configs:
+  #     - targets: ['freeradius:9812']
