@@ -47,4 +47,4 @@ USER nodejs
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/isp-ops-app/server.js"]

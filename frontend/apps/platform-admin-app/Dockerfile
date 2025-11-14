@@ -108,4 +108,4 @@ USER nodejs
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/platform-admin-app/server.js"]
