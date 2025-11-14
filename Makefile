@@ -33,7 +33,7 @@ help:
 	@echo "  make logs-isp               View ISP logs"
 	@echo ""
 	@echo "$(GREEN)Infrastructure - Complete Stack:$(NC)"
-	@echo "  make start-all              Start platform and ISP stacks"
+	@echo "  make start-all              Start all services + run migrations + verify health"
 	@echo "  make stop-all               Stop all services"
 	@echo "  make restart-all            Restart all services"
 	@echo "  make status-all             Check all service status"
@@ -96,12 +96,11 @@ help:
 	@echo "  make clean-isp              Remove ISP containers/volumes (DESTRUCTIVE!)"
 	@echo "  make clean-all              Remove ALL containers/volumes (DESTRUCTIVE!)"
 	@echo ""
-	@echo "$(YELLOW)Quick Start:$(NC)"
+	@echo "$(YELLOW)Quick Start (One Command Setup):$(NC)"
 	@echo "  1. make check-deps          # Verify tools are installed"
 	@echo "  2. make install             # Install dependencies"
-	@echo "  3. make start-all           # Start infrastructure"
-	@echo "  4. make post-deploy         # Run post-deployment setup (migrations + health checks)"
-	@echo "  5. make dev-host            # Start backend on host (or use the Docker containers)"
+	@echo "  3. make start-all           # Start all services + migrations + health checks"
+	@echo "  4. Access frontends:        # Platform (3002), ISP (3001)"
 	@echo ""
 
 # ===================================================================
@@ -157,6 +156,9 @@ start-all:
 		exit 1; \
 	fi
 	@./scripts/infra.sh all start
+	@echo ""
+	@echo "$(CYAN)Running post-deployment setup (migrations + health checks)...$(NC)"
+	@./scripts/post-deploy.sh all
 
 stop-all:
 	@./scripts/infra.sh all stop
