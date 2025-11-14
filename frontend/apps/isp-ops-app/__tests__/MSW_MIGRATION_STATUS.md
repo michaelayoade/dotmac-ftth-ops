@@ -459,16 +459,23 @@ Located in `__tests__/test-utils.tsx`:
 - Hooks Fully Passing: useOrchestration, useTechnicians, useServiceLifecycle
 - Hooks Mostly Passing: useLogs (83.3% - React Query config issue with parallel stats queries)
 
-### Phase 5: Remaining Hooks
-- [ ] Migrate remaining ~20 hooks as needed based on development priorities
-- [ ] High-priority: useAudit (fetch-based), useFieldService (fetch-based)
-- [ ] Lower-priority specialized hooks (useCampaigns, useReconciliation, usePartners, etc.)
+### Phase 5: Bug Fixes & Optimization ✅ COMPLETE
+- [x] Fix fetch API support with whatwg-fetch polyfill
+- [x] Fix handler conflicts (logs/operations)
+- [x] Fix response format issues
+- [x] Fix mutation refetch timing
+- [x] Fix ESM dependency issues (useJobs)
+- [x] Achieve 100% test pass rate ✅
+- [x] Document lessons learned
 
-### Phase 5: Cleanup and Optimization
-- [ ] Remove all old jest.mock test files
-- [ ] Achieve 90%+ test pass rate
-- [ ] Optimize test performance
-- [ ] Document lessons learned
+### Phase 6-10: Future Migrations (Optional)
+See `MSW_CLEANUP_PLAN.md` for detailed roadmap:
+- **Phase 6**: High-priority API hooks (useAudit, useFieldService, useCampaigns)
+- **Phase 7-8**: Business logic & platform hooks
+- **Phase 9**: GraphQL hooks (requires GraphQL MSW setup)
+- **Phase 10**: Utilities & remaining hooks
+
+**Current Recommendation**: Remove old test files (see cleanup plan), then migrate hooks as needed
 
 ## Benefits of MSW Migration
 
@@ -618,9 +625,43 @@ For each hook migration:
 - [ ] Remove old jest.mock tests
 - [ ] Update this status document
 
+## Documentation Suite
+
+### Core Documentation
+1. **MSW_MIGRATION_STATUS.md** (this file) - Migration progress and history
+2. **MSW_CLEANUP_PLAN.md** - Detailed cleanup plan and future migration roadmap
+3. **TESTING_PATTERNS.md** - Comprehensive testing patterns and best practices
+4. **README.md** - MSW setup guide and architecture
+
+### Quick Links
+- **Start here**: `README.md` for MSW basics
+- **Patterns**: `TESTING_PATTERNS.md` for all testing patterns
+- **Future work**: `MSW_CLEANUP_PLAN.md` for cleanup and migration plans
+- **Examples**: `use*.msw.test.tsx` files for working examples
+
+## Next Steps
+
+### Immediate Actions (Week 1)
+1. **Review cleanup plan**: See `MSW_CLEANUP_PLAN.md`
+2. **Get team approval**: Review which old test files to remove
+3. **Execute cleanup**: Remove 27 old test files (~631KB)
+4. **Verify tests**: Ensure all 495 MSW tests still passing
+
+### Future Migrations (As Needed)
+- **High Priority**: useAudit, useFieldService, useCampaigns
+- **Medium Priority**: Business logic hooks (see cleanup plan Phase 7-8)
+- **Low Priority**: Utilities and specialized hooks
+
+### Maintenance
+- Keep MSW patterns consistent across new tests
+- Update TESTING_PATTERNS.md with new discoveries
+- Migrate remaining hooks as development priorities dictate
+
 ## Contact
 
 For questions about MSW migration:
-- See: `__tests__/README.md` for detailed guide
-- Reference: `useWebhooks.msw.test.tsx` or `useNotifications.msw.test.tsx` for examples
-- Check: `__tests__/msw/handlers/` for handler patterns
+- **Setup guide**: `__tests__/README.md`
+- **Testing patterns**: `__tests__/TESTING_PATTERNS.md`
+- **Examples**: `useWebhooks.msw.test.tsx`, `useDunning.msw.test.tsx`
+- **Handlers**: `__tests__/msw/handlers/`
+- **Cleanup plan**: `__tests__/MSW_CLEANUP_PLAN.md`

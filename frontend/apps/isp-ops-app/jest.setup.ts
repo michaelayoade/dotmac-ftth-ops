@@ -129,16 +129,9 @@ Object.defineProperty(global.navigator, "serviceWorker", {
   },
 });
 
-// Suppress console errors in tests
-const originalError = console.error;
-console.error = (...args: any[]) => {
-  if (
-    typeof args[0] === "string" &&
-    (args[0].includes("Warning: ReactDOM.render") ||
-      args[0].includes("Warning: useLayoutEffect") ||
-      args[0].includes("Not implemented: HTMLFormElement.prototype.submit"))
-  ) {
-    return;
-  }
-  originalError.call(console, ...args);
-};
+// Note: Console warnings are NOT suppressed in tests
+// This allows us to catch real issues like:
+// - useLayoutEffect warnings (should use useEffect in tests or fix server-side issues)
+// - ReactDOM.render deprecation warnings (should migrate to createRoot)
+// - Async state update warnings (should be wrapped in act())
+// If a warning appears, fix the root cause instead of suppressing it here

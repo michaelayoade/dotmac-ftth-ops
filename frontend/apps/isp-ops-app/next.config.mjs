@@ -26,14 +26,14 @@ const nextConfig = {
     domains: ['images.unsplash.com'],
   },
   env: {
-    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
-    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
+    NEXT_PUBLIC_API_BASE_URL: process.env['NEXT_PUBLIC_API_BASE_URL'],
+    NEXT_PUBLIC_WS_URL: process.env['NEXT_PUBLIC_WS_URL'],
     NEXT_PUBLIC_APP_TYPE: 'isp-ops',
     NEXT_PUBLIC_PORTAL_TYPE: 'isp',
   },
   // Proxy API requests to backend for proper cookie handling
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001';
+    const backendUrl = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8001';
     const baseRewrites = [
       {
         source: '/api/v1/:path*',
