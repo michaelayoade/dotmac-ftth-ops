@@ -32,8 +32,15 @@ cd "${PROJECT_ROOT}"
 
 PROJECT_NAME=${COMPOSE_PROJECT_NAME:-$(basename "${PROJECT_ROOT}")}
 
+COMPOSE_INFRA="docker-compose.infra.yml"
 COMPOSE_PLATFORM="docker-compose.base.yml"
 COMPOSE_ISP="docker-compose.isp.yml"
+
+INFRA_SERVICES=(
+    "postgres:5432:PostgreSQL Database"
+    "redis:6379:Redis Cache"
+    "minio:9000:MinIO Object Storage"
+)
 
 PLATFORM_SERVICES=(
     "platform-backend:8000:Platform API"
@@ -165,6 +172,20 @@ show_services_status() {
 # Actions
 # ---------------------------------------------------------------------------
 
+start_infra() {
+    echo -e "${CYAN}Starting infrastructure services (PostgreSQL, Redis, MinIO)...${NC}"
+    if [[ ! -f "${COMPOSE_INFRA}" ]]; then
+        echo -e "${YELLOW}⚠ Warning: ${COMPOSE_INFRA} not found. Infrastructure services will not be started.${NC}"
+        echo -e "${YELLOW}  Create this file to manage PostgreSQL, Redis, and MinIO containers.${NC}"
+        return 0
+    fi
+    docker compose -f "${COMPOSE_INFRA}" up -d
+    echo -e "${GREEN}✓ Waiting for infrastructure services to become healthy...${NC}"
+    sleep 5
+    echo ""
+    status_infra
+}
+
 start_platform() {
     echo -e "${CYAN}Starting platform services...${NC}"
     docker compose -f "${COMPOSE_PLATFORM}" up -d platform-backend platform-frontend
@@ -180,9 +201,18 @@ start_isp() {
 }
 
 start_all() {
+    start_infra
+    echo ""
     start_platform
     echo ""
     start_isp
+}
+
+stop_infra() {
+    echo -e "${CYAN}Stopping infrastructure services...${NC}"
+    if [[ -f "${COMPOSE_INFRA}" ]]; then
+        docker compose -f "${COMPOSE_INFRA}" down
+    fi
 }
 
 stop_platform() {
@@ -198,6 +228,7 @@ stop_isp() {
 stop_all() {
     stop_isp
     stop_platform
+    stop_infra
 }
 
 restart_platform() {
@@ -220,6 +251,15 @@ restart_all() {
     restart_isp
 }
 
+status_infra() {
+    echo -e "${CYAN}Infrastructure services:${NC}"
+    if [[ -f "${COMPOSE_INFRA}" ]]; then
+        show_services_status "${COMPOSE_INFRA}" "${INFRA_SERVICES[@]}"
+    else
+        echo -e "  ${YELLOW}○${NC} docker-compose.infra.yml not found"
+    fi
+}
+
 status_platform() {
     echo -e "${CYAN}Platform services:${NC}"
     show_services_status "${COMPOSE_PLATFORM}" "${PLATFORM_SERVICES[@]}"
@@ -231,6 +271,8 @@ status_isp() {
 }
 
 status_all() {
+    status_infra
+    echo ""
     status_platform
     echo ""
     status_isp
@@ -253,6 +295,18 @@ logs_all() {
     docker compose -f "${COMPOSE_ISP}" logs -f &
     local isp_pid=$!
     wait ${platform_pid} ${isp_pid}
+}
+
+clean_infra() {
+    echo -e "${RED}⚠ This will remove infrastructure containers and volumes (PostgreSQL data, Redis data, MinIO data).${NC}"
+    read -p "Continue? (yes/no): " answer
+    if [[ "${answer}" == "yes" ]]; then
+        if [[ -f "${COMPOSE_INFRA}" ]]; then
+            docker compose -f "${COMPOSE_INFRA}" down -v
+        fi
+    else
+        echo "Aborted."
+    fi
 }
 
 clean_platform() {
@@ -278,6 +332,7 @@ clean_isp() {
 clean_all() {
     clean_isp
     clean_platform
+    clean_infra
 }
 
 # ---------------------------------------------------------------------------
