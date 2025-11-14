@@ -20,6 +20,9 @@ COPY tailwind.config.ts ./
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Build workspace packages that isp-ops-app depends on
+RUN pnpm --filter @dotmac/isp-ops-app^... build
+
 # Build the ISP operations app
 RUN pnpm --filter @dotmac/isp-ops-app build
 
