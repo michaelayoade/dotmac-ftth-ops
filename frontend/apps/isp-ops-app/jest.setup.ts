@@ -1,4 +1,20 @@
 import "@testing-library/jest-dom";
+import { server } from "./__tests__/msw/server";
+
+// Start MSW server before all tests
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "warn" });
+});
+
+// Reset handlers after each test
+afterEach(() => {
+  server.resetHandlers();
+});
+
+// Close MSW server after all tests
+afterAll(() => {
+  server.close();
+});
 
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
@@ -114,20 +130,14 @@ Object.defineProperty(global.navigator, "serviceWorker", {
 
 // Suppress console errors in tests
 const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === "string" &&
-      (args[0].includes("Warning: ReactDOM.render") ||
-        args[0].includes("Warning: useLayoutEffect") ||
-        args[0].includes("Not implemented: HTMLFormElement.prototype.submit"))
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
-
-afterAll(() => {
-  console.error = originalError;
-});
+console.error = (...args: any[]) => {
+  if (
+    typeof args[0] === "string" &&
+    (args[0].includes("Warning: ReactDOM.render") ||
+      args[0].includes("Warning: useLayoutEffect") ||
+      args[0].includes("Not implemented: HTMLFormElement.prototype.submit"))
+  ) {
+    return;
+  }
+  originalError.call(console, ...args);
+};
