@@ -31,6 +31,8 @@ services:
       REQUIRE_REDIS_SESSIONS: ${ISP_REQUIRE_REDIS_SESSIONS:-false}
     ports:
       - "${ISP_BACKEND_PORT:-8000}:8000"
+    volumes:
+      - isp_storage:/var/lib/dotmac
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -51,6 +53,9 @@ services:
       - "${ISP_FRONTEND_PORT:-3001}:3000"
     depends_on:
       - isp-backend
+
+volumes:
+  isp_storage:
 
 networks:
   default:

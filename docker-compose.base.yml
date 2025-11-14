@@ -33,6 +33,8 @@ services:
       REQUIRE_REDIS_SESSIONS: ${REQUIRE_REDIS_SESSIONS:-false}
     ports:
       - "${PLATFORM_BACKEND_PORT:-8001}:8000"
+    volumes:
+      - platform_storage:/var/lib/dotmac
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -73,6 +75,9 @@ services:
       - "${PLATFORM_FRONTEND_PORT:-3002}:3000"
     depends_on:
       - platform-backend
+
+volumes:
+  platform_storage:
 
 networks:
   default:
