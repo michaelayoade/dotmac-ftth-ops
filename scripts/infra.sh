@@ -108,7 +108,15 @@ check_docker() {
 
 container_name() {
     local service=$1
-    echo "${PROJECT_NAME}-${service}-1"
+    local compose_file=$2
+
+    # Infrastructure services use explicit container names (e.g., "dotmac-postgres")
+    if [[ "${compose_file}" == "${COMPOSE_INFRA}" ]]; then
+        echo "dotmac-${service}"
+    else
+        # Application services use project-based names
+        echo "${PROJECT_NAME}-${service}-1"
+    fi
 }
 
 get_container_status() {
@@ -148,7 +156,7 @@ show_services_status() {
     for entry in "${services[@]}"; do
         IFS=':' read -r service port description <<<"${entry}"
         local container
-        container=$(container_name "${service}")
+        container=$(container_name "${service}" "${compose_file}")
         local status
         status=$(get_container_status "${container}")
 
