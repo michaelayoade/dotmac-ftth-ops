@@ -24,7 +24,7 @@ COPY --chown=appuser:appuser pyproject.toml poetry.lock ./
 # Install Poetry and dependencies
 RUN pip install --no-cache-dir "poetry==1.8.3" && \
     poetry config virtualenvs.create false && \
-    poetry install --only=main --extras=celery --no-root --no-interaction --no-ansi
+    poetry install --only=main --no-root --no-interaction --no-ansi
 
 # Copy application code
 COPY --chown=appuser:appuser src ./src
