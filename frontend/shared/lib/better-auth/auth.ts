@@ -15,9 +15,9 @@ import { createAccessControl } from "better-auth/plugins/access";
 import { Pool } from "pg";
 
 // Environment variables
-const DATABASE_URL = process.env.DATABASE_URL || process.env['DOTMAC_DATABASE_URL'];
-const AUTH_SECRET = process.env['BETTER_AUTH_SECRET'] || process.env.JWT_SECRET;
-const AUTH_URL = process.env['BETTER_AUTH_URL'] || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const DATABASE_URL = process.env['DATABASE_URL'] || process.env['DOTMAC_DATABASE_URL'];
+const AUTH_SECRET = process.env['BETTER_AUTH_SECRET'] || process.env['JWT_SECRET'];
+const AUTH_URL = process.env['BETTER_AUTH_URL'] || process.env['NEXT_PUBLIC_API_URL'] || "http://localhost:3000";
 
 if (!DATABASE_URL) {
   throw new Error("DATABASE_URL or DOTMAC_DATABASE_URL must be defined");
@@ -300,7 +300,7 @@ export const auth = betterAuth({
     crossSubDomainCookies: {
       enabled: false,
     },
-    useSecureCookies: process.env.NODE_ENV === "production",
+    useSecureCookies: process.env['NODE_ENV'] === "production",
     generateId: () => {
       // Use crypto for secure ID generation
       return crypto.randomUUID();
