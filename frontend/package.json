@@ -56,10 +56,10 @@
     "pnpm": ">=9"
   },
   "devDependencies": {
-    "@dotmac/eslint-plugin": "workspace:*",
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@dotmac/eslint-plugin": "workspace:*",
     "@graphql-codegen/cli": "^6.0.0",
     "@graphql-codegen/client-preset": "^5.1.1",
     "@graphql-codegen/typescript": "^5.0.2",
@@ -72,6 +72,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^5.1.0",
     "concurrently": "^8.2.0",
+    "msw": "^2.12.1",
     "openapi-typescript": "^7.5.2",
     "prettier": "^3.6.2"
   },
