@@ -185,7 +185,7 @@ describe("useSubscribers (MSW)", () => {
 
     it("should handle pagination", async () => {
       const subscribers = Array.from({ length: 25 }, (_, i) =>
-        createMockSubscriber({ id: `sub-${i + 1}` })
+        createMockSubscriber({ id: `sub-${String(i + 1).padStart(2, '0')}` })
       );
 
       seedSubscriberData(subscribers, []);

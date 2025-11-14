@@ -130,8 +130,8 @@ export const subscriberHandlers = [
     const servicePlan = url.searchParams.get('service_plan');
     const statuses = url.searchParams.getAll('status');
     const connectionTypes = url.searchParams.getAll('connection_type');
-    const sortBy = url.searchParams.get('sort_by') || 'created_at';
-    const sortOrder = url.searchParams.get('sort_order') || 'desc';
+    const sortBy = url.searchParams.get('sort_by') || 'id';
+    const sortOrder = url.searchParams.get('sort_order') || 'asc';
 
     console.log('[MSW] GET /subscribers', {
       offset,
@@ -182,11 +182,19 @@ export const subscriberHandlers = [
       const aValue = a[sortBy as keyof Subscriber] || '';
       const bValue = b[sortBy as keyof Subscriber] || '';
 
+      let comparison = 0;
       if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+        comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
-        return aValue < bValue ? 1 : -1;
+        comparison = aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
       }
+
+      // If values are equal, use ID as secondary sort for stability
+      if (comparison === 0) {
+        return a.id > b.id ? 1 : a.id < b.id ? -1 : 0;
+      }
+
+      return comparison;
     });
 
     // Paginate
@@ -205,7 +213,25 @@ export const subscriberHandlers = [
     );
   }),
 
+  // GET /subscribers/statistics - Get subscriber statistics
+  // NOTE: This MUST come before /subscribers/:id to avoid matching "statistics" as an ID
+  rest.get('*/subscribers/statistics', (req, res, ctx) => {
+    const stats = createMockStatistics();
+    return res(ctx.json(stats));
+  }),
+
+  // GET /subscribers/:id/services - Get subscriber services
+  // NOTE: This MUST come before /subscribers/:id to avoid matching "services" as an ID
+  rest.get('*/subscribers/:id/services', (req, res, ctx) => {
+    const { id } = req.params;
+
+    const subscriberServices = services.filter((svc) => svc.subscriber_id === id);
+
+    return res(ctx.json(subscriberServices));
+  }),
+
   // GET /subscribers/:id - Get single subscriber
+  // NOTE: This must come AFTER all specific routes like /statistics and /:id/services
   rest.get('*/subscribers/:id', (req, res, ctx) => {
     const { id } = req.params;
 
@@ -219,21 +245,6 @@ export const subscriberHandlers = [
     }
 
     return res(ctx.json(subscriber));
-  }),
-
-  // GET /subscribers/statistics - Get subscriber statistics
-  rest.get('*/subscribers/statistics', (req, res, ctx) => {
-    const stats = createMockStatistics();
-    return res(ctx.json(stats));
-  }),
-
-  // GET /subscribers/:id/services - Get subscriber services
-  rest.get('*/subscribers/:id/services', (req, res, ctx) => {
-    const { id } = req.params;
-
-    const subscriberServices = services.filter((svc) => svc.subscriber_id === id);
-
-    return res(ctx.json(subscriberServices));
   }),
 
   // POST /subscribers - Create subscriber

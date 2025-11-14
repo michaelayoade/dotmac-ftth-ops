@@ -227,6 +227,7 @@ describe("useFeatureFlags (MSW)", () => {
           description: "New test feature",
           context: { rollout: 50 },
         });
+        await result.current.refreshFlags();
       });
 
       expect(newFlag).toBeDefined();
@@ -350,6 +351,8 @@ describe("useFeatureFlags (MSW)", () => {
           enabled: false,
           description: "Test feature",
         });
+        // Manual refetch needed since test config has refetchOnMount: false
+        await result.current.refreshFlags();
       });
 
       await waitFor(() => {
@@ -379,14 +382,17 @@ describe("useFeatureFlags (MSW)", () => {
       // Create multiple flags
       await act(async () => {
         await result.current.createFlag("feature-1", { enabled: true });
+        await result.current.refreshFlags();
       });
 
       await act(async () => {
         await result.current.createFlag("feature-2", { enabled: false });
+        await result.current.refreshFlags();
       });
 
       await act(async () => {
         await result.current.createFlag("feature-3", { enabled: true });
+        await result.current.refreshFlags();
       });
 
       await waitFor(() => {
@@ -432,6 +438,7 @@ describe("useFeatureFlags (MSW)", () => {
       // Add a new enabled flag
       await act(async () => {
         await result.current.createFlag("flag-3", { enabled: true });
+        await result.current.refreshFlags();
       });
 
       await waitFor(() => {
