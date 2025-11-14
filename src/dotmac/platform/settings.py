@@ -24,6 +24,16 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _default_storage_path() -> str:
+    """Derive a persistent storage path from env vars with a safe fallback."""
+
+    return (
+        os.getenv("STORAGE__LOCAL_PATH")
+        or os.getenv("DOTMAC_STORAGE_LOCAL_PATH")
+        or "/var/lib/dotmac/storage"
+    )
+
+
 class Environment(str, Enum):
     """Application environment."""
 
@@ -1379,8 +1389,8 @@ class Settings(BaseSettings):
 
         # Local fallback for development
         local_path: str = Field(
-            "/tmp/storage",  # nosec B108 - Configurable via env var, dev default only
-            description="Local storage path for dev",
+            default_factory=_default_storage_path,  # resolved via env when available
+            description="Local storage path for dev/persistent volumes",
         )
 
     storage: StorageSettings = StorageSettings()  # type: ignore[call-arg]
