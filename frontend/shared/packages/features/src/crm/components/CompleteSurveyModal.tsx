@@ -611,13 +611,10 @@ export function CompleteSurveyModal({
                     {photos.map((photo) => (
                       <div key={photo.id} className="relative border rounded-lg p-2 space-y-2">
                         <div className="relative aspect-video">
-                          <Image
+                          <img
                             src={photo.preview}
                             alt="Preview"
-                            fill
-                            unoptimized
-                            className="rounded object-cover"
-                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="absolute inset-0 w-full h-full rounded object-cover"
                           />
                           <Button
                             type="button"
