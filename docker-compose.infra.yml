@@ -221,7 +221,11 @@ services:
       - "9090:9090"
     volumes:
       - prometheus_data:/prometheus
-      - ./config/prometheus:/etc/prometheus
+    configs:
+      - source: prometheus_main_cfg
+        target: /etc/prometheus/prometheus.yml
+      - source: prometheus_alerts_cfg
+        target: /etc/prometheus/alerts.yml
     networks:
       - dotmac-network
 
@@ -305,3 +309,9 @@ networks:
   dotmac-network:
     name: dotmac-network
     driver: bridge
+
+configs:
+  prometheus_main_cfg:
+    file: ./config/prometheus/prometheus.yml
+  prometheus_alerts_cfg:
+    file: ./config/prometheus/alerts.yml

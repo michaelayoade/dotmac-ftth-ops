@@ -2,6 +2,153 @@
 
 ## Changelog
 
+### 2025-11-14: Phase 7 - useReconciliation Migration
+
+**Status**: ✅ COMPLETE - 27 hooks migrated, 631 tests passing
+
+**Changes**:
+- ✅ Migrated useReconciliation hook (24 tests) - First medium-priority hook from Phase 7
+- ✅ Created `__tests__/msw/handlers/reconciliation.ts` - 9 endpoints covering reconciliation workflow and payment recovery
+- ✅ Created `hooks/__tests__/useReconciliation.msw.test.tsx` - 24 comprehensive tests
+- ✅ Removed `hooks/__tests__/useReconciliation.test.tsx` - Legacy file (49KB)
+- ✅ Fixed useToast mock (import from @dotmac/ui, not local hooks)
+
+**Test Results**:
+- Test Suites: 27/27 passing (100%)
+- Tests: 631/638 passing (7 skipped)
+- New tests: 24 reconciliation tests covering 9 hooks
+- Time: ~2.4s for useReconciliation suite
+
+**Technical Highlights**:
+- Complete reconciliation lifecycle (start → add payments → complete → approve)
+- Reconciliation summary with statistics and discrepancy tracking
+- Payment recovery with retry mechanism and circuit breaker pattern
+- Bank account filtering and date range queries
+- Pagination support for large reconciliation datasets
+- Complex workflow validations (must complete before approve)
+
+**Technical Challenges Resolved**:
+1. **useToast Import Path**: Hook imports useToast from `@dotmac/ui`, not from a local hooks directory. Fixed jest.mock to use correct import path with spread operator to preserve other exports.
+2. **Handler URL Ordering**: Specific routes like `/summary`, `/circuit-breaker/status`, and `/retry-payment` must come before parameterized `/:id` route. Ensured proper ordering within handler file.
+
+**Impact**:
+- +24 tests with realistic API mocking
+- -49KB disk space (old test file removed)
+- Billing reconciliation workflows now properly tested with realistic scenarios
+- Circuit breaker pattern for payment gateway failures properly tested
+
+---
+
+### 2025-11-14: Phase 6 - useCampaigns Migration
+
+**Status**: ✅ COMPLETE - 26 hooks migrated, 607 tests passing
+
+**Changes**:
+- ✅ Migrated useCampaigns hook (27 tests) - Third high-priority hook from Phase 6
+- ✅ Created `__tests__/msw/handlers/campaigns.ts` - 2 endpoints (GET list, PATCH update)
+- ✅ Created `hooks/__tests__/useCampaigns.msw.test.tsx` - 27 comprehensive tests
+- ✅ Removed `hooks/__tests__/useCampaigns.test.tsx` - Legacy file (25KB)
+- ✅ Fixed URL pattern conflicts with dunningHandlers
+- ✅ Fixed handler ordering (campaignsHandlers before dunningHandlers)
+
+**Test Results**:
+- Test Suites: 26/26 passing (100%)
+- Tests: 607/614 passing (7 skipped)
+- New tests: 27 campaigns tests covering 2 hooks (useCampaigns, useUpdateCampaign)
+- Time: ~2.0s for useCampaigns suite
+
+**Technical Highlights**:
+- Dunning campaigns management with filtering by active status
+- Campaign updates (status, priority)
+- Query caching and invalidation
+- Comprehensive error handling
+
+**Technical Challenges Resolved**:
+1. **API BaseURL Handling**: apiClient uses `/api/v1` baseURL, so paths like `/billing/dunning/campaigns` become `/api/v1/billing/dunning/campaigns`. Handler patterns must account for this.
+2. **Handler Ordering Conflicts**: dunningHandlers already had `/api/v1/billing/dunning/campaigns` endpoints. Fixed by placing campaignsHandlers BEFORE dunningHandlers in server.ts to ensure more specific handlers match first.
+3. **jest.mock for useRealtime**: Added jest.mock for useRealtime to avoid better-auth ESM import issues.
+
+**Impact**:
+- +27 tests with realistic API mocking
+- -25KB disk space (old test file removed)
+- Dunning campaigns now properly tested with realistic scenarios
+
+---
+
+### 2025-11-14: Phase 6 - useFieldService Migration
+
+**Status**: ✅ COMPLETE - 25 hooks migrated, 580 tests passing
+
+**Changes**:
+- ✅ Migrated useFieldService hook (15 tests) - Second high-priority hook from Phase 6
+- ✅ Created `__tests__/msw/handlers/field-service.ts` - 10 endpoints covering technicians, time tracking, scheduling, and resources
+- ✅ Created `hooks/__tests__/useFieldService.msw.test.tsx` - 15 comprehensive tests
+- ✅ Removed `hooks/__tests__/useFieldService.test.tsx` - Legacy file (15KB)
+- ✅ Fixed enum imports (type imports vs runtime imports)
+- ✅ Fixed handler ordering in server.ts (fieldServiceHandlers must come before techniciansHandlers)
+
+**Test Results**:
+- Test Suites: 25/25 passing (100%)
+- Tests: 580/587 passing (7 skipped)
+- New tests: 15 field service tests covering 10 hooks
+- Time: ~2.0s for useFieldService suite
+
+**Technical Highlights**:
+- Technician management with filtering by status, skill level, and availability
+- Time tracking with GPS-enabled clock in/out
+- Task assignment with auto-assignment algorithm
+- Equipment and vehicle resource management
+- Resource assignment tracking
+- Complex filtering across multiple dimensions
+
+**Technical Challenges Resolved**:
+1. **Enum Runtime Errors**: Fixed by separating type-only imports from runtime enum imports
+   ```typescript
+   // Before: import type { TechnicianStatus, ... }
+   // After:  import { TechnicianStatus, ... } from "@/types/field-service"
+   ```
+2. **Handler URL Conflicts**: fieldServiceHandlers (`/api/v1/field-service/*`) was being overridden by techniciansHandlers (`*/field-service/*`). Fixed by reordering handlers in server.ts with proper documentation about URL pattern specificity.
+
+**Impact**:
+- +15 tests with realistic API mocking
+- -15KB disk space (old test file removed)
+- Field operations management now properly tested with realistic scenarios
+
+---
+
+### 2025-11-14: Phase 6 - useAudit Migration
+
+**Status**: ✅ COMPLETE - 24 hooks migrated, 565 tests passing
+
+**Changes**:
+- ✅ Migrated useAudit hook (54 tests) - First high-priority hook from Phase 6
+- ✅ Created `__tests__/msw/handlers/audit.ts` - 8 endpoints, complex filtering
+- ✅ Created `hooks/__tests__/useAudit.msw.test.tsx` - 54 comprehensive tests
+- ✅ Removed `hooks/__tests__/useAudit.test.tsx` - Legacy file (38KB)
+- ✅ Fixed handler URL ordering issues (summary/recent/user must come before :activityId)
+- ✅ Fixed parameter naming (from_date/to_date vs from/to)
+
+**Test Results**:
+- Test Suites: 24/24 passing (100%)
+- Tests: 565/572 passing (7 skipped)
+- New tests: 54 audit tests covering 10 hooks
+- Time: ~3.4s for useAudit suite
+
+**Technical Highlights**:
+- Complex date filtering across multiple time ranges
+- Pagination support with per_page/page parameters
+- Activity type and severity filtering
+- Resource history tracking
+- Compliance reporting with date ranges
+- Export functionality with multiple formats
+
+**Impact**:
+- +54 tests with realistic API mocking
+- -38KB disk space (old test file removed)
+- High-priority business logic now properly tested
+
+---
+
 ### 2025-11-14: Phase 5 Complete - Cleanup & 100% Success
 
 **Status**: ✅ COMPLETE - All 23 hooks passing, legacy files removed

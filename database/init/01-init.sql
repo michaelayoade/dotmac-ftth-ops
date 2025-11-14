@@ -26,6 +26,10 @@ CREATE EXTENSION IF NOT EXISTS "btree_gin"; -- For GIN indexes
   \echo 'Skipping database tuning (DOTMAC_TUNING_FILE not set).'
 \endif
 
+-- NOTE: The recommended workflow is to run ./scripts/generate-db-config.sh (or
+--       ./scripts/pgtune.sh <ram_mb> web ssd) and pass the resulting SQL file via
+--       DOTMAC_TUNING_FILE so each environment gets the correct parameters.
+
 -- Create read-only user for reporting (optional)
 -- DO $$
 -- BEGIN

@@ -29,16 +29,27 @@ import { orchestrationHandlers } from './handlers/orchestration';
 import { serviceLifecycleHandlers } from './handlers/service-lifecycle';
 import { logsHandlers } from './handlers/logs';
 import { techniciansHandlers } from './handlers/technicians';
+import { auditHandlers } from './handlers/audit';
+import { fieldServiceHandlers } from './handlers/field-service';
+import { reconciliationHandlers } from './handlers/reconciliation';
+import { commissionRulesHandlers } from './handlers/commission-rules';
 
 // Combine all handlers
 // NOTE: logsHandlers MUST come before operationsHandlers to prevent
 // operations from matching /api/v1/monitoring/logs/stats first
+// NOTE: More specific URL patterns must come before broader patterns to prevent
+// conflicts. For example:
+// - logsHandlers must come before operationsHandlers
+// - fieldServiceHandlers must come before techniciansHandlers (to match /api/v1/field-service/* before */field-service/*)
 export const handlers = [
   ...logsHandlers, // Must be first to match /api/v1/monitoring/logs/stats correctly
+  ...fieldServiceHandlers, // Must come before techniciansHandlers to match /api/v1/field-service/* correctly
   ...webhookHandlers,
   ...notificationHandlers,
   ...billingPlansHandlers,
   ...dunningHandlers,
+  ...reconciliationHandlers,
+  ...commissionRulesHandlers,
   ...creditNotesHandlers,
   ...invoiceActionsHandlers,
   ...networkMonitoringHandlers,
@@ -57,6 +68,7 @@ export const handlers = [
   ...orchestrationHandlers,
   ...serviceLifecycleHandlers,
   ...techniciansHandlers,
+  ...auditHandlers,
 ];
 
 // Create MSW server
