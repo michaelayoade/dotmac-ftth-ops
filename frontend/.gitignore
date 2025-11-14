@@ -1,5 +1,6 @@
 # Dependencies and lockfiles (frontend is managed via the repo root)
 node_modules/
+.pnpm-store/
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
