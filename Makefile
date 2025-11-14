@@ -2,7 +2,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-host dev-frontend dev-frontend-admin install check-prereqs check-docker check-deps test test-fast test-unit test-integration test-e2e lint lint-frontend typecheck typecheck-frontend typecheck-mypy typecheck-pyright format format-frontend db-migrate db-migrate-create db-seed db-reset build-platform build-isp build-all build-freeradius env-validate env-check env-local env-test env-staging env-show setup shell clean-py docker-ps docker-platform-up docker-isp-up restart-platform restart-isp restart-all
+.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-host dev-frontend dev-frontend-admin install check-prereqs check-docker check-deps test test-fast test-unit test-integration test-e2e lint lint-frontend typecheck typecheck-frontend typecheck-mypy typecheck-pyright format format-frontend db-migrate db-migrate-create db-seed db-reset post-deploy post-deploy-platform post-deploy-isp build-platform build-isp build-all build-freeradius env-validate env-check env-local env-test env-staging env-show setup shell clean-py docker-ps docker-platform-up docker-isp-up restart-platform restart-isp restart-all
 
 # Colors
 CYAN := \033[0;36m
@@ -66,6 +66,11 @@ help:
 	@echo "  make db-seed                Seed database with test data"
 	@echo "  make db-reset               Reset database (destructive)"
 	@echo ""
+	@echo "$(GREEN)Post-Deployment (Docker):$(NC)"
+	@echo "  make post-deploy            Run post-deployment setup (migrations + health checks)"
+	@echo "  make post-deploy-platform   Setup platform backend only"
+	@echo "  make post-deploy-isp        Setup ISP backend only"
+	@echo ""
 	@echo "$(GREEN)Build:$(NC)"
 	@echo "  make build-platform         Build platform Docker images"
 	@echo "  make build-isp              Build ISP Docker images"
@@ -95,8 +100,8 @@ help:
 	@echo "  1. make check-deps          # Verify tools are installed"
 	@echo "  2. make install             # Install dependencies"
 	@echo "  3. make start-all           # Start infrastructure"
-	@echo "  4. make db-migrate          # Run migrations"
-	@echo "  5. make dev-host            # Start backend on host"
+	@echo "  4. make post-deploy         # Run post-deployment setup (migrations + health checks)"
+	@echo "  5. make dev-host            # Start backend on host (or use the Docker containers)"
 	@echo ""
 
 # ===================================================================
@@ -252,6 +257,22 @@ db-reset:
 		poetry run alembic upgrade head && \
 		make db-seed; \
 	fi
+
+# ===================================================================
+# Post-Deployment (Docker Containers)
+# ===================================================================
+
+post-deploy:
+	@echo "$(CYAN)Running post-deployment setup for all backends...$(NC)"
+	@./scripts/post-deploy.sh all
+
+post-deploy-platform:
+	@echo "$(CYAN)Running post-deployment setup for platform backend...$(NC)"
+	@./scripts/post-deploy.sh platform
+
+post-deploy-isp:
+	@echo "$(CYAN)Running post-deployment setup for ISP backend...$(NC)"
+	@./scripts/post-deploy.sh isp
 
 # ===================================================================
 # Testing
