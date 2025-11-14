@@ -3,7 +3,10 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    DATABASE_URL="postgresql://build:build@localhost:5432/build" \
+    BETTER_AUTH_SECRET="build-time-secret-not-used-in-production" \
+    JWT_SECRET="build-time-jwt-secret-not-used-in-production"
 
 RUN apk add --no-cache libc6-compat && corepack enable pnpm
 
