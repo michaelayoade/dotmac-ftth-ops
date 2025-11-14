@@ -31,7 +31,10 @@ import { logsHandlers } from './handlers/logs';
 import { techniciansHandlers } from './handlers/technicians';
 
 // Combine all handlers
+// NOTE: logsHandlers MUST come before operationsHandlers to prevent
+// operations from matching /api/v1/monitoring/logs/stats first
 export const handlers = [
+  ...logsHandlers, // Must be first to match /api/v1/monitoring/logs/stats correctly
   ...webhookHandlers,
   ...notificationHandlers,
   ...billingPlansHandlers,
@@ -53,7 +56,6 @@ export const handlers = [
   ...schedulerHandlers,
   ...orchestrationHandlers,
   ...serviceLifecycleHandlers,
-  ...logsHandlers,
   ...techniciansHandlers,
 ];
 

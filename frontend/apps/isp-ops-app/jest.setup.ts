@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import "whatwg-fetch"; // Polyfill fetch for jsdom
 import { server } from "./__tests__/msw/server";
 
 // Start MSW server before all tests

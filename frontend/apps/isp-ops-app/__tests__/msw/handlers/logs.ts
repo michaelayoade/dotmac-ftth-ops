@@ -85,8 +85,6 @@ export const logsHandlers = [
   // GET /api/v1/monitoring/logs/stats - Get log statistics
   // NOTE: This MUST come before /api/v1/monitoring/logs to avoid matching "/stats" as a query param
   rest.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
-    console.log('[MSW] GET /api/v1/monitoring/logs/stats');
-
     const stats = createLogStats();
     return res(ctx.json(stats));
   }),
@@ -94,8 +92,6 @@ export const logsHandlers = [
   // GET /api/v1/monitoring/logs/services - Get list of services
   // NOTE: This MUST come before /api/v1/monitoring/logs to avoid matching "/services" as a query param
   rest.get('*/api/v1/monitoring/logs/services', (req, res, ctx) => {
-    console.log('[MSW] GET /api/v1/monitoring/logs/services');
-
     const services = getUniqueServices();
     return res(ctx.json(services));
   }),

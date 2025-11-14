@@ -74,18 +74,19 @@ export function seedDunningData(
 }
 
 export const dunningHandlers = [
-  // GET /dunning/campaigns - List campaigns
-  rest.get('*/dunning/campaigns', (req, res, ctx) => {
+  // GET /api/v1/billing/dunning/campaigns - List campaigns
+  rest.get('*/api/v1/billing/dunning/campaigns', (req, res, ctx) => {
     const url = new URL(req.url);
-    const status = url.searchParams.get('status');
+    const activeOnly = url.searchParams.get('active_only');
     const search = url.searchParams.get('search');
     const page = parseInt(url.searchParams.get('page') || '1');
     const pageSize = parseInt(url.searchParams.get('page_size') || '20');
 
     let filtered = campaigns;
 
-    if (status) {
-      filtered = filtered.filter((c) => c.status === status);
+    // Filter by active_only parameter
+    if (activeOnly === 'true') {
+      filtered = filtered.filter((c) => c.status === 'active');
     }
 
     if (search) {
@@ -102,8 +103,8 @@ export const dunningHandlers = [
     return res(ctx.json(paginated));
   }),
 
-  // GET /dunning/campaigns/:id - Get campaign
-  rest.get('*/dunning/campaigns/:id', (req, res, ctx) => {
+  // GET /api/v1/billing/dunning/campaigns/:id - Get campaign
+  rest.get('*/api/v1/billing/dunning/campaigns/:id', (req, res, ctx) => {
     const { id } = req.params;
     const campaign = campaigns.find((c) => c.id === id);
 
@@ -117,8 +118,8 @@ export const dunningHandlers = [
     return res(ctx.json(campaign));
   }),
 
-  // POST /dunning/campaigns - Create campaign
-  rest.post('*/dunning/campaigns', async (req, res, ctx) => {
+  // POST /api/v1/billing/dunning/campaigns - Create campaign
+  rest.post('*/api/v1/billing/dunning/campaigns', async (req, res, ctx) => {
     const data = await req.json();
 
     const newCampaign = createMockDunningCampaign({
@@ -131,7 +132,7 @@ export const dunningHandlers = [
   }),
 
   // PATCH /dunning/campaigns/:id - Update campaign
-  rest.patch('*/dunning/campaigns/:id', async (req, res, ctx) => {
+  rest.patch('*/api/v1/billing/dunning/campaigns/:id', async (req, res, ctx) => {
     const { id } = req.params;
     const updates = await req.json();
 
@@ -154,7 +155,7 @@ export const dunningHandlers = [
   }),
 
   // DELETE /dunning/campaigns/:id - Delete campaign
-  rest.delete('*/dunning/campaigns/:id', (req, res, ctx) => {
+  rest.delete('*/api/v1/billing/dunning/campaigns/:id', (req, res, ctx) => {
     const { id } = req.params;
     const index = campaigns.findIndex((c) => c.id === id);
 
@@ -170,7 +171,7 @@ export const dunningHandlers = [
   }),
 
   // POST /dunning/campaigns/:id/pause - Pause campaign
-  rest.post('*/dunning/campaigns/:id/pause', (req, res, ctx) => {
+  rest.post('*/api/v1/billing/dunning/campaigns/:id/pause', (req, res, ctx) => {
     const { id } = req.params;
     const campaign = campaigns.find((c) => c.id === id);
 
@@ -188,7 +189,7 @@ export const dunningHandlers = [
   }),
 
   // POST /dunning/campaigns/:id/resume - Resume campaign
-  rest.post('*/dunning/campaigns/:id/resume', (req, res, ctx) => {
+  rest.post('*/api/v1/billing/dunning/campaigns/:id/resume', (req, res, ctx) => {
     const { id } = req.params;
     const campaign = campaigns.find((c) => c.id === id);
 
@@ -206,7 +207,7 @@ export const dunningHandlers = [
   }),
 
   // GET /dunning/executions - List executions
-  rest.get('*/dunning/executions', (req, res, ctx) => {
+  rest.get('*/api/v1/billing/dunning/executions', (req, res, ctx) => {
     const url = new URL(req.url);
     const campaignId = url.searchParams.get('campaign_id');
     const status = url.searchParams.get('status');
@@ -231,7 +232,7 @@ export const dunningHandlers = [
   }),
 
   // GET /dunning/executions/:id - Get execution
-  rest.get('*/dunning/executions/:id', (req, res, ctx) => {
+  rest.get('*/api/v1/billing/dunning/executions/:id', (req, res, ctx) => {
     const { id } = req.params;
     const execution = executions.find((e) => e.id === id);
 
@@ -246,7 +247,7 @@ export const dunningHandlers = [
   }),
 
   // POST /dunning/executions - Start execution
-  rest.post('*/dunning/executions', async (req, res, ctx) => {
+  rest.post('*/api/v1/billing/dunning/executions', async (req, res, ctx) => {
     const data = await req.json();
 
     const newExecution = createMockDunningExecution({
@@ -259,7 +260,7 @@ export const dunningHandlers = [
   }),
 
   // POST /dunning/executions/:id/cancel - Cancel execution
-  rest.post('*/dunning/executions/:id/cancel', async (req, res, ctx) => {
+  rest.post('*/api/v1/billing/dunning/executions/:id/cancel', async (req, res, ctx) => {
     const { id } = req.params;
     const { reason } = await req.json();
 
@@ -279,8 +280,8 @@ export const dunningHandlers = [
     return res(ctx.json(execution));
   }),
 
-  // GET /dunning/statistics - Get statistics
-  rest.get('*/dunning/statistics', (req, res, ctx) => {
+  // GET /api/v1/billing/dunning/stats - Get statistics
+  rest.get('*/api/v1/billing/dunning/stats', (req, res, ctx) => {
     const stats: DunningStatistics = {
       total_campaigns: campaigns.length,
       active_campaigns: campaigns.filter((c) => c.status === 'active').length,
@@ -298,8 +299,8 @@ export const dunningHandlers = [
     return res(ctx.json(stats));
   }),
 
-  // GET /dunning/campaigns/:id/statistics - Get campaign statistics
-  rest.get('*/dunning/campaigns/:id/statistics', (req, res, ctx) => {
+  // GET /api/v1/billing/dunning/stats/campaigns/:id - Get campaign statistics
+  rest.get('*/api/v1/billing/dunning/stats/campaigns/:id', (req, res, ctx) => {
     const { id } = req.params;
     const campaign = campaigns.find((c) => c.id === id);
 
@@ -332,8 +333,8 @@ export const dunningHandlers = [
     return res(ctx.json(stats));
   }),
 
-  // GET /dunning/recovery-chart - Get recovery chart data
-  rest.get('*/dunning/recovery-chart', (req, res, ctx) => {
+  // GET /api/v1/billing/dunning/analytics/recovery - Get recovery chart data
+  rest.get('*/api/v1/billing/dunning/analytics/recovery', (req, res, ctx) => {
     const url = new URL(req.url);
     const days = parseInt(url.searchParams.get('days') || '30');
 

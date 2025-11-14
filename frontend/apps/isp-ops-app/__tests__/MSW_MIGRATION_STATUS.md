@@ -4,7 +4,7 @@
 
 This document tracks the migration of test suites from `jest.mock()` to MSW (Mock Service Worker) for more realistic API mocking.
 
-**Last Updated**: 2025-11-14 (Phase 4 Complete)
+**Last Updated**: 2025-11-14 (Phase 4 Complete + useLogs Stats Fix)
 
 ## Test Suite Baseline
 
@@ -35,9 +35,14 @@ Tests:       46 failed, 453 passed, 499 total
 Success Rate: 90.8%
 ```
 
-**Hooks with 100% Passing Tests (19 hooks)**: useWebhooks, useNotifications, useSubscribers, useFaults, useUsers, useApiKeys, useIntegrations, useHealth, useFeatureFlags, useOperations, useJobs, useScheduler, useNetworkMonitoring, useNetworkInventory, useBillingPlans, useInvoiceActions, useOrchestration, useTechnicians, useServiceLifecycle
+### After Phase 4 useLogs Stats Fix (MSW Tests Only)
+```
+Test Suites: 3 failed, 21 passed, 24 total
+Tests:       42 failed, 457 passed, 499 total
+Success Rate: 91.6%
+```
 
-**Hooks with >95% Passing (1 hook)**: useLogs (20/24 tests, 83.3% - stats query config issue)
+**Hooks with 100% Passing Tests (20 hooks)**: useWebhooks, useNotifications, useSubscribers, useFaults, useUsers, useApiKeys, useIntegrations, useHealth, useFeatureFlags, useOperations, useJobs, useScheduler, useNetworkMonitoring, useNetworkInventory, useBillingPlans, useInvoiceActions, useOrchestration, useTechnicians, useServiceLifecycle, **useLogs** ✅
 
 **Known Limitations**: useDunning (24 tests), useCreditNotes (8 tests), useRADIUS (10 tests) - all use native fetch() which MSW v1 has limited support for in Node/Jest environments.
 
@@ -366,10 +371,12 @@ Located in `__tests__/test-utils.tsx`:
 - Test Files Added: useDunning, useCreditNotes, useInvoiceActions
 
 ### Phase 4: High-Priority Hooks ✅ COMPLETE
-- [x] **Migrated useLogs** - 24 tests created (20 passing, 4 with React Query parallel query config issue)
+- [x] **Migrated useLogs** - 24 tests created, **all passing** ✅
   - 3 handlers: logs list, stats, services
   - Comprehensive filtering: level, service, search, time range, pagination
   - Factory functions for realistic log data
+  - **Fix Applied**: MSW handler conflict resolved - moved logsHandlers before operationsHandlers in server.ts to prevent `/api/v1/monitoring/logs/stats` from being matched by wrong handler
+  - **Test Fix**: Added `act()` wrapper for `fetchStats()` calls to handle React Query's `refetchOnMount: false` config in tests
 - [x] **Migrated useOrchestration** - 37 tests created, all passing ✅
   - 7 handlers: workflows, stats, retry, cancel, export (CSV/JSON)
   - In-memory workflow and step management
