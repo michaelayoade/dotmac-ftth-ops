@@ -424,6 +424,38 @@ export {
   seedSchedulerData,
 } from './msw/handlers/scheduler';
 
+// Logs helpers
+export {
+  resetLogsStorage,
+  createMockLogEntry,
+  seedLogsData,
+} from './msw/handlers/logs';
+
+// Service Lifecycle helpers
+export {
+  resetServiceLifecycleStorage,
+  createMockServiceInstance,
+  seedServiceLifecycleData,
+  createMockServiceStatistics,
+} from './msw/handlers/service-lifecycle';
+
+// Orchestration helpers
+export {
+  resetOrchestrationStorage,
+  createMockWorkflow,
+  createMockWorkflowStep,
+  seedOrchestrationData,
+} from './msw/handlers/orchestration';
+
+// Technicians helpers
+export {
+  resetTechniciansStorage,
+  createMockTechnician,
+  createMockTechnicianLocation,
+  seedTechniciansData,
+  seedLocationHistory,
+} from './msw/handlers/technicians';
+
 /**
  * Add a runtime handler to MSW server
  *

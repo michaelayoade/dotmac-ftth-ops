@@ -25,6 +25,10 @@ import { featureFlagsHandlers } from './handlers/featureFlags';
 import { operationsHandlers } from './handlers/operations';
 import { jobsHandlers } from './handlers/jobs';
 import { schedulerHandlers } from './handlers/scheduler';
+import { orchestrationHandlers } from './handlers/orchestration';
+import { serviceLifecycleHandlers } from './handlers/service-lifecycle';
+import { logsHandlers } from './handlers/logs';
+import { techniciansHandlers } from './handlers/technicians';
 
 // Combine all handlers
 export const handlers = [
@@ -47,6 +51,10 @@ export const handlers = [
   ...operationsHandlers,
   ...jobsHandlers,
   ...schedulerHandlers,
+  ...orchestrationHandlers,
+  ...serviceLifecycleHandlers,
+  ...logsHandlers,
+  ...techniciansHandlers,
 ];
 
 // Create MSW server
