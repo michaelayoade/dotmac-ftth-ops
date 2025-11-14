@@ -736,7 +736,18 @@ export function useCustomerSettings(): {
 // useCustomerPaymentMethods Hook
 // ============================================================================
 
-export function useCustomerPaymentMethods() {
+export function useCustomerPaymentMethods(): {
+  paymentMethods: CustomerPaymentMethod[];
+  defaultPaymentMethod: CustomerPaymentMethod | undefined;
+  autoPayPaymentMethod: CustomerPaymentMethod | undefined;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  addPaymentMethod: (request: any) => Promise<CustomerPaymentMethod>;
+  setDefaultPaymentMethod: (paymentMethodId: string) => Promise<void>;
+  removePaymentMethod: (paymentMethodId: string) => Promise<void>;
+  toggleAutoPay: (paymentMethodId: string, enabled: boolean) => Promise<void>;
+} {
   const queryClient = useQueryClient();
   const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
 
@@ -802,7 +813,7 @@ export function useCustomerPaymentMethods() {
     autoPayPaymentMethod,
     loading: query.isLoading,
     error: query.error ? toMessage(query.error, "An error occurred") : null,
-    refetch: query.refetch,
+    refetch: query.refetch as () => void,
     addPaymentMethod: addMutation.mutateAsync,
     setDefaultPaymentMethod: setDefaultMutation.mutateAsync,
     removePaymentMethod: removeMutation.mutateAsync,
