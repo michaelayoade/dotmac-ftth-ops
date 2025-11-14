@@ -8,7 +8,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN apk add --no-cache libc6-compat && corepack enable pnpm
 
 # Copy workspace manifests
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml .npmrc ./
 
 # Copy source (frontend workspace)
 COPY apps ./apps
