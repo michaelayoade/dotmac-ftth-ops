@@ -13,6 +13,7 @@ services:
       DATABASE__DATABASE: ${ISP_DATABASE__DATABASE:-dotmac}
       DATABASE__USERNAME: ${ISP_DATABASE__USERNAME:-dotmac_user}
       DATABASE__PASSWORD: ${ISP_DATABASE__PASSWORD:-change-me}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:change-me@dotmac-postgres:5432/dotmac}
       REDIS__HOST: ${ISP_REDIS__HOST:-dotmac-redis}
       REDIS__PORT: ${ISP_REDIS__PORT:-6379}
       REDIS__DB: ${ISP_REDIS__DB:-0}
