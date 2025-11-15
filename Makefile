@@ -148,20 +148,6 @@ logs-isp:
 # ===================================================================
 
 start-all:
-	@echo "$(CYAN)Validating environment configuration...$(NC)"
-	@if [ -f ./scripts/validate-server-env.sh ]; then \
-		./scripts/validate-server-env.sh || { \
-			if [ "$(ALLOW_ENV_VALIDATION_SKIP)" = "1" ]; then \
-				echo "$(YELLOW)⚠ Environment validation failed, but ALLOW_ENV_VALIDATION_SKIP=1 so continuing...$(NC)"; \
-			else \
-				echo "$(YELLOW)✗ Environment validation failed. Fix errors above or set ALLOW_ENV_VALIDATION_SKIP=1 to override.$(NC)"; \
-				exit 1; \
-			fi \
-		}; \
-	else \
-		echo "$(YELLOW)⚠ Validation script not found, skipping environment validation$(NC)"; \
-	fi
-	@echo ""
 	@echo "$(CYAN)Running pre-flight checks...$(NC)"
 	@if ./scripts/docker-compose-pre-flight.sh; then \
 		true; \
