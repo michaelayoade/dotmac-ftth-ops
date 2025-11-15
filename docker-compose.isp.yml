@@ -16,6 +16,7 @@ services:
       REDIS__HOST: ${ISP_REDIS__HOST:-dotmac-redis}
       REDIS__PORT: ${ISP_REDIS__PORT:-6379}
       REDIS__DB: ${ISP_REDIS__DB:-0}
+      REDIS__PASSWORD: ${ISP_REDIS__PASSWORD:-dev_local_redis_password_123}
       STORAGE__ENDPOINT: ${ISP_STORAGE__ENDPOINT:-http://dotmac-minio:9000}
       STORAGE__ACCESS_KEY: ${ISP_STORAGE__ACCESS_KEY:-minioadmin}
       STORAGE__SECRET_KEY: ${ISP_STORAGE__SECRET_KEY:-minioadmin123}
@@ -34,7 +35,7 @@ services:
     volumes:
       - isp_storage:/var/lib/dotmac
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
       interval: 30s
       timeout: 10s
       retries: 3
