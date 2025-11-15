@@ -277,3 +277,4 @@ run_example_api.sh
 node_modules
 *.tsbuildinfo
 docker-compose.override.yml
+/.local/
