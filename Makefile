@@ -2,7 +2,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-host dev-frontend dev-frontend-admin install check-prereqs check-docker check-deps test test-fast test-unit test-integration test-e2e lint lint-frontend typecheck typecheck-frontend typecheck-mypy typecheck-pyright format format-frontend db-migrate db-migrate-create db-seed db-reset post-deploy post-deploy-platform post-deploy-isp build-platform build-isp build-all build-freeradius env-validate env-check env-local env-test env-staging env-show setup shell clean-py docker-ps docker-platform-up docker-isp-up restart-platform restart-isp restart-all
+.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-host dev-frontend dev-frontend-admin install check-prereqs check-docker check-deps test test-fast test-unit test-integration test-e2e lint lint-frontend typecheck typecheck-frontend typecheck-mypy typecheck-pyright format format-frontend db-migrate db-migrate-create db-seed db-reset post-deploy post-deploy-platform post-deploy-isp build-platform build-isp build-all build-freeradius env-validate env-validate-server env-check env-server env-local env-test env-staging env-show setup shell clean-py docker-ps docker-platform-up docker-isp-up restart-platform restart-isp restart-all
 
 # Colors
 CYAN := \033[0;36m
@@ -33,7 +33,7 @@ help:
 	@echo "  make logs-isp               View ISP logs"
 	@echo ""
 	@echo "$(GREEN)Infrastructure - Complete Stack:$(NC)"
-	@echo "  make start-all              Start all services + run migrations + verify health"
+	@echo "  make start-all              Validate config + start all services + migrations + health checks"
 	@echo "  make stop-all               Stop all services"
 	@echo "  make restart-all            Restart all services"
 	@echo "  make status-all             Check all service status"
@@ -79,7 +79,9 @@ help:
 	@echo ""
 	@echo "$(GREEN)Environment:$(NC)"
 	@echo "  make env-validate           Validate current environment"
+	@echo "  make env-validate-server    Validate server deployment configuration"
 	@echo "  make env-check              Check external services"
+	@echo "  make env-server             Switch to server deployment environment"
 	@echo "  make env-local              Switch to local development environment"
 	@echo "  make env-test               Switch to test environment"
 	@echo "  make env-staging            Switch to staging environment"
@@ -146,6 +148,20 @@ logs-isp:
 # ===================================================================
 
 start-all:
+	@echo "$(CYAN)Validating environment configuration...$(NC)"
+	@if [ -f ./scripts/validate-server-env.sh ]; then \
+		./scripts/validate-server-env.sh || { \
+			if [ "$(ALLOW_ENV_VALIDATION_SKIP)" = "1" ]; then \
+				echo "$(YELLOW)⚠ Environment validation failed, but ALLOW_ENV_VALIDATION_SKIP=1 so continuing...$(NC)"; \
+			else \
+				echo "$(YELLOW)✗ Environment validation failed. Fix errors above or set ALLOW_ENV_VALIDATION_SKIP=1 to override.$(NC)"; \
+				exit 1; \
+			fi \
+		}; \
+	else \
+		echo "$(YELLOW)⚠ Validation script not found, skipping environment validation$(NC)"; \
+	fi
+	@echo ""
 	@echo "$(CYAN)Running pre-flight checks...$(NC)"
 	@if ./scripts/docker-compose-pre-flight.sh; then \
 		true; \
@@ -360,9 +376,24 @@ env-validate:
 	@echo "$(CYAN)Validating environment configuration...$(NC)"
 	@./scripts/validate-docker-compose-env.sh
 
+env-validate-server:
+	@echo "$(CYAN)Validating server deployment configuration...$(NC)"
+	@./scripts/validate-server-env.sh
+
 env-check:
 	@echo "$(CYAN)Checking external services...$(NC)"
 	@./scripts/check-external-services.sh
+
+env-server:
+	@echo "$(CYAN)Switching to server deployment environment...$(NC)"
+	@if [ -f .env.server ]; then \
+		cp .env.server .env; \
+		echo "$(GREEN)✓ Switched to .env.server$(NC)"; \
+		echo "$(YELLOW)⚠ Review and update passwords before deployment!$(NC)"; \
+	else \
+		echo "$(YELLOW)✗ .env.server not found$(NC)"; \
+		exit 1; \
+	fi
 
 env-local:
 	@echo "$(CYAN)Switching to local development environment...$(NC)"
