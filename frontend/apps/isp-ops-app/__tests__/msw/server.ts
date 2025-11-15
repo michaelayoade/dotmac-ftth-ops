@@ -33,6 +33,7 @@ import { auditHandlers } from './handlers/audit';
 import { fieldServiceHandlers } from './handlers/field-service';
 import { reconciliationHandlers } from './handlers/reconciliation';
 import { commissionRulesHandlers } from './handlers/commission-rules';
+import { partnersHandlers } from './handlers/partners';
 
 // Combine all handlers
 // NOTE: logsHandlers MUST come before operationsHandlers to prevent
@@ -50,6 +51,7 @@ export const handlers = [
   ...dunningHandlers,
   ...reconciliationHandlers,
   ...commissionRulesHandlers,
+  ...partnersHandlers,
   ...creditNotesHandlers,
   ...invoiceActionsHandlers,
   ...networkMonitoringHandlers,

@@ -2,6 +2,45 @@
 
 ## Changelog
 
+### 2025-11-14: Phase 7 - useCommissionRules Migration
+
+**Status**: ✅ COMPLETE - 28 hooks migrated, 669 tests passing
+
+**Changes**:
+- ✅ Migrated useCommissionRules hook (38 tests) - Second medium-priority hook from Phase 7
+- ✅ Created `__tests__/msw/handlers/commission-rules.ts` - 6 endpoints covering commission rule management
+- ✅ Created `hooks/__tests__/useCommissionRules.msw.test.tsx` - 38 comprehensive tests
+- ✅ Removed `hooks/__tests__/useCommissionRules.test.tsx` - Legacy file (39KB)
+- ✅ Updated MSW server configuration
+
+**Test Results**:
+- Test Suites: 28/28 passing (100%)
+- Tests: 669/676 passing (7 skipped)
+- New tests: 38 commission rules tests covering 6 hooks
+- Time: ~3.5s for useCommissionRules suite
+
+**Technical Highlights**:
+- Complete CRUD operations for commission rules
+- Multiple commission types: revenue_share, flat_fee, tiered, hybrid
+- Product and customer applicability filtering
+- Priority-based rule sorting for applicable rules
+- Comprehensive pagination and filtering support
+- Rule activation/deactivation management
+- Effective date range support
+
+**Technical Challenges Resolved**:
+1. **AppConfigContext Mocking**: Hook uses custom AppConfigContext for API configuration. Created mock that provides buildUrl function matching the expected signature.
+2. **Test Isolation**: Ensured unique IDs for edge case tests to prevent conflicts with auto-generated IDs from previous tests.
+3. **Handler URL Ordering**: Specific `/partners/:partnerId/applicable` route must come before generic `/:id` route to match correctly.
+
+**Impact**:
+- +38 tests with realistic API mocking
+- -39KB disk space (old test file removed)
+- Partner commission management now properly tested with all commission types
+- Rule applicability logic validated with product/customer filtering
+
+---
+
 ### 2025-11-14: Phase 7 - useReconciliation Migration
 
 **Status**: ✅ COMPLETE - 27 hooks migrated, 631 tests passing

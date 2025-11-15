@@ -1,11 +1,17 @@
 /**
  * Table component tests
- * Testing table structure, variants, and accessibility
+ * Testing table structure, variants, accessibility, security, and performance
  */
 
-import { render, screen } from "@testing-library/react";
-import { axe } from "jest-axe";
 import React from "react";
+import {
+  render,
+  renderA11y,
+  renderSecurity,
+  renderPerformance,
+  renderComprehensive,
+  screen,
+} from "@dotmac/testing";
 
 import {
   Table,
@@ -381,9 +387,7 @@ describe("Table Components", () => {
 
   describe("Accessibility", () => {
     it("should be accessible", async () => {
-      const { container } = render(<SampleTable />);
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      await renderA11y(<SampleTable />);
     });
 
     it("supports aria-label", () => {
@@ -510,5 +514,167 @@ describe("Table Components", () => {
       expect(headRef.current).toBeInstanceOf(HTMLTableCellElement);
       expect(cellRef.current).toBeInstanceOf(HTMLTableCellElement);
     });
+  });
+});
+
+// Security tests
+describe("Table Security", () => {
+  it("passes security validation", async () => {
+    const result = await renderSecurity(<SampleTable />);
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+
+  it("prevents XSS in cell content", async () => {
+    const XSSTable = () => (
+      <Table data-testid="table">
+        <TableBody>
+          <TableRow>
+            <TableCell>{'<script>alert("xss")</script>'}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    );
+
+    const result = await renderSecurity(<XSSTable />);
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+
+  it("sanitizes user-provided data", async () => {
+    const userData = [
+      { name: 'User<script>alert(1)</script>', email: 'test@test.com' },
+    ];
+
+    const UserTable = () => (
+      <Table data-testid="table">
+        <TableBody>
+          {userData.map((user, index) => (
+            <TableRow key={index}>
+              <TableCell>{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+
+    const result = await renderSecurity(<UserTable />);
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+});
+
+// Performance tests
+describe("Table Performance", () => {
+  it("renders within performance threshold", () => {
+    const result = renderPerformance(<SampleTable />);
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant();
+  });
+
+  it("handles large tables efficiently", () => {
+    const LargeTable = () => (
+      <Table data-testid="table">
+        <TableBody>
+          {Array.from({ length: 100 }, (_, i) => (
+            <TableRow key={i}>
+              <TableCell>Cell {i}-1</TableCell>
+              <TableCell>Cell {i}-2</TableCell>
+              <TableCell>Cell {i}-3</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+
+    const result = renderPerformance(<LargeTable />);
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant(50); // Allow more time for large table
+  });
+
+  it("handles complex nested content efficiently", () => {
+    const ComplexTable = () => (
+      <Table data-testid="table">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Details</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 50 }, (_, i) => (
+            <TableRow key={i}>
+              <TableCell>Item {i}</TableCell>
+              <TableCell>
+                <div>
+                  <span>Property 1: Value</span>
+                  <span>Property 2: Value</span>
+                  <span>Property 3: Value</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+
+    const result = renderPerformance(<ComplexTable />);
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant(50);
+  });
+});
+
+// Comprehensive test
+describe("Table Comprehensive Testing", () => {
+  it("passes all comprehensive tests", async () => {
+    const { result, metrics } = await renderComprehensive(
+      <Table data-testid="comprehensive-table" variant="striped" size="md" density="comfortable">
+        <TableCaption>Comprehensive table with all features</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Alice Johnson</TableCell>
+            <TableCell>alice@example.com</TableCell>
+            <TableCell>Admin</TableCell>
+            <TableCell>Active</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Bob Smith</TableCell>
+            <TableCell>bob@example.com</TableCell>
+            <TableCell>User</TableCell>
+            <TableCell>Active</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Charlie Brown</TableCell>
+            <TableCell>charlie@example.com</TableCell>
+            <TableCell>Guest</TableCell>
+            <TableCell>Inactive</TableCell>
+          </TableRow>
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={3}>Total Users</TableCell>
+            <TableCell>3</TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>,
+    );
+
+    // All tests should pass
+    expect(result.container).toBeAccessible();
+    expect(result.container).toHaveNoSecurityViolations();
+    expect(metrics).toBePerformant();
+    expect(result.container).toHaveValidMarkup();
   });
 });

@@ -1,11 +1,19 @@
 /**
  * Chart component tests
- * Testing chart rendering, data visualization, and interactive features
+ * Testing chart rendering, data visualization, interactive features,
+ * security, and performance
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
-import { axe } from "jest-axe";
-import type React from "react";
+import React from "react";
+import {
+  render,
+  renderA11y,
+  renderSecurity,
+  renderPerformance,
+  renderComprehensive,
+  screen,
+  fireEvent,
+} from "@dotmac/testing";
 
 import {
   AreaChart,
@@ -459,39 +467,29 @@ describe("Chart Components", () => {
 
   describe("Accessibility", () => {
     it("LineChart should be accessible", async () => {
-      const { container } = render(
+      await renderA11y(
         <LineChart data={sampleData} lines={[{ key: "value" }]} title="Accessible Chart" />,
       );
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
     });
 
     it("BarChart should be accessible", async () => {
-      const { container } = render(
+      await renderA11y(
         <BarChart data={sampleData} bars={[{ key: "value" }]} title="Accessible Bar Chart" />,
       );
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
     });
 
     it("PieChart should be accessible", async () => {
-      const { container } = render(
-        <PieChart data={pieData} dataKey="value" title="Accessible Pie Chart" />,
-      );
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
+      await renderA11y(<PieChart data={pieData} dataKey="value" title="Accessible Pie Chart" />);
     });
 
     it("MetricCard should be accessible", async () => {
-      const { container } = render(
+      await renderA11y(
         <MetricCard
           title="Accessible Metric"
           value="1,234"
           trend={{ value: 10, direction: "up" }}
         />,
       );
-      const results = await axe(container);
-      expect(results).toHaveNoViolations();
     });
   });
 
@@ -574,5 +572,274 @@ describe("Chart Components", () => {
       expect(endTime - startTime).toBeLessThan(100);
       expect(screen.getByTestId("line-chart")).toBeInTheDocument();
     });
+  });
+});
+
+// Security tests
+describe("Chart Security", () => {
+  it("LineChart passes security validation", async () => {
+    const result = await renderSecurity(
+      <LineChart
+        data={sampleData}
+        lines={[{ key: "value", stroke: "#8884d8" }]}
+        title="Secure Line Chart"
+      />,
+    );
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+
+  it("BarChart passes security validation", async () => {
+    const result = await renderSecurity(
+      <BarChart
+        data={sampleData}
+        bars={[{ key: "value", fill: "#8884d8" }]}
+        title="Secure Bar Chart"
+      />,
+    );
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+
+  it("prevents XSS in chart titles", async () => {
+    const result = await renderSecurity(
+      <LineChart
+        data={sampleData}
+        lines={[{ key: "value" }]}
+        title='<script>alert("xss")</script>'
+      />,
+    );
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+
+  it("sanitizes data labels", async () => {
+    const xssData = [
+      { name: '<img src=x onerror="alert(1)">', value: 100 },
+      { name: "Normal", value: 200 },
+    ];
+
+    const result = await renderSecurity(
+      <LineChart data={xssData} lines={[{ key: "value" }]} title="Data with XSS" />,
+    );
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+
+  it("MetricCard passes security validation", async () => {
+    const result = await renderSecurity(
+      <MetricCard title="Secure Metric" value="$1,234" trend={{ value: 5, direction: "up" }} />,
+    );
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+
+  it("prevents XSS in MetricCard values", async () => {
+    const result = await renderSecurity(
+      <MetricCard
+        title="Test"
+        value='<script>alert("xss")</script>'
+        data-testid="metric-card"
+      />,
+    );
+
+    expect(result.container).toHaveNoSecurityViolations();
+  });
+});
+
+// Performance tests
+describe("Chart Performance", () => {
+  it("LineChart renders within performance threshold", () => {
+    const result = renderPerformance(
+      <LineChart
+        data={sampleData}
+        lines={[{ key: "value", stroke: "#8884d8" }]}
+        title="Performance Test"
+      />,
+    );
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant();
+  });
+
+  it("BarChart renders within performance threshold", () => {
+    const result = renderPerformance(
+      <BarChart
+        data={sampleData}
+        bars={[{ key: "value", fill: "#8884d8" }]}
+        title="Performance Test"
+      />,
+    );
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant();
+  });
+
+  it("handles multiple chart lines efficiently", () => {
+    const result = renderPerformance(
+      <LineChart
+        data={sampleData}
+        lines={[
+          { key: "value", stroke: "#8884d8" },
+          { key: "revenue", stroke: "#82ca9d" },
+          { key: "customers", stroke: "#ffc658" },
+        ]}
+        title="Multi-line Chart"
+      />,
+    );
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant();
+  });
+
+  it("handles large datasets with virtual scrolling efficiently", () => {
+    const largeData = Array.from({ length: 5000 }, (_, i) => ({
+      name: `Item ${i}`,
+      value: Math.random() * 1000,
+      revenue: Math.random() * 5000,
+    }));
+
+    const result = renderPerformance(
+      <LineChart data={largeData} lines={[{ key: "value" }]} title="Large Dataset" />,
+    );
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant(100); // Allow more time for large dataset
+  });
+
+  it("MetricCard renders efficiently", () => {
+    const result = renderPerformance(
+      <MetricCard title="Performance Metric" value="12,345" trend={{ value: 10, direction: "up" }} />,
+    );
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant();
+  });
+
+  it("ChartContainer renders efficiently with complex content", () => {
+    const ComplexChart = () => (
+      <ChartContainer title="Complex Chart" description="Multi-metric dashboard">
+        <div>
+          {Array.from({ length: 10 }, (_, i) => (
+            <MetricCard
+              key={i}
+              title={`Metric ${i}`}
+              value={`${Math.floor(Math.random() * 10000)}`}
+              trend={{ value: Math.random() * 20, direction: "up" }}
+            />
+          ))}
+        </div>
+      </ChartContainer>
+    );
+
+    const result = renderPerformance(<ComplexChart />);
+
+    const metrics = result.measurePerformance();
+    expect(metrics).toBePerformant(50);
+  });
+});
+
+// Comprehensive test
+describe("Chart Comprehensive Testing", () => {
+  it("LineChart passes all comprehensive tests", async () => {
+    const { result, metrics } = await renderComprehensive(
+      <LineChart
+        data={sampleData}
+        lines={[
+          { key: "value", stroke: "#8884d8" },
+          { key: "revenue", stroke: "#82ca9d" },
+        ]}
+        title="Comprehensive Line Chart"
+        showGrid
+        showTooltip
+        showLegend
+        xAxisKey="name"
+      />,
+    );
+
+    expect(result.container).toBeAccessible();
+    expect(result.container).toHaveNoSecurityViolations();
+    expect(metrics).toBePerformant();
+    expect(result.container).toHaveValidMarkup();
+  });
+
+  it("BarChart passes all comprehensive tests", async () => {
+    const { result, metrics } = await renderComprehensive(
+      <BarChart
+        data={sampleData}
+        bars={[
+          { key: "revenue", fill: "#8884d8" },
+          { key: "customers", fill: "#82ca9d" },
+        ]}
+        title="Comprehensive Bar Chart"
+        showGrid
+        showTooltip
+        showLegend
+      />,
+    );
+
+    expect(result.container).toBeAccessible();
+    expect(result.container).toHaveNoSecurityViolations();
+    expect(metrics).toBePerformant();
+    expect(result.container).toHaveValidMarkup();
+  });
+
+  it("PieChart passes all comprehensive tests", async () => {
+    const { result, metrics } = await renderComprehensive(
+      <PieChart
+        data={pieData}
+        dataKey="value"
+        nameKey="name"
+        title="Comprehensive Pie Chart"
+        showTooltip
+        showLegend
+        showLabels
+      />,
+    );
+
+    expect(result.container).toBeAccessible();
+    expect(result.container).toHaveNoSecurityViolations();
+    expect(metrics).toBePerformant();
+    expect(result.container).toHaveValidMarkup();
+  });
+
+  it("MetricCard passes all comprehensive tests", async () => {
+    const { result, metrics } = await renderComprehensive(
+      <MetricCard
+        title="Total Revenue"
+        value="$124,567"
+        subtitle="Last 30 days"
+        trend={{ value: 15.3, direction: "up" }}
+        size="lg"
+        data-testid="comprehensive-metric"
+      />,
+    );
+
+    expect(result.container).toBeAccessible();
+    expect(result.container).toHaveNoSecurityViolations();
+    expect(metrics).toBePerformant();
+    expect(result.container).toHaveValidMarkup();
+  });
+
+  it("ChartContainer with complete dashboard passes all tests", async () => {
+    const { result, metrics } = await renderComprehensive(
+      <ChartContainer
+        title="Complete Dashboard"
+        description="All chart types and metrics"
+        actions={<button type="button">Export</button>}
+      >
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <LineChart data={sampleData} lines={[{ key: "value" }]} title="Trend" />
+          <BarChart data={sampleData} bars={[{ key: "revenue" }]} title="Revenue" />
+          <MetricCard title="Active Users" value="5,678" trend={{ value: 12, direction: "up" }} />
+          <MetricCard title="Conversion" value="3.4%" trend={{ value: 2, direction: "down" }} />
+        </div>
+      </ChartContainer>,
+    );
+
+    expect(result.container).toBeAccessible();
+    expect(result.container).toHaveNoSecurityViolations();
+    expect(metrics).toBePerformant();
+    expect(result.container).toHaveValidMarkup();
   });
 });
