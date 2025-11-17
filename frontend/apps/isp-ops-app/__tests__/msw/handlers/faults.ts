@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   Alarm,
   AlarmStatistics,
@@ -145,8 +145,8 @@ export function createMockAlarmStatistics(): AlarmStatistics {
 
 export const faultHandlers = [
   // GET /faults/alarms - List alarms
-  rest.get('*/faults/alarms', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/faults/alarms', ({ request, params }) => {
+    const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const severities = url.searchParams.getAll('severity');
@@ -222,18 +222,18 @@ export const faultHandlers = [
 
     console.log('[MSW] Returning', paginated.length, 'alarms');
 
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 
   // GET /faults/alarms/statistics - Get alarm statistics
-  rest.get('*/faults/alarms/statistics', (req, res, ctx) => {
+  http.get('*/faults/alarms/statistics', ({ request, params }) => {
     const stats = createMockAlarmStatistics();
-    return res(ctx.json(stats));
+    return HttpResponse.json(stats);
   }),
 
   // GET /faults/sla/compliance - Get SLA compliance
-  rest.get('*/faults/sla/compliance', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/faults/sla/compliance', ({ request, params }) => {
+    const url = new URL(request.url);
     const fromDate = url.searchParams.get('from_date');
     const excludeMaintenance = url.searchParams.get('exclude_maintenance');
 
@@ -253,12 +253,12 @@ export const faultHandlers = [
       };
     });
 
-    return res(ctx.json(compliance));
+    return HttpResponse.json(compliance);
   }),
 
   // GET /faults/sla/rollup-stats - Get SLA rollup stats
-  rest.get('*/faults/sla/rollup-stats', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/faults/sla/rollup-stats', ({ request, params }) => {
+    const url = new URL(request.url);
     const days = parseInt(url.searchParams.get('days') || '30');
     const targetPercentage = parseFloat(url.searchParams.get('target_percentage') || '99.9');
 
@@ -270,48 +270,48 @@ export const faultHandlers = [
       days_analyzed: days,
     };
 
-    return res(ctx.json(stats));
+    return HttpResponse.json(stats);
   }),
 
   // GET /faults/alarms/:id/history - Get alarm history
-  rest.get('*/faults/alarms/:id/history', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/faults/alarms/:id/history', ({ request, params }) => {
+    const { id } = params;
 
     const history = alarmHistory.filter((h) => h.alarm_id === id);
 
-    return res(ctx.json(history));
+    return HttpResponse.json(history);
   }),
 
   // GET /faults/alarms/:id/notes - Get alarm notes
-  rest.get('*/faults/alarms/:id/notes', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/faults/alarms/:id/notes', ({ request, params }) => {
+    const { id } = params;
 
     const notes = alarmNotes.filter((n) => n.alarm_id === id);
 
-    return res(ctx.json(notes));
+    return HttpResponse.json(notes);
   }),
 
   // POST /faults/alarms/:id/notes - Add alarm note
-  rest.post('*/faults/alarms/:id/notes', (req, res, ctx) => {
-    const { id } = req.params;
-    const data = req.body as { content: string };
+  http.post('*/faults/alarms/:id/notes', async ({ request, params }) => {
+    const { id } = params;
+    const data = await request.json() as { content: string };
 
     const newNote = createMockNote(id as string, { content: data.content });
     alarmNotes.push(newNote);
 
-    return res(ctx.status(201), ctx.json(newNote));
+    return HttpResponse.json(newNote, { status: 201 });
   }),
 
   // POST /faults/alarms/:id/acknowledge - Acknowledge alarm
-  rest.post('*/faults/alarms/:id/acknowledge', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/faults/alarms/:id/acknowledge', ({ request, params }) => {
+    const { id } = params;
 
     const index = alarms.findIndex((alarm) => alarm.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Alarm not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Alarm not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -319,19 +319,19 @@ export const faultHandlers = [
     alarms[index].acknowledged_at = new Date().toISOString();
     alarms[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(200), ctx.json(alarms[index]));
+    return HttpResponse.json(alarms[index], { status: 200 });
   }),
 
   // POST /faults/alarms/:id/clear - Clear alarm
-  rest.post('*/faults/alarms/:id/clear', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/faults/alarms/:id/clear', ({ request, params }) => {
+    const { id } = params;
 
     const index = alarms.findIndex((alarm) => alarm.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Alarm not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Alarm not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -339,26 +339,26 @@ export const faultHandlers = [
     alarms[index].cleared_at = new Date().toISOString();
     alarms[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(200), ctx.json(alarms[index]));
+    return HttpResponse.json(alarms[index], { status: 200 });
   }),
 
   // POST /faults/alarms/:id/create-ticket - Create ticket for alarm
-  rest.post('*/faults/alarms/:id/create-ticket', (req, res, ctx) => {
-    const { id } = req.params;
-    const data = req.body as { priority: string };
+  http.post('*/faults/alarms/:id/create-ticket', async ({ request, params }) => {
+    const { id } = params;
+    const data = await request.json() as { priority: string };
 
     const index = alarms.findIndex((alarm) => alarm.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Alarm not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Alarm not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     alarms[index].ticket_id = `ticket-${Date.now()}`;
     alarms[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(201), ctx.json({ ticket_id: alarms[index].ticket_id }));
+    return HttpResponse.json({ ticket_id: alarms[index].ticket_id }, { status: 201 });
   }),
 ];

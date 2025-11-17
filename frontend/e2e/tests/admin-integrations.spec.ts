@@ -12,7 +12,8 @@
  * - API contract validation
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 
 test.describe("Admin Integrations Dashboard", () => {
   test.beforeEach(async ({ page }) => {

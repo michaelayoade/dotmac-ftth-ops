@@ -2,7 +2,7 @@
  * MSW Handlers for Dunning API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   DunningCampaign,
   DunningExecution,
@@ -33,11 +33,18 @@ export function createMockDunningCampaign(overrides?: Partial<DunningCampaign>):
     tenant_id: 'tenant-123',
     name: 'Test Campaign',
     description: 'A test dunning campaign',
-    status: 'active',
+    trigger_after_days: 30,
+    max_retries: 3,
+    retry_interval_days: 7,
+    actions: [],
+    exclusion_rules: {},
+    is_active: true,
+    priority: 1,
     stages: [],
     total_executions: 0,
     successful_executions: 0,
     failed_executions: 0,
+    total_recovered_amount: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -75,8 +82,8 @@ export function seedDunningData(
 
 export const dunningHandlers = [
   // GET /api/v1/billing/dunning/campaigns - List campaigns
-  rest.get('*/api/v1/billing/dunning/campaigns', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/billing/dunning/campaigns', ({ request, params }) => {
+    const url = new URL(request.url);
     const activeOnly = url.searchParams.get('active_only');
     const search = url.searchParams.get('search');
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -84,9 +91,10 @@ export const dunningHandlers = [
 
     let filtered = campaigns;
 
-    // Filter by active_only parameter
     if (activeOnly === 'true') {
-      filtered = filtered.filter((c) => c.status === 'active');
+      filtered = filtered.filter((c) => c.is_active);
+    } else if (activeOnly === 'false') {
+      filtered = filtered.filter((c) => !c.is_active);
     }
 
     if (search) {
@@ -100,27 +108,24 @@ export const dunningHandlers = [
     const end = start + pageSize;
     const paginated = filtered.slice(start, end);
 
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 
   // GET /api/v1/billing/dunning/campaigns/:id - Get campaign
-  rest.get('*/api/v1/billing/dunning/campaigns/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/api/v1/billing/dunning/campaigns/:id', ({ request, params }) => {
+    const { id } = params;
     const campaign = campaigns.find((c) => c.id === id);
 
     if (!campaign) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Campaign not found' })
-      );
+      return HttpResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    return res(ctx.json(campaign));
+    return HttpResponse.json(campaign);
   }),
 
   // POST /api/v1/billing/dunning/campaigns - Create campaign
-  rest.post('*/api/v1/billing/dunning/campaigns', async (req, res, ctx) => {
-    const data = await req.json();
+  http.post('*/api/v1/billing/dunning/campaigns', async ({ request, params }) => {
+    const data = await request.json();
 
     const newCampaign = createMockDunningCampaign({
       ...data,
@@ -128,21 +133,18 @@ export const dunningHandlers = [
 
     campaigns.push(newCampaign);
 
-    return res(ctx.status(201), ctx.json(newCampaign));
+    return HttpResponse.json(newCampaign, { status: 201 });
   }),
 
   // PATCH /dunning/campaigns/:id - Update campaign
-  rest.patch('*/api/v1/billing/dunning/campaigns/:id', async (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = await req.json();
+  http.patch('*/api/v1/billing/dunning/campaigns/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json();
 
     const index = campaigns.findIndex((c) => c.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Campaign not found' })
-      );
+      return HttpResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
     campaigns[index] = {
@@ -151,64 +153,55 @@ export const dunningHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(campaigns[index]));
+    return HttpResponse.json(campaigns[index]);
   }),
 
   // DELETE /dunning/campaigns/:id - Delete campaign
-  rest.delete('*/api/v1/billing/dunning/campaigns/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/api/v1/billing/dunning/campaigns/:id', ({ request, params }) => {
+    const { id } = params;
     const index = campaigns.findIndex((c) => c.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Campaign not found' })
-      );
+      return HttpResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
     campaigns.splice(index, 1);
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /dunning/campaigns/:id/pause - Pause campaign
-  rest.post('*/api/v1/billing/dunning/campaigns/:id/pause', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/billing/dunning/campaigns/:id/pause', ({ request, params }) => {
+    const { id } = params;
     const campaign = campaigns.find((c) => c.id === id);
 
     if (!campaign) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Campaign not found' })
-      );
+      return HttpResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
     campaign.status = 'paused';
     campaign.updated_at = new Date().toISOString();
 
-    return res(ctx.json(campaign));
+    return HttpResponse.json(campaign);
   }),
 
   // POST /dunning/campaigns/:id/resume - Resume campaign
-  rest.post('*/api/v1/billing/dunning/campaigns/:id/resume', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/billing/dunning/campaigns/:id/resume', ({ request, params }) => {
+    const { id } = params;
     const campaign = campaigns.find((c) => c.id === id);
 
     if (!campaign) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Campaign not found' })
-      );
+      return HttpResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
     campaign.status = 'active';
     campaign.updated_at = new Date().toISOString();
 
-    return res(ctx.json(campaign));
+    return HttpResponse.json(campaign);
   }),
 
   // GET /dunning/executions - List executions
-  rest.get('*/api/v1/billing/dunning/executions', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/billing/dunning/executions', ({ request, params }) => {
+    const url = new URL(request.url);
     const campaignId = url.searchParams.get('campaign_id');
     const status = url.searchParams.get('status');
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -228,27 +221,24 @@ export const dunningHandlers = [
     const end = start + pageSize;
     const paginated = filtered.slice(start, end);
 
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 
   // GET /dunning/executions/:id - Get execution
-  rest.get('*/api/v1/billing/dunning/executions/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/api/v1/billing/dunning/executions/:id', ({ request, params }) => {
+    const { id } = params;
     const execution = executions.find((e) => e.id === id);
 
     if (!execution) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Execution not found' })
-      );
+      return HttpResponse.json({ error: 'Execution not found' }, { status: 404 });
     }
 
-    return res(ctx.json(execution));
+    return HttpResponse.json(execution);
   }),
 
   // POST /dunning/executions - Start execution
-  rest.post('*/api/v1/billing/dunning/executions', async (req, res, ctx) => {
-    const data = await req.json();
+  http.post('*/api/v1/billing/dunning/executions', async ({ request, params }) => {
+    const data = await request.json();
 
     const newExecution = createMockDunningExecution({
       ...data,
@@ -256,32 +246,29 @@ export const dunningHandlers = [
 
     executions.push(newExecution);
 
-    return res(ctx.status(201), ctx.json(newExecution));
+    return HttpResponse.json(newExecution, { status: 201 });
   }),
 
   // POST /dunning/executions/:id/cancel - Cancel execution
-  rest.post('*/api/v1/billing/dunning/executions/:id/cancel', async (req, res, ctx) => {
-    const { id } = req.params;
-    const { reason } = await req.json();
+  http.post('*/api/v1/billing/dunning/executions/:id/cancel', async ({ request, params }) => {
+    const { id } = params;
+    const { reason } = await request.json();
 
     const execution = executions.find((e) => e.id === id);
 
     if (!execution) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Execution not found' })
-      );
+      return HttpResponse.json({ error: 'Execution not found' }, { status: 404 });
     }
 
     execution.status = 'cancelled';
     execution.cancellation_reason = reason;
     execution.updated_at = new Date().toISOString();
 
-    return res(ctx.json(execution));
+    return HttpResponse.json(execution);
   }),
 
   // GET /api/v1/billing/dunning/stats - Get statistics
-  rest.get('*/api/v1/billing/dunning/stats', (req, res, ctx) => {
+  http.get('*/api/v1/billing/dunning/stats', ({ request, params }) => {
     const stats: DunningStatistics = {
       total_campaigns: campaigns.length,
       active_campaigns: campaigns.filter((c) => c.status === 'active').length,
@@ -296,19 +283,16 @@ export const dunningHandlers = [
       average_days_to_recovery: 15,
     };
 
-    return res(ctx.json(stats));
+    return HttpResponse.json(stats);
   }),
 
   // GET /api/v1/billing/dunning/stats/campaigns/:id - Get campaign statistics
-  rest.get('*/api/v1/billing/dunning/stats/campaigns/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/api/v1/billing/dunning/stats/campaigns/:id', ({ request, params }) => {
+    const { id } = params;
     const campaign = campaigns.find((c) => c.id === id);
 
     if (!campaign) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Campaign not found' })
-      );
+      return HttpResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
     const campaignExecutions = executions.filter((e) => e.campaign_id === id);
@@ -330,12 +314,12 @@ export const dunningHandlers = [
       },
     };
 
-    return res(ctx.json(stats));
+    return HttpResponse.json(stats);
   }),
 
   // GET /api/v1/billing/dunning/analytics/recovery - Get recovery chart data
-  rest.get('*/api/v1/billing/dunning/analytics/recovery', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/billing/dunning/analytics/recovery', ({ request, params }) => {
+    const url = new URL(request.url);
     const days = parseInt(url.searchParams.get('days') || '30');
 
     const chartData: DunningRecoveryChartData[] = [];
@@ -353,6 +337,6 @@ export const dunningHandlers = [
       });
     }
 
-    return res(ctx.json(chartData));
+    return HttpResponse.json(chartData);
   }),
 ];

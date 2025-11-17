@@ -280,6 +280,7 @@ export function DataTable<T = any>({
                   type="checkbox"
                   checked={data.length > 0 && selection.selectedKeys.length === data.length}
                   onChange={(e) => handleSelectAll(e.target.checked)}
+                  aria-label="Select all rows"
                 />
               </TableHead>
             ) : null}
@@ -324,6 +325,7 @@ export function DataTable<T = any>({
                           type="checkbox"
                           checked={selected}
                           onChange={(e) => handleSelectRow(record, e.target.checked)}
+                          aria-label={`Select row ${rowKey}`}
                         />
                       </TableCell>
                     ) : null}

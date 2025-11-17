@@ -3,7 +3,7 @@
  * Mocks technicians, scheduling, time tracking, and resource management endpoints
  */
 
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import type {
   Technician,
   TimeEntry,
@@ -204,8 +204,8 @@ export function clearFieldServiceData(): void {
 
 export const fieldServiceHandlers = [
   // Get technicians list with filters
-  rest.get("*/api/v1/field-service/technicians", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/field-service/technicians", ({ request, params }) => {
+    const url = new URL(request.url);
     const statusParam = url.searchParams.get("status");
     const skillLevelParam = url.searchParams.get("skillLevel");
     const search = url.searchParams.get("search");
@@ -257,28 +257,28 @@ export const fieldServiceHandlers = [
     };
 
     console.log(`[MSW] Returning ${filtered.length} technicians`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // Get single technician
-  rest.get("*/api/v1/field-service/technicians/:id", (req, res, ctx) => {
-    const { id } = req.params;
+  http.get("*/api/v1/field-service/technicians/:id", ({ request, params }) => {
+    const { id } = params;
     console.log("[MSW] GET /api/v1/field-service/technicians/:id", { id });
 
     const technician = technicians.find((t) => t.id === id);
     if (!technician) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: "Technician not found", code: "NOT_FOUND" })
+      return HttpResponse.json(
+        { error: "Technician not found", code: "NOT_FOUND" },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(technician));
+    return HttpResponse.json(technician);
   }),
 
   // Clock in
-  rest.post("*/api/v1/time/clock-in", async (req, res, ctx) => {
-    const clockInData = await req.json<ClockInData>();
+  http.post("*/api/v1/time/clock-in", async ({ request, params }) => {
+    const clockInData = await request.json<ClockInData>();
     console.log("[MSW] POST /api/v1/time/clock-in", clockInData);
 
     const entry = createMockTimeEntry({
@@ -295,13 +295,13 @@ export const fieldServiceHandlers = [
     });
 
     timeEntries.push(entry);
-    return res(ctx.json(entry));
+    return HttpResponse.json(entry);
   }),
 
   // Clock out
-  rest.post("*/api/v1/time/entries/:id/clock-out", async (req, res, ctx) => {
-    const { id } = req.params;
-    const clockOutData = await req.json<ClockOutData>();
+  http.post("*/api/v1/time/entries/:id/clock-out", async ({ request, params }) => {
+    const { id } = params;
+    const clockOutData = await request.json<ClockOutData>();
     console.log("[MSW] POST /api/v1/time/entries/:id/clock-out", {
       id,
       ...clockOutData,
@@ -309,9 +309,9 @@ export const fieldServiceHandlers = [
 
     const entry = timeEntries.find((e) => e.id === id);
     if (!entry) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: "Time entry not found", code: "NOT_FOUND" })
+      return HttpResponse.json(
+        { error: "Time entry not found", code: "NOT_FOUND" },
+        { status: 404 }
       );
     }
 
@@ -332,12 +332,12 @@ export const fieldServiceHandlers = [
       durationMinutes: Math.round(totalHours * 60),
     });
 
-    return res(ctx.json(entry));
+    return HttpResponse.json(entry);
   }),
 
   // Get time entries with filters
-  rest.get("*/api/v1/time/entries", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/time/entries", ({ request, params }) => {
+    const url = new URL(request.url);
     const technicianId = url.searchParams.get("technicianId");
     const statusParam = url.searchParams.get("status");
     const entryTypeParam = url.searchParams.get("entryType");
@@ -372,12 +372,12 @@ export const fieldServiceHandlers = [
     };
 
     console.log(`[MSW] Returning ${filtered.length} time entries`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // Get assignments with filters
-  rest.get("*/api/v1/scheduling/assignments", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/scheduling/assignments", ({ request, params }) => {
+    const url = new URL(request.url);
     const technicianId = url.searchParams.get("technicianId");
     const taskId = url.searchParams.get("taskId");
     const statusParam = url.searchParams.get("status");
@@ -411,12 +411,12 @@ export const fieldServiceHandlers = [
     };
 
     console.log(`[MSW] Returning ${filtered.length} assignments`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // Auto-assign task
-  rest.post("*/api/v1/scheduling/assignments/auto-assign", async (req, res, ctx) => {
-    const autoAssignData = await req.json<AutoAssignmentData>();
+  http.post("*/api/v1/scheduling/assignments/auto-assign", async ({ request, params }) => {
+    const autoAssignData = await request.json<AutoAssignmentData>();
     console.log("[MSW] POST /api/v1/scheduling/assignments/auto-assign", autoAssignData);
 
     // Find best available technician
@@ -424,9 +424,9 @@ export const fieldServiceHandlers = [
     const selectedTech = availableTechs[0] || technicians[0];
 
     if (!selectedTech) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: "No available technicians", code: "NO_TECHNICIANS" })
+      return HttpResponse.json(
+        { error: "No available technicians", code: "NO_TECHNICIANS" },
+        { status: 404 }
       );
     }
 
@@ -443,12 +443,12 @@ export const fieldServiceHandlers = [
     });
 
     assignments.push(assignment);
-    return res(ctx.json(assignment));
+    return HttpResponse.json(assignment);
   }),
 
   // Get equipment with filters
-  rest.get("*/api/v1/resources/equipment", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/resources/equipment", ({ request, params }) => {
+    const url = new URL(request.url);
     const statusParam = url.searchParams.get("status");
     const category = url.searchParams.get("category");
     const isAvailable = url.searchParams.get("isAvailable");
@@ -483,12 +483,12 @@ export const fieldServiceHandlers = [
     };
 
     console.log(`[MSW] Returning ${filtered.length} equipment`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // Get vehicles with filters
-  rest.get("*/api/v1/resources/vehicles", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/resources/vehicles", ({ request, params }) => {
+    const url = new URL(request.url);
     const statusParam = url.searchParams.get("status");
     const vehicleType = url.searchParams.get("vehicleType");
 
@@ -516,12 +516,12 @@ export const fieldServiceHandlers = [
     };
 
     console.log(`[MSW] Returning ${filtered.length} vehicles`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // Assign resource to technician
-  rest.post("*/api/v1/resources/assignments", async (req, res, ctx) => {
-    const assignmentData = await req.json<AssignResourceData>();
+  http.post("*/api/v1/resources/assignments", async ({ request, params }) => {
+    const assignmentData = await request.json<AssignResourceData>();
     console.log("[MSW] POST /api/v1/resources/assignments", assignmentData);
 
     const assignment = createMockResourceAssignment({
@@ -557,6 +557,6 @@ export const fieldServiceHandlers = [
       }
     }
 
-    return res(ctx.json(assignment));
+    return HttpResponse.json(assignment);
   }),
 ];

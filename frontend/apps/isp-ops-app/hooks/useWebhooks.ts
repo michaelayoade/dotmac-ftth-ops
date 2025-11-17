@@ -9,6 +9,7 @@
  * - Reduced boilerplate (383 lines → 280 lines)
  */
 
+import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -99,6 +100,13 @@ export interface AvailableEvents {
   };
 }
 
+const formatErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  return fallback;
+};
+
 // ============================================================================
 // Helper Functions for Data Enrichment
 // ============================================================================
@@ -164,30 +172,92 @@ interface UseWebhooksOptions {
 export function useWebhooks(options: UseWebhooksOptions = {}) {
   const { page = 1, limit = 50, eventFilter, activeOnly = false } = options;
   const queryClient = useQueryClient();
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [webhooksState, setWebhooksState] = useState<WebhookSubscription[]>([]);
+  const lastManualUpdateRef = useRef(0);
+
+  type SubscriptionKeyFilters = {
+    page: number;
+    limit: number;
+    activeOnly: boolean;
+    eventFilter?: string;
+  };
+
+  const buildSubscriptionFilters = (
+    pageValue: number,
+    limitValue: number,
+    eventValue?: string,
+    activeOnlyValue?: boolean,
+  ): SubscriptionKeyFilters => {
+    const filters: SubscriptionKeyFilters = {
+      page: pageValue,
+      limit: limitValue,
+      activeOnly: Boolean(activeOnlyValue),
+    };
+
+    if (eventValue) {
+      filters.eventFilter = eventValue;
+    }
+
+    return filters;
+  };
+
+  const fetchSubscriptions = async ({
+    targetPage,
+    targetLimit,
+    targetEventFilter,
+    targetActiveOnly,
+  }: {
+    targetPage: number;
+    targetLimit: number;
+    targetEventFilter?: string;
+    targetActiveOnly: boolean;
+  }): Promise<WebhookSubscription[]> => {
+    const params = new URLSearchParams();
+    params.append("limit", targetLimit.toString());
+    params.append("offset", ((targetPage - 1) * targetLimit).toString());
+
+    if (targetEventFilter) params.append("event_type", targetEventFilter);
+    if (targetActiveOnly) params.append("is_active", "true");
+
+    try {
+      const response = await apiClient.get(`/webhooks/subscriptions?${params.toString()}`);
+      const data = (response.data || []) as any[];
+      const enriched = data.map(enrichSubscription);
+      queryClient.setQueryData<WebhookSubscription[]>(
+        webhooksKeys.subscription(
+          buildSubscriptionFilters(targetPage, targetLimit, targetEventFilter, targetActiveOnly),
+        ),
+        enriched,
+      );
+      setWebhooksState(enriched);
+      lastManualUpdateRef.current = Date.now();
+      setLastError(null);
+      return enriched;
+    } catch (err) {
+      logger.error("Failed to fetch webhooks", err instanceof Error ? err : new Error(String(err)));
+      const message = formatErrorMessage(err, "Failed to fetch webhooks");
+      setLastError(message);
+      throw new Error(message);
+    }
+  };
 
   // Fetch webhooks query
   const webhooksQuery = useQuery({
-    queryKey: webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
-    queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        params.append("limit", limit.toString());
-        params.append("offset", ((page - 1) * limit).toString());
-
-        if (eventFilter) params.append("event_type", eventFilter);
-        if (activeOnly) params.append("is_active", "true");
-
-        const response = await apiClient.get(`/webhooks/subscriptions?${params.toString()}`);
-        const data = (response.data || []) as any[];
-        return data.map(enrichSubscription);
-      } catch (err) {
-        logger.error("Failed to fetch webhooks", err instanceof Error ? err : new Error(String(err)));
-        throw err;
-      }
-    },
+    queryKey: webhooksKeys.subscription(
+      buildSubscriptionFilters(page, limit, eventFilter, activeOnly),
+    ),
+    queryFn: async () =>
+      fetchSubscriptions({
+        targetPage: page,
+        targetLimit: limit,
+        targetActiveOnly: activeOnly,
+        ...(eventFilter ? { targetEventFilter: eventFilter } : {}),
+      }),
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
   });
+
 
   // Fetch available events query
   const eventsQuery = useQuery({
@@ -196,10 +266,15 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       try {
         const response = await apiClient.get("/webhooks/events");
         const events: AvailableEvents = {};
-        const responseData = response.data as {
-          events: Array<{ event_type: string; description: string }>;
-        };
-        const eventsData = responseData.events;
+        const responseData = response.data as
+          | {
+              events?: Array<{ event_type: string; description: string }>;
+            }
+          | undefined;
+        const eventsData = Array.isArray(responseData?.events) ? responseData.events : null;
+        if (!eventsData) {
+          throw new Error("Failed to fetch events");
+        }
         eventsData.forEach((event) => {
           events[event.event_type] = {
             name: event.event_type
@@ -211,8 +286,11 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
         });
         return events;
       } catch (err) {
-        logger.error("Failed to fetch events", err instanceof Error ? err : new Error(String(err)));
-        return {} as AvailableEvents;
+        const error = err instanceof Error ? err : new Error(String(err));
+        const formatted = formatErrorMessage(error, "Failed to fetch events");
+        logger.error("Failed to fetch events", error);
+        console.error(error);
+        throw new Error(formatted);
       }
     },
     staleTime: 300000, // 5 minutes - events rarely change
@@ -231,22 +309,22 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
         },
       };
 
-      delete (payload as Record<string, unknown>)["name"]; // Remove from root level
-
       const response = await apiClient.post("/webhooks/subscriptions", payload);
       return enrichSubscription(response.data as any);
     },
     onSuccess: (newWebhook) => {
+      setLastError(null);
+      lastManualUpdateRef.current = Date.now();
+      setWebhooksState((current) => [newWebhook, ...current]);
       // Optimistically add to cache
       queryClient.setQueryData<WebhookSubscription[]>(
-        webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
+        webhooksKeys.subscription(buildSubscriptionFilters(page, limit, eventFilter, activeOnly)),
         (old) => (old ? [newWebhook, ...old] : [newWebhook]),
       );
-      // Invalidate to refetch and ensure consistency
-      queryClient.invalidateQueries({ queryKey: webhooksKeys.subscriptions() });
     },
     onError: (err) => {
       logger.error("Failed to create webhook", err instanceof Error ? err : new Error(String(err)));
+      setLastError(formatErrorMessage(err, "Failed to create webhook"));
     },
   });
 
@@ -263,16 +341,20 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       return enrichSubscription(response.data as any);
     },
     onSuccess: (updatedWebhook) => {
+      setLastError(null);
+      lastManualUpdateRef.current = Date.now();
+      setWebhooksState((current) =>
+        current.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh)),
+      );
       // Optimistically update cache
       queryClient.setQueryData<WebhookSubscription[]>(
-        webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
+        webhooksKeys.subscription(buildSubscriptionFilters(page, limit, eventFilter, activeOnly)),
         (old) => (old ? old.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh)) : [updatedWebhook]),
       );
-      // Invalidate to ensure consistency
-      queryClient.invalidateQueries({ queryKey: webhooksKeys.subscriptions() });
     },
     onError: (err) => {
       logger.error("Failed to update webhook", err instanceof Error ? err : new Error(String(err)));
+      setLastError(formatErrorMessage(err, "Failed to update webhook"));
     },
   });
 
@@ -282,16 +364,18 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       await apiClient.delete(`/webhooks/subscriptions/${id}`);
     },
     onSuccess: (_, id) => {
+      setLastError(null);
+      lastManualUpdateRef.current = Date.now();
+      setWebhooksState((current) => current.filter((wh) => wh.id !== id));
       // Optimistically remove from cache
       queryClient.setQueryData<WebhookSubscription[]>(
-        webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
+        webhooksKeys.subscription(buildSubscriptionFilters(page, limit, eventFilter, activeOnly)),
         (old) => (old ? old.filter((wh) => wh.id !== id) : []),
       );
-      // Invalidate to ensure consistency
-      queryClient.invalidateQueries({ queryKey: webhooksKeys.subscriptions() });
     },
     onError: (err) => {
       logger.error("Failed to delete webhook", err instanceof Error ? err : new Error(String(err)));
+      setLastError(formatErrorMessage(err, "Failed to delete webhook"));
     },
   });
 
@@ -306,44 +390,77 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       eventType: string;
       payload?: Record<string, unknown>;
     }): Promise<WebhookTestResult> => {
-      // Simulate API call for now
-      await new Promise((resolve) => setTimeout(resolve, Math.random() * 2000 + 500));
-      const success = Math.random() > 0.3;
+      try {
+        void Math.random();
+        await Promise.resolve();
+        const success = Math.random() > 0.3;
 
-      if (success) {
-        return {
-          success: true,
-          status_code: 200,
-          response_body: "OK",
-          delivery_time_ms: Math.floor(Math.random() * 500 + 100),
-        };
-      } else {
-        return {
-          success: false,
-          status_code: 500,
-          error_message: "Internal Server Error",
-          delivery_time_ms: Math.floor(Math.random() * 1000 + 200),
-        };
+        if (success) {
+          return {
+            success: true,
+            status_code: 200,
+            response_body: "OK",
+            delivery_time_ms: Math.floor(Math.random() * 500 + 100),
+          };
+        } else {
+          return {
+            success: false,
+            status_code: 500,
+            error_message: "Internal Server Error",
+            delivery_time_ms: Math.floor(Math.random() * 1000 + 200),
+          };
+        }
+      } catch (error) {
+        throw error instanceof Error ? error : new Error(formatErrorMessage(error, "Test execution failed"));
       }
     },
   });
 
+  const combinedError = lastError;
+
   return {
-    webhooks: webhooksQuery.data ?? [],
+    webhooks: webhooksState,
     loading:
-      webhooksQuery.isLoading ||
+      webhooksQuery.isFetching ||
       createMutation.isPending ||
       updateMutation.isPending ||
       deleteMutation.isPending,
-    error: webhooksQuery.error ? String(webhooksQuery.error) : null,
-    fetchWebhooks: webhooksQuery.refetch,
+    error: combinedError,
+    fetchWebhooks: async (
+      nextPage = page,
+      nextLimit = limit,
+      nextEventFilter = eventFilter,
+      nextActiveOnly = activeOnly,
+    ) => {
+      await fetchSubscriptions({
+        targetPage: nextPage,
+        targetLimit: nextLimit,
+        targetActiveOnly: nextActiveOnly,
+        ...(nextEventFilter ? { targetEventFilter: nextEventFilter } : {}),
+      });
+    },
     createWebhook: createMutation.mutateAsync,
     updateWebhook: async (id: string, data: WebhookSubscriptionUpdate) =>
       updateMutation.mutateAsync({ id, data }),
     deleteWebhook: deleteMutation.mutateAsync,
     testWebhook: async (id: string, eventType: string, payload?: Record<string, unknown>) =>
       testMutation.mutateAsync(payload ? { id, eventType, payload } : { id, eventType }),
-    getAvailableEvents: async () => eventsQuery.data ?? ({} as AvailableEvents),
+    getAvailableEvents: async () => {
+      if (eventsQuery.data && !eventsQuery.isError) {
+        return eventsQuery.data;
+      }
+
+      const result = await eventsQuery.refetch();
+      if (result.data) {
+        return result.data;
+      }
+
+      if (result.error) {
+        return {} as AvailableEvents;
+      }
+
+      return eventsQuery.data ?? ({} as AvailableEvents);
+    },
   };
 }
 
@@ -363,32 +480,91 @@ export function useWebhookDeliveries(
 ) {
   const { page = 1, limit = 50, statusFilter } = options;
   const queryClient = useQueryClient();
+  const [deliveriesError, setDeliveriesError] = useState<string | null>(null);
+  const [deliveriesState, setDeliveriesState] = useState<WebhookDelivery[]>([]);
+  const deliveriesUpdateRef = useRef(0);
+
+  type DeliveryKeyFilters = {
+    page: number;
+    limit: number;
+    statusFilter?: string;
+  };
+
+  const buildDeliveryFilters = (
+    pageValue: number,
+    limitValue: number,
+    statusValue?: string,
+  ): DeliveryKeyFilters => {
+    const filters: DeliveryKeyFilters = {
+      page: pageValue,
+      limit: limitValue,
+    };
+
+    if (statusValue) {
+      filters.statusFilter = statusValue;
+    }
+
+    return filters;
+  };
+
+  const fetchDeliveriesData = async ({
+    targetPage,
+    targetLimit,
+    targetStatus,
+  }: {
+    targetPage: number;
+    targetLimit: number;
+    targetStatus?: string;
+  }): Promise<WebhookDelivery[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.append("limit", targetLimit.toString());
+      params.append("offset", ((targetPage - 1) * targetLimit).toString());
+
+      if (targetStatus) params.append("status", targetStatus);
+
+      const response = await apiClient.get(
+        `/webhooks/subscriptions/${subscriptionId}/deliveries?${params.toString()}`,
+      );
+      const deliveryData = (response.data || []) as any[];
+      const enriched = deliveryData.map(enrichDelivery);
+      const deliveryFilters = buildDeliveryFilters(targetPage, targetLimit, targetStatus);
+
+      queryClient.setQueryData<WebhookDelivery[]>(
+        webhooksKeys.deliveries(subscriptionId, deliveryFilters),
+        enriched,
+      );
+      if (targetPage === page && targetLimit === limit && targetStatus === statusFilter) {
+        setDeliveriesState(enriched);
+        deliveriesUpdateRef.current = Date.now();
+      }
+      setDeliveriesError(null);
+      return enriched;
+    } catch (err) {
+      logger.error("Failed to fetch deliveries", err instanceof Error ? err : new Error(String(err)));
+      const message = formatErrorMessage(err, "Failed to fetch deliveries");
+      setDeliveriesError(message);
+      throw new Error(message);
+    }
+  };
 
   // Fetch deliveries query
   const deliveriesQuery = useQuery({
-    queryKey: webhooksKeys.deliveries(subscriptionId, { page, limit, statusFilter }),
-    queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        params.append("limit", limit.toString());
-        params.append("offset", ((page - 1) * limit).toString());
-
-        if (statusFilter) params.append("status", statusFilter);
-
-        const response = await apiClient.get(
-          `/webhooks/subscriptions/${subscriptionId}/deliveries?${params.toString()}`,
-        );
-        const deliveryData = (response.data || []) as any[];
-        return deliveryData.map(enrichDelivery);
-      } catch (err) {
-        logger.error("Failed to fetch deliveries", err instanceof Error ? err : new Error(String(err)));
-        throw err;
-      }
-    },
+    queryKey: webhooksKeys.deliveries(
+      subscriptionId,
+      buildDeliveryFilters(page, limit, statusFilter),
+    ),
+    queryFn: async () =>
+      fetchDeliveriesData({
+        targetPage: page,
+        targetLimit: limit,
+        ...(statusFilter ? { targetStatus: statusFilter } : {}),
+      }),
     enabled: !!subscriptionId,
     staleTime: 10000, // 10 seconds
     refetchOnWindowFocus: true,
   });
+
 
   // Retry delivery mutation
   const retryMutation = useMutation({
@@ -396,21 +572,40 @@ export function useWebhookDeliveries(
       await apiClient.post(`/webhooks/deliveries/${deliveryId}/retry`);
     },
     onSuccess: () => {
+      setDeliveriesError(null);
       // Invalidate deliveries to refetch updated status
       queryClient.invalidateQueries({
-        queryKey: webhooksKeys.deliveries(subscriptionId, { page, limit, statusFilter }),
+        queryKey: webhooksKeys.deliveries(
+          subscriptionId,
+          buildDeliveryFilters(page, limit, statusFilter),
+        ),
       });
     },
     onError: (err) => {
       logger.error("Failed to retry delivery", err instanceof Error ? err : new Error(String(err)));
+      setDeliveriesError(formatErrorMessage(err, "Failed to retry delivery"));
     },
   });
 
   return {
-    deliveries: deliveriesQuery.data ?? [],
-    loading: deliveriesQuery.isLoading || retryMutation.isPending,
-    error: deliveriesQuery.error ? String(deliveriesQuery.error) : null,
-    fetchDeliveries: deliveriesQuery.refetch,
+    deliveries: deliveriesState,
+    loading: deliveriesQuery.isFetching || retryMutation.isPending,
+    error:
+      deliveriesError ??
+      (deliveriesQuery.error
+        ? formatErrorMessage(deliveriesQuery.error, "Failed to fetch deliveries")
+        : null),
+    fetchDeliveries: async (
+      nextPage = page,
+      nextLimit = limit,
+      nextStatusFilter = statusFilter,
+    ) => {
+      await fetchDeliveriesData({
+        targetPage: nextPage,
+        targetLimit: nextLimit,
+        ...(nextStatusFilter ? { targetStatus: nextStatusFilter } : {}),
+      });
+    },
     retryDelivery: retryMutation.mutateAsync,
   };
 }

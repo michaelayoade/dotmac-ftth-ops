@@ -304,8 +304,39 @@ class TestCustomerSearchE2E:
 
     async def test_search_customers_with_filters(self, async_client, auth_headers):
         """Test customer search with filters."""
+        # Create premium and non-premium customers to validate filtering
+        premium_emails = []
+        for suffix in ("A", "B"):
+            customer = {
+                "first_name": f"Premium{suffix}",
+                "last_name": "Customer",
+                "email": f"premium{suffix}.{uuid4()}@example.com",
+                "tier": "premium",
+            }
+            premium_emails.append(customer["email"])
+            response = await async_client.post(
+                "/api/v1/customers/",
+                json=customer,
+                headers=auth_headers,
+            )
+            assert response.status_code == 201
+            assert response.json()["email"] == customer["email"]
+
+        non_matching_email = f"basic.{uuid4()}@example.com"
+        non_matching_response = await async_client.post(
+            "/api/v1/customers/",
+            json={
+                "first_name": "Basic",
+                "last_name": "Customer",
+                "email": non_matching_email,
+                "tier": "standard",
+            },
+            headers=auth_headers,
+        )
+        assert non_matching_response.status_code == 201
+        assert non_matching_response.json()["email"] == non_matching_email
+
         search_params = {
-            "status": "active",
             "tier": "premium",
             "page": 1,
             "page_size": 10,
@@ -320,7 +351,12 @@ class TestCustomerSearchE2E:
         assert response.status_code == 200
         data = response.json()
         assert "customers" in data
-        assert "total" in data
+        assert data["total"] >= len(premium_emails)
+
+        returned_emails = {customer["email"] for customer in data["customers"]}
+        assert set(premium_emails).issubset(returned_emails)
+        assert non_matching_email not in returned_emails
+        assert all(customer["tier"] == "premium" for customer in data["customers"])
 
 
 class TestCustomerActivitiesE2E:

@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   ServiceStatistics,
   ServiceInstanceSummary,
@@ -128,16 +128,16 @@ export function createMockServiceStatistics(): ServiceStatistics {
 export const serviceLifecycleHandlers = [
   // GET /services/lifecycle/statistics - Get service statistics
   // NOTE: This MUST come before /services/lifecycle/services to avoid matching "statistics" incorrectly
-  rest.get('*/services/lifecycle/statistics', (req, res, ctx) => {
+  http.get('*/services/lifecycle/statistics', ({ request, params }) => {
     console.log('[MSW] GET /services/lifecycle/statistics');
 
     const stats = createMockServiceStatistics();
-    return res(ctx.json(stats));
+    return HttpResponse.json(stats);
   }),
 
   // GET /services/lifecycle/services - List service instances
-  rest.get('*/services/lifecycle/services', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/services/lifecycle/services', ({ request, params }) => {
+    const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const status = url.searchParams.get('status');
@@ -184,31 +184,31 @@ export const serviceLifecycleHandlers = [
 
     console.log('[MSW] Returning', summaries.length, 'services');
 
-    return res(ctx.json(summaries));
+    return HttpResponse.json(summaries);
   }),
 
   // GET /services/lifecycle/services/:id - Get single service instance
   // NOTE: This must come AFTER /statistics route
-  rest.get('*/services/lifecycle/services/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/services/lifecycle/services/:id', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] GET /services/lifecycle/services/:id', { id });
 
     const service = services.find((s) => s.id === id);
 
     if (!service) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Service instance not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Service instance not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(service));
+    return HttpResponse.json(service);
   }),
 
   // POST /services/lifecycle/services/provision - Provision new service
-  rest.post('*/services/lifecycle/services/provision', async (req, res, ctx) => {
-    const payload = await req.json();
+  http.post('*/services/lifecycle/services/provision', async ({ request, params }) => {
+    const payload = await request.json();
 
     console.log('[MSW] POST /services/lifecycle/services/provision', { payload });
 
@@ -222,24 +222,21 @@ export const serviceLifecycleHandlers = [
 
     services.push(newService);
 
-    return res(
-      ctx.status(201),
-      ctx.json({ service_instance_id: newService.id })
-    );
+    return HttpResponse.json({ service_instance_id: newService.id }, { status: 201 });
   }),
 
   // POST /services/lifecycle/services/:id/activate - Activate service
-  rest.post('*/services/lifecycle/services/:id/activate', async (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/services/lifecycle/services/:id/activate', async ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /services/lifecycle/services/:id/activate', { id });
 
     const index = services.findIndex((s) => s.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Service instance not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Service instance not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -247,12 +244,12 @@ export const serviceLifecycleHandlers = [
 
     // Validate state transition
     if (!['provisioning', 'suspended'].includes(currentStatus)) {
-      return res(
-        ctx.status(400),
-        ctx.json({
+      return HttpResponse.json(
+        {
           error: `Cannot activate service in ${currentStatus} status`,
           code: 'INVALID_STATE_TRANSITION',
-        })
+        },
+        { status: 400 }
       );
     }
 
@@ -261,21 +258,21 @@ export const serviceLifecycleHandlers = [
     services[index].provisioned_at = services[index].provisioned_at || new Date().toISOString();
     services[index].suspended_at = null;
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /services/lifecycle/services/:id/suspend - Suspend service
-  rest.post('*/services/lifecycle/services/:id/suspend', async (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/services/lifecycle/services/:id/suspend', async ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /services/lifecycle/services/:id/suspend', { id });
 
     const index = services.findIndex((s) => s.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Service instance not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Service instance not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -283,33 +280,33 @@ export const serviceLifecycleHandlers = [
 
     // Validate state transition
     if (currentStatus !== 'active') {
-      return res(
-        ctx.status(400),
-        ctx.json({
+      return HttpResponse.json(
+        {
           error: `Cannot suspend service in ${currentStatus} status`,
           code: 'INVALID_STATE_TRANSITION',
-        })
+        },
+        { status: 400 }
       );
     }
 
     services[index].status = 'suspended';
     services[index].suspended_at = new Date().toISOString();
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /services/lifecycle/services/:id/resume - Resume service
-  rest.post('*/services/lifecycle/services/:id/resume', async (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/services/lifecycle/services/:id/resume', async ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /services/lifecycle/services/:id/resume', { id });
 
     const index = services.findIndex((s) => s.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Service instance not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Service instance not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -317,55 +314,55 @@ export const serviceLifecycleHandlers = [
 
     // Validate state transition
     if (!['suspended', 'suspended_fraud'].includes(currentStatus)) {
-      return res(
-        ctx.status(400),
-        ctx.json({
+      return HttpResponse.json(
+        {
           error: `Cannot resume service in ${currentStatus} status`,
           code: 'INVALID_STATE_TRANSITION',
-        })
+        },
+        { status: 400 }
       );
     }
 
     services[index].status = 'active';
     services[index].suspended_at = null;
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /services/lifecycle/services/:id/terminate - Terminate service
-  rest.post('*/services/lifecycle/services/:id/terminate', async (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/services/lifecycle/services/:id/terminate', async ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /services/lifecycle/services/:id/terminate', { id });
 
     const index = services.findIndex((s) => s.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Service instance not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Service instance not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     services[index].status = 'terminated';
     services[index].terminated_at = new Date().toISOString();
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // PATCH /services/lifecycle/services/:id - Modify service
-  rest.patch('*/services/lifecycle/services/:id', async (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = await req.json();
+  http.patch('*/services/lifecycle/services/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json();
 
     console.log('[MSW] PATCH /services/lifecycle/services/:id', { id, updates });
 
     const index = services.findIndex((s) => s.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Service instance not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Service instance not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -377,27 +374,27 @@ export const serviceLifecycleHandlers = [
       ...allowedUpdates,
     };
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /services/lifecycle/services/:id/health-check - Run health check
-  rest.post('*/services/lifecycle/services/:id/health-check', async (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/services/lifecycle/services/:id/health-check', async ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /services/lifecycle/services/:id/health-check', { id });
 
     const index = services.findIndex((s) => s.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Service instance not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Service instance not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     // Simulate health check update
     services[index].health_status = 'healthy';
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

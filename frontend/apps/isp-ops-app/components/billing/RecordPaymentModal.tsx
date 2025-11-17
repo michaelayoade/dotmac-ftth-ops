@@ -8,7 +8,7 @@
 
 import {
   RecordPaymentModal as SharedRecordPaymentModal,
-  type Invoice as SharedInvoice,
+  type RecordPaymentInvoice,
 } from "@dotmac/features/billing";
 import { formatCurrency } from "@dotmac/features/billing";
 import { useToast, useConfirmDialog } from "@dotmac/ui";
@@ -25,7 +25,7 @@ interface RecordPaymentModalWrapperProps {
 
 export function RecordPaymentModal(props: RecordPaymentModalWrapperProps) {
   // Map app-specific Invoice type to shared Invoice type
-  const sharedInvoices: SharedInvoice[] = props.invoices.map((invoice) => ({
+  const sharedInvoices: RecordPaymentInvoice[] = props.invoices.map((invoice) => ({
     invoice_id: invoice.invoice_id,
     invoice_number: invoice.invoice_number,
     customer_id: invoice.customer_id,
@@ -43,7 +43,7 @@ export function RecordPaymentModal(props: RecordPaymentModalWrapperProps) {
   return (
     <SharedRecordPaymentModal
       {...props}
-      invoices={sharedInvoices as any}
+      invoices={sharedInvoices}
       apiClient={apiClient}
       useToast={useToast}
       logger={logger}

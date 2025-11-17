@@ -5485,6 +5485,7 @@ export type AccessPointListQuery = {
       transmitPower: number;
       maxClients?: number | null;
       securityType: WirelessSecurityType;
+      siteId?: string | null;
       controllerName?: string | null;
       siteName?: string | null;
       createdAt: string;
@@ -5636,6 +5637,8 @@ export type AccessPointsBySiteQuery = {
     ssid: string;
     frequencyBand: FrequencyBand;
     channel: number;
+    siteId?: string | null;
+    siteName?: string | null;
     performance?: {
       __typename?: "APPerformanceMetrics";
       connectedClients: number;
@@ -5770,6 +5773,7 @@ export type WirelessClientsByAccessPointQuery = {
     macAddress: string;
     hostname?: string | null;
     ipAddress?: string | null;
+    accessPointId?: string | null;
     ssid: string;
     signalStrengthDbm?: number | null;
     txRateMbps?: number | null;
@@ -5800,6 +5804,7 @@ export type WirelessClientsByCustomerQuery = {
     macAddress: string;
     hostname?: string | null;
     ipAddress?: string | null;
+    customerId?: string | null;
     accessPointName: string;
     ssid: string;
     frequencyBand: FrequencyBand;
@@ -5904,6 +5909,8 @@ export type CoverageZonesBySiteQuery = {
     __typename?: "CoverageZone";
     id: string;
     name: string;
+    siteId: string;
+    siteName: string;
     floor?: string | null;
     areaType: string;
     coverageAreaSqm?: number | null;
@@ -10801,6 +10808,7 @@ export const AccessPointListDocument = gql`
           memoryUsagePercent
           uptimeSeconds
         }
+        siteId
         controllerName
         siteName
         createdAt
@@ -10983,6 +10991,8 @@ export const AccessPointsBySiteDocument = gql`
       ssid
       frequencyBand
       channel
+      siteId
+      siteName
       performance {
         connectedClients
         cpuUsagePercent
@@ -11246,6 +11256,7 @@ export const WirelessClientsByAccessPointDocument = gql`
       macAddress
       hostname
       ipAddress
+      accessPointId
       ssid
       signalStrengthDbm
       signalQuality {
@@ -11329,6 +11340,7 @@ export const WirelessClientsByCustomerDocument = gql`
       macAddress
       hostname
       ipAddress
+      customerId
       accessPointName
       ssid
       frequencyBand
@@ -11550,6 +11562,8 @@ export const CoverageZonesBySiteDocument = gql`
     coverageZonesBySite(siteId: $siteId) {
       id
       name
+      siteId
+      siteName
       floor
       areaType
       coverageAreaSqm

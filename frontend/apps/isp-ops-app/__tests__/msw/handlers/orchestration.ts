@@ -111,14 +111,15 @@ function calculateWorkflowStatistics(): WorkflowStatistics {
 }
 
 export const orchestrationHandlers = [
-  // GET /api/v1/orchestration/stats - Get workflow statistics
-  rest.get('*/api/v1/orchestration/stats', (req, res, ctx) => {
+  // GET /api/v1/orchestration/statistics - Get workflow statistics
+  rest.get('*/orchestration/statistics', (req, res, ctx) => {
     const stats = calculateWorkflowStatistics();
-    return res(ctx.json(stats));
+    console.log('[MSW] stats handler', stats);
+    return res(ctx.status(200), ctx.json(stats));
   }),
 
   // GET /api/v1/orchestration/workflows - List workflows
-  rest.get('*/api/v1/orchestration/workflows', (req, res, ctx) => {
+  rest.get('*/orchestration/workflows', (req, res, ctx) => {
     const status = req.url.searchParams.get('status');
     const workflowType = req.url.searchParams.get('workflow_type');
     const page = parseInt(req.url.searchParams.get('page') || '1', 10);
@@ -153,11 +154,11 @@ export const orchestrationHandlers = [
       total_pages: totalPages,
     };
 
-    return res(ctx.json(response));
+    return res(ctx.status(200), ctx.json(response));
   }),
 
   // GET /api/v1/orchestration/workflows/:workflowId - Get single workflow
-  rest.get('*/api/v1/orchestration/workflows/:workflowId', (req, res, ctx) => {
+  rest.get('*/orchestration/workflows/:workflowId', (req, res, ctx) => {
     const { workflowId } = req.params;
     const workflow = workflows.find((w) => w.workflow_id === workflowId);
 
@@ -165,11 +166,11 @@ export const orchestrationHandlers = [
       return res(ctx.status(404), ctx.json({ detail: 'Workflow not found' }));
     }
 
-    return res(ctx.json(workflow));
+    return res(ctx.status(200), ctx.json(workflow));
   }),
 
   // POST /api/v1/orchestration/workflows/:workflowId/retry - Retry workflow
-  rest.post('*/api/v1/orchestration/workflows/:workflowId/retry', (req, res, ctx) => {
+  rest.post('*/orchestration/workflows/:workflowId/retry', (req, res, ctx) => {
     const { workflowId } = req.params;
     const index = workflows.findIndex((w) => w.workflow_id === workflowId);
 
@@ -197,11 +198,11 @@ export const orchestrationHandlers = [
       }));
     }
 
-    return res(ctx.json({ message: 'Workflow retry initiated' }));
+    return res(ctx.status(200), ctx.json({ message: 'Workflow retry initiated' }));
   }),
 
   // POST /api/v1/orchestration/workflows/:workflowId/cancel - Cancel workflow
-  rest.post('*/api/v1/orchestration/workflows/:workflowId/cancel', (req, res, ctx) => {
+  rest.post('*/orchestration/workflows/:workflowId/cancel', (req, res, ctx) => {
     const { workflowId } = req.params;
     const index = workflows.findIndex((w) => w.workflow_id === workflowId);
 
@@ -226,11 +227,11 @@ export const orchestrationHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json({ message: 'Workflow cancelled' }));
+    return res(ctx.status(200), ctx.json({ message: 'Workflow cancelled' }));
   }),
 
   // GET /api/v1/orchestration/export/csv - Export workflows as CSV
-  rest.get('*/api/v1/orchestration/export/csv', (req, res, ctx) => {
+  rest.get('*/orchestration/export/csv', (req, res, ctx) => {
     const workflowType = req.url.searchParams.get('workflow_type');
     const status = req.url.searchParams.get('status');
     const dateFrom = req.url.searchParams.get('date_from');
@@ -288,6 +289,7 @@ export const orchestrationHandlers = [
     const csvContent = csvRows.join('\n');
 
     return res(
+      ctx.status(200),
       ctx.set('Content-Type', 'text/csv'),
       ctx.set('Content-Disposition', 'attachment; filename="workflows_export.csv"'),
       ctx.body(csvContent)
@@ -295,7 +297,7 @@ export const orchestrationHandlers = [
   }),
 
   // GET /api/v1/orchestration/export/json - Export workflows as JSON
-  rest.get('*/api/v1/orchestration/export/json', (req, res, ctx) => {
+  rest.get('*/orchestration/export/json', (req, res, ctx) => {
     const workflowType = req.url.searchParams.get('workflow_type');
     const status = req.url.searchParams.get('status');
     const dateFrom = req.url.searchParams.get('date_from');
@@ -336,6 +338,7 @@ export const orchestrationHandlers = [
     const jsonContent = JSON.stringify(filteredWorkflows, null, 2);
 
     return res(
+      ctx.status(200),
       ctx.set('Content-Type', 'application/json'),
       ctx.set('Content-Disposition', 'attachment; filename="workflows_export.json"'),
       ctx.body(jsonContent)

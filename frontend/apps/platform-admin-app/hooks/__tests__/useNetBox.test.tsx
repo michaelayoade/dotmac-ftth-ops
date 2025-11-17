@@ -22,10 +22,10 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -46,7 +46,6 @@ describe("Platform Admin useNetBox hooks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    toastMock.mockClear();
   });
 
   it("fetches NetBox health data", async () => {
@@ -76,7 +75,7 @@ describe("Platform Admin useNetBox hooks", () => {
       address: "192.0.2.1",
     });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["netbox", "ip-addresses"] });
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "IP Address Created" }),
     );
   });

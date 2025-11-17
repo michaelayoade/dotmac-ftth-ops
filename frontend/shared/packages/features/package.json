@@ -26,7 +26,8 @@
     "./radius": "./src/radius/index.ts",
     "./rbac": "./src/rbac/index.ts",
     "./remediation": "./src/remediation/index.ts",
-    "./subscribers": "./src/subscribers/index.ts"
+    "./subscribers": "./src/subscribers/index.ts",
+    "./workspace": "./src/workspace/index.ts"
   },
   "scripts": {
     "lint": "eslint \"src\" --ext .ts,.tsx --max-warnings=0",

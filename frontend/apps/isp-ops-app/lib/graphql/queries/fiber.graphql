@@ -198,6 +198,7 @@ query SplicePointList(
     splicePoints {
       id
       spliceId
+      cableId
       name
       description
       status
@@ -295,6 +296,7 @@ query SplicePointsByCable($cableId: String!) {
   splicePointsByCable(cableId: $cableId) {
     id
     spliceId
+    cableId
     name
     status
     totalSplices
@@ -437,6 +439,7 @@ query DistributionPointDetail($id: ID!) {
 query DistributionPointsBySite($siteId: String!) {
   distributionPointsBySite(siteId: $siteId) {
     id
+    siteId
     name
     pointType
     status
@@ -558,6 +561,7 @@ query ServiceAreasByPostalCode($postalCode: String!) {
     city
     stateProvince
     isServiceable
+    postalCodes
     homesPassed
     homesConnected
     penetrationRatePercent
@@ -629,6 +633,8 @@ query FiberNetworkAnalytics {
     usedCapacity
     availableCapacity
     capacityUtilizationPercent
+    cablesByStatus
+    cablesByType
     healthyCables
     degradedCables
     failedCables
@@ -690,6 +696,7 @@ query FiberDashboard {
       homesConnected
     }
     cablesRequiringAttention {
+      id
       cableId
       cableName
       healthStatus

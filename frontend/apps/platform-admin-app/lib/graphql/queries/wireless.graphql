@@ -81,6 +81,7 @@ query AccessPointList(
         memoryUsagePercent
         uptimeSeconds
       }
+      siteId
       controllerName
       siteName
       createdAt
@@ -179,6 +180,8 @@ query AccessPointsBySite($siteId: String!) {
     ssid
     frequencyBand
     channel
+    siteId
+    siteName
     performance {
       connectedClients
       cpuUsagePercent
@@ -303,6 +306,7 @@ query WirelessClientsByAccessPoint($accessPointId: String!) {
     macAddress
     hostname
     ipAddress
+    accessPointId
     ssid
     signalStrengthDbm
     signalQuality {
@@ -326,6 +330,7 @@ query WirelessClientsByCustomer($customerId: String!) {
     macAddress
     hostname
     ipAddress
+    customerId
     accessPointName
     ssid
     frequencyBand
@@ -421,6 +426,8 @@ query CoverageZonesBySite($siteId: String!) {
   coverageZonesBySite(siteId: $siteId) {
     id
     name
+    siteId
+    siteName
     floor
     areaType
     coverageAreaSqm

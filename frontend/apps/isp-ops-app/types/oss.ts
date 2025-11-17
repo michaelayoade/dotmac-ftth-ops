@@ -154,16 +154,45 @@ export interface JobChain {
   completed_at?: string | null;
 }
 
+export type DunningActionType =
+  | "email"
+  | "sms"
+  | "suspend_service"
+  | "terminate_service"
+  | "webhook"
+  | "custom";
+
+export type DunningExecutionStatus =
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "failed"
+  | "canceled";
+
+export interface DunningActionConfig {
+  type: DunningActionType;
+  delay_days: number;
+  template?: string;
+  webhook_url?: string;
+  custom_config?: Record<string, unknown>;
+}
+
+export interface DunningExclusionRules {
+  min_lifetime_value?: number;
+  customer_tiers?: string[];
+  customer_tags?: string[];
+}
+
 export interface DunningCampaign {
   id: string;
   tenant_id: string;
   name: string;
-  description?: string | null;
+  description?: string;
   trigger_after_days: number;
   max_retries: number;
   retry_interval_days: number;
-  actions: Array<Record<string, unknown>>;
-  exclusion_rules: Record<string, unknown>;
+  actions: DunningActionConfig[];
+  exclusion_rules: DunningExclusionRules;
   is_active: boolean;
   priority: number;
   total_executions: number;

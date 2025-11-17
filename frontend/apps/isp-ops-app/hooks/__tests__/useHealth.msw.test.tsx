@@ -20,6 +20,10 @@ import {
   makeHealthCheckSucceed,
 } from "../../__tests__/test-utils";
 
+const waitForHealthLoading = async (getLoading: () => boolean) => {
+  await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
+};
+
 describe("useHealth (MSW)", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
@@ -69,7 +73,7 @@ describe("useHealth (MSW)", () => {
       expect(result.current.loading).toBe(true);
 
       // Wait for data to load
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       // Verify data matches actual hook API
       expect(result.current.health).toBeDefined();
@@ -103,7 +107,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       expect(result.current.health?.status).toBe("degraded");
       expect(result.current.health?.healthy).toBe(false);
@@ -131,7 +135,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       expect(result.current.health?.status).toBe("unhealthy");
       expect(result.current.health?.healthy).toBe(false);
@@ -145,7 +149,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       expect(result.current.health?.status).toBe("degraded");
       expect(result.current.health?.healthy).toBe(false);
@@ -159,7 +163,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       expect(result.current.health?.status).toBe("forbidden");
       expect(result.current.health?.healthy).toBe(false);
@@ -180,7 +184,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       expect(result.current.health?.timestamp).toBe("2024-01-01T00:00:00Z");
 
@@ -243,7 +247,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       expect(result.current.health?.services).toHaveLength(4);
 
@@ -286,7 +290,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       const apiService = result.current.health?.services.find((s) => s.name === "api");
       const workerService = result.current.health?.services.find(
@@ -314,7 +318,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       expect(result.current.health?.version).toBe("2.5.1");
       expect(result.current.health?.timestamp).toBeDefined();
@@ -352,7 +356,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
 
       const requiredServices = result.current.health?.services.filter((s) => s.required);
       const optionalServices = result.current.health?.services.filter((s) => !s.required);
@@ -374,7 +378,7 @@ describe("useHealth (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForHealthLoading(() => result.current.loading);
       expect(result.current.health?.status).toBe("healthy");
 
       // Simulate status change

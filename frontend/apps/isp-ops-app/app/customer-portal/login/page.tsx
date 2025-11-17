@@ -103,7 +103,7 @@ export default function CustomerLoginPage() {
                   type="email"
                   placeholder="john.doe@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   disabled={loading}
                   className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
                   autoComplete="email"
@@ -122,7 +122,7 @@ export default function CustomerLoginPage() {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   disabled={loading}
                   className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500"
                   autoComplete="current-password"

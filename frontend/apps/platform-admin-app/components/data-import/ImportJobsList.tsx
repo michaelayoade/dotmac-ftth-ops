@@ -38,7 +38,7 @@ interface ImportJobsListProps {
 }
 
 export function ImportJobsList({ onViewDetails }: ImportJobsListProps) {
-  const { useImportJobs, cancelImport, isCancelling } = useDataImport();
+  const { useImportJobs, cancelImport, isCancelling, downloadFailures } = useDataImport();
   const [statusFilter, setStatusFilter] = useState<ImportJobStatus | undefined>();
   const { data, isLoading, error, refetch } = useImportJobs(
     statusFilter ? { status: statusFilter } : {},
@@ -207,7 +207,7 @@ export function ImportJobsList({ onViewDetails }: ImportJobsListProps) {
                       </DropdownMenuItem>
 
                       {job.failed_records > 0 && (
-                        <DropdownMenuItem onClick={() => {}}>
+                        <DropdownMenuItem onClick={() => void downloadFailures(job.id)}>
                           <Download className="h-4 w-4 mr-2" />
                           Download Failures
                         </DropdownMenuItem>

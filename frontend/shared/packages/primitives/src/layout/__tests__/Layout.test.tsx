@@ -350,9 +350,9 @@ describe("Layout Components", () => {
 
   describe("Edge Cases", () => {
     it("handles empty layout", () => {
-      render(<Layout />);
+      const { container } = render(<Layout />);
 
-      const layout = screen.getByRole("generic");
+      const layout = container.querySelector(".layout");
       expect(layout).toBeInTheDocument();
     });
 

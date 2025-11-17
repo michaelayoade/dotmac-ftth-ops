@@ -48,8 +48,7 @@ describe("useCreditNotes (MSW)", () => {
   });
 
   describe("useCreditNotes - fetch credit notes", () => {
-    it.skip("should fetch credit notes successfully", async () => {
-      // Skipped due to fetch API limitation with MSW v1
+    it("should fetch credit notes successfully", async () => {
       const notes = [
         createMockCreditNote({ credit_note_number: "CN-001" }),
         createMockCreditNote({ credit_note_number: "CN-002" }),
@@ -62,14 +61,12 @@ describe("useCreditNotes (MSW)", () => {
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
-
       expect(result.current.data).toHaveLength(3);
       expect(result.current.data?.[0].number).toBe("CN-001");
       expect(result.current.error).toBeNull();
     });
 
-    it.skip("should handle empty credit note list", async () => {
-      // Skipped due to fetch API limitation with MSW v1
+    it("should handle empty credit note list", async () => {
       seedCreditNotesData([]);
 
       const { result } = renderHook(() => useCreditNotes(), {
@@ -81,8 +78,7 @@ describe("useCreditNotes (MSW)", () => {
       expect(result.current.data).toHaveLength(0);
     });
 
-    it.skip("should respect limit parameter", async () => {
-      // Skipped due to fetch API limitation with MSW v1
+    it("should respect limit parameter", async () => {
       const notes = Array.from({ length: 10 }, (_, i) =>
         createMockCreditNote({ credit_note_number: `CN-${String(i + 1).padStart(3, '0')}` })
       );
@@ -99,8 +95,7 @@ describe("useCreditNotes (MSW)", () => {
       expect(result.current.data?.[4].number).toBe("CN-005");
     });
 
-    it.skip("should use default limit of 5", async () => {
-      // Skipped due to fetch API limitation with MSW v1
+    it("should use default limit of 5", async () => {
       const notes = Array.from({ length: 10 }, (_, i) =>
         createMockCreditNote()
       );
@@ -115,8 +110,7 @@ describe("useCreditNotes (MSW)", () => {
       expect(result.current.data).toHaveLength(5);
     });
 
-    it.skip("should transform API response to CreditNoteSummary format", async () => {
-      // Skipped due to fetch API limitation with MSW v1
+    it("should transform API response to CreditNoteSummary format", async () => {
       const note = createMockCreditNote({
         credit_note_id: "cn-test-1",
         credit_note_number: "CN-TEST-001",
@@ -151,8 +145,7 @@ describe("useCreditNotes (MSW)", () => {
       });
     });
 
-    it.skip("should handle missing optional fields", async () => {
-      // Skipped due to fetch API limitation with MSW v1
+    it("should handle missing optional fields", async () => {
       const note = createMockCreditNote({
         credit_note_id: "cn-minimal",
         customer_id: null,
@@ -173,8 +166,7 @@ describe("useCreditNotes (MSW)", () => {
       expect(creditNote?.issuedAt).toBeNull();
     });
 
-    it.skip("should handle fetch error", async () => {
-      // Skipped due to fetch API limitation with MSW v1
+    it("should handle fetch error", async () => {
       makeApiEndpointFail("get", "/billing/credit-notes", "Server error");
 
       const { result } = renderHook(() => useCreditNotes(), {

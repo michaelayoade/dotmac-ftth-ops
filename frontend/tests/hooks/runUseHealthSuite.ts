@@ -8,10 +8,28 @@ import { createElement, type PropsWithChildren } from "react";
 import type { ServiceHealth, HealthSummary } from "../../apps/platform-admin-app/hooks/useHealth";
 
 type UseHealthHook = () => {
-  health: HealthSummary | null;
-  loading: boolean;
-  error: string | null;
-  refreshHealth: () => Promise<void>;
+  data: HealthSummary | undefined;
+  isLoading: boolean;
+  error: unknown;
+  refetch: () => Promise<any>;
+};
+
+type HealthWithMeta = HealthSummary & { apiErrorMessage?: string };
+
+const getHealthErrorMessage = (health: HealthWithMeta | undefined, error: unknown) => {
+  if (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+  if (health?.apiErrorMessage) {
+    return health.apiErrorMessage;
+  }
+  if (health?.status === "forbidden") {
+    return "You do not have permission to view service health.";
+  }
+  if (health?.status === "degraded") {
+    return "Service health is temporarily unavailable.";
+  }
+  return null;
 };
 
 export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
@@ -38,6 +56,13 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
     });
 
     return hook;
+  };
+
+  const waitForHealthData = async (hookResult: ReturnType<typeof renderUseHealth>) => {
+    await waitFor(() => {
+      expect(hookResult.current.data).toBeDefined();
+    });
+    return hookResult.current.data as HealthWithMeta;
   };
 
   describe("useHealth", () => {
@@ -75,14 +100,10 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        expect(result.current.loading).toBe(true);
+        const health = await waitForHealthData(result);
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
-
-        expect(result.current.health).toEqual(mockHealth);
-        expect(result.current.error).toBeNull();
+        expect(health).toEqual(mockHealth);
+        expect(getHealthErrorMessage(health, result.current.error)).toBeNull();
         expect(apiClient.get).toHaveBeenCalledWith("/ready");
       });
 
@@ -103,12 +124,10 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        const health = await waitForHealthData(result);
 
-        expect(result.current.health).toEqual(mockHealth);
-        expect(result.current.error).toBeNull();
+        expect(health).toEqual(mockHealth);
+        expect(getHealthErrorMessage(health, result.current.error)).toBeNull();
       });
 
       it("should handle degraded services", async () => {
@@ -132,13 +151,11 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        const health = await waitForHealthData(result);
 
-        expect(result.current.health).toEqual(mockHealth);
-        expect(result.current.health?.healthy).toBe(false);
-        expect(result.current.health?.failed_services).toContain("redis");
+        expect(health).toEqual(mockHealth);
+        expect(health?.healthy).toBe(false);
+        expect(health?.failed_services).toContain("redis");
       });
 
       it("should allow manual refresh", async () => {
@@ -153,15 +170,13 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForHealthData(result);
 
         // Clear previous calls
         apiClient.get.mockClear();
 
         // Trigger manual refresh
-        await result.current.refreshHealth();
+        await result.current.refetch();
 
         await waitFor(() => {
           expect(apiClient.get).toHaveBeenCalledTimes(1);
@@ -176,12 +191,12 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        const health = await waitForHealthData(result);
 
-        expect(result.current.error).toBe("Service health is temporarily unavailable.");
-        expect(result.current.health).toEqual({
+        expect(getHealthErrorMessage(health, result.current.error)).toBe(
+          "Service health is temporarily unavailable.",
+        );
+        expect(health).toEqual({
           status: "degraded",
           healthy: false,
           services: [],
@@ -203,12 +218,11 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
-
-        expect(result.current.error).toBe("You do not have permission to view service health.");
-        expect(result.current.health?.status).toBe("forbidden");
+        const health = await waitForHealthData(result);
+        expect(getHealthErrorMessage(health, result.current.error)).toBe(
+          "You do not have permission to view service health.",
+        );
+        expect(health?.status).toBe("forbidden");
       });
 
       it("should handle wrapped error response", async () => {
@@ -222,19 +236,15 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
-
-        expect(result.current.error).toBe("Database connection failed");
-        expect(result.current.health).toMatchObject({
+        const health = await waitForHealthData(result);
+        expect(getHealthErrorMessage(health, result.current.error)).toBe("Database connection failed");
+        expect(health).toMatchObject({
           status: "degraded",
           healthy: false,
           services: [],
           failed_services: [],
           timestamp: expect.any(String),
         });
-        expect((result.current.health as any)?.apiErrorMessage).toBe("Database connection failed");
       });
 
       it("should handle malformed response", async () => {
@@ -244,11 +254,9 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        const health = await waitForHealthData(result);
 
-        expect(result.current.health).toEqual({
+        expect(health).toEqual({
           status: "unknown",
           healthy: false,
           services: [],
@@ -290,12 +298,10 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        const health = await waitForHealthData(result);
 
-        expect(result.current.health?.services).toHaveLength(3);
-        expect(result.current.health?.services[2].status).toBe("degraded");
+        expect(health?.services).toHaveLength(3);
+        expect(health?.services[2].status).toBe("degraded");
       });
 
       it("should handle empty services array", async () => {
@@ -310,12 +316,10 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        const health = await waitForHealthData(result);
 
-        expect(result.current.health?.services).toEqual([]);
-        expect(result.current.health?.healthy).toBe(true);
+        expect(health?.services).toEqual([]);
+        expect(health?.healthy).toBe(true);
       });
 
       it("should include optional metadata when available", async () => {
@@ -342,13 +346,11 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
 
         const { result } = renderUseHealth();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        const health = await waitForHealthData(result);
 
-        expect(result.current.health?.version).toBe("1.2.3");
-        expect(result.current.health?.services[0].uptime).toBe(99.99);
-        expect(result.current.health?.services[0].responseTime).toBe(3);
+        expect(health?.version).toBe("1.2.3");
+        expect(health?.services[0].uptime).toBe(99.99);
+        expect(health?.services[0].responseTime).toBe(3);
       });
     });
   });

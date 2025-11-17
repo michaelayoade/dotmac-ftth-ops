@@ -2,7 +2,7 @@
  * MSW Handlers for Scheduler API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   ScheduledJob,
   JobChain,
@@ -91,25 +91,25 @@ export function seedSchedulerData(scheduledJobsData?: ScheduledJob[], jobChainsD
 
 export const schedulerHandlers = [
   // GET /api/v1/jobs/scheduler/scheduled-jobs - List scheduled jobs
-  rest.get('*/api/v1/jobs/scheduler/scheduled-jobs', (req, res, ctx) => {
-    return res(ctx.json(scheduledJobs));
+  http.get('*/api/v1/jobs/scheduler/scheduled-jobs', ({ request, params }) => {
+    return HttpResponse.json(scheduledJobs);
   }),
 
   // GET /api/v1/jobs/scheduler/scheduled-jobs/:id - Get single scheduled job
-  rest.get('*/api/v1/jobs/scheduler/scheduled-jobs/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/api/v1/jobs/scheduler/scheduled-jobs/:id', ({ request, params }) => {
+    const { id } = params;
     const job = scheduledJobs.find((j) => j.id === id);
 
     if (!job) {
-      return res(ctx.status(404), ctx.json({ error: 'Scheduled job not found' }));
+      return HttpResponse.json({ error: 'Scheduled job not found' }, { status: 404 });
     }
 
-    return res(ctx.json(job));
+    return HttpResponse.json(job);
   }),
 
   // POST /api/v1/jobs/scheduler/scheduled-jobs - Create scheduled job
-  rest.post('*/api/v1/jobs/scheduler/scheduled-jobs', (req, res, ctx) => {
-    const data = req.body as ScheduledJobCreate;
+  http.post('*/api/v1/jobs/scheduler/scheduled-jobs', async ({ request, params }) => {
+    const data = await request.json() as ScheduledJobCreate;
 
     const newJob: ScheduledJob = {
       id: `scheduled-job-${nextScheduledJobId++}`,
@@ -132,18 +132,18 @@ export const schedulerHandlers = [
 
     scheduledJobs.push(newJob);
 
-    return res(ctx.status(201), ctx.json(newJob));
+    return HttpResponse.json(newJob, { status: 201 });
   }),
 
   // PATCH /api/v1/jobs/scheduler/scheduled-jobs/:id - Update scheduled job
-  rest.patch('*/api/v1/jobs/scheduler/scheduled-jobs/:id', (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = req.body as ScheduledJobUpdate;
+  http.patch('*/api/v1/jobs/scheduler/scheduled-jobs/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json() as ScheduledJobUpdate;
 
     const index = scheduledJobs.findIndex((j) => j.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Scheduled job not found' }));
+      return HttpResponse.json({ error: 'Scheduled job not found' }, { status: 404 });
     }
 
     scheduledJobs[index] = {
@@ -151,56 +151,56 @@ export const schedulerHandlers = [
       ...updates,
     };
 
-    return res(ctx.json(scheduledJobs[index]));
+    return HttpResponse.json(scheduledJobs[index]);
   }),
 
   // POST /api/v1/jobs/scheduler/scheduled-jobs/:id/toggle - Toggle scheduled job active status
-  rest.post('*/api/v1/jobs/scheduler/scheduled-jobs/:id/toggle', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/jobs/scheduler/scheduled-jobs/:id/toggle', ({ request, params }) => {
+    const { id } = params;
     const index = scheduledJobs.findIndex((j) => j.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Scheduled job not found' }));
+      return HttpResponse.json({ error: 'Scheduled job not found' }, { status: 404 });
     }
 
     scheduledJobs[index].is_active = !scheduledJobs[index].is_active;
 
-    return res(ctx.json(scheduledJobs[index]));
+    return HttpResponse.json(scheduledJobs[index]);
   }),
 
   // DELETE /api/v1/jobs/scheduler/scheduled-jobs/:id - Delete scheduled job
-  rest.delete('*/api/v1/jobs/scheduler/scheduled-jobs/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/api/v1/jobs/scheduler/scheduled-jobs/:id', ({ request, params }) => {
+    const { id } = params;
     const index = scheduledJobs.findIndex((j) => j.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Scheduled job not found' }));
+      return HttpResponse.json({ error: 'Scheduled job not found' }, { status: 404 });
     }
 
     scheduledJobs.splice(index, 1);
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // GET /api/v1/jobs/scheduler/chains - List job chains
-  rest.get('*/api/v1/jobs/scheduler/chains', (req, res, ctx) => {
-    return res(ctx.json(jobChains));
+  http.get('*/api/v1/jobs/scheduler/chains', ({ request, params }) => {
+    return HttpResponse.json(jobChains);
   }),
 
   // GET /api/v1/jobs/scheduler/chains/:id - Get single job chain
-  rest.get('*/api/v1/jobs/scheduler/chains/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/api/v1/jobs/scheduler/chains/:id', ({ request, params }) => {
+    const { id } = params;
     const chain = jobChains.find((c) => c.id === id);
 
     if (!chain) {
-      return res(ctx.status(404), ctx.json({ error: 'Job chain not found' }));
+      return HttpResponse.json({ error: 'Job chain not found' }, { status: 404 });
     }
 
-    return res(ctx.json(chain));
+    return HttpResponse.json(chain);
   }),
 
   // POST /api/v1/jobs/scheduler/chains - Create job chain
-  rest.post('*/api/v1/jobs/scheduler/chains', (req, res, ctx) => {
-    const data = req.body as JobChainCreate;
+  http.post('*/api/v1/jobs/scheduler/chains', async ({ request, params }) => {
+    const data = await request.json() as JobChainCreate;
 
     const newChain: JobChain = {
       id: `chain-${nextJobChainId++}`,
@@ -225,16 +225,16 @@ export const schedulerHandlers = [
 
     jobChains.push(newChain);
 
-    return res(ctx.status(201), ctx.json(newChain));
+    return HttpResponse.json(newChain, { status: 201 });
   }),
 
   // POST /api/v1/jobs/scheduler/chains/:id/execute - Execute job chain
-  rest.post('*/api/v1/jobs/scheduler/chains/:chainId/execute', (req, res, ctx) => {
-    const { chainId } = req.params;
+  http.post('*/api/v1/jobs/scheduler/chains/:chainId/execute', ({ request, params }) => {
+    const { chainId } = params;
     const index = jobChains.findIndex((c) => c.id === chainId);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Job chain not found' }));
+      return HttpResponse.json({ error: 'Job chain not found' }, { status: 404 });
     }
 
     // Update chain status to running
@@ -242,19 +242,19 @@ export const schedulerHandlers = [
     jobChains[index].started_at = new Date().toISOString();
     jobChains[index].current_step = 1;
 
-    return res(ctx.json(jobChains[index]));
+    return HttpResponse.json(jobChains[index]);
   }),
 
   // DELETE /api/v1/jobs/scheduler/chains/:id - Delete job chain
-  rest.delete('*/api/v1/jobs/scheduler/chains/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/api/v1/jobs/scheduler/chains/:id', ({ request, params }) => {
+    const { id } = params;
     const index = jobChains.findIndex((c) => c.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Job chain not found' }));
+      return HttpResponse.json({ error: 'Job chain not found' }, { status: 404 });
     }
 
     jobChains.splice(index, 1);
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

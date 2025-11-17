@@ -3,7 +3,8 @@
  * Note: These tests are placeholders until MFA is fully implemented in the frontend
  * They test the expected behavior based on backend MFA support
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 
 test.describe("Multi-Factor Authentication", () => {
   const BASE_APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";

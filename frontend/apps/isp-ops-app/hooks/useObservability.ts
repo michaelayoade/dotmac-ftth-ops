@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useToast } from "@dotmac/ui";
 import { useApiConfig } from "@/hooks/useApiConfig";
@@ -118,9 +118,15 @@ export function useTraces(filters: TracesFilter = {}) {
     has_more: false,
   });
 
+  const serializedFilters = useMemo(() => JSON.stringify(filters ?? {}), [filters]);
+  const stableFilters = useMemo(
+    () => JSON.parse(serializedFilters) as TracesFilter,
+    [serializedFilters],
+  );
+
   const fetchTraces = useCallback(
     async (customFilters?: TracesFilter) => {
-      const activeFilters = { ...filters, ...customFilters };
+      const activeFilters = { ...stableFilters, ...customFilters };
 
       try {
         setIsLoading(true);
@@ -158,7 +164,7 @@ export function useTraces(filters: TracesFilter = {}) {
         setIsLoading(false);
       }
     },
-    [filters, toast, apiBaseUrl],
+    [stableFilters, toast, apiBaseUrl],
   );
 
   const fetchTraceDetails = async (traceId: string): Promise<TraceData | null> => {

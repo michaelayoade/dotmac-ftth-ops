@@ -185,7 +185,7 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
       <main className="flex-1 container px-4 py-6">
         {/* Portal Badge - Shows which portal user is in */}
         <div className="mb-4 flex items-center justify-between">
-          <PortalBadge showIcon shortName size="sm" />
+          <PortalBadge className="" showIcon shortName size="sm" />
         </div>
         <CustomerProtectedRoute>{children}</CustomerProtectedRoute>
       </main>

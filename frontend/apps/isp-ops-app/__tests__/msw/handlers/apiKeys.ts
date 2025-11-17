@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   APIKey,
   APIKeyCreateResponse,
@@ -74,8 +74,8 @@ export function seedApiKeysData(keys: APIKey[]) {
 
 export const apiKeysHandlers = [
   // GET /api/v1/auth/api-keys - List API keys with pagination
-  rest.get('*/api/v1/auth/api-keys', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/auth/api-keys', ({ request, params }) => {
+    const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '50');
 
@@ -94,19 +94,19 @@ export const apiKeysHandlers = [
       limit,
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // GET /api/v1/auth/api-keys/scopes/available - Get available scopes
-  rest.get('*/api/v1/auth/api-keys/scopes/available', (req, res, ctx) => {
+  http.get('*/api/v1/auth/api-keys/scopes/available', ({ request, params }) => {
     console.log('[MSW] GET /api/v1/auth/api-keys/scopes/available');
     const scopes = createMockAvailableScopes();
-    return res(ctx.json(scopes));
+    return HttpResponse.json(scopes);
   }),
 
   // POST /api/v1/auth/api-keys - Create API key
-  rest.post('*/api/v1/auth/api-keys', async (req, res, ctx) => {
-    const data = await req.json() as APIKeyCreateRequest;
+  http.post('*/api/v1/auth/api-keys', async ({ request, params }) => {
+    const data = await request.json() as APIKeyCreateRequest;
 
     console.log('[MSW] POST /api/v1/auth/api-keys', data);
 
@@ -124,13 +124,13 @@ export const apiKeysHandlers = [
 
     console.log('[MSW] Created API key', newKey.id);
 
-    return res(ctx.status(201), ctx.json(newKey));
+    return HttpResponse.json(newKey, { status: 201 });
   }),
 
   // PATCH /api/v1/auth/api-keys/:id - Update API key
-  rest.patch('*/api/v1/auth/api-keys/:id', async (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = await req.json() as APIKeyUpdateRequest;
+  http.patch('*/api/v1/auth/api-keys/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json() as APIKeyUpdateRequest;
 
     console.log('[MSW] PATCH /api/v1/auth/api-keys/:id', { id, updates });
 
@@ -138,9 +138,9 @@ export const apiKeysHandlers = [
 
     if (index === -1) {
       console.log('[MSW] API key not found', id);
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'API key not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'API key not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -151,12 +151,12 @@ export const apiKeysHandlers = [
 
     console.log('[MSW] Updated API key', apiKeys[index].id);
 
-    return res(ctx.json(apiKeys[index]));
+    return HttpResponse.json(apiKeys[index]);
   }),
 
   // DELETE /api/v1/auth/api-keys/:id - Revoke API key
-  rest.delete('*/api/v1/auth/api-keys/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/api/v1/auth/api-keys/:id', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] DELETE /api/v1/auth/api-keys/:id', { id });
 
@@ -164,9 +164,9 @@ export const apiKeysHandlers = [
 
     if (index === -1) {
       console.log('[MSW] API key not found', id);
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'API key not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'API key not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -174,6 +174,6 @@ export const apiKeysHandlers = [
 
     console.log('[MSW] Deleted API key', id);
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

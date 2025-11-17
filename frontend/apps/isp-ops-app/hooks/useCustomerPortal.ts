@@ -354,7 +354,7 @@ function createCustomerPortalApi(buildUrl: BuildApiUrl) {
 
 function useCustomerPortalApiContext() {
   const { api } = useAppConfig();
-  const portalApi = useMemo(() => createCustomerPortalApi(api.buildUrl), [api.baseUrl, api.prefix]);
+  const portalApi = useMemo(() => createCustomerPortalApi(api.buildUrl), [api.buildUrl]);
   return {
     portalApi,
     apiBaseUrl: api.baseUrl,
@@ -376,9 +376,13 @@ export function useCustomerProfile(): {
 } {
   const queryClient = useQueryClient();
   const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
+  const queryKey = useMemo(
+    () => [...customerPortalKeys.profile(), apiBaseUrl, apiPrefix],
+    [apiBaseUrl, apiPrefix],
+  );
 
   const query = useQuery({
-    queryKey: [...customerPortalKeys.profile(), apiBaseUrl, apiPrefix],
+    queryKey,
     queryFn: portalApi.fetchProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes - profile data doesn't change often
     retry: 1,
@@ -388,16 +392,14 @@ export function useCustomerProfile(): {
     mutationFn: portalApi.updateProfile,
     onMutate: async (updates) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: customerPortalKeys.profile() });
+      await queryClient.cancelQueries({ queryKey });
 
       // Snapshot previous value
-      const previousProfile = queryClient.getQueryData<CustomerProfile>(
-        customerPortalKeys.profile(),
-      );
+      const previousProfile = queryClient.getQueryData<CustomerProfile>(queryKey);
 
       // Optimistically update
       if (previousProfile) {
-        queryClient.setQueryData<CustomerProfile>(customerPortalKeys.profile(), {
+        queryClient.setQueryData<CustomerProfile>(queryKey, {
           ...previousProfile,
           ...updates,
         });
@@ -410,16 +412,16 @@ export function useCustomerProfile(): {
     onError: (error, variables, context) => {
       // Roll back on error
       if (context?.previousProfile) {
-        queryClient.setQueryData(customerPortalKeys.profile(), context.previousProfile);
+        queryClient.setQueryData(queryKey, context.previousProfile);
       }
       logger.error("Error updating customer profile", toError(error));
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(customerPortalKeys.profile(), data);
+      queryClient.setQueryData(queryKey, data);
       logger.info("Customer profile updated successfully", { data });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.profile() });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -530,9 +532,17 @@ export function useCustomerPayments(): {
 } {
   const queryClient = useQueryClient();
   const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
+  const queryKey = useMemo(
+    () => [...customerPortalKeys.payments(), apiBaseUrl, apiPrefix],
+    [apiBaseUrl, apiPrefix],
+  );
+  const invoicesQueryKey = useMemo(
+    () => [...customerPortalKeys.invoices(), apiBaseUrl, apiPrefix],
+    [apiBaseUrl, apiPrefix],
+  );
 
   const query = useQuery({
-    queryKey: [...customerPortalKeys.payments(), apiBaseUrl, apiPrefix],
+    queryKey,
     queryFn: portalApi.fetchPayments,
     staleTime: 1 * 60 * 1000, // 1 minute - payments may change frequently
     retry: 1,
@@ -549,19 +559,20 @@ export function useCustomerPayments(): {
       paymentMethodId: string;
     }) => portalApi.makePayment(invoiceId, amount, paymentMethodId),
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: customerPortalKeys.payments() });
+      await queryClient.cancelQueries({ queryKey });
       logger.info("Making payment");
     },
     onError: (error) => {
       logger.error("Error making payment", toError(error));
     },
     onSuccess: (data) => {
+      queryClient.setQueryData<CustomerPayment[]>(queryKey, (old = []) => [data, ...old]);
       logger.info("Payment processed successfully", { data });
     },
     onSettled: () => {
       // Invalidate both payments and invoices as they're related
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.payments() });
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.invoices() });
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: invoicesQueryKey });
     },
   });
 
@@ -666,9 +677,13 @@ export function useCustomerSettings(): {
 } {
   const queryClient = useQueryClient();
   const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
+  const queryKey = useMemo(
+    () => [...customerPortalKeys.settings(), apiBaseUrl, apiPrefix],
+    [apiBaseUrl, apiPrefix],
+  );
 
   const query = useQuery({
-    queryKey: [...customerPortalKeys.settings(), apiBaseUrl, apiPrefix],
+    queryKey,
     queryFn: portalApi.fetchSettings,
     staleTime: 5 * 60 * 1000, // 5 minutes - settings don't change often
     retry: 1,
@@ -677,12 +692,12 @@ export function useCustomerSettings(): {
   const updateSettingsMutation = useMutation({
     mutationFn: portalApi.updateSettings,
     onMutate: async (updates) => {
-      await queryClient.cancelQueries({ queryKey: customerPortalKeys.settings() });
-      const previousSettings = queryClient.getQueryData(customerPortalKeys.settings());
+      await queryClient.cancelQueries({ queryKey });
+      const previousSettings = queryClient.getQueryData(queryKey);
 
       // Optimistically update
       if (previousSettings) {
-        queryClient.setQueryData(customerPortalKeys.settings(), {
+        queryClient.setQueryData(queryKey, {
           ...previousSettings,
           ...updates,
         });
@@ -693,16 +708,16 @@ export function useCustomerSettings(): {
     },
     onError: (error, variables, context) => {
       if (context?.previousSettings) {
-        queryClient.setQueryData(customerPortalKeys.settings(), context.previousSettings);
+        queryClient.setQueryData(queryKey, context.previousSettings);
       }
       logger.error("Error updating customer settings", toError(error));
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(customerPortalKeys.settings(), data);
+      queryClient.setQueryData(queryKey, data);
       logger.info("Customer settings updated successfully", { data });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.settings() });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -750,9 +765,13 @@ export function useCustomerPaymentMethods(): {
 } {
   const queryClient = useQueryClient();
   const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
+  const queryKey = useMemo(
+    () => [...customerPortalKeys.paymentMethods(), apiBaseUrl, apiPrefix],
+    [apiBaseUrl, apiPrefix],
+  );
 
   const query = useQuery({
-    queryKey: [...customerPortalKeys.paymentMethods(), apiBaseUrl, apiPrefix],
+    queryKey,
     queryFn: portalApi.fetchPaymentMethods,
     staleTime: 2 * 60 * 1000, // 2 minutes - payment methods don't change often
     retry: 1,
@@ -760,8 +779,9 @@ export function useCustomerPaymentMethods(): {
 
   const addMutation = useMutation({
     mutationFn: (request: any) => portalApi.addPaymentMethod(request),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.paymentMethods() });
+    onSuccess: (newMethod) => {
+      queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) => [...old, newMethod]);
+      queryClient.invalidateQueries({ queryKey });
       logger.info("Payment method added successfully");
     },
     onError: (error) => {
@@ -771,8 +791,11 @@ export function useCustomerPaymentMethods(): {
 
   const setDefaultMutation = useMutation({
     mutationFn: (paymentMethodId: string) => portalApi.setDefaultPaymentMethod(paymentMethodId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.paymentMethods() });
+    onSuccess: (_, paymentMethodId) => {
+      queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) =>
+        old.map((pm) => ({ ...pm, is_default: pm.payment_method_id === paymentMethodId })),
+      );
+      queryClient.invalidateQueries({ queryKey });
       logger.info("Default payment method updated");
     },
     onError: (error) => {
@@ -782,8 +805,11 @@ export function useCustomerPaymentMethods(): {
 
   const removeMutation = useMutation({
     mutationFn: (paymentMethodId: string) => portalApi.removePaymentMethod(paymentMethodId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.paymentMethods() });
+    onSuccess: (_, paymentMethodId) => {
+      queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) =>
+        old.filter((pm) => pm.payment_method_id !== paymentMethodId),
+      );
+      queryClient.invalidateQueries({ queryKey });
       logger.info("Payment method removed successfully");
     },
     onError: (error) => {
@@ -794,8 +820,13 @@ export function useCustomerPaymentMethods(): {
   const toggleAutoPayMutation = useMutation({
     mutationFn: ({ paymentMethodId, enabled }: { paymentMethodId: string; enabled: boolean }) =>
       portalApi.toggleAutoPay(paymentMethodId, enabled),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: customerPortalKeys.paymentMethods() });
+    onSuccess: (_, { paymentMethodId, enabled }) => {
+      queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) =>
+        old.map((pm) =>
+          pm.payment_method_id === paymentMethodId ? { ...pm, auto_pay_enabled: enabled } : pm,
+        ),
+      );
+      queryClient.invalidateQueries({ queryKey });
       logger.info("Auto pay toggled successfully");
     },
     onError: (error) => {

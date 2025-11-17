@@ -11,7 +11,8 @@
  * - API contract validation
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 
 test.describe("Admin Data Transfer Dashboard", () => {
   test.beforeEach(async ({ page }) => {

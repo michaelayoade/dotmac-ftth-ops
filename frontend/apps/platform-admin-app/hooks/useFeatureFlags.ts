@@ -67,18 +67,14 @@ export const useFeatureFlags = (enabledOnly = false) => {
     queryFn: async ({ queryKey }) => {
       const [, , params] = queryKey as ReturnType<typeof featureFlagsKeys.flags>;
       const enabledParam = params.enabledOnly ?? false;
-      try {
-        const response = await apiClient.get<FeatureFlag[]>(
-          `/feature-flags/flags${enabledParam ? "?enabled_only=true" : ""}`,
-        );
-        return normalizeFlagsResponse(response);
-      } catch (err) {
-        logger.error(
-          "Failed to fetch feature flags",
-          err instanceof Error ? err : new Error(String(err)),
-        );
-        return [];
+      const response = await apiClient.get<FeatureFlag[]>(
+        `/feature-flags/flags${enabledParam ? "?enabled_only=true" : ""}`,
+      );
+      // Handle wrapped error responses
+      if ((response as any)?.error) {
+        throw new Error((response as any).error.message || "Failed to fetch feature flags");
       }
+      return normalizeFlagsResponse(response);
     },
     staleTime: 30000, // Consider data fresh for 30 seconds
     refetchOnWindowFocus: true,
@@ -88,16 +84,8 @@ export const useFeatureFlags = (enabledOnly = false) => {
   const statusQuery = useQuery({
     queryKey: featureFlagsKeys.status(),
     queryFn: async () => {
-      try {
-        const response = await apiClient.get<FlagStatus>("/feature-flags/status");
-        return normalizeStatusResponse(response);
-      } catch (err) {
-        logger.error(
-          "Failed to fetch flag status",
-          err instanceof Error ? err : new Error(String(err)),
-        );
-        return null;
-      }
+      const response = await apiClient.get<FlagStatus>("/feature-flags/status");
+      return normalizeStatusResponse(response);
     },
     staleTime: 30000,
   });
@@ -171,11 +159,18 @@ export const useFeatureFlags = (enabledOnly = false) => {
     },
   });
 
+  // Extract error message from query errors
+  const errorMessage = flagsQuery.error
+    ? (flagsQuery.error instanceof Error ? flagsQuery.error.message : "Failed to fetch feature flags")
+    : statusQuery.error
+    ? (statusQuery.error instanceof Error ? statusQuery.error.message : "Failed to fetch flag status")
+    : null;
+
   return {
     flags: flagsQuery.data ?? [],
     status: statusQuery.data ?? null,
     loading: flagsQuery.isLoading || statusQuery.isLoading,
-    error: flagsQuery.error ?? statusQuery.error ?? null,
+    error: errorMessage,
     fetchFlags: flagsQuery.refetch,
     toggleFlag: async (flagName: string, enabled: boolean) => {
       await toggleMutation.mutateAsync({ flagName, enabled });

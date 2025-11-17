@@ -34,12 +34,6 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-jest.mock("@dotmac/ui", () => ({
-  useToast: () => ({
-    toast: jest.fn(),
-  }),
-}));
-
 jest.mock("@/lib/api/response-helpers", () => ({
   extractDataOrThrow: jest.fn((response, _errorMsg) => response.data),
 }));
@@ -50,9 +44,15 @@ describe("useUsers", () => {
       defaultOptions: {
         queries: {
           retry: false,
+          gcTime: 0,
+          staleTime: 0,
+          refetchOnWindowFocus: false,
+          refetchOnMount: false,
+          refetchOnReconnect: false,
         },
         mutations: {
           retry: false,
+          gcTime: 0,
         },
       },
     });
@@ -64,6 +64,9 @@ describe("useUsers", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    global.mockToast.mockClear();
+    // Reset extractDataOrThrow to default implementation
+    (extractDataOrThrow as jest.Mock).mockImplementation((response, _errorMsg) => response.data);
   });
 
   describe("useUsers - list users", () => {
@@ -475,17 +478,16 @@ describe("useUsers", () => {
         avatar_url: null,
       };
 
+      // Set up mocks for mutation
       (apiClient.put as jest.Mock).mockResolvedValue({ data: mockUpdatedUser });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockUpdatedUser);
-
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
-      });
 
       const { result } = renderHook(() => useUpdateUser(), {
         wrapper: createWrapper(),
       });
+
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
 
       await act(async () => {
         await result.current.mutateAsync({
@@ -494,9 +496,11 @@ describe("useUsers", () => {
         });
       });
 
-      expect(mockToast).toHaveBeenCalledWith({
-        title: "User updated",
-        description: "John Updated was updated successfully.",
+      await waitFor(() => {
+        expect(global.mockToast).toHaveBeenCalledWith({
+          title: "User updated",
+          description: "John Updated was updated successfully.",
+        });
       });
     });
 
@@ -511,14 +515,12 @@ describe("useUsers", () => {
 
       (apiClient.put as jest.Mock).mockRejectedValue(error);
 
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
-      });
-
       const { result } = renderHook(() => useUpdateUser(), {
         wrapper: createWrapper(),
       });
+
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -532,7 +534,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Update failed",
           description: "Update failed",
           variant: "destructive",
@@ -620,24 +622,31 @@ describe("useUsers", () => {
     });
 
     it("should show toast notification on success", async () => {
+      // Set up mocks for mutation and refetch after invalidation
       (apiClient.delete as jest.Mock).mockResolvedValue({ status: 204 });
-
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { users: [], total: 0, page: 1, per_page: 50 },
       });
+      (extractDataOrThrow as jest.Mock).mockImplementation(
+        (response) => response.data
+      );
 
       const { result } = renderHook(() => useDeleteUser(), {
         wrapper: createWrapper(),
       });
 
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
+
       await act(async () => {
         await result.current.mutateAsync("user-1");
       });
 
-      expect(mockToast).toHaveBeenCalledWith({
-        title: "User deleted",
-        description: "User was removed successfully.",
+      await waitFor(() => {
+        expect(global.mockToast).toHaveBeenCalledWith({
+          title: "User deleted",
+          description: "User was removed successfully.",
+        });
       });
     });
 
@@ -652,14 +661,12 @@ describe("useUsers", () => {
 
       (apiClient.delete as jest.Mock).mockRejectedValue(error);
 
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
-      });
-
       const { result } = renderHook(() => useDeleteUser(), {
         wrapper: createWrapper(),
       });
+
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -670,7 +677,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Delete failed",
           description: "Cannot delete user",
           variant: "destructive",
@@ -742,24 +749,31 @@ describe("useUsers", () => {
     });
 
     it("should show toast notification on success", async () => {
+      // Set up mocks for mutation and refetch after invalidation
       (apiClient.post as jest.Mock).mockResolvedValue({ status: 200 });
-
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { users: [], total: 0, page: 1, per_page: 50 },
       });
+      (extractDataOrThrow as jest.Mock).mockImplementation(
+        (response) => response.data
+      );
 
       const { result } = renderHook(() => useDisableUser(), {
         wrapper: createWrapper(),
       });
 
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
+
       await act(async () => {
         await result.current.mutateAsync("user-1");
       });
 
-      expect(mockToast).toHaveBeenCalledWith({
-        title: "User disabled",
-        description: "User account has been disabled.",
+      await waitFor(() => {
+        expect(global.mockToast).toHaveBeenCalledWith({
+          title: "User disabled",
+          description: "User account has been disabled.",
+        });
       });
     });
 
@@ -774,14 +788,12 @@ describe("useUsers", () => {
 
       (apiClient.post as jest.Mock).mockRejectedValue(error);
 
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
-      });
-
       const { result } = renderHook(() => useDisableUser(), {
         wrapper: createWrapper(),
       });
+
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -792,7 +804,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Disable failed",
           description: "Cannot disable user",
           variant: "destructive",
@@ -864,24 +876,31 @@ describe("useUsers", () => {
     });
 
     it("should show toast notification on success", async () => {
+      // Set up mocks for mutation and refetch after invalidation
       (apiClient.post as jest.Mock).mockResolvedValue({ status: 200 });
-
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
+      (apiClient.get as jest.Mock).mockResolvedValue({
+        data: { users: [], total: 0, page: 1, per_page: 50 },
       });
+      (extractDataOrThrow as jest.Mock).mockImplementation(
+        (response) => response.data
+      );
 
       const { result } = renderHook(() => useEnableUser(), {
         wrapper: createWrapper(),
       });
 
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
+
       await act(async () => {
         await result.current.mutateAsync("user-1");
       });
 
-      expect(mockToast).toHaveBeenCalledWith({
-        title: "User enabled",
-        description: "User account has been enabled.",
+      await waitFor(() => {
+        expect(global.mockToast).toHaveBeenCalledWith({
+          title: "User enabled",
+          description: "User account has been enabled.",
+        });
       });
     });
 
@@ -896,14 +915,12 @@ describe("useUsers", () => {
 
       (apiClient.post as jest.Mock).mockRejectedValue(error);
 
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
-      });
-
       const { result } = renderHook(() => useEnableUser(), {
         wrapper: createWrapper(),
       });
+
+      // Clear the mock before mutation to track toast calls
+      global.mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -914,7 +931,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Enable failed",
           description: "Cannot enable user",
           variant: "destructive",

@@ -69,6 +69,11 @@ import {
   TableRow,
 } from "./table";
 
+const DEFAULT_PAGE_SIZE_OPTIONS: number[] = [10, 20, 30, 50, 100];
+const EMPTY_FILTERS: FilterConfig[] = [];
+const EMPTY_QUICK_FILTERS: QuickFilter<never>[] = [];
+const EMPTY_BULK_ACTIONS: BulkAction<never>[] = [];
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -232,13 +237,13 @@ export function EnhancedDataTable<TData, TValue>({
   searchConfig,
   paginated = true,
   pagination,
-  pageSizeOptions = [10, 20, 30, 50, 100],
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   defaultPageSize = 10,
   selectable = false,
-  bulkActions = [],
+  bulkActions = EMPTY_BULK_ACTIONS as BulkAction<TData>[],
   filterable = false,
-  filters = [],
-  quickFilters = [],
+  filters = EMPTY_FILTERS,
+  quickFilters = EMPTY_QUICK_FILTERS as QuickFilter<TData>[],
   exportable = false,
   exportFilename = "data",
   exportColumns,
@@ -381,9 +386,7 @@ export function EnhancedDataTable<TData, TValue>({
     }
   }, [filteredData, table, isPaginated]);
 
-  const selectedRows = React.useMemo(() => {
-    return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
-  }, [table]);
+  const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
 
   const handleExport = React.useCallback(() => {
     const dataToExport = selectedRows.length > 0 ? selectedRows : filteredData;

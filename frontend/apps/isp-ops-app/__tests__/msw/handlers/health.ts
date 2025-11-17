@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from "msw";
 import type { HealthSummary, ServiceHealth } from '../../../hooks/useHealth';
 
 // In-memory storage for test data
@@ -69,20 +69,17 @@ export function makeHealthCheckSucceed() {
 
 export const healthHandlers = [
   // GET /api/v1/ready - Get health status
-  rest.get('*/api/v1/ready', (req, res, ctx) => {
+  http.get('*/api/v1/ready', (req, res, ctx) => {
     console.log('[MSW] GET /api/v1/ready', { shouldFail, hasData: !!healthData });
 
     // Handle forced failure
     if (shouldFail) {
       if (failureStatus === 403) {
-        return res(
-          ctx.status(403),
-          ctx.json({
+        return HttpResponse.json({
             error: {
               message: 'You do not have permission to view service health.',
             },
-          })
-        );
+          }, { status: 403 });
       }
 
       return res(
@@ -100,6 +97,6 @@ export const healthHandlers = [
 
     // Wrap in success format if not already wrapped
     // The hook expects either direct data or { success: true, data: ... }
-    return res(ctx.json({ success: true, data: response }));
+    return HttpResponse.json({ success: true, data: response });
   }),
 ];

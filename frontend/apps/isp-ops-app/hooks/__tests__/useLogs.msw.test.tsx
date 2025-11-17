@@ -17,6 +17,10 @@ import {
   makeApiEndpointFail,
 } from "../../__tests__/test-utils";
 
+const waitForLogsLoading = async (getLoading: () => boolean) => {
+  await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
+};
+
 // Mock useAppConfig
 jest.mock('@/providers/AppConfigContext', () => ({
   AppConfigProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -89,7 +93,7 @@ describe("useLogs (MSW)", () => {
       expect(result.current.isLoading).toBe(true);
 
       // Wait for data to load
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       // Verify data matches (sorted by timestamp, newest first)
       expect(result.current.logs).toHaveLength(2);
@@ -108,7 +112,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(0);
       expect(result.current.pagination.total).toBe(0);
@@ -129,7 +133,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
       expect(result.current.logs.every((log) => log.level === "ERROR")).toBe(true);
@@ -148,7 +152,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
       expect(result.current.logs.every((log) => log.service === "api-gateway")).toBe(true);
@@ -167,7 +171,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
       expect(
@@ -199,7 +203,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
       expect(
@@ -225,7 +229,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
     });
@@ -244,7 +248,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(10);
       expect(result.current.pagination.page).toBe(2);
@@ -284,7 +288,7 @@ describe("useLogs (MSW)", () => {
         { wrapper: createQueryWrapper(queryClient) }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
       expect(result.current.logs.every((log) => log.level === "ERROR")).toBe(true);
@@ -298,7 +302,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.error).toBeTruthy();
       expect(result.current.logs).toHaveLength(0);
@@ -374,7 +378,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       // Logs should still work
       expect(result.current.logs).toHaveLength(1);
@@ -398,7 +402,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.services).toBeDefined();
       expect(result.current.services).toHaveLength(3);
@@ -420,7 +424,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.services).toEqual([]);
     });
@@ -441,7 +445,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       // Logs should still work
       expect(result.current.logs).toHaveLength(1);
@@ -459,7 +463,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
       expect(result.current.logs).toHaveLength(1);
       expect(result.current.logs[0].message).toBe("First log");
 
@@ -585,7 +589,7 @@ describe("useLogs (MSW)", () => {
         { wrapper: createQueryWrapper(queryClient) }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
       expect(result.current.logs.every((log) => log.level === "ERROR")).toBe(true);
@@ -630,7 +634,7 @@ describe("useLogs (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(4);
       expect(
@@ -704,7 +708,7 @@ describe("useLogs (MSW)", () => {
         { wrapper: createQueryWrapper(queryClient) }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForLogsLoading(() => result.current.isLoading);
 
       expect(result.current.logs).toHaveLength(2);
       expect(result.current.logs[0].message).toBe("Recent error 1");

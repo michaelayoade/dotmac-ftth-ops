@@ -12,10 +12,10 @@ import { useToast } from "@dotmac/ui";
 
 jest.unmock("@tanstack/react-query");
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -85,7 +85,7 @@ describe("Platform Admin useDataImport hook", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["import-jobs"] });
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Upload successful" }),
     );
   });

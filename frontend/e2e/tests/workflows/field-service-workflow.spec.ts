@@ -3,7 +3,9 @@
  * Covers technician, dispatcher, and manager journeys end to end.
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+import type { Page } from "@playwright/test";
+
 import path from "path";
 
 const BASE_APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";

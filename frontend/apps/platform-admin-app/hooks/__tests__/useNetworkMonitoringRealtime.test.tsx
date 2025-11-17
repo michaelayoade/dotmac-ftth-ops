@@ -19,11 +19,11 @@ import { DeviceStatusEnum, DeviceTypeEnum, AlertSeverityEnum } from "@/lib/graph
 
 jest.unmock("@tanstack/react-query");
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -118,7 +118,6 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
       error: null,
       refetch: jest.fn(),
     });
-    toastMock.mockClear();
   });
 
   it("maps overview GraphQL data to realtime summary", async () => {
@@ -194,7 +193,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     await waitFor(() =>
       expect(result.current.data?.[0].status).toBe(DeviceStatusEnum.Online),
     );
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Device Online" }),
     );
   });
@@ -246,7 +245,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     });
 
     await waitFor(() => expect(result.current.data).toHaveLength(2));
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Critical Alert" }),
     );
 
@@ -270,7 +269,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     });
 
     await waitFor(() => expect(result.current.data).toHaveLength(1));
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Alert Resolved" }),
     );
   });
@@ -336,7 +335,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
 
     await waitFor(() => expect(result.current.isConnected).toBe(false));
     expect(result.current.reconnectAttempts).toBeGreaterThan(0);
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Connection Lost" }),
     );
 

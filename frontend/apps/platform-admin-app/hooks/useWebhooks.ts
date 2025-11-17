@@ -9,6 +9,8 @@
  * - Reduced boilerplate (383 lines → 280 lines)
  */
 
+import axios from "axios";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
@@ -103,6 +105,34 @@ export interface AvailableEvents {
 // Helper Functions for Data Enrichment
 // ============================================================================
 
+const getErrorMessage = (err: unknown): string => {
+  if (axios.isAxiosError(err)) {
+    const errorData = err.response?.data as {
+      error?: string;
+      message?: string;
+      detail?: string;
+    };
+    return errorData?.error || errorData?.message || errorData?.detail || err.message;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return String(err);
+};
+
+const parseJsonData = <T>(payload: unknown, fallback: T): T => {
+  if (payload === undefined || payload === null) {
+    return fallback;
+  }
+  if (typeof payload === "string") {
+    if (payload.trim().length === 0) {
+      return fallback;
+    }
+    return JSON.parse(payload) as T;
+  }
+  return payload as T;
+};
+
 const enrichSubscription = (
   sub: Record<string, unknown> & {
     custom_metadata?: Record<string, unknown>;
@@ -157,37 +187,72 @@ export const webhooksKeys = {
 interface UseWebhooksOptions {
   page?: number;
   limit?: number;
-  eventFilter?: string;
+  eventFilter?: string | undefined;
   activeOnly?: boolean;
 }
 
 export function useWebhooks(options: UseWebhooksOptions = {}) {
   const { page = 1, limit = 50, eventFilter, activeOnly = false } = options;
   const queryClient = useQueryClient();
+  const [queryParams, setQueryParams] = useState({ page, limit, eventFilter, activeOnly });
+  const [localWebhooks, setLocalWebhooks] = useState<WebhookSubscription[]>([]);
+
+  useEffect(() => {
+    setQueryParams((prev) => {
+      if (
+        prev.page === page &&
+        prev.limit === limit &&
+        prev.eventFilter === eventFilter &&
+        prev.activeOnly === activeOnly
+      ) {
+        return prev;
+      }
+      return { page, limit, eventFilter, activeOnly };
+    });
+  }, [page, limit, eventFilter, activeOnly]);
+
+  const fetchSubscriptions = async (
+    params: Required<Pick<UseWebhooksOptions, "page" | "limit">> &
+      Pick<UseWebhooksOptions, "eventFilter" | "activeOnly">
+  ) => {
+    const searchParams = new URLSearchParams();
+    searchParams.append("limit", params.limit.toString());
+    searchParams.append("offset", ((params.page - 1) * params.limit).toString());
+
+    if (params.eventFilter) searchParams.append("event_type", params.eventFilter);
+    if (params.activeOnly) searchParams.append("is_active", "true");
+
+    const response = await apiClient.get(`/webhooks/subscriptions?${searchParams.toString()}`);
+    const data = parseJsonData<any[]>(response.data ?? [], []);
+    return data.map(enrichSubscription);
+  };
 
   // Fetch webhooks query
   const webhooksQuery = useQuery({
-    queryKey: webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
+    queryKey: webhooksKeys.subscription(queryParams),
     queryFn: async () => {
       try {
-        const params = new URLSearchParams();
-        params.append("limit", limit.toString());
-        params.append("offset", ((page - 1) * limit).toString());
-
-        if (eventFilter) params.append("event_type", eventFilter);
-        if (activeOnly) params.append("is_active", "true");
-
-        const response = await apiClient.get(`/webhooks/subscriptions?${params.toString()}`);
-        const data = (response.data || []) as any[];
-        return data.map(enrichSubscription);
+        return await fetchSubscriptions(queryParams);
       } catch (err) {
-        logger.error("Failed to fetch webhooks", err instanceof Error ? err : new Error(String(err)));
-        throw err;
+        const message = getErrorMessage(err);
+        if (axios.isAxiosError(err)) {
+          console.error("[debug] webhooks query error", err.response?.status, err.response?.data);
+        }
+        logger.error("Failed to fetch webhooks", err instanceof Error ? err : new Error(message));
+        throw new Error(message);
       }
     },
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
   });
+
+  useEffect(() => {
+    if (webhooksQuery.data) {
+      setLocalWebhooks(webhooksQuery.data);
+    } else if (webhooksQuery.isError) {
+      setLocalWebhooks([]);
+    }
+  }, [webhooksQuery.data, webhooksQuery.isError]);
 
   // Fetch available events query
   const eventsQuery = useQuery({
@@ -196,11 +261,11 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       try {
         const response = await apiClient.get("/webhooks/events");
         const events: AvailableEvents = {};
-        const responseData = response.data as {
-          events: Array<{ event_type: string; description: string }>;
-        };
-        const eventsData = responseData.events;
-        eventsData.forEach((event) => {
+        const responseData = parseJsonData<{
+          events?: Array<{ event_type: string; description: string }>;
+        }>(response.data, { events: [] });
+        const eventsData = Array.isArray(responseData?.events) ? responseData.events : [];
+        for (const event of eventsData) {
           events[event.event_type] = {
             name: event.event_type
               .split(".")
@@ -208,7 +273,7 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
               .join(" "),
             description: event.description,
           };
-        });
+        }
         return events;
       } catch (err) {
         logger.error("Failed to fetch events", err instanceof Error ? err : new Error(String(err)));
@@ -231,17 +296,17 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
         },
       };
 
-      delete (payload as Record<string, unknown>)["name"]; // Remove from root level
-
       const response = await apiClient.post("/webhooks/subscriptions", payload);
-      return enrichSubscription(response.data as any);
+      const responseData = parseJsonData<any>(response.data, {});
+      return enrichSubscription(responseData);
     },
     onSuccess: (newWebhook) => {
       // Optimistically add to cache
       queryClient.setQueryData<WebhookSubscription[]>(
-        webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
+        webhooksKeys.subscription(queryParams),
         (old) => (old ? [newWebhook, ...old] : [newWebhook]),
       );
+      setLocalWebhooks((prev) => [newWebhook, ...prev]);
       // Invalidate to refetch and ensure consistency
       queryClient.invalidateQueries({ queryKey: webhooksKeys.subscriptions() });
     },
@@ -260,13 +325,17 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       data: WebhookSubscriptionUpdate;
     }): Promise<WebhookSubscription> => {
       const response = await apiClient.patch(`/webhooks/subscriptions/${id}`, data);
-      return enrichSubscription(response.data as any);
+      const responseData = parseJsonData<any>(response.data, {});
+      return enrichSubscription(responseData);
     },
     onSuccess: (updatedWebhook) => {
       // Optimistically update cache
       queryClient.setQueryData<WebhookSubscription[]>(
-        webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
+        webhooksKeys.subscription(queryParams),
         (old) => (old ? old.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh)) : [updatedWebhook]),
+      );
+      setLocalWebhooks((prev) =>
+        prev.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh)),
       );
       // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: webhooksKeys.subscriptions() });
@@ -284,9 +353,10 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
     onSuccess: (_, id) => {
       // Optimistically remove from cache
       queryClient.setQueryData<WebhookSubscription[]>(
-        webhooksKeys.subscription({ page, limit, eventFilter, activeOnly }),
+        webhooksKeys.subscription(queryParams),
         (old) => (old ? old.filter((wh) => wh.id !== id) : []),
       );
+      setLocalWebhooks((prev) => prev.filter((wh) => wh.id !== id));
       // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: webhooksKeys.subscriptions() });
     },
@@ -329,14 +399,31 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
   });
 
   return {
-    webhooks: webhooksQuery.data ?? [],
+    webhooks: localWebhooks,
     loading:
       webhooksQuery.isLoading ||
       createMutation.isPending ||
       updateMutation.isPending ||
       deleteMutation.isPending,
     error: webhooksQuery.error ? String(webhooksQuery.error) : null,
-    fetchWebhooks: webhooksQuery.refetch,
+    fetchWebhooks: async (
+      nextPage?: number,
+      nextLimit?: number,
+      nextEventFilter?: string,
+      nextActiveOnly?: boolean
+    ) => {
+      const newParams = {
+        page: nextPage ?? queryParams.page,
+        limit: nextLimit ?? queryParams.limit,
+        eventFilter: nextEventFilter ?? queryParams.eventFilter,
+        activeOnly: typeof nextActiveOnly === "boolean" ? nextActiveOnly : queryParams.activeOnly,
+      };
+      setQueryParams(newParams);
+      await queryClient.fetchQuery({
+        queryKey: webhooksKeys.subscription(newParams),
+        queryFn: () => fetchSubscriptions(newParams),
+      });
+    },
     createWebhook: createMutation.mutateAsync,
     updateWebhook: async (id: string, data: WebhookSubscriptionUpdate) =>
       updateMutation.mutateAsync({ id, data }),
@@ -356,7 +443,7 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
 interface UseWebhookDeliveriesOptions {
   page?: number;
   limit?: number;
-  statusFilter?: string;
+  statusFilter?: string | undefined;
 }
 
 export function useWebhookDeliveries(
@@ -365,26 +452,48 @@ export function useWebhookDeliveries(
 ) {
   const { page = 1, limit = 50, statusFilter } = options;
   const queryClient = useQueryClient();
+  const [deliveryParams, setDeliveryParams] = useState({ page, limit, statusFilter });
+
+  useEffect(() => {
+    setDeliveryParams((prev) => {
+      if (prev.page === page && prev.limit === limit && prev.statusFilter === statusFilter) {
+        return prev;
+      }
+      return { page, limit, statusFilter };
+    });
+  }, [page, limit, statusFilter]);
+
+  useEffect(() => {
+    setDeliveryParams({ page, limit, statusFilter });
+  }, [subscriptionId]);
+
+  const fetchDeliveriesData = async (
+    params: Required<Pick<UseWebhookDeliveriesOptions, "page" | "limit">> &
+      Pick<UseWebhookDeliveriesOptions, "statusFilter">
+  ) => {
+    const searchParams = new URLSearchParams();
+    searchParams.append("limit", params.limit.toString());
+    searchParams.append("offset", ((params.page - 1) * params.limit).toString());
+
+    if (params.statusFilter) searchParams.append("status", params.statusFilter);
+
+    const response = await apiClient.get(
+      `/webhooks/subscriptions/${subscriptionId}/deliveries?${searchParams.toString()}`,
+    );
+    const deliveryData = parseJsonData<any[]>(response.data ?? [], []);
+    return deliveryData.map(enrichDelivery);
+  };
 
   // Fetch deliveries query
   const deliveriesQuery = useQuery({
-    queryKey: webhooksKeys.deliveries(subscriptionId, { page, limit, statusFilter }),
+    queryKey: webhooksKeys.deliveries(subscriptionId, deliveryParams),
     queryFn: async () => {
       try {
-        const params = new URLSearchParams();
-        params.append("limit", limit.toString());
-        params.append("offset", ((page - 1) * limit).toString());
-
-        if (statusFilter) params.append("status", statusFilter);
-
-        const response = await apiClient.get(
-          `/webhooks/subscriptions/${subscriptionId}/deliveries?${params.toString()}`,
-        );
-        const deliveryData = (response.data || []) as any[];
-        return deliveryData.map(enrichDelivery);
+        return await fetchDeliveriesData(deliveryParams);
       } catch (err) {
-        logger.error("Failed to fetch deliveries", err instanceof Error ? err : new Error(String(err)));
-        throw err;
+        const message = getErrorMessage(err);
+        logger.error("Failed to fetch deliveries", err instanceof Error ? err : new Error(message));
+        throw new Error(message);
       }
     },
     enabled: !!subscriptionId,
@@ -412,7 +521,18 @@ export function useWebhookDeliveries(
     deliveries: deliveriesQuery.data ?? [],
     loading: deliveriesQuery.isLoading || retryMutation.isPending,
     error: deliveriesQuery.error ? String(deliveriesQuery.error) : null,
-    fetchDeliveries: deliveriesQuery.refetch,
+    fetchDeliveries: async (nextPage?: number, nextLimit?: number, nextStatusFilter?: string) => {
+      const newParams = {
+        page: nextPage ?? deliveryParams.page,
+        limit: nextLimit ?? deliveryParams.limit,
+        statusFilter: nextStatusFilter ?? deliveryParams.statusFilter,
+      };
+      setDeliveryParams(newParams);
+      await queryClient.fetchQuery({
+        queryKey: webhooksKeys.deliveries(subscriptionId, newParams),
+        queryFn: () => fetchDeliveriesData(newParams),
+      });
+    },
     retryDelivery: retryMutation.mutateAsync,
   };
 }

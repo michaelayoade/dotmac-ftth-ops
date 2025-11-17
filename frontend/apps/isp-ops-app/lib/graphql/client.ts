@@ -35,6 +35,7 @@ import {
 import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
 import { logger } from "@/lib/logger";
+import "./patchApolloCache";
 
 function resolveGraphQLEndpoint(preferred?: string): string {
   if (preferred) {

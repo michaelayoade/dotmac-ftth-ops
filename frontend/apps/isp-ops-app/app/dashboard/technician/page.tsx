@@ -5,7 +5,7 @@
  * Personal dashboard for field technicians - daily schedule, tasks, and quick actions
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -27,10 +27,15 @@ import {
   useTimeEntries,
   useClockIn,
   useClockOut,
+  useStartAssignment,
+  useCompleteAssignment,
 } from "@/hooks/useFieldService";
 import type { TaskAssignment, TimeEntry } from "@/types/field-service";
 import { TimeEntryType } from "@/types/field-service";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
+import { useToast } from "@dotmac/ui";
 
 // ============================================================================
 // Active Time Entry Component
@@ -265,11 +270,31 @@ function TodaysSchedule({ assignments, onStartTask, onCompleteTask }: TodaysSche
 // ============================================================================
 
 interface AssignedResourcesProps {
-  technicianId: string;
+  technicianId: string | null;
 }
 
 function AssignedResources({ technicianId }: AssignedResourcesProps) {
-  const { data: assignments } = useResourceAssignments(technicianId);
+  const { data: assignments, isLoading } = useResourceAssignments(technicianId ?? undefined, {
+    enabled: Boolean(technicianId),
+  });
+
+  if (!technicianId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Assigned Resources
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-gray-500">
+            Sign in with a technician account to view assigned equipment.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const activeAssignments = assignments?.filter((a) => !a.returnedAt) || [];
 
@@ -282,7 +307,9 @@ function AssignedResources({ technicianId }: AssignedResourcesProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {activeAssignments.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-4 text-gray-500 text-sm">Loading assignments…</div>
+        ) : activeAssignments.length === 0 ? (
           <div className="text-center py-4 text-gray-500 text-sm">
             No resources currently assigned
           </div>
@@ -336,23 +363,48 @@ function AssignedResources({ technicianId }: AssignedResourcesProps) {
 // ============================================================================
 
 export default function TechnicianDashboard() {
-  // TODO: Get actual technician ID from auth context
-  const technicianId = "current-user-tech-id";
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user as ExtendedUser | undefined;
+  const technicianId = user?.technician_id ?? null;
+  const todayString = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  const { toast } = useToast();
 
-  const { data: assignmentsData } = useAssignments({
-    technicianId,
-    dateFrom: format(new Date(), "yyyy-MM-dd"),
-    dateTo: format(new Date(), "yyyy-MM-dd"),
-  });
+  const assignmentsFilter = useMemo(() => {
+    if (!technicianId) {
+      return undefined;
+    }
+    return {
+      technicianId,
+      dateFrom: todayString,
+      dateTo: todayString,
+    };
+  }, [technicianId, todayString]);
 
-  const { data: timeEntriesData } = useTimeEntries({
-    technicianId,
-    dateFrom: format(new Date(), "yyyy-MM-dd"),
-    dateTo: format(new Date(), "yyyy-MM-dd"),
-  });
+  const timeEntriesFilter = useMemo(() => {
+    if (!technicianId) {
+      return undefined;
+    }
+    return {
+      technicianId,
+      dateFrom: todayString,
+      dateTo: todayString,
+    };
+  }, [technicianId, todayString]);
+
+  const { data: assignmentsData, isLoading: assignmentsLoading } = useAssignments(
+    assignmentsFilter,
+    { enabled: Boolean(assignmentsFilter) },
+  );
+
+  const { data: timeEntriesData, isLoading: timeEntriesLoading } = useTimeEntries(
+    timeEntriesFilter,
+    { enabled: Boolean(timeEntriesFilter) },
+  );
 
   const clockInMutation = useClockIn();
   const clockOutMutation = useClockOut();
+  const startAssignmentMutation = useStartAssignment();
+  const completeAssignmentMutation = useCompleteAssignment();
 
   const todaysAssignments = assignmentsData?.assignments || [];
   const activeTimeEntry = timeEntriesData?.entries.find((e) => e.isActive);
@@ -367,6 +419,11 @@ export default function TechnicianDashboard() {
   };
 
   const handleClockIn = async () => {
+    if (!technicianId) {
+      console.warn("Cannot clock in without an associated technician ID");
+      return;
+    }
+
     try {
       await clockInMutation.mutateAsync({
         technicianId,
@@ -391,14 +448,66 @@ export default function TechnicianDashboard() {
   };
 
   const handleStartTask = async (assignmentId: string) => {
-    // TODO: Implement start task mutation
-    console.log("Starting task:", assignmentId);
+    try {
+      await startAssignmentMutation.mutateAsync({ id: assignmentId });
+      toast({
+        title: "Task started",
+        description: "Assignment is now in progress.",
+      });
+    } catch (error) {
+      console.error("Failed to start task:", error);
+      toast({
+        title: "Start failed",
+        description: error instanceof Error ? error.message : "Unable to start assignment",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCompleteTask = async (assignmentId: string) => {
-    // TODO: Implement complete task mutation
-    console.log("Completing task:", assignmentId);
+    try {
+      await completeAssignmentMutation.mutateAsync({ id: assignmentId });
+      toast({
+        title: "Task completed",
+        description: "Assignment marked as complete.",
+      });
+    } catch (error) {
+      console.error("Failed to complete task:", error);
+      toast({
+        title: "Completion failed",
+        description: error instanceof Error ? error.message : "Unable to complete assignment",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (authLoading) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="py-12 text-center text-gray-500">Loading dashboard…</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!technicianId) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Technician Profile Required</CardTitle>
+          </CardHeader>
+          <CardContent className="text-gray-600 space-y-2">
+            <p>
+              This dashboard is available only to technician accounts. Contact your administrator to
+              link your user profile to a technician record.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 space-y-6">

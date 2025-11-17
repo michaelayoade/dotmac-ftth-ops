@@ -322,12 +322,12 @@ const DynamicField = ({
         {field['is_secret'] && <span className="text-amber-400 ml-1 text-xs">(Secret)</span>}
       </label>
       {field['description'] && field['type'] !== "boolean" && (
-        <p className="text-xs text-foreground0">{field['description']}</p>
+        <p className="text-xs text-muted-foreground">{field['description']}</p>
       )}
       {renderField()}
       {error && <p className="text-xs text-rose-400">{error}</p>}
       {field['validation_rules'].length > 0 && (
-        <div className="text-xs text-foreground0">
+        <div className="text-xs text-muted-foreground">
           <ul className="list-disc list-inside space-y-0.5">
             {field['validation_rules'].map((rule, index) => {
               const ruleText =
@@ -618,7 +618,7 @@ export const PluginForm = ({
               <div className="bg-accent/50 rounded-lg p-4">
                 <h3 className="font-medium text-foreground mb-2">{selectedPlugin.name}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{selectedPlugin.description}</p>
-                <div className="flex items-center gap-4 text-xs text-foreground0">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span>Version: {selectedPlugin.version}</span>
                   {selectedPlugin.author && <span>By: {selectedPlugin.author}</span>}
                   <span>Type: {selectedPlugin.type}</span>

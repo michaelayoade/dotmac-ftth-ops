@@ -32,11 +32,11 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -55,7 +55,6 @@ describe("Platform Admin useNetworkMonitoring hooks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    toastMock.mockClear();
   });
 
   it("fetches network overview data", async () => {
@@ -155,7 +154,7 @@ describe("Platform Admin useNetworkMonitoring hooks", () => {
     );
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["network", "alerts"] });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["network", "overview"] });
-    expect(toastMock).toHaveBeenCalledWith({
+    expect(global.mockToast).toHaveBeenCalledWith({
       title: "Alert Acknowledged",
       description: "The alert has been acknowledged successfully",
     });
@@ -186,7 +185,7 @@ describe("Platform Admin useNetworkMonitoring hooks", () => {
 
     expect(apiClient.post).toHaveBeenCalledWith("/network/alert-rules", { name: "CPU" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["network", "alert-rules"] });
-    expect(toastMock).toHaveBeenCalledWith({
+    expect(global.mockToast).toHaveBeenCalledWith({
       title: "Alert Rule Created",
       description: 'Alert rule "CPU" has been created successfully',
     });

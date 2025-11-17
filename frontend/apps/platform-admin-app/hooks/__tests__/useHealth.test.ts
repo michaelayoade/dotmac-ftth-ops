@@ -5,6 +5,8 @@
 import { useHealth } from "../useHealth";
 import { runUseHealthSuite } from "../../../../tests/hooks/runUseHealthSuite";
 
+jest.unmock("@tanstack/react-query");
+
 // Mock dependencies
 jest.mock("@/lib/api/client", () => ({
   apiClient: {

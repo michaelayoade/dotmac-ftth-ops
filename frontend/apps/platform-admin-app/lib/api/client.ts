@@ -5,21 +5,36 @@
  * HTTP requests to the DotMac platform backend.
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosAdapter,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 import { resolveTenantId } from "../../../../shared/utils/jwtUtils";
 import { platformConfig } from "@/lib/config";
 
-const API_PREFIX = platformConfig.api.prefix || "/api/v1";
-const BASE_URL = platformConfig.api.baseUrl
-  ? `${platformConfig.api.baseUrl}${API_PREFIX}`
-  : API_PREFIX || "/api/v1";
+const DEFAULT_API_PREFIX = "/api/v1";
+
+const resolveBaseUrl = (): string => {
+  const base = platformConfig.api.baseUrl;
+  const prefix = platformConfig.api.prefix || DEFAULT_API_PREFIX;
+
+  if (base) {
+    return `${base}${prefix}`;
+  }
+
+  return prefix;
+};
 
 /**
  * Configured axios instance for API requests
  */
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: resolveBaseUrl(),
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -30,6 +45,10 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token and tenant ID if available
 apiClient.interceptors.request.use(
   (config) => {
+    if (!config.baseURL) {
+      config.baseURL = resolveBaseUrl();
+    }
+
     if (typeof window !== "undefined") {
       const accessToken = getOperatorAccessToken();
 
@@ -158,3 +177,94 @@ export async function del<T = any>(
 }
 
 export default apiClient;
+function createFetchAdapter(): AxiosAdapter {
+  return async (config: InternalAxiosRequestConfig) => {
+    const method = (config.method || "get").toUpperCase();
+    const origin = typeof window === "undefined" ? "http://localhost" : window.location.origin;
+    const urlPath = config.url || "";
+    let targetUrl: URL;
+
+    if (config.baseURL && config.baseURL.length > 0) {
+      if (/^https?:\/\//i.test(config.baseURL)) {
+        targetUrl = new URL(urlPath, config.baseURL);
+      } else {
+        const normalizedBase = config.baseURL.startsWith("/")
+          ? config.baseURL
+          : `/${config.baseURL}`;
+        const normalizedPath = urlPath.startsWith("/") ? urlPath.substring(1) : urlPath;
+        const combined = `${normalizedBase.replace(/\/+$/, "")}/${normalizedPath}`;
+        targetUrl = new URL(combined, origin);
+      }
+    } else {
+      targetUrl = new URL(urlPath, origin);
+    }
+
+    const headers = new Headers();
+    Object.entries(config.headers || {}).forEach(([key, value]) => {
+      if (value !== undefined) {
+        headers.set(key, String(value));
+      }
+    });
+
+    let body = config.data;
+    if (body && typeof body === "object" && !(body instanceof FormData) && !(body instanceof Blob)) {
+      body = JSON.stringify(body);
+      if (!headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+      }
+    }
+
+    const testNativeFetch =
+      (globalThis as typeof globalThis & { __JEST_NATIVE_FETCH__?: typeof fetch }).__JEST_NATIVE_FETCH__;
+    const fetchImpl = testNativeFetch || fetch;
+    const requestBody =
+      method === "GET" || method === "HEAD" ? null : ((body ?? null) as BodyInit | null);
+
+    const response = await fetchImpl(targetUrl, {
+      method,
+      headers,
+      body: requestBody,
+      credentials: config.withCredentials ? "include" : "same-origin",
+    });
+
+    const responseText = await response.text();
+    const responseHeaders = Object.fromEntries(response.headers.entries());
+    const contentType = response.headers.get("content-type") || "";
+    let parsedData: unknown = responseText;
+    if (contentType.includes("application/json")) {
+      try {
+        parsedData = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        parsedData = responseText;
+      }
+    }
+
+    const axiosResponse = {
+      data: parsedData,
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+      config,
+      request: {},
+    };
+
+    const validateStatus =
+      config.validateStatus || ((status: number) => status >= 200 && status < 300);
+
+    if (validateStatus(response.status)) {
+      return axiosResponse;
+    }
+
+    throw new AxiosError(
+      `Request failed with status code ${response.status}`,
+      undefined,
+      config,
+      undefined,
+      axiosResponse,
+    );
+  };
+}
+
+if (typeof process !== "undefined" && process.env["JEST_WORKER_ID"]) {
+  apiClient.defaults.adapter = createFetchAdapter();
+}

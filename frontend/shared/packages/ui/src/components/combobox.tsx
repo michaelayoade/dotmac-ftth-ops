@@ -11,19 +11,8 @@ import * as React from "react";
 import { cn } from "../lib/utils";
 
 import { Button } from "./button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "./command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./command";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 export interface ComboboxOption {
   value: string;
@@ -55,6 +44,11 @@ export function Combobox({
   const [open, setOpen] = React.useState(false);
 
   const selectedOption = options.find((option) => option.value === value);
+  const displayText = selectedOption ? selectedOption.label : placeholder;
+  const triggerTextClass = cn(
+    "max-w-full truncate",
+    !selectedOption && "text-muted-foreground",
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -63,11 +57,16 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={displayText}
           disabled={disabled}
           className={cn("w-full justify-between", className)}
         >
-          <span className={cn(!selectedOption && "text-muted-foreground")}>
-            {selectedOption ? selectedOption.label : placeholder}
+          <span
+            aria-hidden="true"
+            className={triggerTextClass}
+            style={{ visibility: open ? "hidden" : "visible" }}
+          >
+            {displayText}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -91,7 +90,7 @@ export function Combobox({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      value === option.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                   {option.label}
@@ -108,14 +107,14 @@ export function Combobox({
 /**
  * Multi-select Combobox variant
  */
-export interface MultiComboboxProps extends Omit<ComboboxProps, 'value' | 'onValueChange'> {
+export interface MultiComboboxProps extends Omit<ComboboxProps, "value" | "onValueChange"> {
   value?: string[];
   onValueChange?: (value: string[]) => void;
 }
 
 export function MultiCombobox({
   options,
-  value = [],
+  value,
   onValueChange,
   placeholder = "Select options...",
   searchPlaceholder = "Search...",
@@ -124,30 +123,64 @@ export function MultiCombobox({
   className,
 }: MultiComboboxProps) {
   const [open, setOpen] = React.useState(false);
+  const [internalValue, setInternalValue] = React.useState<string[]>(value ?? []);
+  const preventCloseRef = React.useRef(false);
 
-  const selectedCount = value.length;
-  const displayText = selectedCount === 0
-    ? placeholder
-    : `${selectedCount} selected`;
+  React.useEffect(() => {
+    if (value !== undefined) {
+      setInternalValue(value);
+    }
+  }, [value]);
+
+  const selectedValues = internalValue;
+  const selectedCount = selectedValues.length;
+  const displayText = selectedCount === 0 ? placeholder : `${selectedCount} selected`;
+  const triggerTextClass = cn(
+    "max-w-full truncate",
+    selectedCount === 0 && "text-muted-foreground",
+  );
 
   const handleSelect = (optionValue: string) => {
-    const newValue = value.includes(optionValue)
-      ? value.filter((v) => v !== optionValue)
-      : [...value, optionValue];
+    const newValue = selectedValues.includes(optionValue)
+      ? selectedValues.filter((v) => v !== optionValue)
+      : [...selectedValues, optionValue];
+    setInternalValue(newValue);
     onValueChange?.(newValue);
   };
 
+  const handleTriggerPointerDown = () => {
+    if (open) {
+      preventCloseRef.current = true;
+    }
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && preventCloseRef.current) {
+      preventCloseRef.current = false;
+      return;
+    }
+
+    preventCloseRef.current = false;
+    setOpen(nextOpen);
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={displayText}
           disabled={disabled}
+          onPointerDown={handleTriggerPointerDown}
           className={cn("w-full justify-between", className)}
         >
-          <span className={cn(selectedCount === 0 && "text-muted-foreground")}>
+          <span
+            aria-hidden="true"
+            className={triggerTextClass}
+            style={{ visibility: open ? "hidden" : "visible" }}
+          >
             {displayText}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -169,7 +202,7 @@ export function MultiCombobox({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value.includes(option.value) ? "opacity-100" : "opacity-0"
+                      selectedValues.includes(option.value) ? "opacity-100" : "opacity-0",
                     )}
                   />
                   {option.label}

@@ -1,27 +1,69 @@
 import "@testing-library/jest-dom";
 import { toHaveNoViolations } from "jest-axe";
 import { TextEncoder, TextDecoder } from "util";
+import { TransformStream, ReadableStream, WritableStream } from "stream/web";
+import axios from "axios";
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getAdapter } = require("axios/dist/node/axios.cjs");
+    axios.defaults.adapter = getAdapter("http");
+  } catch (error) {
+    console.warn("[jest.setup] Failed to configure axios HTTP adapter:", error);
+  }
+}
+
+try {
+  const fetchModule = require("next/dist/compiled/node-fetch");
+  const fetchImpl = fetchModule.default ?? fetchModule;
+  if (typeof global.fetch !== "function") {
+    global.fetch = fetchImpl;
+  }
+  if (!global.Headers) {
+    global.Headers = fetchModule.Headers;
+  }
+  if (!global.Request) {
+    global.Request = fetchModule.Request;
+  }
+  if (!global.Response) {
+    global.Response = fetchModule.Response;
+  }
+  if (!global.FormData) {
+    global.FormData = fetchModule.FormData;
+  }
+} catch {
+  // ok - use native jsdom fetch
+}
+
+if (typeof global !== "undefined" && "XMLHttpRequest" in global) {
+  try {
+    delete global.XMLHttpRequest;
+  } catch {
+    global.XMLHttpRequest = undefined;
+  }
+}
+
+if (typeof global.self === "undefined") {
+  global.self = global;
+}
+require("whatwg-fetch");
+if (typeof global.fetch === "function") {
+  global.__JEST_NATIVE_FETCH__ = global.fetch.bind(global);
+}
 
 const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args) => {
-    if (
-      typeof args[0] === "string" &&
-      args[0].includes("Warning: An update to") &&
-      args[0].includes("was not wrapped in act")
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
-
-afterAll(() => {
-  console.error = originalError;
-});
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
+if (!(global.TransformStream)) {
+  global.TransformStream = TransformStream;
+}
+if (!(global.ReadableStream)) {
+  global.ReadableStream = ReadableStream;
+}
+if (!(global.WritableStream)) {
+  global.WritableStream = WritableStream;
+}
 
 global.BroadcastChannel = class BroadcastChannel {
   constructor(name) {
@@ -34,6 +76,44 @@ global.BroadcastChannel = class BroadcastChannel {
 };
 
 expect.extend(toHaveNoViolations);
+
+let mswServer = null;
+try {
+  mswServer = require("./__tests__/msw/server").server;
+} catch (error) {
+  console.warn("[jest.setup] MSW server failed to load:", error instanceof Error ? error.message : error);
+  console.warn("[jest.setup] Tests that do not require MSW will still run");
+}
+
+beforeAll(() => {
+  console.error = (...args) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("Warning: An update to") &&
+      args[0].includes("was not wrapped in act")
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+
+  if (mswServer) {
+    mswServer.listen({ onUnhandledRequest: "warn" });
+  }
+});
+
+afterEach(() => {
+  if (mswServer) {
+    mswServer.resetHandlers();
+  }
+});
+
+afterAll(() => {
+  console.error = originalError;
+  if (mswServer) {
+    mswServer.close();
+  }
+});
 
 jest.mock("next/router", () => ({
   useRouter: () => ({
@@ -60,56 +140,12 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("@dotmac/ui", () => {
-  const actual = jest.requireActual("@dotmac/ui");
-  return {
-    ...actual,
-    useToast: () => ({
-      toast: jest.fn(),
-      dismiss: jest.fn(),
-      toasts: [],
-    }),
-  };
-});
-
-jest.mock("@tanstack/react-query", () => ({
-  useQuery: jest.fn((options = {}) => ({
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    error: null,
-    refetch: jest.fn(),
-    isSuccess: true,
-    ...options,
-  })),
-  useMutation: jest.fn(() => ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
-    isLoading: false,
-    isError: false,
-    error: null,
-    reset: jest.fn(),
-    isSuccess: false,
-  })),
-  useQueryClient: jest.fn(() => ({
-    invalidateQueries: jest.fn(),
-    setQueryData: jest.fn(),
-    getQueryData: jest.fn(),
-    refetchQueries: jest.fn(),
-  })),
-  QueryClient: jest.fn(() => ({
-    invalidateQueries: jest.fn(),
-    setQueryData: jest.fn(),
-    getQueryData: jest.fn(),
-    refetchQueries: jest.fn(),
-  })),
-  QueryClientProvider: ({ children }) => children,
-}));
-
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    status: 200,
-    json: () => Promise.resolve({}),
-  }),
-);
+if (typeof global.Response === "undefined" && typeof window !== "undefined" && window.Response) {
+  global.Response = window.Response;
+}
+if (typeof global.Request === "undefined" && typeof window !== "undefined" && window.Request) {
+  global.Request = window.Request;
+}
+if (typeof global.Headers === "undefined" && typeof window !== "undefined" && window.Headers) {
+  global.Headers = window.Headers;
+}

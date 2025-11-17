@@ -278,7 +278,7 @@ export const PluginHealthDashboard = ({
                       <div className="text-foreground">
                         {formatResponseTime(health?.response_time_ms ?? undefined)}
                       </div>
-                      <div className="text-foreground0">Response Time</div>
+                      <div className="text-muted-foreground">Response Time</div>
                     </div>
 
                     <div
@@ -297,7 +297,7 @@ export const PluginHealthDashboard = ({
                 </div>
 
                 {/* Last Check Time */}
-                <div className="mt-1 text-xs text-foreground0 flex items-center gap-1">
+                <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   Last checked: {health?.timestamp ? formatTimestamp(health.timestamp) : "Never"}
                 </div>
@@ -359,7 +359,7 @@ export const PluginHealthDashboard = ({
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-foreground0">No additional details available</p>
+                        <p className="text-sm text-muted-foreground">No additional details available</p>
                       )}
                     </div>
                   </div>
@@ -384,9 +384,9 @@ export const PluginHealthDashboard = ({
 
         {sortedInstances.length === 0 && (
           <div className="text-center py-12">
-            <Activity className="h-12 w-12 text-foreground0 mx-auto mb-4" />
+            <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground mb-2">No Plugin Instances</h3>
-            <p className="text-foreground0">
+            <p className="text-muted-foreground">
               Add some plugin instances to monitor their health status.
             </p>
           </div>

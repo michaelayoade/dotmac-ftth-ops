@@ -4,6 +4,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Network, Wifi, Shield, Globe } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
+function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = 8000,
+): Promise<Response> {
+  if (init.signal || typeof AbortController === "undefined") {
+    return fetch(input, init);
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  return fetch(input, { ...init, signal: controller.signal }).finally(() => {
+    clearTimeout(timeoutId);
+  });
+}
+
 interface NetworkProfileStats {
   totalProfiles: number;
   profilesWithStaticIpv4: number;
@@ -44,10 +61,13 @@ export function NetworkProfileStats() {
   const { data: stats, isLoading: isProfileStatsLoading, error: profileError } = useQuery<NetworkProfileStats>({
     queryKey: ["networkProfileStats"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/network/profiles/stats", {
-        credentials: "include",
-        signal: AbortSignal.timeout(8000), // 8 second timeout
-      });
+      const response = await fetchWithTimeout(
+        "/api/v1/network/profiles/stats",
+        {
+          credentials: "include",
+        },
+        8000,
+      );
 
       if (!response['ok']) {
         throw new Error("Failed to fetch network profile stats");
@@ -62,10 +82,13 @@ export function NetworkProfileStats() {
   const { data: ipv6Stats, isLoading: isIpv6StatsLoading, error: ipv6Error } = useQuery<IPv6LifecycleStats>({
     queryKey: ["ipv6LifecycleStats"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/network/ipv6/stats", {
-        credentials: "include",
-        signal: AbortSignal.timeout(8000), // 8 second timeout
-      });
+      const response = await fetchWithTimeout(
+        "/api/v1/network/ipv6/stats",
+        {
+          credentials: "include",
+        },
+        8000,
+      );
 
       if (!response['ok']) {
         throw new Error("Failed to fetch IPv6 lifecycle stats");

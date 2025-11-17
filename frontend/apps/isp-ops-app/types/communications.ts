@@ -260,6 +260,7 @@ export interface TemplateListResponse {
   total: number;
   page: number;
   page_size: number;
+  has_more?: boolean;
 }
 
 /**

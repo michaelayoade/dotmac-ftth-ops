@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   WebhookSubscription,
   WebhookDelivery,
@@ -57,17 +57,21 @@ export function createMockDelivery(
   subscriptionId: string,
   overrides?: Partial<WebhookDelivery>
 ): WebhookDelivery {
+  const timestamp = new Date().toISOString();
+
   return {
     id: `del-${nextDeliveryId++}`,
     subscription_id: subscriptionId,
     event_type: 'subscriber.created',
-    payload: { test: 'data' },
+    event_id: `evt-${nextDeliveryId}`,
     status: 'success',
-    attempt_number: 1,
     response_code: 200,
-    response_body: 'OK',
-    triggered_at: new Date().toISOString(),
+    error_message: null,
+    attempt_number: 1,
+    duration_ms: 320,
+    created_at: timestamp,
     next_retry_at: null,
+    response_body: 'OK',
     ...overrides,
   };
 }
@@ -80,8 +84,8 @@ export function seedWebhookData(webhooks: WebhookSubscription[], deliveriesData:
 
 export const webhookHandlers = [
   // GET /api/v1/webhooks/subscriptions - List webhook subscriptions
-  rest.get('*/api/v1/webhooks/subscriptions', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/webhooks/subscriptions', ({ request, params }) => {
+    const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const event = url.searchParams.get('event_type');
@@ -100,13 +104,13 @@ export const webhookHandlers = [
     console.log('[MSW] Returning', paginated.length, 'webhooks');
 
     // Hook expects response.data to be the array directly
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 
   // GET /api/v1/webhooks/subscriptions/:id/deliveries - Get webhook deliveries
-  rest.get('*/api/v1/webhooks/subscriptions/:id/deliveries', (req, res, ctx) => {
-    const { id } = req.params;
-    const url = new URL(req.url);
+  http.get('*/api/v1/webhooks/subscriptions/:id/deliveries', ({ request, params }) => {
+    const { id } = params;
+    const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const status = url.searchParams.get('status');
@@ -121,25 +125,23 @@ export const webhookHandlers = [
     const paginated = filtered.slice(start, end);
 
     // Hook expects response.data to be the array directly
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 
   // GET /api/v1/webhooks/events - Get available webhook events
-  rest.get('*/api/v1/webhooks/events', (req, res, ctx) => {
-    return res(
-      ctx.json({
-        events: [
-          { event_type: 'subscriber.created', description: 'Triggered when a subscriber is created' },
-          { event_type: 'subscriber.updated', description: 'Triggered when a subscriber is updated' },
-          { event_type: 'subscriber.deleted', description: 'Triggered when a subscriber is deleted' },
-        ],
-      })
-    );
+  http.get('*/api/v1/webhooks/events', ({ request, params }) => {
+    return HttpResponse.json({
+      events: [
+        { event_type: 'subscriber.created', description: 'Triggered when a subscriber is created' },
+        { event_type: 'subscriber.updated', description: 'Triggered when a subscriber is updated' },
+        { event_type: 'subscriber.deleted', description: 'Triggered when a subscriber is deleted' },
+      ],
+    });
   }),
 
   // POST /api/v1/webhooks/subscriptions - Create webhook subscription
-  rest.post('*/api/v1/webhooks/subscriptions', (req, res, ctx) => {
-    const data = req.body as Partial<WebhookSubscription>;
+  http.post('*/api/v1/webhooks/subscriptions', async ({ request, params }) => {
+    const data = await request.json() as Partial<WebhookSubscription>;
 
     const newWebhook = createMockWebhook({
       ...data,
@@ -148,20 +150,20 @@ export const webhookHandlers = [
 
     webhookSubscriptions.push(newWebhook);
 
-    return res(ctx.status(201), ctx.json(newWebhook));
+    return HttpResponse.json(newWebhook, { status: 201 });
   }),
 
   // PATCH /api/v1/webhooks/subscriptions/:id - Update webhook subscription
-  rest.patch('*/api/v1/webhooks/subscriptions/:id', (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = req.body as Partial<WebhookSubscription>;
+  http.patch('*/api/v1/webhooks/subscriptions/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json() as Partial<WebhookSubscription>;
 
     const index = webhookSubscriptions.findIndex((wh) => wh.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Webhook subscription not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Webhook subscription not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -171,37 +173,37 @@ export const webhookHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(webhookSubscriptions[index]));
+    return HttpResponse.json(webhookSubscriptions[index]);
   }),
 
   // DELETE /api/v1/webhooks/subscriptions/:id - Delete webhook subscription
-  rest.delete('*/api/v1/webhooks/subscriptions/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/api/v1/webhooks/subscriptions/:id', ({ request, params }) => {
+    const { id } = params;
 
     const index = webhookSubscriptions.findIndex((wh) => wh.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Webhook subscription not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Webhook subscription not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     webhookSubscriptions.splice(index, 1);
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /api/v1/webhooks/deliveries/:id/retry - Retry webhook delivery
-  rest.post('*/api/v1/webhooks/deliveries/:id/retry', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/webhooks/deliveries/:id/retry', ({ request, params }) => {
+    const { id } = params;
 
     const delivery = deliveries.find((d) => d.id === id);
 
     if (!delivery) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Delivery not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Delivery not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -210,6 +212,6 @@ export const webhookHandlers = [
     delivery.attempt_number = (delivery.attempt_number || 1) + 1;
     delivery.next_retry_at = new Date(Date.now() + 60000).toISOString(); // Retry in 1 minute
 
-    return res(ctx.status(202), ctx.json(delivery));
+    return HttpResponse.json(delivery, { status: 202 });
   }),
 ];

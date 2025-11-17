@@ -3,7 +3,7 @@
  * Mocks partner management and onboarding workflow endpoints
  */
 
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 
 // ============================================
 // Types
@@ -80,10 +80,14 @@ export function createMockPartner(overrides: Partial<Partner> = {}): Partner {
 // Storage Helpers
 // ============================================
 
-export function seedPartnersData(initialPartners: Partner[]): void {
-  partners = [...initialPartners];
+export function seedPartners(initialPartners: Partner[]): void {
+  partners = initialPartners.map((partner, index) => ({
+    id: partner.id ?? `partner-${nextPartnerId + index}`,
+    ...partner,
+  }));
   const maxId = initialPartners.reduce((max, p) => {
-    const numId = parseInt(p.id.replace("partner-", ""));
+    const partnerId = typeof p.id === "string" ? p.id : "";
+    const numId = parseInt(partnerId.replace("partner-", ""));
     return isNaN(numId) ? max : Math.max(max, numId);
   }, 0);
   nextPartnerId = maxId + 1;
@@ -108,9 +112,9 @@ export function getPartners(): Partner[] {
 
 export const partnersHandlers = [
   // GET /api/v1/partners/:id/quota/check - MUST come before /:id route
-  rest.get("*/api/v1/partners/:id/quota/check", (req, res, ctx) => {
-    const { id } = req.params;
-    const url = new URL(req.url);
+  http.get("*/api/v1/partners/:id/quota/check", ({ request, params }) => {
+    const { id } = params;
+    const url = new URL(request.url);
     const requestedLicenses = parseInt(url.searchParams.get("requested_licenses") || "0");
     const tenantId = url.searchParams.get("tenant_id");
 
@@ -123,10 +127,7 @@ export const partnersHandlers = [
     const partner = partners.find((p) => p.id === id);
 
     if (!partner) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
     const quotaAllocated = partner.license_quota || 100;
@@ -151,12 +152,12 @@ export const partnersHandlers = [
     };
 
     console.log("[MSW] Quota check result:", quotaResult);
-    return res(ctx.json(quotaResult));
+    return HttpResponse.json(quotaResult);
   }),
 
   // POST /api/v1/partners/onboarding/complete - MUST come before /:id route
-  rest.post("*/api/v1/partners/onboarding/complete", async (req, res, ctx) => {
-    const onboardingData = await req.json();
+  http.post("*/api/v1/partners/onboarding/complete", async ({ request, params }) => {
+    const onboardingData = await request.json();
 
     console.log("[MSW] POST /api/v1/partners/onboarding/complete", {
       onboardingData,
@@ -174,6 +175,8 @@ export const partnersHandlers = [
       customer_id: `cust-${nextCustomerId++}`,
       customer_number: `CUST-${String(nextCustomerId).padStart(3, "0")}`,
       name: `${onboardingData.customer_data.first_name} ${onboardingData.customer_data.last_name}`,
+      company_name:
+        onboardingData.customer_data.company_name ?? onboardingData.partner_data?.company_name,
       email: onboardingData.customer_data.email,
       phone: onboardingData.customer_data.phone,
       tier: onboardingData.customer_data.tier || "premium",
@@ -239,23 +242,40 @@ export const partnersHandlers = [
       provisioned_at: new Date().toISOString(),
     };
 
+    const commissionAmount =
+      typeof onboardingData.commission?.amount === "number"
+        ? onboardingData.commission.amount
+        : onboardingData.commission?.amount
+          ? parseFloat(onboardingData.commission.amount)
+          : 0;
+
+    const commission = {
+      commission_id: `comm-${nextCommissionId++}`,
+      commission_type: "new_customer",
+      amount: commissionAmount.toFixed(2),
+      currency: onboardingData.commission?.currency || "USD",
+      status: "recorded",
+      recorded_at: new Date().toISOString(),
+    };
+
     const onboardingResult = {
       partner: newPartner,
       customer,
       licenses,
       tenant,
       workflow_id: `wf-${Date.now()}`,
+      commission,
       status: "completed",
       completed_at: new Date().toISOString(),
     };
 
     console.log("[MSW] Onboarding completed:", onboardingResult.workflow_id);
-    return res(ctx.json(onboardingResult));
+    return HttpResponse.json(onboardingResult);
   }),
 
   // GET /api/v1/partners - List partners
-  rest.get("*/api/v1/partners", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/partners", ({ request, params }) => {
+    const url = new URL(request.url);
     const status = url.searchParams.get("status");
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("page_size") || "50");
@@ -281,12 +301,12 @@ export const partnersHandlers = [
     };
 
     console.log(`[MSW] Returning ${paginated.length}/${total} partners`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // POST /api/v1/partners - Create partner
-  rest.post("*/api/v1/partners", async (req, res, ctx) => {
-    const createData = await req.json();
+  http.post("*/api/v1/partners", async ({ request, params }) => {
+    const createData = await request.json();
 
     console.log("[MSW] POST /api/v1/partners", { createData });
 
@@ -299,41 +319,35 @@ export const partnersHandlers = [
     partners.push(newPartner);
 
     console.log("[MSW] Created partner:", newPartner.id);
-    return res(ctx.json(newPartner));
+    return HttpResponse.json(newPartner);
   }),
 
   // GET /api/v1/partners/:id - Get single partner
-  rest.get("*/api/v1/partners/:id", (req, res, ctx) => {
-    const { id } = req.params;
+  http.get("*/api/v1/partners/:id", ({ request, params }) => {
+    const { id } = params;
 
     console.log("[MSW] GET /api/v1/partners/:id", { id });
 
     const partner = partners.find((p) => p.id === id);
 
     if (!partner) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
-    return res(ctx.json(partner));
+    return HttpResponse.json(partner);
   }),
 
   // PATCH /api/v1/partners/:id - Update partner
-  rest.patch("*/api/v1/partners/:id", async (req, res, ctx) => {
-    const { id } = req.params;
-    const updateData = await req.json();
+  http.patch("*/api/v1/partners/:id", async ({ request, params }) => {
+    const { id } = params;
+    const updateData = await request.json();
 
     console.log("[MSW] PATCH /api/v1/partners/:id", { id, updateData });
 
     const partner = partners.find((p) => p.id === id);
 
     if (!partner) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
     Object.assign(partner, updateData, {
@@ -341,34 +355,31 @@ export const partnersHandlers = [
     });
 
     console.log("[MSW] Updated partner:", partner.id);
-    return res(ctx.json(partner));
+    return HttpResponse.json(partner);
   }),
 
   // DELETE /api/v1/partners/:id - Delete partner
-  rest.delete("*/api/v1/partners/:id", (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete("*/api/v1/partners/:id", ({ request, params }) => {
+    const { id } = params;
 
     console.log("[MSW] DELETE /api/v1/partners/:id", { id });
 
     const index = partners.findIndex((p) => p.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
     partners.splice(index, 1);
 
     console.log("[MSW] Deleted partner:", id);
-    return res(ctx.status(200));
+    return new HttpResponse(null, { status: 200 });
   }),
 
   // POST /api/v1/partners/:id/customers - Create partner customer
-  rest.post("*/api/v1/partners/:id/customers", async (req, res, ctx) => {
-    const { id } = req.params;
-    const requestData = await req.json();
+  http.post("*/api/v1/partners/:id/customers", async ({ request, params }) => {
+    const { id } = params;
+    const requestData = await request.json();
 
     console.log("[MSW] POST /api/v1/partners/:id/customers", {
       id,
@@ -378,10 +389,7 @@ export const partnersHandlers = [
     const partner = partners.find((p) => p.id === id);
 
     if (!partner) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
     const customerData = requestData.customer_data;
@@ -409,13 +417,13 @@ export const partnersHandlers = [
     partner.updated_at = new Date().toISOString();
 
     console.log("[MSW] Created customer:", customer.customer_id);
-    return res(ctx.json(customer));
+    return HttpResponse.json(customer);
   }),
 
   // POST /api/v1/partners/:id/licenses/allocate - Allocate licenses
-  rest.post("*/api/v1/partners/:id/licenses/allocate", async (req, res, ctx) => {
-    const { id } = req.params;
-    const allocationData = await req.json();
+  http.post("*/api/v1/partners/:id/licenses/allocate", async ({ request, params }) => {
+    const { id } = params;
+    const allocationData = await request.json();
 
     console.log("[MSW] POST /api/v1/partners/:id/licenses/allocate", {
       id,
@@ -425,10 +433,7 @@ export const partnersHandlers = [
     const partner = partners.find((p) => p.id === id);
 
     if (!partner) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
     const licenseCount = allocationData.license_count || 1;
@@ -439,9 +444,9 @@ export const partnersHandlers = [
     const quotaRemaining = quotaAllocated - quotaUsed;
 
     if (licenseCount > quotaRemaining) {
-      return res(
-        ctx.status(400),
-        ctx.json({ detail: "Insufficient license quota" })
+      return HttpResponse.json(
+        { detail: "Insufficient license quota" },
+        { status: 400 }
       );
     }
     const licenseKeys = Array.from({ length: licenseCount }, (_, i) => `KEY-${nextLicenseId + i}`);
@@ -467,13 +472,13 @@ export const partnersHandlers = [
     };
 
     console.log("[MSW] Allocated licenses:", licenseCount);
-    return res(ctx.json(allocationResult));
+    return HttpResponse.json(allocationResult);
   }),
 
   // POST /api/v1/partners/:id/tenants/provision - Provision tenant
-  rest.post("*/api/v1/partners/:id/tenants/provision", async (req, res, ctx) => {
-    const { id } = req.params;
-    const provisionData = await req.json();
+  http.post("*/api/v1/partners/:id/tenants/provision", async ({ request, params }) => {
+    const { id } = params;
+    const provisionData = await request.json();
 
     console.log("[MSW] POST /api/v1/partners/:id/tenants/provision", {
       id,
@@ -483,10 +488,7 @@ export const partnersHandlers = [
     const partner = partners.find((p) => p.id === id);
 
     if (!partner) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
     const tenantId = provisionData.tenant_id || nextTenantId++;
@@ -522,13 +524,13 @@ export const partnersHandlers = [
     };
 
     console.log("[MSW] Provisioned tenant:", tenantId);
-    return res(ctx.json(tenantResult));
+    return HttpResponse.json(tenantResult);
   }),
 
   // POST /api/v1/partners/:id/commissions - Record commission
-  rest.post("*/api/v1/partners/:id/commissions", async (req, res, ctx) => {
-    const { id } = req.params;
-    const commissionData = await req.json();
+  http.post("*/api/v1/partners/:id/commissions", async ({ request, params }) => {
+    const { id } = params;
+    const commissionData = await request.json();
 
     console.log("[MSW] POST /api/v1/partners/:id/commissions", {
       id,
@@ -538,10 +540,7 @@ export const partnersHandlers = [
     const partner = partners.find((p) => p.id === id);
 
     if (!partner) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Partner not found" })
-      );
+      return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
     const commissionAmount = typeof commissionData.amount === "string"
@@ -555,7 +554,7 @@ export const partnersHandlers = [
       partner_name: partner.company_name,
       customer_id: commissionData.customer_id,
       commission_type: commissionData.commission_type,
-      amount: commissionAmount,
+      amount: commissionAmount.toFixed(2),
       currency: commissionData.currency || "USD",
       status: "pending",
       event_date: new Date().toISOString(),
@@ -570,6 +569,6 @@ export const partnersHandlers = [
     partner.updated_at = new Date().toISOString();
 
     console.log("[MSW] Recorded commission:", commissionResult.commission_id);
-    return res(ctx.json(commissionResult));
+    return HttpResponse.json(commissionResult);
   }),
 ];

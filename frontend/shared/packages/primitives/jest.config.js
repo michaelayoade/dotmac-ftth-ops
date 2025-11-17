@@ -1,3 +1,5 @@
+const path = require("path");
+
 const esModules = [
   "react-leaflet",
   "@react-leaflet",
@@ -11,6 +13,10 @@ const esModules = [
 
 const esmPattern = esModules.join("|");
 const transformIgnorePattern = `node_modules/(?!((?:\\.pnpm/[^/]+/node_modules/)?(${esmPattern}))/)`;
+const workspaceRoot = path.resolve(__dirname, "../../..");
+const workspaceReact = path.join(workspaceRoot, "node_modules/react/index.js");
+const workspaceReactDom = path.join(workspaceRoot, "node_modules/react-dom/index.js");
+const workspaceReactJsxRuntime = path.join(workspaceRoot, "node_modules/react/jsx-runtime.js");
 
 /** @type {import('jest').Config} */
 const config = {
@@ -30,6 +36,9 @@ const config = {
     "^@dotmac/headless$": "<rootDir>/../headless/src/index.ts",
     "^@dotmac/headless/(.*)$": "<rootDir>/../headless/src/$1",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    "^react$": workspaceReact,
+    "^react-dom$": workspaceReactDom,
+    "^react/jsx-runtime$": workspaceReactJsxRuntime,
   },
   transform: {
     "^.+\\.(js|jsx|ts|tsx)$": [

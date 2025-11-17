@@ -5,11 +5,15 @@
     "lib": ["ES2020"],
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dotmac/http-client": ["../http-client/src"],
+      "@dotmac/http-client/*": ["../http-client/src/*"]
+    },
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

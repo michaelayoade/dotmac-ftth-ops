@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@dotmac/ui";
+import { useToast, type Toast } from "@dotmac/ui";
 import { useAppConfig } from "@/providers/AppConfigContext";
 
 // Types matching backend models
@@ -108,8 +108,11 @@ export interface WorkflowStats {
 /**
  * Hook for managing orchestration workflows
  */
-export function useOrchestrationWorkflows() {
-  const { toast } = useToast();
+type ToastParams = Omit<Toast, "id">;
+
+export function useOrchestrationWorkflows(options?: { toast?: (params: ToastParams) => void }) {
+  const { toast: defaultToast } = useToast();
+  const notify = options?.toast ?? defaultToast;
   const queryClient = useQueryClient();
   const { api } = useAppConfig();
   const buildUrl = api.buildUrl;
@@ -145,8 +148,10 @@ export function useOrchestrationWorkflows() {
       },
       refetchInterval: (query) => {
         // Poll more frequently if there are active workflows
-        const hasActiveWorkflows = query.state.data?.workflows.some(
-          (w: Workflow) => w.status === "running" || w.status === "pending" || w.status === "rolling_back"
+        const workflows = query.state.data?.workflows ?? [];
+        const hasActiveWorkflows = workflows.some(
+          (w: Workflow) =>
+            w.status === "running" || w.status === "pending" || w.status === "rolling_back"
         );
         return hasActiveWorkflows ? 2000 : 10000;
       },
@@ -222,15 +227,21 @@ export function useOrchestrationWorkflows() {
 
       return response.json() as Promise<Workflow>;
     },
-    onSuccess: () => {
-      toast({
+    onSuccess: (_data, workflowId) => {
+      notify({
         title: "Workflow retried",
         description: "The workflow has been queued for retry",
       });
       queryClient.invalidateQueries({ queryKey: ["orchestration-workflows"] });
+      queryClient.invalidateQueries({ queryKey: ["orchestration-stats"] });
+      if (workflowId) {
+        queryClient.invalidateQueries({ queryKey: ["orchestration-workflow", workflowId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["orchestration-workflow"] });
+      }
     },
     onError: (error: Error) => {
-      toast({
+      notify({
         title: "Retry failed",
         description: error.message,
         variant: "destructive",
@@ -254,15 +265,21 @@ export function useOrchestrationWorkflows() {
 
       return response.json() as Promise<Workflow>;
     },
-    onSuccess: () => {
-      toast({
+    onSuccess: (_data, workflowId) => {
+      notify({
         title: "Workflow cancelled",
         description: "The workflow is being rolled back",
       });
       queryClient.invalidateQueries({ queryKey: ["orchestration-workflows"] });
+      queryClient.invalidateQueries({ queryKey: ["orchestration-stats"] });
+      if (workflowId) {
+        queryClient.invalidateQueries({ queryKey: ["orchestration-workflow", workflowId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["orchestration-workflow"] });
+      }
     },
     onError: (error: Error) => {
-      toast({
+      notify({
         title: "Cancel failed",
         description: error.message,
         variant: "destructive",
@@ -277,13 +294,21 @@ export function useOrchestrationWorkflows() {
       workflow_type?: WorkflowType;
       status?: WorkflowStatus;
       limit?: number;
+      date_from?: string;
+      date_to?: string;
+      include_steps?: boolean;
     }
   ) => {
     try {
       const searchParams = new URLSearchParams();
       if (params?.workflow_type) searchParams.append("workflow_type", params.workflow_type);
-      if (params?.status) searchParams.append("status_filter", params.status);
+      if (params?.status) searchParams.append("status", params.status);
       if (params?.limit) searchParams.append("limit", String(params.limit));
+      if (params?.date_from) searchParams.append("date_from", params.date_from);
+      if (params?.date_to) searchParams.append("date_to", params.date_to);
+      if (format === "json" && params?.include_steps !== undefined) {
+        searchParams.append("include_steps", String(params.include_steps));
+      }
 
       const url = buildUrl(`/orchestration/export/${format}?${searchParams.toString()}`);
       const response = await fetch(url, {
@@ -304,12 +329,12 @@ export function useOrchestrationWorkflows() {
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
-      toast({
+      notify({
         title: "Export successful",
         description: `Workflows exported as ${format.toUpperCase()}`,
       });
     } catch (error) {
-      toast({
+      notify({
         title: "Export failed",
         description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
@@ -321,8 +346,8 @@ export function useOrchestrationWorkflows() {
     useWorkflows,
     useWorkflow,
     useWorkflowStats,
-    retryWorkflow: retryWorkflow.mutate,
-    cancelWorkflow: cancelWorkflow.mutate,
+    retryWorkflow: retryWorkflow.mutateAsync,
+    cancelWorkflow: cancelWorkflow.mutateAsync,
     exportWorkflows,
     isRetrying: retryWorkflow.isPending,
     isCancelling: cancelWorkflow.isPending,

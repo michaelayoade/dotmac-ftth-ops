@@ -7,7 +7,8 @@
  * - E2E_ADMIN_USERNAME: Admin username (default: admin)
  * - E2E_ADMIN_PASSWORD: Admin password (default: admin123)
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 import path from "path";
 
 test.describe("Admin User Journey", () => {

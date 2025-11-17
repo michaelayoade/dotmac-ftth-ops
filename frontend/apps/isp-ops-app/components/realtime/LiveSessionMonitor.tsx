@@ -134,11 +134,14 @@ export function LiveSessionMonitor() {
             <Badge
               variant={isConnected ? "default" : "secondary"}
               className="flex items-center gap-1"
+              data-testid="connection-status-badge"
             >
-              <Wifi className="h-3 w-3" />
-              {isConnected ? "Live" : "Simulated"}
+              <Wifi className="h-3 w-3" aria-hidden="true" />
+              <span data-testid="connection-status-label">
+                {isConnected ? "Live" : "Simulated"}
+              </span>
             </Badge>
-            <Badge variant="outline">
+            <Badge variant="outline" data-testid="session-count-badge">
               {activeSessions.size} {activeSessions.size === 1 ? "session" : "sessions"}
             </Badge>
           </div>
@@ -149,15 +152,21 @@ export function LiveSessionMonitor() {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Active Users</p>
-            <p className="text-2xl font-bold">{activeSessions.size}</p>
+            <p className="text-2xl font-bold" data-testid="active-users-count">
+              {activeSessions.size}
+            </p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Upload</p>
-            <p className="text-2xl font-bold text-green-500">{formatBytes(totalUpload)}</p>
+            <p className="text-2xl font-bold text-green-500" data-testid="total-upload">
+              {formatBytes(totalUpload)}
+            </p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Download</p>
-            <p className="text-2xl font-bold text-blue-500">{formatBytes(totalDownload)}</p>
+            <p className="text-2xl font-bold text-blue-500" data-testid="total-download">
+              {formatBytes(totalDownload)}
+            </p>
           </div>
         </div>
 
@@ -187,13 +196,19 @@ export function LiveSessionMonitor() {
                     <TableCell className="font-medium">{session.username}</TableCell>
                     <TableCell className="font-mono text-xs">{session.ip_address}</TableCell>
                     <TableCell className="text-right text-green-600">
-                      {formatBytes(session.upload_bytes)}
+                      <span data-testid={`session-upload-${session.session_id}`}>
+                        {formatBytes(session.upload_bytes)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right text-blue-600">
-                      {formatBytes(session.download_bytes)}
+                      <span data-testid={`session-download-${session.session_id}`}>
+                        {formatBytes(session.download_bytes)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatDuration(session.session_time_seconds)}
+                      <span data-testid={`session-duration-${session.session_id}`}>
+                        {formatDuration(session.session_time_seconds)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(session.last_update), {

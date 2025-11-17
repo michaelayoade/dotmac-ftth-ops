@@ -10,8 +10,6 @@
 
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.api.baseUrl;
-
 // ============================================
 // Type Definitions
 // ============================================
@@ -97,10 +95,8 @@ export interface PayoutFilters {
 // ============================================
 
 class PartnerRevenueService {
-  private baseUrl: string;
-
-  constructor() {
-    this.baseUrl = API_BASE;
+  private buildUrl(path: string): string {
+    return platformConfig.api.buildUrl(path);
   }
 
   /**
@@ -145,9 +141,9 @@ class PartnerRevenueService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/partners/revenue/metrics${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(
+      `/partners/revenue/metrics${queryString ? `?${queryString}` : ""}`,
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -182,9 +178,9 @@ class PartnerRevenueService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/partners/revenue/commissions${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(
+      `/partners/revenue/commissions${queryString ? `?${queryString}` : ""}`,
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -203,7 +199,7 @@ class PartnerRevenueService {
    */
   async getCommissionEvent(commissionId: string): Promise<PartnerCommissionEvent> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/partners/revenue/commissions/${commissionId}`,
+      this.buildUrl(`/partners/revenue/commissions/${commissionId}`),
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -238,9 +234,9 @@ class PartnerRevenueService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/partners/revenue/payouts${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(
+      `/partners/revenue/payouts${queryString ? `?${queryString}` : ""}`,
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -258,7 +254,7 @@ class PartnerRevenueService {
    * @returns Payout details
    */
   async getPayout(payoutId: string): Promise<PartnerPayout> {
-    const response = await fetch(`${this.baseUrl}/api/v1/partners/revenue/payouts/${payoutId}`, {
+    const response = await fetch(this.buildUrl(`/partners/revenue/payouts/${payoutId}`), {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",

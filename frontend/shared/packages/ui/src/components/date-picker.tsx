@@ -35,27 +35,34 @@ export function DatePicker({
   disabled = false,
   className,
 }: DatePickerProps) {
+  const [open, setOpen] = React.useState(false);
+
   const handleSelect = React.useCallback(
     (selectedDate?: Date) => {
       onDateChange?.(selectedDate);
+      setOpen(false);
     },
     [onDateChange],
   );
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
           disabled={disabled}
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal border-input",
             !date && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>{placeholder}</span>}
+          {date ? (
+            format(date, "PPP")
+          ) : (
+            <span className="text-muted-foreground">{placeholder}</span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
@@ -86,6 +93,7 @@ export function DateRangePicker({
   disabled = false,
   className,
 }: DateRangePickerProps) {
+  const [open, setOpen] = React.useState(false);
   const handleRangeSelect = React.useCallback(
     (range?: DateRange) => {
       onDateRangeChange?.(range);
@@ -93,16 +101,22 @@ export function DateRangePicker({
     [onDateRangeChange],
   );
 
+  React.useEffect(() => {
+    if (dateRange?.from && dateRange?.to) {
+      setOpen(false);
+    }
+  }, [dateRange?.from, dateRange?.to]);
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
           disabled={disabled}
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal border-input",
             !dateRange && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -116,7 +130,7 @@ export function DateRangePicker({
               format(dateRange.from, "LLL dd, y")
             )
           ) : (
-            <span>{placeholder}</span>
+            <span className="text-muted-foreground">{placeholder}</span>
           )}
         </Button>
       </PopoverTrigger>

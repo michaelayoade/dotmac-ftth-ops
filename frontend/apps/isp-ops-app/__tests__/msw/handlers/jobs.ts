@@ -2,7 +2,7 @@
  * MSW Handlers for Jobs API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { Job, FieldInstallationJob, JobsResponse } from '../../../hooks/useJobs';
 
 // In-memory storage for test data
@@ -96,8 +96,8 @@ export function seedJobsData(jobsData: Job[]) {
 
 export const jobsHandlers = [
   // GET /api/v1/jobs - List jobs with filters
-  rest.get('*/api/v1/jobs', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/jobs', ({ request, params }) => {
+    const url = new URL(request.url);
     const status = url.searchParams.get('status');
     const jobType = url.searchParams.get('job_type');
     const limit = parseInt(url.searchParams.get('limit') || '50');
@@ -126,23 +126,23 @@ export const jobsHandlers = [
       offset,
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // POST /api/v1/jobs/:id/cancel - Cancel a job
-  rest.post('*/api/v1/jobs/:id/cancel', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/jobs/:id/cancel', ({ request, params }) => {
+    const { id } = params;
     const job = jobs.find((j) => j.id === id);
 
     if (!job) {
-      return res(ctx.status(404), ctx.json({ error: 'Job not found' }));
+      return HttpResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
     // Only allow cancelling certain statuses
     if (job.status === 'completed' || job.status === 'cancelled') {
-      return res(
-        ctx.status(400),
-        ctx.json({ error: 'Cannot cancel a job that is already completed or cancelled' })
+      return HttpResponse.json(
+        { error: 'Cannot cancel a job that is already completed or cancelled' },
+        { status: 400 }
       );
     }
 
@@ -150,24 +150,24 @@ export const jobsHandlers = [
     job.cancelled_at = new Date().toISOString();
     job.cancelled_by = 'user-123';
 
-    return res(ctx.json(job));
+    return HttpResponse.json(job);
   }),
 
   // GET /api/v1/jobs/:id - Get single job
-  rest.get('*/api/v1/jobs/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/api/v1/jobs/:id', ({ request, params }) => {
+    const { id } = params;
     const job = jobs.find((j) => j.id === id);
 
     if (!job) {
-      return res(ctx.status(404), ctx.json({ error: 'Job not found' }));
+      return HttpResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
-    return res(ctx.json(job));
+    return HttpResponse.json(job);
   }),
 
   // POST /api/v1/jobs - Create a new job
-  rest.post('*/api/v1/jobs', (req, res, ctx) => {
-    const data = req.body as Partial<Job>;
+  http.post('*/api/v1/jobs', async ({ request, params }) => {
+    const data = await request.json() as Partial<Job>;
 
     const newJob = createMockJob({
       ...data,
@@ -177,18 +177,18 @@ export const jobsHandlers = [
 
     jobs.push(newJob);
 
-    return res(ctx.status(201), ctx.json(newJob));
+    return HttpResponse.json(newJob, { status: 201 });
   }),
 
   // PATCH /api/v1/jobs/:id - Update a job
-  rest.patch('*/api/v1/jobs/:id', (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = req.body as Partial<Job>;
+  http.patch('*/api/v1/jobs/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json() as Partial<Job>;
 
     const index = jobs.findIndex((j) => j.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Job not found' }));
+      return HttpResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
     jobs[index] = {
@@ -196,6 +196,6 @@ export const jobsHandlers = [
       ...updates,
     };
 
-    return res(ctx.json(jobs[index]));
+    return HttpResponse.json(jobs[index]);
   }),
 ];

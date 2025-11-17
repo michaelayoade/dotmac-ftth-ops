@@ -34,12 +34,6 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-jest.mock("@dotmac/ui", () => ({
-  useToast: () => ({
-    toast: jest.fn(),
-  }),
-}));
-
 jest.mock("@/lib/api/response-helpers", () => ({
   extractDataOrThrow: jest.fn((response, _errorMsg) => response.data),
 }));
@@ -64,6 +58,10 @@ describe("useSettings", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    global.mockToast.mockClear();
+    (extractDataOrThrow as jest.Mock).mockImplementation(
+      (response: any, _errorMsg: string) => response.data,
+    );
   });
 
   describe("useSettingsCategories - list categories", () => {
@@ -658,11 +656,6 @@ describe("useSettings", () => {
       (apiClient.put as jest.Mock).mockResolvedValue({ data: mockUpdatedSettings });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockUpdatedSettings);
 
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
-      });
-
       const { result } = renderHook(() => useUpdateCategorySettings(), {
         wrapper: createWrapper(),
       });
@@ -674,9 +667,11 @@ describe("useSettings", () => {
         });
       });
 
-      expect(mockToast).toHaveBeenCalledWith({
-        title: "Settings updated",
-        description: "Redis Cache settings were updated successfully.",
+      await waitFor(() => {
+        expect(global.mockToast).toHaveBeenCalledWith({
+          title: "Settings updated",
+          description: "Redis Cache settings were updated successfully.",
+        });
       });
     });
 
@@ -690,11 +685,6 @@ describe("useSettings", () => {
       };
 
       (apiClient.put as jest.Mock).mockRejectedValue(error);
-
-      const mockToast = jest.fn();
-      jest.spyOn(require("@dotmac/ui"), "useToast").mockReturnValue({
-        toast: mockToast,
-      });
 
       const { result } = renderHook(() => useUpdateCategorySettings(), {
         wrapper: createWrapper(),
@@ -712,7 +702,7 @@ describe("useSettings", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Update failed",
           description: "Update failed",
           variant: "destructive",

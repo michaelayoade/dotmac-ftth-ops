@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   Subscriber,
   SubscriberService,
@@ -121,8 +121,8 @@ export function createMockStatistics(): SubscriberStatistics {
 
 export const subscriberHandlers = [
   // GET /subscribers - List subscribers
-  rest.get('*/subscribers', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/subscribers', ({ request, params }) => {
+    const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const search = url.searchParams.get('search');
@@ -205,51 +205,49 @@ export const subscriberHandlers = [
     console.log('[MSW] Returning', paginated.length, 'subscribers');
 
     // Return in the format expected by the hook
-    return res(
-      ctx.json({
-        items: paginated,
-        total: filtered.length,
-      })
-    );
+    return HttpResponse.json({
+      items: paginated,
+      total: filtered.length,
+    });
   }),
 
   // GET /subscribers/statistics - Get subscriber statistics
   // NOTE: This MUST come before /subscribers/:id to avoid matching "statistics" as an ID
-  rest.get('*/subscribers/statistics', (req, res, ctx) => {
+  http.get('*/subscribers/statistics', ({ request, params }) => {
     const stats = createMockStatistics();
-    return res(ctx.json(stats));
+    return HttpResponse.json(stats);
   }),
 
   // GET /subscribers/:id/services - Get subscriber services
   // NOTE: This MUST come before /subscribers/:id to avoid matching "services" as an ID
-  rest.get('*/subscribers/:id/services', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/subscribers/:id/services', ({ request, params }) => {
+    const { id } = params;
 
     const subscriberServices = services.filter((svc) => svc.subscriber_id === id);
 
-    return res(ctx.json(subscriberServices));
+    return HttpResponse.json(subscriberServices);
   }),
 
   // GET /subscribers/:id - Get single subscriber
   // NOTE: This must come AFTER all specific routes like /statistics and /:id/services
-  rest.get('*/subscribers/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/subscribers/:id', ({ request, params }) => {
+    const { id } = params;
 
     const subscriber = subscribers.find((sub) => sub.id === id);
 
     if (!subscriber) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Subscriber not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Subscriber not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(subscriber));
+    return HttpResponse.json(subscriber);
   }),
 
   // POST /subscribers - Create subscriber
-  rest.post('*/subscribers', (req, res, ctx) => {
-    const data = req.body as CreateSubscriberRequest;
+  http.post('*/subscribers', async ({ request, params }) => {
+    const data = await request.json() as CreateSubscriberRequest;
 
     const newSubscriber = createMockSubscriber({
       ...data,
@@ -258,20 +256,20 @@ export const subscriberHandlers = [
 
     subscribers.push(newSubscriber);
 
-    return res(ctx.status(201), ctx.json(newSubscriber));
+    return HttpResponse.json(newSubscriber, { status: 201 });
   }),
 
   // PATCH /subscribers/:id - Update subscriber
-  rest.patch('*/subscribers/:id', (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = req.body as UpdateSubscriberRequest;
+  http.patch('*/subscribers/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json() as UpdateSubscriberRequest;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Subscriber not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Subscriber not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -281,81 +279,81 @@ export const subscriberHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(subscribers[index]));
+    return HttpResponse.json(subscribers[index]);
   }),
 
   // DELETE /subscribers/:id - Delete subscriber
-  rest.delete('*/subscribers/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/subscribers/:id', ({ request, params }) => {
+    const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Subscriber not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Subscriber not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     subscribers.splice(index, 1);
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /subscribers/:id/suspend - Suspend subscriber
-  rest.post('*/subscribers/:id/suspend', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/subscribers/:id/suspend', ({ request, params }) => {
+    const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Subscriber not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Subscriber not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     subscribers[index].status = 'suspended';
     subscribers[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(200), ctx.json(subscribers[index]));
+    return HttpResponse.json(subscribers[index], { status: 200 });
   }),
 
   // POST /subscribers/:id/activate - Activate subscriber
-  rest.post('*/subscribers/:id/activate', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/subscribers/:id/activate', ({ request, params }) => {
+    const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Subscriber not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Subscriber not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     subscribers[index].status = 'active';
     subscribers[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(200), ctx.json(subscribers[index]));
+    return HttpResponse.json(subscribers[index], { status: 200 });
   }),
 
   // POST /subscribers/:id/terminate - Terminate subscriber
-  rest.post('*/subscribers/:id/terminate', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/subscribers/:id/terminate', ({ request, params }) => {
+    const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Subscriber not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Subscriber not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     subscribers[index].status = 'terminated';
     subscribers[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(200), ctx.json(subscribers[index]));
+    return HttpResponse.json(subscribers[index], { status: 200 });
   }),
 ];

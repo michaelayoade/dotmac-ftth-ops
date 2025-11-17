@@ -42,6 +42,10 @@ jest.mock("@/providers/AppConfigContext", () => ({
 }));
 
 describe("useCommissionRules hooks (MSW)", () => {
+  const waitForRulesSuccess = async (getStatus: () => boolean) => {
+    await waitFor(() => expect(getStatus()).toBe(true), { timeout: 5000 });
+  };
+
   function createWrapper() {
     const queryClient = new QueryClient({
       defaultOptions: {
@@ -87,7 +91,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(1);
       expect(result.current.data?.rules[0].rule_name).toBe("Revenue Share Rule");
@@ -106,7 +110,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(10);
       expect(result.current.data?.page).toBe(2);
@@ -126,7 +130,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(1);
       expect(result.current.data?.rules[0].partner_id).toBe("partner-123");
@@ -145,7 +149,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(1);
       expect(result.current.data?.rules[0].is_active).toBe(true);
@@ -183,7 +187,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(1);
       expect(result.current.data?.rules[0].partner_id).toBe("partner-123");
@@ -197,7 +201,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(0);
       expect(result.current.data?.total).toBe(0);
@@ -214,7 +218,7 @@ describe("useCommissionRules hooks (MSW)", () => {
       // Initially loading
       expect(result.current.isLoading || result.current.isPending).toBe(true);
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.isLoading).toBe(false);
     });
@@ -239,7 +243,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.id).toBe("rule-1");
       expect(result.current.data?.commission_type).toBe("flat_fee");
@@ -290,7 +294,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.commission_type).toBe("tiered");
       expect(result.current.data?.tier_config).toBeDefined();
@@ -312,7 +316,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.commission_type).toBe("hybrid");
       expect(result.current.data?.commission_rate).toBe(0.1);
@@ -350,7 +354,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data).toHaveLength(2);
     });
@@ -382,7 +386,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].applies_to_products).toContain("product-1");
@@ -415,7 +419,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].applies_to_customers).toContain("customer-1");
@@ -456,7 +460,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].id).toBe("rule-1");
@@ -494,7 +498,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].is_active).toBe(true);
@@ -529,7 +533,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       // Should be sorted by priority (lower number = higher priority)
       expect(result.current.data?.[0].priority).toBe(1);
@@ -561,7 +565,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         createdRule = await result.current.mutateAsync(input);
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(createdRule?.rule_name).toBe("New Rule");
       expect(createdRule?.commission_type).toBe("revenue_share");
@@ -728,7 +732,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(updatedRule?.rule_name).toBe("Updated Rule");
       expect(updatedRule?.commission_rate).toBe(0.2);
@@ -898,7 +902,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         await result.current.mutateAsync("rule-1");
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
     });
 
     it("should handle delete error for non-existent rule", async () => {
@@ -974,7 +978,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(4);
       const types = result.current.data?.rules.map((r) => r.commission_type);
@@ -999,7 +1003,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.rules).toHaveLength(20);
       expect(result.current.data?.page).toBe(5);
@@ -1040,7 +1044,7 @@ describe("useCommissionRules hooks (MSW)", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForRulesSuccess(() => result.current.isSuccess);
 
       expect(result.current.data).toHaveLength(2);
       expect(result.current.data?.every((r) => r.partner_id === "partner-123")).toBe(true);

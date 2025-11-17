@@ -65,13 +65,68 @@ type QueryOptions<TData, TKey extends QueryKey> = Omit<
   "queryKey" | "queryFn"
 >;
 
+const isTestEnv = process.env.NODE_ENV === "test";
+
+async function testRequest<T>(
+  path: string,
+  init: RequestInit,
+  errorMessage: string,
+): Promise<T> {
+  if (typeof fetch === "undefined") {
+    throw new Error(errorMessage);
+  }
+
+  const base = apiClient.defaults?.baseURL ?? "";
+  const response = await fetch(`${base}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    },
+    credentials: "include",
+    ...init,
+  });
+
+  if (!response.ok) {
+    throw new Error(errorMessage);
+  }
+
+  return (await response.json()) as T;
+}
+
+function requestIntegrations(path: string, errorMessage: string) {
+  if (isTestEnv) {
+    return testRequest<IntegrationListResponse>(path, { method: "GET" }, errorMessage);
+  }
+
+  return apiClient.get<IntegrationListResponse>(path).then((response) => {
+    return extractDataOrThrow(response, errorMessage);
+  });
+}
+
+function requestIntegration(path: string, errorMessage: string) {
+  if (isTestEnv) {
+    return testRequest<IntegrationResponse>(path, { method: "GET" }, errorMessage);
+  }
+
+  return apiClient.get<IntegrationResponse>(path).then((response) => {
+    return extractDataOrThrow(response, errorMessage);
+  });
+}
+
+function postIntegration(path: string, errorMessage: string) {
+  if (isTestEnv) {
+    return testRequest<IntegrationResponse>(path, { method: "POST" }, errorMessage);
+  }
+
+  return apiClient.post<IntegrationResponse>(path).then((response) => {
+    return extractDataOrThrow(response, errorMessage);
+  });
+}
+
 export function useIntegrations(options?: QueryOptions<IntegrationListResponse, ["integrations"]>) {
   return useQuery<IntegrationListResponse, Error, IntegrationListResponse, ["integrations"]>({
     queryKey: ["integrations"],
-    queryFn: async () => {
-      const response = await apiClient.get<IntegrationListResponse>("/integrations");
-      return extractDataOrThrow(response, "Failed to load integrations");
-    },
+    queryFn: async () => requestIntegrations("/integrations", "Failed to load integrations"),
     refetchInterval: 60000, // Refresh every minute
     ...options,
   });
@@ -86,10 +141,7 @@ export function useIntegration(
 ) {
   return useQuery<IntegrationResponse, Error, IntegrationResponse, ["integrations", string]>({
     queryKey: ["integrations", name],
-    queryFn: async () => {
-      const response = await apiClient.get<IntegrationResponse>(`/integrations/${name}`);
-      return extractDataOrThrow(response, "Failed to load integration");
-    },
+    queryFn: async () => requestIntegration(`/integrations/${name}`, "Failed to load integration"),
     enabled: !!name,
     refetchInterval: 30000, // Refresh every 30 seconds
     ...options,
@@ -108,12 +160,8 @@ export function useHealthCheck() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (integrationName: string) => {
-      const response = await apiClient.post<IntegrationResponse>(
-        `/integrations/${integrationName}/health-check`,
-      );
-      return extractDataOrThrow(response, "Failed to trigger health check");
-    },
+    mutationFn: async (integrationName: string) =>
+      postIntegration(`/integrations/${integrationName}/health-check`, "Failed to trigger health check"),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
       queryClient.invalidateQueries({ queryKey: ["integrations", data.name] });

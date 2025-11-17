@@ -10,7 +10,9 @@ import { getRuntimeConfigSnapshot } from "../../../shared/runtime/runtime-config
 const DEFAULT_API_PREFIX = "/api/v1";
 
 const rawApiBaseUrl =
-  process.env["NEXT_PUBLIC_API_BASE_URL"] ?? process.env["NEXT_PUBLIC_API_URL"] ?? "";
+  process.env["NEXT_PUBLIC_API_BASE_URL"] ??
+  process.env["NEXT_PUBLIC_API_URL"] ??
+  (process.env["NODE_ENV"] === "test" ? "http://localhost:3000" : "");
 let apiBaseUrl = sanitizeBaseUrl(rawApiBaseUrl);
 let apiPrefix = normalizeApiPrefix(process.env["NEXT_PUBLIC_API_PREFIX"] ?? DEFAULT_API_PREFIX);
 

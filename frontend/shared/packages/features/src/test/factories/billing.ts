@@ -2,7 +2,8 @@
  * Test data factories for billing module
  */
 
-import type { Invoice } from "../../billing/components/InvoiceList";
+import type { Invoice } from "../../billing/types";
+import { InvoiceStatus, PaymentStatus } from "../../billing/types";
 
 let invoiceCounter = 1;
 let receiptCounter = 1;
@@ -15,20 +16,26 @@ export const createMockInvoice = (overrides?: Partial<Invoice>): Invoice => {
   const id = invoiceCounter++;
   const amount = overrides?.total_amount ?? 150.0;
   const paidAmount = overrides?.amount_paid ?? 0;
+  const invoiceIdValue = overrides?.invoice_id ?? `inv_${id}`;
+  const invoiceNumberValue = overrides?.invoice_number ?? `INV-${String(id).padStart(5, "0")}`;
 
   return {
-    invoice_id: `inv_${id}`,
-    invoice_number: `INV-${String(id).padStart(5, "0")}`,
+    id: overrides?.id ?? invoiceIdValue,
+    invoice_id: invoiceIdValue,
+    invoice_number: invoiceNumberValue,
+    tenant_id: overrides?.tenant_id ?? "tenant_123",
     customer_id: "cust_123",
     billing_email: "customer@example.com",
     total_amount: amount,
     amount_due: amount - paidAmount,
     amount_paid: paidAmount,
+    amount_remaining: amount - paidAmount,
     currency: "USD",
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
-    status: "draft",
-    payment_status: "unpaid",
+    updated_at: new Date().toISOString(),
+    status: InvoiceStatus.DRAFT,
+    payment_status: PaymentStatus.PENDING,
     ...overrides,
   };
 };
@@ -38,8 +45,8 @@ export const createMockInvoice = (overrides?: Partial<Invoice>): Invoice => {
  */
 export const createOverdueInvoice = (overrides?: Partial<Invoice>): Invoice => {
   return createMockInvoice({
-    status: "sent",
-    payment_status: "unpaid",
+    status: InvoiceStatus.OPEN,
+    payment_status: PaymentStatus.PENDING,
     due_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
     ...overrides,
   });
@@ -51,8 +58,8 @@ export const createOverdueInvoice = (overrides?: Partial<Invoice>): Invoice => {
 export const createPaidInvoice = (overrides?: Partial<Invoice>): Invoice => {
   const amount = overrides?.total_amount ?? 150.0;
   return createMockInvoice({
-    status: "sent",
-    payment_status: "paid",
+    status: InvoiceStatus.PAID,
+    payment_status: PaymentStatus.PAID,
     amount_paid: amount,
     amount_due: 0,
     ...overrides,
@@ -68,8 +75,8 @@ export const createPartiallyPaidInvoice = (
   const amount = overrides?.total_amount ?? 150.0;
   const paidAmount = amount * 0.5;
   return createMockInvoice({
-    status: "sent",
-    payment_status: "partial",
+    status: InvoiceStatus.OPEN,
+    payment_status: PaymentStatus.PROCESSING,
     amount_paid: paidAmount,
     amount_due: amount - paidAmount,
     total_amount: amount,
@@ -82,8 +89,8 @@ export const createPartiallyPaidInvoice = (
  */
 export const createVoidedInvoice = (overrides?: Partial<Invoice>): Invoice => {
   return createMockInvoice({
-    status: "void",
-    payment_status: "unpaid",
+    status: InvoiceStatus.VOID,
+    payment_status: PaymentStatus.FAILED,
     ...overrides,
   });
 };

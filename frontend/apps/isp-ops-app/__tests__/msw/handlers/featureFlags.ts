@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { FeatureFlag, FlagStatus } from '../../../hooks/useFeatureFlags';
 
 // In-memory storage for test data
@@ -69,8 +69,8 @@ export function seedFeatureFlagsData(flags: FeatureFlag[], status?: FlagStatus) 
 
 export const featureFlagsHandlers = [
   // GET /api/v1/feature-flags/flags - List feature flags
-  rest.get('*/api/v1/feature-flags/flags', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/feature-flags/flags', ({ request, params }) => {
+    const url = new URL(request.url);
     const enabledOnly = url.searchParams.get('enabled_only') === 'true';
 
     console.log('[MSW] GET /api/v1/feature-flags/flags', { enabledOnly, totalFlags: featureFlags.length });
@@ -84,24 +84,24 @@ export const featureFlagsHandlers = [
 
     // Hook expects response.data to be array directly, OR response.data.data
     // Since axios wraps in response.data, just return the array
-    return res(ctx.json(filtered));
+    return HttpResponse.json(filtered);
   }),
 
   // GET /api/v1/feature-flags/status - Get flag status
-  rest.get('*/api/v1/feature-flags/status', (req, res, ctx) => {
+  http.get('*/api/v1/feature-flags/status', ({ request, params }) => {
     console.log('[MSW] GET /api/v1/feature-flags/status');
 
     // Update status counts based on current flags
     const status = createMockFlagStatus();
 
     // Hook expects response.data to be the status object
-    return res(ctx.json(status));
+    return HttpResponse.json(status);
   }),
 
   // PUT /api/v1/feature-flags/flags/:name - Toggle flag
-  rest.put('*/api/v1/feature-flags/flags/:name', async (req, res, ctx) => {
-    const { name } = req.params;
-    const body = await req.json() as { enabled: boolean };
+  http.put('*/api/v1/feature-flags/flags/:name', async ({ request, params }) => {
+    const { name } = params;
+    const body = await request.json() as { enabled: boolean };
 
     console.log('[MSW] PUT /api/v1/feature-flags/flags/:name', { name, enabled: body.enabled });
 
@@ -109,9 +109,9 @@ export const featureFlagsHandlers = [
 
     if (!flag) {
       console.log('[MSW] Flag not found', name);
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Feature flag not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Feature flag not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -121,22 +121,22 @@ export const featureFlagsHandlers = [
 
     console.log('[MSW] Toggled flag', name, 'to', body.enabled);
 
-    return res(ctx.json(flag));
+    return HttpResponse.json(flag);
   }),
 
   // POST /api/v1/feature-flags/flags/:name - Create flag
-  rest.post('*/api/v1/feature-flags/flags/:name', async (req, res, ctx) => {
-    const { name } = req.params;
-    const body = await req.json() as Partial<FeatureFlag>;
+  http.post('*/api/v1/feature-flags/flags/:name', async ({ request, params }) => {
+    const { name } = params;
+    const body = await request.json() as Partial<FeatureFlag>;
 
     console.log('[MSW] POST /api/v1/feature-flags/flags/:name', { name, body });
 
     // Check if flag already exists
     const existingFlag = featureFlags.find((f) => f.name === name);
     if (existingFlag) {
-      return res(
-        ctx.status(400),
-        ctx.json({ error: 'Feature flag already exists', code: 'ALREADY_EXISTS' })
+      return HttpResponse.json(
+        { error: 'Feature flag already exists', code: 'ALREADY_EXISTS' },
+        { status: 400 }
       );
     }
 
@@ -153,12 +153,12 @@ export const featureFlagsHandlers = [
 
     console.log('[MSW] Created flag', name);
 
-    return res(ctx.status(201), ctx.json(newFlag));
+    return HttpResponse.json(newFlag, { status: 201 });
   }),
 
   // DELETE /api/v1/feature-flags/flags/:name - Delete flag
-  rest.delete('*/api/v1/feature-flags/flags/:name', (req, res, ctx) => {
-    const { name } = req.params;
+  http.delete('*/api/v1/feature-flags/flags/:name', ({ request, params }) => {
+    const { name } = params;
 
     console.log('[MSW] DELETE /api/v1/feature-flags/flags/:name', { name });
 
@@ -166,9 +166,9 @@ export const featureFlagsHandlers = [
 
     if (index === -1) {
       console.log('[MSW] Flag not found', name);
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Feature flag not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Feature flag not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -176,6 +176,6 @@ export const featureFlagsHandlers = [
 
     console.log('[MSW] Deleted flag', name);
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

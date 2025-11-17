@@ -21,8 +21,6 @@ import type {
   ActivityType,
 } from "@/types/audit";
 
-const API_BASE = platformConfig.api.baseUrl;
-
 // ============================================
 // Additional Interfaces
 // ============================================
@@ -63,10 +61,12 @@ export interface ComplianceReport {
 // ============================================
 
 class AuditService {
-  private baseUrl: string;
+  private get baseUrl(): string {
+    return platformConfig.api.baseUrl || "";
+  }
 
-  constructor() {
-    this.baseUrl = API_BASE;
+  private buildUrl(path: string): string {
+    return platformConfig.api.buildUrl(path);
   }
 
   /**
@@ -112,7 +112,9 @@ class AuditService {
     if (filters.per_page) params.append("per_page", filters.per_page.toString());
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/audit/activities${queryString ? `?${queryString}` : ""}`;
+    const url = platformConfig.api.buildUrl(
+      `/audit/activities${queryString ? `?${queryString}` : ""}`,
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -136,7 +138,7 @@ class AuditService {
     params.append("days", days.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/audit/activities/recent?${params.toString()}`,
+      platformConfig.api.buildUrl(`/audit/activities/recent?${params.toString()}`),
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -165,7 +167,7 @@ class AuditService {
     params.append("days", days.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/audit/activities/user/${userId}?${params.toString()}`,
+      platformConfig.api.buildUrl(`/audit/activities/user/${userId}?${params.toString()}`),
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -183,7 +185,7 @@ class AuditService {
    * @returns Activity details
    */
   async getActivity(activityId: string): Promise<AuditActivity> {
-    const response = await fetch(`${this.baseUrl}/api/v1/audit/activities/${activityId}`, {
+    const response = await fetch(platformConfig.api.buildUrl(`/audit/activities/${activityId}`), {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -207,7 +209,7 @@ class AuditService {
     params.append("days", days.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/audit/activities/summary?${params.toString()}`,
+      platformConfig.api.buildUrl(`/audit/activities/summary?${params.toString()}`),
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -247,7 +249,7 @@ class AuditService {
    * @returns Export response with download URL
    */
   async exportLogs(request: AuditExportRequest): Promise<AuditExportResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/audit/export`, {
+    const response = await fetch(platformConfig.api.buildUrl("/audit/export"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -269,11 +271,14 @@ class AuditService {
     params.append("from_date", fromDate);
     params.append("to_date", toDate);
 
-    const response = await fetch(`${this.baseUrl}/api/v1/audit/compliance?${params.toString()}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-      credentials: "include",
-    });
+    const response = await fetch(
+      platformConfig.api.buildUrl(`/audit/compliance?${params.toString()}`),
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+      },
+    );
 
     return this.handleResponse<ComplianceReport>(response);
   }

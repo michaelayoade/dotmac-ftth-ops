@@ -269,9 +269,15 @@ describe("useSearch", () => {
     it("should use custom debounce time", async () => {
       (searchService.search as jest.Mock).mockResolvedValue({ results: [], total: 0 });
 
-      renderHook(() => useDebouncedSearch("test", undefined, 500), {
-        wrapper: createWrapper(),
-      });
+      const { rerender } = renderHook(
+        ({ query }) => useDebouncedSearch(query, undefined, 500),
+        {
+          wrapper: createWrapper(),
+          initialProps: { query: "" },
+        }
+      );
+
+      rerender({ query: "test" });
 
       // Clear any initial render calls
       (searchService.search as jest.Mock).mockClear();

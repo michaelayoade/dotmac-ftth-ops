@@ -23,13 +23,6 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-const toastMock = jest.fn();
-jest.mock("@dotmac/ui", () => ({
-  useToast: () => ({
-    toast: toastMock,
-  }),
-}));
-
 jest.mock("@/lib/logger", () => ({
   logger: {
     info: jest.fn(),
@@ -54,7 +47,6 @@ describe("Platform Admin useFiberMaps hooks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    toastMock.mockClear();
   });
 
   it("fetches fiber cables with filters", async () => {
@@ -87,7 +79,7 @@ describe("Platform Admin useFiberMaps hooks", () => {
       cable_name: "Spur",
     });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: fiberMapsKeys.cables({}) });
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Cable Created" }),
     );
   });

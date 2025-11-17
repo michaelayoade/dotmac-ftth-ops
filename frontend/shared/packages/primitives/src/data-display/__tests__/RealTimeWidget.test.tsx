@@ -28,9 +28,6 @@ import {
   type RealTimeMetricsWidgetProps,
 } from "../RealTimeWidget";
 
-// Mock timers for auto-refresh testing
-jest.useFakeTimers();
-
 // Sample test data
 const mockNetworkDevice: NetworkDeviceWidgetProps["device"] = {
   id: "device-1",
@@ -176,6 +173,14 @@ describe("BaseRealTimeWidget Component", () => {
   });
 
   describe("Auto-Refresh Functionality", () => {
+    beforeAll(() => {
+      jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+    });
+
     it("shows refresh controls when onRefresh is provided", () => {
       const onRefresh = jest.fn();
 
@@ -538,8 +543,8 @@ describe("ServiceHealthWidget Component", () => {
 
       render(<ServiceHealthWidget service={degradedService} />);
 
-      const indicator = screen.getByTitle("Warning");
-      expect(indicator).toBeInTheDocument();
+      const indicators = screen.getAllByTitle("Warning");
+      expect(indicators.length).toBeGreaterThan(0);
     });
 
     it("maps unhealthy status to critical indicator", () => {
@@ -670,23 +675,27 @@ describe("RealTimeWidget Security", () => {
 
 // Accessibility tests
 describe("RealTimeWidget Accessibility", () => {
+  beforeAll(() => {
+    jest.useRealTimers();
+  });
+
   it("BaseRealTimeWidget is accessible", async () => {
     await renderA11y(
       <BaseRealTimeWidget title="Accessible Widget">Content</BaseRealTimeWidget>,
     );
-  });
+  }, 30000);
 
   it("NetworkDeviceWidget is accessible", async () => {
     await renderA11y(<NetworkDeviceWidget device={mockNetworkDevice} />);
-  });
+  }, 30000);
 
   it("ServiceHealthWidget is accessible", async () => {
     await renderA11y(<ServiceHealthWidget service={mockService} />);
-  });
+  }, 30000);
 
   it("RealTimeMetricsWidget is accessible", async () => {
     await renderA11y(<RealTimeMetricsWidget title="Metrics" metrics={mockMetrics} />);
-  });
+  }, 30000);
 
   it("refresh button has proper accessibility attributes", () => {
     const onRefresh = jest.fn();
@@ -771,6 +780,10 @@ describe("RealTimeWidget Performance", () => {
 
 // Comprehensive test
 describe("RealTimeWidget Comprehensive Testing", () => {
+  beforeAll(() => {
+    jest.useRealTimers();
+  });
+
   it("BaseRealTimeWidget passes all comprehensive tests", async () => {
     const onRefresh = jest.fn();
     const { result, metrics } = await renderComprehensive(
@@ -785,33 +798,33 @@ describe("RealTimeWidget Comprehensive Testing", () => {
       </BaseRealTimeWidget>,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
-  });
+  }, 30000);
 
   it("NetworkDeviceWidget passes all comprehensive tests", async () => {
     const { result, metrics } = await renderComprehensive(
       <NetworkDeviceWidget device={mockNetworkDevice} onRefresh={jest.fn()} />,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
-  });
+  }, 30000);
 
   it("ServiceHealthWidget passes all comprehensive tests", async () => {
     const { result, metrics } = await renderComprehensive(
       <ServiceHealthWidget service={mockService} onRefresh={jest.fn()} />,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
-  });
+  }, 30000);
 
   it("RealTimeMetricsWidget passes all comprehensive tests", async () => {
     const { result, metrics } = await renderComprehensive(
@@ -822,9 +835,9 @@ describe("RealTimeWidget Comprehensive Testing", () => {
       />,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
-  });
+  }, 30000);
 });

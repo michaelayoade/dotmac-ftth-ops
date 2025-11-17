@@ -108,7 +108,12 @@ export default function FilesPage() {
         throw new Error("Delete failed");
       }
 
-      return response.json();
+      if (response.status === 204) {
+        return null;
+      }
+
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["files"] });

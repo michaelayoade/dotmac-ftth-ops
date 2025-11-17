@@ -9,7 +9,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Integer, String, Text
+from sqlalchemy import JSON, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -56,7 +56,7 @@ class TransferJob(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]
     total_records: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     processed_records: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     failed_records: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    progress_percentage: Mapped[float] = mapped_column(Integer, default=0, nullable=False)
+    progress_percentage: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
 
     # Timing
     started_at: Mapped[datetime | None] = mapped_column(nullable=True)

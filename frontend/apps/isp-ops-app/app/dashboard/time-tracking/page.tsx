@@ -5,7 +5,7 @@
  * Clock in/out and timesheet management for technicians
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -35,6 +35,8 @@ import {
 import type { TimeEntry, TimeEntryStatus, TimeEntryFilter } from "@/types/field-service";
 import { TimeEntryType } from "@/types/field-service";
 import { format, formatDuration, intervalToDuration } from "date-fns";
+import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 
 // ============================================================================
 // Clock In/Out Component
@@ -423,10 +425,24 @@ export default function TimeTrackingPage() {
     dateTo: format(new Date(), "yyyy-MM-dd"),
   });
 
-  // TODO: Get actual technician ID from auth context
-  const technicianId = "current-user-tech-id";
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user as ExtendedUser | undefined;
+  const technicianId = user?.technician_id ?? null;
+  const queryFilter = useMemo(() => {
+    if (!technicianId) {
+      return undefined;
+    }
+    return {
+      ...filter,
+      technicianId,
+    };
+  }, [filter, technicianId]);
 
-  const { data: entriesData, isLoading, isError } = useTimeEntries({ ...filter, technicianId });
+  const {
+    data: entriesData,
+    isLoading,
+    isError,
+  } = useTimeEntries(queryFilter, { enabled: Boolean(queryFilter) });
   const submitMutation = useSubmitTimeEntry();
   const approveMutation = useApproveTimeEntry();
   const rejectMutation = useRejectTimeEntry();
@@ -452,6 +468,34 @@ export default function TimeTrackingPage() {
   const handleReject = async (id: string, reason: string) => {
     await rejectMutation.mutateAsync({ id, reason });
   };
+
+  if (authLoading) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="py-12 text-center text-gray-500">Loading time tracking…</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!technicianId) {
+    return (
+      <div className="container mx-auto py-8 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Technician Profile Required</CardTitle>
+          </CardHeader>
+          <CardContent className="text-gray-600 space-y-2">
+            <p>
+              We couldn&apos;t find a technician profile for your account. Contact an administrator
+              to link your user before using the time tracking tools.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 space-y-6">

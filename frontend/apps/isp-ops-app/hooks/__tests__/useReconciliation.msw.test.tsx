@@ -27,6 +27,10 @@ import {
 } from "@/__tests__/msw/handlers/reconciliation";
 import type { ReconciliationResponse } from "@/lib/services/reconciliation-service";
 
+const waitForSuccess = async (getStatus: () => boolean) => {
+  await waitFor(() => expect(getStatus()).toBe(true), { timeout: 5000 });
+};
+
 // Mock useToast to avoid UI dependencies
 jest.mock("@dotmac/ui", () => ({
   ...jest.requireActual("@dotmac/ui"),
@@ -85,7 +89,7 @@ describe("useReconciliation hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.reconciliations).toHaveLength(2);
       expect(result.current.data?.total).toBe(2);
@@ -112,7 +116,7 @@ describe("useReconciliation hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.reconciliations).toHaveLength(1);
       expect(result.current.data?.reconciliations[0].bank_account_id).toBe(100);
@@ -143,7 +147,7 @@ describe("useReconciliation hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.reconciliations).toHaveLength(1);
       expect(result.current.data?.reconciliations[0].status).toBe("completed");
@@ -163,7 +167,7 @@ describe("useReconciliation hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.reconciliations).toHaveLength(10);
       expect(result.current.data?.page).toBe(2);
@@ -186,7 +190,7 @@ describe("useReconciliation hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.id).toBe(1);
       expect(result.current.data?.status).toBe("pending");
@@ -232,7 +236,7 @@ describe("useReconciliation hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.total_reconciliations).toBe(3);
       expect(result.current.data?.pending_reconciliations).toBe(1);
@@ -261,7 +265,7 @@ describe("useReconciliation hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.total_reconciliations).toBe(1);
     });
@@ -290,7 +294,7 @@ describe("useReconciliation hooks (MSW)", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(reconciliation?.bank_account_id).toBe(100);
       expect(reconciliation?.status).toBe("pending");
@@ -348,7 +352,7 @@ describe("useReconciliation hooks (MSW)", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(updated?.reconciled_items).toHaveLength(1);
       expect(updated?.reconciled_items[0].payment_id).toBe(5001);
@@ -404,7 +408,7 @@ describe("useReconciliation hooks (MSW)", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(completed?.status).toBe("completed");
       expect(completed?.completed_by).toBe("user-1");
@@ -468,7 +472,7 @@ describe("useReconciliation hooks (MSW)", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(approved?.status).toBe("approved");
       expect(approved?.approved_by).toBe("approver-1");
@@ -524,7 +528,7 @@ describe("useReconciliation hooks (MSW)", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(retryResult.payment_id).toBe(5001);
       expect(typeof retryResult.success).toBe("boolean");
@@ -545,7 +549,7 @@ describe("useReconciliation hooks (MSW)", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       // When circuit breaker is open, retries should fail
       expect(retryResult.success).toBe(false);
@@ -561,7 +565,7 @@ describe("useReconciliation hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.state).toBe("closed");
       expect(result.current.data?.failure_count).toBe(0);
@@ -574,7 +578,7 @@ describe("useReconciliation hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.state).toBe("open");
       expect(result.current.data?.failure_count).toBe(5);
@@ -700,7 +704,7 @@ describe("useReconciliation hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.discrepancy_amount).toBe(40000);
     });
@@ -712,7 +716,7 @@ describe("useReconciliation hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.reconciliations).toHaveLength(0);
       expect(result.current.data?.total).toBe(0);

@@ -2,7 +2,9 @@
  * E2E tests for GraphQL API integration
  * Tests GraphQL queries, mutations, and their effects on the UI
  */
-import { test, expect, type APIRequestContext } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+import type { APIRequestContext } from "@playwright/test";
+
 
 test.describe("GraphQL API Integration", () => {
   const BASE_URL = process.env.API_BASE_URL || "http://localhost:8000";

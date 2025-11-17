@@ -66,6 +66,9 @@ export default defineConfig({
       }
     : undefined,
 
+  globalSetup: "./e2e/global-setup.ts",
+  globalTeardown: "./e2e/global-teardown.ts",
+
   timeout: testTimeout,
   expect: {
     timeout: expectTimeout,

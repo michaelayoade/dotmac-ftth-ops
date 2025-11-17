@@ -10,8 +10,6 @@
 
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.api.baseUrl;
-
 // ============================================
 // Type Definitions
 // ============================================
@@ -165,10 +163,12 @@ export interface UsageChartFilters {
 // ============================================
 
 class UsageBillingService {
-  private baseUrl: string;
+  private get baseUrl(): string {
+    return platformConfig.api.baseUrl || "";
+  }
 
-  constructor() {
-    this.baseUrl = API_BASE;
+  private buildUrl(path: string): string {
+    return platformConfig.api.buildUrl(path);
   }
 
   /**
@@ -231,9 +231,7 @@ class UsageBillingService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/billing/usage/records${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(`/billing/usage/records${queryString ? `?${queryString}` : ""}`);
 
     const response = await fetch(url, {
       method: "GET",
@@ -252,7 +250,7 @@ class UsageBillingService {
    * @returns Usage record details
    */
   async getUsageRecord(recordId: string): Promise<UsageRecord> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/usage/records/${recordId}`, {
+    const response = await fetch(this.buildUrl(`/billing/usage/records/${recordId}`), {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -268,7 +266,7 @@ class UsageBillingService {
    * @returns Created usage record
    */
   async createUsageRecord(data: UsageRecordCreate): Promise<UsageRecord> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/usage/records`, {
+    const response = await fetch(this.buildUrl("/billing/usage/records"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -285,7 +283,7 @@ class UsageBillingService {
    * @returns Created usage records
    */
   async createUsageRecordsBulk(records: UsageRecordCreate[]): Promise<UsageRecord[]> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/usage/records/bulk`, {
+    const response = await fetch(this.buildUrl("/billing/usage/records/bulk"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -304,7 +302,7 @@ class UsageBillingService {
    * @returns Updated usage record
    */
   async updateUsageRecord(recordId: string, data: UsageRecordUpdate): Promise<UsageRecord> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/usage/records/${recordId}`, {
+    const response = await fetch(this.buildUrl(`/billing/usage/records/${recordId}`), {
       method: "PATCH",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -320,7 +318,7 @@ class UsageBillingService {
    * @param recordId - Record UUID
    */
   async deleteUsageRecord(recordId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/usage/records/${recordId}`, {
+    const response = await fetch(this.buildUrl(`/billing/usage/records/${recordId}`), {
       method: "DELETE",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -339,7 +337,7 @@ class UsageBillingService {
    * @param invoiceId - Invoice ID
    */
   async markUsageRecordsAsBilled(recordIds: string[], invoiceId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/usage/records/mark-billed`, {
+    const response = await fetch(this.buildUrl("/billing/usage/records/mark-billed"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -358,7 +356,7 @@ class UsageBillingService {
    * @param recordIds - Array of record UUIDs
    */
   async excludeUsageRecordsFromBilling(recordIds: string[]): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/usage/records/exclude`, {
+    const response = await fetch(this.buildUrl("/billing/usage/records/exclude"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -410,9 +408,7 @@ class UsageBillingService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/billing/usage/aggregates${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(`/billing/usage/aggregates${queryString ? `?${queryString}` : ""}`);
 
     const response = await fetch(url, {
       method: "GET",
@@ -446,7 +442,7 @@ class UsageBillingService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/billing/usage/stats${queryString ? `?${queryString}` : ""}`;
+    const url = this.buildUrl(`/billing/usage/stats${queryString ? `?${queryString}` : ""}`);
 
     const response = await fetch(url, {
       method: "GET",
@@ -479,9 +475,9 @@ class UsageBillingService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/billing/usage/analytics/chart${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(
+      `/billing/usage/analytics/chart${queryString ? `?${queryString}` : ""}`,
+    );
 
     const response = await fetch(url, {
       method: "GET",

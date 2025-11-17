@@ -8,16 +8,8 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { useOrchestrationWorkflows } from "../useOrchestrationWorkflows";
-import { useToast } from "@dotmac/ui";
 
 jest.unmock("@tanstack/react-query");
-
-const toastMock = jest.fn();
-jest.mock("@dotmac/ui", () => ({
-  useToast: () => ({
-    toast: toastMock,
-  }),
-}));
 
 const buildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
@@ -39,6 +31,7 @@ jest.mock("@/providers/AppConfigContext", () => ({
 }));
 
 const fetchMock = jest.fn();
+const global.mockToast = jest.fn();
 
 describe("Platform Admin useOrchestrationWorkflows hook", () => {
   const createWrapper = () => {
@@ -71,19 +64,23 @@ describe("Platform Admin useOrchestrationWorkflows hook", () => {
       });
 
     const { wrapper, queryClient } = createWrapper();
-    const workflowsHook = renderHook(() => useOrchestrationWorkflows(), { wrapper });
+    const workflowsHook = renderHook(() => useOrchestrationWorkflows({ toast: global.mockToast }), {
+      wrapper,
+    });
     expect(typeof workflowsHook.result.current.useWorkflows).toBe("function");
 
     await act(async () => {
-      workflowsHook.result.current.retryWorkflow("wf-1");
+      await workflowsHook.result.current.retryWorkflow("wf-1");
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.com/api/v1/orchestration/workflows/wf-1/retry",
       expect.objectContaining({ method: "POST" }),
     );
-    expect(toastMock).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Workflow retried" }),
+    await waitFor(() =>
+      expect(global.mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "Workflow retried" }),
+      ),
     );
   });
 });

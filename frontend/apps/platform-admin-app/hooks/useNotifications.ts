@@ -10,6 +10,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useReducer, useRef } from "react";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 
@@ -761,6 +762,13 @@ export function useCommunicationLogs(options?: {
 
 export function useBulkNotifications() {
   const queryClient = useQueryClient();
+  const isSendingRef = useRef(false);
+  const [, forceRender] = useReducer((x) => x + 1, 0);
+
+  const setSending = (value: boolean) => {
+    isSendingRef.current = value;
+    forceRender();
+  };
 
   // Mutation: Send bulk notification
   const sendBulkNotificationMutation = useMutation({
@@ -789,12 +797,17 @@ export function useBulkNotifications() {
   };
 
   return {
-    isLoading: sendBulkNotificationMutation.isPending,
+    get isLoading() {
+      return isSendingRef.current;
+    },
     sendBulkNotification: async (data: BulkNotificationRequest) => {
+      setSending(true);
       try {
         return await sendBulkNotificationMutation.mutateAsync(data);
       } catch {
         return null;
+      } finally {
+        setSending(false);
       }
     },
     getBulkJobStatus,

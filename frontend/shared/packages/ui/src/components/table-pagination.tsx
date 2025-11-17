@@ -93,7 +93,7 @@ export function TablePagination({
 
   // Calculate displayed range
   const startItem = pageIndex * pageSize + 1;
-  const endItem = totalItems
+  const endItem = totalItems !== undefined
     ? Math.min((pageIndex + 1) * pageSize, totalItems)
     : (pageIndex + 1) * pageSize;
 

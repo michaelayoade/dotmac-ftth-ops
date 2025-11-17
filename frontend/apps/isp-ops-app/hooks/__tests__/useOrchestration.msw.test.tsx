@@ -5,6 +5,18 @@
  * Tests the actual hook contracts: useOrchestrationStats, useWorkflows, useWorkflow, etc.
  */
 
+jest.mock("@/lib/config", () => ({
+  platformConfig: {
+    api: {
+      baseUrl: "http://localhost:3000",
+      prefix: "/api/v1",
+      timeout: 30000,
+      buildUrl: (path: string) => `http://localhost:3000/api/v1${path}`,
+      graphqlEndpoint: "http://localhost:3000/api/v1/graphql",
+    },
+  },
+}));
+
 import { renderHook, waitFor, act } from "@testing-library/react";
 import {
   useOrchestrationStats,
@@ -13,6 +25,7 @@ import {
   useRetryWorkflow,
   useCancelWorkflow,
   useExportWorkflows,
+  orchestrationKeys,
   type WorkflowType,
   type WorkflowStatus,
 } from "../useOrchestration";
@@ -135,7 +148,7 @@ describe("useOrchestration (MSW)", () => {
     });
 
     it("should handle fetch error", async () => {
-      makeApiEndpointFail('get', '/api/v1/orchestration/stats', 'Server error', 500);
+      makeApiEndpointFail('get', '/api/v1/orchestration/statistics', 'Server error', 500);
 
       const { result } = renderHook(() => useOrchestrationStats(), {
         wrapper: createWrapper(),
@@ -458,6 +471,47 @@ describe("useOrchestration (MSW)", () => {
 
       expect(result.current.error).toBeNull();
     });
+
+    it("should invalidate workflow queries after retry", async () => {
+      const mockWorkflows = [
+        createMockWorkflow({
+          workflow_id: "wf-1",
+          status: "failed",
+        }),
+      ];
+
+      seedOrchestrationData(mockWorkflows);
+
+      const filters = {
+        status: "failed" as WorkflowStatus,
+        workflowType: "provision_subscriber" as WorkflowType,
+        page: 1,
+        pageSize: 20,
+      };
+      const workflowQueryClient = createTestQueryClient();
+      workflowQueryClient.setQueryData(orchestrationKeys.workflows(filters), {
+        workflows: mockWorkflows,
+        total: 1,
+        page: 1,
+        page_size: 20,
+        total_pages: 1,
+      });
+
+      const { result } = renderHook(() => useRetryWorkflow(), {
+        wrapper: createWrapper(workflowQueryClient),
+      });
+
+      await act(async () => {
+        await result.current.retryWorkflow("wf-1");
+      });
+
+      const workflowQueryState = workflowQueryClient.getQueryState(
+        orchestrationKeys.workflows(filters),
+      );
+      expect(workflowQueryState?.isInvalidated).toBe(true);
+
+      workflowQueryClient.clear();
+    });
   });
 
   describe("useCancelWorkflow", () => {
@@ -537,6 +591,46 @@ describe("useOrchestration (MSW)", () => {
       });
 
       expect(result.current.error).toBeTruthy();
+    });
+
+    it("should invalidate workflow queries after cancel", async () => {
+      const mockWorkflows = [
+        createMockWorkflow({
+          workflow_id: "wf-1",
+          status: "running",
+        }),
+      ];
+
+      seedOrchestrationData(mockWorkflows);
+
+      const filters = {
+        status: "running" as WorkflowStatus,
+        page: 1,
+        pageSize: 20,
+      };
+      const workflowQueryClient = createTestQueryClient();
+      workflowQueryClient.setQueryData(orchestrationKeys.workflows(filters), {
+        workflows: mockWorkflows,
+        total: 1,
+        page: 1,
+        page_size: 20,
+        total_pages: 1,
+      });
+
+      const { result } = renderHook(() => useCancelWorkflow(), {
+        wrapper: createWrapper(workflowQueryClient),
+      });
+
+      await act(async () => {
+        await result.current.cancelWorkflow("wf-1");
+      });
+
+      const workflowQueryState = workflowQueryClient.getQueryState(
+        orchestrationKeys.workflows(filters),
+      );
+      expect(workflowQueryState?.isInvalidated).toBe(true);
+
+      workflowQueryClient.clear();
     });
   });
 
@@ -955,4 +1049,5 @@ describe("useOrchestration (MSW)", () => {
       expect(statsResult.current.data?.pending).toBe(1);
     });
   });
+
 });

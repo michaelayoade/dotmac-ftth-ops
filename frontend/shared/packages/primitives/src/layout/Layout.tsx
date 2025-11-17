@@ -571,6 +571,221 @@ export const Center = forwardRef<HTMLDivElement, CenterProps>(
   },
 );
 
+// Layout variants for semantic layout components
+const layoutVariants = cva("", {
+  variants: {
+    variant: {
+      default: "",
+      "sidebar-left": "variant-sidebar-left",
+      "sidebar-right": "variant-sidebar-right",
+      "sidebar-both": "variant-sidebar-both",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+const layoutHeaderVariants = cva("", {
+  variants: {
+    height: {
+      default: "",
+      tall: "",
+      compact: "",
+    },
+  },
+  defaultVariants: {
+    height: "default",
+  },
+});
+
+const layoutContentVariants = cva("", {
+  variants: {
+    padding: {
+      none: "",
+      small: "",
+      medium: "",
+      large: "",
+    },
+  },
+  defaultVariants: {
+    padding: "medium",
+  },
+});
+
+const layoutSidebarVariants = cva("", {
+  variants: {
+    position: {
+      left: "position-left",
+      right: "position-right",
+    },
+    width: {
+      narrow: "width-narrow",
+      default: "",
+      wide: "width-wide",
+    },
+  },
+  defaultVariants: {
+    position: "left",
+    width: "default",
+  },
+});
+
+// Layout Component (semantic container)
+export interface LayoutProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof layoutVariants> {
+  asChild?: boolean;
+  responsive?: boolean;
+}
+
+export const Layout = forwardRef<HTMLDivElement, LayoutProps>(
+  ({ className, variant, responsive = false, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "div";
+
+    return (
+      <Comp
+        ref={ref}
+        className={clsx(
+          layoutVariants({ variant }),
+          "layout",
+          {
+            responsive,
+          },
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
+
+// LayoutHeader Component
+export interface LayoutHeaderProps
+  extends React.HTMLAttributes<HTMLElement>,
+    VariantProps<typeof layoutHeaderVariants> {
+  asChild?: boolean;
+  sticky?: boolean;
+}
+
+export const LayoutHeader = forwardRef<HTMLElement, LayoutHeaderProps>(
+  ({ className, height, sticky = false, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "header";
+
+    return (
+      <Comp
+        ref={ref}
+        className={clsx(
+          layoutHeaderVariants({ height }),
+          "layout-header",
+          {
+            sticky,
+          },
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
+
+// LayoutContent Component
+export interface LayoutContentProps
+  extends React.HTMLAttributes<HTMLElement>,
+    VariantProps<typeof layoutContentVariants> {
+  asChild?: boolean;
+  scrollable?: boolean;
+}
+
+export const LayoutContent = forwardRef<HTMLElement, LayoutContentProps>(
+  ({ className, padding, scrollable = false, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "main";
+
+    return (
+      <Comp
+        ref={ref}
+        className={clsx(
+          layoutContentVariants({ padding }),
+          "layout-content",
+          {
+            scrollable,
+          },
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
+
+// LayoutSidebar Component
+export interface LayoutSidebarProps
+  extends React.HTMLAttributes<HTMLElement>,
+    VariantProps<typeof layoutSidebarVariants> {
+  asChild?: boolean;
+  collapsible?: boolean;
+  collapsed?: boolean;
+}
+
+export const LayoutSidebar = forwardRef<HTMLElement, LayoutSidebarProps>(
+  (
+    {
+      className,
+      position,
+      width,
+      collapsible = false,
+      collapsed = false,
+      asChild = false,
+      ...props
+    },
+    ref,
+  ) => {
+    const Comp = asChild ? Slot : "aside";
+
+    return (
+      <Comp
+        ref={ref}
+        className={clsx(
+          layoutSidebarVariants({ position, width }),
+          "layout-sidebar",
+          {
+            collapsible,
+            collapsed,
+          },
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
+
+// LayoutFooter Component
+export interface LayoutFooterProps extends React.HTMLAttributes<HTMLElement> {
+  asChild?: boolean;
+  sticky?: boolean;
+}
+
+export const LayoutFooter = forwardRef<HTMLElement, LayoutFooterProps>(
+  ({ className, sticky = false, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "footer";
+
+    return (
+      <Comp
+        ref={ref}
+        className={clsx(
+          "layout-footer",
+          {
+            sticky,
+          },
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
+
 // Set display names
 Container.displayName = "Container";
 Grid.displayName = "Grid";
@@ -587,3 +802,8 @@ CardFooter.displayName = "CardFooter";
 Divider.displayName = "Divider";
 Spacer.displayName = "Spacer";
 Center.displayName = "Center";
+Layout.displayName = "Layout";
+LayoutHeader.displayName = "LayoutHeader";
+LayoutContent.displayName = "LayoutContent";
+LayoutSidebar.displayName = "LayoutSidebar";
+LayoutFooter.displayName = "LayoutFooter";

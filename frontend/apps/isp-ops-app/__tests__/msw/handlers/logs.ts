@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   LogEntry,
   LogsResponse,
@@ -92,7 +92,7 @@ export const logsHandlers = [
   // NOTE: This handler serves two different APIs:
   // 1. Without 'period' param: Returns log stats for useLogs (by_level, by_service, time_range)
   // 2. With 'period' param: Returns operations log stats for useLogStats (critical_logs, auth_logs, etc.)
-  rest.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
+  http.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
     const url = new URL(req.url);
     const period = url.searchParams.get('period') as '1h' | '24h' | '7d' | null;
 
@@ -101,23 +101,23 @@ export const logsHandlers = [
       // Check if there's seeded data from operations tests
       const storedStats = getStoredOperationsLogStats(period);
       const operationsStats = storedStats || createMockOperationsLogStats(period);
-      return res(ctx.json(operationsStats));
+      return HttpResponse.json(operationsStats);
     }
 
     // Without period parameter, return logs-style stats
     const stats = createLogStats();
-    return res(ctx.json(stats));
+    return HttpResponse.json(stats);
   }),
 
   // GET /api/v1/monitoring/logs/services - Get list of services
   // NOTE: This MUST come before /api/v1/monitoring/logs to avoid matching "/services" as a query param
-  rest.get('*/api/v1/monitoring/logs/services', (req, res, ctx) => {
+  http.get('*/api/v1/monitoring/logs/services', (req, res, ctx) => {
     const services = getUniqueServices();
-    return res(ctx.json(services));
+    return HttpResponse.json(services);
   }),
 
   // GET /api/v1/monitoring/logs - List logs
-  rest.get('*/api/v1/monitoring/logs', (req, res, ctx) => {
+  http.get('*/api/v1/monitoring/logs', (req, res, ctx) => {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const pageSize = parseInt(url.searchParams.get('page_size') || '100');
@@ -189,6 +189,6 @@ export const logsHandlers = [
       has_more: hasMore,
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 ];

@@ -5,7 +5,8 @@
  * Verifies that pages load, render correctly, and have no console errors
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from "#e2e/fixtures";
+
 
 // Test configuration
 const ISP_OPS_URL = process.env.ISP_OPS_URL || 'http://localhost:3001';

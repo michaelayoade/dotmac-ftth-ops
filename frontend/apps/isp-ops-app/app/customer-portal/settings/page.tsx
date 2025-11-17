@@ -190,7 +190,7 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="firstName"
                     value={profile.firstName}
-                    onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, firstName: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -198,7 +198,7 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="lastName"
                     value={profile.lastName}
-                    onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, lastName: e.target.value })}
                   />
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function CustomerSettingsPage() {
                   id="email"
                   type="email"
                   value={profile.email}
-                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, email: e.target.value })}
                 />
               </div>
 
@@ -225,7 +225,7 @@ export default function CustomerSettingsPage() {
                   id="phone"
                   type="tel"
                   value={profile.phone}
-                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, phone: e.target.value })}
                 />
               </div>
 

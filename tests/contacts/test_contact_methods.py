@@ -17,6 +17,9 @@ from tests.helpers import (
     build_mock_db_session,
     build_not_found_result,
     build_success_result,
+    create_entity_test_helper,
+    update_entity_test_helper,
+    delete_entity_test_helper,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -39,19 +42,25 @@ class TestContactMethods:
             is_primary=False,
         )
 
-        # Mock get_contact to return the sample contact
         with patch.object(service, "get_contact", return_value=sample_contact):
             with patch("dotmac.platform.contacts.service.cache_delete"):
-                method = await service.add_contact_method(
-                    contact_id=sample_contact.id,
-                    method_data=method_data,
+                method = await create_entity_test_helper(
+                    service=service,
+                    method_name="add_contact_method",
+                    create_data=method_data,
+                    mock_db_session=mock_db,
+                    expected_attributes={
+                        "value": "jane@example.com",
+                        "label": "Personal",
+                    },
                     tenant_id=tenant_id,
+                    contact_id=sample_contact.id,
+                    data_param_name="method_data",
                 )
 
         assert method is not None
-        assert method.value == "jane@example.com"
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
+        assert method.contact_id == sample_contact.id
+        assert method.label == "Personal"
 
     @pytest.mark.asyncio
     async def test_add_contact_method_not_found(self, tenant_id):
@@ -89,20 +98,25 @@ class TestContactMethods:
             country="US",
         )
 
-        # Mock get_contact to return the sample contact
         with patch.object(service, "get_contact", return_value=sample_contact):
             with patch("dotmac.platform.contacts.service.cache_delete"):
-                method = await service.add_contact_method(
-                    contact_id=sample_contact.id,
-                    method_data=method_data,
+                method = await create_entity_test_helper(
+                    service=service,
+                    method_name="add_contact_method",
+                    create_data=method_data,
+                    mock_db_session=mock_db,
+                    expected_attributes={
+                        "value": "456 Oak Ave",
+                        "city": "Boston",
+                    },
                     tenant_id=tenant_id,
+                    contact_id=sample_contact.id,
+                    data_param_name="method_data",
                 )
 
         assert method is not None
         assert method.type == ContactMethodType.ADDRESS
         assert method.city == "Boston"
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_update_contact_method_success(self, tenant_id, sample_contact_method):
@@ -115,21 +129,27 @@ class TestContactMethods:
             is_primary=True,
         )
 
-        # Mock the DB query result
         mock_db.execute.return_value = build_success_result(sample_contact_method)
 
         with patch("dotmac.platform.contacts.service.cache_delete"):
-            method = await service.update_contact_method(
-                method_id=sample_contact_method.id,
-                method_data=update_data,
+            method = await update_entity_test_helper(
+                service=service,
+                method_name="update_contact_method",
+                entity_id=sample_contact_method.id,
+                update_data=update_data,
+                mock_db_session=mock_db,
+                sample_entity=sample_contact_method,
+                expected_attributes={
+                    "value": "newemail@example.com",
+                    "is_primary": True,
+                },
                 tenant_id=tenant_id,
+                id_param_name="method_id",
+                data_param_name="method_data",
             )
 
         assert method is not None
         assert method.value == "newemail@example.com"
-        assert method.is_primary is True
-        mock_db.commit.assert_called_once()
-        mock_db.refresh.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_update_contact_method_not_found(self, tenant_id):
@@ -157,18 +177,20 @@ class TestContactMethods:
         mock_db = build_mock_db_session()
         service = ContactService(mock_db)
 
-        # Mock the DB query result
         mock_db.execute.return_value = build_success_result(sample_contact_method)
 
         with patch("dotmac.platform.contacts.service.cache_delete"):
-            result = await service.delete_contact_method(
-                method_id=sample_contact_method.id,
+            result = await delete_entity_test_helper(
+                service=service,
+                method_name="delete_contact_method",
+                entity_id=sample_contact_method.id,
+                mock_db_session=mock_db,
+                sample_entity=sample_contact_method,
                 tenant_id=tenant_id,
+                id_param_name="method_id",
             )
 
         assert result is True
-        mock_db.delete.assert_called_once_with(sample_contact_method)
-        mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_delete_contact_method_not_found(self, tenant_id):

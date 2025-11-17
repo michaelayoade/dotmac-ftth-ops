@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   NetworkOverview,
   DeviceHealth,
@@ -180,19 +180,19 @@ export function seedNetworkMonitoringData(
 
 export const networkMonitoringHandlers = [
   // GET /api/v1/network/overview - Get network overview
-  rest.get('*/api/v1/network/overview', (req, res, ctx) => {
+  http.get('*/api/v1/network/overview', ({ request, params }) => {
     console.log('[MSW] GET /network/overview');
 
     if (!networkOverview) {
       networkOverview = createMockNetworkOverview();
     }
 
-    return res(ctx.json(networkOverview));
+    return HttpResponse.json(networkOverview);
   }),
 
   // GET /api/v1/network/devices - List network devices
-  rest.get('*/api/v1/network/devices', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/network/devices', ({ request, params }) => {
+    const url = new URL(request.url);
     const device_type = url.searchParams.get('device_type');
     const status = url.searchParams.get('status');
 
@@ -210,30 +210,30 @@ export const networkMonitoringHandlers = [
 
     console.log('[MSW] Returning', filtered.length, 'devices');
 
-    return res(ctx.json(filtered));
+    return HttpResponse.json(filtered);
   }),
 
   // GET /api/v1/network/devices/:deviceId/health - Get device health
-  rest.get('*/api/v1/network/devices/:deviceId/health', (req, res, ctx) => {
-    const { deviceId } = req.params;
+  http.get('*/api/v1/network/devices/:deviceId/health', ({ request, params }) => {
+    const { deviceId } = params;
 
     console.log('[MSW] GET /network/devices/:deviceId/health', { deviceId });
 
     const device = devices.find((d) => d.device_id === deviceId);
 
     if (!device) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Device not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Device not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(device));
+    return HttpResponse.json(device);
   }),
 
   // GET /api/v1/network/devices/:deviceId/metrics - Get device metrics
-  rest.get('*/api/v1/network/devices/:deviceId/metrics', (req, res, ctx) => {
-    const { deviceId } = req.params;
+  http.get('*/api/v1/network/devices/:deviceId/metrics', ({ request, params }) => {
+    const { deviceId } = params;
 
     console.log('[MSW] GET /network/devices/:deviceId/metrics', { deviceId });
 
@@ -249,18 +249,18 @@ export const networkMonitoringHandlers = [
     }
 
     if (!metrics) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Device not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Device not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(metrics));
+    return HttpResponse.json(metrics);
   }),
 
   // GET /api/v1/network/devices/:deviceId/traffic - Get device traffic
-  rest.get('*/api/v1/network/devices/:deviceId/traffic', (req, res, ctx) => {
-    const { deviceId } = req.params;
+  http.get('*/api/v1/network/devices/:deviceId/traffic', ({ request, params }) => {
+    const { deviceId } = params;
 
     console.log('[MSW] GET /network/devices/:deviceId/traffic', { deviceId });
 
@@ -276,18 +276,18 @@ export const networkMonitoringHandlers = [
     }
 
     if (!traffic) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Device not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Device not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(traffic));
+    return HttpResponse.json(traffic);
   }),
 
   // GET /api/v1/network/alerts - List network alerts
-  rest.get('*/api/v1/network/alerts', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/network/alerts', ({ request, params }) => {
+    const url = new URL(request.url);
     const severity = url.searchParams.get('severity');
     const active_only = url.searchParams.get('active_only');
     const device_id = url.searchParams.get('device_id');
@@ -321,22 +321,22 @@ export const networkMonitoringHandlers = [
 
     console.log('[MSW] Returning', filtered.length, 'alerts');
 
-    return res(ctx.json(filtered));
+    return HttpResponse.json(filtered);
   }),
 
   // POST /api/v1/network/alerts/:alertId/acknowledge - Acknowledge alert
-  rest.post('*/api/v1/network/alerts/:alertId/acknowledge', (req, res, ctx) => {
-    const { alertId } = req.params;
-    const data = req.body as AcknowledgeAlertRequest;
+  http.post('*/api/v1/network/alerts/:alertId/acknowledge', async ({ request, params }) => {
+    const { alertId } = params;
+    const data = await request.json() as AcknowledgeAlertRequest;
 
     console.log('[MSW] POST /network/alerts/:alertId/acknowledge', { alertId, data });
 
     const alertIndex = alerts.findIndex((a) => a.alert_id === alertId);
 
     if (alertIndex === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Alert not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Alert not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -346,19 +346,19 @@ export const networkMonitoringHandlers = [
       acknowledged_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(alerts[alertIndex]));
+    return HttpResponse.json(alerts[alertIndex]);
   }),
 
   // GET /api/v1/network/alert-rules - List alert rules
-  rest.get('*/api/v1/network/alert-rules', (req, res, ctx) => {
+  http.get('*/api/v1/network/alert-rules', ({ request, params }) => {
     console.log('[MSW] GET /network/alert-rules', { totalRules: alertRules.length });
 
-    return res(ctx.json(alertRules));
+    return HttpResponse.json(alertRules);
   }),
 
   // POST /api/v1/network/alert-rules - Create alert rule
-  rest.post('*/api/v1/network/alert-rules', (req, res, ctx) => {
-    const data = req.body as CreateAlertRuleRequest;
+  http.post('*/api/v1/network/alert-rules', async ({ request, params }) => {
+    const data = await request.json() as CreateAlertRuleRequest;
 
     console.log('[MSW] POST /network/alert-rules', { data });
 
@@ -375,6 +375,6 @@ export const networkMonitoringHandlers = [
 
     alertRules.push(newRule);
 
-    return res(ctx.status(201), ctx.json(newRule));
+    return HttpResponse.json(newRule, { status: 201 });
   }),
 ];

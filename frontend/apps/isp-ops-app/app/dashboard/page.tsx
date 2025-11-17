@@ -23,6 +23,7 @@ import { useFeatureFlag } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
 import { useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSubscriberDashboardGraphQL } from "@/hooks/useSubscriberDashboardGraphQL";
 
 function formatDate(value?: string | null): string {
   if (!value) {
@@ -68,6 +69,12 @@ export default function DashboardPage() {
     enabled: hasRadiusAccess && radiusSessionsEnabled,
   });
 
+  const { metrics: subscriberMetrics } = useSubscriberDashboardGraphQL({
+    limit: 5,
+    enabled: hasRadiusAccess && radiusSubscribersEnabled,
+    pollingEnabled: false,
+  });
+
   const { data: netboxHealth } = useNetboxHealth({
     enabled: hasNetworkAccess,
   });
@@ -86,10 +93,17 @@ export default function DashboardPage() {
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
-  const totalSubscribers = radiusSubscribers?.data?.length ?? 0;
+  const totalSubscribers =
+    subscriberMetrics.totalSubscribers ??
+    radiusSubscribers?.total ??
+    radiusSubscribers?.data?.length ??
+    0;
   const activeSubscribers =
-    radiusSubscribers?.data?.filter((subscriber) => subscriber.enabled).length ?? 0;
-  const activeSessionsCount = activeSessions?.data?.length ?? 0;
+    subscriberMetrics.enabledSubscribers ??
+    radiusSubscribers?.data?.filter((subscriber) => subscriber.enabled).length ??
+    0;
+  const activeSessionsCount =
+    subscriberMetrics.activeSessions ?? activeSessions?.total ?? activeSessions?.data?.length ?? 0;
 
   const summaryCards = [
     {

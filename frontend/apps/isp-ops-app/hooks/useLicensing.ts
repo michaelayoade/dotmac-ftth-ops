@@ -118,7 +118,7 @@ export function useLicensing(): UseLicensingReturn {
   // Current Subscription Query
   // ==========================================================================
 
-  const subscriptionQuery = useQuery({
+  const subscriptionQuery = useQuery<TenantSubscription | null>({
     queryKey: licensingKeys.subscription(),
     queryFn: async () => {
       try {
@@ -126,7 +126,7 @@ export function useLicensing(): UseLicensingReturn {
         return response.data;
       } catch (error: any) {
         if (error.response?.status === 404) {
-          return undefined;
+          return null;
         }
         logger.error("Failed to fetch subscription", error);
         throw error;

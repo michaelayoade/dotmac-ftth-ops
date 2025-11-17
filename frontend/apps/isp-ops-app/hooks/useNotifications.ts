@@ -140,6 +140,14 @@ export interface CommunicationTemplate {
   updated_at: string;
 }
 
+export interface CommunicationTemplateListResponse {
+  templates: CommunicationTemplate[];
+  total?: number;
+  page?: number;
+  page_size?: number;
+  has_more?: boolean;
+}
+
 export interface CommunicationLog {
   id: string;
   tenant_id: string;
@@ -413,10 +421,17 @@ export function useNotificationTemplates(options?: {
       }
 
       const endpoint = buildUrlWithParams("/communications/templates", params);
-      const response = await apiClient.get<CommunicationTemplate[]>(endpoint);
+      const response = await apiClient.get<
+        CommunicationTemplateListResponse | CommunicationTemplate[]
+      >(endpoint);
 
-      if (response.data) {
-        setTemplates(response.data);
+      const data = response.data;
+      if (Array.isArray(data)) {
+        setTemplates(data);
+      } else if (data?.templates) {
+        setTemplates(data.templates);
+      } else {
+        setTemplates([]);
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 403) {

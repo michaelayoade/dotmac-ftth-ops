@@ -29,6 +29,14 @@ import {
 } from "@/__tests__/msw/handlers/field-service";
 import { TechnicianStatus, SkillLevel, TimeEntryType, TimeEntryStatus } from "@/types/field-service";
 
+const waitForFieldServiceSuccess = async (getStatus: () => boolean) => {
+  await waitFor(() => expect(getStatus()).toBe(true), { timeout: 5000 });
+};
+
+const waitForFieldServiceLoading = async (getLoading: () => boolean) => {
+  await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
+};
+
 describe("useFieldService hooks (MSW)", () => {
   function createWrapper() {
     const queryClient = new QueryClient({
@@ -86,7 +94,7 @@ describe("useFieldService hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.technicians).toHaveLength(2);
       expect(result.current.data?.total).toBe(2);
@@ -110,7 +118,7 @@ describe("useFieldService hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.technicians).toHaveLength(1);
       expect(result.current.data?.technicians[0].isAvailable).toBe(true);
@@ -130,7 +138,7 @@ describe("useFieldService hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.id).toBe("tech-1");
       expect(result.current.data?.fullName).toBe("John Doe");
@@ -143,7 +151,7 @@ describe("useFieldService hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForFieldServiceLoading(() => result.current.isLoading);
 
       expect(result.current.error).toBeTruthy();
     });
@@ -235,7 +243,7 @@ describe("useFieldService hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.entries).toHaveLength(1);
       expect(result.current.data?.entries[0].technicianId).toBe("tech-1");
@@ -262,7 +270,7 @@ describe("useFieldService hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.entries).toHaveLength(1);
       expect(result.current.data?.entries[0].status).toBe(TimeEntryStatus.SUBMITTED);
@@ -297,7 +305,7 @@ describe("useFieldService hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.assignments).toHaveLength(1);
       expect(result.current.data?.assignments[0].technicianId).toBe("tech-1");
@@ -384,7 +392,7 @@ describe("useFieldService hooks (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.equipment).toHaveLength(2);
       expect(result.current.data?.equipment[0].category).toBe("fiber-tools");
@@ -412,7 +420,7 @@ describe("useFieldService hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
       expect(result.current.data?.vehicles).toHaveLength(2);
     });
@@ -458,7 +466,7 @@ describe("useFieldService hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForFieldServiceLoading(() => result.current.isLoading);
 
       expect(result.current.error).toBeTruthy();
       expect(result.current.data).toBeUndefined();

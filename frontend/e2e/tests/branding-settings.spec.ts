@@ -6,7 +6,8 @@
  * re-render tenant-defined branding assets.
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 
 test.describe("Branding Settings Harness", () => {
   test("allows operators to update identity, contact, and color fields", async ({ page }) => {

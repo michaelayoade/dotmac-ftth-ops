@@ -57,14 +57,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body suppressHydrationWarning>
         <RuntimeConfigProvider onConfig={applyPlatformRuntimeConfig}>
-        <ErrorBoundary>
-          <PWAProvider>
-            <ClientProviders>
-              {children}
-              <InstallPrompt />
-            </ClientProviders>
-          </PWAProvider>
-        </ErrorBoundary>
+          <ErrorBoundary>
+            <PWAProvider>
+              <ClientProviders>
+                {children}
+                <InstallPrompt />
+              </ClientProviders>
+            </PWAProvider>
+          </ErrorBoundary>
         </RuntimeConfigProvider>
       </body>
     </html>

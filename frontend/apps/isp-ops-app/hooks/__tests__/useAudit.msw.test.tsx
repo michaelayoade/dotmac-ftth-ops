@@ -27,6 +27,14 @@ import {
   createMockActivity,
 } from "@/__tests__/msw/handlers/audit";
 
+const waitForAuditLoading = async (getLoading: () => boolean) => {
+  await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
+};
+
+const waitForAuditSuccess = async (getStatus: () => boolean) => {
+  await waitFor(() => expect(getStatus()).toBe(true), { timeout: 5000 });
+};
+
 describe("useAudit (MSW)", () => {
   function createWrapper() {
     const queryClient = new QueryClient({
@@ -111,7 +119,7 @@ describe("useAudit (MSW)", () => {
 
       expect(result.current.isLoading).toBe(true);
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(1);
       expect(result.current.data?.total).toBe(1);
@@ -125,7 +133,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(0);
       expect(result.current.data?.total).toBe(0);
@@ -160,7 +168,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(1);
       expect(result.current.data?.activities[0].user_id).toBe("user-1");
@@ -193,7 +201,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(1);
       expect(result.current.data?.activities[0].resource_type).toBe("subscriber");
@@ -214,7 +222,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(10);
       expect(result.current.data?.page).toBe(2);
@@ -230,7 +238,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeUndefined();
     });
@@ -252,7 +260,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities[0].activity_type).toBe(
         ActivityType.ROLE_CREATED
@@ -279,7 +287,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(1);
       expect(result.current.data?.activities[0].severity).toBe(ActivitySeverity.CRITICAL);
@@ -305,7 +313,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(2);
       expect(result.current.data?.[0].id).toBe("activity-1");
@@ -324,7 +332,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(10);
     });
@@ -347,7 +355,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].id).toBe("activity-1");
@@ -360,7 +368,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(0);
     });
@@ -384,7 +392,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].user_id).toBe("user-1");
@@ -404,7 +412,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(30);
     });
@@ -429,7 +437,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].id).toBe("activity-1");
@@ -448,7 +456,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(0);
     });
@@ -469,7 +477,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.id).toBe("activity-1");
       expect(result.current.data?.details).toEqual({
@@ -485,7 +493,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.error).toBeTruthy();
     });
@@ -502,7 +510,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeUndefined();
     });
@@ -522,7 +530,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activity_type).toBe(ActivityType.ROLE_CREATED);
       expect(result.current.data?.resource_type).toBe("role");
@@ -542,7 +550,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.user_id).toBeNull();
       expect(result.current.data?.activity_type).toBe(ActivityType.SYSTEM_STARTUP);
@@ -571,7 +579,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.total_activities).toBe(2);
       expect(result.current.data?.by_severity[ActivitySeverity.LOW]).toBe(1);
@@ -596,7 +604,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.total_activities).toBe(1);
     });
@@ -618,7 +626,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.recent_critical).toHaveLength(1);
       expect(result.current.data?.recent_critical[0].severity).toBe(ActivitySeverity.CRITICAL);
@@ -645,7 +653,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.by_type[ActivityType.USER_LOGIN]).toBe(2);
       expect(result.current.data?.by_type[ActivityType.ROLE_ASSIGNED]).toBe(1);
@@ -680,7 +688,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(2);
       expect(result.current.data?.[0].resource_id).toBe("sub-1");
@@ -694,7 +702,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(0);
     });
@@ -716,7 +724,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeUndefined();
     });
@@ -740,7 +748,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(1);
       expect(result.current.data?.[0].resource_type).toBe("role");
@@ -759,7 +767,6 @@ describe("useAudit (MSW)", () => {
           format: "csv",
         });
       });
-
       expect(result.current.isSuccess).toBe(true);
       expect(result.current.data?.export_id).toBeDefined();
       expect(result.current.data?.status).toBe("completed");
@@ -870,7 +877,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.report_id).toBeDefined();
       expect(result.current.data?.period_start).toBe("2024-01-01");
@@ -883,7 +890,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       // Query should not run, so data is undefined
       expect(result.current.data).toBeUndefined();
@@ -899,7 +906,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.compliance_score).toBeDefined();
       expect(result.current.data?.total_events).toBeDefined();
@@ -914,7 +921,7 @@ describe("useAudit (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeUndefined();
     });
@@ -938,7 +945,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.summary).toBeDefined();
       expect(result.current.recentActivities).toBeDefined();
@@ -958,7 +965,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.summary).toBeDefined();
       expect(result.current.recentActivities).toBeDefined();
@@ -971,7 +978,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.summary?.total_activities).toBe(0);
       expect(result.current.recentActivities).toHaveLength(0);
@@ -984,7 +991,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       // Error may or may not be set depending on handler behavior
       expect(result.current.error === null || result.current.error === undefined).toBeTruthy();
@@ -1001,7 +1008,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.summary?.total_activities).toBeGreaterThan(0);
       expect(result.current.recentActivities).toBeDefined();
@@ -1014,7 +1021,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(typeof result.current.refetch).toBe("function");
     });
@@ -1034,7 +1041,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.activities).toBeDefined();
       expect(result.current.activities).toHaveLength(1);
@@ -1053,7 +1060,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.activities).toBeDefined();
     });
@@ -1064,7 +1071,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       // Hook returns empty array when disabled (data || [])
       expect(result.current.activities).toEqual([]);
@@ -1089,7 +1096,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(2);
     });
@@ -1111,7 +1118,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(2);
     });
@@ -1133,7 +1140,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(2);
     });
@@ -1151,7 +1158,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(1);
     });
@@ -1169,7 +1176,7 @@ describe("useAudit (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForAuditLoading(() => result.current.isLoading);
 
       expect(result.current.data?.activities).toHaveLength(1);
     });

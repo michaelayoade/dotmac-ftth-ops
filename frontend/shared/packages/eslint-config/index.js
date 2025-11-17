@@ -65,12 +65,12 @@ module.exports = {
         message: "new Function() is dangerous and should never be used.",
       },
       {
-        selector: "CallExpression[callee.property.name='innerHTML']",
-        message: "innerHTML can lead to XSS. Use textContent or a sanitization library.",
+        selector: "AssignmentExpression[left.property.name='innerHTML']",
+        message: "innerHTML assignments can lead to XSS. Use textContent or a sanitization library.",
       },
       {
-        selector: "CallExpression[callee.property.name='outerHTML']",
-        message: "outerHTML can lead to XSS. Use textContent or a sanitization library.",
+        selector: "AssignmentExpression[left.property.name='outerHTML']",
+        message: "outerHTML assignments can lead to XSS. Use textContent or a sanitization library.",
       },
     ],
 

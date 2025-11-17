@@ -85,12 +85,10 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const handleConfirm = async () => {
     await onConfirm();
-    onOpenChange(false);
   };
 
   const handleCancel = () => {
     onCancel?.();
-    onOpenChange(false);
   };
 
   const buttonVariants = {

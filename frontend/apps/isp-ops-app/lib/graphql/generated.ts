@@ -923,6 +923,8 @@ export type FiberNetworkAnalytics = {
   cablesUnderConstruction: Scalars["Int"]["output"];
   cablesWithHighLoss: Array<Scalars["String"]["output"]>;
   capacityUtilizationPercent: Scalars["Float"]["output"];
+  cablesByStatus?: Maybe<Scalars["JSON"]["output"]>;
+  cablesByType?: Maybe<Scalars["JSON"]["output"]>;
   degradedCables: Scalars["Int"]["output"];
   distributionPointsNearCapacity: Array<Scalars["String"]["output"]>;
   failedCables: Scalars["Int"]["output"];
@@ -3698,6 +3700,7 @@ export type SplicePointListQuery = {
       __typename?: "SplicePoint";
       id: string;
       spliceId: string;
+      cableId: string;
       name: string;
       description?: string | null;
       status: SpliceStatus;
@@ -3809,6 +3812,7 @@ export type SplicePointsByCableQuery = {
     __typename?: "SplicePoint";
     id: string;
     spliceId: string;
+    cableId: string;
     name: string;
     status: SpliceStatus;
     totalSplices: number;
@@ -3961,6 +3965,7 @@ export type DistributionPointsBySiteQuery = {
   distributionPointsBySite: Array<{
     __typename?: "DistributionPoint";
     id: string;
+    siteId?: string | null;
     name: string;
     pointType: DistributionPointType;
     status: FiberCableStatus;
@@ -4089,6 +4094,7 @@ export type ServiceAreasByPostalCodeQuery = {
     city: string;
     stateProvince: string;
     isServiceable: boolean;
+    postalCodes?: Array<string> | null;
     homesPassed: number;
     homesConnected: number;
     penetrationRatePercent?: number | null;
@@ -4177,6 +4183,8 @@ export type FiberNetworkAnalyticsQuery = {
     usedCapacity: number;
     availableCapacity: number;
     capacityUtilizationPercent: number;
+    cablesByStatus?: Record<string, any> | null;
+    cablesByType?: Record<string, any> | null;
     healthyCables: number;
     degradedCables: number;
     failedCables: number;
@@ -4251,6 +4259,7 @@ export type FiberDashboardQuery = {
     }>;
     cablesRequiringAttention: Array<{
       __typename?: "FiberHealthMetrics";
+      id: string;
       cableId: string;
       cableName: string;
       healthStatus: FiberHealthStatus;
@@ -5485,6 +5494,7 @@ export type AccessPointListQuery = {
       transmitPower: number;
       maxClients?: number | null;
       securityType: WirelessSecurityType;
+      siteId?: string | null;
       controllerName?: string | null;
       siteName?: string | null;
       createdAt: string;
@@ -5636,6 +5646,8 @@ export type AccessPointsBySiteQuery = {
     ssid: string;
     frequencyBand: FrequencyBand;
     channel: number;
+    siteId?: string | null;
+    siteName?: string | null;
     performance?: {
       __typename?: "APPerformanceMetrics";
       connectedClients: number;
@@ -5770,6 +5782,7 @@ export type WirelessClientsByAccessPointQuery = {
     macAddress: string;
     hostname?: string | null;
     ipAddress?: string | null;
+    accessPointId?: string | null;
     ssid: string;
     signalStrengthDbm?: number | null;
     txRateMbps?: number | null;
@@ -5800,6 +5813,7 @@ export type WirelessClientsByCustomerQuery = {
     macAddress: string;
     hostname?: string | null;
     ipAddress?: string | null;
+    customerId?: string | null;
     accessPointName: string;
     ssid: string;
     frequencyBand: FrequencyBand;
@@ -5904,6 +5918,8 @@ export type CoverageZonesBySiteQuery = {
     __typename?: "CoverageZone";
     id: string;
     name: string;
+    siteId: string;
+    siteName: string;
     floor?: string | null;
     areaType: string;
     coverageAreaSqm?: number | null;
@@ -7524,6 +7540,7 @@ export const SplicePointListDocument = gql`
       splicePoints {
         id
         spliceId
+        cableId
         name
         description
         status
@@ -7705,6 +7722,7 @@ export const SplicePointsByCableDocument = gql`
     splicePointsByCable(cableId: $cableId) {
       id
       spliceId
+      cableId
       name
       status
       totalSplices
@@ -7997,6 +8015,7 @@ export const DistributionPointsBySiteDocument = gql`
   query DistributionPointsBySite($siteId: String!) {
     distributionPointsBySite(siteId: $siteId) {
       id
+      siteId
       name
       pointType
       status
@@ -8252,6 +8271,7 @@ export const ServiceAreasByPostalCodeDocument = gql`
       city
       stateProvince
       isServiceable
+      postalCodes
       homesPassed
       homesConnected
       penetrationRatePercent
@@ -8459,6 +8479,8 @@ export const FiberNetworkAnalyticsDocument = gql`
       usedCapacity
       availableCapacity
       capacityUtilizationPercent
+      cablesByStatus
+      cablesByType
       healthyCables
       degradedCables
       failedCables
@@ -8571,6 +8593,7 @@ export const FiberDashboardDocument = gql`
         homesConnected
       }
       cablesRequiringAttention {
+        id
         cableId
         cableName
         healthStatus
@@ -10801,6 +10824,7 @@ export const AccessPointListDocument = gql`
           memoryUsagePercent
           uptimeSeconds
         }
+        siteId
         controllerName
         siteName
         createdAt
@@ -10983,6 +11007,8 @@ export const AccessPointsBySiteDocument = gql`
       ssid
       frequencyBand
       channel
+      siteId
+      siteName
       performance {
         connectedClients
         cpuUsagePercent
@@ -11246,6 +11272,7 @@ export const WirelessClientsByAccessPointDocument = gql`
       macAddress
       hostname
       ipAddress
+      accessPointId
       ssid
       signalStrengthDbm
       signalQuality {
@@ -11329,6 +11356,7 @@ export const WirelessClientsByCustomerDocument = gql`
       macAddress
       hostname
       ipAddress
+      customerId
       accessPointName
       ssid
       frequencyBand
@@ -11550,6 +11578,8 @@ export const CoverageZonesBySiteDocument = gql`
     coverageZonesBySite(siteId: $siteId) {
       id
       name
+      siteId
+      siteName
       floor
       areaType
       coverageAreaSqm

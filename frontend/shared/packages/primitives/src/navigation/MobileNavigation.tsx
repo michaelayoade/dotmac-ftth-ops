@@ -37,7 +37,7 @@ function renderNavTree(items: NavItem[], options: RenderOptions): ReactNode {
   const { depth, currentPath, expandedItems, onToggle, onNavigate } = options;
 
   return (
-    <ul className={clsx(depth > 0 && "ml-4")} role={depth === 0 ? "tree" : "group"}>
+    <ul className={clsx(depth > 0 && "ml-4")}>
       {items.map((item) => {
         const isActive = currentPath === item.href;
         const hasChildren = (item.children?.length ?? 0) > 0;
@@ -173,6 +173,7 @@ function TabsNavigation({
               onClick={() => setShowMore((prev) => !prev)}
               className="flex items-center rounded-md px-2 py-2 text-sm text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               aria-expanded={showMore}
+              aria-label="More navigation"
             >
               <ChevronDown className={clsx("h-4 w-4 transition-transform", showMore && "rotate-180")} />
               <span className="sr-only">More navigation</span>

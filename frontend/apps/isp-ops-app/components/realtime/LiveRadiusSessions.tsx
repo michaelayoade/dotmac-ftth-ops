@@ -148,7 +148,9 @@ export function LiveRadiusSessions({
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
             <h3 className="font-bold">Active Sessions</h3>
-            <Badge variant="outline">{sessionList.length}</Badge>
+            <Badge variant="outline" data-testid="compact-active-count">
+              {sessionList.length}
+            </Badge>
           </div>
           <CompactConnectionStatus />
         </div>
@@ -156,15 +158,27 @@ export function LiveRadiusSessions({
         <div className="grid gap-2 md:grid-cols-3">
           <div className="p-3 bg-gray-50 rounded">
             <p className="text-xs text-muted-foreground">Active Users</p>
-            <p className="text-2xl font-bold">{sessionList.length}</p>
+            <p className="text-2xl font-bold" data-testid="compact-active-users">
+              {sessionList.length}
+            </p>
           </div>
           <div className="p-3 bg-green-50 rounded">
             <p className="text-xs text-green-900">Total RX</p>
-            <p className="text-xl font-bold text-green-900">{formatBytes(totalBytesIn)}</p>
+            <p
+              className="text-xl font-bold text-green-900"
+              data-testid="compact-total-rx"
+            >
+              {formatBytes(totalBytesIn)}
+            </p>
           </div>
           <div className="p-3 bg-blue-50 rounded">
             <p className="text-xs text-blue-900">Total TX</p>
-            <p className="text-xl font-bold text-blue-900">{formatBytes(totalBytesOut)}</p>
+            <p
+              className="text-xl font-bold text-blue-900"
+              data-testid="compact-total-tx"
+            >
+              {formatBytes(totalBytesOut)}
+            </p>
           </div>
         </div>
       </Card>
@@ -178,8 +192,14 @@ export function LiveRadiusSessions({
           <div className="flex items-center gap-2">
             <Wifi className="h-6 w-6 text-primary" />
             <h2 className="text-2xl font-bold">Live RADIUS Sessions</h2>
-            <Badge variant={isConnected ? "default" : "secondary"} className="ml-2">
-              {isConnected ? "Live" : "Disconnected"}
+            <Badge
+              variant={isConnected ? "default" : "secondary"}
+              className="ml-2"
+              data-testid="connection-status-badge"
+            >
+              <span data-testid="connection-status-label">
+                {isConnected ? "Live" : "Disconnected"}
+              </span>
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">Real-time authentication session monitoring</p>
@@ -193,7 +213,9 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Active Sessions</p>
-              <p className="text-3xl font-bold">{sessionList.length}</p>
+              <p className="text-3xl font-bold" data-testid="summary-active-count">
+                {sessionList.length}
+              </p>
             </div>
             <Users className="h-10 w-10 text-primary" />
           </div>
@@ -203,7 +225,12 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-900">Total RX</p>
-              <p className="text-2xl font-bold text-green-900">{formatBytes(totalBytesIn)}</p>
+              <p
+                className="text-2xl font-bold text-green-900"
+                data-testid="summary-total-rx"
+              >
+                {formatBytes(totalBytesIn)}
+              </p>
             </div>
             <TrendingDown className="h-10 w-10 text-green-600" />
           </div>
@@ -213,7 +240,12 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-blue-900">Total TX</p>
-              <p className="text-2xl font-bold text-blue-900">{formatBytes(totalBytesOut)}</p>
+              <p
+                className="text-2xl font-bold text-blue-900"
+                data-testid="summary-total-tx"
+              >
+                {formatBytes(totalBytesOut)}
+              </p>
             </div>
             <TrendingUp className="h-10 w-10 text-blue-600" />
           </div>
@@ -223,7 +255,10 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-purple-900">Total Traffic</p>
-              <p className="text-2xl font-bold text-purple-900">
+              <p
+                className="text-2xl font-bold text-purple-900"
+                data-testid="summary-total-traffic"
+              >
                 {formatBytes(totalBytesIn + totalBytesOut)}
               </p>
             </div>
@@ -277,28 +312,45 @@ export function LiveRadiusSessions({
               <tbody className="divide-y divide-gray-200">
                 {sessionList.map((session) => (
                   <tr key={session.session_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium">
+                    <td
+                      className="px-4 py-3 text-sm font-medium"
+                      data-testid={`session-username-${session.session_id}`}
+                    >
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
                         {session.username}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm font-mono text-muted-foreground">
+                    <td
+                      className="px-4 py-3 text-sm font-mono text-muted-foreground"
+                      data-testid={`session-nas-${session.session_id}`}
+                    >
                       {session.nas_ip_address}
                     </td>
-                    <td className="px-4 py-3 text-sm font-mono text-muted-foreground">
+                    <td
+                      className="px-4 py-3 text-sm font-mono text-muted-foreground"
+                      data-testid={`session-framed-${session.session_id}`}
+                    >
                       {session.framed_ip_address || "N/A"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right font-semibold text-green-600">
+                    <td
+                      className="px-4 py-3 text-sm text-right font-semibold text-green-600"
+                      data-testid={`session-rx-${session.session_id}`}
+                    >
                       {formatBytes(session.bytes_in)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right font-semibold text-blue-600">
+                    <td
+                      className="px-4 py-3 text-sm text-right font-semibold text-blue-600"
+                      data-testid={`session-tx-${session.session_id}`}
+                    >
                       {formatBytes(session.bytes_out)}
                     </td>
                     <td className="px-4 py-3 text-sm text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Clock className="h-3 w-3" />
-                        {formatDuration(session.session_time)}
+                        <span data-testid={`session-duration-${session.session_id}`}>
+                          {formatDuration(session.session_time)}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-right text-muted-foreground">
@@ -343,7 +395,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
 function formatDuration(seconds: number): string {

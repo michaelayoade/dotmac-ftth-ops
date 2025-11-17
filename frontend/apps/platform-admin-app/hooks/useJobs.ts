@@ -33,7 +33,17 @@ export interface JobsResponse {
   offset: number;
 }
 
+// Field installation job is a specialized job type
+export type FieldInstallationJob = Job;
+
 interface UseJobsOptions {
+  status?: string;
+  jobType?: string;
+  limit?: number;
+  offset?: number;
+}
+
+interface UseFieldInstallationJobsOptions {
   status?: string;
   limit?: number;
   offset?: number;
@@ -43,12 +53,35 @@ interface UseJobsOptions {
  * Fetch active jobs
  */
 export function useJobs(options: UseJobsOptions = {}) {
-  const { status, limit = 50, offset = 0 } = options;
+  const { status, jobType, limit = 50, offset = 0 } = options;
 
   return useQuery({
-    queryKey: ["jobs", status, limit, offset],
+    queryKey: ["jobs", status, jobType, limit, offset],
     queryFn: async () => {
       const params = new URLSearchParams();
+      if (status) params.append("status", status);
+      if (jobType) params.append("job_type", jobType);
+      params.append("limit", String(limit));
+      params.append("offset", String(offset));
+
+      const response = await apiClient.get<JobsResponse>(`/jobs?${params.toString()}`);
+      return extractDataOrThrow(response);
+    },
+    staleTime: 5000, // 5 seconds
+  });
+}
+
+/**
+ * Fetch field installation jobs
+ */
+export function useFieldInstallationJobs(options: UseFieldInstallationJobsOptions = {}) {
+  const { status, limit = 100, offset = 0 } = options;
+
+  return useQuery({
+    queryKey: ["field-installation-jobs", status, limit, offset],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("job_type", "field_installation");
       if (status) params.append("status", status);
       params.append("limit", String(limit));
       params.append("offset", String(offset));

@@ -2,7 +2,8 @@
  * E2E tests for authentication flows
  * Focus on advanced scenarios beyond the baseline happy paths
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 
 test.describe("Advanced Authentication Scenarios", () => {
   const ISP_APP_URL = "http://localhost:3001";

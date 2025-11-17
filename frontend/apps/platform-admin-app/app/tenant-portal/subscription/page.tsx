@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
@@ -23,7 +23,12 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { useLicensing } from "../../../hooks/useLicensing";
 import { SubscriptionDashboard } from "../../../components/licensing/SubscriptionDashboard";
 import { PlanSelector } from "../../../components/licensing/PlanSelector";
-import { BillingCycle, ServicePlan } from "../../../types/licensing";
+import { BillingCycle } from "../../../types/licensing";
+import type {
+  ServicePlan as BillingServicePlan,
+  TenantSubscription as BillingTenantSubscription,
+  SubscriptionStatus as BillingSubscriptionStatus,
+} from "@dotmac/features/billing";
 
 export default function TenantSubscriptionPage() {
   const {
@@ -37,17 +42,169 @@ export default function TenantSubscriptionPage() {
   } = useLicensing();
 
   const [showPlanSelector, setShowPlanSelector] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<ServicePlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<BillingServicePlan | null>(null);
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle>(
     BillingCycle.MONTHLY,
   );
   const [isUpgrading, setIsUpgrading] = useState(false);
 
-  const handleSelectPlan = (plan: ServicePlan, billingCycle: BillingCycle) => {
+  const handleSelectPlan = (plan: BillingServicePlan, billingCycle: BillingCycle) => {
     setSelectedPlan(plan);
     setSelectedBillingCycle(billingCycle);
     setShowPlanSelector(true);
   };
+
+  const planOptions = useMemo<BillingServicePlan[]>(() => {
+    return plans.map((plan) => {
+      const mappedPlan: BillingServicePlan = {
+        id: plan.id,
+        plan_name: plan.plan_name,
+        plan_code: plan.plan_code,
+        description: plan.description,
+        base_price_monthly: plan.base_price_monthly,
+        annual_discount_percent: plan.annual_discount_percent,
+        trial_days: plan.trial_days,
+        is_public: plan.is_public,
+        is_active: plan.is_active,
+        created_at: plan.created_at,
+        updated_at: plan.updated_at,
+      };
+
+      if (plan.modules && plan.modules.length > 0) {
+        mappedPlan.modules = plan.modules.map((module) => ({
+          id: module.id,
+          module_id: module.module_id,
+          included_by_default: module.included_by_default,
+          addon_price: module.override_price,
+          module: module.module
+            ? {
+                id: module.module.id,
+                module_name: module.module.module_name,
+                module_code: module.module.module_code,
+                description: module.module.description,
+                category: module.module.category as any,
+                is_core: !module.is_optional_addon,
+                dependencies: module.module.dependencies,
+                created_at: module.module.created_at,
+                updated_at: module.module.updated_at,
+              }
+            : undefined,
+        })) as NonNullable<BillingServicePlan["modules"]>;
+      }
+
+      if (plan.quotas && plan.quotas.length > 0) {
+        mappedPlan.quotas = plan.quotas.map((quota) => ({
+          id: quota.id,
+          quota_id: quota.quota_id,
+          included_quantity: quota.included_quantity,
+          overage_allowed: quota.allow_overage,
+          overage_rate: quota.overage_rate_override,
+          quota: quota.quota
+            ? {
+                id: quota.quota.id,
+                quota_name: quota.quota.quota_name,
+                quota_code: quota.quota.quota_code,
+                unit_name: quota.quota.unit_name,
+                description: quota.quota.description,
+              }
+            : undefined,
+        })) as NonNullable<BillingServicePlan["quotas"]>;
+      }
+
+      return mappedPlan;
+    });
+  }, [plans]);
+
+  const sharedSubscription = useMemo<BillingTenantSubscription | null>(() => {
+    if (!currentSubscription) {
+      return null;
+    }
+
+    const subscriptionPlan = planOptions.find((plan) => plan.id === currentSubscription.plan_id);
+
+    const subscriptionData: BillingTenantSubscription = {
+      id: currentSubscription.id,
+      tenant_id: currentSubscription.tenant_id,
+      plan_id: currentSubscription.plan_id,
+      status: currentSubscription.status as BillingSubscriptionStatus,
+      billing_cycle: currentSubscription.billing_cycle as any,
+      monthly_price: currentSubscription.monthly_price,
+      current_period_start: currentSubscription.current_period_start,
+      current_period_end: currentSubscription.current_period_end,
+      created_at: currentSubscription.created_at,
+      updated_at: currentSubscription.updated_at,
+    };
+
+    if (currentSubscription.modules && currentSubscription.modules.length > 0) {
+      subscriptionData.modules = currentSubscription.modules.map((module) => {
+        const mappedModule: NonNullable<BillingTenantSubscription["modules"]>[number] = {
+          id: module.id,
+          module_id: module.module_id,
+          source:
+            module.source === "ADDON"
+              ? "ADDON"
+              : module.source === "TRIAL"
+                ? "TRIAL"
+                : "PLAN",
+        };
+
+        if (module.addon_price !== undefined) {
+          mappedModule.addon_price = module.addon_price;
+        }
+
+        if (module.module) {
+          mappedModule.module = {
+            id: module.module.id,
+            module_name: module.module.module_name,
+            module_code: module.module.module_code,
+            description: module.module.description,
+            category: module.module.category as any,
+            is_core: true,
+            dependencies: module.module.dependencies,
+            created_at: module.module.created_at,
+            updated_at: module.module.updated_at,
+          };
+        }
+
+        return mappedModule;
+      });
+    }
+
+    if (currentSubscription.quota_usage && currentSubscription.quota_usage.length > 0) {
+      subscriptionData.quota_usage = currentSubscription.quota_usage.map((usage) => {
+        const mappedQuota: NonNullable<BillingTenantSubscription["quota_usage"]>[number] = {
+          id: usage.id,
+          quota_id: usage.quota_id,
+          allocated_quantity: usage.allocated_quantity,
+          current_usage: usage.current_usage,
+          overage_quantity: usage.overage_quantity,
+          overage_charges: usage.overage_charges,
+        };
+
+        if (usage.quota) {
+          mappedQuota.quota = {
+            id: usage.quota.id,
+            quota_name: usage.quota.quota_name,
+            quota_code: usage.quota.quota_code,
+            unit_name: usage.quota.unit_name,
+            description: usage.quota.description,
+          };
+        }
+
+        return mappedQuota;
+      });
+    }
+
+    if (currentSubscription.trial_end) {
+      subscriptionData.trial_end = currentSubscription.trial_end;
+    }
+
+    if (subscriptionPlan) {
+      subscriptionData.plan = subscriptionPlan;
+    }
+
+    return subscriptionData;
+  }, [currentSubscription, planOptions]);
 
   const handleConfirmPlan = async () => {
     if (!selectedPlan) return;
@@ -112,7 +269,7 @@ export default function TenantSubscriptionPage() {
           <p className="text-muted-foreground">Select a plan that fits your business needs</p>
         </div>
 
-        <PlanSelector plans={plans} onSelectPlan={handleSelectPlan} loading={isUpgrading} />
+        <PlanSelector plans={planOptions} onSelectPlan={handleSelectPlan} loading={isUpgrading} />
 
         {/* Confirm Dialog */}
         <Dialog open={showPlanSelector} onOpenChange={setShowPlanSelector}>
@@ -177,6 +334,10 @@ export default function TenantSubscriptionPage() {
     );
   }
 
+  if (!sharedSubscription) {
+    return null;
+  }
+
   // Has subscription - show dashboard
   return (
     <div className="space-y-6">
@@ -193,7 +354,7 @@ export default function TenantSubscriptionPage() {
 
         <TabsContent value="overview">
           <SubscriptionDashboard
-            subscription={currentSubscription}
+            subscription={sharedSubscription}
             onUpgrade={() => {
               // Navigate to plans tab or show upgrade modal
             }}
@@ -220,8 +381,8 @@ export default function TenantSubscriptionPage() {
               </CardHeader>
               <CardContent>
                 <PlanSelector
-                  plans={plans}
-                  currentPlanId={currentSubscription.plan_id}
+                  plans={planOptions}
+                  currentPlanId={sharedSubscription.plan_id}
                   onSelectPlan={handleSelectPlan}
                   loading={isUpgrading}
                 />

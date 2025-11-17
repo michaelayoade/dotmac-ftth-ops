@@ -7,6 +7,22 @@
  * Tests the actual hook contract: { apiKeys, loading, error, createApiKey, ... }
  */
 
+// Mock platform config to ensure apiClient has an absolute base URL
+jest.mock("@/lib/config", () => ({
+  platformConfig: {
+    api: {
+      baseUrl: "http://localhost:3000",
+      prefix: "/api/v1",
+      timeout: 30000,
+      buildUrl: (path: string) => {
+        const normalized = path.startsWith("/") ? path : `/${path}`;
+        const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+        return `http://localhost:3000${prefixed}`;
+      },
+    },
+  },
+}));
+
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useApiKeys, apiKeysKeys } from "../useApiKeys";
 import {

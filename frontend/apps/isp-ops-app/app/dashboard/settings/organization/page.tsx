@@ -246,7 +246,7 @@ export default function OrganizationSettingsPage() {
       },
     };
     const variant = variants[status] || {
-      color: "bg-card0/10 text-foreground0",
+      color: "bg-card0/10 text-muted-foreground",
       label: status,
     };
     return <Badge className={variant.color}>{variant.label}</Badge>;
@@ -267,12 +267,12 @@ export default function OrganizationSettingsPage() {
         label: "Revoked",
       },
       expired: {
-        color: "bg-card0/10 text-foreground0 dark:bg-card0/20",
+        color: "bg-card0/10 text-muted-foreground dark:bg-card0/20",
         label: "Expired",
       },
     };
     const variant = variants[status] || {
-      color: "bg-card0/10 text-foreground0",
+      color: "bg-card0/10 text-muted-foreground",
       label: status,
     };
     return <Badge className={variant.color}>{variant.label}</Badge>;

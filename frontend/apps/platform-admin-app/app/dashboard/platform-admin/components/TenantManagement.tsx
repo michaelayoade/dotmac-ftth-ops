@@ -33,6 +33,7 @@ import { usePlatformTenants } from "@/hooks/usePlatformTenants";
 import { tenantService } from "@/lib/services/tenant-service";
 import { Building2, ChevronLeft, ChevronRight, Eye, Key, Plus, Search, Users } from "lucide-react";
 import { TenantOnboardingWizard } from "@/components/tenant/TenantOnboardingWizard";
+import { setOperatorAccessToken } from "../../../../../../shared/utils/operatorAuth";
 
 interface PaginationState {
   page: number;
@@ -99,6 +100,7 @@ export function TenantManagement() {
     onSuccess: (response, tenantId) => {
       if (response.access_token) {
         sessionStorage.setItem("impersonation_token", response.access_token);
+        setOperatorAccessToken(response.access_token);
       }
       if (response.refresh_token) {
         sessionStorage.setItem("impersonation_refresh_token", response.refresh_token);

@@ -7,7 +7,7 @@
  * Tests the actual hook contract: { data, isLoading, error, ... }
  */
 
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { renderHook, waitFor, act, cleanup } from "@testing-library/react";
 import { useIntegrations, useIntegration, useHealthCheck } from "../useIntegrations";
 import {
   createTestQueryClient,
@@ -16,6 +16,7 @@ import {
   createMockIntegration,
   seedIntegrationsData,
   makeApiEndpointFail,
+  server,
 } from "../../__tests__/test-utils";
 
 describe("useIntegrations (MSW)", () => {
@@ -24,9 +25,11 @@ describe("useIntegrations (MSW)", () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     resetIntegrationsStorage();
+    server.resetHandlers();
   });
 
   afterEach(() => {
+    cleanup();
     queryClient.clear();
   });
 
@@ -66,7 +69,7 @@ describe("useIntegrations (MSW)", () => {
       expect(result.current.isLoading).toBe(true);
 
       // Wait for data to load
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitFor(() => expect(result.current?.isLoading ?? true).toBe(false));
 
       // Verify data
       expect(result.current.data).toBeDefined();
@@ -83,7 +86,7 @@ describe("useIntegrations (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitFor(() => expect(result.current?.isLoading ?? true).toBe(false));
 
       expect(result.current.data?.integrations).toHaveLength(0);
       expect(result.current.data?.total).toBe(0);
@@ -97,7 +100,7 @@ describe("useIntegrations (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitFor(() => expect(result.current?.isLoading ?? true).toBe(false));
 
       expect(result.current.error).toBeTruthy();
       expect(result.current.data).toBeUndefined();
@@ -228,11 +231,9 @@ describe("useIntegrations (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await expect(
-        act(async () => {
-          await result.current.mutateAsync("non-existent");
-        })
-      ).rejects.toThrow();
+      await act(async () => {
+        await expect(result.current.mutateAsync("non-existent")).rejects.toThrow();
+      });
     });
   });
 
@@ -248,15 +249,21 @@ describe("useIntegrations (MSW)", () => {
 
       seedIntegrationsData(integrations);
 
+      const localQueryClient = createTestQueryClient();
       const { result } = renderHook(() => useIntegrations(), {
-        wrapper: createQueryWrapper(queryClient),
+        wrapper: createQueryWrapper(localQueryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitFor(() => {
+        const length = result.current?.data?.integrations?.length;
+        expect(length).toBe(5);
+      });
 
-      expect(result.current.data?.integrations).toHaveLength(5);
+      const finalResult = result.current;
+      expect(finalResult).not.toBeNull();
+      expect(finalResult?.data?.integrations).toHaveLength(5);
 
-      const types = result.current.data?.integrations.map((i) => i.type);
+      const types = finalResult?.data?.integrations.map((i) => i.type);
       expect(types).toContain("email");
       expect(types).toContain("sms");
       expect(types).toContain("storage");
@@ -278,9 +285,9 @@ describe("useIntegrations (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitFor(() => expect(result.current?.isLoading ?? true).toBe(false));
 
-      const statusCounts = result.current.data?.integrations.reduce(
+      const statusCounts = result.current?.data?.integrations.reduce(
         (acc, i) => {
           acc[i.status] = (acc[i.status] || 0) + 1;
           return acc;

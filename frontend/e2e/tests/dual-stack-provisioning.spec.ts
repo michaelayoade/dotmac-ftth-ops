@@ -4,7 +4,9 @@
  * Tests complete user workflows for provisioning subscribers with IPv4/IPv6
  */
 
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+import type { Page } from "@playwright/test";
+
 
 test.describe("Dual-Stack Subscriber Provisioning", () => {
   test.beforeEach(async ({ page }) => {

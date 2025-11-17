@@ -2,7 +2,7 @@
  * MSW Handlers for Credit Notes API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { CreditNoteSummary } from '../../../hooks/useCreditNotes';
 
 // In-memory storage for test data
@@ -39,22 +39,20 @@ export function seedCreditNotesData(notesData: any[]) {
 
 export const creditNotesHandlers = [
   // GET /billing/credit-notes - List credit notes
-  rest.get('*/billing/credit-notes', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/billing/credit-notes', ({ request, params }) => {
+    const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
     const limited = creditNotes.slice(0, limit);
 
-    return res(
-      ctx.json({
-        credit_notes: limited,
-      })
-    );
+    return HttpResponse.json({
+      credit_notes: limited,
+    });
   }),
 
   // POST /billing/credit-notes - Create credit note
-  rest.post('*/billing/credit-notes', async (req, res, ctx) => {
-    const data = await req.json();
+  http.post('*/billing/credit-notes', async ({ request, params }) => {
+    const data = await request.json();
 
     const newCreditNote = createMockCreditNote({
       invoice_id: data.invoice_id,
@@ -65,9 +63,6 @@ export const creditNotesHandlers = [
 
     creditNotes.push(newCreditNote);
 
-    return res(
-      ctx.status(201),
-      ctx.json(newCreditNote)
-    );
+    return HttpResponse.json(newCreditNote, { status: 201 });
   }),
 ];

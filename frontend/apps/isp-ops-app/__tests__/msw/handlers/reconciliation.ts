@@ -3,7 +3,7 @@
  * Mocks billing reconciliation and payment recovery endpoints
  */
 
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import type {
   ReconciliationStart,
   ReconcilePaymentRequest,
@@ -126,8 +126,8 @@ export function setCircuitBreakerState(open: boolean, failureCount: number = 0):
 
 export const reconciliationHandlers = [
   // GET /api/v1/billing/reconciliations/summary - MUST come before /:id route
-  rest.get("*/api/v1/billing/reconciliations/summary", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/billing/reconciliations/summary", ({ request, params }) => {
+    const url = new URL(request.url);
     const bankAccountId = url.searchParams.get("bank_account_id");
     const days = url.searchParams.get("days");
 
@@ -181,11 +181,11 @@ export const reconciliationHandlers = [
     };
 
     console.log("[MSW] Returning summary:", summary);
-    return res(ctx.json(summary));
+    return HttpResponse.json(summary);
   }),
 
   // GET /api/v1/billing/reconciliations/circuit-breaker/status - MUST come before /:id route
-  rest.get("*/api/v1/billing/reconciliations/circuit-breaker/status", (req, res, ctx) => {
+  http.get("*/api/v1/billing/reconciliations/circuit-breaker/status", ({ request, params }) => {
     console.log("[MSW] GET /api/v1/billing/reconciliations/circuit-breaker/status");
 
     const status = {
@@ -198,12 +198,12 @@ export const reconciliationHandlers = [
     };
 
     console.log("[MSW] Circuit breaker status:", status);
-    return res(ctx.json(status));
+    return HttpResponse.json(status);
   }),
 
   // POST /api/v1/billing/reconciliations/retry-payment - MUST come before /:id route
-  rest.post("*/api/v1/billing/reconciliations/retry-payment", async (req, res, ctx) => {
-    const retryRequest = await req.json<PaymentRetryRequest>();
+  http.post("*/api/v1/billing/reconciliations/retry-payment", async ({ request, params }) => {
+    const retryRequest = await request.json<PaymentRetryRequest>();
 
     console.log("[MSW] POST /api/v1/billing/reconciliations/retry-payment", {
       retryRequest,
@@ -221,12 +221,12 @@ export const reconciliationHandlers = [
     };
 
     console.log("[MSW] Retry result:", response);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // GET /api/v1/billing/reconciliations - List reconciliations
-  rest.get("*/api/v1/billing/reconciliations", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/billing/reconciliations", ({ request, params }) => {
+    const url = new URL(request.url);
     const bankAccountId = url.searchParams.get("bank_account_id");
     const status = url.searchParams.get("status");
     const startDate = url.searchParams.get("start_date");
@@ -283,12 +283,12 @@ export const reconciliationHandlers = [
     };
 
     console.log(`[MSW] Returning ${paginated.length}/${total} reconciliations`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // POST /api/v1/billing/reconciliations - Start reconciliation
-  rest.post("*/api/v1/billing/reconciliations", async (req, res, ctx) => {
-    const startData = await req.json<ReconciliationStart>();
+  http.post("*/api/v1/billing/reconciliations", async ({ request, params }) => {
+    const startData = await request.json<ReconciliationStart>();
 
     console.log("[MSW] POST /api/v1/billing/reconciliations", { startData });
 
@@ -307,31 +307,28 @@ export const reconciliationHandlers = [
     reconciliations.push(newReconciliation);
 
     console.log("[MSW] Created reconciliation:", newReconciliation.id);
-    return res(ctx.json(newReconciliation));
+    return HttpResponse.json(newReconciliation);
   }),
 
   // GET /api/v1/billing/reconciliations/:id - Get single reconciliation
-  rest.get("*/api/v1/billing/reconciliations/:id", (req, res, ctx) => {
-    const { id } = req.params;
+  http.get("*/api/v1/billing/reconciliations/:id", ({ request, params }) => {
+    const { id } = params;
 
     console.log("[MSW] GET /api/v1/billing/reconciliations/:id", { id });
 
     const reconciliation = reconciliations.find((r) => r.id === parseInt(id as string));
 
     if (!reconciliation) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Reconciliation not found" })
-      );
+      return HttpResponse.json({ detail: "Reconciliation not found" }, { status: 404 });
     }
 
-    return res(ctx.json(reconciliation));
+    return HttpResponse.json(reconciliation);
   }),
 
   // POST /api/v1/billing/reconciliations/:id/payments - Add reconciled payment
-  rest.post("*/api/v1/billing/reconciliations/:id/payments", async (req, res, ctx) => {
-    const { id } = req.params;
-    const paymentData = await req.json<ReconcilePaymentRequest>();
+  http.post("*/api/v1/billing/reconciliations/:id/payments", async ({ request, params }) => {
+    const { id } = params;
+    const paymentData = await request.json<ReconcilePaymentRequest>();
 
     console.log("[MSW] POST /api/v1/billing/reconciliations/:id/payments", {
       id,
@@ -341,10 +338,7 @@ export const reconciliationHandlers = [
     const reconciliation = reconciliations.find((r) => r.id === parseInt(id as string));
 
     if (!reconciliation) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Reconciliation not found" })
-      );
+      return HttpResponse.json({ detail: "Reconciliation not found" }, { status: 404 });
     }
 
     // Add reconciled item
@@ -357,13 +351,13 @@ export const reconciliationHandlers = [
     reconciliation.updated_at = new Date().toISOString();
 
     console.log("[MSW] Added payment to reconciliation:", reconciledItem);
-    return res(ctx.json(reconciliation));
+    return HttpResponse.json(reconciliation);
   }),
 
   // POST /api/v1/billing/reconciliations/:id/complete - Complete reconciliation
-  rest.post("*/api/v1/billing/reconciliations/:id/complete", async (req, res, ctx) => {
-    const { id } = req.params;
-    const completeData = await req.json<ReconciliationComplete>();
+  http.post("*/api/v1/billing/reconciliations/:id/complete", async ({ request, params }) => {
+    const { id } = params;
+    const completeData = await request.json<ReconciliationComplete>();
 
     console.log("[MSW] POST /api/v1/billing/reconciliations/:id/complete", {
       id,
@@ -373,10 +367,7 @@ export const reconciliationHandlers = [
     const reconciliation = reconciliations.find((r) => r.id === parseInt(id as string));
 
     if (!reconciliation) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Reconciliation not found" })
-      );
+      return HttpResponse.json({ detail: "Reconciliation not found" }, { status: 404 });
     }
 
     // Update to completed status
@@ -387,13 +378,13 @@ export const reconciliationHandlers = [
     reconciliation.updated_at = new Date().toISOString();
 
     console.log("[MSW] Completed reconciliation:", reconciliation.id);
-    return res(ctx.json(reconciliation));
+    return HttpResponse.json(reconciliation);
   }),
 
   // POST /api/v1/billing/reconciliations/:id/approve - Approve reconciliation
-  rest.post("*/api/v1/billing/reconciliations/:id/approve", async (req, res, ctx) => {
-    const { id } = req.params;
-    const approveData = await req.json<ReconciliationApprove>();
+  http.post("*/api/v1/billing/reconciliations/:id/approve", async ({ request, params }) => {
+    const { id } = params;
+    const approveData = await request.json<ReconciliationApprove>();
 
     console.log("[MSW] POST /api/v1/billing/reconciliations/:id/approve", {
       id,
@@ -403,17 +394,14 @@ export const reconciliationHandlers = [
     const reconciliation = reconciliations.find((r) => r.id === parseInt(id as string));
 
     if (!reconciliation) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Reconciliation not found" })
-      );
+      return HttpResponse.json({ detail: "Reconciliation not found" }, { status: 404 });
     }
 
     // Must be completed before approval
     if (reconciliation.status !== "completed") {
-      return res(
-        ctx.status(400),
-        ctx.json({ detail: "Reconciliation must be completed before approval" })
+      return HttpResponse.json(
+        { detail: "Reconciliation must be completed before approval" },
+        { status: 400 }
       );
     }
 
@@ -425,6 +413,6 @@ export const reconciliationHandlers = [
     reconciliation.updated_at = new Date().toISOString();
 
     console.log("[MSW] Approved reconciliation:", reconciliation.id);
-    return res(ctx.json(reconciliation));
+    return HttpResponse.json(reconciliation);
   }),
 ];

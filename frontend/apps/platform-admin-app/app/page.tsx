@@ -36,6 +36,7 @@ export default function HomePage() {
                 fill
                 className="object-contain dark:hidden"
                 priority
+                unoptimized
               />
               {branding.logo.dark && (
                 <Image
@@ -44,6 +45,7 @@ export default function HomePage() {
                   fill
                   className="object-contain hidden dark:block"
                   priority
+                  unoptimized
                 />
               )}
             </div>

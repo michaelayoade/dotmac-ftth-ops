@@ -250,11 +250,17 @@ export default function MapDashboard() {
     }
     return next;
   }, [filters]);
-  const { data: techniciansData } = useTechnicians(technicianFilters);
+  const {
+    data: techniciansData,
+    refetch: refetchTechnicians,
+  } = useTechnicians(technicianFilters);
 
   // Fetch today's assignments
   const today = format(new Date(), "yyyy-MM-dd");
-  const { data: assignmentsData } = useAssignments({
+  const {
+    data: assignmentsData,
+    refetch: refetchAssignments,
+  } = useAssignments({
     dateFrom: today,
     dateTo: today,
   });
@@ -308,11 +314,12 @@ export default function MapDashboard() {
   // Auto-refresh every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      // Trigger refetch (React Query handles this automatically)
+      void refetchTechnicians();
+      void refetchAssignments();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [refetchAssignments, refetchTechnicians]);
 
   return (
     <div className="h-screen flex flex-col">

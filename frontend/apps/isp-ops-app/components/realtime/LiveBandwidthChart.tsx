@@ -62,16 +62,17 @@ export function LiveBandwidthChart() {
           <Badge
             variant={isConnected ? "default" : "secondary"}
             className="flex items-center gap-1"
+            data-testid="connection-status-badge"
           >
             {isConnected ? (
               <>
-                <Wifi className="h-3 w-3" />
-                Live
+                <Wifi className="h-3 w-3" aria-hidden="true" />
+                <span data-testid="connection-status-label">Live</span>
               </>
             ) : (
               <>
-                <WifiOff className="h-3 w-3" />
-                Simulated
+                <WifiOff className="h-3 w-3" aria-hidden="true" />
+                <span data-testid="connection-status-label">Simulated</span>
               </>
             )}
           </Badge>
@@ -83,19 +84,21 @@ export function LiveBandwidthChart() {
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Upload</p>
-              <p className="text-2xl font-bold text-green-500">
+              <p className="text-2xl font-bold text-green-500" data-testid="upload-rate">
                 {latestData.upload_mbps.toFixed(1)} Mbps
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Download</p>
-              <p className="text-2xl font-bold text-blue-500">
+              <p className="text-2xl font-bold text-blue-500" data-testid="download-rate">
                 {latestData.download_mbps.toFixed(1)} Mbps
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Latency</p>
-              <p className="text-2xl font-bold">{latestData.latency_ms.toFixed(0)} ms</p>
+              <p className="text-2xl font-bold" data-testid="latency-value">
+                {latestData.latency_ms.toFixed(0)} ms
+              </p>
             </div>
           </div>
         )}

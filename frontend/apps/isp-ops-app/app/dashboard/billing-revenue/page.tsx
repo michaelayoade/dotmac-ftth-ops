@@ -60,7 +60,7 @@ function MetricCard({
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="mt-2 text-3xl font-bold text-foreground">{formattedValue}</p>
-          {subtitle && <p className="mt-1 text-sm text-foreground0">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
           {trend && (
             <div
               className={`mt-2 flex items-center text-sm ${trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
@@ -81,7 +81,7 @@ function MetricCard({
     return (
       <Link href={href} className="block group relative">
         {content}
-        <ArrowUpRight className="absolute top-4 right-4 h-4 w-4 text-foreground0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ArrowUpRight className="absolute top-4 right-4 h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       </Link>
     );
   }
@@ -142,7 +142,7 @@ function PaymentActivity({ items }: { items: PaymentActivityItem[] }) {
       </div>
       <div className="divide-y divide-border">
         {items.length === 0 ? (
-          <div className="p-6 text-center text-foreground0">No recent transactions</div>
+          <div className="p-6 text-center text-muted-foreground">No recent transactions</div>
         ) : (
           items.map((item) => (
             <div key={item.id} className="p-4 hover:bg-accent/50 transition-colors">
@@ -153,7 +153,7 @@ function PaymentActivity({ items }: { items: PaymentActivityItem[] }) {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{item.description}</p>
-                    <p className="text-xs text-foreground0 mt-1">{item.timestamp}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{item.timestamp}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -365,7 +365,7 @@ function BillingRevenuePageContent() {
                   <p className="font-medium text-foreground">Invoices</p>
                   <p className="text-sm text-muted-foreground">View and manage invoices</p>
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-foreground0" />
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </Link>
 
               <Link
@@ -379,7 +379,7 @@ function BillingRevenuePageContent() {
                   <p className="font-medium text-foreground">Subscriptions</p>
                   <p className="text-sm text-muted-foreground">Manage recurring billing</p>
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-foreground0" />
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </Link>
 
               <Link
@@ -393,7 +393,7 @@ function BillingRevenuePageContent() {
                   <p className="font-medium text-foreground">Payments</p>
                   <p className="text-sm text-muted-foreground">Process and track payments</p>
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-foreground0" />
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </Link>
 
               <Link
@@ -407,7 +407,7 @@ function BillingRevenuePageContent() {
                   <p className="font-medium text-foreground">Pricing Plans</p>
                   <p className="text-sm text-muted-foreground">Configure pricing tiers</p>
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-foreground0" />
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </Link>
             </div>
           </div>

@@ -44,9 +44,54 @@ interface UseRADIUSOptions {
   enabled?: boolean;
 }
 
+async function parseListResponse<T>(response: Response): Promise<{ data: T[]; total: number }> {
+  const payload = await response.json();
+  let items: T[] = [];
+  let total = 0;
+
+  if (Array.isArray(payload)) {
+    items = payload;
+  } else if (Array.isArray(payload?.data)) {
+    items = payload.data as T[];
+    total = Number(payload?.total ?? payload?.count ?? payload?.total_count ?? items.length);
+  } else if (Array.isArray(payload?.items)) {
+    items = payload.items as T[];
+    total = Number(payload?.total ?? payload?.count ?? payload?.total_count ?? items.length);
+  } else {
+    items = [];
+  }
+
+  if (!Number.isFinite(total) || total <= 0) {
+    const headerTotal =
+      response.headers.get('x-total-count') ||
+      response.headers.get('x-total') ||
+      response.headers.get('x-total-results');
+    if (headerTotal) {
+      const parsed = Number.parseInt(headerTotal, 10);
+      if (Number.isFinite(parsed)) {
+        total = parsed;
+      }
+    }
+  }
+
+  if (!Number.isFinite(total) || total <= 0) {
+    total = items.length;
+  }
+
+  return { data: items, total };
+}
+
 export function useRADIUSSubscribers(offset: number, limit: number, options?: UseRADIUSOptions) {
   const { api } = useAppConfig();
-  const apiBaseUrl = api.baseUrl || "";
+  const buildApiUrl = (path: string) => {
+    if (typeof api.buildUrl === "function") {
+      return api.buildUrl(path);
+    }
+    const base = api.baseUrl || "";
+    const prefix = api.prefix || "";
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    return `${base}${prefix}${normalizedPath}`;
+  };
   return useQuery({
     queryKey: ['radius-subscribers', offset, limit, api.baseUrl, api.prefix],
     queryFn: async () => {
@@ -58,7 +103,7 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
         headers['Authorization'] = `Bearer ${token}`;
       }
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/radius/subscribers?offset=${offset}&limit=${limit}`,
+        `${buildApiUrl("/radius/subscribers")}?offset=${offset}&limit=${limit}`,
         {
           credentials: 'include',
           headers,
@@ -69,11 +114,7 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
         throw new Error(`Failed to fetch RADIUS subscribers: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return {
-        data: data as RADIUSSubscriber[],
-        total: data.length,
-      };
+      return parseListResponse<RADIUSSubscriber>(response);
     },
     enabled: options?.enabled ?? true,
     staleTime: 30000, // 30 seconds
@@ -82,7 +123,15 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
 
 export function useRADIUSSessions(options?: UseRADIUSOptions) {
   const { api } = useAppConfig();
-  const apiBaseUrl = api.baseUrl || "";
+  const buildApiUrl = (path: string) => {
+    if (typeof api.buildUrl === "function") {
+      return api.buildUrl(path);
+    }
+    const base = api.baseUrl || "";
+    const prefix = api.prefix || "";
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    return `${base}${prefix}${normalizedPath}`;
+  };
   return useQuery({
     queryKey: ['radius-sessions', api.baseUrl, api.prefix],
     queryFn: async () => {
@@ -93,7 +142,7 @@ export function useRADIUSSessions(options?: UseRADIUSOptions) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch(`${apiBaseUrl}/api/v1/radius/sessions`, {
+      const response = await fetch(buildApiUrl("/radius/sessions"), {
         credentials: 'include',
         headers,
       });
@@ -102,11 +151,7 @@ export function useRADIUSSessions(options?: UseRADIUSOptions) {
         throw new Error(`Failed to fetch RADIUS sessions: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return {
-        data: data as RADIUSSession[],
-        total: data.length,
-      };
+      return parseListResponse<RADIUSSession>(response);
     },
     enabled: options?.enabled ?? true,
     staleTime: 10000, // 10 seconds (sessions change frequently)

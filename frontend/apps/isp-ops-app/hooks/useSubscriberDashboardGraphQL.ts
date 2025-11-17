@@ -13,17 +13,30 @@
  * - Type-safe from backend to frontend
  */
 
+import { useEffect, useRef } from "react";
 import { useSubscriberDashboardQuery } from "@/lib/graphql/generated";
 import { logger } from "@/lib/logger";
+
+import { useServiceStatistics } from "@/hooks/useServiceLifecycle";
 
 interface UseSubscriberDashboardOptions {
   limit?: number;
   search?: string;
   enabled?: boolean;
+  pollingIntervalMs?: number;
+  pollingEnabled?: boolean;
+  lifecycleMetricsEnabled?: boolean;
 }
 
 export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOptions = {}) {
-  const { limit = 50, search, enabled = true } = options;
+  const {
+    limit = 50,
+    search,
+    enabled = true,
+    pollingIntervalMs = 30000,
+    pollingEnabled = true,
+    lifecycleMetricsEnabled = false,
+  } = options;
 
   const { data, loading, error, refetch } = useSubscriberDashboardQuery({
     variables: {
@@ -31,18 +44,59 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
       search: search || undefined,
     },
     skip: !enabled,
-    pollInterval: 30000, // Refresh every 30 seconds
-    onError: (err) => {
-      logger.error("GraphQL subscriber dashboard query failed", err);
-    },
   });
+
+  const { data: lifecycleStats, error: lifecycleError } = useServiceStatistics({
+    enabled: lifecycleMetricsEnabled,
+  });
+
+  const refetchRef = useRef(refetch);
+
+  useEffect(() => {
+    refetchRef.current = refetch;
+  }, [refetch]);
+
+  useEffect(() => {
+    if (error) {
+      logger.error("GraphQL subscriber dashboard query failed", error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (!enabled || !pollingEnabled || pollingIntervalMs <= 0) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      const executeRefetch = refetchRef.current;
+      if (typeof executeRefetch === "function") {
+        void executeRefetch().catch((err) => {
+          logger.warn("GraphQL subscriber dashboard poll failed", err);
+        });
+      }
+    }, pollingIntervalMs);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [enabled, pollingEnabled, pollingIntervalMs]);
 
   // Transform GraphQL data to match existing component expectations
   const subscribers = data?.subscribers ?? [];
   const metrics = data?.subscriberMetrics;
 
   // Calculate active services count from sessions
-  const activeServicesCount = subscribers.filter((s) => s.sessions.length > 0).length;
+  const fallbackActiveServicesCount = subscribers.filter((s) => s.sessions.length > 0).length;
+  const activeServicesCount = lifecycleStats?.active_count ?? fallbackActiveServicesCount;
+
+  useEffect(() => {
+    if (lifecycleError) {
+      logger.warn("Failed to load lifecycle statistics for subscriber dashboard", {
+        error: lifecycleError.message,
+        stack: lifecycleError.stack,
+      });
+    }
+  }, [lifecycleError]);
 
   // Get all sessions flattened
   const allSessions = subscribers.flatMap((s) => s.sessions);

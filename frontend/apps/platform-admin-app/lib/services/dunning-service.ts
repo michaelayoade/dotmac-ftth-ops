@@ -10,8 +10,6 @@
 
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.api.baseUrl;
-
 // ============================================
 // Type Definitions
 // ============================================
@@ -170,10 +168,12 @@ export interface ExecutionListFilters {
 // ============================================
 
 class DunningService {
-  private baseUrl: string;
+  private get baseUrl(): string {
+    return platformConfig.api.baseUrl || "";
+  }
 
-  constructor() {
-    this.baseUrl = API_BASE;
+  private buildUrl(path: string): string {
+    return platformConfig.api.buildUrl(path);
   }
 
   /**
@@ -221,9 +221,9 @@ class DunningService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/billing/dunning/campaigns${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(
+      `/billing/dunning/campaigns${queryString ? `?${queryString}` : ""}`,
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -241,11 +241,14 @@ class DunningService {
    * @returns Campaign details
    */
   async getCampaign(campaignId: string): Promise<DunningCampaign> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-      credentials: "include",
-    });
+    const response = await fetch(
+      this.buildUrl(`/billing/dunning/campaigns/${campaignId}`),
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+      },
+    );
 
     return this.handleResponse<DunningCampaign>(response);
   }
@@ -257,7 +260,7 @@ class DunningService {
    * @returns Created campaign
    */
   async createCampaign(data: DunningCampaignCreate): Promise<DunningCampaign> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/dunning/campaigns`, {
+    const response = await fetch(this.buildUrl("/billing/dunning/campaigns"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -275,12 +278,15 @@ class DunningService {
    * @returns Updated campaign
    */
   async updateCampaign(campaignId: string, data: DunningCampaignUpdate): Promise<DunningCampaign> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
-      method: "PATCH",
-      headers: this.getAuthHeaders(),
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      this.buildUrl(`/billing/dunning/campaigns/${campaignId}`),
+      {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+        body: JSON.stringify(data),
+      },
+    );
 
     return this.handleResponse<DunningCampaign>(response);
   }
@@ -291,11 +297,14 @@ class DunningService {
    * @param campaignId - Campaign UUID
    */
   async deleteCampaign(campaignId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-      credentials: "include",
-    });
+    const response = await fetch(
+      this.buildUrl(`/billing/dunning/campaigns/${campaignId}`),
+      {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+      },
+    );
 
     if (!response.ok && response.status !== 204) {
       const error = await response.text();
@@ -310,7 +319,7 @@ class DunningService {
    */
   async pauseCampaign(campaignId: string): Promise<DunningCampaign> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}/pause`,
+      this.buildUrl(`/billing/dunning/campaigns/${campaignId}/pause`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -328,7 +337,7 @@ class DunningService {
    */
   async resumeCampaign(campaignId: string): Promise<DunningCampaign> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/dunning/campaigns/${campaignId}/resume`,
+      this.buildUrl(`/billing/dunning/campaigns/${campaignId}/resume`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -372,9 +381,9 @@ class DunningService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/billing/dunning/executions${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = this.buildUrl(
+      `/billing/dunning/executions${queryString ? `?${queryString}` : ""}`,
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -393,7 +402,7 @@ class DunningService {
    */
   async getExecution(executionId: string): Promise<DunningExecution> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/dunning/executions/${executionId}`,
+      this.buildUrl(`/billing/dunning/executions/${executionId}`),
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -411,7 +420,7 @@ class DunningService {
    * @returns Started execution
    */
   async startExecution(data: DunningExecutionStart): Promise<DunningExecution> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/dunning/executions`, {
+    const response = await fetch(this.buildUrl("/billing/dunning/executions"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -429,7 +438,7 @@ class DunningService {
    */
   async cancelExecution(executionId: string, reason: string): Promise<DunningExecution> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/dunning/executions/${executionId}/cancel`,
+      this.buildUrl(`/billing/dunning/executions/${executionId}/cancel`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -451,7 +460,7 @@ class DunningService {
    * @returns Dunning statistics
    */
   async getStatistics(): Promise<DunningStatistics> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/dunning/stats`, {
+    const response = await fetch(this.buildUrl("/billing/dunning/stats"), {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -468,7 +477,7 @@ class DunningService {
    */
   async getCampaignStatistics(campaignId: string): Promise<DunningCampaignStats> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/dunning/stats/campaigns/${campaignId}`,
+      this.buildUrl(`/billing/dunning/stats/campaigns/${campaignId}`),
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -487,7 +496,7 @@ class DunningService {
    */
   async getRecoveryChartData(days: number = 30): Promise<DunningRecoveryChartData[]> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/dunning/analytics/recovery?days=${days}`,
+      this.buildUrl(`/billing/dunning/analytics/recovery?days=${days}`),
       {
         method: "GET",
         headers: this.getAuthHeaders(),

@@ -1,7 +1,7 @@
 {
   "instances": [
     {
-      "id": "1a4cfbf1-3158-4473-b5d9-60c56cd74f79",
+      "id": "a3c78e60-608d-483d-9929-6d0695894e1c",
       "plugin_name": "Test Notification",
       "instance_name": "Test",
       "config_schema": {
@@ -86,10 +86,10 @@
     }
   ],
   "configurations": {
-    "1a4cfbf1-3158-4473-b5d9-60c56cd74f79": {
+    "a3c78e60-608d-483d-9929-6d0695894e1c": {
       "api_key": {
         "__secret__": true,
-        "path": "plugins/1a4cfbf1-3158-4473-b5d9-60c56cd74f79/api_key"
+        "path": "plugins/a3c78e60-608d-483d-9929-6d0695894e1c/api_key"
       },
       "endpoint": "https://test.com"
     }

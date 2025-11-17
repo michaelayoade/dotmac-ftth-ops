@@ -4,6 +4,7 @@
  */
 
 import { platformConfig } from "../config";
+import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 // ============================================
 // Types matching backend models
@@ -180,20 +181,23 @@ export interface ReconcilePaymentRequest {
 // ============================================
 
 class BankAccountsService {
-  private baseUrl = platformConfig.api.baseUrl;
-
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("access_token");
-    return {
-      Authorization: `Bearer ${token}`,
+    const token = getOperatorAccessToken();
+    const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   // ==================== Bank Accounts ====================
 
   async createBankAccount(data: CompanyBankAccountCreate): Promise<CompanyBankAccountResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/bank-accounts`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/bank-accounts"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -211,12 +215,9 @@ class BankAccountsService {
     const params = new URLSearchParams();
     if (includeInactive) params.append("include_inactive", "true");
 
-    const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/bank-accounts?${params.toString()}`,
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts?${params.toString()}`), {
+      headers: this.getAuthHeaders(),
+    });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -227,7 +228,7 @@ class BankAccountsService {
   }
 
   async getBankAccount(accountId: number): Promise<CompanyBankAccountResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/bank-accounts/${accountId}`, {
+    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`), {
       headers: this.getAuthHeaders(),
     });
 
@@ -241,7 +242,7 @@ class BankAccountsService {
 
   async getBankAccountSummary(accountId: number): Promise<BankAccountSummary> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`,
+      platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}/summary`),
       {
         headers: this.getAuthHeaders(),
       },
@@ -259,7 +260,7 @@ class BankAccountsService {
     accountId: number,
     data: CompanyBankAccountUpdate,
   ): Promise<CompanyBankAccountResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/bank-accounts/${accountId}`, {
+    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`), {
       method: "PUT",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -278,7 +279,7 @@ class BankAccountsService {
     if (notes) params.append("notes", notes);
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/bank-accounts/${accountId}/verify?${params.toString()}`,
+      platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}/verify?${params.toString()}`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -294,7 +295,7 @@ class BankAccountsService {
   }
 
   async deactivateBankAccount(accountId: number): Promise<CompanyBankAccountResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/bank-accounts/${accountId}`, {
+    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`), {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });
@@ -310,7 +311,7 @@ class BankAccountsService {
   // ==================== Manual Payments ====================
 
   async recordCashPayment(data: CashPaymentCreate): Promise<ManualPaymentResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/payments/cash`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/payments/cash"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -325,7 +326,7 @@ class BankAccountsService {
   }
 
   async recordCheckPayment(data: CheckPaymentCreate): Promise<ManualPaymentResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/payments/check`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/payments/check"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -340,7 +341,7 @@ class BankAccountsService {
   }
 
   async recordBankTransfer(data: BankTransferCreate): Promise<ManualPaymentResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/payments/bank-transfer`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/payments/bank-transfer"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -355,7 +356,7 @@ class BankAccountsService {
   }
 
   async recordMobileMoney(data: MobileMoneyCreate): Promise<ManualPaymentResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/payments/mobile-money`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/payments/mobile-money"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -374,7 +375,7 @@ class BankAccountsService {
     limit: number = 100,
     offset: number = 0,
   ): Promise<ManualPaymentResponse[]> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/payments/search`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/payments/search"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(filters),
@@ -393,7 +394,7 @@ class BankAccountsService {
     if (notes) params.append("notes", notes);
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/payments/${paymentId}/verify?${params.toString()}`,
+      platformConfig.api.buildUrl(`/billing/payments/${paymentId}/verify?${params.toString()}`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -409,7 +410,7 @@ class BankAccountsService {
   }
 
   async reconcilePayments(request: ReconcilePaymentRequest): Promise<ManualPaymentResponse[]> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/payments/reconcile`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/payments/reconcile"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(request),
@@ -424,20 +425,17 @@ class BankAccountsService {
   }
 
   async uploadPaymentAttachment(paymentId: number, file: File): Promise<any> {
-    const token = localStorage.getItem("access_token");
+    const token = getOperatorAccessToken();
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/payments/${paymentId}/attachments`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+    const response = await fetch(platformConfig.api.buildUrl(`/billing/payments/${paymentId}/attachments`), {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-    );
+      body: formData,
+    });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));

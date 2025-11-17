@@ -3,25 +3,54 @@
  * Tests orchestration workflow statistics functionality
  */
 import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createElement, type PropsWithChildren } from "react";
 import type { WorkflowStatistics, WorkflowType } from "../../apps/platform-admin-app/hooks/useOrchestration";
 
 type UseOrchestrationStatsHook = () => {
-  stats: WorkflowStatistics | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
+  data: WorkflowStatistics | null | undefined;
+  isLoading: boolean;
+  error: unknown;
+  refetch: () => Promise<any>;
 };
 
 export function runUseOrchestrationStatsSuite(
   useOrchestrationStats: UseOrchestrationStatsHook,
   apiClient: any
 ) {
+  const cleanupFns: Array<() => void> = [];
+
+  const renderUseOrchestrationStats = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          cacheTime: 0,
+        },
+      },
+    });
+
+    const wrapper = ({ children }: PropsWithChildren) =>
+      createElement(QueryClientProvider, { client: queryClient }, children);
+
+    const hook = renderHook(() => useOrchestrationStats(), { wrapper });
+
+    cleanupFns.push(() => {
+      hook.unmount();
+      queryClient.clear();
+    });
+
+    return hook;
+  };
+
   describe("useOrchestrationStats", () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
     afterEach(() => {
+      cleanupFns.forEach((cleanup) => cleanup());
+      cleanupFns.length = 0;
       jest.restoreAllMocks();
     });
 
@@ -49,17 +78,17 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
-        expect(result.current.loading).toBe(true);
+        expect(result.current.isLoading).toBe(true);
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats).toEqual(mockStats);
+        expect(result.current.data).toEqual(mockStats);
         expect(result.current.error).toBeNull();
-        expect(apiClient.get).toHaveBeenCalledWith("/orchestration/stats");
+        expect(apiClient.get).toHaveBeenCalledWith("/orchestration/statistics");
       });
 
       it("should handle stats with no workflows", async () => {
@@ -84,14 +113,14 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats?.total).toBe(0);
-        expect(result.current.stats?.success_rate).toBe(0);
+        expect(result.current.data?.total).toBe(0);
+        expect(result.current.data?.success_rate).toBe(0);
       });
 
       it("should handle stats without avg_duration_seconds", async () => {
@@ -116,13 +145,13 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats?.avg_duration_seconds).toBeUndefined();
+        expect(result.current.data?.avg_duration_seconds).toBeUndefined();
       });
 
       it("should allow manual refetch", async () => {
@@ -147,10 +176,10 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValue({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
         // Clear previous calls
@@ -177,40 +206,42 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockRejectedValueOnce(mockError);
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.error).toBe("Internal server error");
-        expect(result.current.stats).toBeNull();
+        const error = result.current.error as Error;
+        expect(error.message).toBe("Internal server error");
+        expect(result.current.data).toBeUndefined();
       });
 
       it("should handle errors without detail message", async () => {
         const mockError = new Error("Network error");
         apiClient.get.mockRejectedValueOnce(mockError);
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.error).toBe("Failed to fetch statistics");
-        expect(result.current.stats).toBeNull();
+        const error = result.current.error as Error;
+        expect(error.message).toBe("Failed to fetch statistics");
+        expect(result.current.data).toBeUndefined();
       });
 
       it("should handle empty response", async () => {
         apiClient.get.mockResolvedValueOnce({ data: null });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats).toBeNull();
+        expect(result.current.data).toBeNull();
         expect(result.current.error).toBeNull();
       });
     });
@@ -239,14 +270,14 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats?.success_rate).toBe(99.5);
-        expect(result.current.stats?.failed).toBe(5);
+        expect(result.current.data?.success_rate).toBe(99.5);
+        expect(result.current.data?.failed).toBe(5);
       });
 
       it("should handle low success rate", async () => {
@@ -271,14 +302,14 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats?.success_rate).toBe(58.82);
-        expect(result.current.stats?.failed).toBe(35);
+        expect(result.current.data?.success_rate).toBe(58.82);
+        expect(result.current.data?.failed).toBe(35);
       });
 
       it("should handle uneven workflow type distribution", async () => {
@@ -303,14 +334,14 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats?.by_type.provision_subscriber).toBe(95);
-        expect(result.current.stats?.by_type.deprovision_subscriber).toBe(1);
+        expect(result.current.data?.by_type.provision_subscriber).toBe(95);
+        expect(result.current.data?.by_type.deprovision_subscriber).toBe(1);
       });
 
       it("should handle very fast workflows", async () => {
@@ -336,13 +367,13 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats?.avg_duration_seconds).toBe(0.5);
+        expect(result.current.data?.avg_duration_seconds).toBe(0.5);
       });
 
       it("should handle very slow workflows", async () => {
@@ -368,13 +399,13 @@ export function runUseOrchestrationStatsSuite(
 
         apiClient.get.mockResolvedValueOnce({ data: mockStats });
 
-        const { result } = renderHook(() => useOrchestrationStats());
+        const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.isLoading).toBe(false);
         });
 
-        expect(result.current.stats?.avg_duration_seconds).toBe(3600);
+        expect(result.current.data?.avg_duration_seconds).toBe(3600);
       });
     });
   });

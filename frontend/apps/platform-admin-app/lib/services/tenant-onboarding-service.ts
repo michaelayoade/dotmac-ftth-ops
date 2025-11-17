@@ -4,6 +4,7 @@
  */
 
 import { platformConfig } from "../config";
+import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 import { Tenant } from "./tenant-service";
 
 export interface OnboardingAdminUser {
@@ -75,21 +76,24 @@ export interface OnboardingStatusResponse {
 }
 
 class TenantOnboardingService {
-  private baseUrl = platformConfig.api.baseUrl;
-
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("access_token");
-    return {
-      Authorization: `Bearer ${token}`,
+    const token = getOperatorAccessToken();
+    const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   /**
    * Onboard a new or existing tenant
    */
   async onboardTenant(request: TenantOnboardingRequest): Promise<TenantOnboardingResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/onboarding`, {
+    const response = await fetch(platformConfig.api.buildUrl("/tenants/onboarding"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(request),
@@ -107,9 +111,12 @@ class TenantOnboardingService {
    * Get onboarding status for a tenant
    */
   async getOnboardingStatus(tenantId: string): Promise<OnboardingStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/onboarding/status`, {
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      platformConfig.api.buildUrl(`/tenants/${tenantId}/onboarding/status`),
+      {
+        headers: this.getAuthHeaders(),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));

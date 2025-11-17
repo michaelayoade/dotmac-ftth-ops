@@ -125,7 +125,7 @@ export default function CustomerServicePage() {
               </CardTitle>
               <CardDescription>Your active internet service</CardDescription>
             </div>
-            <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+            <Badge variant="outline" className="bg-green-500/20 text-green-300 border-green-500/30">
               <CheckCircle className="h-3 w-3 mr-1" />
               Active
             </Badge>
@@ -189,12 +189,12 @@ export default function CustomerServicePage() {
             >
               {plan.recommended && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary">Recommended</Badge>
+                  <Badge variant="outline" className="bg-primary">Recommended</Badge>
                 </div>
               )}
               {plan.current && (
                 <div className="absolute -top-3 right-4">
-                  <Badge className="bg-green-500">Current Plan</Badge>
+                  <Badge variant="outline" className="bg-green-500">Current Plan</Badge>
                 </div>
               )}
 

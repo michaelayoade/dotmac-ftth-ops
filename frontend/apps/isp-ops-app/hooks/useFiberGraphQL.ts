@@ -14,6 +14,8 @@
  * @created 2025-10-16
  */
 
+import type { ApolloError } from "@apollo/client";
+
 import {
   useFiberDashboardQuery,
   useFiberCableListQuery,
@@ -55,6 +57,45 @@ export type {
   DistributionPointType,
   ServiceAreaType,
   FiberHealthStatus,
+};
+
+const formatGraphQLError = (error?: ApolloError) => {
+  if (!error) {
+    return undefined;
+  }
+
+  const graphQLError = error.graphQLErrors?.[0]?.message;
+  if (graphQLError) {
+    return graphQLError;
+  }
+
+  const extractMessage = (payload: unknown): string | undefined => {
+    if (!payload) {
+      return undefined;
+    }
+
+    const normalized =
+      typeof payload === "string"
+        ? (() => {
+            try {
+              return JSON.parse(payload);
+            } catch {
+              return undefined;
+            }
+          })()
+        : payload;
+
+    if (normalized && typeof normalized === "object" && "errors" in normalized) {
+      const errors = (normalized as { errors?: Array<{ message?: string }> }).errors;
+      return errors?.find((err) => typeof err?.message === "string")?.message;
+    }
+
+    return undefined;
+  };
+
+  const networkError = error.networkError as { result?: unknown; bodyText?: string } | null;
+  const networkMessage = extractMessage(networkError?.result) ?? extractMessage(networkError?.bodyText);
+  return networkMessage ?? error.message;
 };
 
 // ============================================================================
@@ -115,7 +156,7 @@ export function useFiberDashboardGraphQL(
     distributionPointsNearCapacity: data?.fiberDashboard?.distributionPointsNearCapacity || [],
     serviceAreasExpansion: data?.fiberDashboard?.serviceAreasExpansionCandidates || [],
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -181,7 +222,7 @@ export function useFiberCableListGraphQL(
     totalCount: data?.fiberCables?.totalCount || 0,
     hasNextPage: data?.fiberCables?.hasNextPage || false,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
     fetchMore: (newOffset: number) => {
       return fetchMore({
@@ -225,7 +266,7 @@ export function useFiberCableDetailGraphQL(
   return {
     cable: data?.fiberCable || null,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -261,7 +302,7 @@ export function useFiberCablesByRouteGraphQL(
   return {
     cables: data?.fiberCablesByRoute || [],
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -289,7 +330,7 @@ export function useFiberCablesByDistributionPointGraphQL(distributionPointId: st
   return {
     cables: data?.fiberCablesByDistributionPoint || [],
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -335,7 +376,7 @@ export function useFiberHealthMetricsGraphQL(
   return {
     metrics: data?.fiberHealthMetrics || [],
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -375,7 +416,7 @@ export function useFiberNetworkAnalyticsGraphQL(
   return {
     analytics: data?.fiberNetworkAnalytics || null,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -434,7 +475,7 @@ export function useSplicePointListGraphQL(
     totalCount: data?.splicePoints?.totalCount || 0,
     hasNextPage: data?.splicePoints?.hasNextPage || false,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -455,7 +496,7 @@ export function useSplicePointDetailGraphQL(splicePointId: string | undefined) {
   return {
     splicePoint: data?.splicePoint || null,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -476,7 +517,7 @@ export function useSplicePointsByCableGraphQL(cableId: string | undefined) {
   return {
     splicePoints: data?.splicePointsByCable || [],
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -539,7 +580,7 @@ export function useDistributionPointListGraphQL(
     totalCount: data?.distributionPoints?.totalCount || 0,
     hasNextPage: data?.distributionPoints?.hasNextPage || false,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -560,7 +601,7 @@ export function useDistributionPointDetailGraphQL(distributionPointId: string | 
   return {
     distributionPoint: data?.distributionPoint || null,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -581,7 +622,7 @@ export function useDistributionPointsBySiteGraphQL(siteId: string | undefined) {
   return {
     distributionPoints: data?.distributionPointsBySite || [],
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -641,7 +682,7 @@ export function useServiceAreaListGraphQL(
     totalCount: data?.serviceAreas?.totalCount || 0,
     hasNextPage: data?.serviceAreas?.hasNextPage || false,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -662,7 +703,7 @@ export function useServiceAreaDetailGraphQL(serviceAreaId: string | undefined) {
   return {
     serviceArea: data?.serviceArea || null,
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }
@@ -683,7 +724,7 @@ export function useServiceAreasByPostalCodeGraphQL(postalCode: string | undefine
   return {
     serviceAreas: data?.serviceAreasByPostalCode || [],
     loading,
-    error: error?.message,
+    error: formatGraphQLError(error),
     refetch,
   };
 }

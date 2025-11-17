@@ -44,45 +44,32 @@ export function NetworkProfileEditDialog({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState({
+  const buildFormState = (currentProfile: NetworkProfile | null) => ({
     // VLAN
-    serviceVlan: profile?.serviceVlan?.toString() || "",
-    innerVlan: profile?.innerVlan?.toString() || "",
-    vlanPool: profile?.vlanPool || "",
-    qinqEnabled: profile?.qinqEnabled || false,
+    serviceVlan: currentProfile?.serviceVlan?.toString() || "",
+    innerVlan: currentProfile?.innerVlan?.toString() || "",
+    vlanPool: currentProfile?.vlanPool || "",
+    qinqEnabled: currentProfile?.qinqEnabled || false,
 
     // IP Addressing
-    staticIpv4: profile?.staticIpv4 || "",
-    staticIpv6: profile?.staticIpv6 || "",
-    delegatedIpv6Prefix: profile?.delegatedIpv6Prefix || "",
-    ipv6PdSize: profile?.ipv6PdSize?.toString() || "",
-    ipv6AssignmentMode: profile?.ipv6AssignmentMode || "none",
+    staticIpv4: currentProfile?.staticIpv4 || "",
+    staticIpv6: currentProfile?.staticIpv6 || "",
+    delegatedIpv6Prefix: currentProfile?.delegatedIpv6Prefix || "",
+    ipv6PdSize: currentProfile?.ipv6PdSize?.toString() || "",
+    ipv6AssignmentMode: currentProfile?.ipv6AssignmentMode || "none",
 
     // Option 82
-    circuitId: profile?.circuitId || "",
-    remoteId: profile?.remoteId || "",
-    option82Policy: profile?.option82Policy || "log",
+    circuitId: currentProfile?.circuitId || "",
+    remoteId: currentProfile?.remoteId || "",
+    option82Policy: currentProfile?.option82Policy || "log",
   });
+
+  // Form state
+  const [formData, setFormData] = useState(() => buildFormState(profile ?? null));
 
   // Reset form when profile changes
   useEffect(() => {
-    if (profile) {
-      setFormData({
-        serviceVlan: profile.serviceVlan?.toString() || "",
-        innerVlan: profile.innerVlan?.toString() || "",
-        vlanPool: profile.vlanPool || "",
-        qinqEnabled: profile.qinqEnabled || false,
-        staticIpv4: profile.staticIpv4 || "",
-        staticIpv6: profile.staticIpv6 || "",
-        delegatedIpv6Prefix: profile.delegatedIpv6Prefix || "",
-        ipv6PdSize: profile.ipv6PdSize?.toString() || "",
-        ipv6AssignmentMode: profile.ipv6AssignmentMode || "none",
-        circuitId: profile.circuitId || "",
-        remoteId: profile.remoteId || "",
-        option82Policy: profile.option82Policy || "log",
-      });
-    }
+    setFormData(buildFormState(profile ?? null));
   }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {

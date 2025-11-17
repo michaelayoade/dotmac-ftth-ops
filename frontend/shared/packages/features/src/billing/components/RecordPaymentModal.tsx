@@ -35,7 +35,7 @@ export type PaymentMethod =
   | "paypal"
   | "other";
 
-export interface Invoice {
+export interface RecordPaymentInvoice {
   invoice_id: string;
   invoice_number: string;
   amount_due: number;
@@ -80,7 +80,7 @@ export interface BillingConfirmDialogFn {
 export interface RecordPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  invoices: Invoice[];
+  invoices: RecordPaymentInvoice[];
   onSuccess?: () => void;
   apiClient: BillingApiClient;
   useToast: () => Toast;
@@ -143,7 +143,7 @@ export function RecordPaymentModal({
     );
 
     let remainingAmount = paymentAmount;
-    const distribution: { invoice: Invoice; amount: number }[] = [];
+    const distribution: { invoice: RecordPaymentInvoice; amount: number }[] = [];
 
     for (const invoice of sortedInvoices) {
       if (remainingAmount <= 0) break;

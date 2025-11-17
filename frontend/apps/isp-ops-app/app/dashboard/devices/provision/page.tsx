@@ -61,7 +61,8 @@ function ProvisionPageContent() {
   const [serialNumber, setSerialNumber] = useState("");
   const [productClass, setProductClass] = useState("");
   const [oui, setOui] = useState("");
-  const [selectedPreset, setSelectedPreset] = useState("");
+  const [singlePreset, setSinglePreset] = useState("");
+  const [bulkPreset, setBulkPreset] = useState("");
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -114,7 +115,7 @@ function ProvisionPageContent() {
       setSerialNumber("");
       setProductClass("");
       setOui("");
-      setSelectedPreset("");
+      setSinglePreset("");
       toast({ title: "Device provisioned successfully" });
     },
     onError: (error: Error) => {
@@ -131,8 +132,8 @@ function ProvisionPageContent() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      if (selectedPreset) {
-        formData.append("presetName", selectedPreset);
+      if (bulkPreset) {
+        formData.append("presetName", bulkPreset);
       }
 
       const response = await fetch(
@@ -150,6 +151,7 @@ function ProvisionPageContent() {
       queryClient.invalidateQueries({ queryKey: ["bulk-provision-jobs"] });
       setCsvFile(null);
       setCsvPreview([]);
+      setBulkPreset("");
       toast({ title: "Bulk provisioning started" });
     },
     onError: (error: Error) => {
@@ -175,7 +177,7 @@ function ProvisionPageContent() {
       serialNumber,
       productClass,
       oui,
-      ...(selectedPreset ? { presetName: selectedPreset } : {}),
+      ...(singlePreset ? { presetName: singlePreset } : {}),
     };
     provisionMutation.mutate(payload);
   };
@@ -312,8 +314,8 @@ function ProvisionPageContent() {
                   <select
                     id="preset"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                    value={selectedPreset}
-                    onChange={(e) => setSelectedPreset(e.target.value)}
+                    value={singlePreset}
+                    onChange={(e) => setSinglePreset(e.target.value)}
                   >
                     <option value="">No preset</option>
                     {presets.map((preset) => (
@@ -328,12 +330,12 @@ function ProvisionPageContent() {
               <div className="flex justify-end gap-2 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setSerialNumber("");
-                    setProductClass("");
-                    setOui("");
-                    setSelectedPreset("");
-                  }}
+                    onClick={() => {
+                      setSerialNumber("");
+                      setProductClass("");
+                      setOui("");
+                      setSinglePreset("");
+                    }}
                 >
                   Clear
                 </Button>
@@ -436,8 +438,8 @@ function ProvisionPageContent() {
                 <select
                   id="bulkPreset"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                  value={selectedPreset}
-                  onChange={(e) => setSelectedPreset(e.target.value)}
+                  value={bulkPreset}
+                  onChange={(e) => setBulkPreset(e.target.value)}
                 >
                   <option value="">No preset</option>
                   {presets.map((preset) => (
@@ -451,11 +453,11 @@ function ProvisionPageContent() {
               <div className="flex justify-end gap-2 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setCsvFile(null);
-                    setCsvPreview([]);
-                    setSelectedPreset("");
-                  }}
+                    onClick={() => {
+                      setCsvFile(null);
+                      setCsvPreview([]);
+                      setBulkPreset("");
+                    }}
                   disabled={!csvFile}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />

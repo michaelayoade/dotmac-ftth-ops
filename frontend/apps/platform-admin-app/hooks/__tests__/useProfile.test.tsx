@@ -62,6 +62,7 @@ const createWrapper = () => {
   );
 };
 
+
 describe("useProfile", () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -557,46 +558,67 @@ describe("useProfile", () => {
   describe("useExportData", () => {
     let mockLink: any;
     let createElementSpy: jest.SpyInstance;
+    let createObjectURLSpy: jest.SpyInstance;
+    let revokeObjectURLSpy: jest.SpyInstance;
     let appendChildSpy: jest.SpyInstance;
     let removeChildSpy: jest.SpyInstance;
-    let originalCreateObjectURL: typeof URL.createObjectURL;
-    let originalRevokeObjectURL: typeof URL.revokeObjectURL;
-    let originalCreateElement: typeof document.createElement;
 
     beforeEach(() => {
+      if (typeof URL.createObjectURL !== "function") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (URL as any).createObjectURL = () => "";
+      }
+      if (typeof URL.revokeObjectURL !== "function") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (URL as any).revokeObjectURL = () => {};
+      }
+
       mockLink = {
         href: "",
         download: "",
         click: jest.fn(),
       };
 
-      // Save original createElement
-      originalCreateElement = document.createElement.bind(document);
-
-      // Mock createElement to only mock 'a' elements, let others through
-      createElementSpy = jest.spyOn(document, "createElement").mockImplementation(((tagName: string) => {
+      // Mock createElement to only intercept 'a' elements, use real implementation for others
+      const realCreateElement = document.createElement.bind(document);
+      createElementSpy = jest.spyOn(document, "createElement").mockImplementation(((tagName: string, options?: any) => {
         if (tagName === "a") {
           return mockLink as any;
         }
-        return originalCreateElement(tagName);
+        // Call real createElement for all other elements
+        return realCreateElement(tagName, options);
       }) as any);
 
-      appendChildSpy = jest.spyOn(document.body, "appendChild").mockImplementation();
-      removeChildSpy = jest.spyOn(document.body, "removeChild").mockImplementation();
+      const realAppendChild = document.body.appendChild.bind(document.body);
+      const realRemoveChild = document.body.removeChild.bind(document.body);
+      appendChildSpy = jest
+        .spyOn(document.body, "appendChild")
+        .mockImplementation(((node: any) => {
+          if (node === mockLink) {
+            return mockLink as any;
+          }
+          return realAppendChild(node);
+        }) as any);
+      removeChildSpy = jest
+        .spyOn(document.body, "removeChild")
+        .mockImplementation(((node: any) => {
+          if (node === mockLink) {
+            return mockLink as any;
+          }
+          return realRemoveChild(node);
+        }) as any);
 
       // Mock URL.createObjectURL and URL.revokeObjectURL
-      originalCreateObjectURL = URL.createObjectURL;
-      originalRevokeObjectURL = URL.revokeObjectURL;
-      URL.createObjectURL = jest.fn(() => "blob:url");
-      URL.revokeObjectURL = jest.fn();
+      createObjectURLSpy = jest.spyOn(URL, "createObjectURL").mockReturnValue("blob:url");
+      revokeObjectURLSpy = jest.spyOn(URL, "revokeObjectURL").mockImplementation();
     });
 
     afterEach(() => {
       createElementSpy.mockRestore();
       appendChildSpy.mockRestore();
       removeChildSpy.mockRestore();
-      URL.createObjectURL = originalCreateObjectURL;
-      URL.revokeObjectURL = originalRevokeObjectURL;
+      createObjectURLSpy.mockRestore();
+      revokeObjectURLSpy.mockRestore();
     });
 
     it("should export user data successfully", async () => {

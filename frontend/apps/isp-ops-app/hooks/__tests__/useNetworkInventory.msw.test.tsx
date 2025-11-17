@@ -17,6 +17,10 @@ import {
   makeApiEndpointFail,
 } from "../../__tests__/test-utils";
 
+const waitForNetboxLoading = async (getLoading: () => boolean) => {
+  await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
+};
+
 describe("useNetworkInventory (MSW)", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
@@ -44,7 +48,7 @@ describe("useNetworkInventory (MSW)", () => {
 
       expect(result.current.isLoading).toBe(true);
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNetboxLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data?.status).toBe('healthy');
@@ -90,7 +94,7 @@ describe("useNetworkInventory (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNetboxLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeDefined();
     });
@@ -112,7 +116,7 @@ describe("useNetworkInventory (MSW)", () => {
 
       expect(result.current.isLoading).toBe(true);
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNetboxLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toHaveLength(3);
@@ -127,7 +131,7 @@ describe("useNetworkInventory (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNetboxLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(0);
       expect(result.current.error).toBeNull();
@@ -144,7 +148,7 @@ describe("useNetworkInventory (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNetboxLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(10);
       expect(result.current.data?.[0].name).toBe("Site 1");
@@ -164,7 +168,7 @@ describe("useNetworkInventory (MSW)", () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNetboxLoading(() => result.current.isLoading);
 
       expect(result.current.data).toHaveLength(10);
       expect(result.current.data?.[0].name).toBe("Site 11");

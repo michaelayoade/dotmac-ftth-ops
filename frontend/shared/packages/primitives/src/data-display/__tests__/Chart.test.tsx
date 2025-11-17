@@ -757,7 +757,7 @@ describe("Chart Comprehensive Testing", () => {
       />,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
@@ -778,7 +778,7 @@ describe("Chart Comprehensive Testing", () => {
       />,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
@@ -797,7 +797,7 @@ describe("Chart Comprehensive Testing", () => {
       />,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
@@ -815,7 +815,7 @@ describe("Chart Comprehensive Testing", () => {
       />,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();
@@ -837,7 +837,7 @@ describe("Chart Comprehensive Testing", () => {
       </ChartContainer>,
     );
 
-    expect(result.container).toBeAccessible();
+    await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
     expect(metrics).toBePerformant();
     expect(result.container).toHaveValidMarkup();

@@ -70,11 +70,22 @@ export const logsKeys = {
 };
 
 export function useLogs(filters: LogsFilter = {}) {
-  const serializedFilters = JSON.stringify(filters ?? {});
-  const normalizedFilters = useMemo(() => filters, [serializedFilters]);
+  const serializedFilters = useMemo(() => JSON.stringify(filters ?? {}), [filters]);
+  const normalizedFilters = useMemo(
+    () => JSON.parse(serializedFilters) as LogsFilter,
+    [serializedFilters],
+  );
   const { toast } = useToast();
   const { api } = useAppConfig();
-  const apiBaseUrl = api.baseUrl || "";
+  const buildApiUrl = (path: string) => {
+    if (typeof api.buildUrl === "function") {
+      return api.buildUrl(path);
+    }
+    const base = api.baseUrl || "";
+    const prefix = api.prefix || "";
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    return `${base}${prefix}${normalizedPath}`;
+  };
 
   // Fetch logs
   const logsQuery = useQuery({
@@ -91,10 +102,11 @@ export function useLogs(filters: LogsFilter = {}) {
         if (normalizedFilters.page_size)
           params.append("page_size", normalizedFilters.page_size.toString());
 
-        const response = await axios.get<LogsResponse>(
-          `${apiBaseUrl}/api/v1/monitoring/logs?${params.toString()}`,
-          { withCredentials: true },
-        );
+        const query = params.toString();
+        const logsUrl = query
+          ? `${buildApiUrl("/monitoring/logs")}?${query}`
+          : buildApiUrl("/monitoring/logs");
+        const response = await axios.get<LogsResponse>(logsUrl, { withCredentials: true });
 
         return response.data;
       } catch (err: unknown) {
@@ -115,10 +127,9 @@ export function useLogs(filters: LogsFilter = {}) {
     queryKey: [...logsKeys.stats(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
-        const response = await axios.get<LogStats>(
-          `${apiBaseUrl}/api/v1/monitoring/logs/stats`,
-          { withCredentials: true },
-        );
+        const response = await axios.get<LogStats>(buildApiUrl("/monitoring/logs/stats"), {
+          withCredentials: true,
+        });
         return response.data;
       } catch (err: unknown) {
         logger.error(
@@ -136,10 +147,9 @@ export function useLogs(filters: LogsFilter = {}) {
     queryKey: [...logsKeys.services(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
-        const response = await axios.get<string[]>(
-          `${apiBaseUrl}/api/v1/monitoring/logs/services`,
-          { withCredentials: true },
-        );
+        const response = await axios.get<string[]>(buildApiUrl("/monitoring/logs/services"), {
+          withCredentials: true,
+        });
         return response.data;
       } catch (err: unknown) {
         logger.error(

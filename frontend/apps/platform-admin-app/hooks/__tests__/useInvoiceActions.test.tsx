@@ -24,13 +24,7 @@ jest.mock("@/lib/logger", () => ({
   },
 }));
 
-jest.mock("@dotmac/ui", () => ({
-  useToast: jest.fn(),
-}));
-
 describe("useInvoiceActions", () => {
-  const mockToast = jest.fn();
-
   function createWrapper() {
     const queryClient = new QueryClient({
       defaultOptions: {
@@ -50,7 +44,6 @@ describe("useInvoiceActions", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useToast as jest.Mock).mockReturnValue({ toast: mockToast });
   });
 
   describe("sendInvoiceEmail", () => {
@@ -69,7 +62,7 @@ describe("useInvoiceActions", () => {
       });
 
       expect(apiClient.post).toHaveBeenCalledWith("/billing/invoices/inv-123/send", {});
-      expect(mockToast).toHaveBeenCalledWith({
+      expect(global.mockToast).toHaveBeenCalledWith({
         title: "Invoice Sent",
         description: "Invoice has been sent successfully.",
       });
@@ -93,7 +86,7 @@ describe("useInvoiceActions", () => {
       expect(apiClient.post).toHaveBeenCalledWith("/billing/invoices/inv-123/send", {
         email: "custom@example.com",
       });
-      expect(mockToast).toHaveBeenCalledWith({
+      expect(global.mockToast).toHaveBeenCalledWith({
         title: "Invoice Sent",
         description: "Invoice has been sent successfully to custom@example.com.",
       });
@@ -126,7 +119,7 @@ describe("useInvoiceActions", () => {
 
       await waitFor(() => {
         expect(logger.error).toHaveBeenCalledWith("Failed to send invoice email", mockError);
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Send Invoice",
           description: "Email service unavailable",
           variant: "destructive",
@@ -154,7 +147,7 @@ describe("useInvoiceActions", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Send Invoice",
           description: "Unable to send invoice. Please try again.",
           variant: "destructive",
@@ -203,7 +196,7 @@ describe("useInvoiceActions", () => {
       expect(apiClient.post).toHaveBeenCalledWith("/billing/invoices/inv-123/void", {
         reason: "Customer requested cancellation",
       });
-      expect(mockToast).toHaveBeenCalledWith({
+      expect(global.mockToast).toHaveBeenCalledWith({
         title: "Invoice Voided",
         description: "Invoice has been voided successfully.",
       });
@@ -237,7 +230,7 @@ describe("useInvoiceActions", () => {
 
       await waitFor(() => {
         expect(logger.error).toHaveBeenCalledWith("Failed to void invoice", mockError);
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Void Invoice",
           description: "Invoice already paid",
           variant: "destructive",
@@ -266,7 +259,7 @@ describe("useInvoiceActions", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Void Invoice",
           description: "Unable to void invoice. Please try again.",
           variant: "destructive",
@@ -313,7 +306,7 @@ describe("useInvoiceActions", () => {
       });
 
       expect(apiClient.post).toHaveBeenCalledWith("/billing/invoices/inv-123/remind", {});
-      expect(mockToast).toHaveBeenCalledWith({
+      expect(global.mockToast).toHaveBeenCalledWith({
         title: "Reminder Sent",
         description: "Payment reminder has been sent successfully.",
       });
@@ -337,7 +330,7 @@ describe("useInvoiceActions", () => {
       expect(apiClient.post).toHaveBeenCalledWith("/billing/invoices/inv-123/remind", {
         message: "Your payment is overdue. Please pay immediately.",
       });
-      expect(mockToast).toHaveBeenCalledWith({
+      expect(global.mockToast).toHaveBeenCalledWith({
         title: "Reminder Sent",
         description: "Payment reminder has been sent successfully.",
       });
@@ -370,7 +363,7 @@ describe("useInvoiceActions", () => {
 
       await waitFor(() => {
         expect(logger.error).toHaveBeenCalledWith("Failed to send payment reminder", mockError);
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Send Reminder",
           description: "Customer email not found",
           variant: "destructive",
@@ -398,7 +391,7 @@ describe("useInvoiceActions", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Send Reminder",
           description: "Unable to send payment reminder. Please try again.",
           variant: "destructive",
@@ -462,7 +455,7 @@ describe("useInvoiceActions", () => {
         amount: 100,
         reason: "Product return",
       });
-      expect(mockToast).toHaveBeenCalledWith({
+      expect(global.mockToast).toHaveBeenCalledWith({
         title: "Credit Note Created",
         description: "Credit note CN-2024-001 has been created successfully.",
       });
@@ -518,7 +511,7 @@ describe("useInvoiceActions", () => {
         line_items: lineItems,
         notes: "Customer requested full refund",
       });
-      expect(mockToast).toHaveBeenCalledWith({
+      expect(global.mockToast).toHaveBeenCalledWith({
         title: "Credit Note Created",
         description: "Credit note CN-2024-002 has been created successfully.",
       });
@@ -553,7 +546,7 @@ describe("useInvoiceActions", () => {
 
       await waitFor(() => {
         expect(logger.error).toHaveBeenCalledWith("Failed to create credit note", mockError);
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Create Credit Note",
           description: "Amount exceeds invoice total",
           variant: "destructive",
@@ -583,7 +576,7 @@ describe("useInvoiceActions", () => {
       });
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith({
+        expect(global.mockToast).toHaveBeenCalledWith({
           title: "Failed to Create Credit Note",
           description: "Unable to create credit note. Please try again.",
           variant: "destructive",

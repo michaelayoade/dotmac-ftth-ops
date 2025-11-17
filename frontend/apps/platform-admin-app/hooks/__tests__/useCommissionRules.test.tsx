@@ -841,13 +841,13 @@ describe("useCommissionRules", () => {
         effective_from: "2024-02-01T00:00:00Z",
       };
 
-      // Start mutation
+      // Start mutation and check pending state
       act(() => {
         result.current.mutate(input);
       });
 
-      // Should be pending immediately
-      expect(result.current.isPending).toBe(true);
+      // Wait for pending state to be set
+      await waitFor(() => expect(result.current.isPending).toBe(true));
 
       // Resolve the fetch
       act(() => {
@@ -1098,8 +1098,8 @@ describe("useCommissionRules", () => {
         });
       });
 
-      // Should be pending immediately
-      expect(result.current.isPending).toBe(true);
+      // Wait for pending state to be set
+      await waitFor(() => expect(result.current.isPending).toBe(true));
 
       // Resolve the fetch
       act(() => {
@@ -1291,8 +1291,8 @@ describe("useCommissionRules", () => {
         result.current.mutate("rule-1");
       });
 
-      // Should be pending immediately
-      expect(result.current.isPending).toBe(true);
+      // Wait for pending state to be set
+      await waitFor(() => expect(result.current.isPending).toBe(true));
 
       // Resolve the fetch
       act(() => {

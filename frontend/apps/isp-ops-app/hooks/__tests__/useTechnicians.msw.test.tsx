@@ -6,6 +6,8 @@
  */
 
 import { renderHook, waitFor, act } from "@testing-library/react";
+import { server } from "@/__tests__/msw/server";
+import { techniciansHandlers } from "@/__tests__/msw/handlers/technicians";
 import {
   useTechnicians,
   useTechnician,
@@ -30,6 +32,8 @@ describe("useTechnicians (MSW)", () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     resetTechniciansStorage();
+    // Ensure technician-specific handlers take precedence over field-service handlers
+    server.use(...techniciansHandlers);
   });
 
   afterEach(() => {

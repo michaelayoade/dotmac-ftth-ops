@@ -21,8 +21,6 @@ import type {
   RemoveFromIndexResponse,
 } from "@/types/search";
 
-const API_BASE = platformConfig.api.baseUrl;
-
 // ============================================
 // Additional Interfaces
 // ============================================
@@ -44,10 +42,8 @@ export interface ReindexRequest {
 // ============================================
 
 class SearchService {
-  private baseUrl: string;
-
-  constructor() {
-    this.baseUrl = API_BASE;
+  private buildUrl(path: string): string {
+    return platformConfig.api.buildUrl(path);
   }
 
   /**
@@ -87,7 +83,7 @@ class SearchService {
     if (params.limit) searchParams.append("limit", params.limit.toString());
     if (params.page) searchParams.append("page", params.page.toString());
 
-    const response = await fetch(`${this.baseUrl}/api/v1/search?${searchParams.toString()}`, {
+    const response = await fetch(this.buildUrl(`/search?${searchParams.toString()}`), {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -145,7 +141,7 @@ class SearchService {
    * @returns Index response
    */
   async indexContent(content: IndexContentRequest): Promise<IndexContentResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/search/index`, {
+    const response = await fetch(this.buildUrl("/search/index"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -162,7 +158,7 @@ class SearchService {
    * @returns Remove response
    */
   async removeFromIndex(contentId: string): Promise<RemoveFromIndexResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/search/index/${contentId}`, {
+    const response = await fetch(this.buildUrl(`/search/index/${contentId}`), {
       method: "DELETE",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -177,7 +173,7 @@ class SearchService {
    * @param request - Reindex request
    */
   async reindex(request: ReindexRequest = {}): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/search/reindex`, {
+    const response = await fetch(this.buildUrl("/search/reindex"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -200,7 +196,7 @@ class SearchService {
    * @returns Search index statistics
    */
   async getStatistics(): Promise<SearchStatistics> {
-    const response = await fetch(`${this.baseUrl}/api/v1/search/stats`, {
+    const response = await fetch(this.buildUrl("/search/stats"), {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",

@@ -11,9 +11,10 @@ import { resolveTenantId } from "../../../../shared/utils/jwtUtils";
 import { platformConfig } from "@/lib/config";
 
 const API_PREFIX = platformConfig.api.prefix || "/api/v1";
-const BASE_URL = platformConfig.api.baseUrl
+const RAW_BASE_URL = platformConfig.api.baseUrl
   ? `${platformConfig.api.baseUrl}${API_PREFIX}`
   : API_PREFIX || "/api/v1";
+const BASE_URL = ensureAbsoluteBaseUrl(RAW_BASE_URL);
 
 /**
  * Configured axios instance for API requests
@@ -156,3 +157,61 @@ export async function del<T = any>(
 }
 
 export default apiClient;
+
+type LocationLike = {
+  origin?: string;
+  protocol?: string;
+  host?: string;
+};
+
+function ensureAbsoluteBaseUrl(url: string): string {
+  if (!url || isAbsoluteUrl(url)) {
+    return url;
+  }
+
+  const origin = getRuntimeOrigin();
+  if (!origin) {
+    return url;
+  }
+
+  try {
+    return new URL(url, origin).toString();
+  } catch {
+    const normalizedOrigin = origin.replace(/\/+$/, "");
+    const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+    return `${normalizedOrigin}${normalizedUrl}`;
+  }
+}
+
+function getRuntimeOrigin(): string | undefined {
+  if (typeof window !== "undefined" && window.location) {
+    return resolveOrigin(window.location) || "http://localhost";
+  }
+
+  const globalLocation = (globalThis as any)?.location as LocationLike | undefined;
+  if (globalLocation) {
+    return resolveOrigin(globalLocation);
+  }
+
+  return undefined;
+}
+
+function resolveOrigin(target: LocationLike | undefined): string | undefined {
+  if (!target) {
+    return undefined;
+  }
+
+  if (target.origin) {
+    return target.origin;
+  }
+
+  if (target.protocol && target.host) {
+    return `${target.protocol}//${target.host}`;
+  }
+
+  return undefined;
+}
+
+function isAbsoluteUrl(url: string): boolean {
+  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+}

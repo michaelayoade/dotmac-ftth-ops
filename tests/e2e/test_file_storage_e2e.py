@@ -25,13 +25,13 @@ from uuid import uuid4
 
 import pytest
 
-# Pytest marker for integration tests
+# Pytest markers for integration/e2e tests
 
 # Note: auth_headers fixture is provided by tests/e2e/conftest.py
 # It includes both Authorization and X-Tenant-ID headers
 
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration, pytest.mark.e2e]
 
 
 @pytest.fixture

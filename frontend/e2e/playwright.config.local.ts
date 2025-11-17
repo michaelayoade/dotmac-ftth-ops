@@ -7,6 +7,10 @@ import { defineConfig, devices } from "@playwright/test";
  * Usage: pnpm exec playwright test --config=playwright.config.local.ts
  */
 const LOCAL_BASE_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
+const testTimeout = parseInt(process.env.E2E_TEST_TIMEOUT || "600000", 10);
+const expectTimeout = parseInt(process.env.E2E_EXPECT_TIMEOUT || "20000", 10);
+const actionTimeout = parseInt(process.env.E2E_ACTION_TIMEOUT || "60000", 10);
+const navigationTimeout = parseInt(process.env.E2E_NAV_TIMEOUT || "480000", 10);
 
 export default defineConfig({
   testDir: "./tests",
@@ -22,6 +26,8 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
+    actionTimeout,
+    navigationTimeout,
     extraHTTPHeaders: {
       Accept: "application/json",
     },
@@ -43,9 +49,9 @@ export default defineConfig({
   // webServer: undefined,
 
   /* Test timeout */
-  timeout: 30000,
+  timeout: testTimeout,
   expect: {
-    timeout: 10000,
+    timeout: expectTimeout,
   },
 
   /* Output folder for test artifacts */

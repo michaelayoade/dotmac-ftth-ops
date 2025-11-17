@@ -51,3 +51,6 @@ export * from "./diagnostics";
 
 // Re-export network module
 export * from "./network";
+
+// Re-export workspace module
+export * from "./workspace";

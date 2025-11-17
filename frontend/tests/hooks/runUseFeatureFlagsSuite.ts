@@ -281,7 +281,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
           expect(result.current.loading).toBe(false);
         });
 
-        expect(result.current.error).toBe("Failed to fetch feature flags");
+        expect(result.current.error).toBe(mockError.message);
         expect(result.current.flags).toEqual([]);
       });
 

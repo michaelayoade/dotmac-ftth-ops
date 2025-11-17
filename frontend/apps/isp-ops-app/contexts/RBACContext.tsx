@@ -3,7 +3,7 @@
  * Manages roles, permissions, and access control throughout the application
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
@@ -299,8 +299,11 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Permission check functions
-  const effectivePermissions = permissions?.effective_permissions ?? [];
-  const assignedRoles = permissions?.roles ?? [];
+  const effectivePermissions = useMemo(
+    () => permissions?.effective_permissions ?? [],
+    [permissions],
+  );
+  const assignedRoles = useMemo(() => permissions?.roles ?? [], [permissions]);
   const isSuperuser = permissions?.is_superuser ?? false;
 
   const hasPermission = useCallback(

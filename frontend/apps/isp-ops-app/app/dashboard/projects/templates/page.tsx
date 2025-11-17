@@ -6,14 +6,19 @@
  */
 
 import { useRouter } from "next/navigation";
+import { useToast } from "@dotmac/ui";
 import { TemplateBuilder } from "@/components/projects/TemplateBuilder";
 import type { ProjectTemplate } from "@/types/project-management";
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSave = (template: ProjectTemplate) => {
-    console.log("Template saved:", template);
+    toast({
+      title: "Template created",
+      description: `${template.name} is ready to use.`,
+    });
     router.push("/dashboard/projects");
   };
 

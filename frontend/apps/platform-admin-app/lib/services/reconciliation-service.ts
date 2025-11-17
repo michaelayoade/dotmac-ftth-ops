@@ -4,6 +4,7 @@
  */
 
 import { platformConfig } from "../config";
+import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 // ============================================
 // Types matching backend schemas
@@ -113,20 +114,23 @@ export interface PaymentRetryResponse {
 // ============================================
 
 class ReconciliationService {
-  private baseUrl = platformConfig.api.baseUrl;
-
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("access_token");
-    return {
-      Authorization: `Bearer ${token}`,
+    const token = getOperatorAccessToken();
+    const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   // ==================== Reconciliation Sessions ====================
 
   async startReconciliation(data: ReconciliationStart): Promise<ReconciliationResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/reconciliations`, {
+    const response = await fetch(platformConfig.api.buildUrl("/billing/reconciliations"), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -158,7 +162,7 @@ class ReconciliationService {
     if (params?.page_size) searchParams.append("page_size", params.page_size.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/reconciliations?${searchParams.toString()}`,
+      platformConfig.api.buildUrl(`/billing/reconciliations?${searchParams.toString()}`),
       {
         headers: this.getAuthHeaders(),
       },
@@ -182,7 +186,9 @@ class ReconciliationService {
     if (params?.days) searchParams.append("days", params.days.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/reconciliations/summary?${searchParams.toString()}`,
+      platformConfig.api.buildUrl(
+        `/billing/reconciliations/summary?${searchParams.toString()}`,
+      ),
       {
         headers: this.getAuthHeaders(),
       },
@@ -198,7 +204,7 @@ class ReconciliationService {
 
   async getReconciliation(reconciliationId: number): Promise<ReconciliationResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/reconciliations/${reconciliationId}`,
+      platformConfig.api.buildUrl(`/billing/reconciliations/${reconciliationId}`),
       {
         headers: this.getAuthHeaders(),
       },
@@ -219,7 +225,7 @@ class ReconciliationService {
     paymentData: ReconcilePaymentRequest,
   ): Promise<ReconciliationResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/reconciliations/${reconciliationId}/payments`,
+      platformConfig.api.buildUrl(`/billing/reconciliations/${reconciliationId}/payments`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -240,7 +246,7 @@ class ReconciliationService {
     data: ReconciliationComplete,
   ): Promise<ReconciliationResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/reconciliations/${reconciliationId}/complete`,
+      platformConfig.api.buildUrl(`/billing/reconciliations/${reconciliationId}/complete`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -261,7 +267,7 @@ class ReconciliationService {
     data: ReconciliationApprove,
   ): Promise<ReconciliationResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/reconciliations/${reconciliationId}/approve`,
+      platformConfig.api.buildUrl(`/billing/reconciliations/${reconciliationId}/approve`),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -280,11 +286,14 @@ class ReconciliationService {
   // ==================== Recovery & Retry ====================
 
   async retryFailedPayment(request: PaymentRetryRequest): Promise<PaymentRetryResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/billing/reconciliations/retry-payment`, {
-      method: "POST",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(request),
-    });
+    const response = await fetch(
+      platformConfig.api.buildUrl("/billing/reconciliations/retry-payment"),
+      {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(request),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -296,7 +305,7 @@ class ReconciliationService {
 
   async getCircuitBreakerStatus(): Promise<any> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/billing/reconciliations/circuit-breaker/status`,
+      platformConfig.api.buildUrl("/billing/reconciliations/circuit-breaker/status"),
       {
         headers: this.getAuthHeaders(),
       },

@@ -15,6 +15,7 @@ import {
   type EventType,
   SSEConfig,
 } from "../../types/realtime";
+import { platformConfig } from "@/lib/config";
 
 export class SSEClient {
   private eventSource: EventSource | null = null;
@@ -240,12 +241,21 @@ export function createSSEClient(config: SSEConfig): SSEClient {
  * SSE endpoint factory
  */
 export class SSEEndpoints {
-  private baseUrl: string;
-  private token: string;
+  private readonly token: string;
+  private readonly overrideBaseUrl?: string;
 
-  constructor(baseUrl: string, token: string) {
-    this.baseUrl = baseUrl;
+  constructor(token: string, overrideBaseUrl?: string) {
     this.token = token;
+    this.overrideBaseUrl = overrideBaseUrl;
+  }
+
+  private buildEndpoint(path: string): string {
+    if (this.overrideBaseUrl) {
+      const normalizedBase = this.overrideBaseUrl.replace(/\/+$/, "");
+      const prefix = platformConfig.api.prefix || "/api/v1";
+      return `${normalizedBase}${prefix}${path}`;
+    }
+    return platformConfig.api.buildUrl(path);
   }
 
   /**
@@ -253,7 +263,7 @@ export class SSEEndpoints {
    */
   onuStatus(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/onu-status`,
+      endpoint: this.buildEndpoint("/realtime/onu-status"),
       token: this.token,
       ...config,
     });
@@ -264,7 +274,7 @@ export class SSEEndpoints {
    */
   alerts(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/alerts`,
+      endpoint: this.buildEndpoint("/realtime/alerts"),
       token: this.token,
       ...config,
     });
@@ -275,7 +285,7 @@ export class SSEEndpoints {
    */
   tickets(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/tickets`,
+      endpoint: this.buildEndpoint("/realtime/tickets"),
       token: this.token,
       ...config,
     });
@@ -286,7 +296,7 @@ export class SSEEndpoints {
    */
   subscribers(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/subscribers`,
+      endpoint: this.buildEndpoint("/realtime/subscribers"),
       token: this.token,
       ...config,
     });
@@ -297,7 +307,7 @@ export class SSEEndpoints {
    */
   radiusSessions(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/radius-sessions`,
+      endpoint: this.buildEndpoint("/realtime/radius-sessions"),
       token: this.token,
       ...config,
     });

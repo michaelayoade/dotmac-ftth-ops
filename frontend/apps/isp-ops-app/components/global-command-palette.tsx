@@ -271,7 +271,7 @@ export function GlobalCommandPalette() {
         {/* Search Results */}
         {searchQuery && results?.results && results.results.length > 0 && (
           <>
-            {!searchQuery && <CommandSeparator />}
+            <CommandSeparator />
             <CommandGroup heading="Search Results">
               {results.results.map((result: any) => {
                 // Determine icon based on entity type

@@ -9,7 +9,7 @@
  * - Reduced boilerplate (427 lines → 340 lines)
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 
@@ -113,6 +113,15 @@ export const orchestrationKeys = {
   workflow: (id: string) => [...orchestrationKeys.all, "workflow", id] as const,
 };
 
+function invalidateWorkflowLists(queryClient: QueryClient) {
+  queryClient.invalidateQueries({
+    predicate: (query) => {
+      const key = query.queryKey as unknown[];
+      return key?.[0] === "orchestration" && key?.[1] === "workflows";
+    },
+  });
+}
+
 // ============================================================================
 // useOrchestrationStats Hook
 // ============================================================================
@@ -122,7 +131,7 @@ export function useOrchestrationStats() {
     queryKey: orchestrationKeys.stats(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<WorkflowStatistics>("/orchestration/stats");
+        const response = await apiClient.get<WorkflowStatistics>("/orchestration/statistics");
         return response.data;
       } catch (err: any) {
         logger.error("Failed to fetch orchestration stats", err);
@@ -239,7 +248,7 @@ export function useRetryWorkflow() {
     onSuccess: (workflowId) => {
       // Invalidate the specific workflow and stats
       queryClient.invalidateQueries({ queryKey: orchestrationKeys.workflow(workflowId) });
-      queryClient.invalidateQueries({ queryKey: orchestrationKeys.workflows() });
+      invalidateWorkflowLists(queryClient);
       queryClient.invalidateQueries({ queryKey: orchestrationKeys.stats() });
     },
     onError: (err: any) => {
@@ -269,7 +278,7 @@ export function useCancelWorkflow() {
     onSuccess: (workflowId) => {
       // Invalidate the specific workflow and stats
       queryClient.invalidateQueries({ queryKey: orchestrationKeys.workflow(workflowId) });
-      queryClient.invalidateQueries({ queryKey: orchestrationKeys.workflows() });
+      invalidateWorkflowLists(queryClient);
       queryClient.invalidateQueries({ queryKey: orchestrationKeys.stats() });
     },
     onError: (err: any) => {

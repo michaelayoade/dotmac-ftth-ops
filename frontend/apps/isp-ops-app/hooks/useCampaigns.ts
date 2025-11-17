@@ -1,7 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api/client";
-import { extractDataOrThrow } from "@/lib/api/response-helpers";
-import type { DunningCampaign } from "@/types";
+import { useCallback, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  dunningService,
+  type DunningCampaign,
+  type DunningCampaignUpdate,
+} from "@/lib/services/dunning-service";
 
 type CampaignListKey = ["campaigns", { active?: boolean | null }];
 
@@ -13,10 +16,13 @@ export function useCampaigns({ active }: UseCampaignsOptions = {}) {
   return useQuery<DunningCampaign[], Error, DunningCampaign[], CampaignListKey>({
     queryKey: ["campaigns", { active: active ?? null }],
     queryFn: async () => {
-      const response = await apiClient.get<DunningCampaign[]>("/billing/dunning/campaigns", {
-        params: active === undefined ? undefined : { is_active: active },
-      });
-      return extractDataOrThrow(response);
+      const filters =
+        active === undefined
+          ? {}
+          : {
+              activeOnly: active,
+            };
+      return dunningService.listCampaigns(filters);
     },
     staleTime: 30_000,
   });
@@ -24,23 +30,93 @@ export function useCampaigns({ active }: UseCampaignsOptions = {}) {
 
 interface UpdateCampaignStatusVariables {
   campaignId: string;
-  data: Partial<Pick<DunningCampaign, "is_active" | "priority">> & Record<string, unknown>;
+  data: Partial<Pick<DunningCampaign, "is_active" | "priority">> & DunningCampaignUpdate;
 }
 
 export function useUpdateCampaign() {
   const queryClient = useQueryClient();
-  return useMutation<DunningCampaign, Error, UpdateCampaignStatusVariables>({
-    mutationFn: async ({ campaignId, data }) => {
-      const response = await apiClient.patch<DunningCampaign>(
-        `/api/v1/billing/dunning/campaigns/${campaignId}`,
-        data,
-      );
-      return extractDataOrThrow(response);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-    },
+  const [state, setState] = useState<{
+    data: DunningCampaign | undefined;
+    error: Error | null;
+    isPending: boolean;
+    isSuccess: boolean;
+  }>({
+    data: undefined,
+    error: null,
+    isPending: false,
+    isSuccess: false,
   });
+
+  const mutateAsync = useCallback(
+    async ({ campaignId, data }: UpdateCampaignStatusVariables) => {
+      setState((prev) => ({
+        ...prev,
+        isPending: true,
+        error: null,
+      }));
+
+      try {
+        const result = await dunningService.updateCampaign(campaignId, data);
+        setState({
+          data: result,
+          error: null,
+          isPending: false,
+          isSuccess: true,
+        });
+        queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+        return result;
+      } catch (error) {
+        const normalizedError =
+          error instanceof Error ? error : new Error("Failed to update campaign");
+        setState((prev) => ({
+          ...prev,
+          error: normalizedError,
+          isPending: false,
+          isSuccess: false,
+        }));
+        throw normalizedError;
+      }
+    },
+    [queryClient],
+  );
+
+  const mutate = useCallback(
+    (
+      variables: UpdateCampaignStatusVariables,
+      callbacks?: {
+        onSuccess?: (data: DunningCampaign) => void;
+        onError?: (error: Error) => void;
+      },
+    ) => {
+      void mutateAsync(variables)
+        .then((data) => {
+          callbacks?.onSuccess?.(data);
+        })
+        .catch((error: Error) => {
+          callbacks?.onError?.(error);
+        });
+    },
+    [mutateAsync],
+  );
+
+  const reset = useCallback(() => {
+    setState({
+      data: undefined,
+      error: null,
+      isPending: false,
+      isSuccess: false,
+    });
+  }, []);
+
+  return {
+    mutate,
+    mutateAsync,
+    reset,
+    data: state.data,
+    error: state.error,
+    isPending: state.isPending,
+    isSuccess: state.isSuccess,
+  };
 }
 
 /**

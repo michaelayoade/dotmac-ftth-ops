@@ -15,12 +15,15 @@ This E2E test suite covers the following modules:
 - src/dotmac/platform/data_transfer/core.py (enums)
 """
 
+from datetime import UTC, datetime
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
-import pytest_asyncio
-from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
+
+from dotmac.platform.data_transfer.core import TransferStatus
+from dotmac.platform.data_transfer.models import TransferType
+from dotmac.platform.data_transfer.repository import TransferJobRepository
 
 # Pytest marker for E2E tests
 
@@ -28,58 +31,98 @@ from httpx import ASGITransport, AsyncClient
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
 
-@pytest_asyncio.fixture
-async def data_transfer_app():
-    """Create FastAPI app with data transfer router for E2E testing."""
-    from dotmac.platform.auth.core import UserInfo
-    from dotmac.platform.auth.dependencies import get_current_user
-    from dotmac.platform.data_transfer.router import data_transfer_router
+@pytest.fixture(autouse=True)
+def stub_data_transfer_tasks(monkeypatch):
+    """Avoid hitting real Celery brokers during tests."""
+    from dotmac.platform.data_transfer import tasks
 
-    app = FastAPI(title="Data Transfer E2E Test App")
-    # Router already has prefix="/data-transfer", so we only add "/api/v1"
-    app.include_router(data_transfer_router, prefix="/api/v1", tags=["Data Transfer"])
+    import_delay = MagicMock(name="import_delay")
+    export_delay = MagicMock(name="export_delay")
+    monkeypatch.setattr(tasks.process_import_job, "delay", import_delay)
+    monkeypatch.setattr(tasks.process_export_job, "delay", export_delay)
 
-    # Fixed UUIDs for consistent testing
-    test_user_id = str(uuid4())
-    test_tenant_id = str(uuid4())
 
-    # Override auth dependency
-    async def override_get_current_user():
-        return UserInfo(
-            user_id=test_user_id,  # Valid UUID format
-            username="testuser",
-            email="test@example.com",
-            permissions=["read", "write", "admin"],
-            roles=["user", "admin"],
-            tenant_id=test_tenant_id,  # Valid UUID format
+@pytest.fixture
+def client(async_client, auth_headers):
+    """Authenticated HTTP client wrapper that injects headers automatically."""
+
+    class AuthenticatedClient:
+        def __init__(self, http_client, headers):
+            self._client = http_client
+            self._headers = headers
+
+        def _merged_headers(self, extra):
+            merged = dict(self._headers)
+            if extra:
+                merged.update(extra)
+            return merged
+
+        async def get(self, url: str, **kwargs):
+            headers = self._merged_headers(kwargs.pop("headers", None))
+            return await self._client.get(url, headers=headers, **kwargs)
+
+        async def post(self, url: str, **kwargs):
+            headers = self._merged_headers(kwargs.pop("headers", None))
+            return await self._client.post(url, headers=headers, **kwargs)
+
+        async def delete(self, url: str, **kwargs):
+            headers = self._merged_headers(kwargs.pop("headers", None))
+            return await self._client.delete(url, headers=headers, **kwargs)
+
+    return AuthenticatedClient(async_client, auth_headers)
+
+
+@pytest.fixture
+def create_transfer_job(db_session, tenant_id):
+    """Factory for inserting transfer jobs directly via the repository."""
+    repo = TransferJobRepository(db_session)
+
+    async def _create(
+        *,
+        job_type: TransferType = TransferType.IMPORT,
+        status: TransferStatus = TransferStatus.PENDING,
+        name: str = "Test Job",
+        config=None,
+        metadata=None,
+        import_source=None,
+        source_path=None,
+        export_target=None,
+        target_path=None,
+        update_fields=None,
+    ):
+        job_id = uuid4()
+
+        config = config or {"format": "csv", "batch_size": 1000}
+        metadata = metadata or {"user_id": "e2e"}
+
+        if job_type == TransferType.IMPORT:
+            import_source = import_source or "file"
+            source_path = source_path or "/data/import.csv"
+        else:
+            export_target = export_target or "file"
+            target_path = target_path or "/data/export.csv"
+
+        job = await repo.create_job(
+            job_id=job_id,
+            name=name,
+            job_type=job_type,
+            tenant_id=tenant_id,
+            config=config,
+            metadata=metadata,
+            import_source=import_source,
+            source_path=source_path,
+            export_target=export_target,
+            target_path=target_path,
         )
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
+        update_kwargs = update_fields or {}
+        if status != TransferStatus.PENDING or update_kwargs:
+            await repo.update_job_status(job_id, status, **update_kwargs)
+            job = await repo.get_job(job_id, tenant_id)
 
-    # Override RBAC checks to avoid database lookups
-    from dotmac.platform.auth.rbac_dependencies import require_admin
+        return job
 
-    async def override_require_admin():
-        return UserInfo(
-            user_id=test_user_id,
-            username="testuser",
-            email="test@example.com",
-            permissions=["read", "write", "admin"],
-            roles=["user", "admin"],
-            tenant_id=test_tenant_id,
-        )
-
-    app.dependency_overrides[require_admin] = override_require_admin
-
-    return app
-
-
-@pytest_asyncio.fixture
-async def client(data_transfer_app):
-    """Async HTTP client for E2E testing."""
-    transport = ASGITransport(app=data_transfer_app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-        yield client
+    return _create
 
 
 # ============================================================================
@@ -389,15 +432,24 @@ class TestJobStatusE2E:
     """E2E tests for job status tracking."""
 
     @pytest.mark.asyncio
-    async def test_get_job_status_success(self, client):
+    async def test_get_job_status_success(self, client, create_transfer_job):
         """Test getting status of existing job."""
-        job_id = str(uuid4())
+        job = await create_transfer_job(
+            status=TransferStatus.COMPLETED,
+            job_type=TransferType.IMPORT,
+            update_fields={
+                "progress_percentage": 100.0,
+                "processed_records": 1000,
+                "failed_records": 0,
+                "total_records": 1000,
+            },
+        )
 
-        response = await client.get(f"/api/v1/data-transfer/jobs/{job_id}")
+        response = await client.get(f"/api/v1/data-transfer/jobs/{job.id}")
 
         assert response.status_code == 200
         data = response.json()
-        assert "job_id" in data
+        assert data["job_id"] == str(job.id)
         assert data["status"] == "completed"
         assert data["progress"] == 100.0
         assert data["records_processed"] == 1000
@@ -416,30 +468,46 @@ class TestJobStatusE2E:
         assert "Invalid job ID format" in data["detail"]
 
     @pytest.mark.asyncio
-    async def test_get_job_status_shows_timestamps(self, client):
+    async def test_get_job_status_shows_timestamps(self, client, create_transfer_job):
         """Test that job status includes all timestamps."""
-        job_id = str(uuid4())
+        started_at = datetime.now(UTC)
+        completed_at = datetime.now(UTC)
+        job = await create_transfer_job(
+            status=TransferStatus.COMPLETED,
+            update_fields={
+                "started_at": started_at,
+                "completed_at": completed_at,
+            },
+        )
 
-        response = await client.get(f"/api/v1/data-transfer/jobs/{job_id}")
+        response = await client.get(f"/api/v1/data-transfer/jobs/{job.id}")
 
         assert response.status_code == 200
         data = response.json()
         assert "created_at" in data
-        assert "started_at" in data
-        assert "completed_at" in data
+        assert data["started_at"] is not None
+        assert data["completed_at"] is not None
 
     @pytest.mark.asyncio
-    async def test_get_job_status_shows_progress(self, client):
+    async def test_get_job_status_shows_progress(self, client, create_transfer_job):
         """Test that job status shows progress information."""
-        job_id = str(uuid4())
+        job = await create_transfer_job(
+            status=TransferStatus.RUNNING,
+            update_fields={
+                "progress_percentage": 42.5,
+                "processed_records": 425,
+                "failed_records": 5,
+                "total_records": 1000,
+            },
+        )
 
-        response = await client.get(f"/api/v1/data-transfer/jobs/{job_id}")
+        response = await client.get(f"/api/v1/data-transfer/jobs/{job.id}")
 
         assert response.status_code == 200
         data = response.json()
-        assert 0.0 <= data["progress"] <= 100.0
-        assert data["records_processed"] >= 0
-        assert data["records_failed"] >= 0
+        assert data["progress"] == pytest.approx(42.5)
+        assert data["records_processed"] == 425
+        assert data["records_failed"] == 5
 
 
 # ============================================================================
@@ -451,58 +519,86 @@ class TestJobListingE2E:
     """E2E tests for listing jobs."""
 
     @pytest.mark.asyncio
-    async def test_list_all_jobs(self, client):
+    async def test_list_all_jobs(self, client, create_transfer_job):
         """Test listing all jobs."""
+        job1 = await create_transfer_job(name="Import Job A")
+        job2 = await create_transfer_job(job_type=TransferType.EXPORT, name="Export Job B")
+
         response = await client.get("/api/v1/data-transfer/jobs")
 
         assert response.status_code == 200
         data = response.json()
-        assert "jobs" in data
-        assert "total" in data
-        assert "page" in data
-        assert "page_size" in data
-        assert "has_more" in data
-        assert isinstance(data["jobs"], list)
+        assert data["total"] >= 2
+        returned_ids = {job["job_id"] for job in data["jobs"]}
+        assert str(job1.id) in returned_ids
+        assert str(job2.id) in returned_ids
 
     @pytest.mark.asyncio
-    async def test_list_jobs_with_pagination(self, client):
+    async def test_list_jobs_with_pagination(self, client, create_transfer_job):
         """Test listing jobs with pagination."""
-        response = await client.get("/api/v1/data-transfer/jobs?page=2&page_size=10")
+        for i in range(3):
+            await create_transfer_job(name=f"Job {i}")
+
+        response = await client.get("/api/v1/data-transfer/jobs?page=2&page_size=1")
 
         assert response.status_code == 200
         data = response.json()
         assert data["page"] == 2
-        assert data["page_size"] == 10
+        assert data["page_size"] == 1
+        assert len(data["jobs"]) == 1
+        assert data["total"] == 3
 
     @pytest.mark.asyncio
-    async def test_list_jobs_filter_by_type(self, client):
+    async def test_list_jobs_filter_by_type(self, client, create_transfer_job):
         """Test filtering jobs by type."""
-        response = await client.get("/api/v1/data-transfer/jobs?type=import")
+        await create_transfer_job(job_type=TransferType.IMPORT)
+        export_job = await create_transfer_job(job_type=TransferType.EXPORT)
+
+        response = await client.get("/api/v1/data-transfer/jobs?type=export")
 
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data["jobs"], list)
+        assert data["total"] >= 1
+        assert all(job["type"] == "export" for job in data["jobs"])
+        assert str(export_job.id) in {job["job_id"] for job in data["jobs"]}
 
     @pytest.mark.asyncio
-    async def test_list_jobs_filter_by_status(self, client):
+    async def test_list_jobs_filter_by_status(self, client, create_transfer_job):
         """Test filtering jobs by status."""
-        response = await client.get("/api/v1/data-transfer/jobs?status=completed")
+        await create_transfer_job(status=TransferStatus.PENDING)
+        completed_job = await create_transfer_job(
+            status=TransferStatus.COMPLETED,
+            update_fields={"completed_at": datetime.now(UTC)},
+        )
+
+        response = await client.get("/api/v1/data-transfer/jobs?job_status=completed")
 
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data["jobs"], list)
+        assert data["total"] >= 1
+        assert all(job["status"] == "completed" for job in data["jobs"])
+        assert str(completed_job.id) in {job["job_id"] for job in data["jobs"]}
 
     @pytest.mark.asyncio
-    async def test_list_jobs_combined_filters(self, client):
+    async def test_list_jobs_combined_filters(self, client, create_transfer_job):
         """Test filtering jobs with multiple criteria."""
+        pending_export = await create_transfer_job(
+            job_type=TransferType.EXPORT,
+            status=TransferStatus.PENDING,
+        )
+        await create_transfer_job(job_type=TransferType.EXPORT, status=TransferStatus.COMPLETED)
+        await create_transfer_job(job_type=TransferType.IMPORT, status=TransferStatus.PENDING)
+
         response = await client.get(
-            "/api/v1/data-transfer/jobs?type=export&status=pending&page=1&page_size=20"
+            "/api/v1/data-transfer/jobs?type=export&job_status=pending&page=1&page_size=20"
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["page"] == 1
         assert data["page_size"] == 20
+        assert data["total"] == 1
+        assert data["jobs"][0]["job_id"] == str(pending_export.id)
 
     @pytest.mark.asyncio
     async def test_list_jobs_empty_result(self, client):
@@ -525,37 +621,50 @@ class TestJobCancellationE2E:
     """E2E tests for cancelling jobs."""
 
     @pytest.mark.asyncio
-    async def test_cancel_job_success(self, client):
+    async def test_cancel_job_success(self, client, create_transfer_job, db_session, tenant_id):
         """Test successfully cancelling a job."""
-        job_id = str(uuid4())
+        job = await create_transfer_job()
 
-        response = await client.delete(f"/api/v1/data-transfer/jobs/{job_id}")
+        response = await client.delete(f"/api/v1/data-transfer/jobs/{job.id}")
 
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
-        assert job_id in data["message"]
+        assert str(job.id) in data["message"]
         assert "cancelled" in data["message"]
 
-    @pytest.mark.asyncio
-    async def test_cancel_running_job(self, client):
-        """Test cancelling a currently running job."""
-        job_id = str(uuid4())
+        db_session.expire_all()
+        repo = TransferJobRepository(db_session)
+        stored = await repo.get_job(job.id, tenant_id)
+        assert stored.status == TransferStatus.CANCELLED.value
 
-        response = await client.delete(f"/api/v1/data-transfer/jobs/{job_id}")
+    @pytest.mark.asyncio
+    async def test_cancel_running_job(self, client, create_transfer_job, db_session, tenant_id):
+        """Test cancelling a currently running job."""
+        job = await create_transfer_job(status=TransferStatus.RUNNING)
+
+        response = await client.delete(f"/api/v1/data-transfer/jobs/{job.id}")
 
         assert response.status_code == 200
         data = response.json()
         assert "cancelled" in data["message"]
+        db_session.expire_all()
+        repo = TransferJobRepository(db_session)
+        stored = await repo.get_job(job.id, tenant_id)
+        assert stored.status == TransferStatus.CANCELLED.value
 
     @pytest.mark.asyncio
-    async def test_cancel_pending_job(self, client):
+    async def test_cancel_pending_job(self, client, create_transfer_job, db_session, tenant_id):
         """Test cancelling a pending job."""
-        job_id = str(uuid4())
+        job = await create_transfer_job(status=TransferStatus.PENDING)
 
-        response = await client.delete(f"/api/v1/data-transfer/jobs/{job_id}")
+        response = await client.delete(f"/api/v1/data-transfer/jobs/{job.id}")
 
         assert response.status_code == 200
+        db_session.expire_all()
+        repo = TransferJobRepository(db_session)
+        stored = await repo.get_job(job.id, tenant_id)
+        assert stored.status == TransferStatus.CANCELLED.value
 
 
 # ============================================================================

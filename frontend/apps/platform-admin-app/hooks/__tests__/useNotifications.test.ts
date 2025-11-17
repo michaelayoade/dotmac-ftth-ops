@@ -25,8 +25,8 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { ReactNode } from "react";
 
-// Unmock TanStack Query to use real implementation
-jest.unmock("@tanstack/react-query");
+// Ensure TanStack Query uses the real implementation even when automock is enabled
+jest.mock("@tanstack/react-query", () => jest.requireActual("@tanstack/react-query"));
 
 // Mock utils that apiClient depends on
 jest.mock("../../../../shared/utils/operatorAuth", () => ({
@@ -150,6 +150,13 @@ describe("useNotifications", () => {
     jest.clearAllMocks();
   });
 
+  const waitForNotificationsReady = async (result: ReturnType<typeof renderHook>["result"]) => {
+    await waitFor(() => {
+      expect(result.current).toBeDefined();
+      expect(result.current?.isLoading).toBe(false);
+    });
+  };
+
   describe("Query - Fetch Notifications", () => {
     it("should fetch notifications successfully", async () => {
       const mockResponse: NotificationListResponse = {
@@ -164,7 +171,7 @@ describe("useNotifications", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       expect(result.current.notifications).toEqual([mockNotification]);
       expect(result.current.unreadCount).toBe(1);
@@ -191,7 +198,7 @@ describe("useNotifications", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       expect(apiClient.get).toHaveBeenCalledWith(
         "/notifications?unread_only=true&priority=high&notification_type=invoice_overdue"
@@ -209,7 +216,7 @@ describe("useNotifications", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       expect(result.current.notifications).toEqual([]);
       expect(result.current.unreadCount).toBe(0);
@@ -227,7 +234,7 @@ describe("useNotifications", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       expect(result.current.error).toEqual(mockError);
       expect(result.current.notifications).toEqual([]);
@@ -250,7 +257,7 @@ describe("useNotifications", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       expect(result.current.notifications[0].is_read).toBe(false);
       expect(result.current.unreadCount).toBe(1);
@@ -261,8 +268,8 @@ describe("useNotifications", () => {
       });
 
       expect(success).toBe(true);
-      expect(result.current.notifications[0].is_read).toBe(true);
-      expect(result.current.unreadCount).toBe(0);
+      await waitFor(() => expect(result.current.notifications[0].is_read).toBe(true));
+      await waitFor(() => expect(result.current.unreadCount).toBe(0));
       expect(apiClient.post).toHaveBeenCalledWith("/notifications/notif-1/read", {});
     });
 
@@ -280,7 +287,7 @@ describe("useNotifications", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       let success: boolean = true;
       await act(async () => {
@@ -311,7 +318,7 @@ describe("useNotifications", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       expect(result.current.unreadCount).toBe(0);
 
@@ -321,8 +328,8 @@ describe("useNotifications", () => {
       });
 
       expect(success).toBe(true);
-      expect(result.current.notifications[0].is_read).toBe(false);
-      expect(result.current.unreadCount).toBe(1);
+      await waitFor(() => expect(result.current.notifications[0].is_read).toBe(false));
+      await waitFor(() => expect(result.current.unreadCount).toBe(1));
       expect(apiClient.post).toHaveBeenCalledWith("/notifications/notif-1/unread", {});
     });
 
@@ -341,7 +348,7 @@ describe("useNotifications", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForNotificationsReady(result);
 
       let success: boolean = true;
       await act(async () => {
@@ -382,8 +389,8 @@ describe("useNotifications", () => {
       });
 
       expect(success).toBe(true);
-      expect(result.current.notifications.every((n) => n.is_read)).toBe(true);
-      expect(result.current.unreadCount).toBe(0);
+      await waitFor(() => expect(result.current.notifications.every((n) => n.is_read)).toBe(true));
+      await waitFor(() => expect(result.current.unreadCount).toBe(0));
       expect(apiClient.post).toHaveBeenCalledWith("/notifications/mark-all-read");
     });
 
@@ -1001,6 +1008,8 @@ describe("useBulkNotifications", () => {
         wrapper: createWrapper(),
       });
 
+      await waitFor(() => expect(result.current).toBeDefined());
+
       let response: BulkNotificationResponse | null = null;
       await act(async () => {
         response = await result.current.sendBulkNotification(bulkRequest);
@@ -1020,6 +1029,8 @@ describe("useBulkNotifications", () => {
       const { result } = renderHook(() => useBulkNotifications(), {
         wrapper: createWrapper(),
       });
+
+      await waitFor(() => expect(result.current).toBeDefined());
 
       let response: BulkNotificationResponse | null | undefined;
       await act(async () => {
@@ -1052,19 +1063,19 @@ describe("useBulkNotifications", () => {
         wrapper: createWrapper(),
       });
 
+      await waitFor(() => expect(result.current).toBeDefined());
+
       expect(result.current.isLoading).toBe(false);
 
-      const promise = act(async () => {
-        await result.current.sendBulkNotification(bulkRequest);
+      await act(async () => {
+        const sendPromise = result.current!.sendBulkNotification(bulkRequest);
+        await Promise.resolve();
+        expect(result.current!.isLoading).toBe(true);
+        await sendPromise;
       });
 
-      // Should be loading during the mutation
-      await waitFor(() => expect(result.current.isLoading).toBe(true));
-
-      await promise;
-
       // Should not be loading after completion
-      expect(result.current.isLoading).toBe(false);
+      expect(result.current!.isLoading).toBe(false);
     });
   });
 
@@ -1082,9 +1093,14 @@ describe("useBulkNotifications", () => {
         wrapper: createWrapper(),
       });
 
+      await waitFor(() => expect(result.current).toBeDefined());
+
+      await waitFor(() => expect(result.current).toBeDefined());
+
+      const { getBulkJobStatus } = result.current!;
       let status: BulkNotificationResponse | null = null;
       await act(async () => {
-        status = await result.current.getBulkJobStatus("job-123");
+        status = await getBulkJobStatus("job-123");
       });
 
       expect(status).toEqual(mockJobStatus);
@@ -1098,9 +1114,14 @@ describe("useBulkNotifications", () => {
         wrapper: createWrapper(),
       });
 
+      await waitFor(() => expect(result.current).toBeDefined());
+
+      await waitFor(() => expect(result.current).toBeDefined());
+
+      const { getBulkJobStatus } = result.current!;
       let status: BulkNotificationResponse | null = null;
       await act(async () => {
-        status = await result.current.getBulkJobStatus("job-123");
+        status = await getBulkJobStatus("job-123");
       });
 
       expect(status).toBeNull();
@@ -1114,6 +1135,15 @@ describe("useUnreadCount", () => {
     jest.clearAllMocks();
   });
 
+  const waitForUnreadReady = async (result: ReturnType<typeof renderHook>["result"]) => {
+    await waitFor(() => {
+      expect(result.current).toBeDefined();
+    });
+    await waitFor(() => {
+      expect(result.current?.isLoading).toBe(false);
+    });
+  };
+
   describe("Query - Fetch Unread Count", () => {
     it("should fetch unread count successfully", async () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: { unread_count: 5 } });
@@ -1122,11 +1152,9 @@ describe("useUnreadCount", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        return result.current && result.current.isLoading === false;
-      });
+      await waitForUnreadReady(result);
 
-      expect(result.current.unreadCount).toBe(5);
+      expect(result.current!.unreadCount).toBe(5);
       expect(apiClient.get).toHaveBeenCalledWith("/notifications/unread-count");
 
       unmount();
@@ -1139,11 +1167,9 @@ describe("useUnreadCount", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        return result.current && result.current.isLoading === false;
-      });
+      await waitForUnreadReady(result);
 
-      expect(result.current.unreadCount).toBe(0);
+      expect(result.current!.unreadCount).toBe(0);
       unmount();
     });
 
@@ -1158,11 +1184,9 @@ describe("useUnreadCount", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        return result.current && result.current.isLoading === false;
-      });
+      await waitForUnreadReady(result);
 
-      expect(result.current.unreadCount).toBe(0);
+      expect(result.current!.unreadCount).toBe(0);
       expect(logger.warn).toHaveBeenCalledWith(
         "Unread count endpoint returned 403. Defaulting to zero unread notifications."
       );
@@ -1177,11 +1201,9 @@ describe("useUnreadCount", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        return result.current && result.current.isLoading === false;
-      });
+      await waitForUnreadReady(result);
 
-      expect(result.current.unreadCount).toBe(0);
+      expect(result.current!.unreadCount).toBe(0);
       expect(logger.error).toHaveBeenCalled();
       unmount();
     });
@@ -1196,11 +1218,9 @@ describe("useUnreadCount", () => {
         { wrapper: createWrapper() }
       );
 
-      await waitFor(() => {
-        return result.current && result.current.isLoading === false;
-      });
+      await waitForUnreadReady(result);
 
-      expect(result.current.unreadCount).toBe(3);
+      expect(result.current!.unreadCount).toBe(3);
       expect(apiClient.get).toHaveBeenCalledWith("/notifications/unread-count");
 
       unmount();
@@ -1213,11 +1233,9 @@ describe("useUnreadCount", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        return result.current && result.current.isLoading === false;
-      });
+      await waitForUnreadReady(result);
 
-      expect(result.current.unreadCount).toBe(3);
+      expect(result.current!.unreadCount).toBe(3);
       expect(apiClient.get).toHaveBeenCalledWith("/notifications/unread-count");
 
       unmount();
@@ -1232,14 +1250,12 @@ describe("useUnreadCount", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        return result.current && result.current.isLoading === false;
-      });
+      await waitForUnreadReady(result);
 
       (apiClient.get as jest.Mock).mockClear();
 
       await act(async () => {
-        await result.current.refetch();
+        await result.current!.refetch();
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/notifications/unread-count");

@@ -26,8 +26,8 @@ def upgrade() -> None:
         CREATE TABLE IF NOT EXISTS ai_chat_sessions (
             id SERIAL PRIMARY KEY,
             tenant_id VARCHAR(50) NOT NULL,
-            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-            customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+            user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+            customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
 
             -- Session metadata
             session_type VARCHAR(50) NOT NULL DEFAULT 'customer_support',
@@ -54,7 +54,7 @@ def upgrade() -> None:
             user_feedback TEXT,
 
             -- Escalation
-            escalated_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            escalated_to_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
             escalation_reason TEXT,
 
             CONSTRAINT chk_user_rating CHECK (user_rating IS NULL OR (user_rating >= 1 AND user_rating <= 5)),

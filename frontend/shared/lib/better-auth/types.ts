@@ -15,6 +15,7 @@ export type DotmacUserExtras = {
   last_name?: string;
   full_name?: string;
   tenant_id?: string;
+  technician_id?: string;
   partner_id?: string;
   managed_tenant_ids?: string[];
   roles?: string[];

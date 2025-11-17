@@ -4,7 +4,8 @@
  * Tests WCAG 2.1 compliance for dual-stack IP components
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 import AxeBuilder from "@axe-core/playwright";
 
 test.describe("Accessibility - IP Input Components", () => {

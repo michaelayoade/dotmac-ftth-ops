@@ -37,7 +37,7 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, children, ...props }, ref) => {
+  ({ className, variant, size, children, type = "button", ...props }, ref) => {
     // Accessibility: Warn in development if button has no accessible label
     if (process.env["NODE_ENV"] !== "production") {
       const hasTextContent =
@@ -58,7 +58,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     return (
-      <button className={cn(buttonVariants({ variant, size }), className)} ref={ref} {...props}>
+      <button
+        type={type}
+        className={cn(buttonVariants({ variant, size }), className)}
+        ref={ref}
+        {...props}
+      >
         {children}
       </button>
     );

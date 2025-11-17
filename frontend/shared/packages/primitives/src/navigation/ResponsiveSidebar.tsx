@@ -41,7 +41,7 @@ function renderSidebarItems(options: RenderOptions): ReactNode {
   const { items, depth, currentPath, expandedItems, showContent, onToggle, onNavigate } = options;
 
   return (
-    <ul className={clsx("space-y-1", depth > 0 && "ml-2")} role={depth === 0 ? "tree" : "group"}>
+    <ul className={clsx("space-y-1", depth > 0 && "ml-2")}>
       {items.map((item) => {
         const isActive = currentPath === item.href;
         const hasChildren = (item.children?.length ?? 0) > 0;

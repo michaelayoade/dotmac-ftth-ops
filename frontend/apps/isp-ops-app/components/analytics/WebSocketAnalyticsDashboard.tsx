@@ -91,8 +91,9 @@ export function WebSocketAnalyticsDashboard() {
       ? `${avgDurationMinutes}m ${avgDurationSeconds}s`
       : `${avgDurationSeconds}s`;
 
-  // Calculate messages per connection
-  const messagesPerConnection = analytics.total_active_connections > 0
+  // Calculate messages per connection using lifetime totals to avoid zeroing out after quiet periods
+  const hasLifetimeConnections = analytics.total_connections_lifetime > 0;
+  const messagesPerConnection = hasLifetimeConnections
     ? Math.round(analytics.total_messages_sent / analytics.total_connections_lifetime)
     : 0;
 

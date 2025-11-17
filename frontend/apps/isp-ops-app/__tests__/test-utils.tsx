@@ -8,7 +8,15 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, RenderHookOptions, RenderHookResult } from '@testing-library/react';
 import { act } from '@testing-library/react';
+import { ApolloClient, ApolloProvider, InMemoryCache, NormalizedCacheObject, createHttpLink } from '@apollo/client';
+import '@/lib/graphql/patchApolloCache';
 import { server } from './msw/server';
+import {
+  resetSubscriberStorage as mswResetSubscriberStorage,
+  createMockSubscriber as mswCreateMockSubscriber,
+  createMockService as mswCreateMockService,
+  seedSubscriberData as mswSeedSubscriberData,
+} from './msw/handlers/subscribers';
 import {
   resetWebhookStorage,
   createMockWebhook,
@@ -22,7 +30,7 @@ import {
   createMockLog,
   seedNotificationData,
 } from './msw/handlers/notifications';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 /**
  * Creates a QueryClient with test-friendly defaults
@@ -38,9 +46,11 @@ export function createTestQueryClient(): QueryClient {
         refetchOnMount: false,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
+        networkMode: "always",
       },
       mutations: {
         retry: false,
+        networkMode: "always",
       },
     },
     logger: {
@@ -53,6 +63,46 @@ export function createTestQueryClient(): QueryClient {
 }
 
 /**
+ * Creates an Apollo Client with test-friendly defaults
+ */
+export function createTestApolloClient(): ApolloClient<NormalizedCacheObject> {
+  const httpLink = createHttpLink({
+    uri: 'http://localhost:3000/api/v1/graphql',
+  });
+
+  return new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            subscribers: {
+              keyArgs: ["search"],
+              merge(existing, incoming) {
+                return incoming;
+              },
+            },
+          },
+        },
+      },
+    }),
+    defaultOptions: {
+      watchQuery: {
+        fetchPolicy: 'no-cache',
+        errorPolicy: 'all',
+      },
+      query: {
+        fetchPolicy: 'no-cache',
+        errorPolicy: 'all',
+      },
+      mutate: {
+        errorPolicy: 'all',
+      },
+    },
+  });
+}
+
+/**
  * Creates a wrapper component with QueryClientProvider
  */
 export function createQueryWrapper(queryClient?: QueryClient) {
@@ -60,6 +110,17 @@ export function createQueryWrapper(queryClient?: QueryClient) {
 
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+}
+
+/**
+ * Creates a wrapper component with ApolloProvider (for GraphQL tests)
+ */
+export function createApolloWrapper(apolloClient?: ApolloClient<NormalizedCacheObject>) {
+  const client = apolloClient || createTestApolloClient();
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <ApolloProvider client={client}>{children}</ApolloProvider>
   );
 }
 
@@ -224,38 +285,6 @@ export function createFetchResponse<T>(
  * Mock data factories
  */
 
-export const createMockUser = (overrides = {}) => ({
-  id: 'user-123',
-  email: 'test@example.com',
-  username: 'testuser',
-  full_name: 'Test User',
-  role: 'tenant_admin',
-  tenant_id: 'tenant-123',
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  ...overrides,
-});
-
-export const createMockSubscriber = (overrides = {}) => ({
-  id: 'sub-123',
-  tenant_id: 'tenant-123',
-  subscriber_id: 'SUB-001',
-  first_name: 'John',
-  last_name: 'Doe',
-  email: 'john@example.com',
-  phone: '+1234567890',
-  service_address: '123 Main St',
-  service_city: 'City',
-  service_state: 'State',
-  service_postal_code: '12345',
-  service_country: 'Country',
-  status: 'active' as const,
-  connection_type: 'ftth' as const,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  ...overrides,
-});
-
 export const createMockPlugin = (overrides = {}) => ({
   id: 'plugin-123',
   name: 'Test Plugin',
@@ -344,11 +373,11 @@ export {
 
 // Subscriber helpers
 export {
-  resetSubscriberStorage,
-  createMockSubscriber,
-  createMockService,
-  seedSubscriberData,
-} from './msw/handlers/subscribers';
+  mswResetSubscriberStorage as resetSubscriberStorage,
+  mswCreateMockSubscriber as createMockSubscriber,
+  mswCreateMockService as createMockService,
+  mswSeedSubscriberData as seedSubscriberData,
+};
 
 // Fault helpers
 export {
@@ -447,6 +476,13 @@ export {
   seedOrchestrationData,
 } from './msw/handlers/orchestration';
 
+// Partners helpers
+export {
+  clearPartnersData,
+  createMockPartner,
+  seedPartners,
+} from './msw/handlers/partners';
+
 // Technicians helpers
 export {
   resetTechniciansStorage,
@@ -455,6 +491,16 @@ export {
   seedTechniciansData,
   seedLocationHistory,
 } from './msw/handlers/technicians';
+
+// GraphQL Subscriber helpers
+export {
+  clearGraphQLSubscriberData,
+  seedGraphQLSubscriberData,
+  createMockSubscriber as createMockGraphQLSubscriber,
+  createMockSession as createMockGraphQLSession,
+  createMockSubscriberMetrics as createMockGraphQLSubscriberMetrics,
+  createMockSubscriberDashboard as createMockGraphQLSubscriberDashboard,
+} from './msw/handlers/graphql-subscriber';
 
 /**
  * Add a runtime handler to MSW server
@@ -483,12 +529,12 @@ export function addMockHandler(...handlers: Parameters<typeof server.use>) {
 export function overrideApiEndpoint(
   method: 'get' | 'post' | 'patch' | 'put' | 'delete',
   path: string,
-  handler: Parameters<typeof rest.get>[1]
+  handler: Parameters<typeof http.get>[1]
 ) {
-  const restMethod = rest[method];
+  const httpMethod = http[method];
   // Add wildcard to match full URLs with host
   const fullPath = path.startsWith('*') ? path : `*${path}`;
-  server.use(restMethod(fullPath, handler as any));
+  server.use(httpMethod(fullPath, handler as any));
 }
 
 /**
@@ -503,10 +549,10 @@ export function makeApiEndpointFail(
   errorMessage: string,
   status = 500
 ) {
-  overrideApiEndpoint(method, path, (req, res, ctx) => {
-    return res(
-      ctx.status(status),
-      ctx.json({ error: errorMessage, code: 'TEST_ERROR' })
+  overrideApiEndpoint(method, path, ({ request }) => {
+    return HttpResponse.json(
+      { error: errorMessage, code: 'TEST_ERROR' },
+      { status }
     );
   });
 }
@@ -523,7 +569,7 @@ export function makeApiEndpointReturn(
   data: any,
   status = 200
 ) {
-  overrideApiEndpoint(method, path, (req, res, ctx) => {
-    return res(ctx.status(status), ctx.json(data));
+  overrideApiEndpoint(method, path, ({ request }) => {
+    return HttpResponse.json(data, { status });
   });
 }

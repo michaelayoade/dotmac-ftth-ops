@@ -240,7 +240,9 @@ export function VOLTHADashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">OLTs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{olts.length}</div>
+            <div className="text-3xl font-bold" data-testid="olt-count">
+              {olts.length}
+            </div>
             <p className="text-xs text-muted-foreground">
               {olts.filter((o) => o.root_device_id).length} active
             </p>
@@ -252,7 +254,9 @@ export function VOLTHADashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">ONUs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{onus.length}</div>
+            <div className="text-3xl font-bold" data-testid="onu-count">
+              {onus.length}
+            </div>
             <p className="text-xs text-muted-foreground">
               {onlineONUs.length} online ({((onlineONUs.length / onus.length) * 100).toFixed(0)}%)
             </p>
@@ -266,7 +270,9 @@ export function VOLTHADashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{criticalAlarms.length}</div>
+            <div className="text-3xl font-bold text-red-600" data-testid="alarm-count">
+              {criticalAlarms.length}
+            </div>
             <p className="text-xs text-muted-foreground">{alarms.length} total alarms</p>
           </CardContent>
         </Card>

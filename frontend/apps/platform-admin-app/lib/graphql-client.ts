@@ -43,13 +43,15 @@ function getAuthToken(): string | null {
 /**
  * Create a lightweight GraphQL client
  */
-function createGraphQLClient(): GraphQLClient {
-  const graphqlUrl =
-    platformConfig.api.graphqlEndpoint ?? platformConfig.api.buildUrl("/graphql");
+function resolveGraphqlUrl(): string {
+  return platformConfig.api.graphqlEndpoint ?? platformConfig.api.buildUrl("/graphql");
+}
 
+function createGraphQLClient(): GraphQLClient {
   return {
     async request<T = any>(query: string, variables?: Record<string, any>): Promise<T> {
       const token = getAuthToken();
+      const graphqlUrl = resolveGraphqlUrl();
 
       const response = await fetch(graphqlUrl, {
         method: "POST",

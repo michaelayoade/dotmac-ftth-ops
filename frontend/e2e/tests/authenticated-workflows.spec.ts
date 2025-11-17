@@ -5,7 +5,8 @@
  * Note: These tests will skip if login fails (no test users available)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from "#e2e/fixtures";
+
 import { login, TEST_USERS, isLoggedIn } from '../helpers/auth';
 
 const ISP_OPS_URL = process.env.ISP_OPS_URL || 'http://localhost:3001';

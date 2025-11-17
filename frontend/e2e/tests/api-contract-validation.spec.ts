@@ -12,7 +12,8 @@
  * - Breaking API changes
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 
 test.describe("API Contract Validation", () => {
   const API_BASE = "http://localhost:8000/api/v1";

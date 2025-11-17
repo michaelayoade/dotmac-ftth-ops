@@ -4,8 +4,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useRouter } from "next/navigation";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.api.baseUrl;
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -56,7 +54,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Verify token and get user info
-        const response = await fetch(`${API_BASE}/api/v1/customer/profile`, {
+        const response = await fetch(platformConfig.api.buildUrl("/customer/profile"), {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -95,7 +93,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE}/api/v1/auth/customer/login`, {
+      const response = await fetch(platformConfig.api.buildUrl("/auth/customer/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

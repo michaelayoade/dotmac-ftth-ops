@@ -4,6 +4,7 @@
  */
 
 import { platformConfig } from "../config";
+import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 export type VerificationMethod = "dns_txt" | "dns_cname" | "meta_tag" | "file_upload";
 
@@ -59,14 +60,21 @@ export interface DomainRemovalResponse {
 }
 
 class DomainVerificationService {
-  private baseUrl = platformConfig.api.baseUrl;
+  private buildUrl(path: string): string {
+    return platformConfig.api.buildUrl(path);
+  }
 
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem("access_token");
-    return {
-      Authorization: `Bearer ${token}`,
+    const token = getOperatorAccessToken();
+    const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   /**
@@ -76,7 +84,7 @@ class DomainVerificationService {
     tenantId: string,
     request: InitiateVerificationRequest,
   ): Promise<DomainVerificationResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains/verify`, {
+    const response = await fetch(this.buildUrl(`/tenants/${tenantId}/domains/verify`), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(request),
@@ -97,7 +105,7 @@ class DomainVerificationService {
     tenantId: string,
     request: CheckVerificationRequest,
   ): Promise<DomainVerificationResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains/check`, {
+    const response = await fetch(this.buildUrl(`/tenants/${tenantId}/domains/check`), {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(request),
@@ -115,7 +123,7 @@ class DomainVerificationService {
    * Get current domain verification status
    */
   async getStatus(tenantId: string): Promise<DomainVerificationStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains/status`, {
+    const response = await fetch(this.buildUrl(`/tenants/${tenantId}/domains/status`), {
       headers: this.getAuthHeaders(),
     });
 
@@ -131,7 +139,7 @@ class DomainVerificationService {
    * Remove verified domain
    */
   async removeDomain(tenantId: string): Promise<DomainRemovalResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains`, {
+    const response = await fetch(this.buildUrl(`/tenants/${tenantId}/domains`), {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });

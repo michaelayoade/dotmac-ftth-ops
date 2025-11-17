@@ -145,7 +145,7 @@ export default function CustomerSupportPage() {
     const Icon = statusConfig.icon;
 
     return (
-      <Badge className={statusConfig.className}>
+      <Badge variant="outline" className={statusConfig.className}>
         <Icon className="h-3 w-3 mr-1" />
         {statusConfig.label}
       </Badge>

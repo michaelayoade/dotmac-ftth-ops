@@ -48,7 +48,7 @@ frontend/
 
 ## Testing
 
-- **Unit tests:** `pnpm --filter @dotmac/isp-ops-app test` and `pnpm --filter @dotmac/platform-admin-app test` run the Next/Jest suites with the consolidated `jest.config.ts`.
-- **Shared package tests:** run `pnpm --filter ./shared/packages/* test` to execute Jest suites inside the shared packages (http-client, graphql, providers, etc.).
+- **Recommended workflow:** `pnpm test` now runs the shared packages plus both Next.js apps sequentially. Pair it with `pnpm type-check` (or `pnpm test:all`) before committing.
+- **Targeted unit suites:** use `pnpm test:shared`, `pnpm test:apps`, `pnpm test:isp`, or `pnpm test:admin` when you only touched a specific area. `pnpm test:hooks` runs just the ISP hook/MSW suites, and the `:watch` variants stream results during refactors.
 - **E2E tests:** `pnpm e2e` executes the Playwright suite defined in `playwright.config.ts`. Use `pnpm e2e -- e2e/tests/workflows/complete-workflows.spec.ts` for a specific spec or `pnpm e2e:headed` to watch the browser.
 - **Smoke/workflow shortcuts:** the `test:auto*` scripts now proxy to Playwright (no more Puppeteer harness); see `package.json` for the available targets.

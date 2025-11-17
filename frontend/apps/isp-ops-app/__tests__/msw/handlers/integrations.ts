@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   IntegrationResponse,
   IntegrationListResponse,
@@ -47,7 +47,7 @@ export function seedIntegrationsData(integrationsData: IntegrationResponse[]) {
 
 export const integrationsHandlers = [
   // GET /api/v1/integrations - List all integrations
-  rest.get('*/api/v1/integrations', (req, res, ctx) => {
+  http.get('*/api/v1/integrations', (req, res, ctx) => {
     console.log('[MSW] GET /api/v1/integrations', { totalIntegrations: integrations.length });
 
     const response: IntegrationListResponse = {
@@ -55,11 +55,11 @@ export const integrationsHandlers = [
       total: integrations.length,
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // GET /api/v1/integrations/:name - Get single integration
-  rest.get('*/api/v1/integrations/:name', (req, res, ctx) => {
+  http.get('*/api/v1/integrations/:name', (req, res, ctx) => {
     const { name } = req.params;
 
     console.log('[MSW] GET /api/v1/integrations/:name', { name });
@@ -68,17 +68,14 @@ export const integrationsHandlers = [
 
     if (!integration) {
       console.log('[MSW] Integration not found', name);
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Integration not found', code: 'NOT_FOUND' })
-      );
+      return HttpResponse.json({ error: 'Integration not found', code: 'NOT_FOUND' }, { status: 404 });
     }
 
-    return res(ctx.json(integration));
+    return HttpResponse.json(integration);
   }),
 
   // POST /api/v1/integrations/:name/health-check - Trigger health check
-  rest.post('*/api/v1/integrations/:name/health-check', (req, res, ctx) => {
+  http.post('*/api/v1/integrations/:name/health-check', (req, res, ctx) => {
     const { name } = req.params;
 
     console.log('[MSW] POST /api/v1/integrations/:name/health-check', { name });
@@ -87,10 +84,7 @@ export const integrationsHandlers = [
 
     if (!integration) {
       console.log('[MSW] Integration not found', name);
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Integration not found', code: 'NOT_FOUND' })
-      );
+      return HttpResponse.json({ error: 'Integration not found', code: 'NOT_FOUND' }, { status: 404 });
     }
 
     // Update last_check timestamp
@@ -106,6 +100,6 @@ export const integrationsHandlers = [
       integrations[index] = updatedIntegration;
     }
 
-    return res(ctx.json(updatedIntegration));
+    return HttpResponse.json(updatedIntegration);
   }),
 ];

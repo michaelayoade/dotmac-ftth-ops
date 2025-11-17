@@ -230,6 +230,8 @@ async def async_client(db_engine, tenant_id, user_id):
     finally:
         # Stop patches
         rbac_patch.stop()
+        rbac_permissions_all_patch.stop()
+        rbac_permissions_any_patch.stop()
         tenant_patch.stop()
         router_tenant_patch.stop()
         # Clear overrides after test

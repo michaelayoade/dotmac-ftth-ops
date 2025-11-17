@@ -138,7 +138,7 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
         </div>
 
         {/* Plugin Metadata */}
-        <div className="flex items-center gap-4 mt-3 text-xs text-foreground0">
+        <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
           <span>v{plugin.version}</span>
           {plugin.author && <span>by {plugin.author}</span>}
           <span>{plugin.fields.length} fields</span>
@@ -182,7 +182,7 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
                   <span className="text-rose-400">{errorInstances.length}</span>
                 </div>
               )}
-              <span className="text-foreground0">of {totalInstances}</span>
+              <span className="text-muted-foreground">of {totalInstances}</span>
             </div>
           </div>
 
@@ -197,7 +197,7 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
               </div>
             ))}
             {instances.length > 2 && (
-              <div className="text-xs text-foreground0 text-center">
+              <div className="text-xs text-muted-foreground text-center">
                 +{instances.length - 2} more instances
               </div>
             )}

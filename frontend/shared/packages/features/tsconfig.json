@@ -19,7 +19,8 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@dotmac/*": ["../*/src"]
+      "@dotmac/*": ["../*/src"],
+      "@dotmac/testing-utils/*": ["../testing-utils/src/*"]
     }
   },
   "include": ["src/**/*"],

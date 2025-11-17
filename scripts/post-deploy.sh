@@ -219,9 +219,33 @@ setup_isp() {
 }
 
 setup_all() {
-    setup_platform
+    # Run migrations only once since both backends share the same database
+    echo -e "${CYAN}Setting up shared database migrations...${NC}"
     echo ""
-    setup_isp
+
+    if wait_for_container_healthy "${PLATFORM_BACKEND_CONTAINER}" "Platform backend"; then
+        run_migrations "${PLATFORM_BACKEND_CONTAINER}" "Shared Database"
+        sleep 2
+        verify_api "${PLATFORM_API_PORT}" "Platform"
+    else
+        echo -e "${RED}✗ Platform backend setup failed${NC}"
+        return 1
+    fi
+
+    echo ""
+
+    # ISP backend - skip migrations, just verify API
+    echo -e "${CYAN}Setting up ISP backend...${NC}"
+    echo ""
+
+    if wait_for_container_healthy "${ISP_BACKEND_CONTAINER}" "ISP backend"; then
+        echo -e "${YELLOW}ℹ Skipping migrations for ISP (already run on shared database)${NC}"
+        sleep 2
+        verify_api "${ISP_API_PORT}" "ISP"
+    else
+        echo -e "${RED}✗ ISP backend setup failed${NC}"
+        return 1
+    fi
 }
 
 # ---------------------------------------------------------------------------

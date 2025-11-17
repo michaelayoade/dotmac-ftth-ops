@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   Technician,
   TechnicianLocation,
@@ -103,8 +103,8 @@ export function seedLocationHistory(
 
 export const techniciansHandlers = [
   // GET /field-service/technicians - List technicians
-  rest.get('*/field-service/technicians', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/field-service/technicians', ({ request, params }) => {
+    const url = new URL(request.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '50');
     const status = url.searchParams.get('status');
@@ -146,11 +146,11 @@ export const techniciansHandlers = [
       offset,
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // GET /field-service/technicians/locations/active - Get active technician locations
-  rest.get('*/field-service/technicians/locations/active', (req, res, ctx) => {
+  http.get('*/field-service/technicians/locations/active', ({ request, params }) => {
     console.log('[MSW] GET /field-service/technicians/locations/active');
 
     // Return locations for all active technicians with valid coordinates
@@ -165,13 +165,13 @@ export const techniciansHandlers = [
         status: tech.status,
       }));
 
-    return res(ctx.json(activeLocations));
+    return HttpResponse.json(activeLocations);
   }),
 
   // GET /field-service/technicians/:id/location-history - Get technician location history
-  rest.get('*/field-service/technicians/:id/location-history', (req, res, ctx) => {
-    const { id } = req.params;
-    const url = new URL(req.url);
+  http.get('*/field-service/technicians/:id/location-history', ({ request, params }) => {
+    const { id } = params;
+    const url = new URL(request.url);
     const startTime = url.searchParams.get('start_time');
     const endTime = url.searchParams.get('end_time');
     const limit = parseInt(url.searchParams.get('limit') || '100');
@@ -200,30 +200,30 @@ export const techniciansHandlers = [
     // Limit results
     const limited = history.slice(0, limit);
 
-    return res(ctx.json(limited));
+    return HttpResponse.json(limited);
   }),
 
   // GET /field-service/technicians/:id - Get single technician
-  rest.get('*/field-service/technicians/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/field-service/technicians/:id', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] GET /field-service/technicians/:id', { id });
 
     const technician = technicians.find((tech) => tech.id === id);
 
     if (!technician) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(technician));
+    return HttpResponse.json(technician);
   }),
 
   // POST /field-service/technicians - Create technician
-  rest.post('*/field-service/technicians', async (req, res, ctx) => {
-    const data = await req.json();
+  http.post('*/field-service/technicians', async ({ request, params }) => {
+    const data = await request.json();
 
     console.log('[MSW] POST /field-service/technicians', data);
 
@@ -234,22 +234,22 @@ export const techniciansHandlers = [
 
     technicians.push(newTechnician);
 
-    return res(ctx.status(201), ctx.json(newTechnician));
+    return HttpResponse.json(newTechnician, { status: 201 });
   }),
 
   // PATCH /field-service/technicians/:id - Update technician
-  rest.patch('*/field-service/technicians/:id', async (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = await req.json();
+  http.patch('*/field-service/technicians/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json();
 
     console.log('[MSW] PATCH /field-service/technicians/:id', { id, updates });
 
     const index = technicians.findIndex((tech) => tech.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -259,64 +259,64 @@ export const techniciansHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(technicians[index]));
+    return HttpResponse.json(technicians[index]);
   }),
 
   // DELETE /field-service/technicians/:id - Delete technician
-  rest.delete('*/field-service/technicians/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/field-service/technicians/:id', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] DELETE /field-service/technicians/:id', { id });
 
     const index = technicians.findIndex((tech) => tech.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     technicians.splice(index, 1);
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /field-service/technicians/:id/status - Update technician status
-  rest.post('*/field-service/technicians/:id/status', async (req, res, ctx) => {
-    const { id } = req.params;
-    const data = await req.json();
+  http.post('*/field-service/technicians/:id/status', async ({ request, params }) => {
+    const { id } = params;
+    const data = await request.json();
 
     console.log('[MSW] POST /field-service/technicians/:id/status', { id, data });
 
     const index = technicians.findIndex((tech) => tech.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     technicians[index].status = data.status;
     technicians[index].updated_at = new Date().toISOString();
 
-    return res(ctx.json(technicians[index]));
+    return HttpResponse.json(technicians[index]);
   }),
 
   // POST /field-service/technicians/:id/location - Update technician location
-  rest.post('*/field-service/technicians/:id/location', async (req, res, ctx) => {
-    const { id } = req.params;
-    const data = await req.json();
+  http.post('*/field-service/technicians/:id/location', async ({ request, params }) => {
+    const { id } = params;
+    const data = await request.json();
 
     console.log('[MSW] POST /field-service/technicians/:id/location', { id, data });
 
     const index = technicians.findIndex((tech) => tech.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -337,12 +337,12 @@ export const techniciansHandlers = [
       })
     );
 
-    return res(ctx.json(technicians[index]));
+    return HttpResponse.json(technicians[index]);
   }),
 
   // GET /field-service/technicians/available - Get available technicians
-  rest.get('*/field-service/technicians/available', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/field-service/technicians/available', ({ request, params }) => {
+    const url = new URL(request.url);
     const skillLevel = url.searchParams.get('skill_level');
     const serviceArea = url.searchParams.get('service_area');
 
@@ -367,73 +367,73 @@ export const techniciansHandlers = [
       );
     }
 
-    return res(ctx.json(filtered));
+    return HttpResponse.json(filtered);
   }),
 
   // POST /field-service/technicians/:id/assign - Assign technician to job
-  rest.post('*/field-service/technicians/:id/assign', async (req, res, ctx) => {
-    const { id } = req.params;
-    const data = await req.json();
+  http.post('*/field-service/technicians/:id/assign', async ({ request, params }) => {
+    const { id } = params;
+    const data = await request.json();
 
     console.log('[MSW] POST /field-service/technicians/:id/assign', { id, data });
 
     const index = technicians.findIndex((tech) => tech.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     // Check if technician is available
     if (technicians[index].status !== 'available') {
-      return res(
-        ctx.status(400),
-        ctx.json({ error: 'Technician is not available', code: 'NOT_AVAILABLE' })
+      return HttpResponse.json(
+        { error: 'Technician is not available', code: 'NOT_AVAILABLE' },
+        { status: 400 }
       );
     }
 
     technicians[index].status = 'on_job';
     technicians[index].updated_at = new Date().toISOString();
 
-    return res(ctx.json({
+    return HttpResponse.json({
       success: true,
       message: 'Technician assigned successfully',
       job_id: data.job_id,
       technician: technicians[index],
-    }));
+    });
   }),
 
   // POST /field-service/technicians/:id/unassign - Unassign technician from job
-  rest.post('*/field-service/technicians/:id/unassign', async (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/field-service/technicians/:id/unassign', async ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /field-service/technicians/:id/unassign', { id });
 
     const index = technicians.findIndex((tech) => tech.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     technicians[index].status = 'available';
     technicians[index].updated_at = new Date().toISOString();
 
-    return res(ctx.json({
+    return HttpResponse.json({
       success: true,
       message: 'Technician unassigned successfully',
       technician: technicians[index],
-    }));
+    });
   }),
 
   // GET /field-service/technicians/:id/schedule - Get technician schedule
-  rest.get('*/field-service/technicians/:id/schedule', (req, res, ctx) => {
-    const { id } = req.params;
-    const url = new URL(req.url);
+  http.get('*/field-service/technicians/:id/schedule', ({ request, params }) => {
+    const { id } = params;
+    const url = new URL(request.url);
     const startDate = url.searchParams.get('start_date');
     const endDate = url.searchParams.get('end_date');
 
@@ -446,9 +446,9 @@ export const techniciansHandlers = [
     const technician = technicians.find((tech) => tech.id === id);
 
     if (!technician) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Technician not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'Technician not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -462,6 +462,6 @@ export const techniciansHandlers = [
       assignments: [],
     };
 
-    return res(ctx.json(schedule));
+    return HttpResponse.json(schedule);
   }),
 ];

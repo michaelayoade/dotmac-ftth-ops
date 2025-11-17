@@ -41,7 +41,7 @@ function MetricCard({ title, value, subtitle, icon: Icon, trend, href }: MetricC
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
-          {subtitle && <p className="mt-1 text-sm text-foreground0">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
           {trend && (
             <div
               className={`mt-2 flex items-center text-sm ${trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
@@ -62,7 +62,7 @@ function MetricCard({ title, value, subtitle, icon: Icon, trend, href }: MetricC
     return (
       <Link href={href} className="block group relative">
         {content}
-        <ArrowUpRight className="absolute top-4 right-4 h-4 w-4 text-foreground0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ArrowUpRight className="absolute top-4 right-4 h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       </Link>
     );
   }
@@ -90,7 +90,7 @@ function QuickAction({ title, description, href, icon: Icon }: QuickActionProps)
         <p className="font-medium text-foreground">{title}</p>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
-      <ArrowUpRight className="h-4 w-4 text-foreground0" />
+      <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
     </Link>
   );
 }
@@ -112,7 +112,7 @@ function RecentActivity({ items }: { items: RecentActivityItem[] }) {
       </div>
       <div className="divide-y divide-border">
         {items.length === 0 ? (
-          <div className="p-6 text-center text-foreground0">No recent activity</div>
+          <div className="p-6 text-center text-muted-foreground">No recent activity</div>
         ) : (
           items.map((item) => (
             <div key={item.id} className="p-4 hover:bg-muted transition-colors">
@@ -124,7 +124,7 @@ function RecentActivity({ items }: { items: RecentActivityItem[] }) {
                   <p className="font-medium text-foreground truncate">{item.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground truncate">{item.description}</p>
                 </div>
-                <span className="text-xs text-foreground0 whitespace-nowrap">{item.timestamp}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">{item.timestamp}</span>
               </div>
             </div>
           ))
@@ -344,7 +344,7 @@ export default function OperationsPage() {
                       </p>
                     </div>
                   </div>
-                  <ArrowUpRight className="h-5 w-5 text-foreground0" />
+                  <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </Link>
 
@@ -364,7 +364,7 @@ export default function OperationsPage() {
                       </p>
                     </div>
                   </div>
-                  <ArrowUpRight className="h-5 w-5 text-foreground0" />
+                  <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </Link>
 
@@ -384,7 +384,7 @@ export default function OperationsPage() {
                       </p>
                     </div>
                   </div>
-                  <ArrowUpRight className="h-5 w-5 text-foreground0" />
+                  <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </Link>
             </div>

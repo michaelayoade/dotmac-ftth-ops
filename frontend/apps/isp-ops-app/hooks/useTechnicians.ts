@@ -177,16 +177,18 @@ export function useTechniciansWithLocations() {
   const { data, ...rest } = useActiveTechnicianLocations();
 
   // Filter to only technicians with valid coordinates
-  const techniciansWithLocation = data?.filter(
-    (tech) =>
-      tech.latitude !== null &&
-      tech.longitude !== null &&
-      tech.latitude !== undefined &&
-      tech.longitude !== undefined
-  );
+  const techniciansWithLocation = Array.isArray(data)
+    ? data.filter(
+        (tech) =>
+          tech.latitude !== null &&
+          tech.longitude !== null &&
+          tech.latitude !== undefined &&
+          tech.longitude !== undefined,
+      )
+    : [];
 
   return {
     ...rest,
-    data: techniciansWithLocation || [],
+    data: techniciansWithLocation,
   };
 }

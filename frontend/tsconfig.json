@@ -5,7 +5,9 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@dotmac/typescript-config/*": ["./shared/packages/typescript-config/*"],
-      "@dotmac/*": ["./shared/packages/*/src"]
+      "@dotmac/*": ["./shared/packages/*/src"],
+      "@dotmac/testing-utils/*": ["./shared/packages/testing-utils/src/*"],
+      "#e2e/*": ["./e2e/*"]
     }
   },
   "references": [

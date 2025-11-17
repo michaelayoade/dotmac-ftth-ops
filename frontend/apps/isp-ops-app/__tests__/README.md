@@ -89,11 +89,11 @@ Handlers intercept API requests and return mock responses. They must:
 Example webhook handler:
 
 ```typescript
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 export const webhookHandlers = [
   // GET endpoint with filtering
-  rest.get('*/api/v1/webhooks/subscriptions', (req, res, ctx) => {
+  http.get('*/api/v1/webhooks/subscriptions', (req) => {
     const url = new URL(req.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '20');
@@ -107,31 +107,28 @@ export const webhookHandlers = [
     const paginated = filtered.slice(offset, offset + limit);
 
     // Return array directly (not wrapped in { data: [...] })
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 
   // POST endpoint
-  rest.post('*/api/v1/webhooks/subscriptions', (req, res, ctx) => {
-    const data = req.body as Partial<WebhookSubscription>;
+  http.post('*/api/v1/webhooks/subscriptions', async (req) => {
+    const data = await req.json<Partial<WebhookSubscription>>();
     const newWebhook = createMockWebhook(data);
     webhookSubscriptions.push(newWebhook);
-    return res(ctx.status(201), ctx.json(newWebhook));
+    return HttpResponse.json(newWebhook, { status: 201 });
   }),
 
   // DELETE endpoint
-  rest.delete('*/api/v1/webhooks/subscriptions/:id', (req, res, ctx) => {
+  http.delete('*/api/v1/webhooks/subscriptions/:id', (req) => {
     const { id } = req.params;
     const index = webhookSubscriptions.findIndex((wh) => wh.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Not found', code: 'NOT_FOUND' })
-      );
+      return HttpResponse.json({ error: 'Not found', code: 'NOT_FOUND' }, { status: 404 });
     }
 
     webhookSubscriptions.splice(index, 1);
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 ];
 ```

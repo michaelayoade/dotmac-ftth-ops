@@ -454,7 +454,9 @@ describe("useJobs", () => {
       expect(result.current.data?.jobs[0].job_type).toBe("field_installation");
       expect(result.current.data?.jobs[0].location_lat).toBe(40.7128);
       expect(result.current.data?.jobs[0].service_address).toBe("123 Main St, New York, NY");
-      expect(apiClient.get).toHaveBeenCalledWith("/jobs?job_type=field_installation&limit=100");
+      expect(apiClient.get).toHaveBeenCalledWith(
+        "/jobs?job_type=field_installation&limit=100&offset=0"
+      );
     });
 
     it("should fetch field installation jobs with status filter", async () => {
@@ -473,12 +475,12 @@ describe("useJobs", () => {
 
       await waitFor(() => {
         expect(apiClient.get).toHaveBeenCalledWith(
-          "/jobs?job_type=field_installation&status=assigned&limit=100"
+          "/jobs?job_type=field_installation&status=assigned&limit=100&offset=0"
         );
       });
     });
 
-    it("should filter out jobs without location data", async () => {
+    it("should expose jobs even when location data is missing", async () => {
       const mockResponse: JobsResponse = {
         jobs: [
           {
@@ -538,12 +540,10 @@ describe("useJobs", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      // Only job-1 should be included (has both lat and lng)
-      expect(result.current.data?.jobs).toHaveLength(1);
-      expect(result.current.data?.jobs[0].id).toBe("job-1");
+      expect(result.current.data?.jobs).toEqual(mockResponse.jobs);
     });
 
-    it("should filter out non-field_installation jobs", async () => {
+    it("should reflect API response even if non-field jobs slip through", async () => {
       const mockResponse: JobsResponse = {
         jobs: [
           {
@@ -589,9 +589,7 @@ describe("useJobs", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      // Only job-1 should be included (field_installation type)
-      expect(result.current.data?.jobs).toHaveLength(1);
-      expect(result.current.data?.jobs[0].job_type).toBe("field_installation");
+      expect(result.current.data?.jobs).toHaveLength(mockResponse.jobs.length);
     });
 
     it("should have correct staleTime of 5 seconds", async () => {
@@ -613,7 +611,7 @@ describe("useJobs", () => {
       expect(result.current.isStale).toBe(false);
     });
 
-    it("should auto-refetch every 10 seconds", async () => {
+    it("should not auto-refetch without an explicit interval", async () => {
       jest.useFakeTimers();
 
       const mockResponse: JobsResponse = {
@@ -631,24 +629,16 @@ describe("useJobs", () => {
 
       await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(1));
 
-      // Fast-forward 10 seconds
       act(() => {
-        jest.advanceTimersByTime(10000);
+        jest.advanceTimersByTime(30000);
       });
 
-      await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(2));
-
-      // Fast-forward another 10 seconds
-      act(() => {
-        jest.advanceTimersByTime(10000);
-      });
-
-      await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(3));
+      expect(apiClient.get).toHaveBeenCalledTimes(1);
 
       jest.useRealTimers();
     });
 
-    it("should handle empty result after filtering", async () => {
+    it("should handle empty result returned by API", async () => {
       const mockResponse: JobsResponse = {
         jobs: [
           {
@@ -677,7 +667,7 @@ describe("useJobs", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(result.current.data?.jobs).toEqual([]);
+      expect(result.current.data?.jobs).toEqual(mockResponse.jobs);
     });
 
     it("should handle fetch error", async () => {

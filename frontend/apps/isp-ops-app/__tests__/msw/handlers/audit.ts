@@ -4,7 +4,7 @@
  * Mocks audit logging endpoints for testing audit trail functionality
  */
 
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 import type {
   AuditActivity,
   AuditActivityList,
@@ -185,8 +185,8 @@ function applyFilters(
 
 export const auditHandlers = [
   // Get activity summary - MUST come before /activities/:activityId
-  rest.get("*/api/v1/audit/activities/summary", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/audit/activities/summary", ({ request, params }) => {
+    const url = new URL(request.url);
     const days = parseInt(url.searchParams.get("days") || "7");
 
     console.log("[MSW] GET /api/v1/audit/activities/summary", { days });
@@ -234,12 +234,12 @@ export const auditHandlers = [
       .slice(0, 10);
 
     console.log(`[MSW] Returning summary for ${filtered.length} activities`);
-    return res(ctx.json(summary));
+    return HttpResponse.json(summary);
   }),
 
   // Get recent audit activities - MUST come before /activities/:activityId
-  rest.get("*/api/v1/audit/activities/recent", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/audit/activities/recent", ({ request, params }) => {
+    const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "20");
     const days = parseInt(url.searchParams.get("days") || "7");
 
@@ -258,13 +258,13 @@ export const auditHandlers = [
       .slice(0, limit);
 
     console.log(`[MSW] Returning ${recent.length} recent activities`);
-    return res(ctx.json(recent));
+    return HttpResponse.json(recent);
   }),
 
   // Get user audit activities - MUST come before /activities/:activityId
-  rest.get("*/api/v1/audit/activities/user/:userId", (req, res, ctx) => {
-    const { userId } = req.params;
-    const url = new URL(req.url);
+  http.get("*/api/v1/audit/activities/user/:userId", ({ request, params }) => {
+    const { userId } = params;
+    const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const days = parseInt(url.searchParams.get("days") || "30");
 
@@ -287,12 +287,12 @@ export const auditHandlers = [
       .slice(0, limit);
 
     console.log(`[MSW] Returning ${userActivities.length} user activities`);
-    return res(ctx.json(userActivities));
+    return HttpResponse.json(userActivities);
   }),
 
   // List audit activities with pagination and filters
-  rest.get("*/api/v1/audit/activities", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/audit/activities", ({ request, params }) => {
+    const url = new URL(request.url);
     const filters: AuditFilterParams = {
       user_id: url.searchParams.get("user_id") || undefined,
       activity_type: url.searchParams.get("activity_type") || undefined,
@@ -332,30 +332,30 @@ export const auditHandlers = [
     };
 
     console.log(`[MSW] Returning ${paginated.length}/${total} activities`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // Get single activity details - MUST come after specific routes
-  rest.get("*/api/v1/audit/activities/:activityId", (req, res, ctx) => {
-    const { activityId } = req.params;
+  http.get("*/api/v1/audit/activities/:activityId", ({ request, params }) => {
+    const { activityId } = params;
 
     console.log("[MSW] GET /api/v1/audit/activities/:activityId", { activityId });
 
     const activity = activities.find((a) => a.id === activityId);
 
     if (!activity) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: "Activity not found", code: "NOT_FOUND" })
+      return HttpResponse.json(
+        { error: "Activity not found", code: "NOT_FOUND" },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(activity));
+    return HttpResponse.json(activity);
   }),
 
   // Export audit logs
-  rest.post("*/api/v1/audit/export", async (req, res, ctx) => {
-    const exportRequest = await req.json<AuditExportRequest>();
+  http.post("*/api/v1/audit/export", async ({ request, params }) => {
+    const exportRequest = await request.json<AuditExportRequest>();
 
     console.log("[MSW] POST /api/v1/audit/export", {
       format: exportRequest.format,
@@ -364,9 +364,9 @@ export const auditHandlers = [
 
     // Simulate export with validation
     if (!exportRequest.format) {
-      return res(
-        ctx.status(400),
-        ctx.json({ error: "Format is required", code: "VALIDATION_ERROR" })
+      return HttpResponse.json(
+        { error: "Format is required", code: "VALIDATION_ERROR" },
+        { status: 400 }
       );
     }
 
@@ -380,24 +380,24 @@ export const auditHandlers = [
 
     exportRequests.set(exportId, exportResponse);
 
-    return res(ctx.json(exportResponse));
+    return HttpResponse.json(exportResponse);
   }),
 
   // Get compliance report
-  rest.get("*/api/v1/audit/compliance", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/audit/compliance", ({ request, params }) => {
+    const url = new URL(request.url);
     const fromDate = url.searchParams.get("from_date") || "";
     const toDate = url.searchParams.get("to_date") || "";
 
     console.log("[MSW] GET /api/v1/audit/compliance", { fromDate, toDate });
 
     if (!fromDate || !toDate) {
-      return res(
-        ctx.status(400),
-        ctx.json({
+      return HttpResponse.json(
+        {
           error: "From and to dates are required",
           code: "VALIDATION_ERROR",
-        })
+        },
+        { status: 400 }
       );
     }
 
@@ -417,6 +417,6 @@ export const auditHandlers = [
     });
 
     console.log(`[MSW] Returning compliance report for ${filtered.length} events`);
-    return res(ctx.json(report));
+    return HttpResponse.json(report);
   }),
 ];

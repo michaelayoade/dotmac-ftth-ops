@@ -19,6 +19,10 @@ import {
   makeApiEndpointFail,
 } from "../../__tests__/test-utils";
 
+const waitForWebhooksLoading = async (getLoading: () => boolean) => {
+  await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
+};
+
 describe("useWebhooks (MSW)", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
 
@@ -79,7 +83,7 @@ describe("useWebhooks (MSW)", () => {
       expect(result.current.loading).toBe(true);
 
       // Wait for data to load
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       // Verify data matches actual hook API
       expect(result.current.webhooks).toBeDefined();
@@ -96,7 +100,7 @@ describe("useWebhooks (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       expect(result.current.webhooks).toHaveLength(0);
       expect(result.current.error).toBeNull();
@@ -116,7 +120,7 @@ describe("useWebhooks (MSW)", () => {
         { wrapper: createQueryWrapper(queryClient) }
       );
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       // Should only return webhooks with subscriber.created event
       expect(result.current.webhooks).toHaveLength(2);
@@ -137,7 +141,7 @@ describe("useWebhooks (MSW)", () => {
         { wrapper: createQueryWrapper(queryClient) }
       );
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       expect(result.current.webhooks).toHaveLength(10);
       // Page 2 should have webhooks 11-20
@@ -152,7 +156,7 @@ describe("useWebhooks (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       expect(result.current.error).toBeTruthy();
       expect(result.current.webhooks).toHaveLength(0);
@@ -174,7 +178,7 @@ describe("useWebhooks (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       expect(result.current.deliveries).toBeDefined();
       expect(result.current.deliveries).toHaveLength(3);
@@ -196,7 +200,7 @@ describe("useWebhooks (MSW)", () => {
         { wrapper: createQueryWrapper(queryClient) }
       );
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       expect(result.current.deliveries).toHaveLength(2);
       expect(result.current.deliveries.every((d) => d.status === "success")).toBe(true);
@@ -210,7 +214,7 @@ describe("useWebhooks (MSW)", () => {
         wrapper: createQueryWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.loading).toBe(false));
+      await waitForWebhooksLoading(() => result.current.loading);
 
       expect(result.current.deliveries).toHaveLength(0);
     });

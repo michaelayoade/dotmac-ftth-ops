@@ -10,8 +10,6 @@
 
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.api.baseUrl;
-
 // ============================================
 // Type Definitions
 // ============================================
@@ -149,10 +147,12 @@ export interface WorkflowStep {
 // ============================================
 
 class ServiceLifecycleService {
-  private baseUrl: string;
+  private get baseUrl(): string {
+    return platformConfig.api.baseUrl || "";
+  }
 
-  constructor() {
-    this.baseUrl = API_BASE;
+  private buildUrl(path: string): string {
+    return platformConfig.api.buildUrl(path);
   }
 
   /**

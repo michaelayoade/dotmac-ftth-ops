@@ -25,10 +25,10 @@ jest.mock("@/lib/services/bank-accounts-service", () => ({
   },
 }));
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -49,7 +49,6 @@ describe("Platform Admin useBankAccounts hooks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    toastMock.mockClear();
   });
 
   it("fetches bank accounts", async () => {
@@ -77,7 +76,7 @@ describe("Platform Admin useBankAccounts hooks", () => {
 
     expect(mockedService.createBankAccount).toHaveBeenCalledWith({ name: "Reserve" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["bank-accounts"] });
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Bank Account Created" }),
     );
   });
@@ -96,7 +95,7 @@ describe("Platform Admin useBankAccounts hooks", () => {
 
     expect(mockedService.recordCashPayment).toHaveBeenCalledWith({ amount: 100 });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["manual-payments"] });
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Cash Payment Recorded" }),
     );
   });

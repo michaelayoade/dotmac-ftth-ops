@@ -3,7 +3,7 @@
  * Mocks partner commission rule management endpoints
  */
 
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 
 // ============================================
 // Types
@@ -98,11 +98,11 @@ export function getCommissionRules(): CommissionRule[] {
 
 export const commissionRulesHandlers = [
   // GET /api/v1/partners/commission-rules/partners/:partnerId/applicable - MUST come before /:id route
-  rest.get(
+  http.get(
     "*/api/v1/partners/commission-rules/partners/:partnerId/applicable",
-    (req, res, ctx) => {
-      const { partnerId } = req.params;
-      const url = new URL(req.url);
+    ({ request, params }) => {
+      const { partnerId } = params;
+      const url = new URL(request.url);
       const productId = url.searchParams.get("product_id");
       const customerId = url.searchParams.get("customer_id");
 
@@ -134,13 +134,13 @@ export const commissionRulesHandlers = [
       filtered.sort((a, b) => a.priority - b.priority);
 
       console.log(`[MSW] Returning ${filtered.length} applicable rules`);
-      return res(ctx.json(filtered));
+      return HttpResponse.json(filtered);
     }
   ),
 
   // GET /api/v1/partners/commission-rules/ - List commission rules
-  rest.get("*/api/v1/partners/commission-rules/", (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get("*/api/v1/partners/commission-rules/", ({ request, params }) => {
+    const url = new URL(request.url);
     const partnerId = url.searchParams.get("partner_id");
     const isActive = url.searchParams.get("is_active");
     const page = parseInt(url.searchParams.get("page") || "1");
@@ -178,12 +178,12 @@ export const commissionRulesHandlers = [
     };
 
     console.log(`[MSW] Returning ${paginated.length}/${total} rules`);
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // POST /api/v1/partners/commission-rules/ - Create commission rule
-  rest.post("*/api/v1/partners/commission-rules/", async (req, res, ctx) => {
-    const createData = await req.json();
+  http.post("*/api/v1/partners/commission-rules/", async ({ request, params }) => {
+    const createData = await request.json();
 
     console.log("[MSW] POST /api/v1/partners/commission-rules/", {
       createData,
@@ -200,33 +200,30 @@ export const commissionRulesHandlers = [
     rules.push(newRule);
 
     console.log("[MSW] Created commission rule:", newRule.id);
-    return res(ctx.json(newRule));
+    return HttpResponse.json(newRule);
   }),
 
   // GET /api/v1/partners/commission-rules/:id - Get single commission rule
-  rest.get("*/api/v1/partners/commission-rules/:id", (req, res, ctx) => {
-    const { id } = req.params;
+  http.get("*/api/v1/partners/commission-rules/:id", ({ request, params }) => {
+    const { id } = params;
 
     console.log("[MSW] GET /api/v1/partners/commission-rules/:id", { id });
 
     const rule = rules.find((r) => r.id === id);
 
     if (!rule) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Rule not found" })
-      );
+      return HttpResponse.json({ detail: "Rule not found" }, { status: 404 });
     }
 
-    return res(ctx.json(rule));
+    return HttpResponse.json(rule);
   }),
 
   // PATCH /api/v1/partners/commission-rules/:id - Update commission rule
-  rest.patch(
+  http.patch(
     "*/api/v1/partners/commission-rules/:id",
-    async (req, res, ctx) => {
-      const { id } = req.params;
-      const updateData = await req.json();
+    async ({ request, params }) => {
+      const { id } = params;
+      const updateData = await request.json();
 
       console.log("[MSW] PATCH /api/v1/partners/commission-rules/:id", {
         id,
@@ -236,10 +233,7 @@ export const commissionRulesHandlers = [
       const rule = rules.find((r) => r.id === id);
 
       if (!rule) {
-        return res(
-          ctx.status(404),
-          ctx.json({ detail: "Rule not found" })
-        );
+        return HttpResponse.json({ detail: "Rule not found" }, { status: 404 });
       }
 
       // Update rule
@@ -248,28 +242,25 @@ export const commissionRulesHandlers = [
       });
 
       console.log("[MSW] Updated commission rule:", rule.id);
-      return res(ctx.json(rule));
+      return HttpResponse.json(rule);
     }
   ),
 
   // DELETE /api/v1/partners/commission-rules/:id - Delete commission rule
-  rest.delete("*/api/v1/partners/commission-rules/:id", (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete("*/api/v1/partners/commission-rules/:id", ({ request, params }) => {
+    const { id } = params;
 
     console.log("[MSW] DELETE /api/v1/partners/commission-rules/:id", { id });
 
     const index = rules.findIndex((r) => r.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ detail: "Rule not found" })
-      );
+      return HttpResponse.json({ detail: "Rule not found" }, { status: 404 });
     }
 
     rules.splice(index, 1);
 
     console.log("[MSW] Deleted commission rule:", id);
-    return res(ctx.status(200));
+    return new HttpResponse(null, { status: 200 });
   }),
 ];

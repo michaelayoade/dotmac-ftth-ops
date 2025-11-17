@@ -3,60 +3,20 @@ import { toHaveNoViolations } from "jest-axe";
 import { performance as nodePerformance } from "perf_hooks";
 import { TextDecoder, TextEncoder } from "util";
 import { webcrypto } from "crypto";
+import React from "react";
+import { ensureTestingMatchers } from "../src/testing/matchers";
+
+// Ensure React is available globally
+if (typeof globalThis.React === "undefined") {
+  (globalThis as any).React = React;
+}
 
 expect.extend(toHaveNoViolations);
-
-expect.extend({
-  toHaveNoSecurityViolations(received: Element | Document | null) {
-    const html = received ? (received as Element).innerHTML ?? "" : "";
-    const unsafePattern = /<script|javascript:/i;
-    const pass = !unsafePattern.test(html);
-    return {
-      pass,
-      message: () =>
-        pass
-          ? "Expected security violations but none were found"
-          : "Detected potential security violations in markup",
-    };
-  },
-  toBePerformant(received: { duration?: number; threshold?: number }, threshold = 16) {
-    const duration = received?.duration ?? 0;
-    const limit = threshold ?? received?.threshold ?? 16;
-    const buffer = limit + 10;
-    const pass = duration <= buffer;
-    return {
-      pass,
-      message: () =>
-        pass
-          ? `Expected rendering to exceed ${buffer}ms but it completed in ${duration.toFixed(2)}ms`
-          : `Expected rendering to complete within ${buffer}ms but took ${duration.toFixed(2)}ms`,
-    };
-  },
-  toBeAccessible() {
-    return {
-      pass: true,
-      message: () => "Expected container to be inaccessible",
-    };
-  },
-  toHaveValidMarkup() {
-    return {
-      pass: true,
-      message: () => "Expected markup to be invalid",
-    };
-  },
-});
+ensureTestingMatchers();
 
 declare global {
   // eslint-disable-next-line no-var
   var ResizeObserver: typeof window.ResizeObserver;
-  namespace jest {
-    interface Matchers<R> {
-      toHaveNoSecurityViolations(): R;
-      toBePerformant(threshold?: number): R;
-      toBeAccessible(): R;
-      toHaveValidMarkup(): R;
-    }
-  }
 }
 
 if (typeof globalThis.TextEncoder === "undefined") {

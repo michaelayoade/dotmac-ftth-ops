@@ -180,7 +180,7 @@ function SettingCard({ card }: { card: SettingCard }) {
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">{card.description}</p>
             </div>
-            <ArrowUpRight className="h-4 w-4 text-foreground0 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           {card.badge && (
             <span
@@ -323,7 +323,7 @@ function SettingsHubPageContent() {
                     {(user.full_name || user.username) as string}
                   </h2>
                   <p className="text-sm text-muted-foreground">{user.email as string}</p>
-                  <p className="text-xs text-foreground0 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Organization: {user.tenant_id || "Personal"} • Plan:{" "}
                     {tenantStats?.plan_type || "—"} • Users:{" "}
                     {tenantStats?.total_users ?? "—"}

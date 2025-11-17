@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
@@ -21,11 +21,16 @@ import {
 } from "@/lib/design-system/accessibility";
 import { ConfirmDialogProvider } from "@dotmac/ui";
 import { useRuntimeConfigState } from "@shared/runtime/RuntimeConfigContext";
+import { setupApiFetchInterceptor } from "@/lib/api/fetch-interceptor";
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [queryClient] = useState(() => new QueryClient());
   const { runtimeConfig } = useRuntimeConfigState();
+
+  useEffect(() => {
+    setupApiFetchInterceptor();
+  }, []);
 
   const appConfigValue = useMemo(() => {
     return {

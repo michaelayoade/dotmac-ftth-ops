@@ -2,7 +2,8 @@
  * E2E tests for regular user journeys
  * Tests complete workflows that a regular user would perform
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 import path from "path";
 
 test.describe("Regular User Journey", () => {

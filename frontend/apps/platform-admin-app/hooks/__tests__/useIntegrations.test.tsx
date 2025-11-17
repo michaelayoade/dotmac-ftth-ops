@@ -33,10 +33,10 @@ jest.mock("@/lib/api/response-helpers", () => ({
   extractDataOrThrow: jest.fn((response) => response.data),
 }));
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -60,7 +60,6 @@ describe("Platform Admin useIntegrations hooks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    toastMock.mockClear();
   });
 
   it("fetches integrations and single integration detail", async () => {
@@ -101,7 +100,7 @@ describe("Platform Admin useIntegrations hooks", () => {
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: ["integrations", "segment"],
     });
-    expect(toastMock).toHaveBeenCalledWith({
+    expect(global.mockToast).toHaveBeenCalledWith({
       title: "Health check complete",
       description: "segment: ready",
     });

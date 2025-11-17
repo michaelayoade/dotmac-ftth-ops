@@ -2,7 +2,7 @@
  * MSW Handlers for Billing Plans API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { BillingPlan, ProductCatalogItem } from '../../../hooks/useBillingPlans';
 
 // In-memory storage for test data
@@ -73,8 +73,8 @@ export function seedBillingPlansData(
 
 export const billingPlansHandlers = [
   // GET /billing/subscriptions/plans - List billing plans
-  rest.get('*/billing/subscriptions/plans', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/billing/subscriptions/plans', ({ request, params }) => {
+    const url = new URL(request.url);
     const activeOnly = url.searchParams.get('active_only') === 'true';
     const productId = url.searchParams.get('product_id');
 
@@ -88,12 +88,12 @@ export const billingPlansHandlers = [
       filtered = filtered.filter((plan) => plan.product_id === productId);
     }
 
-    return res(ctx.json(filtered));
+    return HttpResponse.json(filtered);
   }),
 
   // GET /billing/catalog/products - List products
-  rest.get('*/billing/catalog/products', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/billing/catalog/products', ({ request, params }) => {
+    const url = new URL(request.url);
     const isActive = url.searchParams.get('is_active') === 'true';
 
     let filtered = products;
@@ -102,12 +102,12 @@ export const billingPlansHandlers = [
       filtered = filtered.filter((product) => product.is_active);
     }
 
-    return res(ctx.json(filtered));
+    return HttpResponse.json(filtered);
   }),
 
   // POST /billing/subscriptions/plans - Create plan
-  rest.post('*/billing/subscriptions/plans', async (req, res, ctx) => {
-    const data = await req.json();
+  http.post('*/billing/subscriptions/plans', async ({ request, params }) => {
+    const data = await request.json();
 
     const newPlan = createMockBillingPlan({
       ...data,
@@ -116,21 +116,18 @@ export const billingPlansHandlers = [
 
     billingPlans.push(newPlan);
 
-    return res(ctx.status(201), ctx.json(newPlan));
+    return HttpResponse.json(newPlan, { status: 201 });
   }),
 
   // PATCH /billing/subscriptions/plans/:id - Update plan
-  rest.patch('*/billing/subscriptions/plans/:planId', async (req, res, ctx) => {
-    const { planId } = req.params;
-    const updates = await req.json();
+  http.patch('*/billing/subscriptions/plans/:planId', async ({ request, params }) => {
+    const { planId } = params;
+    const updates = await request.json();
 
     const index = billingPlans.findIndex((plan) => plan.plan_id === planId);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Plan not found' })
-      );
+      return HttpResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
     billingPlans[index] = {
@@ -139,22 +136,19 @@ export const billingPlansHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(billingPlans[index]));
+    return HttpResponse.json(billingPlans[index]);
   }),
 
   // DELETE /billing/subscriptions/plans/:id - Delete plan
-  rest.delete('*/billing/subscriptions/plans/:planId', (req, res, ctx) => {
-    const { planId } = req.params;
+  http.delete('*/billing/subscriptions/plans/:planId', ({ request, params }) => {
+    const { planId } = params;
     const index = billingPlans.findIndex((plan) => plan.plan_id === planId);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'Plan not found' })
-      );
+      return HttpResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
     billingPlans.splice(index, 1);
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

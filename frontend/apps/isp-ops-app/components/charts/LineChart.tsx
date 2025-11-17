@@ -31,6 +31,7 @@ export function LineChart({
   gradient = true,
 }: LineChartProps) {
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+  const gradientId = React.useId();
 
   if (!data || data.length === 0) {
     return (
@@ -107,14 +108,14 @@ export function LineChart({
           {gradient && (
             <>
               <defs>
-                <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="rgb(14, 165, 233)" stopOpacity="0.3" />
                   <stop offset="100%" stopColor="rgb(14, 165, 233)" stopOpacity="0" />
                 </linearGradient>
               </defs>
               <path
                 d={areaPath}
-                fill="url(#lineGradient)"
+                fill={`url(#${gradientId})`}
                 className={animated ? "animate-in fade-in duration-500" : ""}
               />
             </>

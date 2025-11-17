@@ -19,6 +19,61 @@ from tests.helpers.assertions import (
 )
 from tests.helpers.mock_builders import build_success_result
 
+EXCLUDED_DATA_PARAM_NAMES = {
+    "tenant_id",
+    "owner_id",
+    "created_by",
+    "updated_by",
+    "performed_by",
+    "user_id",
+}
+
+
+def _get_method_param_names(method: Any) -> list[str]:
+    """Return positional parameter names for a method excluding `self`."""
+
+    code = method.__code__
+    total = code.co_argcount
+    return list(code.co_varnames[1:total])
+
+
+def _select_id_param(param_names: list[str], explicit_name: str | None = None) -> str:
+    """Pick the parameter name that represents an entity identifier."""
+
+    if explicit_name:
+        return explicit_name
+
+    if "entity_id" in param_names:
+        return "entity_id"
+
+    for name in param_names:
+        if name.endswith("_id") or name == "id":
+            return name
+
+    return param_names[0] if param_names else "entity_id"
+
+
+def _select_data_param(
+    param_names: list[str],
+    id_param: str | None = None,
+    explicit_name: str | None = None,
+) -> str | None:
+    """Select the parameter name used for data payloads."""
+
+    if explicit_name:
+        return explicit_name
+
+    for name in param_names:
+        if name == id_param:
+            continue
+        if name in EXCLUDED_DATA_PARAM_NAMES:
+            continue
+        if name.endswith("_id"):
+            continue
+        return name
+
+    return None
+
 
 async def create_entity_test_helper(
     service: Any,
@@ -29,6 +84,7 @@ async def create_entity_test_helper(
     expected_attributes: dict[str, Any] | None = None,
     tenant_id: str | None = None,
     allow_multiple_adds: bool = False,
+    data_param_name: str | None = None,
     **extra_kwargs,
 ) -> Any:
     """
@@ -69,8 +125,14 @@ async def create_entity_test_helper(
     if tenant_id:
         kwargs["tenant_id"] = tenant_id
 
-    # Call the creation method
-    result = await method(create_data, **kwargs)
+    param_names = _get_method_param_names(method)
+    data_param = _select_data_param(param_names, explicit_name=data_param_name)
+
+    if data_param:
+        kwargs[data_param] = create_data
+        result = await method(**kwargs)
+    else:
+        result = await method(create_data, **kwargs)
 
     # Assert entity was created
     assert_entity_created(
@@ -92,6 +154,8 @@ async def update_entity_test_helper(
     sample_entity: Any,
     expected_attributes: dict[str, Any] | None = None,
     tenant_id: str | None = None,
+    id_param_name: str | None = None,
+    data_param_name: str | None = None,
     **extra_kwargs,
 ) -> Any:
     """
@@ -135,13 +199,20 @@ async def update_entity_test_helper(
     if tenant_id:
         kwargs["tenant_id"] = tenant_id
 
-    # Handle method signature variations
-    if "entity_id" in method.__code__.co_varnames:
-        result = await method(entity_id=entity_id, update_data=update_data, **kwargs)
+    param_names = _get_method_param_names(method)
+    entity_param = _select_id_param(param_names, explicit_name=id_param_name)
+    kwargs[entity_param] = entity_id
+
+    data_param = _select_data_param(
+        param_names,
+        id_param=entity_param,
+        explicit_name=data_param_name or ("update_data" if "update_data" in param_names else None),
+    )
+
+    if data_param:
+        kwargs[data_param] = update_data
+        result = await method(**kwargs)
     else:
-        # Try common variations
-        first_param = method.__code__.co_varnames[1]  # Skip 'self'
-        kwargs[first_param] = entity_id
         result = await method(update_data, **kwargs)
 
     # Assert entity was updated
@@ -158,6 +229,7 @@ async def delete_entity_test_helper(
     sample_entity: Any,
     soft_delete: bool = False,
     tenant_id: str | None = None,
+    id_param_name: str | None = None,
     **extra_kwargs,
 ) -> bool:
     """
@@ -199,13 +271,11 @@ async def delete_entity_test_helper(
     if tenant_id:
         kwargs["tenant_id"] = tenant_id
 
-    # Handle method signature variations
-    if "entity_id" in method.__code__.co_varnames:
-        result = await method(entity_id=entity_id, **kwargs)
-    else:
-        first_param = method.__code__.co_varnames[1]
-        kwargs[first_param] = entity_id
-        result = await method(**kwargs)
+    param_names = _get_method_param_names(method)
+    entity_param = _select_id_param(param_names, explicit_name=id_param_name)
+    kwargs[entity_param] = entity_id
+
+    result = await method(**kwargs)
 
     # Assert entity was deleted
     assert_entity_deleted(mock_db_session, sample_entity, soft_delete=soft_delete)
@@ -222,6 +292,7 @@ async def retrieve_entity_test_helper(
     expected_entity_type: type | None = None,
     use_cache: bool = True,
     tenant_id: str | None = None,
+    id_param_name: str | None = None,
     **extra_kwargs,
 ) -> Any:
     """
@@ -262,21 +333,15 @@ async def retrieve_entity_test_helper(
     if tenant_id:
         kwargs["tenant_id"] = tenant_id
 
+    param_names = _get_method_param_names(method)
+    entity_param = _select_id_param(param_names, explicit_name=id_param_name)
+    kwargs[entity_param] = entity_id
+
     if use_cache:
         with patch("dotmac.platform.contacts.service.cache_get", return_value=None):
-            if "entity_id" in method.__code__.co_varnames:
-                result = await method(entity_id=entity_id, **kwargs)
-            else:
-                first_param = method.__code__.co_varnames[1]
-                kwargs[first_param] = entity_id
-                result = await method(**kwargs)
-    else:
-        if "entity_id" in method.__code__.co_varnames:
-            result = await method(entity_id=entity_id, **kwargs)
-        else:
-            first_param = method.__code__.co_varnames[1]
-            kwargs[first_param] = entity_id
             result = await method(**kwargs)
+    else:
+        result = await method(**kwargs)
 
     # Assert entity was retrieved
     assert_entity_retrieved(result, sample_entity, expected_entity_type)

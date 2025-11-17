@@ -21,25 +21,9 @@ import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
 import { formatCurrency } from "../utils";
+import type { Receipt } from "../types";
 
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface Receipt {
-  receipt_id: string;
-  receipt_number: string;
-  customer_name: string;
-  customer_email: string;
-  total_amount: number;
-  tax_amount: number;
-  currency: string;
-  payment_method: string;
-  issue_date: string;
-  payment_status: string;
-}
 
 export interface BillingApiClient {
   get: <T = any>(url: string, config?: any) => Promise<{ data: T }>;

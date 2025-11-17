@@ -29,7 +29,6 @@ async function fetchCreditNotes(limit: number, buildUrl: BuildApiUrl): Promise<C
       "Content-Type": "application/json",
     },
   });
-
   if (!response.ok) {
     throw new Error("Failed to fetch credit notes");
   }

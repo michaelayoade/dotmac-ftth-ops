@@ -3,13 +3,31 @@
  * Configures testing environment for UI components
  */
 
+import React from "react";
 import "@testing-library/jest-dom";
 import "./mocks";
 
-jest.mock("next/link", () => ({
-  __esModule: true,
-  default: ({ children }: any) => children,
-}));
+jest.mock("next/link", () => {
+  const React = require("react");
+  const Link = React.forwardRef(
+    ({ children, href, legacyBehavior, ...props }: any, ref: React.Ref<HTMLAnchorElement>) => {
+      const childArray = React.Children.toArray(children);
+      const elementChild = childArray.find((child) => React.isValidElement(child)) as
+        | React.ReactElement
+        | undefined;
+      const isAnchorChild =
+        elementChild && typeof elementChild.type === "string" && elementChild.type === "a";
+
+      if ((legacyBehavior || isAnchorChild) && elementChild) {
+        return React.cloneElement(elementChild, { href, ref, ...props });
+      }
+
+      return React.createElement("a", { href, ref, ...props }, children);
+    },
+  );
+
+  return { __esModule: true, default: Link };
+});
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -24,13 +42,37 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("next-themes", () => ({
-  useTheme: () => ({
-    theme: "light",
-    setTheme: jest.fn(),
-    resolvedTheme: "light",
-  }),
-}));
+jest.mock("next-themes", () => {
+  const React = require("react");
+  const ThemeContext = React.createContext({
+    theme: "system",
+    setTheme: () => {},
+    resolvedTheme: "system",
+  });
+
+  const ThemeProvider = ({ children, defaultTheme = "system" }: any) => {
+    const [theme, setTheme] = React.useState(defaultTheme);
+
+    const value = React.useMemo(
+      () => ({
+        theme,
+        setTheme,
+        resolvedTheme: theme,
+      }),
+      [theme],
+    );
+
+    return React.createElement(ThemeContext.Provider, { value }, children);
+  };
+
+  const useTheme = () => React.useContext(ThemeContext);
+
+  return {
+    __esModule: true,
+    ThemeProvider,
+    useTheme,
+  };
+});
 
 // Mock ResizeObserver which might be used by components
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -45,6 +87,22 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
+
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = jest.fn();
+}
+
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
 
 // Mock window.matchMedia for responsive components
 Object.defineProperty(window, "matchMedia", {

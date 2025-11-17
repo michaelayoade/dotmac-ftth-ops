@@ -2,7 +2,7 @@
  * MSW Handlers for Invoice Actions API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 // Reset storage between tests
 export function resetInvoiceActionsStorage() {
@@ -11,44 +11,38 @@ export function resetInvoiceActionsStorage() {
 
 export const invoiceActionsHandlers = [
   // POST /billing/invoices/:id/send - Send invoice email
-  rest.post('*/billing/invoices/:invoiceId/send', async (req, res, ctx) => {
-    const { invoiceId } = req.params;
-    const data = await req.json();
+  http.post('*/billing/invoices/:invoiceId/send', async ({ request, params }) => {
+    const { invoiceId } = params;
+    const data = await request.json();
 
-    return res(
-      ctx.json({
-        success: true,
-        message: 'Invoice sent successfully',
-        email: data.email,
-      })
-    );
+    return HttpResponse.json({
+      success: true,
+      message: 'Invoice sent successfully',
+      email: data.email,
+    });
   }),
 
   // POST /billing/invoices/:id/void - Void invoice
-  rest.post('*/billing/invoices/:invoiceId/void', async (req, res, ctx) => {
-    const { invoiceId } = req.params;
-    const data = await req.json();
+  http.post('*/billing/invoices/:invoiceId/void', async ({ request, params }) => {
+    const { invoiceId } = params;
+    const data = await request.json();
 
-    return res(
-      ctx.json({
-        success: true,
-        message: 'Invoice voided successfully',
-        reason: data.reason,
-      })
-    );
+    return HttpResponse.json({
+      success: true,
+      message: 'Invoice voided successfully',
+      reason: data.reason,
+    });
   }),
 
   // POST /billing/invoices/:id/remind - Send payment reminder
-  rest.post('*/billing/invoices/:invoiceId/remind', async (req, res, ctx) => {
-    const { invoiceId } = req.params;
-    const data = await req.json();
+  http.post('*/billing/invoices/:invoiceId/remind', async ({ request, params }) => {
+    const { invoiceId } = params;
+    const data = await request.json();
 
-    return res(
-      ctx.json({
-        success: true,
-        message: 'Payment reminder sent successfully',
-        message_override: data.message,
-      })
-    );
+    return HttpResponse.json({
+      success: true,
+      message: 'Payment reminder sent successfully',
+      message_override: data.message,
+    });
   }),
 ];

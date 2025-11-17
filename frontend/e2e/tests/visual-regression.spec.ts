@@ -4,7 +4,8 @@
  * Captures screenshots of key components and compares against baselines
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+
 
 test.describe("Visual Regression - IP Input Components", () => {
   test.beforeEach(async ({ page }) => {

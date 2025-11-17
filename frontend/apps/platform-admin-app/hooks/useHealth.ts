@@ -29,6 +29,7 @@ export interface HealthSummary {
   failed_services: string[];
   version?: string;
   timestamp?: string;
+  apiErrorMessage?: string;
 }
 
 // Query key factory for health
@@ -56,6 +57,7 @@ function normalizeHealthResponse(response: any): HealthSummary {
       services: [],
       failed_services: [],
       timestamp: new Date().toISOString(),
+      apiErrorMessage: payload.error.message,
     };
   }
 

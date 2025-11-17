@@ -19,6 +19,7 @@ import {
   type WebSocketMessageType,
   type WebSocketServerMessage,
 } from "../../types/realtime";
+import { platformConfig } from "@/lib/config";
 
 export class WebSocketClient {
   private ws: WebSocket | null = null;
@@ -342,12 +343,21 @@ export function createWebSocketClient(config: WebSocketConfig): WebSocketClient 
  * WebSocket endpoint factory
  */
 export class WebSocketEndpoints {
-  private baseUrl: string;
-  private token: string;
+  private readonly token: string;
+  private readonly overrideBaseUrl?: string;
 
-  constructor(baseUrl: string, token: string) {
-    this.baseUrl = baseUrl;
+  constructor(token: string, overrideBaseUrl?: string) {
     this.token = token;
+    this.overrideBaseUrl = overrideBaseUrl;
+  }
+
+  private buildEndpoint(path: string): string {
+    if (this.overrideBaseUrl) {
+      const normalizedBase = this.overrideBaseUrl.replace(/\/+$/, "");
+      const prefix = platformConfig.api.prefix || "/api/v1";
+      return `${normalizedBase}${prefix}${path}`;
+    }
+    return platformConfig.api.buildUrl(path);
   }
 
   /**
@@ -355,7 +365,7 @@ export class WebSocketEndpoints {
    */
   sessions(config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/ws/sessions`,
+      endpoint: this.buildEndpoint("/realtime/ws/sessions"),
       token: this.token,
       ...config,
     });
@@ -366,7 +376,7 @@ export class WebSocketEndpoints {
    */
   job(jobId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/ws/jobs/${jobId}`,
+      endpoint: this.buildEndpoint(`/realtime/ws/jobs/${jobId}`),
       token: this.token,
       ...config,
     });
@@ -377,7 +387,7 @@ export class WebSocketEndpoints {
    */
   campaign(campaignId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/ws/campaigns/${campaignId}`,
+      endpoint: this.buildEndpoint(`/realtime/ws/campaigns/${campaignId}`),
       token: this.token,
       ...config,
     });

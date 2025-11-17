@@ -28,7 +28,7 @@ import { useState, useEffect, useCallback } from "react";
 // Types
 // ============================================================================
 
-export interface Invoice {
+interface Invoice {
   id: string;
   invoice_number: string;
   amount: number;
@@ -38,7 +38,7 @@ export interface Invoice {
   created_at: string;
 }
 
-export interface Payment {
+interface Payment {
   id: string;
   payment_method: string;
   amount: number;

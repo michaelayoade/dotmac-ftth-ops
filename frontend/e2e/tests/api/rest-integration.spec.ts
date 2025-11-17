@@ -2,7 +2,9 @@
  * E2E tests for REST API integration
  * Tests API calls and their effects on the UI
  */
-import { test, expect, type Page, type APIRequestContext } from "@playwright/test";
+import { test, expect } from "#e2e/fixtures";
+import type { Page, APIRequestContext } from "@playwright/test";
+
 
 test.describe("REST API Integration", () => {
   const BASE_URL = process.env.API_BASE_URL || "http://localhost:8000";

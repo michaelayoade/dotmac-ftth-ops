@@ -15,6 +15,11 @@ export {
   Spacer,
   Stack,
   VStack,
+  Layout,
+  LayoutHeader,
+  LayoutContent,
+  LayoutSidebar,
+  LayoutFooter,
 } from "./Layout";
 // Export Universal Layout components
 export { default as UniversalHeader } from "./UniversalHeader";

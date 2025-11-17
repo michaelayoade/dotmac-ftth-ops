@@ -12,10 +12,10 @@ import { useToast } from "@dotmac/ui";
 
 jest.unmock("@tanstack/react-query");
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 

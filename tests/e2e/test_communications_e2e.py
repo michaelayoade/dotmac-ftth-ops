@@ -15,8 +15,10 @@ from unittest.mock import patch
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 
 from dotmac.platform.communications.email_service import EmailResponse
+from dotmac.platform.communications.models import CommunicationLog, CommunicationStatus
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
@@ -24,7 +26,7 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 class TestEmailSendingE2E:
     """End-to-end tests for email sending workflow."""
 
-    async def test_send_email_complete_flow(self, client: AsyncClient, auth_headers):
+    async def test_send_email_complete_flow(self, client: AsyncClient, auth_headers, db_session):
         """Test complete email sending flow from API to service."""
         email_data = {
             "to": ["recipient@example.com"],
@@ -62,6 +64,17 @@ class TestEmailSendingE2E:
             assert data["status"] == "sent"
             assert "id" in data  # EmailResponse has 'id' field, not 'message_id'
             assert mock_send.called
+
+        # Verify communication log persisted with SENT status
+        result = await db_session.execute(
+            select(CommunicationLog).order_by(CommunicationLog.created_at.desc())
+        )
+        log_entry = result.scalars().first()
+        assert log_entry is not None
+        assert log_entry.subject == email_data["subject"]
+        assert log_entry.recipient == ", ".join(email_data["to"])
+        assert log_entry.status == CommunicationStatus.SENT
+        assert log_entry.provider_message_id == "msg_123"
 
     async def test_send_email_without_auth(self, client: AsyncClient, auth_headers):
         """Test email sending without authentication (should still work with optional auth)."""

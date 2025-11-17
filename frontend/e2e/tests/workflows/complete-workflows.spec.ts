@@ -4,7 +4,9 @@
  * Tests all major user workflows end-to-end
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from "#e2e/fixtures";
+import type { Page } from "@playwright/test";
+
 
 const ISP_OPS_URL = process.env.ISP_OPS_URL || 'http://localhost:3001';
 const PLATFORM_ADMIN_URL = process.env.PLATFORM_ADMIN_URL || 'http://localhost:3002';

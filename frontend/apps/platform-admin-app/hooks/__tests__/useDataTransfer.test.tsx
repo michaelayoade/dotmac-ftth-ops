@@ -31,10 +31,10 @@ jest.mock("@/lib/api/response-helpers", () => ({
   extractDataOrThrow: jest.fn((response) => response.data),
 }));
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -59,7 +59,6 @@ describe("Platform Admin useDataTransfer hooks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    toastMock.mockClear();
   });
 
   it("fetches transfer jobs with filters", async () => {
@@ -118,7 +117,7 @@ describe("Platform Admin useDataTransfer hooks", () => {
       format: "csv",
     });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["data-transfer", "jobs"] });
-    expect(toastMock).toHaveBeenCalledWith({
+    expect(global.mockToast).toHaveBeenCalledWith({
       title: "Import job created",
       description: 'Job "Import Products" has been queued for processing.',
     });

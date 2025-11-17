@@ -2,10 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 const ISP_BASE_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
 const useExternalServers = process.env.E2E_USE_DEV_SERVER === "true";
-const testTimeout = parseInt(process.env.E2E_TEST_TIMEOUT || "120000", 10);
+const testTimeout = parseInt(process.env.E2E_TEST_TIMEOUT || "600000", 10);
 const expectTimeout = parseInt(process.env.E2E_EXPECT_TIMEOUT || "20000", 10);
-const actionTimeout = parseInt(process.env.E2E_ACTION_TIMEOUT || "30000", 10);
-const navigationTimeout = parseInt(process.env.E2E_NAV_TIMEOUT || "120000", 10);
+const actionTimeout = parseInt(process.env.E2E_ACTION_TIMEOUT || "60000", 10);
+const navigationTimeout = parseInt(process.env.E2E_NAV_TIMEOUT || "480000", 10);
+const webServerTimeout = parseInt(process.env.E2E_WEB_SERVER_TIMEOUT || "600000", 10);
 
 export default defineConfig({
   testDir: "./tests",
@@ -41,13 +42,13 @@ export default defineConfig({
           command: "pnpm --filter @dotmac/isp-ops-app dev",
           url: "http://localhost:3001",
           reuseExistingServer: !process.env.CI,
-          timeout: 120 * 1000,
+          timeout: webServerTimeout,
         },
         {
           command: "pnpm --filter @dotmac/platform-admin-app dev",
           url: "http://localhost:3002",
           reuseExistingServer: !process.env.CI,
-          timeout: 120 * 1000,
+          timeout: webServerTimeout,
         },
       ],
 

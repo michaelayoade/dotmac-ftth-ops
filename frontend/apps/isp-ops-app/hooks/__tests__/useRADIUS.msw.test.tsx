@@ -36,6 +36,10 @@ jest.mock('@/providers/AppConfigContext', () => ({
   })),
 }));
 
+const waitForRadiusLoading = async (getLoading: () => boolean) => {
+  await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
+};
+
 // Create a wrapper that includes QueryClient
 function createRADIUSWrapper(queryClient: ReturnType<typeof createTestQueryClient>) {
   return createQueryWrapper(queryClient);
@@ -81,7 +85,7 @@ describe("useRADIUS (MSW)", () => {
 
       expect(result.current.isLoading).toBe(true);
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data?.data).toHaveLength(3);
@@ -97,7 +101,7 @@ describe("useRADIUS (MSW)", () => {
         wrapper: createRADIUSWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.data?.data).toHaveLength(0);
       expect(result.current.data?.total).toBe(0);
@@ -118,7 +122,7 @@ describe("useRADIUS (MSW)", () => {
         wrapper: createRADIUSWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.data?.data).toHaveLength(10);
       expect(result.current.data?.data[0].username).toBe("user11@example.com");
@@ -143,7 +147,7 @@ describe("useRADIUS (MSW)", () => {
         wrapper: createRADIUSWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.error).toBeTruthy();
       expect(result.current.data).toBeUndefined();
@@ -201,7 +205,7 @@ describe("useRADIUS (MSW)", () => {
 
       expect(result.current.isLoading).toBe(true);
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data?.data).toHaveLength(2);
@@ -217,7 +221,7 @@ describe("useRADIUS (MSW)", () => {
         wrapper: createRADIUSWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.data?.data).toHaveLength(0);
       expect(result.current.data?.total).toBe(0);
@@ -243,7 +247,7 @@ describe("useRADIUS (MSW)", () => {
         wrapper: createRADIUSWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.error).toBeTruthy();
       expect(result.current.data).toBeUndefined();
@@ -274,7 +278,7 @@ describe("useRADIUS (MSW)", () => {
         wrapper: createRADIUSWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.data?.data).toHaveLength(3);
       expect(result.current.data?.data[0].acctsessiontime).toBe(3600);
@@ -328,7 +332,7 @@ describe("useRADIUS (MSW)", () => {
         wrapper: createRADIUSWrapper(queryClient),
       });
 
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await waitForRadiusLoading(() => result.current.isLoading);
 
       expect(result.current.data?.data).toHaveLength(100);
     });

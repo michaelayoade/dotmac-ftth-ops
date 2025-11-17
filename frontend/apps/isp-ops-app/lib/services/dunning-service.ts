@@ -9,60 +9,27 @@
  */
 
 import { platformConfig } from "@/lib/config";
+import type {
+  DunningActionConfig,
+  DunningActionType,
+  DunningCampaign,
+  DunningExclusionRules,
+  DunningExecutionStatus,
+} from "@/types/oss";
+
+export type {
+  DunningActionConfig,
+  DunningActionType,
+  DunningCampaign,
+  DunningExclusionRules,
+  DunningExecutionStatus,
+} from "@/types/oss";
 
 const API_BASE = platformConfig.api.baseUrl;
 
 // ============================================
 // Type Definitions
 // ============================================
-
-export type DunningActionType =
-  | "email"
-  | "sms"
-  | "suspend_service"
-  | "terminate_service"
-  | "webhook"
-  | "custom";
-
-export type DunningExecutionStatus =
-  | "pending"
-  | "in_progress"
-  | "completed"
-  | "failed"
-  | "canceled";
-
-export interface DunningActionConfig {
-  type: DunningActionType;
-  delay_days: number;
-  template?: string;
-  webhook_url?: string;
-  custom_config?: Record<string, any>;
-}
-
-export interface DunningExclusionRules {
-  min_lifetime_value?: number;
-  customer_tiers?: string[];
-  customer_tags?: string[];
-}
-
-export interface DunningCampaign {
-  id: string;
-  tenant_id: string;
-  name: string;
-  description?: string;
-  trigger_after_days: number;
-  max_retries: number;
-  retry_interval_days: number;
-  actions: DunningActionConfig[];
-  exclusion_rules: DunningExclusionRules;
-  is_active: boolean;
-  priority: number;
-  total_executions: number;
-  successful_executions: number;
-  total_recovered_amount: number;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface DunningCampaignCreate {
   name: string;

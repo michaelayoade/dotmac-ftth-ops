@@ -49,7 +49,7 @@ export default function PartnerDetailPage() {
       <div className="p-6">
         <div className="text-center py-12">
           <div className="text-red-400">Failed to load partner details</div>
-          <div className="text-sm text-foreground0 mt-2">
+          <div className="text-sm text-muted-foreground mt-2">
             {(error as Error)?.message || "Partner not found"}
           </div>
           <Link
@@ -153,7 +153,7 @@ export default function PartnerDetailPage() {
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {conversionRate}%
           </div>
-          <div className="text-xs text-foreground0 mt-1">
+          <div className="text-xs text-muted-foreground mt-1">
             {partner.converted_referrals}/{partner.total_referrals}
           </div>
         </div>

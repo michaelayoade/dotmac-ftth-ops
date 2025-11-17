@@ -3,14 +3,15 @@
  * Tests campaign management with realistic API mocking
  */
 
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { waitFor, act, render } from "@testing-library/react";
+import { renderHook } from "@testing-library/react/pure";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 import { useCampaigns, useUpdateCampaign } from "../useCampaigns";
 import {
   seedDunningData,
-  clearDunningData,
-  createMockCampaign,
+  resetDunningStorage,
+  createMockDunningCampaign,
 } from "@/__tests__/msw/handlers/dunning";
 import type { DunningCampaign } from "@/types";
 
@@ -40,8 +41,31 @@ describe("useCampaigns hooks (MSW)", () => {
     );
   }
 
+  function renderMutationHarness() {
+    const mutationRef: { current: ReturnType<typeof useUpdateCampaign> | null } = {
+      current: null,
+    };
+
+    function Harness() {
+      mutationRef.current = useUpdateCampaign();
+      return null;
+    }
+
+    const utils = render(<Harness />, { wrapper: createWrapper() });
+
+    return {
+      ...utils,
+      getCurrent: () => {
+        if (!mutationRef.current) {
+          throw new Error("mutation hook not ready");
+        }
+        return mutationRef.current;
+      },
+    };
+  }
+
   beforeEach(() => {
-    clearDunningData();
+    resetDunningStorage();
   });
 
   // ============================================================================
@@ -50,7 +74,7 @@ describe("useCampaigns hooks (MSW)", () => {
 
   describe("useCampaigns query", () => {
     it("should fetch campaigns successfully", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
         name: "30-Day Overdue",
         description: "Campaign for 30 days overdue invoices",
@@ -78,19 +102,19 @@ describe("useCampaigns hooks (MSW)", () => {
 
     it("should fetch multiple campaigns", async () => {
       const mockCampaigns: DunningCampaign[] = [
-        createMockCampaign({
+        createMockDunningCampaign({
           id: "campaign-1",
           name: "30-Day Overdue",
           trigger_after_days: 30,
           is_active: true,
         }),
-        createMockCampaign({
+        createMockDunningCampaign({
           id: "campaign-2",
           name: "60-Day Overdue",
           trigger_after_days: 60,
           is_active: false,
         }),
-        createMockCampaign({
+        createMockDunningCampaign({
           id: "campaign-3",
           name: "90-Day Overdue",
           trigger_after_days: 90,
@@ -161,8 +185,8 @@ describe("useCampaigns hooks (MSW)", () => {
   describe("useCampaigns with active filter", () => {
     it("should filter active campaigns (active: true)", async () => {
       const mockCampaigns = [
-        createMockCampaign({ id: "campaign-1", is_active: true }),
-        createMockCampaign({ id: "campaign-2", is_active: false }),
+        createMockDunningCampaign({ id: "campaign-1", is_active: true }),
+        createMockDunningCampaign({ id: "campaign-2", is_active: false }),
       ];
 
       seedDunningData(mockCampaigns, []);
@@ -179,8 +203,8 @@ describe("useCampaigns hooks (MSW)", () => {
 
     it("should filter inactive campaigns (active: false)", async () => {
       const mockCampaigns = [
-        createMockCampaign({ id: "campaign-1", is_active: true }),
-        createMockCampaign({ id: "campaign-2", is_active: false }),
+        createMockDunningCampaign({ id: "campaign-1", is_active: true }),
+        createMockDunningCampaign({ id: "campaign-2", is_active: false }),
       ];
 
       seedDunningData(mockCampaigns, []);
@@ -197,8 +221,8 @@ describe("useCampaigns hooks (MSW)", () => {
 
     it("should fetch all campaigns when active is undefined", async () => {
       const mockCampaigns = [
-        createMockCampaign({ id: "campaign-1", is_active: true }),
-        createMockCampaign({ id: "campaign-2", is_active: false }),
+        createMockDunningCampaign({ id: "campaign-1", is_active: true }),
+        createMockDunningCampaign({ id: "campaign-2", is_active: false }),
       ];
 
       seedDunningData(mockCampaigns, []);
@@ -214,8 +238,8 @@ describe("useCampaigns hooks (MSW)", () => {
 
     it("should fetch all campaigns when no options provided", async () => {
       const mockCampaigns = [
-        createMockCampaign({ id: "campaign-1", is_active: true }),
-        createMockCampaign({ id: "campaign-2", is_active: false }),
+        createMockDunningCampaign({ id: "campaign-1", is_active: true }),
+        createMockDunningCampaign({ id: "campaign-2", is_active: false }),
       ];
 
       seedDunningData(mockCampaigns, []);
@@ -305,7 +329,7 @@ describe("useCampaigns hooks (MSW)", () => {
 
   describe("campaign properties", () => {
     it("should include all campaign properties", async () => {
-      const fullCampaign = createMockCampaign({
+      const fullCampaign = createMockDunningCampaign({
         id: "campaign-full",
         tenant_id: "tenant-1",
         name: "Full Campaign",
@@ -383,7 +407,7 @@ describe("useCampaigns hooks (MSW)", () => {
 
   describe("useUpdateCampaign mutation", () => {
     it("should update campaign status successfully", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
         is_active: true,
       });
@@ -407,7 +431,7 @@ describe("useCampaigns hooks (MSW)", () => {
     });
 
     it("should update campaign priority successfully", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
         priority: 1,
       });
@@ -431,7 +455,7 @@ describe("useCampaigns hooks (MSW)", () => {
     });
 
     it("should update both is_active and priority", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
         is_active: true,
         priority: 1,
@@ -454,7 +478,7 @@ describe("useCampaigns hooks (MSW)", () => {
     });
 
     it("should handle additional data properties", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
       });
 
@@ -482,18 +506,18 @@ describe("useCampaigns hooks (MSW)", () => {
         wrapper: createWrapper(),
       });
 
-      await expect(
-        act(async () => {
-          await result.current.mutateAsync({
+      await act(async () => {
+        await expect(
+          result.current.mutateAsync({
             campaignId: "non-existent",
             data: { is_active: false },
-          });
-        })
-      ).rejects.toThrow();
+          })
+        ).rejects.toThrow();
+      });
     });
 
     it("should set isPending state correctly during mutation", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
       });
 
@@ -526,7 +550,7 @@ describe("useCampaigns hooks (MSW)", () => {
 
   describe("cache invalidation", () => {
     it("should call onSuccess callback after successful update", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
         is_active: true,
       });
@@ -552,8 +576,8 @@ describe("useCampaigns hooks (MSW)", () => {
 
     it("should successfully update campaign with multiple mutations", async () => {
       const mockCampaigns = [
-        createMockCampaign({ id: "campaign-1", is_active: true }),
-        createMockCampaign({ id: "campaign-2", is_active: false }),
+        createMockDunningCampaign({ id: "campaign-1", is_active: true }),
+        createMockDunningCampaign({ id: "campaign-2", is_active: false }),
       ];
 
       seedDunningData(mockCampaigns, []);
@@ -590,7 +614,7 @@ describe("useCampaigns hooks (MSW)", () => {
 
   describe("API endpoint construction", () => {
     it("should construct correct API endpoint with campaignId", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "test-campaign-123",
       });
 
@@ -611,7 +635,7 @@ describe("useCampaigns hooks (MSW)", () => {
     });
 
     it("should handle special characters in campaignId", async () => {
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-uuid-abc-123",
       });
 
@@ -659,34 +683,38 @@ describe("useCampaigns hooks (MSW)", () => {
       // First attempt - no campaign
       seedDunningData([], []);
 
-      const { result } = renderHook(() => useUpdateCampaign(), {
-        wrapper: createWrapper(),
-      });
+      const firstHarness = renderMutationHarness();
+      await waitFor(() => expect(firstHarness.getCurrent()).toBeDefined());
 
-      // First mutation fails
-      await expect(
-        act(async () => {
-          await result.current.mutateAsync({
+      await act(async () => {
+        await expect(
+          firstHarness.getCurrent().mutateAsync({
             campaignId: "campaign-1",
             data: { is_active: false },
-          });
-        })
-      ).rejects.toThrow();
+          })
+        ).rejects.toThrow();
+      });
+
+      firstHarness.unmount();
 
       // Now add the campaign
-      const mockCampaign = createMockCampaign({
+      const mockCampaign = createMockDunningCampaign({
         id: "campaign-1",
       });
       seedDunningData([mockCampaign], []);
 
-      // Second mutation succeeds
+      const secondHarness = renderMutationHarness();
+      await waitFor(() => expect(secondHarness.getCurrent()).toBeDefined());
+
       let secondResult: DunningCampaign | undefined;
       await act(async () => {
-        secondResult = await result.current.mutateAsync({
+        secondResult = await secondHarness.getCurrent().mutateAsync({
           campaignId: "campaign-1",
           data: { is_active: true },
         });
       });
+
+      secondHarness.unmount();
 
       expect(secondResult).toBeDefined();
       expect(secondResult?.is_active).toBe(true);

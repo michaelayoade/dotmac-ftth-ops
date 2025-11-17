@@ -32,6 +32,26 @@ import {
   FrequencyBand,
 } from "@/lib/graphql/generated";
 
+const hasDefinedData = (value: unknown) => typeof value !== "undefined";
+
+const normalizeLoadingState = (
+  loading: boolean,
+  enabled: boolean,
+  hasData: boolean,
+  error?: Error,
+) => {
+  if (!enabled) {
+    return false;
+  }
+  if (error) {
+    return false;
+  }
+  if (hasData) {
+    return false;
+  }
+  return loading;
+};
+
 // ============================================================================
 // Access Point List Hook
 // ============================================================================
@@ -73,6 +93,7 @@ export function useAccessPointListGraphQL(options: UseAccessPointListOptions = {
   const accessPoints = data?.accessPoints?.accessPoints ?? [];
   const totalCount = data?.accessPoints?.totalCount ?? 0;
   const hasNextPage = data?.accessPoints?.hasNextPage ?? false;
+  const normalizedLoading = normalizeLoadingState(loading, enabled, hasDefinedData(data), error);
 
   return {
     accessPoints,
@@ -80,7 +101,7 @@ export function useAccessPointListGraphQL(options: UseAccessPointListOptions = {
     hasNextPage,
     limit,
     offset,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -111,10 +132,11 @@ export function useAccessPointDetailGraphQL(options: UseAccessPointDetailOptions
   });
 
   const accessPoint = data?.accessPoint ?? null;
+  const normalizedLoading = normalizeLoadingState(loading, enabled && Boolean(id), hasDefinedData(data), error);
 
   return {
     accessPoint,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -141,10 +163,16 @@ export function useAccessPointsBySiteGraphQL(options: UseAccessPointsBySiteOptio
   });
 
   const accessPoints = data?.accessPointsBySite ?? [];
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(siteId),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     accessPoints,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -194,6 +222,7 @@ export function useWirelessClientListGraphQL(options: UseWirelessClientListOptio
   const clients = data?.wirelessClients?.clients ?? [];
   const totalCount = data?.wirelessClients?.totalCount ?? 0;
   const hasNextPage = data?.wirelessClients?.hasNextPage ?? false;
+  const normalizedLoading = normalizeLoadingState(loading, enabled, hasDefinedData(data), error);
 
   return {
     clients,
@@ -201,7 +230,7 @@ export function useWirelessClientListGraphQL(options: UseWirelessClientListOptio
     hasNextPage,
     limit,
     offset,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -228,10 +257,16 @@ export function useWirelessClientDetailGraphQL(options: UseWirelessClientDetailO
   });
 
   const client = data?.wirelessClient ?? null;
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(id),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     client,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -261,10 +296,16 @@ export function useWirelessClientsByAccessPointGraphQL(
   });
 
   const clients = data?.wirelessClientsByAccessPoint ?? [];
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(accessPointId),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     clients,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -291,10 +332,16 @@ export function useWirelessClientsByCustomerGraphQL(options: UseWirelessClientsB
   });
 
   const clients = data?.wirelessClientsByCustomer ?? [];
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(customerId),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     clients,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -337,6 +384,7 @@ export function useCoverageZoneListGraphQL(options: UseCoverageZoneListOptions =
   const zones = data?.coverageZones?.zones ?? [];
   const totalCount = data?.coverageZones?.totalCount ?? 0;
   const hasNextPage = data?.coverageZones?.hasNextPage ?? false;
+  const normalizedLoading = normalizeLoadingState(loading, enabled, hasDefinedData(data), error);
 
   return {
     zones,
@@ -344,7 +392,7 @@ export function useCoverageZoneListGraphQL(options: UseCoverageZoneListOptions =
     hasNextPage,
     limit,
     offset,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -371,10 +419,16 @@ export function useCoverageZoneDetailGraphQL(options: UseCoverageZoneDetailOptio
   });
 
   const zone = data?.coverageZone ?? null;
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(id),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     zone,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -401,10 +455,16 @@ export function useCoverageZonesBySiteGraphQL(options: UseCoverageZonesBySiteOpt
   });
 
   const zones = data?.coverageZonesBySite ?? [];
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(siteId),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     zones,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -435,10 +495,16 @@ export function useRfAnalyticsGraphQL(options: UseRfAnalyticsOptions) {
   });
 
   const analytics = data?.rfAnalytics ?? null;
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(siteId),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     analytics,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -466,10 +532,16 @@ export function useChannelUtilizationGraphQL(options: UseChannelUtilizationOptio
   });
 
   const channelUtilization = data?.channelUtilization ?? [];
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(siteId) && Boolean(band),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     channelUtilization,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -496,10 +568,16 @@ export function useWirelessSiteMetricsGraphQL(options: UseWirelessSiteMetricsOpt
   });
 
   const metrics = data?.wirelessSiteMetrics ?? null;
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(siteId),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     metrics,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };
@@ -527,10 +605,11 @@ export function useWirelessDashboardGraphQL(options: UseWirelessDashboardOptions
   });
 
   const dashboard = data?.wirelessDashboard ?? null;
+  const normalizedLoading = normalizeLoadingState(loading, enabled, hasDefinedData(data), error);
 
   return {
     dashboard,
-    loading,
+    loading: normalizedLoading,
     error: error?.message,
     refetch,
   };

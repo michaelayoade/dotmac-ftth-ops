@@ -20,10 +20,10 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -43,7 +43,6 @@ describe("Platform Admin useNetworkDiagnostics hook", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    toastMock.mockClear();
   });
 
   it("executes ping mutation and reports success", async () => {
@@ -59,7 +58,7 @@ describe("Platform Admin useNetworkDiagnostics hook", () => {
       host: "1.1.1.1",
       count: 4,
     });
-    expect(toastMock).toHaveBeenCalledWith(
+    expect(global.mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Ping Completed" }),
     );
   });

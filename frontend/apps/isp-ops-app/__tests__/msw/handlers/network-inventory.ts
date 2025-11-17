@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from "msw";
 import type { NetboxHealth, NetboxSite } from '../../../types';
 
 // In-memory storage for test data
@@ -91,18 +91,18 @@ export function seedNetworkInventoryData(
 
 export const networkInventoryHandlers = [
   // GET /api/v1/netbox/health - Get NetBox health
-  rest.get('*/api/v1/netbox/health', (req, res, ctx) => {
+  http.get('*/api/v1/netbox/health', (req, res, ctx) => {
     console.log('[MSW] GET /netbox/health');
 
     if (!netboxHealth) {
       netboxHealth = createMockNetboxHealth();
     }
 
-    return res(ctx.json(netboxHealth));
+    return HttpResponse.json(netboxHealth);
   }),
 
   // GET /api/v1/netbox/dcim/sites - List NetBox sites
-  rest.get('*/api/v1/netbox/dcim/sites', (req, res, ctx) => {
+  http.get('*/api/v1/netbox/dcim/sites', (req, res, ctx) => {
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = parseInt(url.searchParams.get('offset') || '0');
@@ -119,6 +119,6 @@ export const networkInventoryHandlers = [
 
     console.log('[MSW] Returning', paginated.length, 'sites');
 
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 ];

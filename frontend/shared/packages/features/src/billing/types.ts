@@ -112,3 +112,132 @@ export interface Receipt {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================================================
+// Licensing Framework Types
+// ============================================================================
+
+export enum ModuleCategory {
+  NETWORK = "NETWORK",
+  OSS_INTEGRATION = "OSS_INTEGRATION",
+  BILLING = "BILLING",
+  ANALYTICS = "ANALYTICS",
+  AUTOMATION = "AUTOMATION",
+  COMMUNICATIONS = "COMMUNICATIONS",
+  SECURITY = "SECURITY",
+  REPORTING = "REPORTING",
+  API_MANAGEMENT = "API_MANAGEMENT",
+  OTHER = "OTHER",
+}
+
+export enum PricingModel {
+  FLAT_FEE = "FLAT_FEE",
+  PER_UNIT = "PER_UNIT",
+  TIERED = "TIERED",
+  USAGE_BASED = "USAGE_BASED",
+  CUSTOM = "CUSTOM",
+  FREE = "FREE",
+  BUNDLED = "BUNDLED",
+}
+
+export enum SubscriptionStatus {
+  TRIAL = "TRIAL",
+  ACTIVE = "ACTIVE",
+  PAST_DUE = "PAST_DUE",
+  CANCELED = "CANCELED",
+  EXPIRED = "EXPIRED",
+  SUSPENDED = "SUSPENDED",
+}
+
+export enum BillingCycle {
+  MONTHLY = "MONTHLY",
+  ANNUAL = "ANNUAL",
+}
+
+export interface Module {
+  id: string;
+  module_name: string;
+  module_code: string;
+  description?: string;
+  category: ModuleCategory;
+  is_core: boolean;
+  dependencies?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlanModule {
+  id: string;
+  module_id: string;
+  module?: Module;
+  included_by_default: boolean;
+  addon_price?: number;
+}
+
+export interface Quota {
+  id: string;
+  quota_name: string;
+  quota_code: string;
+  unit_name: string;
+  description?: string;
+}
+
+export interface PlanQuota {
+  id: string;
+  quota_id: string;
+  quota?: Quota;
+  included_quantity: number;
+  overage_allowed: boolean;
+  overage_rate?: number;
+}
+
+export interface ServicePlan {
+  id: string;
+  plan_name: string;
+  plan_code: string;
+  description?: string;
+  base_price_monthly: number;
+  annual_discount_percent: number;
+  trial_days: number;
+  is_public: boolean;
+  is_active: boolean;
+  modules?: PlanModule[];
+  quotas?: PlanQuota[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionModule {
+  id: string;
+  module_id: string;
+  module?: Module;
+  source: "PLAN" | "ADDON" | "TRIAL";
+  addon_price?: number;
+}
+
+export interface QuotaUsage {
+  id: string;
+  quota_id: string;
+  quota?: Quota;
+  allocated_quantity: number;
+  current_usage: number;
+  overage_quantity: number;
+  overage_charges: number;
+}
+
+export interface TenantSubscription {
+  id: string;
+  tenant_id: string;
+  plan_id: string;
+  plan?: ServicePlan;
+  status: SubscriptionStatus;
+  billing_cycle: BillingCycle;
+  monthly_price: number;
+  trial_end?: string;
+  current_period_start: string;
+  current_period_end: string;
+  modules?: SubscriptionModule[];
+  quota_usage?: QuotaUsage[];
+  created_at: string;
+  updated_at: string;
+}

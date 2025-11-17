@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { User, UserUpdateRequest, UserListResponse } from '../../../hooks/useUsers';
 
 // In-memory storage for test data
@@ -49,7 +49,7 @@ export function seedUserData(usersData: User[]) {
 
 export const userHandlers = [
   // GET /users - List all users
-  rest.get('*/users', (req, res, ctx) => {
+  http.get('*/users', ({ request, params }) => {
     console.log('[MSW] GET /users', { totalUsers: users.length });
 
     const response: UserListResponse = {
@@ -59,11 +59,11 @@ export const userHandlers = [
       per_page: 50,
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // GET /users/me - Get current user
-  rest.get('*/users/me', (req, res, ctx) => {
+  http.get('*/users/me', ({ request, params }) => {
     console.log('[MSW] GET /users/me');
 
     // Return the first user or create a default current user
@@ -74,40 +74,40 @@ export const userHandlers = [
       full_name: 'Current User',
     });
 
-    return res(ctx.json(currentUser));
+    return HttpResponse.json(currentUser);
   }),
 
   // GET /users/:id - Get single user
-  rest.get('*/users/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.get('*/users/:id', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] GET /users/:id', { id });
 
     const user = users.find((u) => u.id === id);
 
     if (!user) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'User not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'User not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
-    return res(ctx.json(user));
+    return HttpResponse.json(user);
   }),
 
   // PUT /users/:id - Update user
-  rest.put('*/users/:id', (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = req.body as UserUpdateRequest;
+  http.put('*/users/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json() as UserUpdateRequest;
 
     console.log('[MSW] PUT /users/:id', { id, updates });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'User not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'User not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
@@ -117,68 +117,68 @@ export const userHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(users[index]));
+    return HttpResponse.json(users[index]);
   }),
 
   // DELETE /users/:id - Delete user
-  rest.delete('*/users/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/users/:id', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] DELETE /users/:id', { id });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'User not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'User not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     users.splice(index, 1);
 
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /users/:id/disable - Disable user
-  rest.post('*/users/:id/disable', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/users/:id/disable', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /users/:id/disable', { id });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'User not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'User not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     users[index].is_active = false;
     users[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(200), ctx.json(users[index]));
+    return HttpResponse.json(users[index], { status: 200 });
   }),
 
   // POST /users/:id/enable - Enable user
-  rest.post('*/users/:id/enable', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/users/:id/enable', ({ request, params }) => {
+    const { id } = params;
 
     console.log('[MSW] POST /users/:id/enable', { id });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return res(
-        ctx.status(404),
-        ctx.json({ error: 'User not found', code: 'NOT_FOUND' })
+      return HttpResponse.json(
+        { error: 'User not found', code: 'NOT_FOUND' },
+        { status: 404 }
       );
     }
 
     users[index].is_active = true;
     users[index].updated_at = new Date().toISOString();
 
-    return res(ctx.status(200), ctx.json(users[index]));
+    return HttpResponse.json(users[index], { status: 200 });
   }),
 ];

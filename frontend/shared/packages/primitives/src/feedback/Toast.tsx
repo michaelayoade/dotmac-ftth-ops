@@ -88,6 +88,8 @@ export const Toast = React.forwardRef<
   return (
     <div
       ref={ref}
+      role="status"
+      aria-live="polite"
       className={cn(
         "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all",
         typeStyles[type],
@@ -140,6 +142,7 @@ export const ToastClose = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <button
     ref={ref}
+    aria-label="Close"
     className={cn(
       "absolute right-2 top-2 rounded-md p-1 text-gray-400 opacity-0 transition-opacity hover:text-gray-900 focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
       className,

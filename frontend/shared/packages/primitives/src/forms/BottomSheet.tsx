@@ -43,21 +43,24 @@ export const BottomSheet = React.forwardRef<HTMLDivElement, BottomSheetProps>(
       }
     };
 
-    if (!isOpen) return null;
-
     return (
       <div
         ref={overlayRef}
-        className="fixed inset-0 z-50 bg-black/50 flex items-end"
+        className={clsx(
+          "fixed inset-0 z-50 bg-black/50 flex items-end",
+          !isOpen && "hidden",
+        )}
         onClick={handleBackdropClick}
         aria-modal="true"
         role="dialog"
+        aria-label="Bottom sheet"
+        aria-hidden={!isOpen}
       >
         <div
           ref={ref}
           className={clsx(
             "w-full max-h-[90vh] bg-white rounded-t-lg shadow-lg overflow-auto",
-            "animate-in slide-in-from-bottom duration-200",
+            isOpen && "animate-in slide-in-from-bottom duration-200",
             className,
           )}
           onClick={(e) => e.stopPropagation()}

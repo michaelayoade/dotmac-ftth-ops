@@ -13,6 +13,11 @@ NC='\033[0m'
 ISP_OPS_URL="http://localhost:3001"
 PLATFORM_ADMIN_URL="http://localhost:3002"
 
+# Allow longer waits for slow first-time Next.js dev compilation
+MAX_WAIT_SECONDS=${SMOKE_MAX_WAIT_SECONDS:-600}
+RETRY_DELAY=${SMOKE_RETRY_DELAY:-5}
+REQUEST_TIMEOUT=${SMOKE_REQUEST_TIMEOUT:-30}
+
 echo "🔥 Smoke Testing Critical Pages"
 echo ""
 
@@ -26,17 +31,48 @@ test_page() {
 
     printf "%-60s " "$name..."
 
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url" --max-time 5)
+    local start_time
+    start_time=$(date +%s)
+    local attempt=1
 
-    if [ "$http_code" == "200" ] || [ "$http_code" == "302" ] || [ "$http_code" == "304" ]; then
-        echo -e "${GREEN}✓ OK${NC} (HTTP $http_code)"
-        PASSED=$((PASSED + 1))
-        return 0
-    else
-        echo -e "${RED}✗ FAILED${NC} (HTTP $http_code)"
-        FAILED=$((FAILED + 1))
-        return 1
-    fi
+    while true; do
+        local http_code
+        http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url" --max-time "$REQUEST_TIMEOUT" || true)
+        http_code=${http_code:-000}
+
+        if [ "$http_code" == "200" ] || [ "$http_code" == "302" ] || [ "$http_code" == "304" ]; then
+            local elapsed
+            elapsed=$(( $(date +%s) - start_time ))
+            if [ "$attempt" -gt 1 ]; then
+                printf "%-60s " "$name..."
+            fi
+            echo -e "${GREEN}✓ OK${NC} (HTTP $http_code, ${elapsed}s elapsed, $attempt attempt(s))"
+            PASSED=$((PASSED + 1))
+            return 0
+        fi
+
+        local now elapsed
+        now=$(date +%s)
+        elapsed=$((now - start_time))
+
+        if [ "$elapsed" -ge "$MAX_WAIT_SECONDS" ]; then
+            if [ "$attempt" -gt 1 ]; then
+                printf "%-60s " "$name..."
+            fi
+            echo -e "${RED}✗ FAILED${NC} (last HTTP $http_code, waited ${elapsed}s, $attempt attempt(s))"
+            FAILED=$((FAILED + 1))
+            return 1
+        fi
+
+        if [ "$attempt" -eq 1 ]; then
+            echo ""
+        fi
+
+        printf "    Waiting for route to finish compiling (attempt %d, last HTTP %s, %ds/%ds)\n" \
+            "$attempt" "$http_code" "$elapsed" "$MAX_WAIT_SECONDS"
+        sleep "$RETRY_DELAY"
+        attempt=$((attempt + 1))
+    done
 }
 
 echo "ISP Ops App ($ISP_OPS_URL)"

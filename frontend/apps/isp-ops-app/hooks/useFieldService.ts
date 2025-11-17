@@ -4,6 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import type {
   Technician,
   TechnicianSchedule,
@@ -35,15 +36,16 @@ import type {
   TimeEntryFilter,
   ResourceFilter,
 } from "@/types/field-service";
+import { AssignmentStatus } from "@/types/field-service";
 
 // ============================================================================
 // API Base URLs
 // ============================================================================
 
-const TECHNICIAN_API = "/api/v1/field-service/technicians";
-const SCHEDULING_API = "/api/v1/scheduling";
-const TIME_API = "/api/v1/time";
-const RESOURCES_API = "/api/v1/resources";
+const TECHNICIAN_API = "/field-service/technicians";
+const SCHEDULING_API = "/scheduling";
+const TIME_API = "/time";
+const RESOURCES_API = "/resources";
 
 // ============================================================================
 // Helper Functions
@@ -172,6 +174,13 @@ const cancelAssignment = async (id: string, reason?: string): Promise<void> => {
 const rescheduleAssignment = async (id: string, data: { scheduledStart: string; scheduledEnd: string; reason?: string }): Promise<TaskAssignment> => {
   return fetchJSON(`${SCHEDULING_API}/assignments/${id}/reschedule`, {
     method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+const updateAssignment = async (id: string, data: Partial<TaskAssignment>): Promise<TaskAssignment> => {
+  return fetchJSON(`${SCHEDULING_API}/assignments/${id}`, {
+    method: "PUT",
     body: JSON.stringify(data),
   });
 };
@@ -385,11 +394,12 @@ export const useUpdateSchedule = () => {
   });
 };
 
-export const useAssignments = (filter?: AssignmentFilter) => {
+export const useAssignments = (filter?: AssignmentFilter, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ["assignments", filter],
     queryFn: () => fetchAssignments(filter),
     staleTime: 10000,
+    enabled: options?.enabled ?? true,
   });
 };
 
@@ -459,6 +469,38 @@ export const useRescheduleAssignment = () => {
   });
 };
 
+export const useStartAssignment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, actualStart }: { id: string; actualStart?: string }) =>
+      updateAssignment(id, {
+        status: AssignmentStatus.IN_PROGRESS,
+        actualStart: actualStart ?? new Date().toISOString(),
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["assignment", variables.id] });
+    },
+  });
+};
+
+export const useCompleteAssignment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, actualEnd }: { id: string; actualEnd?: string }) =>
+      updateAssignment(id, {
+        status: AssignmentStatus.COMPLETED,
+        actualEnd: actualEnd ?? new Date().toISOString(),
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["assignment", variables.id] });
+    },
+  });
+};
+
 // ============================================================================
 // React Query Hooks - Time Tracking
 // ============================================================================
@@ -485,11 +527,12 @@ export const useClockOut = () => {
   });
 };
 
-export const useTimeEntries = (filter?: TimeEntryFilter) => {
+export const useTimeEntries = (filter?: TimeEntryFilter, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ["time-entries", filter],
     queryFn: () => fetchTimeEntries(filter),
     staleTime: 10000,
+    enabled: options?.enabled ?? true,
   });
 };
 
@@ -661,10 +704,14 @@ export const useReturnResource = () => {
   });
 };
 
-export const useResourceAssignments = (technicianId?: string) => {
+export const useResourceAssignments = (
+  technicianId?: string,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: ["resource-assignments", technicianId],
     queryFn: () => fetchResourceAssignments(technicianId),
     staleTime: 10000,
+    enabled: options?.enabled ?? true,
   });
 };

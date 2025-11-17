@@ -553,7 +553,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: frontend
-        run: pnpm test:ci
+        run: pnpm test:coverage
 
       - name: Upload frontend coverage
         if: always()
@@ -561,6 +561,7 @@ jobs:
         with:
           name: frontend-coverage
           path: frontend/**/coverage/
+          if-no-files-found: ignore
           retention-days: 30
 
   # ====================
@@ -573,10 +574,16 @@ jobs:
     timeout-minutes: 20
     # Only run when frontend files change, on schedule, or manual trigger
     if: |
+      github.event_name == 'pull_request' ||
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
-      contains(github.event.head_commit.modified, 'frontend/') ||
-      contains(github.event.head_commit.added, 'frontend/')
+      (
+        github.event_name == 'push' &&
+        (
+          contains(github.event.head_commit.modified, 'frontend/') ||
+          contains(github.event.head_commit.added, 'frontend/')
+        )
+      )
 
     steps:
       - name: Checkout code
@@ -686,18 +693,19 @@ jobs:
         browser: [chromium, firefox, webkit]
         shard: [1, 2, 3, 4]
 
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
     steps:
       - uses: actions/checkout@v4
-
-      - name: Start platform dependencies
-        run: |
-          docker compose \
-            -f docker-compose.yml \
-            -f docker-compose.test.yml \
-            --profile storage \
-            --profile observability \
-            up -d --wait
-          docker compose -f docker-compose.yml -f docker-compose.test.yml ps
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -793,16 +801,6 @@ jobs:
           name: e2e-results-${{ matrix.browser }}-${{ matrix.shard }}
           path: frontend/test-results/
           retention-days: 30
-
-      - name: Stop platform dependencies
-        if: always()
-        run: |
-          docker compose \
-            -f docker-compose.yml \
-            -f docker-compose.test.yml \
-            --profile storage \
-            --profile observability \
-            down -v
 
   # ====================
   # SECURITY SCANS

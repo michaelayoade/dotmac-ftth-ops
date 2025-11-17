@@ -134,7 +134,7 @@ export default function ProductCatalogPage() {
         <div className="text-center py-12">
           <Package className="h-12 w-12 text-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-muted-foreground mb-2">Error Loading Catalog</h3>
-          <p className="text-foreground0 mb-4">{error}</p>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <button
             onClick={loadCatalogData}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -194,7 +194,7 @@ export default function ProductCatalogPage() {
         <div className="text-center py-12 bg-card rounded-lg border border-border">
           <Package className="h-12 w-12 text-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-muted-foreground mb-2">No Products Found</h3>
-          <p className="text-foreground0 mb-4">
+          <p className="text-muted-foreground mb-4">
             {searchQuery || selectedCategory !== "all"
               ? "No products match your current filters."
               : "Get started by creating your first product."}
@@ -254,7 +254,7 @@ export default function ProductCatalogPage() {
 
                 {product.features && product.features.length > 0 && (
                   <div>
-                    <p className="text-xs text-foreground0 mb-1">Features:</p>
+                    <p className="text-xs text-muted-foreground mb-1">Features:</p>
                     <div className="flex flex-wrap gap-1">
                       {product.features.slice(0, 3).map((feature, index) => (
                         <span
@@ -289,7 +289,7 @@ export default function ProductCatalogPage() {
                 {category.description && (
                   <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
                 )}
-                <p className="text-xs text-foreground0">{category.product_count || 0} products</p>
+                <p className="text-xs text-muted-foreground">{category.product_count || 0} products</p>
               </div>
             ))}
           </div>

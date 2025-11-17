@@ -292,14 +292,16 @@ These hooks don't make API calls or are UI-focused:
 - **API**: Browser Notification API (not HTTP)
 - **Complexity**: Low
 - **Priority**: LOW - Browser API, not network
-- **Note**: May not benefit from MSW
+- **Status**: Reviewed on 2025-11-17 — MSW not applicable (only Notification/localStorage calls)
+- **Note**: Keep explicit Notification mocks in `useBrowserNotifications.test.tsx`
 
 #### 25. **useAlerts**
 - **Current**: jest.mock-based
 - **API**: In-app alerts (likely state management)
 - **Complexity**: Low
 - **Priority**: LOW - State management, not network
-- **Note**: May not benefit from MSW
+- **Status**: Reviewed on 2025-11-17 — alertService is in-memory, so MSW would not add coverage
+- **Note**: Keep alertService mocks + subscriptions inside `useAlerts.test.tsx`
 
 #### 26. **useAIChat**
 - **Current**: jest.mock-based

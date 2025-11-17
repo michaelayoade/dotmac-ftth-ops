@@ -21,6 +21,7 @@ import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { platformConfig } from "@/lib/config";
+import { useAppConfig } from "@/providers/AppConfigContext";
 import {
   Dialog,
   DialogContent,
@@ -43,12 +44,15 @@ import { useQuery } from "@tanstack/react-query";
 
 function SubscribersDashboardContent() {
   const { hasPermission } = useRBAC();
+  const { features } = useAppConfig();
   const [search, setSearch] = useState("");
   const radiusEnabled = platformConfig.features.enableRadius && hasPermission("isp.radius.read");
   const [selectedSubscriberId, setSelectedSubscriberId] = useState<number | null>(null);
   const [subscriberDialogOpen, setSubscriberDialogOpen] = useState(false);
 
   const { toast } = useToast();
+
+  const hasLifecycleAccess = features.enableAutomation && hasPermission("isp.automation.read");
 
   // Single GraphQL query replaces multiple REST calls
   const trimmedSearch = search.trim();
@@ -57,6 +61,7 @@ function SubscribersDashboardContent() {
       limit: 50,
       ...(trimmedSearch ? { search: trimmedSearch } : {}),
       enabled: radiusEnabled,
+      lifecycleMetricsEnabled: hasLifecycleAccess,
     },
   );
 

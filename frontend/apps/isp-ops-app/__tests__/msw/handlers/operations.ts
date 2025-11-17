@@ -2,7 +2,7 @@
  * MSW Handlers for Operations/Monitoring API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from "msw";
 import type { MonitoringMetrics, LogStats, SystemHealth, ServiceHealth } from '../../../hooks/useOperations';
 
 // In-memory storage for test data
@@ -137,32 +137,32 @@ export function getStoredLogStats(period: string): LogStats | undefined {
 
 export const operationsHandlers = [
   // GET /api/v1/monitoring/metrics - Get monitoring metrics
-  rest.get('*/api/v1/monitoring/metrics', (req, res, ctx) => {
+  http.get('*/api/v1/monitoring/metrics', (req, res, ctx) => {
     const url = new URL(req.url);
     const period = (url.searchParams.get('period') || '24h') as '1h' | '24h' | '7d';
 
     // Return stored metrics or create default
     const metricsData = metrics[period] || createMockMetrics(period);
 
-    return res(ctx.json(metricsData));
+    return HttpResponse.json(metricsData);
   }),
 
   // GET /api/v1/monitoring/logs/stats - Get log statistics
-  rest.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
+  http.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
     const url = new URL(req.url);
     const period = (url.searchParams.get('period') || '24h') as '1h' | '24h' | '7d';
 
     // Return stored log stats or create default
     const statsData = logStats[period] || createMockLogStats(period);
 
-    return res(ctx.json(statsData));
+    return HttpResponse.json(statsData);
   }),
 
   // GET /health - Get system health status
-  rest.get('*/health', (req, res, ctx) => {
+  http.get('*/health', (req, res, ctx) => {
     // Return stored health or create default
     const healthData = systemHealth || createMockSystemHealth();
 
-    return res(ctx.json(healthData));
+    return HttpResponse.json(healthData);
   }),
 ];

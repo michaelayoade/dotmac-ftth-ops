@@ -25,11 +25,11 @@ import { handleError } from "@/lib/utils/error-handler";
 
 jest.unmock("@tanstack/react-query");
 
-const toastMock = jest.fn();
+const global.mockToast = jest.fn();
 
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: toastMock,
+    toast: global.mockToast,
   }),
 }));
 
@@ -129,7 +129,7 @@ describe("Platform Admin useCustomersQuery hooks", () => {
     });
 
     expect(mockedOptimistic.addToList).toHaveBeenCalled();
-    expect(toastMock).toHaveBeenCalledWith({
+    expect(global.mockToast).toHaveBeenCalledWith({
       title: "Success",
       description: "Customer created successfully",
     });
@@ -150,7 +150,7 @@ describe("Platform Admin useCustomersQuery hooks", () => {
     });
 
     expect(mockedOptimistic.removeFromList).toHaveBeenCalled();
-    expect(toastMock).toHaveBeenCalledWith({
+    expect(global.mockToast).toHaveBeenCalledWith({
       title: "Success",
       description: "Customer deleted successfully",
     });

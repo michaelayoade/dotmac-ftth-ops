@@ -8,9 +8,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TimeTrackingPage from "../page";
 import { TimeEntryType } from "@/types/field-service";
 import * as useFieldServiceHooks from "@/hooks/useFieldService";
+import { useSession } from "@dotmac/better-auth";
 
 // Mock the hooks
 jest.mock("@/hooks/useFieldService");
+jest.mock("@dotmac/better-auth", () => ({
+  useSession: jest.fn(),
+}));
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -33,6 +37,14 @@ describe("TimeTrackingPage", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useSession as jest.Mock).mockReturnValue({
+      data: {
+        user: {
+          technician_id: mockTechnicianId,
+        },
+      },
+      isPending: false,
+    });
 
     // Mock useTimeEntries
     (useFieldServiceHooks.useTimeEntries as jest.Mock).mockReturnValue({
@@ -79,6 +91,24 @@ describe("TimeTrackingPage", () => {
       },
       isLoading: false,
     });
+  });
+
+  it("informs the user when no technician profile exists", () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { technician_id: null } },
+      isPending: false,
+    });
+    const Wrapper = createWrapper();
+
+    render(
+      <Wrapper>
+        <TimeTrackingPage />
+      </Wrapper>,
+    );
+
+    expect(
+      screen.getByText(/couldn't find a technician profile/i),
+    ).toBeInTheDocument();
   });
 
   describe("Clock In/Out", () => {

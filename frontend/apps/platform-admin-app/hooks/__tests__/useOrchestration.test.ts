@@ -5,6 +5,8 @@
 import { useOrchestrationStats } from "../useOrchestration";
 import { runUseOrchestrationStatsSuite } from "../../../../tests/hooks/runUseOrchestrationStatsSuite";
 
+jest.unmock("@tanstack/react-query");
+
 // Mock dependencies
 jest.mock("@/lib/api/client", () => ({
   apiClient: {

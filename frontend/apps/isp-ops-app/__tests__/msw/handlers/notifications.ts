@@ -2,7 +2,7 @@
  * MSW Handlers for Notification API Endpoints
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type {
   Notification,
   NotificationListResponse,
@@ -14,6 +14,10 @@ import type {
   BulkNotificationRequest,
   BulkNotificationResponse,
 } from '../../../hooks/useNotifications';
+import {
+  seedTemplates as seedCommunicationsTemplates,
+  seedLogs as seedCommunicationsLogs,
+} from './communications';
 
 // In-memory storage for test data
 let notifications: Notification[] = [];
@@ -105,12 +109,14 @@ export function seedNotificationData(
   notifications = [...notificationData];
   templates = [...templateData];
   logs = [...logData];
+  seedCommunicationsTemplates(templateData);
+  seedCommunicationsLogs(logData);
 }
 
 export const notificationHandlers = [
   // GET /api/v1/notifications - List notifications
-  rest.get('*/api/v1/notifications', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/notifications', ({ request, params }) => {
+    const url = new URL(request.url);
     const unreadOnly = url.searchParams.get('unread_only') === 'true';
     const priority = url.searchParams.get('priority');
     const notificationType = url.searchParams.get('notification_type');
@@ -137,87 +143,87 @@ export const notificationHandlers = [
       unread_count: unreadCount,
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 
   // GET /api/v1/notifications/unread-count - Get unread count
-  rest.get('*/api/v1/notifications/unread-count', (req, res, ctx) => {
+  http.get('*/api/v1/notifications/unread-count', ({ request, params }) => {
     const unreadCount = notifications.filter((n) => !n.is_read).length;
-    return res(ctx.json({ unread_count: unreadCount }));
+    return HttpResponse.json({ unread_count: unreadCount });
   }),
 
   // POST /api/v1/notifications/:id/read - Mark as read
-  rest.post('*/api/v1/notifications/:id/read', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/notifications/:id/read', ({ request, params }) => {
+    const { id } = params;
     const notification = notifications.find((n) => n.id === id);
 
     if (!notification) {
-      return res(ctx.status(404), ctx.json({ error: 'Notification not found' }));
+      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
     notification.is_read = true;
     notification.read_at = new Date().toISOString();
 
-    return res(ctx.json(notification));
+    return HttpResponse.json(notification);
   }),
 
   // POST /api/v1/notifications/:id/unread - Mark as unread
-  rest.post('*/api/v1/notifications/:id/unread', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/notifications/:id/unread', ({ request, params }) => {
+    const { id } = params;
     const notification = notifications.find((n) => n.id === id);
 
     if (!notification) {
-      return res(ctx.status(404), ctx.json({ error: 'Notification not found' }));
+      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
     notification.is_read = false;
     delete notification.read_at;
 
-    return res(ctx.json(notification));
+    return HttpResponse.json(notification);
   }),
 
   // POST /api/v1/notifications/mark-all-read - Mark all as read
-  rest.post('*/api/v1/notifications/mark-all-read', (req, res, ctx) => {
+  http.post('*/api/v1/notifications/mark-all-read', ({ request, params }) => {
     const now = new Date().toISOString();
     notifications.forEach((n) => {
       n.is_read = true;
       n.read_at = now;
     });
 
-    return res(ctx.json({ success: true }));
+    return HttpResponse.json({ success: true });
   }),
 
   // POST /api/v1/notifications/:id/archive - Archive notification
-  rest.post('*/api/v1/notifications/:id/archive', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/notifications/:id/archive', ({ request, params }) => {
+    const { id } = params;
     const notification = notifications.find((n) => n.id === id);
 
     if (!notification) {
-      return res(ctx.status(404), ctx.json({ error: 'Notification not found' }));
+      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
     notification.is_archived = true;
     notification.archived_at = new Date().toISOString();
 
-    return res(ctx.json(notification));
+    return HttpResponse.json(notification);
   }),
 
   // DELETE /api/v1/notifications/:id - Delete notification
-  rest.delete('*/api/v1/notifications/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/api/v1/notifications/:id', ({ request, params }) => {
+    const { id } = params;
     const index = notifications.findIndex((n) => n.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Notification not found' }));
+      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
     notifications.splice(index, 1);
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // GET /api/v1/communications/templates - List templates
-  rest.get('*/api/v1/communications/templates', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/communications/templates', ({ request, params }) => {
+    const url = new URL(request.url);
     const type = url.searchParams.get('type');
     const activeOnly = url.searchParams.get('active_only') === 'true';
 
@@ -231,12 +237,12 @@ export const notificationHandlers = [
       filtered = filtered.filter((t) => t.is_active);
     }
 
-    return res(ctx.json(filtered));
+    return HttpResponse.json(filtered);
   }),
 
   // POST /api/v1/communications/templates - Create template
-  rest.post('*/api/v1/communications/templates', (req, res, ctx) => {
-    const data = req.body as TemplateCreateRequest;
+  http.post('*/api/v1/communications/templates', async ({ request, params }) => {
+    const data = await request.json() as TemplateCreateRequest;
 
     const newTemplate = createMockTemplate({
       ...data,
@@ -246,18 +252,18 @@ export const notificationHandlers = [
 
     templates.push(newTemplate);
 
-    return res(ctx.status(201), ctx.json(newTemplate));
+    return HttpResponse.json(newTemplate, { status: 201 });
   }),
 
   // PATCH /api/v1/communications/templates/:id - Update template
-  rest.patch('*/api/v1/communications/templates/:id', (req, res, ctx) => {
-    const { id } = req.params;
-    const updates = req.body as TemplateUpdateRequest;
+  http.patch('*/api/v1/communications/templates/:id', async ({ request, params }) => {
+    const { id } = params;
+    const updates = await request.json() as TemplateUpdateRequest;
 
     const index = templates.findIndex((t) => t.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Template not found' }));
+      return HttpResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
     templates[index] = {
@@ -266,31 +272,31 @@ export const notificationHandlers = [
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.json(templates[index]));
+    return HttpResponse.json(templates[index]);
   }),
 
   // DELETE /api/v1/communications/templates/:id - Delete template
-  rest.delete('*/api/v1/communications/templates/:id', (req, res, ctx) => {
-    const { id } = req.params;
+  http.delete('*/api/v1/communications/templates/:id', ({ request, params }) => {
+    const { id } = params;
     const index = templates.findIndex((t) => t.id === id);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ error: 'Template not found' }));
+      return HttpResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
     templates.splice(index, 1);
-    return res(ctx.status(204));
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // POST /api/v1/communications/templates/:id/render - Render template preview
-  rest.post('*/api/v1/communications/templates/:id/render', (req, res, ctx) => {
-    const { id } = req.params;
-    const { data } = req.body as { data: Record<string, any> };
+  http.post('*/api/v1/communications/templates/:id/render', async ({ request, params }) => {
+    const { id } = params;
+    const { data } = await request.json() as { data: Record<string, any> };
 
     const template = templates.find((t) => t.id === id);
 
     if (!template) {
-      return res(ctx.status(404), ctx.json({ error: 'Template not found' }));
+      return HttpResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
     // Simple variable replacement for testing
@@ -302,18 +308,16 @@ export const notificationHandlers = [
       return result;
     };
 
-    return res(
-      ctx.json({
-        subject: template.subject_template ? renderText(template.subject_template, data) : undefined,
-        text: template.text_template ? renderText(template.text_template, data) : undefined,
-        html: template.html_template ? renderText(template.html_template, data) : undefined,
-      })
-    );
+    return HttpResponse.json({
+      subject: template.subject_template ? renderText(template.subject_template, data) : undefined,
+      text: template.text_template ? renderText(template.text_template, data) : undefined,
+      html: template.html_template ? renderText(template.html_template, data) : undefined,
+    });
   }),
 
   // GET /api/v1/communications/logs - List communication logs
-  rest.get('*/api/v1/communications/logs', (req, res, ctx) => {
-    const url = new URL(req.url);
+  http.get('*/api/v1/communications/logs', ({ request, params }) => {
+    const url = new URL(request.url);
     const type = url.searchParams.get('type');
     const status = url.searchParams.get('status');
     const recipient = url.searchParams.get('recipient');
@@ -338,32 +342,30 @@ export const notificationHandlers = [
     const end = start + pageSize;
     const paginated = filtered.slice(start, end);
 
-    return res(
-      ctx.json({
-        logs: paginated,
-        total: filtered.length,
-      })
-    );
+    return HttpResponse.json({
+      logs: paginated,
+      total: filtered.length,
+    });
   }),
 
   // POST /api/v1/communications/logs/:id/retry - Retry failed communication
-  rest.post('*/api/v1/communications/logs/:id/retry', (req, res, ctx) => {
-    const { id } = req.params;
+  http.post('*/api/v1/communications/logs/:id/retry', ({ request, params }) => {
+    const { id } = params;
     const log = logs.find((l) => l.id === id);
 
     if (!log) {
-      return res(ctx.status(404), ctx.json({ error: 'Log not found' }));
+      return HttpResponse.json({ error: 'Log not found' }, { status: 404 });
     }
 
     log.status = 'pending';
     log.retry_count += 1;
 
-    return res(ctx.json(log));
+    return HttpResponse.json(log);
   }),
 
   // POST /api/v1/notifications/bulk - Send bulk notification
-  rest.post('*/api/v1/notifications/bulk', (req, res, ctx) => {
-    const data = req.body as BulkNotificationRequest;
+  http.post('*/api/v1/notifications/bulk', async ({ request, params }) => {
+    const data = await request.json() as BulkNotificationRequest;
 
     const response: BulkNotificationResponse = {
       job_id: `job-${nextJobId++}`,
@@ -372,12 +374,12 @@ export const notificationHandlers = [
       scheduled_at: data.schedule_at,
     };
 
-    return res(ctx.status(202), ctx.json(response));
+    return HttpResponse.json(response, { status: 202 });
   }),
 
   // GET /api/v1/notifications/bulk/:jobId - Get bulk job status
-  rest.get('*/api/v1/notifications/bulk/:jobId', (req, res, ctx) => {
-    const { jobId } = req.params;
+  http.get('*/api/v1/notifications/bulk/:jobId', ({ request, params }) => {
+    const { jobId } = params;
 
     const response: BulkNotificationResponse = {
       job_id: String(jobId),
@@ -385,6 +387,6 @@ export const notificationHandlers = [
       status: 'completed',
     };
 
-    return res(ctx.json(response));
+    return HttpResponse.json(response);
   }),
 ];

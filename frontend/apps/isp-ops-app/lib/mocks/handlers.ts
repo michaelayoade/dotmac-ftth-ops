@@ -4,7 +4,7 @@
  * Define API mocks for development and testing.
  */
 
-import { rest } from "msw";
+import { http, HttpResponse } from "msw";
 
 export const handlers = [
   // Add mock handlers here as needed

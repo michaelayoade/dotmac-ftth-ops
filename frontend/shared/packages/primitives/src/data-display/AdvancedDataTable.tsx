@@ -7,7 +7,7 @@ import { clsx } from "clsx";
 import type React from "react";
 import { forwardRef, useCallback, useMemo, useState } from "react";
 
-import { cva } from "../lib/cva";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { type Column, DataTable } from "./Table";
 
@@ -155,7 +155,7 @@ interface FilterComponentProps<T> {
   column?: AdvancedColumn<T>;
 }
 
-const TextFilter = <T,>({ value, onChange }: FilterComponentProps<T>) => {
+const TextFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value as T[keyof T]);
   };
@@ -167,6 +167,7 @@ const TextFilter = <T,>({ value, onChange }: FilterComponentProps<T>) => {
       onChange={handleChange}
       placeholder="Filter..."
       className="filter-input"
+      aria-label={column?.label ? `Filter by ${String(column.label)}` : "Filter"}
     />
   );
 };
@@ -177,7 +178,12 @@ const SelectFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) 
   };
 
   return (
-    <select value={String(value || "")} onChange={handleChange} className="filter-select">
+    <select
+      value={String(value || "")}
+      onChange={handleChange}
+      className="filter-select"
+      aria-label={column?.label ? `Filter by ${String(column.label)}` : "Filter"}
+    >
       <option value="">All</option>
       {column?.filterOptions?.map((option) => (
         <option key={String(option.value)} value={String(option.value)}>
@@ -188,22 +194,24 @@ const SelectFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) 
   );
 };
 
-const NumberFilter = ({ value, onChange }: unknown) => (
+const NumberFilter = ({ value, onChange, column }: any) => (
   <input
     type="number"
     value={value || ""}
     onChange={(e) => onChange(Number(e.target.value) || undefined)}
     placeholder="Filter..."
     className="filter-input"
+    aria-label={column?.label ? `Filter by ${String(column.label)}` : "Number filter"}
   />
 );
 
-const DateFilter = ({ value, onChange }: unknown) => (
+const DateFilter = ({ value, onChange, column }: any) => (
   <input
     type="date"
     value={value || ""}
     onChange={(e) => onChange(e.target.value)}
     className="filter-input"
+    aria-label={column?.label ? `Filter by ${String(column.label)}` : "Date filter"}
   />
 );
 
@@ -357,7 +365,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
       if (sortable && state.sorting.field) {
         const column = columns.find((col) => col.key === state.sorting.field);
         if (column) {
-          result.sort((a, _b) => {
+          result.sort((a, b) => {
             if (column.sortCompare) {
               return column.sortCompare(a, b);
             }
@@ -406,7 +414,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
     }, [processedData, pagination?.enabled, state.pagination]);
 
     // Virtual scrolling
-    const { visibleData, visibleRange, setScrollTop, _totalHeight } = useVirtualScrolling(
+    const { visibleData, visibleRange, setScrollTop, totalHeight } = useVirtualScrolling(
       paginatedData,
       rowHeight,
       containerHeight,
@@ -573,7 +581,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
 
     if (loading) {
       return (
-        <div className={clsx(advancedTableVariants(_props), "loading", className)}>
+        <div className={clsx(advancedTableVariants({}), "loading", className)}>
           <div className="table-loading">Loading...</div>
         </div>
       );
@@ -581,14 +589,14 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
 
     if (error) {
       return (
-        <div className={clsx(advancedTableVariants(_props), "error", className)}>
+        <div className={clsx(advancedTableVariants({}), "error", className)}>
           <div className="table-error">Error: {error}</div>
         </div>
       );
     }
 
     return (
-      <div ref={ref} className={clsx(advancedTableVariants(_props), className)} {...props}>
+      <div ref={ref} className={clsx(advancedTableVariants({}), className)} {...props}>
         {/* Table header with filters and actions */}
         <div className="table-header">
           {TableFilters}

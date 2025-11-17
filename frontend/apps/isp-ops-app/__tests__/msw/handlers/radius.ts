@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { rest } from 'msw';
+import { http, HttpResponse } from "msw";
 import type { RADIUSSubscriber, RADIUSSession } from '../../../hooks/useRADIUS';
 
 // In-memory storage for test data
@@ -77,7 +77,7 @@ export function seedRADIUSData(
 
 export const radiusHandlers = [
   // GET /api/v1/radius/subscribers - List RADIUS subscribers
-  rest.get('*/api/v1/radius/subscribers', (req, res, ctx) => {
+  http.get('*/api/v1/radius/subscribers', (req, res, ctx) => {
     const url = new URL(req.url);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const limit = parseInt(url.searchParams.get('limit') || '20');
@@ -95,16 +95,16 @@ export const radiusHandlers = [
     console.log('[MSW] Returning', paginated.length, 'subscribers');
 
     // Hook expects response to be the array directly (not wrapped)
-    return res(ctx.json(paginated));
+    return HttpResponse.json(paginated);
   }),
 
   // GET /api/v1/radius/sessions - List RADIUS sessions
-  rest.get('*/api/v1/radius/sessions', (req, res, ctx) => {
+  http.get('*/api/v1/radius/sessions', (req, res, ctx) => {
     console.log('[MSW] GET /api/v1/radius/sessions', {
       totalSessions: radiusSessions.length,
     });
 
     // Hook expects response to be the array directly (not wrapped)
-    return res(ctx.json(radiusSessions));
+    return HttpResponse.json(radiusSessions);
   }),
 ];

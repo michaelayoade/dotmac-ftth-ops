@@ -291,7 +291,7 @@ export default function CustomerBillingPage() {
     const Icon = statusConfig.icon;
 
     return (
-      <Badge className={statusConfig.className}>
+      <Badge variant="outline" className={statusConfig.className}>
         <Icon className="h-3 w-3 mr-1" />
         {statusConfig.label}
       </Badge>
@@ -444,6 +444,7 @@ export default function CustomerBillingPage() {
                           </TableCell>
                           <TableCell>
                             <Badge
+                              variant="outline"
                               className={
                                 payment.status === "success"
                                   ? "bg-green-500/20 text-green-300 border-green-500/30"
