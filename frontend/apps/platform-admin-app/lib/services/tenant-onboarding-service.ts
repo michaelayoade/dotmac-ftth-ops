@@ -83,7 +83,7 @@ class TenantOnboardingService {
     };
 
     if (token) {
-      headers.Authorization = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     return headers;

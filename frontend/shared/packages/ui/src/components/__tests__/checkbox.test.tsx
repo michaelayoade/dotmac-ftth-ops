@@ -281,6 +281,7 @@ describe("Checkbox", () => {
       );
 
       const checkbox = screen.getByRole("checkbox");
+      expect(checkbox).toBeInTheDocument();
       expect(screen.getByText(/I agree to the terms/)).toBeInTheDocument();
     });
 

@@ -72,20 +72,20 @@ export interface FeatureModule {
   id: string;
   module_code: string;
   module_name: string;
-  category: ModuleCategory;
-  description: string;
-  dependencies: string[];
-  pricing_model: PricingModel;
-  base_price: number;
-  price_per_unit?: number;
-  config_schema: Record<string, any>;
-  default_config: Record<string, any>;
-  is_active: boolean;
-  is_public: boolean;
-  extra_metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-  capabilities?: ModuleCapability[];
+  category?: ModuleCategory | (string & {}) | undefined;
+  description?: string | undefined;
+  dependencies?: string[] | undefined;
+  pricing_model?: PricingModel | undefined;
+  base_price?: number | undefined;
+  price_per_unit?: number | undefined;
+  config_schema?: Record<string, any> | undefined;
+  default_config?: Record<string, any> | undefined;
+  is_active?: boolean | undefined;
+  is_public?: boolean | undefined;
+  extra_metadata?: Record<string, any> | undefined;
+  created_at?: string | undefined;
+  updated_at?: string | undefined;
+  capabilities?: ModuleCapability[] | undefined;
 }
 
 export interface ModuleCapability {
@@ -108,17 +108,17 @@ export interface QuotaDefinition {
   id: string;
   quota_code: string;
   quota_name: string;
-  description: string;
-  unit_name: string;
-  unit_plural: string;
-  pricing_model: PricingModel;
-  overage_rate?: number;
-  is_metered: boolean;
-  reset_period?: string; // 'MONTHLY', 'QUARTERLY', 'ANNUAL', null for lifetime
-  is_active: boolean;
-  extra_metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
+  description?: string | undefined;
+  unit_name?: string | undefined;
+  unit_plural?: string | undefined;
+  pricing_model?: PricingModel | undefined;
+  overage_rate?: number | undefined;
+  is_metered?: boolean | undefined;
+  reset_period?: string | undefined; // 'MONTHLY', 'QUARTERLY', 'ANNUAL', null for lifetime
+  is_active?: boolean | undefined;
+  extra_metadata?: Record<string, any> | undefined;
+  created_at?: string | undefined;
+  updated_at?: string | undefined;
 }
 
 // ============================================================================
@@ -129,21 +129,21 @@ export interface ServicePlan {
   id: string;
   plan_name: string;
   plan_code: string;
-  description: string;
-  version: number;
-  is_template: boolean;
-  is_public: boolean;
-  is_custom: boolean;
-  base_price_monthly: number;
-  annual_discount_percent: number;
-  trial_days: number;
-  trial_modules: string[];
-  extra_metadata: Record<string, any>;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  modules?: PlanModule[];
-  quotas?: PlanQuotaAllocation[];
+  description?: string | undefined;
+  version?: number | undefined;
+  is_template?: boolean | undefined;
+  is_public?: boolean | undefined;
+  is_custom?: boolean | undefined;
+  base_price_monthly?: number | undefined;
+  annual_discount_percent?: number | undefined;
+  trial_days?: number | undefined;
+  trial_modules?: string[] | undefined;
+  extra_metadata?: Record<string, any> | undefined;
+  is_active?: boolean | undefined;
+  created_at?: string | undefined;
+  updated_at?: string | undefined;
+  modules?: PlanModule[] | undefined;
+  quotas?: PlanQuotaAllocation[] | undefined;
 }
 
 export interface PlanModule {
@@ -152,12 +152,12 @@ export interface PlanModule {
   module_id: string;
   included_by_default: boolean;
   is_optional_addon: boolean;
-  override_price?: number;
+  override_price?: number | undefined;
   trial_only: boolean;
-  promotional_until?: string;
+  promotional_until?: string | undefined;
   config: Record<string, any>;
   created_at: string;
-  module?: FeatureModule;
+  module?: FeatureModule | undefined;
 }
 
 export interface PlanQuotaAllocation {
@@ -350,8 +350,8 @@ export interface CheckEntitlementRequest {
 
 export interface CheckEntitlementResponse {
   entitled: boolean;
-  message?: string;
-  upgrade_path?: ServicePlan[];
+  message?: string | undefined;
+  upgrade_path?: ServicePlan[] | undefined;
 }
 
 export interface CheckQuotaRequest {
@@ -361,12 +361,12 @@ export interface CheckQuotaRequest {
 
 export interface CheckQuotaResponse {
   available: boolean;
-  current_usage: number;
-  allocated_quantity: number;
+  current_usage?: number | undefined;
+  allocated_quantity?: number | undefined;
   remaining: number;
-  will_exceed: boolean;
+  will_exceed?: boolean | undefined;
   overage_allowed: boolean;
-  estimated_overage_charge?: number;
+  estimated_overage_charge?: number | undefined;
 }
 
 export interface ConsumeQuotaRequest {
@@ -474,13 +474,18 @@ export type LicensingError = {
 };
 
 export interface PlanPricing {
-  monthly_price: number;
-  annual_price: number;
-  monthly_with_discount: number;
-  savings_annual: number;
-  base_price: number;
-  modules_total: number;
-  addons_total: number;
+  billing_period?: string | undefined;
+  total?: number | undefined;
+  currency?: string | undefined;
+  monthly?: number | undefined;
+  annual?: number | undefined;
+  monthly_price?: number | undefined;
+  annual_price?: number | undefined;
+  monthly_with_discount?: number | undefined;
+  savings_annual?: number | undefined;
+  base_price?: number | undefined;
+  modules_total?: number | undefined;
+  addons_total?: number | undefined;
 }
 
 export interface QuotaUsageStats {

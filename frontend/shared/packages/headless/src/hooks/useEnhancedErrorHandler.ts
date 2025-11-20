@@ -12,6 +12,24 @@ import {
 } from "../utils/enhancedErrorHandling";
 import { errorLogger } from "../services/ErrorLoggingService";
 
+const mergeErrorContext = (
+  base: ErrorContext,
+  updates?: Partial<ErrorContext>,
+): ErrorContext => {
+  if (!updates) {
+    return base;
+  }
+
+  const merged = { ...base } as ErrorContext & Record<string, unknown>;
+  for (const [key, value] of Object.entries(updates)) {
+    if (value !== undefined) {
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+};
+
 export interface ErrorHandlerConfig {
   enableAutoRecovery: boolean;
   enableUserNotifications: boolean;
@@ -81,18 +99,20 @@ export function useEnhancedErrorHandler(
   // Create standardized error context
   const createErrorContext = useCallback(
     (operation: string, resource?: string): ErrorContext => {
-      return {
+      const baseContext: ErrorContext = {
         operation,
-        resource,
         correlationId: generateCorrelationId(),
-        userId: finalConfig.context?.userId,
-        tenantId: finalConfig.context?.tenantId,
         service: "isp-frontend",
         component: "error-handler",
         version: process.env["REACT_APP_VERSION"] || "1.0.0",
         environment: process.env["NODE_ENV"] || "development",
-        ...finalConfig.context,
       };
+
+      if (resource) {
+        baseContext.resource = resource;
+      }
+
+      return mergeErrorContext(baseContext, finalConfig.context);
     },
     [finalConfig.context, generateCorrelationId],
   );
@@ -102,24 +122,38 @@ export function useEnhancedErrorHandler(
     (error: unknown, context?: Partial<ErrorContext>): EnhancedISPError => {
       // If already an enhanced error, just update context
       if (error instanceof EnhancedISPError) {
-        const enhancedError = new EnhancedISPError({
+        const mergedContext = mergeErrorContext(error.enhancedContext, context);
+        const enhancedParams: ConstructorParameters<typeof EnhancedISPError>[0] = {
           code: error.errorCode,
           message: error.message,
-          context: { ...error.enhancedContext, ...context },
+          context: mergedContext,
           category: error.category,
           severity: error.severity,
-          status: error.status,
-          userMessage: error.userMessage,
-          retryable: error.retryable,
-          technicalDetails: error.technicalDetails,
-        });
+        };
+
+        if (typeof error.status === "number") {
+          enhancedParams.status = error.status;
+        }
+
+        if (error.userMessage) {
+          enhancedParams.userMessage = error.userMessage;
+        }
+
+        if (typeof error.retryable === "boolean") {
+          enhancedParams.retryable = error.retryable;
+        }
+
+        if (error.technicalDetails) {
+          enhancedParams.technicalDetails = error.technicalDetails;
+        }
+
+        const enhancedError = new EnhancedISPError(enhancedParams);
 
         setErrorState((prev) => ({
           error: enhancedError,
           isRetrying: false,
           retryCount: 0,
           canRetry: enhancedError.retryable && finalConfig.enableAutoRecovery,
-          lastRetryAt: undefined,
         }));
 
         // Log the error
@@ -143,7 +177,10 @@ export function useEnhancedErrorHandler(
           enhancedError = new EnhancedISPError({
             code: ErrorCode.UNKNOWN_ERROR,
             message: error.message,
-            context: createErrorContext(context?.operation || "unknown"),
+            context: mergeErrorContext(
+              createErrorContext(context?.operation || "unknown"),
+              context,
+            ),
             technicalDetails: {
               stack: error.stack,
               name: error.name,
@@ -175,7 +212,10 @@ export function useEnhancedErrorHandler(
           enhancedError = new EnhancedISPError({
             code: ErrorCode.UNKNOWN_ERROR,
             message,
-            context: createErrorContext(context?.operation || "api_call"),
+            context: mergeErrorContext(
+              createErrorContext(context?.operation || "api_call"),
+              context,
+            ),
             status,
           });
         }
@@ -185,7 +225,10 @@ export function useEnhancedErrorHandler(
         enhancedError = new EnhancedISPError({
           code: ErrorCode.UNKNOWN_ERROR,
           message: String(error),
-          context: createErrorContext(context?.operation || "unknown"),
+          context: mergeErrorContext(
+            createErrorContext(context?.operation || "unknown"),
+            context,
+          ),
         });
       }
 
@@ -195,7 +238,6 @@ export function useEnhancedErrorHandler(
         isRetrying: false,
         retryCount: 0,
         canRetry: enhancedError.retryable && finalConfig.enableAutoRecovery,
-        lastRetryAt: undefined,
       });
 
       // Log the error
@@ -211,15 +253,18 @@ export function useEnhancedErrorHandler(
   // Specialized API error handler
   const handleApiError = useCallback(
     (error: any, operation: string, resource?: string): EnhancedISPError => {
-      const context: Partial<ErrorContext> = {
-        operation: `api_${operation}`,
-        resource,
-        metadata: {
-          endpoint: error.config?.url,
-          method: error.config?.method,
-          status: error.response?.status,
-        },
-      };
+          const context: Partial<ErrorContext> = {
+            operation: `api_${operation}`,
+            metadata: {
+              endpoint: error.config?.url,
+              method: error.config?.method,
+              status: error.response?.status,
+            },
+          };
+
+          if (resource) {
+            context.resource = resource;
+          }
 
       const enhancedError = handleError(error, context);
 
@@ -267,7 +312,6 @@ export function useEnhancedErrorHandler(
         isRetrying: false,
         retryCount: 0,
         canRetry: false, // Business errors typically not retryable
-        lastRetryAt: undefined,
       });
 
       // Log business error with context
@@ -406,6 +450,8 @@ export function useEnhancedErrorHandler(
         return () => clearTimeout(timer);
       }
     }
+
+    return undefined;
   }, [errorState, retry, isRecoverableError, finalConfig.enableAutoRecovery]);
 
   return {

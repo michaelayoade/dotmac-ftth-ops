@@ -3,12 +3,15 @@
  * Mocks AI chat functionality including sessions, messages, and feedback
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 
 // In-memory storage
 let sessions: any[] = [];
 let messages: Map<number, any[]> = new Map();
 let nextSessionId = 1;
+
+// Configurable delay for testing loading states (default 50ms)
+const API_DELAY = parseInt(process.env.MSW_API_DELAY || '50');
 
 // Factory functions
 function createMockSession(data: Partial<any> = {}): any {
@@ -70,6 +73,9 @@ export function seedAIChatData(initialSessions: any[]): void {
 export const aiChatHandlers = [
   // POST /api/v1/ai/chat - Send a message
   http.post("*/api/v1/ai/chat", async (req) => {
+    // Add delay to simulate network latency (makes loading states testable)
+    await delay(API_DELAY);
+
     const body = await req.json<{ message: string; session_id?: number; context?: any }>();
 
     if (!body.message || body.message.trim() === "") {
@@ -128,6 +134,9 @@ export const aiChatHandlers = [
 
   // POST /api/v1/ai/sessions - Create a session
   http.post("*/api/v1/ai/sessions", async (req) => {
+    // Add delay to simulate network latency (makes loading states testable)
+    await delay(API_DELAY);
+
     const body = await req.json<{ session_type?: string; context?: any; customer_id?: number }>();
 
     const newSession = createMockSession({
@@ -178,6 +187,9 @@ export const aiChatHandlers = [
 
   // POST /api/v1/ai/sessions/:id/feedback - Submit feedback
   http.post("*/api/v1/ai/sessions/:id/feedback", async (req) => {
+    // Add delay to simulate network latency (makes loading states testable)
+    await delay(API_DELAY);
+
     const { id } = req.params;
     const sessionId = parseInt(id as string);
     const body = await req.json<{ session_id: number; rating: number; feedback?: string }>();
@@ -205,6 +217,9 @@ export const aiChatHandlers = [
 
   // POST /api/v1/ai/sessions/:id/escalate - Escalate to human
   http.post("*/api/v1/ai/sessions/:id/escalate", async (req) => {
+    // Add delay to simulate network latency (makes loading states testable)
+    await delay(API_DELAY);
+
     const { id } = req.params;
     const sessionId = parseInt(id as string);
     const body = await req.json<{ session_id: number; reason: string }>();

@@ -3,7 +3,7 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { useAnalytics } from "../index";
+import { useAnalytics, type AnalyticsEvent } from "../index";
 
 describe("useAnalytics", () => {
   let consoleLogSpy: jest.SpyInstance;
@@ -175,7 +175,8 @@ describe("useAnalytics", () => {
 
       expect(() => {
         act(() => {
-          result.current.track({ name: "test", properties: undefined });
+          const unsafeEvent = { name: "test", properties: undefined } as unknown as AnalyticsEvent;
+          result.current.track(unsafeEvent);
         });
       }).not.toThrow();
     });

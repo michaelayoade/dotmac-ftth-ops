@@ -28,10 +28,10 @@ export function RouteGuard({
   unauthorizedComponent,
 }: RouteGuardProps) {
   const protection = useCustomRouteProtection({
-    requiredRoles,
-    requiredPermissions,
-    requiredFeatures,
-    allowedPortals,
+    requiredRoles: requiredRoles ?? [],
+    requiredPermissions: requiredPermissions ?? [],
+    requiredFeatures: requiredFeatures ?? [],
+    allowedPortals: allowedPortals ?? [],
   });
 
   if (protection.isLoading) {

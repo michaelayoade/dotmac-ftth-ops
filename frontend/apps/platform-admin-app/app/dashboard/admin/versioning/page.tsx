@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -14,17 +15,27 @@ import {
   TrendingUp,
   XCircle,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
-import { Button } from "@dotmac/ui";
-import { Badge } from "@dotmac/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+
 import {
-  useVersions,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@dotmac/ui";
+import {
   useBreakingChanges,
   useVersionAdoption,
   useVersioningConfiguration,
+  useVersions,
+  type VersionStatus,
 } from "@/hooks/useVersioning";
-import type { VersionStatus } from "@/hooks/useVersioning";
 
 // ============================================
 // Status Badge Component
@@ -36,7 +47,7 @@ function VersionStatusBadge({ status }: { status: VersionStatus }) {
     {
       label: string;
       variant: "default" | "secondary" | "destructive" | "outline";
-      icon: any;
+      icon: LucideIcon;
     }
   > = {
     active: {
@@ -93,8 +104,8 @@ function OverviewTab() {
             <Card key={i} className="bg-slate-800 border-slate-700">
               <CardContent className="p-6">
                 <div className="animate-pulse">
-                  <div className="h-4 bg-slate-700 rounded w-1/2 mb-2"></div>
-                  <div className="h-8 bg-slate-700 rounded w-3/4"></div>
+                  <div className="h-4 bg-slate-700 rounded w-1/2 mb-2" />
+                  <div className="h-8 bg-slate-700 rounded w-3/4" />
                 </div>
               </CardContent>
             </Card>

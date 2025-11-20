@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import {
   Radio,
   TrendingUp,
@@ -11,13 +11,20 @@ import {
   Info,
   Server,
 } from "lucide-react";
-import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@dotmac/ui";
-import { PONPortMetrics, PONStatistics } from "@/types/voltha";
+import { PONPortMetrics } from "@/types/voltha";
+import { usePONPortStatistics } from "@/hooks/useVOLTHA";
+import {
+  UTILIZATION_THRESHOLDS,
+  OPTICAL_POWER_THRESHOLDS,
+  HEALTH_SCORE_DEDUCTIONS,
+  HEALTH_SCORE_THRESHOLDS,
+  ONLINE_RATIO_THRESHOLDS,
+} from "@/lib/constants/voltha";
 
 interface PONPortVisualizationProps {
   oltId: string;
@@ -27,87 +34,76 @@ interface PONPortVisualizationProps {
 export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationProps) {
   const { toast } = useToast();
   const [selectedPort, setSelectedPort] = useState<number | null>(null);
-  const [portStatistics, setPortStatistics] = useState<PONStatistics | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const loadPortStatistics = useCallback(
-    async (portNo: number) => {
-      setLoading(true);
-      try {
-        const response = await apiClient.get<PONStatistics>(
-          `/api/v1/access/devices/${oltId}/ports/${portNo}/statistics`,
-        );
-        setPortStatistics(response.data);
-      } catch (err) {
-        console.error("Failed to load port statistics", err);
-        toast({
-          title: "Failed to load statistics",
-          description: "Could not fetch PON port statistics",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [oltId, toast],
-  );
-
-  useEffect(() => {
-    if (selectedPort !== null) {
-      loadPortStatistics(selectedPort);
-    }
-  }, [loadPortStatistics, selectedPort]);
+  // Use React Query hook for port statistics
+  const {
+    data: portStatistics,
+    isLoading: loading,
+    isError,
+  } = usePONPortStatistics(oltId, selectedPort ?? 0);
 
   const getUtilizationColor = (utilization?: number) => {
     if (!utilization) return "bg-gray-200";
-    if (utilization > 80) return "bg-red-500";
-    if (utilization > 60) return "bg-yellow-500";
-    if (utilization > 40) return "bg-blue-500";
+    if (utilization > UTILIZATION_THRESHOLDS.CRITICAL) return "bg-red-500";
+    if (utilization > UTILIZATION_THRESHOLDS.WARNING) return "bg-yellow-500";
+    if (utilization > UTILIZATION_THRESHOLDS.NORMAL) return "bg-blue-500";
     return "bg-green-500";
   };
 
   const getOpticalPowerStatus = (rxPower?: number) => {
     if (!rxPower) return null;
-    if (rxPower > -20) return { label: "Excellent", color: "text-green-600", icon: TrendingUp };
-    if (rxPower > -25) return { label: "Good", color: "text-blue-600", icon: TrendingUp };
-    if (rxPower > -28) return { label: "Fair", color: "text-yellow-600", icon: Activity };
+    if (rxPower > OPTICAL_POWER_THRESHOLDS.EXCELLENT)
+      return { label: "Excellent", color: "text-green-600", icon: TrendingUp };
+    if (rxPower > OPTICAL_POWER_THRESHOLDS.GOOD)
+      return { label: "Good", color: "text-blue-600", icon: TrendingUp };
+    if (rxPower > OPTICAL_POWER_THRESHOLDS.FAIR)
+      return { label: "Fair", color: "text-yellow-600", icon: Activity };
     return { label: "Poor", color: "text-red-600", icon: TrendingDown };
   };
 
   const getHealthScore = (port: PONPortMetrics) => {
-    let score = 100;
+    let score = HEALTH_SCORE_DEDUCTIONS.BASE_SCORE;
 
     // Deduct for utilization
     if (port.utilization_percent !== undefined) {
-      if (port.utilization_percent > 80) score -= 20;
-      else if (port.utilization_percent > 60) score -= 10;
+      if (port.utilization_percent > UTILIZATION_THRESHOLDS.CRITICAL)
+        score -= HEALTH_SCORE_DEDUCTIONS.HIGH_UTILIZATION;
+      else if (port.utilization_percent > UTILIZATION_THRESHOLDS.WARNING)
+        score -= HEALTH_SCORE_DEDUCTIONS.MEDIUM_UTILIZATION;
     }
 
     // Deduct for offline ONUs
     const onlineRatio = port.total_onus > 0 ? port.online_onus / port.total_onus : 1;
-    if (onlineRatio < 0.9) score -= 15;
-    else if (onlineRatio < 0.95) score -= 5;
+    if (onlineRatio < ONLINE_RATIO_THRESHOLDS.ACCEPTABLE)
+      score -= HEALTH_SCORE_DEDUCTIONS.LOW_ONLINE_RATIO;
+    else if (onlineRatio < ONLINE_RATIO_THRESHOLDS.GOOD)
+      score -= HEALTH_SCORE_DEDUCTIONS.MEDIUM_ONLINE_RATIO;
 
     // Deduct for optical power
     if (port.avg_rx_power !== undefined) {
-      if (port.avg_rx_power < -28) score -= 15;
-      else if (port.avg_rx_power < -25) score -= 5;
+      if (port.avg_rx_power < OPTICAL_POWER_THRESHOLDS.FAIR)
+        score -= HEALTH_SCORE_DEDUCTIONS.POOR_OPTICAL_POWER;
+      else if (port.avg_rx_power < OPTICAL_POWER_THRESHOLDS.GOOD)
+        score -= HEALTH_SCORE_DEDUCTIONS.FAIR_OPTICAL_POWER;
     }
 
     return Math.max(0, score);
   };
 
   const getHealthBadge = (score: number) => {
-    if (score >= 90) return <Badge className="bg-green-500">Healthy</Badge>;
-    if (score >= 70) return <Badge className="bg-yellow-500">Fair</Badge>;
-    if (score >= 50) return <Badge className="bg-orange-500">Degraded</Badge>;
-    return <Badge variant="destructive">Critical</Badge>;
+    if (score >= HEALTH_SCORE_THRESHOLDS.HEALTHY)
+      return <Badge variant="outline" className="bg-green-500">Healthy</Badge>;
+    if (score >= HEALTH_SCORE_THRESHOLDS.FAIR)
+      return <Badge variant="outline" className="bg-yellow-500">Fair</Badge>;
+    if (score >= HEALTH_SCORE_THRESHOLDS.DEGRADED)
+      return <Badge variant="outline" className="bg-orange-500">Degraded</Badge>;
+    return <Badge variant="destructive" className="">Critical</Badge>;
   };
 
   return (
     <div className="space-y-6">
       {/* PON Port Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" role="list" aria-label="PON ports list">
         {ponPorts.map((port) => {
           const healthScore = getHealthScore(port);
           const opticalStatus = port.avg_rx_power ? getOpticalPowerStatus(port.avg_rx_power) : null;
@@ -120,6 +116,16 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                 isSelected ? "ring-2 ring-primary" : ""
               }`}
               onClick={() => setSelectedPort(port.port_no)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Select ${port.label} - Health score ${healthScore}`}
+              aria-pressed={isSelected}
+              onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedPort(port.port_no);
+                }
+              }}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -195,7 +201,7 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                 <div className="pt-2 border-t">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Operational Status</span>
-                    <Badge variant={port.oper_status === "ACTIVE" ? "outline" : "secondary"}>
+                    <Badge variant={port.oper_status === "ACTIVE" ? "outline" : "secondary"} className="">
                       {port.oper_status}
                     </Badge>
                   </div>
@@ -402,25 +408,37 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
             <div className="p-4 rounded-lg border bg-green-50 border-green-200">
               <div className="text-sm text-green-700 mb-1">Healthy Ports</div>
               <div className="text-2xl font-bold text-green-900">
-                {ponPorts.filter((p) => getHealthScore(p) >= 90).length}
+                {ponPorts.filter((p) => getHealthScore(p) >= HEALTH_SCORE_THRESHOLDS.HEALTHY).length}
               </div>
             </div>
             <div className="p-4 rounded-lg border bg-yellow-50 border-yellow-200">
               <div className="text-sm text-yellow-700 mb-1">Fair Ports</div>
               <div className="text-2xl font-bold text-yellow-900">
-                {ponPorts.filter((p) => getHealthScore(p) >= 70 && getHealthScore(p) < 90).length}
+                {
+                  ponPorts.filter(
+                    (p) =>
+                      getHealthScore(p) >= HEALTH_SCORE_THRESHOLDS.FAIR &&
+                      getHealthScore(p) < HEALTH_SCORE_THRESHOLDS.HEALTHY,
+                  ).length
+                }
               </div>
             </div>
             <div className="p-4 rounded-lg border bg-orange-50 border-orange-200">
               <div className="text-sm text-orange-700 mb-1">Degraded Ports</div>
               <div className="text-2xl font-bold text-orange-900">
-                {ponPorts.filter((p) => getHealthScore(p) >= 50 && getHealthScore(p) < 70).length}
+                {
+                  ponPorts.filter(
+                    (p) =>
+                      getHealthScore(p) >= HEALTH_SCORE_THRESHOLDS.DEGRADED &&
+                      getHealthScore(p) < HEALTH_SCORE_THRESHOLDS.FAIR,
+                  ).length
+                }
               </div>
             </div>
             <div className="p-4 rounded-lg border bg-red-50 border-red-200">
               <div className="text-sm text-red-700 mb-1">Critical Ports</div>
               <div className="text-2xl font-bold text-red-900">
-                {ponPorts.filter((p) => getHealthScore(p) < 50).length}
+                {ponPorts.filter((p) => getHealthScore(p) < HEALTH_SCORE_THRESHOLDS.DEGRADED).length}
               </div>
             </div>
           </div>

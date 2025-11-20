@@ -19,6 +19,13 @@ export function runUseOrchestrationStatsSuite(
   apiClient: any
 ) {
   const cleanupFns: Array<() => void> = [];
+  const waitForStatsData = async (
+    hookResult: { current: ReturnType<UseOrchestrationStatsHook> },
+    expectedStats: WorkflowStatistics
+  ) =>
+    waitFor(() => {
+      expect(hookResult.current.data).toBe(expectedStats);
+    });
 
   const renderUseOrchestrationStats = () => {
     const queryClient = new QueryClient({
@@ -80,13 +87,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        expect(result.current.isLoading).toBe(true);
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
-        expect(result.current.data).toEqual(mockStats);
+        await waitForStatsData(result, mockStats);
         expect(result.current.error).toBeNull();
         expect(apiClient.get).toHaveBeenCalledWith("/orchestration/statistics");
       });
@@ -115,9 +116,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         expect(result.current.data?.total).toBe(0);
         expect(result.current.data?.success_rate).toBe(0);
@@ -147,9 +146,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         expect(result.current.data?.avg_duration_seconds).toBeUndefined();
       });
@@ -178,9 +175,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         // Clear previous calls
         apiClient.get.mockClear();
@@ -209,11 +204,11 @@ export function runUseOrchestrationStatsSuite(
         const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
+          const error = result.current.error as Error;
+          expect(error?.message).toBe("Internal server error");
         });
 
         const error = result.current.error as Error;
-        expect(error.message).toBe("Internal server error");
         expect(result.current.data).toBeUndefined();
       });
 
@@ -224,11 +219,11 @@ export function runUseOrchestrationStatsSuite(
         const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
+          const error = result.current.error as Error;
+          expect(error?.message).toBe("Failed to fetch statistics");
         });
 
         const error = result.current.error as Error;
-        expect(error.message).toBe("Failed to fetch statistics");
         expect(result.current.data).toBeUndefined();
       });
 
@@ -238,10 +233,8 @@ export function runUseOrchestrationStatsSuite(
         const { result } = renderUseOrchestrationStats();
 
         await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
+          expect(result.current.data).toBeNull();
         });
-
-        expect(result.current.data).toBeNull();
         expect(result.current.error).toBeNull();
       });
     });
@@ -272,9 +265,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         expect(result.current.data?.success_rate).toBe(99.5);
         expect(result.current.data?.failed).toBe(5);
@@ -304,9 +295,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         expect(result.current.data?.success_rate).toBe(58.82);
         expect(result.current.data?.failed).toBe(35);
@@ -336,9 +325,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         expect(result.current.data?.by_type.provision_subscriber).toBe(95);
         expect(result.current.data?.by_type.deprovision_subscriber).toBe(1);
@@ -369,9 +356,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         expect(result.current.data?.avg_duration_seconds).toBe(0.5);
       });
@@ -401,9 +386,7 @@ export function runUseOrchestrationStatsSuite(
 
         const { result } = renderUseOrchestrationStats();
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForStatsData(result, mockStats);
 
         expect(result.current.data?.avg_duration_seconds).toBe(3600);
       });

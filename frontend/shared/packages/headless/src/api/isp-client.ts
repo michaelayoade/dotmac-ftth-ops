@@ -132,10 +132,11 @@ export class ISPApiClient {
       ...(options.headers || {}),
     };
 
+    const normalizedBody = this.normalizeBody(options.body);
     const response = await fetch(url, {
       ...options,
       headers,
-      body: this.normalizeBody(options.body),
+      body: normalizedBody ?? null,
     });
 
     if (!response.ok) {
@@ -260,9 +261,8 @@ export class ISPApiClient {
   }
 
   async getUsageTracking(serviceId: string, period?: string) {
-    return this.services.getServiceUsage(serviceId, {
-      start_date: period,
-    });
+    const params = period ? { start_date: period } : {};
+    return this.services.getServiceUsage(serviceId, params);
   }
 
   // Networking module

@@ -7,7 +7,7 @@
 import { ISPError, ErrorFactory } from "../../utils/errorUtils";
 
 export interface RequestConfig {
-  params?: Record<string, any>;
+  params?: Record<string, any> | undefined;
   headers?: Record<string, string>;
   timeout?: number;
   retryable?: boolean;

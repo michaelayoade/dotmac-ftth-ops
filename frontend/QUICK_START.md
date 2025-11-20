@@ -102,14 +102,14 @@ pnpm analyze
 
 ## 5. Playwright End-to-End Tests
 
-- ISP portal & shared scenarios: `frontend/playwright.config.ts`
-- Extended suites (mocked backends, contract validation): `frontend/e2e/playwright.config.ts`
+All suites now run from the single config at `frontend/e2e/playwright.config.ts`. It boots both Next apps, enables MSW-powered mocks, and shares every timeout/fixture.
 
-Run them from the `frontend` directory after starting the services:
+Run them from the `frontend` directory after starting the backend:
 
 ```bash
-pnpm --filter @dotmac/e2e-tests test
-pnpm playwright test          # ISP-focused config
+pnpm e2e                      # headless run against frontend/e2e/playwright.config.ts
+pnpm e2e -- e2e/tests/workflows/complete-workflows.spec.ts
+pnpm e2e:headed               # headed/debuggable run
 ```
 
 If MSW handlers change, update `shared/mocks/handlers.ts`.

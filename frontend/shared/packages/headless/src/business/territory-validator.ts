@@ -74,7 +74,9 @@ export type ValidationResult = z.infer<typeof ValidationResultSchema>;
 
 export class TerritoryValidator {
   private territories: Territory[] = [];
-  private geocodingService?: (address: Address) => Promise<{ lat: number; lng: number }>;
+  private geocodingService:
+    | ((address: Address) => Promise<{ lat: number; lng: number }>)
+    | undefined;
 
   constructor(
     territories: Territory[] = [],

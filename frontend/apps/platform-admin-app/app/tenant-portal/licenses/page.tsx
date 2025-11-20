@@ -94,7 +94,7 @@ export default function LicensesPage(): React.ReactElement {
     modules
       .filter((m) => m.is_active)
       .forEach((module) => {
-        const category = module.category;
+        const category = module.category ?? "uncategorized";
         if (!categoryMap.has(category)) {
           categoryMap.set(category, []);
         }

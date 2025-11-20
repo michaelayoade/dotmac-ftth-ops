@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useApiClient } from "../api";
 import { useAppStore } from "../stores";
-import { useAuth } from "@dotmac/headless/auth";
+import { useAuth } from "../auth/context";
 import type { ApiResponse, PaginatedResponse, PaginationParams } from "../api/types";
 import type { FilterState, PaginationState, SelectionState, LoadingState } from "../stores/types";
 
@@ -142,14 +142,23 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         const currentFilters = contextState?.filters;
         const currentPagination = contextState?.pagination;
 
-        const requestParams = params || {
-          page: currentPagination?.currentPage || 1,
-          limit: currentPagination?.itemsPerPage || 20,
-          search: currentFilters?.searchTerm || "",
-          sort: currentFilters?.sortBy || "",
-          order: currentFilters?.sortOrder || "asc",
-          ...currentFilters?.customFilters,
-        };
+        const requestParams: Record<string, unknown> = params
+          ? { ...params }
+          : {
+              page: currentPagination?.currentPage || 1,
+              limit: currentPagination?.itemsPerPage || 20,
+              search: currentFilters?.searchTerm || "",
+              sort: currentFilters?.sortBy || "",
+              order: currentFilters?.sortOrder || "asc",
+              ...currentFilters?.customFilters,
+            };
+
+        if (params?.filters) {
+          Object.assign(requestParams, params.filters);
+          delete requestParams["filters"];
+        } else if (!params && currentFilters?.customFilters) {
+          Object.assign(requestParams, currentFilters.customFilters);
+        }
 
         const response = await apiClient.get<ApiResponse<PaginatedResponse<T>>>(endpoint, {
           params: requestParams,
@@ -315,26 +324,26 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       try {
         const response = await apiClient.delete<ApiResponse<void>>(`${endpoint}/${id}`);
 
-        if (response.status >= 200 && response.status < 300) {
-          // Remove from local state
-          const currentData = contextState?.data || [];
-          const filteredData = currentData.filter((item) => (item as any).id !== id);
-          appStore.setContextData(contextId, filteredData);
-
-          // Invalidate cache
-          apiClient.invalidateCacheByPattern(new RegExp(`${endpoint}/${id}`));
-          apiClient.invalidateEndpointCache(endpoint);
-
-          appStore.addNotification({
-            type: "success",
-            title: "Success",
-            message: "Item deleted successfully",
-          });
-
-          return true;
+        if (response?.success === false) {
+          return false;
         }
 
-        return false;
+        // Remove from local state
+        const currentData = contextState?.data || [];
+        const filteredData = currentData.filter((item) => (item as any).id !== id);
+        appStore.setContextData(contextId, filteredData);
+
+        // Invalidate cache
+        apiClient.invalidateCacheByPattern(new RegExp(`${endpoint}/${id}`));
+        apiClient.invalidateEndpointCache(endpoint);
+
+        appStore.addNotification({
+          type: "success",
+          title: "Success",
+          message: "Item deleted successfully",
+        });
+
+        return true;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to delete item";
         appStore.addNotification({
@@ -448,20 +457,20 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           data: { ids },
         });
 
-        if (response.status >= 200 && response.status < 300) {
-          // Reload data for consistency
-          await load();
-
-          appStore.addNotification({
-            type: "success",
-            title: "Success",
-            message: `${ids.length} items deleted successfully`,
-          });
-
-          return true;
+        if (response?.success === false) {
+          return false;
         }
 
-        return false;
+        // Reload data for consistency
+        await load();
+
+        appStore.addNotification({
+          type: "success",
+          title: "Success",
+          message: `${ids.length} items deleted successfully`,
+        });
+
+        return true;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to delete items";
         appStore.addNotification({
@@ -493,23 +502,21 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           cache: false,
         });
 
-        if (response?.data) {
-          const blob = response.data;
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `${contextId}-export-${new Date().toISOString().split("T")[0]}.${format}`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+        const blob = response;
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${contextId}-export-${new Date().toISOString().split("T")[0]}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
-          appStore.addNotification({
-            type: "success",
-            title: "Success",
-            message: "Data exported successfully",
-          });
-        }
+        appStore.addNotification({
+          type: "success",
+          title: "Success",
+          message: "Data exported successfully",
+        });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to export data";
         appStore.addNotification({
@@ -605,8 +612,8 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
     return contextState?.selection?.selectedItems?.map((item) => (item as any).id) || [];
   }, [contextState?.selection?.selectedItems]);
 
-  const filteredData = useMemo(() => {
-    return appStore.getFilteredData(contextId) || [];
+  const filteredData = useMemo<T[]>(() => {
+    return (appStore.getFilteredData(contextId) as T[]) || [];
   }, [appStore, contextId, contextState?.data, contextState?.filters]);
 
   return {
@@ -700,10 +707,8 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
     // Utility functions
     getSelectedIds: () => selectedIds,
-    getFilteredData: (customFilter?: (item: T) => boolean) => {
-      const data = filteredData;
-      return customFilter ? data.filter(customFilter) : data;
-    },
+    getFilteredData: (customFilter?: (item: T) => boolean) =>
+      customFilter ? filteredData.filter(customFilter) : filteredData,
     exportData,
 
     // Real-time connection

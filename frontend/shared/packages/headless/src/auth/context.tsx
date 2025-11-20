@@ -24,9 +24,6 @@ const defaultAuthState: ExtendedAuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  sessionId: undefined,
-  tenantId: undefined,
-  loginFlow: undefined,
   setAuthState: () => {},
 };
 

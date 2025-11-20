@@ -138,7 +138,7 @@ describe("LiveIndicator", () => {
     });
 
     it("shows refresh icon", () => {
-      const { container } = render(<LiveIndicator onRefresh={jest.fn()} />);
+      render(<LiveIndicator onRefresh={jest.fn()} />);
 
       const button = screen.getByLabelText("Refresh");
       const icon = button.querySelector("svg");
@@ -153,7 +153,7 @@ describe("LiveIndicator", () => {
     });
 
     it("shows spinning icon when refreshing", () => {
-      const { container } = render(<LiveIndicator onRefresh={jest.fn()} isRefreshing={true} />);
+      render(<LiveIndicator onRefresh={jest.fn()} isRefreshing={true} />);
 
       const button = screen.getByLabelText("Refresh");
       const icon = button.querySelector(".animate-spin");
@@ -161,7 +161,7 @@ describe("LiveIndicator", () => {
     });
 
     it("does not spin icon when not refreshing", () => {
-      const { container } = render(<LiveIndicator onRefresh={jest.fn()} isRefreshing={false} />);
+      render(<LiveIndicator onRefresh={jest.fn()} isRefreshing={false} />);
 
       const button = screen.getByLabelText("Refresh");
       const icon = button.querySelector(".animate-spin");
@@ -213,14 +213,14 @@ describe("LiveIndicator", () => {
     });
 
     it("live badge has rounded corners", () => {
-      const { container } = render(<LiveIndicator />);
+      render(<LiveIndicator />);
 
       const badge = screen.getByText("Live").closest("div");
       expect(badge).toHaveClass("rounded-md");
     });
 
     it("live badge has padding", () => {
-      const { container } = render(<LiveIndicator />);
+      render(<LiveIndicator />);
 
       const badge = screen.getByText("Live").closest("div");
       expect(badge).toHaveClass("px-2", "py-1");

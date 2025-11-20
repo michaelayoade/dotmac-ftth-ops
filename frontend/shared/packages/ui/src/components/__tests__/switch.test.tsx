@@ -4,7 +4,7 @@
  * Tests shadcn/ui Switch toggle component
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 
@@ -213,7 +213,7 @@ describe("Switch", () => {
     });
 
     it("maintains visual state when disabled", () => {
-      const { container } = render(<Switch disabled checked={true} data-testid="switch" />);
+      render(<Switch disabled checked={true} data-testid="switch" />);
 
       const switchButton = screen.getByTestId("switch");
       expect(switchButton).toHaveClass("bg-primary");
@@ -485,7 +485,7 @@ describe("Switch", () => {
     });
 
     it("maintains styling with custom className", () => {
-      const { container } = render(
+      render(
         <Switch checked={true} className="custom-class" data-testid="switch" />
       );
 

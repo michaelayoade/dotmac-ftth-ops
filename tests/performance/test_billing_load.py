@@ -238,20 +238,20 @@ def process_webhook_event(client, *, rng=random, now: Callable[[], datetime] | N
 class BillingLoadTestUser(HttpUser):  # pragma: no cover - exercised via Locust
     """Simulates user behaviour for billing operations under load."""
 
-    wait_time = between(1, 3)
+    wait_time = between(0.5, 2)  # Reduced wait time for higher throughput
 
     def on_start(self):
         self.headers = login_and_get_headers(self.client)
 
-    @task(10)
+    @task(20)  # Increased weight for high-frequency read operation
     def ts_get_current_subscription(self):
         get_current_subscription(self.client, self.headers)
 
-    @task(8)
+    @task(15)
     def ts_get_billing_usage(self):
         get_billing_usage(self.client, self.headers)
 
-    @task(6)
+    @task(10)
     def ts_list_invoices(self):
         list_invoices(self.client, self.headers)
 

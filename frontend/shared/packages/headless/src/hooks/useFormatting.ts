@@ -13,7 +13,6 @@ import {
 } from "../config/ConfigProvider";
 
 export function useFormatting() {
-  const { _config } = useConfig();
   const localeConfig = useLocaleConfig();
   const currencyConfig = useCurrencyConfig();
   const businessConfig = useBusinessConfig();

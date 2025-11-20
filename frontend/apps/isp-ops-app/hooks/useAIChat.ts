@@ -252,7 +252,7 @@ export function useAIChat() {
     setCurrentSessionId,
 
     // Data
-    chatHistory: chatHistory?.messages || [],
+    chatHistory: currentSessionId ? chatHistory?.messages || [] : [],
     sessions: sessions || [],
 
     // Actions

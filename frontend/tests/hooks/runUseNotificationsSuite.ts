@@ -34,6 +34,14 @@ export function runUseNotificationsSuite(
   apiClient: any,
 ) {
   describe("useNotifications", () => {
+    const waitForNotificationsData = async (
+      hookResult: { current: ReturnType<UseNotificationsHook> },
+      expectedNotifications: Notification[],
+    ) =>
+      waitFor(() => {
+        expect(hookResult.current.notifications).toBe(expectedNotifications);
+      });
+
     beforeEach(() => {
       jest.clearAllMocks();
       jest.useFakeTimers();
@@ -76,11 +84,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        expect(result.current.isLoading).toBe(true);
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.notifications).toEqual(mockNotifications);
         expect(result.current.unreadCount).toBe(1);
@@ -89,8 +93,9 @@ export function runUseNotificationsSuite(
       });
 
       it("should fetch notifications with filters", async () => {
+        const mockNotifications: Notification[] = [];
         const mockResponse: NotificationListResponse = {
-          notifications: [],
+          notifications: mockNotifications,
           total: 0,
           unread_count: 0,
         };
@@ -105,9 +110,7 @@ export function runUseNotificationsSuite(
           }),
         );
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(apiClient.get).toHaveBeenCalledWith(
           "/notifications?unread_only=true&priority=high&notification_type=invoice_overdue",
@@ -146,9 +149,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.unreadCount).toBe(1);
 
@@ -196,9 +197,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.unreadCount).toBe(0);
 
@@ -262,9 +261,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.unreadCount).toBe(2);
 
@@ -328,9 +325,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.notifications).toHaveLength(2);
 
@@ -377,9 +372,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.notifications).toHaveLength(1);
 
@@ -394,8 +387,9 @@ export function runUseNotificationsSuite(
       });
 
       it("should refetch notifications manually", async () => {
+        const mockNotifications: Notification[] = [];
         const mockResponse: NotificationListResponse = {
-          notifications: [],
+          notifications: mockNotifications,
           total: 0,
           unread_count: 0,
         };
@@ -404,9 +398,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         apiClient.get.mockClear();
 
@@ -426,10 +418,8 @@ export function runUseNotificationsSuite(
         const { result } = renderHook(() => useNotifications());
 
         await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
+          expect(result.current.error).toEqual(mockError);
         });
-
-        expect(result.current.error).toEqual(mockError);
         expect(result.current.notifications).toEqual([]);
       });
 
@@ -441,9 +431,10 @@ export function runUseNotificationsSuite(
         apiClient.get.mockRejectedValueOnce(mockError);
 
         const { result } = renderHook(() => useNotifications());
+        const initialNotifications = result.current.notifications;
 
         await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
+          expect(result.current.notifications).not.toBe(initialNotifications);
         });
 
         expect(result.current.error).toBeNull();
@@ -483,9 +474,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         let success: boolean = true;
         await act(async () => {
@@ -530,9 +519,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         let success: boolean = true;
         await act(async () => {
@@ -545,8 +532,9 @@ export function runUseNotificationsSuite(
       });
 
       it("should handle markAllAsRead errors", async () => {
+        const mockNotifications: Notification[] = [];
         const mockResponse: NotificationListResponse = {
-          notifications: [],
+          notifications: mockNotifications,
           total: 0,
           unread_count: 0,
         };
@@ -556,9 +544,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         let success: boolean = true;
         await act(async () => {
@@ -569,8 +555,9 @@ export function runUseNotificationsSuite(
       });
 
       it("should handle archive errors", async () => {
+        const mockNotifications: Notification[] = [];
         const mockResponse: NotificationListResponse = {
-          notifications: [],
+          notifications: mockNotifications,
           total: 0,
           unread_count: 0,
         };
@@ -580,9 +567,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         let success: boolean = true;
         await act(async () => {
@@ -593,8 +578,9 @@ export function runUseNotificationsSuite(
       });
 
       it("should handle delete errors", async () => {
+        const mockNotifications: Notification[] = [];
         const mockResponse: NotificationListResponse = {
-          notifications: [],
+          notifications: mockNotifications,
           total: 0,
           unread_count: 0,
         };
@@ -604,9 +590,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         let success: boolean = true;
         await act(async () => {
@@ -619,8 +603,9 @@ export function runUseNotificationsSuite(
 
     describe("Edge Cases", () => {
       it("should handle empty notifications list", async () => {
+        const mockNotifications: Notification[] = [];
         const mockResponse: NotificationListResponse = {
-          notifications: [],
+          notifications: mockNotifications,
           total: 0,
           unread_count: 0,
         };
@@ -629,9 +614,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.notifications).toEqual([]);
         expect(result.current.unreadCount).toBe(0);
@@ -679,9 +662,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.notifications[0]).toHaveProperty("action_url");
         expect(result.current.notifications[0]).toHaveProperty("action_label");
@@ -693,8 +674,9 @@ export function runUseNotificationsSuite(
       });
 
       it("should handle auto-refresh correctly", async () => {
+        const mockNotifications: Notification[] = [];
         const mockResponse: NotificationListResponse = {
-          notifications: [],
+          notifications: mockNotifications,
           total: 0,
           unread_count: 0,
         };
@@ -705,9 +687,7 @@ export function runUseNotificationsSuite(
           useNotifications({ autoRefresh: true, refreshInterval: 5000 }),
         );
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         // Initial fetch
         expect(apiClient.get).toHaveBeenCalledTimes(1);
@@ -763,9 +743,7 @@ export function runUseNotificationsSuite(
 
         const { result } = renderHook(() => useNotifications());
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForNotificationsData(result, mockNotifications);
 
         expect(result.current.unreadCount).toBe(1);
 

@@ -25,39 +25,40 @@ export type CalendarProps = DayPickerProps;
 
 type CalendarClassNames = Partial<ClassNames> & Partial<DeprecatedUI<string>>;
 
+const baseClassNames: CalendarClassNames = {
+  months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+  month_caption: "flex justify-center pt-1 relative items-center",
+  month_grid: "w-full border-collapse space-y-1",
+  caption_label: "text-sm font-medium",
+  nav: "space-x-1 flex items-center",
+  button_previous: cn(
+    buttonVariants({ variant: "outline" }),
+    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+  ),
+  button_next: cn(
+    buttonVariants({ variant: "outline" }),
+    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+  ),
+  chevron: "h-4 w-4",
+  weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+  day: "group h-9 w-9",
+  hidden: "invisible",
+  range_start: "group-data-[range_start=true]:rounded-l-md",
+  range_middle: "group-data-[range_middle=true]:bg-accent group-data-[range_middle=true]:text-accent-foreground",
+  range_end: "group-data-[range_end=true]:rounded-r-md",
+  focused: "outline-none focus-visible:ring-2 focus-visible:ring-primary",
+};
+
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
   defaultMonth,
   month,
+  mode,
   ...props
 }: CalendarProps) {
-  const resolvedMode = props.mode ?? "single";
-  const baseClassNames: CalendarClassNames = {
-    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-    month_caption: "flex justify-center pt-1 relative items-center",
-    month_grid: "w-full border-collapse space-y-1",
-    caption_label: "text-sm font-medium",
-    nav: "space-x-1 flex items-center",
-    button_previous: cn(
-      buttonVariants({ variant: "outline" }),
-      "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-    ),
-    button_next: cn(
-      buttonVariants({ variant: "outline" }),
-      "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-    ),
-    chevron: "h-4 w-4",
-    weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-    day: "group h-9 w-9",
-    hidden: "invisible",
-    range_start: "group-data-[range_start=true]:rounded-l-md",
-    range_middle: "group-data-[range_middle=true]:bg-accent group-data-[range_middle=true]:text-accent-foreground",
-    range_end: "group-data-[range_end=true]:rounded-r-md",
-    focused: "outline-none focus-visible:ring-2 focus-visible:ring-primary",
-  };
-
+  const resolvedMode = mode ?? "single";
   const mergedClassNames = React.useMemo<CalendarClassNames>(() => {
     const result: CalendarClassNames = { ...(classNames ?? {}) };
     (Object.keys(baseClassNames) as Array<keyof CalendarClassNames>).forEach((key) => {
@@ -130,27 +131,30 @@ function Calendar({
 
   return (
     <DayPicker
-      {...props}
-      {...optionalMonthProps}
-      {...optionalDefaultMonthProps}
-      showOutsideDays={showOutsideDays}
-      className={cn("rdp p-3", className)}
-      classNames={mergedClassNames}
-      components={{
-        DayButton,
-        Chevron: ({ className, orientation = "right", size = 16 }) => {
-          const icons = {
-            left: ChevronLeft,
-            right: ChevronRight,
-            up: ChevronUp,
-            down: ChevronDown,
-          } as const;
-          const IconComponent = icons[orientation] ?? ChevronRight;
-          return (
-            <IconComponent className={cn("h-4 w-4", className)} style={{ width: size, height: size }} />
-          );
+      {...({
+        ...props,
+        mode: resolvedMode,
+        ...optionalMonthProps,
+        ...optionalDefaultMonthProps,
+        showOutsideDays,
+        className: cn("rdp p-3", className),
+        classNames: mergedClassNames,
+        components: {
+          DayButton,
+          Chevron: ({ className, orientation = "right", size = 16 }) => {
+            const icons = {
+              left: ChevronLeft,
+              right: ChevronRight,
+              up: ChevronUp,
+              down: ChevronDown,
+            } as const;
+            const IconComponent = icons[orientation] ?? ChevronRight;
+            return (
+              <IconComponent className={cn("h-4 w-4", className)} style={{ width: size, height: size }} />
+            );
+          },
         },
-      }}
+      } as DayPickerProps)}
     />
   );
 }

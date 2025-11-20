@@ -31,13 +31,13 @@ import {
   useUpdateCategorySettings,
   formatLastUpdated,
   maskSensitiveValue,
-  SETTINGS_CATEGORY_VALUES,
+  SETTINGS_CATEGORIES,
   type SettingsCategory as SettingsCategoryType,
   type SettingField,
 } from "@/hooks/useSettings";
 
 const isValidSettingsCategory = (value: string): value is SettingsCategoryType =>
-  SETTINGS_CATEGORY_VALUES.includes(value as SettingsCategoryType);
+  SETTINGS_CATEGORIES.includes(value as SettingsCategoryType);
 
 export function SystemConfiguration() {
   const [config, setConfig] = useState<SystemConfig | null>(null);

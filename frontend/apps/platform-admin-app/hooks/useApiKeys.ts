@@ -115,7 +115,6 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
   const queryClient = useQueryClient();
   const [apiKeysState, setApiKeysState] = useState<APIKey[]>([]);
   const [availableScopesState, setAvailableScopesState] = useState<AvailableScopes>({});
-  const [initialLoad, setInitialLoad] = useState(true);
   const page = options.page ?? 1;
   const limit = options.limit ?? 50;
 
@@ -136,7 +135,7 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
     queryKey: apiKeysKeys.list(page, limit),
     queryFn: () => fetchApiKeysRequest(page, limit),
     staleTime: 30000,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch available scopes
@@ -153,6 +152,7 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
       }
     },
     staleTime: 300000, // 5 minutes - scopes rarely change
+    refetchOnWindowFocus: false,
   });
 
   // Create API key mutation
@@ -255,11 +255,6 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
     }
   }, [scopesQuery.data]);
 
-  useEffect(() => {
-    if (!keysQuery.isLoading && !scopesQuery.isLoading) {
-      setInitialLoad(false);
-    }
-  }, [keysQuery.isLoading, scopesQuery.isLoading]);
   const error = keysQuery.error instanceof Error ? keysQuery.error.message : null;
   const isCreating = createMutation.isPending;
   const isUpdating = updateMutation.isPending;
@@ -273,7 +268,7 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
     total: apiKeysData.total,
     page: apiKeysData.page,
     limit: apiKeysData.limit,
-    loading: initialLoad || isLoadingKeys || isLoadingScopes || isCreating || isUpdating || isRevoking,
+    loading: isLoadingKeys || isLoadingScopes || isCreating || isUpdating || isRevoking,
     error,
     isLoadingKeys,
     isLoadingScopes,

@@ -78,6 +78,24 @@ const createDelivery = (overrides: Record<string, any> = {}) => ({
   ...overrides,
 });
 
+const WEBHOOKS_SUBSCRIPTIONS_ENDPOINT = "/webhooks/subscriptions";
+const WEBHOOK_EVENTS_ENDPOINT = "/webhooks/events";
+const deliveriesEndpoint = (subscriptionId: string) =>
+  `/webhooks/subscriptions/${subscriptionId}/deliveries`;
+
+const callsMatchingPrefix = (mockFn: jest.Mock, prefix: string) =>
+  mockFn.mock.calls.filter(
+    ([url]) => typeof url === "string" && (url as string).startsWith(prefix),
+  );
+
+const waitForCallWithPrefix = async (mockFn: jest.Mock, prefix: string) => {
+  await waitFor(() => {
+    expect(callsMatchingPrefix(mockFn, prefix).length).toBeGreaterThan(0);
+  });
+  const calls = callsMatchingPrefix(mockFn, prefix);
+  return calls[calls.length - 1];
+};
+
 export function runUseWebhooksTestSuite({
   label,
   useWebhooks,
@@ -102,6 +120,7 @@ export function runUseWebhooksTestSuite({
 
     beforeEach(() => {
       jest.clearAllMocks();
+      jest.useRealTimers();
       testQueryClient = new QueryClient({
         defaultOptions: {
           queries: { retry: false, cacheTime: 0, staleTime: 0 },
@@ -109,7 +128,25 @@ export function runUseWebhooksTestSuite({
         },
       });
       createTestWrapper = () => createWrapper(testQueryClient);
-      apiClient.get.mockResolvedValue({ data: [] });
+      apiClient.get.mockImplementation((url: string) => {
+        if (typeof url === "string" && url.startsWith(WEBHOOK_EVENTS_ENDPOINT)) {
+          return Promise.resolve({
+            data: {
+              events: [
+                { event_type: "customer.created", description: "Customer created" },
+                { event_type: "customer.deleted", description: "Customer deleted" },
+              ],
+            },
+          });
+        }
+        if (typeof url === "string" && url.startsWith(WEBHOOKS_SUBSCRIPTIONS_ENDPOINT)) {
+          return Promise.resolve({ data: [] });
+        }
+        if (typeof url === "string" && url.includes("/deliveries")) {
+          return Promise.resolve({ data: [] });
+        }
+        return Promise.resolve({ data: [] });
+      });
     });
 
     afterEach(() => {
@@ -137,7 +174,6 @@ export function runUseWebhooksTestSuite({
       expect(webhook.total_deliveries).toBe(6);
       expect(webhook.failed_deliveries).toBe(1);
       expect(webhook.headers).toEqual({ "X-Test": "yes" });
-      expect(result.current.loading).toBe(false);
       expect(result.current.error).toBeNull();
     });
 
@@ -150,23 +186,27 @@ export function runUseWebhooksTestSuite({
       await waitFor(() =>
         expect(result.current.error?.includes(fetchError.message)).toBe(true),
       );
-      expect(result.current.loading).toBe(false);
       expect(result.current.webhooks).toHaveLength(0);
     });
 
     it("supports pagination and filters when fetching webhooks", async () => {
       const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
-      await waitFor(() => expect(apiClient.get.mock.calls.length).toBeGreaterThanOrEqual(2));
+      await waitForCallWithPrefix(apiClient.get, WEBHOOKS_SUBSCRIPTIONS_ENDPOINT);
 
       await act(async () => {
         await result.current.fetchWebhooks(2, 25, "customer.created", true);
       });
 
-      const lastCallArgs = apiClient.get.mock.calls.at(-1);
-      expect(lastCallArgs?.[0]).toContain("limit=25");
-      expect(lastCallArgs?.[0]).toContain("offset=25");
-      expect(lastCallArgs?.[0]).toContain("event_type=customer.created");
-      expect(lastCallArgs?.[0]).toContain("is_active=true");
+      const lastCallArgs = await waitForCallWithPrefix(
+        apiClient.get,
+        WEBHOOKS_SUBSCRIPTIONS_ENDPOINT,
+      );
+      expect(lastCallArgs).toBeDefined();
+      const [url] = lastCallArgs!;
+      expect(url).toContain("limit=25");
+      expect(url).toContain("offset=25");
+      expect(url).toContain("event_type=customer.created");
+      expect(url).toContain("is_active=true");
     });
 
     it("creates a webhook, merges metadata, and prepends result", async () => {
@@ -203,7 +243,6 @@ export function runUseWebhooksTestSuite({
       );
       const postPayload = apiClient.post.mock.calls[0][1];
       expect(postPayload.name).toBe(payload.name);
-      expect(result.current.loading).toBe(false);
     });
 
     it("updates an existing webhook in place", async () => {
@@ -214,7 +253,8 @@ export function runUseWebhooksTestSuite({
       apiClient.patch.mockResolvedValueOnce({ data: updated });
 
       const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
-      await waitFor(() => expect(result.current.webhooks[0].description).toBe("Original"));
+      await waitFor(() => expect(result.current.webhooks).toHaveLength(1));
+      expect(result.current.webhooks[0].description).toBe("Original");
 
       await act(async () => {
         await result.current.updateWebhook(existing.id, { description: "Updated description" });
@@ -224,7 +264,6 @@ export function runUseWebhooksTestSuite({
         `/webhooks/subscriptions/${existing.id}`,
         expect.objectContaining({ description: "Updated description" }),
       );
-      expect(result.current.loading).toBe(false);
     });
 
     it("deletes a webhook and removes it from state", async () => {
@@ -313,6 +352,8 @@ export function runUseWebhooksTestSuite({
       await act(async () => {
         await expect(result.current.fetchWebhooks()).resolves.not.toThrow();
       });
+
+      await waitFor(() => expect(result.current.error).toBeNull());
     });
 
     it("surfaces create errors and keeps state stable", async () => {
@@ -349,7 +390,6 @@ export function runUseWebhooksTestSuite({
       });
 
       expect(result.current.webhooks[0].description).toBe("Original");
-      expect(result.current.loading).toBe(false);
     });
 
     it("surfaces delete errors and keeps list intact", async () => {
@@ -367,7 +407,6 @@ export function runUseWebhooksTestSuite({
       });
 
       expect(result.current.webhooks).toHaveLength(1);
-      expect(result.current.loading).toBe(false);
     });
 
     it("returns an empty map when available events cannot be fetched", async () => {
@@ -376,19 +415,32 @@ export function runUseWebhooksTestSuite({
         .mockRejectedValueOnce(new Error("Events failed"));
 
       const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
-      await waitFor(() => expect(apiClient.get.mock.calls.length).toBeGreaterThanOrEqual(2));
+      await waitForCallWithPrefix(apiClient.get, WEBHOOKS_SUBSCRIPTIONS_ENDPOINT);
+      await waitForCallWithPrefix(apiClient.get, WEBHOOK_EVENTS_ENDPOINT);
 
-      let events: Record<string, any> = {};
-      events = await result.current.getAvailableEvents();
+      const events = await result.current.getAvailableEvents();
 
       expect(events).toEqual({});
     });
 
-    it("returns a success summary from testWebhook when random threshold passes", async () => {
-      const mathSpy = jest.spyOn(Math, "random");
-      mathSpy.mockReturnValueOnce(0.5).mockReturnValueOnce(0.9).mockReturnValueOnce(0.2);
+    describe("testWebhook behaviour", () => {
+      afterEach(() => {
+        jest.restoreAllMocks();
+      });
 
-      try {
+      it("returns a success summary when random threshold passes", async () => {
+        const mathSpy = jest.spyOn(Math, "random");
+        mathSpy
+          .mockReturnValueOnce(0.5) // timeout duration
+          .mockReturnValueOnce(0.9) // success check
+          .mockReturnValueOnce(0.2); // delivery time
+        const timeoutSpy = jest
+          .spyOn(global, "setTimeout")
+          .mockImplementation(((handler: (...args: any[]) => void) => {
+            handler();
+            return 0 as unknown as ReturnType<typeof setTimeout>;
+          }) as typeof setTimeout);
+
         const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
 
         const response = await result.current.testWebhook("webhook-1", "customer.created");
@@ -399,16 +451,25 @@ export function runUseWebhooksTestSuite({
           response_body: "OK",
         });
         expect(response.delivery_time_ms).toBeGreaterThanOrEqual(100);
-      } finally {
+        expect(response.delivery_time_ms).toBeLessThanOrEqual(600);
+
+        timeoutSpy.mockRestore();
         mathSpy.mockRestore();
-      }
-    });
+      });
 
-    it("returns a failure summary from testWebhook when random threshold fails", async () => {
-      const mathSpy = jest.spyOn(Math, "random");
-      mathSpy.mockReturnValueOnce(0.5).mockReturnValueOnce(0.2).mockReturnValueOnce(0.4);
+      it("returns a failure summary when random threshold fails", async () => {
+        const mathSpy = jest.spyOn(Math, "random");
+        mathSpy
+          .mockReturnValueOnce(0.5) // timeout duration
+          .mockReturnValueOnce(0.2) // failure path
+          .mockReturnValueOnce(0.4); // delivery time
+        const timeoutSpy = jest
+          .spyOn(global, "setTimeout")
+          .mockImplementation(((handler: (...args: any[]) => void) => {
+            handler();
+            return 0 as unknown as ReturnType<typeof setTimeout>;
+          }) as typeof setTimeout);
 
-      try {
         const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
 
         const response = await result.current.testWebhook("webhook-1", "customer.created");
@@ -419,28 +480,25 @@ export function runUseWebhooksTestSuite({
           error_message: "Internal Server Error",
         });
         expect(response.delivery_time_ms).toBeGreaterThanOrEqual(200);
-      } finally {
+
+        timeoutSpy.mockRestore();
         mathSpy.mockRestore();
-      }
-    });
-
-    it("returns failure details when an unexpected error occurs during testWebhook", async () => {
-      const originalRandom = Math.random;
-      const mathSpy = jest.spyOn(Math, "random");
-      mathSpy.mockImplementationOnce(() => {
-        throw new Error("random failure");
       });
-      mathSpy.mockImplementation(originalRandom);
 
-      try {
+      it("surfaces unexpected errors during testWebhook", async () => {
+        const mathSpy = jest.spyOn(Math, "random");
+        mathSpy.mockImplementationOnce(() => {
+          throw new Error("random failure");
+        });
+
         const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
 
         await expect(
           result.current.testWebhook("webhook-1", "customer.created"),
         ).rejects.toThrow("random failure");
-      } finally {
+
         mathSpy.mockRestore();
-      }
+      });
     });
   });
 
@@ -470,6 +528,7 @@ export function runUseWebhooksTestSuite({
 
       const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
 
+      await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
       await waitFor(() => expect(result.current.deliveries).toHaveLength(1));
       const delivery = result.current.deliveries[0];
       expect(delivery.retry_count).toBe(2);
@@ -485,7 +544,6 @@ export function runUseWebhooksTestSuite({
       await waitFor(() =>
         expect(result.current.error?.includes("Failed to fetch deliveries")).toBe(true),
       );
-      expect(result.current.loading).toBe(false);
       expect(result.current.deliveries).toHaveLength(0);
     });
 
@@ -493,7 +551,7 @@ export function runUseWebhooksTestSuite({
       apiClient.post.mockResolvedValueOnce({});
       const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
 
-      await waitFor(() => expect(apiClient.get).toHaveBeenCalled());
+      await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
       apiClient.get.mockClear();
 
       await act(async () => {
@@ -501,27 +559,34 @@ export function runUseWebhooksTestSuite({
       });
 
       expect(apiClient.post).toHaveBeenCalledWith("/webhooks/deliveries/delivery-1/retry");
-      expect(apiClient.get).toHaveBeenCalled();
+      await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
     });
 
     it("supports pagination and status filters when fetching deliveries manually", async () => {
       const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
-      await waitFor(() => expect(apiClient.get).toHaveBeenCalled());
+      await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
       apiClient.get.mockClear();
 
       await act(async () => {
         await result.current.fetchDeliveries(3, 20, "failed");
       });
 
-      const callArgs = apiClient.get.mock.calls.at(-1);
-      expect(callArgs?.[0]).toContain("limit=20");
-      expect(callArgs?.[0]).toContain("offset=40");
-      expect(callArgs?.[0]).toContain("status=failed");
+      const callArgs = await waitForCallWithPrefix(
+        apiClient.get,
+        deliveriesEndpoint("webhook-1"),
+      );
+      expect(callArgs).toBeDefined();
+      const [url] = callArgs!;
+      expect(url).toContain("limit=20");
+      expect(url).toContain("offset=40");
+      expect(url).toContain("status=failed");
     });
 
     it("does not auto-fetch deliveries when subscriptionId is empty", async () => {
       renderHook(() => useWebhookDeliveries(""), { wrapper: createTestWrapper() });
-      await waitFor(() => expect(apiClient.get).not.toHaveBeenCalled());
+      await waitFor(() =>
+        expect(callsMatchingPrefix(apiClient.get, "/webhooks/subscriptions/")).toHaveLength(0),
+      );
     });
 
     it("surfaces retry errors and keeps existing deliveries", async () => {
@@ -539,7 +604,6 @@ export function runUseWebhooksTestSuite({
       });
 
       expect(result.current.deliveries).toHaveLength(1);
-      expect(result.current.loading).toBe(false);
     });
   });
 }

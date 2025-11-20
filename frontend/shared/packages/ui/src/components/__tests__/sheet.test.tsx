@@ -16,7 +16,6 @@ import {
   SheetFooter,
   SheetTitle,
   SheetDescription,
-  SheetClose,
   SheetOverlay,
 } from "../sheet";
 

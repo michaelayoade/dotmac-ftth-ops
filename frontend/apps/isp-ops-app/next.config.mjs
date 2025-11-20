@@ -72,6 +72,9 @@ const nextConfig = {
     const path = require('path');
     config.resolve.alias['@dotmac/better-auth'] = path.resolve(dir, '../../shared/lib/better-auth/index.ts');
 
+    // Add @shared alias for importing from shared directory
+    config.resolve.alias['@shared'] = path.resolve(dir, '../../shared');
+
     try {
       const sharedPackages = [
         '@dotmac/ui',

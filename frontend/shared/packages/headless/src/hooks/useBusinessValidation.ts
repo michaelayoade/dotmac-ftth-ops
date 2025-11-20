@@ -60,12 +60,22 @@ export function useBusinessValidation(partnerId?: string) {
                 const address = { street, city, state, zipCode };
                 const result = await territoryValidator.validateAddress(address, partnerId);
 
-                territoryValidation = {
+                const validationDetails: NonNullable<
+                  CustomerBusinessValidation["territoryValidation"]
+                > = {
                   isInTerritory: result.isValid && result.assignedPartnerId === partnerId,
-                  assignedPartnerId: result.assignedPartnerId,
-                  territoryName: result.territoryName,
                   confidence: result.confidence,
                 };
+
+                if (result.assignedPartnerId) {
+                  validationDetails.assignedPartnerId = result.assignedPartnerId;
+                }
+
+                if (result.territoryName) {
+                  validationDetails.territoryName = result.territoryName;
+                }
+
+                territoryValidation = validationDetails;
 
                 if (!result.isValid) {
                   errors.push("Customer address is not in any assigned territory");
@@ -161,16 +171,24 @@ export function useBusinessValidation(partnerId?: string) {
 
         const isValid = errors.length === 0;
 
-        return {
+        const validationResult: CustomerBusinessValidation = {
           isValid,
           warnings,
           errors,
           suggestions,
-          territoryValidation,
-          commissionEstimate,
         };
+
+        if (territoryValidation) {
+          validationResult.territoryValidation = territoryValidation;
+        }
+
+        if (commissionEstimate) {
+          validationResult.commissionEstimate = commissionEstimate;
+        }
+
+        return validationResult;
       } catch (error) {
-        return {
+        const validationResult: CustomerBusinessValidation = {
           isValid: false,
           warnings,
           errors: [
@@ -178,9 +196,17 @@ export function useBusinessValidation(partnerId?: string) {
             `Validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
           ],
           suggestions,
-          territoryValidation,
-          commissionEstimate,
         };
+
+        if (territoryValidation) {
+          validationResult.territoryValidation = territoryValidation;
+        }
+
+        if (commissionEstimate) {
+          validationResult.commissionEstimate = commissionEstimate;
+        }
+
+        return validationResult;
       }
     },
     [partnerId],

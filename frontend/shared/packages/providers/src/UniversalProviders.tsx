@@ -274,5 +274,4 @@ function getPortalConfig(portal: PortalType, config: any = {}) {
   return configs[portal] || configs.admin;
 }
 
-// Re-export for convenience
-export type { FeatureFlags, TenantVariant };
+// Types are re-exported from index.ts to avoid duplicate exports

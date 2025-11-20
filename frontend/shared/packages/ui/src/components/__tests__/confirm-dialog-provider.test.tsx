@@ -5,8 +5,7 @@
  * Provides imperative confirm dialog API
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
-import { renderHook, act } from "@testing-library/react";
+import { render, renderHook, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 

@@ -18,21 +18,21 @@ describe("ScrollArea", () => {
     });
 
     it("renders as div element", () => {
-      const { container } = render(<ScrollArea data-testid="scroll-area">Content</ScrollArea>);
+      render(<ScrollArea data-testid="scroll-area">Content</ScrollArea>);
 
       const scrollArea = screen.getByTestId("scroll-area");
       expect(scrollArea.tagName).toBe("DIV");
     });
 
     it("applies base styles", () => {
-      const { container } = render(<ScrollArea data-testid="scroll-area">Content</ScrollArea>);
+      render(<ScrollArea data-testid="scroll-area">Content</ScrollArea>);
 
       const scrollArea = screen.getByTestId("scroll-area");
       expect(scrollArea).toHaveClass("relative", "overflow-auto");
     });
 
     it("renders with custom className", () => {
-      const { container } = render(
+      render(
         <ScrollArea className="custom-scroll" data-testid="scroll-area">
           Content
         </ScrollArea>
@@ -57,14 +57,14 @@ describe("ScrollArea", () => {
     });
 
     it("renders as div element", () => {
-      const { container } = render(<ScrollBar data-testid="scroll-bar" />);
+      render(<ScrollBar data-testid="scroll-bar" />);
 
       const scrollBar = screen.getByTestId("scroll-bar");
       expect(scrollBar.tagName).toBe("DIV");
     });
 
     it("renders with custom className", () => {
-      const { container } = render(<ScrollBar className="custom-bar" data-testid="scroll-bar" />);
+      render(<ScrollBar className="custom-bar" data-testid="scroll-bar" />);
 
       const scrollBar = screen.getByTestId("scroll-bar");
       expect(scrollBar).toHaveClass("custom-bar");
@@ -108,7 +108,7 @@ describe("ScrollArea", () => {
     });
 
     it("forwards data attributes to ScrollArea", () => {
-      const { container } = render(
+      render(
         <ScrollArea data-testid="custom-scroll" data-custom="value">
           Content
         </ScrollArea>
@@ -119,7 +119,7 @@ describe("ScrollArea", () => {
     });
 
     it("supports aria-label on ScrollArea", () => {
-      const { container } = render(
+      render(
         <ScrollArea aria-label="Scrollable content" data-testid="scroll-area">
           Content
         </ScrollArea>
@@ -166,7 +166,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea className="h-40 w-full rounded-md border">
           <pre className="p-4">
-            <code>const example = "code";</code>
+            <code>const example = &quot;code&quot;;</code>
           </pre>
         </ScrollArea>
       );
@@ -216,20 +216,20 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex gap-4">
-            <img alt="Image 1" />
-            <img alt="Image 2" />
-            <img alt="Image 3" />
+            <img alt="Gallery item 1" />
+            <img alt="Gallery item 2" />
+            <img alt="Gallery item 3" />
           </div>
         </ScrollArea>
       );
 
-      expect(screen.getByAltText("Image 1")).toBeInTheDocument();
+      expect(screen.getByAltText("Gallery item 1")).toBeInTheDocument();
     });
   });
 
   describe("Styling", () => {
     it("can be styled with custom height", () => {
-      const { container } = render(
+      render(
         <ScrollArea className="h-96" data-testid="scroll-area">
           Content
         </ScrollArea>
@@ -240,7 +240,7 @@ describe("ScrollArea", () => {
     });
 
     it("can be styled with custom width", () => {
-      const { container } = render(
+      render(
         <ScrollArea className="w-full" data-testid="scroll-area">
           Content
         </ScrollArea>
@@ -251,7 +251,7 @@ describe("ScrollArea", () => {
     });
 
     it("can be styled with borders", () => {
-      const { container } = render(
+      render(
         <ScrollArea className="border rounded-md" data-testid="scroll-area">
           Content
         </ScrollArea>
@@ -290,7 +290,7 @@ describe("ScrollArea", () => {
     });
 
     it("maintains styling with custom className", () => {
-      const { container } = render(
+      render(
         <ScrollArea className="custom-class" data-testid="scroll-area">
           Content
         </ScrollArea>
@@ -303,7 +303,7 @@ describe("ScrollArea", () => {
 
   describe("Accessibility", () => {
     it("is scrollable with keyboard", () => {
-      const { container } = render(
+      render(
         <ScrollArea data-testid="scroll-area">
           <div style={{ height: "1000px" }}>Tall content</div>
         </ScrollArea>
@@ -314,7 +314,7 @@ describe("ScrollArea", () => {
     });
 
     it("supports tabindex for keyboard focus", () => {
-      const { container } = render(
+      render(
         <ScrollArea tabIndex={0} data-testid="scroll-area">
           Content
         </ScrollArea>
@@ -325,7 +325,7 @@ describe("ScrollArea", () => {
     });
 
     it("can be focused", () => {
-      const { container } = render(
+      render(
         <ScrollArea tabIndex={0} data-testid="scroll-area">
           Content
         </ScrollArea>

@@ -344,7 +344,7 @@ export function createWebSocketClient(config: WebSocketConfig): WebSocketClient 
  */
 export class WebSocketEndpoints {
   private readonly token: string;
-  private readonly overrideBaseUrl?: string;
+  private readonly overrideBaseUrl: string | undefined;
 
   constructor(token: string, overrideBaseUrl?: string) {
     this.token = token;

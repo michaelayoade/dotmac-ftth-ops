@@ -91,6 +91,7 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => mockSubscribers,
+        headers: new Headers(),
       });
 
       const { result } = renderHook(() => useRADIUSSubscribers(0, 20), {
@@ -118,6 +119,7 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
       const { result } = renderHook(() => useRADIUSSubscribers(0, 20), {
@@ -141,6 +143,7 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
       renderHook(() => useRADIUSSubscribers(10, 50), {
@@ -179,6 +182,7 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
       const { result } = renderHook(() => useRADIUSSubscribers(0, 20), {
@@ -205,6 +209,7 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
       const { result } = renderHook(() => useRADIUSSubscribers(0, 20), {
@@ -219,6 +224,7 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
       const { result } = renderHook(() => useRADIUSSubscribers(0, 20), {
@@ -232,18 +238,34 @@ describe("useRADIUS", () => {
     });
 
     it("should handle pagination correctly", async () => {
-      const page1Data = [{ id: 1, username: "user1@test.com" }];
-      const page2Data = [{ id: 21, username: "user21@test.com" }];
+      const page1Data = [{
+        id: 1,
+        tenant_id: "tenant-123",
+        subscriber_id: "sub-1",
+        username: "user1@test.com",
+        enabled: true,
+        created_at: "2024-01-01T00:00:00Z",
+      }];
+      const page2Data = [{
+        id: 21,
+        tenant_id: "tenant-123",
+        subscriber_id: "sub-21",
+        username: "user21@test.com",
+        enabled: true,
+        created_at: "2024-01-21T00:00:00Z",
+      }];
 
       (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
           json: async () => page1Data,
+          headers: new Headers(),
         })
         .mockResolvedValueOnce({
           ok: true,
           json: async () => page2Data,
+          headers: new Headers(),
         });
 
       const { result, rerender } = renderHook(
@@ -276,6 +298,8 @@ describe("useRADIUS", () => {
           nasipaddress: "10.0.0.1",
           framedipaddress: "192.168.1.1",
           framedipv6address: "2001:db8::1",
+          framedipv6prefix: null,
+          delegatedipv6prefix: null,
           acctstarttime: "2024-01-01T00:00:00Z",
           acctsessiontime: 3600,
           acctinputoctets: 1024000,
@@ -287,9 +311,10 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => mockSessions,
+        headers: new Headers(),
       });
 
-      const { result } = renderHook(() => useRADIUSSessions(), {
+      const { result } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createWrapper(),
       });
 
@@ -298,7 +323,7 @@ describe("useRADIUS", () => {
       expect(result.current.data?.data).toHaveLength(1);
       expect(result.current.data?.total).toBe(1);
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/api/v1/radius/sessions",
+        "http://localhost:8000/api/v1/radius/sessions?offset=0&limit=100",
         expect.objectContaining({
           credentials: "include",
           headers: {
@@ -314,16 +339,17 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
-      const { result } = renderHook(() => useRADIUSSessions(), {
+      const { result } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createWrapper(),
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.any(String),
+        expect.stringContaining("?offset=0&limit=100"),
         expect.objectContaining({
           headers: {
             "Content-Type": "application/json",
@@ -337,9 +363,11 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
         statusText: "Internal Server Error",
+        json: async () => ({ message: "Server error" }),
+        headers: new Headers(),
       });
 
-      const { result } = renderHook(() => useRADIUSSessions(), {
+      const { result } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createWrapper(),
       });
 
@@ -356,9 +384,10 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
-      const { result } = renderHook(() => useRADIUSSessions(), {
+      const { result } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createWrapper(),
       });
 
@@ -366,7 +395,7 @@ describe("useRADIUS", () => {
     });
 
     it("should respect enabled option", () => {
-      const { result } = renderHook(() => useRADIUSSessions({ enabled: false }), {
+      const { result } = renderHook(() => useRADIUSSessions(0, 100, { enabled: false }), {
         wrapper: createWrapper(),
       });
 
@@ -379,9 +408,10 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
       });
 
-      const { result } = renderHook(() => useRADIUSSessions(), {
+      const { result } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createWrapper(),
       });
 
@@ -393,6 +423,25 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
+        headers: new Headers(),
+      });
+
+      const { result } = renderHook(() => useRADIUSSessions(0, 100), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(result.current.data?.data).toEqual([]);
+      expect(result.current.data?.total).toBe(0);
+    });
+
+    it("should support default pagination parameters", async () => {
+      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => [],
+        headers: new Headers(),
       });
 
       const { result } = renderHook(() => useRADIUSSessions(), {
@@ -401,8 +450,10 @@ describe("useRADIUS", () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(result.current.data?.data).toEqual([]);
-      expect(result.current.data?.total).toBe(0);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("?offset=0&limit=100"),
+        expect.any(Object)
+      );
     });
 
     it("should handle IPv6 addresses", async () => {
@@ -429,9 +480,10 @@ describe("useRADIUS", () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => mockSessions,
+        headers: new Headers(),
       });
 
-      const { result } = renderHook(() => useRADIUSSessions(), {
+      const { result } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createWrapper(),
       });
 

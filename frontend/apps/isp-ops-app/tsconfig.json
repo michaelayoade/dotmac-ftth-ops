@@ -38,9 +38,11 @@
       "@/hooks/*": ["./hooks/*"],
       "@/contexts/*": ["./contexts/*"],
       "@/*": ["./*"],
-      "@shared/*": ["../shared/*"],
+      "@shared/*": ["../../shared/*"],
+      "@dotmac/*": ["../../shared/packages/*/src"],
       "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
       "@dotmac/primitives/*": ["../../shared/packages/primitives/src/*"],
+      "@dotmac/testing-utils/*": ["../../shared/packages/testing-utils/src/*"],
       "@dotmac/better-auth": ["../../shared/lib/better-auth/index.ts"],
       "@dotmac/better-auth/*": ["../../shared/lib/better-auth/*"]
     }
@@ -50,14 +52,16 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "types/**/*.d.ts",
-    "../shared/**/*.ts",
-    "../shared/**/*.tsx",
-    "../../types/**/*.d.ts"
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
+    "../../shared/**/dist",
+    "../../shared/**/node_modules",
+    "../../shared/**/*.stories.ts",
+    "../../shared/**/*.stories.tsx",
+    "../../shared/examples/**",
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",

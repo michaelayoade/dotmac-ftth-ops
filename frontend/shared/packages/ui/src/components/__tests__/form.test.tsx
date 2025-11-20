@@ -7,7 +7,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 
 import {
   Form,
@@ -21,10 +21,19 @@ import {
 } from "../form";
 import { Input } from "../input";
 
+type TestFormValues = {
+  username: string;
+};
+
+type TestFormProps = {
+  onSubmit: SubmitHandler<TestFormValues>;
+  defaultValues?: Partial<TestFormValues>;
+};
+
 describe("Form Components", () => {
   // Test form component wrapper
-  function TestForm({ onSubmit, defaultValues = {} }: any) {
-    const form = useForm({ defaultValues });
+  function TestForm({ onSubmit, defaultValues }: TestFormProps) {
+    const form = useForm<TestFormValues>({ defaultValues });
 
     return (
       <Form {...form}>
@@ -138,7 +147,7 @@ describe("Form Components", () => {
 
     it("generates unique ID", () => {
       const onSubmit = jest.fn();
-      const { container } = render(<TestForm onSubmit={onSubmit} />);
+      render(<TestForm onSubmit={onSubmit} />);
 
       const input = screen.getByPlaceholderText("Enter username");
       expect(input).toHaveAttribute("id");

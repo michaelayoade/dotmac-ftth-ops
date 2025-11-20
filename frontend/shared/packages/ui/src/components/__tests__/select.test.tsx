@@ -4,7 +4,7 @@
  * Tests shadcn/ui Select component built on Radix UI
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 
@@ -177,7 +177,7 @@ describe("Select", () => {
 
     it("closes content when clicking outside", async () => {
       const user = userEvent.setup();
-      const { container } = renderBasicSelect();
+      renderBasicSelect();
 
       const trigger = screen.getByRole("combobox");
       await user.click(trigger);

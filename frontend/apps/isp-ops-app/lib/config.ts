@@ -24,6 +24,10 @@ const buildApiUrl = (path: string, options: BuildApiUrlOptions = {}): string => 
   return combineApiUrl(apiBaseUrl, apiPrefix, path, options);
 };
 
+const buildApiPath = (path: string, options: BuildApiUrlOptions = {}): string => {
+  return combineApiUrl("", apiPrefix, path, options);
+};
+
 /**
  * Platform configuration (alias for backwards compatibility)
  */
@@ -40,6 +44,7 @@ export const platformConfig = {
     prefix: apiPrefix,
     timeout: 30000,
     buildUrl: buildApiUrl,
+    buildPath: buildApiPath,
     graphqlEndpoint: buildApiUrl("/graphql"),
   },
 
@@ -120,10 +125,6 @@ export const platformConfig = {
     allowMultiTenant: true,
     enforcePlatformAdmin: true,
   },
-
-  /**
-   * Theme configuration
-   */
 };
 
 /**

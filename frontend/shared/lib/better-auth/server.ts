@@ -14,6 +14,6 @@
 import "./types";
 
 // Re-export server configuration (includes database connection)
-export { auth, ISP_ROLES } from "./auth";
+export { getAuth, ISP_ROLES } from "./auth";
 export type { Auth, Session, User } from "./auth";
 export type { ExtendedUser } from "./types";

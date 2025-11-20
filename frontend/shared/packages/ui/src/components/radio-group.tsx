@@ -11,6 +11,8 @@ export const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
   ({ className = "", value, onValueChange, defaultValue, name, children, ...props }, ref) => {
     const [internalValue, setInternalValue] = React.useState(defaultValue);
     const currentValue = value !== undefined ? value : internalValue;
+    const generatedName = React.useId().replace(/:/g, "");
+    const groupName = name ?? `radio-group-${generatedName}`;
 
     const handleChange = React.useCallback(
       (newValue: string) => {
@@ -31,7 +33,7 @@ export const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
           ) {
             return React.cloneElement(child, {
               ...child.props,
-              name: name || "radio-group",
+              name: groupName,
               checked: child.props.value === currentValue,
               onChange: () => handleChange(child.props.value as string),
             });

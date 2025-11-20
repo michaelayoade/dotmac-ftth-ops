@@ -294,6 +294,8 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       }
     },
     staleTime: 300000, // 5 minutes - events rarely change
+    enabled: webhooksQuery.isSuccess || webhooksQuery.isError,
+    refetchOnWindowFocus: false,
   });
 
   // Create webhook mutation
@@ -450,16 +452,24 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
         return eventsQuery.data;
       }
 
-      const result = await eventsQuery.refetch();
-      if (result.data) {
-        return result.data;
-      }
-
-      if (result.error) {
+      if (eventsQuery.isError) {
         return {} as AvailableEvents;
       }
 
-      return eventsQuery.data ?? ({} as AvailableEvents);
+      try {
+        const result = await eventsQuery.refetch();
+        if (result.data) {
+          return result.data;
+        }
+
+        if (result.error) {
+          return {} as AvailableEvents;
+        }
+
+        return eventsQuery.data ?? ({} as AvailableEvents);
+      } catch {
+        return {} as AvailableEvents;
+      }
     },
   };
 }

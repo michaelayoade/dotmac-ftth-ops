@@ -9,11 +9,22 @@
  * - And all other Better Auth endpoints
  */
 
-import { auth } from "@dotmac/better-auth/server";
+import { getAuth } from "@dotmac/better-auth/server";
 import { toNextJsHandler } from "better-auth/next-js";
 
-// Export both GET and POST handlers
-export const { POST, GET } = toNextJsHandler(auth);
+type HandlerGroup = ReturnType<typeof toNextJsHandler>;
+let handlers: HandlerGroup | null = null;
+
+const getHandlers = (): HandlerGroup => {
+  if (!handlers) {
+    handlers = toNextJsHandler(getAuth());
+  }
+
+  return handlers;
+};
+
+export const GET: HandlerGroup["GET"] = async (...args) => getHandlers().GET(...args);
+export const POST: HandlerGroup["POST"] = async (...args) => getHandlers().POST(...args);
 
 // Optional: Configure route segment options
 export const runtime = "nodejs"; // Use Node.js runtime for database connections

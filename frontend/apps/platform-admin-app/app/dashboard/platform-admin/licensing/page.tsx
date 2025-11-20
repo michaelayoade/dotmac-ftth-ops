@@ -192,8 +192,11 @@ export default function PlatformAdminLicensingPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          ${module.base_price.toFixed(2)}
-                          <span className="text-muted-foreground"> ({module.pricing_model})</span>
+                          ${ (module.base_price ?? 0).toFixed(2) }
+                          <span className="text-muted-foreground">
+                            {" "}
+                            ({module.pricing_model})
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -384,10 +387,10 @@ export default function PlatformAdminLicensingPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          ${plan.base_price_monthly.toFixed(2)}/mo
-                          {plan.annual_discount_percent > 0 && (
+                          ${(plan.base_price_monthly ?? 0).toFixed(2)}/mo
+                          {(plan.annual_discount_percent ?? 0) > 0 && (
                             <p className="text-xs text-muted-foreground">
-                              {plan.annual_discount_percent}% annual discount
+                              {(plan.annual_discount_percent ?? 0)}% annual discount
                             </p>
                           )}
                         </div>

@@ -39,6 +39,7 @@ export function createMockDunningCampaign(overrides?: Partial<DunningCampaign>):
     actions: [],
     exclusion_rules: {},
     is_active: true,
+    status: 'active',
     priority: 1,
     stages: [],
     total_executions: 0,
@@ -92,9 +93,9 @@ export const dunningHandlers = [
     let filtered = campaigns;
 
     if (activeOnly === 'true') {
-      filtered = filtered.filter((c) => c.is_active);
+      filtered = filtered.filter((c) => c.status === 'active');
     } else if (activeOnly === 'false') {
-      filtered = filtered.filter((c) => !c.is_active);
+      filtered = filtered.filter((c) => c.status !== 'active');
     }
 
     if (search) {

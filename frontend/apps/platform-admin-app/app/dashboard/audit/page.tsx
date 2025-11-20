@@ -27,10 +27,10 @@ import {
   Eye,
   Shield,
 } from "lucide-react";
-import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { formatDistanceToNow, format } from "date-fns";
 import { useAppConfig } from "@/providers/AppConfigContext";
+import type { LucideIcon } from "lucide-react";
 
 type ActivityType =
   | "login"
@@ -61,7 +61,7 @@ interface AuditActivity {
   resource_id?: string;
   ip_address?: string;
   user_agent?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -79,7 +79,6 @@ function AuditPageContent() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [daysFilter, setDaysFilter] = useState<number>(30);
-  const { toast } = useToast();
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl;
 
@@ -131,7 +130,7 @@ function AuditPageContent() {
   });
 
   const getSeverityBadge = (severity: ActivitySeverity) => {
-    const severityConfig: Record<ActivitySeverity, { icon: any; color: string; label: string }> = {
+    const severityConfig: Record<ActivitySeverity, { icon: LucideIcon; color: string; label: string }> = {
       low: { icon: Info, color: "bg-blue-100 text-blue-800", label: "Low" },
       medium: { icon: AlertTriangle, color: "bg-yellow-100 text-yellow-800", label: "Medium" },
       high: { icon: XCircle, color: "bg-orange-100 text-orange-800", label: "High" },
@@ -150,7 +149,7 @@ function AuditPageContent() {
   };
 
   const getActivityTypeIcon = (type: ActivityType) => {
-    const icons: Record<ActivityType, any> = {
+    const icons: Record<ActivityType, LucideIcon> = {
       login: User,
       logout: User,
       create: CheckCircle,

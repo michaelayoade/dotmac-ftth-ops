@@ -68,21 +68,21 @@ describe("useServiceLifecycle", () => {
     it("should fetch service statistics successfully", async () => {
       const mockStatistics: ServiceStatistics = {
         total_services: 150,
-        active_services: 120,
-        suspended_services: 15,
-        terminated_services: 10,
-        provisioning_services: 5,
-        by_type: {
+        active_count: 120,
+        suspended_count: 15,
+        terminated_count: 10,
+        provisioning_count: 5,
+        failed_count: 0,
+        services_by_type: {
           internet: 100,
           voip: 30,
           iptv: 20,
         },
-        by_status: {
-          active: 120,
-          suspended: 15,
-          terminated: 10,
-          provisioning: 5,
-        },
+        healthy_count: 140,
+        degraded_count: 10,
+        average_uptime: 99.5,
+        active_workflows: 2,
+        failed_workflows: 0,
       };
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -97,19 +97,24 @@ describe("useServiceLifecycle", () => {
 
       expect(result.current.data).toEqual(mockStatistics);
       expect(result.current.data?.total_services).toBe(150);
-      expect(result.current.data?.active_services).toBe(120);
+      expect(result.current.data?.active_count).toBe(120);
       expect(apiClient.get).toHaveBeenCalledWith("/services/lifecycle/statistics");
     });
 
     it("should use correct query key", async () => {
       const mockStatistics: ServiceStatistics = {
         total_services: 0,
-        active_services: 0,
-        suspended_services: 0,
-        terminated_services: 0,
-        provisioning_services: 0,
-        by_type: {},
-        by_status: {},
+        active_count: 0,
+        suspended_count: 0,
+        terminated_count: 0,
+        provisioning_count: 0,
+        failed_count: 0,
+        services_by_type: {},
+        healthy_count: 0,
+        degraded_count: 0,
+        average_uptime: 0,
+        active_workflows: 0,
+        failed_workflows: 0,
       };
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -142,12 +147,17 @@ describe("useServiceLifecycle", () => {
     it("should have correct staleTime of 60 seconds", async () => {
       const mockStatistics: ServiceStatistics = {
         total_services: 100,
-        active_services: 85,
-        suspended_services: 10,
-        terminated_services: 5,
-        provisioning_services: 0,
-        by_type: {},
-        by_status: {},
+        active_count: 85,
+        suspended_count: 10,
+        terminated_count: 5,
+        provisioning_count: 0,
+        failed_count: 0,
+        services_by_type: {},
+        healthy_count: 0,
+        degraded_count: 0,
+        average_uptime: 0,
+        active_workflows: 0,
+        failed_workflows: 0,
       };
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -186,10 +196,10 @@ describe("useServiceLifecycle", () => {
                 resolve({
                   data: {
                     total_services: 0,
-                    active_services: 0,
-                    suspended_services: 0,
-                    terminated_services: 0,
-                    provisioning_services: 0,
+                    active_count: 0,
+                    suspended_count: 0,
+                    terminated_count: 0,
+                    provisioning_count: 0,
                     by_type: {},
                     by_status: {},
                   },
@@ -216,27 +226,27 @@ describe("useServiceLifecycle", () => {
       const mockInstances: ServiceInstanceSummary[] = [
         {
           id: "svc-1",
-          service_id: "SVC-001",
-          tenant_id: "tenant-1",
-          subscriber_id: "sub-1",
+          service_identifier: "SVC-001",
+          service_name: "Premium Fiber 1000",
           service_type: "internet",
+          customer_id: "cust-1",
           status: "active",
-          plan_name: "Premium Fiber 1000",
-          monthly_fee: 99.99,
+          provisioning_status: "active",
+          activated_at: "2024-01-01T00:00:00Z",
+          health_status: "healthy",
           created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
         },
         {
           id: "svc-2",
-          service_id: "SVC-002",
-          tenant_id: "tenant-1",
-          subscriber_id: "sub-2",
+          service_identifier: "SVC-002",
+          service_name: "VoIP Basic",
           service_type: "voip",
+          customer_id: "cust-2",
           status: "active",
-          plan_name: "VoIP Basic",
-          monthly_fee: 19.99,
+          provisioning_status: "pending",
+          activated_at: "2024-01-02T00:00:00Z",
+          health_status: "healthy",
           created_at: "2024-01-02T00:00:00Z",
-          updated_at: "2024-01-02T00:00:00Z",
         },
       ];
 
@@ -366,15 +376,15 @@ describe("useServiceLifecycle", () => {
       for (const status of statuses) {
         const mockInstance: ServiceInstanceSummary = {
           id: `svc-${status}`,
-          service_id: `SVC-${status}`,
-          tenant_id: "tenant-1",
-          subscriber_id: "sub-1",
+          service_identifier: `SVC-${status}`,
+          service_name: "Test Plan",
           service_type: "internet",
           status,
-          plan_name: "Test Plan",
-          monthly_fee: 50,
+          customer_id: "cust-1",
+          provisioning_status: status,
+          activated_at: "2024-01-01T00:00:00Z",
+          health_status: "healthy",
           created_at: "2024-01-01T00:00:00Z",
-          updated_at: "2024-01-01T00:00:00Z",
         };
 
         (apiClient.get as jest.Mock).mockResolvedValue({ data: [mockInstance] });
@@ -452,23 +462,26 @@ describe("useServiceLifecycle", () => {
     it("should fetch single service instance successfully", async () => {
       const mockInstance: ServiceInstanceDetail = {
         id: "svc-1",
-        service_id: "SVC-001",
-        tenant_id: "tenant-1",
-        subscriber_id: "sub-1",
-        subscriber_name: "John Doe",
+        service_identifier: "SVC-001",
+        service_name: "Premium Fiber 1000",
         service_type: "internet",
+        customer_id: "cust-1",
         status: "active",
-        plan_id: "plan-1",
-        plan_name: "Premium Fiber 1000",
-        bandwidth_mbps: 1000,
-        monthly_fee: 99.99,
-        activation_date: "2024-01-01T00:00:00Z",
-        billing_cycle_day: 1,
-        auto_renew: true,
-        contract_end_date: "2025-01-01T00:00:00Z",
-        metadata: {},
+        provisioning_status: "active",
+        activated_at: "2024-01-01T00:00:00Z",
+        health_status: "healthy",
         created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z",
+        subscription_id: "sub-1",
+        plan_id: "plan-1",
+        provisioned_at: "2024-01-01T00:00:00Z",
+        suspended_at: null,
+        terminated_at: null,
+        service_config: { tier: "premium" },
+        equipment_assigned: ["router-1"],
+        ip_address: "10.0.0.1",
+        vlan_id: 100,
+        metadata: {},
+        notes: null,
       };
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -510,15 +523,26 @@ describe("useServiceLifecycle", () => {
     it("should have correct staleTime of 30 seconds", async () => {
       const mockInstance: ServiceInstanceDetail = {
         id: "svc-1",
-        service_id: "SVC-001",
-        tenant_id: "tenant-1",
-        subscriber_id: "sub-1",
+        service_identifier: "SVC-001",
+        service_name: "Test Plan",
         service_type: "internet",
+        customer_id: "cust-1",
         status: "active",
-        plan_name: "Test Plan",
-        monthly_fee: 50,
+        provisioning_status: "active",
+        activated_at: "2024-01-01T00:00:00Z",
+        health_status: "healthy",
         created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z",
+        subscription_id: "sub-1",
+        plan_id: "plan-1",
+        provisioned_at: "2024-01-01T00:00:00Z",
+        suspended_at: null,
+        terminated_at: null,
+        service_config: {},
+        equipment_assigned: [],
+        ip_address: "10.0.0.1",
+        vlan_id: 100,
+        metadata: {},
+        notes: null,
       };
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -1177,12 +1201,17 @@ describe("useServiceLifecycle", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: {
           total_services: 0,
-          active_services: 0,
-          suspended_services: 0,
-          terminated_services: 0,
-          provisioning_services: 0,
-          by_type: {},
-          by_status: {},
+          active_count: 0,
+          suspended_count: 0,
+          terminated_count: 0,
+          provisioning_count: 0,
+          failed_count: 0,
+          services_by_type: {},
+          healthy_count: 0,
+          degraded_count: 0,
+          average_uptime: 0,
+          active_workflows: 0,
+          failed_workflows: 0,
         },
       });
 
@@ -1213,15 +1242,26 @@ describe("useServiceLifecycle", () => {
     it("should use correct query keys for useServiceInstance", async () => {
       const mockInstance: ServiceInstanceDetail = {
         id: "svc-1",
-        service_id: "SVC-001",
-        tenant_id: "tenant-1",
-        subscriber_id: "sub-1",
+        service_identifier: "SVC-001",
+        service_name: "Test Plan",
         service_type: "internet",
+        customer_id: "cust-1",
         status: "active",
-        plan_name: "Test Plan",
-        monthly_fee: 50,
+        provisioning_status: "active",
+        activated_at: "2024-01-01T00:00:00Z",
+        health_status: "healthy",
         created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z",
+        subscription_id: "sub-1",
+        plan_id: "plan-1",
+        provisioned_at: "2024-01-01T00:00:00Z",
+        suspended_at: null,
+        terminated_at: null,
+        service_config: {},
+        equipment_assigned: [],
+        ip_address: "10.0.0.1",
+        vlan_id: 100,
+        metadata: {},
+        notes: null,
       };
 
       (apiClient.get as jest.Mock).mockResolvedValue({
@@ -1248,10 +1288,10 @@ describe("useServiceLifecycle", () => {
                 resolve({
                   data: {
                     total_services: 0,
-                    active_services: 0,
-                    suspended_services: 0,
-                    terminated_services: 0,
-                    provisioning_services: 0,
+                    active_count: 0,
+                    suspended_count: 0,
+                    terminated_count: 0,
+                    provisioning_count: 0,
                     by_type: {},
                     by_status: {},
                   },

@@ -10,20 +10,34 @@ import React from "react";
 
 import { MetricCardEnhanced } from "../metric-card-enhanced";
 
+type AnimatedCardProps = React.HTMLAttributes<HTMLDivElement> & {
+  disabled?: boolean;
+};
+
+type AnimatedCounterProps = {
+  value: number | string;
+  prefix?: React.ReactNode;
+  className?: string;
+};
+
+type FadeInWhenVisibleProps = {
+  children: React.ReactNode;
+};
+
 // Mock @dotmac/primitives
 jest.mock("@dotmac/primitives", () => ({
-  AnimatedCard: ({ children, className, disabled, ...props }: any) => (
+  AnimatedCard: ({ children, className, disabled, ...props }: AnimatedCardProps) => (
     <div className={className} data-disabled={disabled} {...props}>
       {children}
     </div>
   ),
-  AnimatedCounter: ({ value, prefix, className }: any) => (
+  AnimatedCounter: ({ value, prefix, className }: AnimatedCounterProps) => (
     <div className={className} data-testid="animated-counter">
       {prefix}
       {value}
     </div>
   ),
-  FadeInWhenVisible: ({ children }: any) => <div>{children}</div>,
+  FadeInWhenVisible: ({ children }: FadeInWhenVisibleProps) => <div>{children}</div>,
 }));
 
 describe("MetricCardEnhanced", () => {

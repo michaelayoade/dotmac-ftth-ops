@@ -31,6 +31,10 @@ import { useServiceStatistics } from "@/hooks/useServiceLifecycle";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useRBAC } from "@/contexts/RBACContext";
 
+type IconRendererProps = {
+  className?: string;
+};
+
 export default function EnhancedDashboardPage() {
   const router = useRouter();
   const { data: session, isPending: authLoading } = useSession();
@@ -61,7 +65,7 @@ export default function EnhancedDashboardPage() {
   const { data: radiusSubscribers, isLoading: subscribersLoading, refetch: refetchSubscribers } = useRADIUSSubscribers(0, 100, {
     enabled: hasRadiusAccess,
   });
-  const { data: activeSessions, isLoading: sessionsLoading, refetch: refetchSessions } = useRADIUSSessions({
+  const { data: activeSessions, isLoading: sessionsLoading, refetch: refetchSessions } = useRADIUSSessions(0, 100, {
     enabled: hasRadiusAccess,
   });
   const { data: serviceStats, isLoading: serviceStatsLoading, refetch: refetchServices } = useServiceStatistics({});
@@ -105,7 +109,7 @@ export default function EnhancedDashboardPage() {
       id: "total-subscribers",
       title: "Total Subscribers",
       value: totalSubscribers,
-      icon: ({ className }) => <Users className={className} />,
+      icon: ({ className }: IconRendererProps) => <Users className={className} />,
       format: "number",
       trend: {
         direction: "up",
@@ -122,7 +126,7 @@ export default function EnhancedDashboardPage() {
       id: "active-sessions",
       title: "Active Sessions",
       value: activeSessionsCount,
-      icon: ({ className }) => <Wifi className={className} />,
+      icon: ({ className }: IconRendererProps) => <Wifi className={className} />,
       format: "number",
       progress: {
         current: activeSessionsCount,
@@ -139,7 +143,7 @@ export default function EnhancedDashboardPage() {
       id: "active-services",
       title: "Active Services",
       value: activeServices,
-      icon: ({ className }) => <Server className={className} />,
+      icon: ({ className }: IconRendererProps) => <Server className={className} />,
       format: "number",
       subtitle: `${provisioningCount} provisioning`,
       trend: {
@@ -154,7 +158,7 @@ export default function EnhancedDashboardPage() {
       id: "subscriber-rate",
       title: "Subscriber Active Rate",
       value: `${subscriberActiveRate}%`,
-      icon: ({ className }) => <Activity className={className} />,
+      icon: ({ className }: IconRendererProps) => <Activity className={className} />,
       progress: {
         current: activeSubscribers,
         target: totalSubscribers,

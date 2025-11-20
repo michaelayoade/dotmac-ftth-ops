@@ -24,7 +24,14 @@ type UseApiKeysHook = () => {
   getAvailableScopes: () => Promise<AvailableScopes>;
 };
 
-export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
+interface MockApiClient {
+  get: jest.Mock<Promise<{ data: any }>, [string]>;
+  post: jest.Mock<Promise<{ data: any }>, [string, any?]>;
+  patch: jest.Mock<Promise<{ data: any }>, [string, any?]>;
+  delete: jest.Mock<Promise<{ data?: any }>, [string]>;
+}
+
+export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: MockApiClient) {
   let apiKeysStore: APIKey[] = [];
   let scopesStore: AvailableScopes = {};
 
@@ -52,7 +59,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
 
   describe("useApiKeys", () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      jest.resetAllMocks();
       apiKeysStore = [];
       scopesStore = {};
       apiClient.get.mockImplementation((url: string) => {
@@ -73,7 +80,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
     afterEach(() => {
       cleanupFns.forEach((cleanup) => cleanup());
       cleanupFns.length = 0;
-      jest.restoreAllMocks();
+      jest.resetAllMocks();
     });
 
     describe("Happy Path", () => {
@@ -97,7 +104,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         expect(result.current.apiKeys).toEqual(mockApiKeys);
@@ -114,7 +121,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         apiClient.get.mockClear();
@@ -160,7 +167,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(initialKeys);
         });
 
         let createdKey: APIKeyCreateResponse | undefined;
@@ -185,7 +192,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
           },
         ];
 
-        apiKeysStore = [...mockApiKeys];
+        apiKeysStore = mockApiKeys;
 
         const updateRequest: APIKeyUpdateRequest = {
           name: "New Name",
@@ -207,7 +214,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         let updated: APIKey | undefined;
@@ -240,7 +247,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
           },
         ];
 
-        apiKeysStore = [...mockApiKeys];
+        apiKeysStore = mockApiKeys;
 
         apiClient.delete.mockImplementationOnce((url: string) => {
           const id = url.split("/").pop();
@@ -251,7 +258,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         expect(result.current.apiKeys).toHaveLength(2);
@@ -282,7 +289,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.availableScopes).toBe(mockScopes);
         });
 
         let scopes: AvailableScopes | undefined;
@@ -303,16 +310,16 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.error).toBe("Failed to authenticate");
         });
 
-        expect(result.current.error).toBe("Failed to authenticate");
         expect(result.current.apiKeys).toEqual([]);
       });
 
       it("should handle create errors", async () => {
+        const initialKeys: APIKey[] = [];
         apiClient.get.mockResolvedValueOnce({
-          data: { api_keys: [] },
+          data: { api_keys: initialKeys },
         });
 
         const mockError = new Error("Invalid scopes");
@@ -321,7 +328,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(initialKeys);
         });
 
         await expect(async () => {
@@ -356,7 +363,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         await expect(async () => {
@@ -388,7 +395,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         await expect(async () => {
@@ -399,8 +406,9 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
       });
 
       it("should handle getAvailableScopes errors gracefully", async () => {
+        const initialKeys: APIKey[] = [];
         apiClient.get.mockResolvedValueOnce({
-          data: { api_keys: [] },
+          data: { api_keys: initialKeys },
         });
 
         apiClient.get.mockRejectedValueOnce(new Error("Network error"));
@@ -408,7 +416,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(initialKeys);
         });
 
         let scopes: AvailableScopes | undefined;
@@ -423,14 +431,15 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
 
     describe("Edge Cases", () => {
       it("should handle empty API keys list", async () => {
+        const emptyKeys: APIKey[] = [];
         apiClient.get.mockResolvedValueOnce({
-          data: { api_keys: [] },
+          data: { api_keys: emptyKeys },
         });
 
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(emptyKeys);
         });
 
         expect(result.current.apiKeys).toEqual([]);
@@ -456,7 +465,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         expect(result.current.apiKeys[0].description).toBeUndefined();
@@ -486,7 +495,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         expect(result.current.apiKeys[0]).toHaveProperty("description");
@@ -513,7 +522,7 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.apiKeys).toBe(mockApiKeys);
         });
 
         expect(result.current.apiKeys[0].is_active).toBe(false);
@@ -521,13 +530,13 @@ export function runUseApiKeysSuite(useApiKeys: UseApiKeysHook, apiClient: any) {
 
       it("should handle response without api_keys property", async () => {
         apiClient.get.mockResolvedValueOnce({
-          data: {},
+          data: { page: 2 },
         });
 
         const { result } = renderUseApiKeys();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.page).toBe(2);
         });
 
         expect(result.current.apiKeys).toEqual([]);

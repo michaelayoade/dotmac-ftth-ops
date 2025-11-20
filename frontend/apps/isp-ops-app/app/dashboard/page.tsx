@@ -65,7 +65,7 @@ export default function DashboardPage() {
   const { data: radiusSubscribers, isLoading: subscribersLoading } = useRADIUSSubscribers(0, 5, {
     enabled: hasRadiusAccess && radiusSubscribersEnabled,
   });
-  const { data: activeSessions, isLoading: sessionsLoading } = useRADIUSSessions({
+  const { data: activeSessions, isLoading: sessionsLoading } = useRADIUSSessions(0, 100, {
     enabled: hasRadiusAccess && radiusSessionsEnabled,
   });
 

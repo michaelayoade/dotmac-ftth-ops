@@ -453,8 +453,8 @@ describe("ProgressIndicator", () => {
     expect(errorIcon).toBeInTheDocument();
   });
 
-  it("applies correct styles to step states", () => {
-    const { container } = render(<ProgressIndicator steps={steps} />);
+    it("applies correct styles to step states", () => {
+      render(<ProgressIndicator steps={steps} />);
 
     const completedStep = screen.getByText("Step 1").previousSibling;
     expect(completedStep).toHaveClass("bg-green-500");

@@ -29,14 +29,14 @@ describe("Command", () => {
     });
 
     it("applies base styles", () => {
-      const { container } = render(<Command data-testid="command" />);
+      render(<Command data-testid="command" />);
 
       const command = screen.getByTestId("command");
       expect(command).toHaveClass("flex", "h-full", "w-full", "flex-col");
     });
 
     it("supports custom className", () => {
-      const { container } = render(<Command className="custom-command" data-testid="command" />);
+      render(<Command className="custom-command" data-testid="command" />);
 
       const command = screen.getByTestId("command");
       expect(command).toHaveClass("custom-command");
@@ -225,7 +225,7 @@ describe("Command", () => {
 
   describe("CommandSeparator", () => {
     it("renders separator", () => {
-      const { container } = render(
+      render(
         <Command>
           <CommandList>
             <CommandGroup>
@@ -384,8 +384,6 @@ describe("Command", () => {
 
   describe("CommandDialog", () => {
     it("renders dialog trigger", async () => {
-      const user = userEvent.setup();
-
       render(
         <CommandDialog open={false}>
           <CommandInput placeholder="Type a command..." />
@@ -397,8 +395,6 @@ describe("Command", () => {
     });
 
     it("opens when triggered", async () => {
-      const user = userEvent.setup();
-
       const { rerender } = render(
         <CommandDialog open={false}>
           <CommandInput placeholder="Type a command..." />
@@ -697,8 +693,6 @@ describe("Command", () => {
     });
 
     it("items are keyboard navigable", async () => {
-      const user = userEvent.setup();
-
       render(
         <Command>
           <CommandInput placeholder="Search" />

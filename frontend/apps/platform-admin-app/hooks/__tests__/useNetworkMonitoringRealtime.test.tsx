@@ -19,11 +19,11 @@ import { DeviceStatusEnum, DeviceTypeEnum, AlertSeverityEnum } from "@/lib/graph
 
 jest.unmock("@tanstack/react-query");
 
-const global.mockToast = jest.fn();
+const mockToast = jest.fn();
 
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: global.mockToast,
+    toast: mockToast,
   }),
 }));
 
@@ -193,7 +193,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     await waitFor(() =>
       expect(result.current.data?.[0].status).toBe(DeviceStatusEnum.Online),
     );
-    expect(global.mockToast).toHaveBeenCalledWith(
+    expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Device Online" }),
     );
   });
@@ -245,7 +245,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     });
 
     await waitFor(() => expect(result.current.data).toHaveLength(2));
-    expect(global.mockToast).toHaveBeenCalledWith(
+    expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Critical Alert" }),
     );
 
@@ -269,7 +269,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     });
 
     await waitFor(() => expect(result.current.data).toHaveLength(1));
-    expect(global.mockToast).toHaveBeenCalledWith(
+    expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Alert Resolved" }),
     );
   });
@@ -335,7 +335,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
 
     await waitFor(() => expect(result.current.isConnected).toBe(false));
     expect(result.current.reconnectAttempts).toBeGreaterThan(0);
-    expect(global.mockToast).toHaveBeenCalledWith(
+    expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Connection Lost" }),
     );
 

@@ -454,7 +454,7 @@ describe("getStatusVariant", () => {
 
       statuses.forEach((status) => {
         const variant = getStatusVariant(status);
-        const { container } = render(<StatusBadge variant={variant}>{status}</StatusBadge>);
+        render(<StatusBadge variant={variant}>{status}</StatusBadge>);
 
         expect(screen.getByText(status)).toBeInTheDocument();
       });

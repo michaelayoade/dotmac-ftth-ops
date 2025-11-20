@@ -204,7 +204,7 @@ describe("SkipLink", () => {
     });
 
     it("appears before navigation in document order", () => {
-      const { container } = render(
+      render(
         <div>
           <SkipLink />
           <nav>Navigation</nav>
@@ -297,7 +297,7 @@ describe("SkipLink", () => {
 
   describe("Visual Regression", () => {
     it("is hidden from visual users by default", () => {
-      const { container } = render(<SkipLink />);
+      render(<SkipLink />);
 
       const link = screen.getByText("Skip to main content");
 
@@ -306,7 +306,7 @@ describe("SkipLink", () => {
     });
 
     it("does not affect layout when hidden", () => {
-      const { container } = render(
+      render(
         <div>
           <SkipLink />
           <div>Content</div>

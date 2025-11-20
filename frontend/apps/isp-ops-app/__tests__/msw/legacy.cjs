@@ -1,4 +1,12 @@
+const { TextEncoder, TextDecoder } = require('util');
 const { createRequire } = require('module');
+
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = TextDecoder;
+}
 const resolveMsw = createRequire(require.resolve('msw/package.json'));
 const actualMsw = resolveMsw('.');
 const HeadersCtor = typeof Headers !== 'undefined' ? Headers : require('undici').Headers;

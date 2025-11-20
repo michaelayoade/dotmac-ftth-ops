@@ -12,9 +12,14 @@ import {
   AuditSeverity,
   AuditOutcome,
 } from "../api/types/audit";
-import type { CreateFrontendAuditEvent, AuditContext, AuditEvent } from "../api/types/audit";
+import type {
+  CreateFrontendAuditEvent,
+  AuditContext,
+  AuditEvent,
+  AuditActor,
+} from "../api/types/audit";
 import { useISPTenant } from "./useISPTenant";
-import { useAuth } from "@dotmac/headless/auth";
+import { useAuth } from "../auth/context";
 
 interface AuditLoggerConfig {
   serviceName: string;
@@ -119,15 +124,23 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
 
   // Create actor information from current user context
   const createActor = useCallback(() => {
-    const actor = {
+    const actor: AuditActor = {
       id: user?.id || "anonymous",
       type: user?.id ? ("user" as const) : ("anonymous" as const),
-      name: user?.name,
-      email: user?.email,
-      session_id: sessionId,
-      ip_address: undefined, // Will be filled by backend
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
     };
+
+    if (user?.name) {
+      actor.name = user.name;
+    }
+    if (user?.email) {
+      actor.email = user.email;
+    }
+    if (sessionId) {
+      actor.session_id = sessionId;
+    }
+    if (typeof navigator !== "undefined") {
+      actor.user_agent = navigator.userAgent;
+    }
 
     return actor;
   }, [user, sessionId]);
@@ -138,7 +151,8 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       return {
         source: serviceName,
         environment: process.env["NODE_ENV"] || "development",
-        correlation_id: sessionId,
+        correlation_id:
+          sessionId ?? `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         request_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         additional: {
           url: typeof window !== "undefined" ? window.location.href : undefined,
@@ -204,7 +218,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
           ...event,
           actor: event.actor || createActor(),
           context: resolvedContext,
-          tenant_id: event.tenant_id || tenantId,
+          tenant_id: event.tenant_id ?? tenantId ?? "unknown",
           severity: event.severity || AuditSeverity.LOW,
           outcome: event.outcome || AuditOutcome.SUCCESS,
           service_name: event.service_name || serviceName,
@@ -267,15 +281,20 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       message: string,
       metadata?: Record<string, any>,
     ) => {
-      await logEvent({
+      const eventPayload: CreateFrontendAuditEvent = {
         event_type: type,
         message,
         outcome,
         severity: outcome === AuditOutcome.FAILURE ? AuditSeverity.HIGH : AuditSeverity.LOW,
         actor: createActor(),
         context: createContext(),
-        metadata,
-      });
+      };
+
+      if (metadata) {
+        eventPayload.metadata = metadata;
+      }
+
+      await logEvent(eventPayload);
     },
     [logEvent, createActor, createContext],
   );
@@ -300,7 +319,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
                 ? AuditEventType.DATA_DELETE
                 : AuditEventType.DATA_READ;
 
-      await logEvent({
+      const eventPayload: CreateFrontendAuditEvent = {
         event_type: eventType,
         message: `${operation} operation on ${resourceType} ${resourceId}`,
         outcome,
@@ -314,8 +333,13 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
           type: resourceType,
         },
         context: createContext(),
-        metadata,
-      });
+      };
+
+      if (metadata) {
+        eventPayload.metadata = metadata;
+      }
+
+      await logEvent(eventPayload);
     },
     [logEvent, createActor, createContext],
   );
@@ -323,15 +347,20 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
   // Convenience method for UI events
   const logUIEvent = useCallback(
     async (type: FrontendAuditEventType, element: string, metadata?: Record<string, any>) => {
-      await logEvent({
+      const eventPayload: CreateFrontendAuditEvent = {
         event_type: type,
         message: `UI interaction: ${element}`,
         outcome: AuditOutcome.SUCCESS,
         severity: AuditSeverity.LOW,
         actor: createActor(),
         context: createContext({ ui_element: element }),
-        metadata,
-      });
+      };
+
+      if (metadata) {
+        eventPayload.metadata = metadata;
+      }
+
+      await logEvent(eventPayload);
     },
     [logEvent, createActor, createContext],
   );
@@ -365,15 +394,20 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       outcome: AuditOutcome,
       metadata?: Record<string, any>,
     ) => {
-      await logEvent({
+      const eventPayload: CreateFrontendAuditEvent = {
         event_type: type,
         message: `Business workflow: ${workflow}`,
         outcome,
         severity: outcome === AuditOutcome.FAILURE ? AuditSeverity.MEDIUM : AuditSeverity.LOW,
         actor: createActor(),
         context: createContext({ workflow }),
-        metadata,
-      });
+      };
+
+      if (metadata) {
+        eventPayload.metadata = metadata;
+      }
+
+      await logEvent(eventPayload);
     },
     [logEvent, createActor, createContext],
   );

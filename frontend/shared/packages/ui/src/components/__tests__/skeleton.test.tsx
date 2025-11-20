@@ -30,14 +30,14 @@ describe("Skeleton", () => {
     });
 
     it("applies base styles", () => {
-      const { container } = render(<Skeleton data-testid="skeleton" />);
+      render(<Skeleton data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("animate-pulse", "rounded-lg", "bg-muted");
     });
 
     it("renders with custom className", () => {
-      const { container } = render(
+      render(
         <Skeleton className="custom-skeleton" data-testid="skeleton" />
       );
 
@@ -48,7 +48,7 @@ describe("Skeleton", () => {
 
   describe("Variants", () => {
     it("renders default variant", () => {
-      const { container } = render(
+      render(
         <Skeleton variant="default" data-testid="skeleton" />
       );
 
@@ -57,7 +57,7 @@ describe("Skeleton", () => {
     });
 
     it("renders text variant with smaller height", () => {
-      const { container } = render(
+      render(
         <Skeleton variant="text" data-testid="skeleton" />
       );
 
@@ -66,7 +66,7 @@ describe("Skeleton", () => {
     });
 
     it("renders circular variant", () => {
-      const { container } = render(
+      render(
         <Skeleton variant="circular" data-testid="skeleton" />
       );
 
@@ -75,7 +75,7 @@ describe("Skeleton", () => {
     });
 
     it("renders rectangular variant", () => {
-      const { container } = render(
+      render(
         <Skeleton variant="rectangular" data-testid="skeleton" />
       );
 
@@ -84,7 +84,7 @@ describe("Skeleton", () => {
     });
 
     it("defaults to default variant when not specified", () => {
-      const { container } = render(<Skeleton data-testid="skeleton" />);
+      render(<Skeleton data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("rounded-lg");
@@ -93,14 +93,14 @@ describe("Skeleton", () => {
 
   describe("Animation", () => {
     it("has pulse animation", () => {
-      const { container } = render(<Skeleton data-testid="skeleton" />);
+      render(<Skeleton data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("animate-pulse");
     });
 
     it("maintains animation across variants", () => {
-      const { container } = render(
+      render(
         <div>
           <Skeleton variant="default" data-testid="default" />
           <Skeleton variant="circular" data-testid="circular" />
@@ -117,14 +117,14 @@ describe("Skeleton", () => {
   describe("Ref Forwarding", () => {
     it("forwards ref to skeleton element", () => {
       // Skeleton component does not forward refs
-      const { container } = render(<Skeleton data-testid="skeleton" />);
+      render(<Skeleton data-testid="skeleton" />);
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toBeInstanceOf(HTMLDivElement);
     });
 
     it("allows accessing DOM properties via ref", () => {
       // Skeleton component does not forward refs
-      const { container } = render(<Skeleton className="h-8" data-testid="skeleton" />);
+      render(<Skeleton className="h-8" data-testid="skeleton" />);
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toBeInstanceOf(HTMLDivElement);
       expect(skeleton.classList.contains("h-8")).toBe(true);
@@ -140,7 +140,7 @@ describe("Skeleton", () => {
 
   describe("HTML Attributes", () => {
     it("forwards data attributes", () => {
-      const { container } = render(
+      render(
         <Skeleton data-testid="custom-skeleton" data-custom="value" />
       );
 
@@ -477,7 +477,7 @@ describe("Skeleton", () => {
 
   describe("Customization", () => {
     it("supports custom width and height", () => {
-      const { container } = render(
+      render(
         <Skeleton className="h-20 w-64" data-testid="skeleton" />
       );
 
@@ -486,7 +486,7 @@ describe("Skeleton", () => {
     });
 
     it("supports custom colors via className", () => {
-      const { container } = render(
+      render(
         <Skeleton className="bg-gray-300" data-testid="skeleton" />
       );
 
@@ -495,7 +495,7 @@ describe("Skeleton", () => {
     });
 
     it("supports custom border radius", () => {
-      const { container } = render(
+      render(
         <Skeleton className="rounded-xl" data-testid="skeleton" />
       );
 
@@ -504,7 +504,7 @@ describe("Skeleton", () => {
     });
 
     it("can disable animation via className override", () => {
-      const { container } = render(
+      render(
         <Skeleton className="animate-none" data-testid="skeleton" />
       );
 
@@ -536,7 +536,7 @@ describe("Skeleton", () => {
     });
 
     it("maintains styles when combining multiple classNames", () => {
-      const { container } = render(
+      render(
         <Skeleton
           variant="circular"
           className="h-16 w-16 border-2"

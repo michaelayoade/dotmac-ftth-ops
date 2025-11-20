@@ -6,7 +6,7 @@
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AlertCircle, XCircle, AlertTriangle } from "lucide-react";
+import { XCircle, AlertTriangle } from "lucide-react";
 import React from "react";
 
 import { ErrorState, ErrorBoundaryFallback } from "../error-state";
@@ -92,7 +92,7 @@ describe("ErrorState", () => {
 
     it("retry button has refresh icon", () => {
       const onRetry = jest.fn();
-      const { container } = render(<ErrorState message="Test error" onRetry={onRetry} />);
+      render(<ErrorState message="Test error" onRetry={onRetry} />);
 
       const button = screen.getByRole("button");
       const icon = button.querySelector("svg");

@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Shield, Users, Search, Filter } from "lucide-react";
-import { useRBAC, PermissionCategory } from "@/contexts/RBACContext";
-import type {
-  Role as BaseRole,
-  Permission as BasePermission,
-} from "@/contexts/RBACContext";
-import { RouteGuard } from "@/components/auth/PermissionGuard";
-import RoleDetailsModal from "@/components/admin/RoleDetailsModal";
-import CreateRoleModal from "@/components/admin/CreateRoleModal";
+import { useEffect, useState } from "react";
+import { Edit, Filter, Plus, Search, Shield, Trash2, Users } from "lucide-react";
+import { toast, useConfirmDialog } from "@dotmac/ui";
+
 import AssignRoleModal from "@/components/admin/AssignRoleModal";
-import { toast } from "@dotmac/ui";
+import CreateRoleModal from "@/components/admin/CreateRoleModal";
+import RoleDetailsModal from "@/components/admin/RoleDetailsModal";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { PermissionCategory, useRBAC } from "@/contexts/RBACContext";
+import type {
+  Permission as BasePermission,
+  Role as BaseRole,
+} from "@/contexts/RBACContext";
 import { apiClient } from "@/lib/api/client";
-import { useConfirmDialog } from "@dotmac/ui";
 
 type AdminPermission = BasePermission & {
   id?: string;

@@ -208,14 +208,14 @@ describe("PortalCard", () => {
     });
 
     it("supports data attributes", () => {
-      const { container } = render(<PortalCard data-testid="test-card">Card Content</PortalCard>);
+      render(<PortalCard data-testid="test-card">Card Content</PortalCard>);
 
       const card = screen.getByTestId("test-card");
       expect(card).toBeInTheDocument();
     });
 
     it("supports aria attributes", () => {
-      const { container } = render(
+      render(
         <PortalCard aria-label="Product card">Card Content</PortalCard>
       );
 

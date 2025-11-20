@@ -51,7 +51,7 @@ describe("Platform Admin useWireGuard hooks", () => {
       { wrapper },
     );
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.data).toBeDefined());
     expect(mockedApi.get).toHaveBeenCalledWith("/wireguard/servers?status=active&limit=5");
     expect(result.current.data?.[0].name).toBe("WG-1");
   });

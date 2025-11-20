@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
 import {
   AlertCircle,
   AlertTriangle,
@@ -15,7 +15,6 @@ import {
   Zap,
   BarChart3,
 } from "lucide-react";
-import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
@@ -29,7 +28,8 @@ import {
 } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
-import { VOLTHAAlarm, VOLTHAAlarmListResponse, AlarmSeverity } from "@/types/voltha";
+import { VOLTHAAlarm, AlarmSeverity } from "@/types/voltha";
+import { useVOLTHAAlarms, useAcknowledgeAlarm, useClearAlarm } from "@/hooks/useVOLTHA";
 
 interface AlarmPerformanceMonitoringProps {
   deviceId?: string;
@@ -38,66 +38,58 @@ interface AlarmPerformanceMonitoringProps {
 export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitoringProps) {
   const { toast } = useToast();
 
-  const [alarms, setAlarms] = useState<VOLTHAAlarm[]>([]);
-  const [loading, setLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [acknowledgedAlarms, setAcknowledgedAlarms] = useState<Set<string>>(new Set());
+  const [severitySelectOpen, setSeveritySelectOpen] = useState(false);
+  const [stateSelectOpen, setStateSelectOpen] = useState(false);
 
-  const loadAlarms = useCallback(async () => {
-    setLoading(true);
-    try {
-      const endpoint = deviceId ? `/access/devices/${deviceId}/alarms` : "/access/alarms";
+  // Use React Query hooks
+  const {
+    data: alarms = [],
+    isLoading: loading,
+    refetch: loadAlarms,
+  } = useVOLTHAAlarms(deviceId);
 
-      const response = await apiClient.get<VOLTHAAlarmListResponse>(endpoint);
-      setAlarms(response['data'].alarms);
-    } catch (err: any) {
-      toast({
-        title: "Failed to load alarms",
-        description: err?.response?.['data']?.detail || "Could not fetch VOLTHA alarms",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [deviceId, toast]);
-
-  useEffect(() => {
-    loadAlarms();
-  }, [deviceId, loadAlarms]);
-
-  const handleAcknowledgeAlarm = async (alarmId: string) => {
-    try {
-      await apiClient.post(`/access/alarms/${alarmId}/acknowledge`);
+  const acknowledgeMutation = useAcknowledgeAlarm({
+    onSuccess: (alarmId: string) => {
       setAcknowledgedAlarms((prev) => new Set(prev).add(alarmId));
       toast({
         title: "Alarm Acknowledged",
         description: "Alarm has been acknowledged",
       });
-    } catch (err: any) {
+    },
+    onError: (error: Error) => {
       toast({
         title: "Failed to acknowledge alarm",
-        description: err?.response?.['data']?.detail || "Could not acknowledge alarm",
+        description: error.message || "Could not acknowledge alarm",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  const handleClearAlarm = async (alarmId: string) => {
-    try {
-      await apiClient.post(`/access/alarms/${alarmId}/clear`);
+  const clearMutation = useClearAlarm({
+    onSuccess: () => {
       toast({
         title: "Alarm Cleared",
         description: "Alarm has been cleared",
       });
-      loadAlarms();
-    } catch (err: any) {
+    },
+    onError: (error: Error) => {
       toast({
         title: "Failed to clear alarm",
-        description: err?.response?.['data']?.detail || "Could not clear alarm",
+        description: error.message || "Could not clear alarm",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleAcknowledgeAlarm = (alarmId: string) => {
+    acknowledgeMutation.mutate(alarmId);
+  };
+
+  const handleClearAlarm = (alarmId: string) => {
+    clearMutation.mutate(alarmId);
   };
 
   const getSeverityIcon = (severity: string) => {
@@ -125,25 +117,34 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     };
 
     return (
-      <Badge variant="outline" className={classes[severity] || classes['INDETERMINATE']}>
+      <Badge variant="outline" className={classes[severity] || classes["INDETERMINATE"]}>
         {severity}
       </Badge>
     );
   };
 
-  const filteredAlarms = alarms.filter((alarm) => {
-    if (severityFilter !== "all" && alarm['severity'] !== severityFilter) return false;
-    if (stateFilter !== "all" && alarm['state'] !== stateFilter) return false;
-    return true;
-  });
+  // Memoize filtered alarms for performance
+  const filteredAlarms = useMemo(
+    () =>
+      alarms.filter((alarm) => {
+        if (severityFilter !== "all" && alarm.severity !== severityFilter) return false;
+        if (stateFilter !== "all" && alarm.state !== stateFilter) return false;
+        return true;
+      }),
+    [alarms, severityFilter, stateFilter],
+  );
 
-  const alarmStats = {
-    total: alarms.length,
-    active: alarms.filter((a) => a.state === "RAISED").length,
-    critical: alarms.filter((a) => a.severity === "CRITICAL" && a.state === "RAISED").length,
-    major: alarms.filter((a) => a.severity === "MAJOR" && a.state === "RAISED").length,
-    minor: alarms.filter((a) => a.severity === "MINOR" && a.state === "RAISED").length,
-  };
+  // Memoize alarm statistics
+  const alarmStats = useMemo(
+    () => ({
+      total: alarms.length,
+      active: alarms.filter((a) => a.state === "RAISED").length,
+      critical: alarms.filter((a) => a.severity === "CRITICAL" && a.state === "RAISED").length,
+      major: alarms.filter((a) => a.severity === "MAJOR" && a.state === "RAISED").length,
+      minor: alarms.filter((a) => a.severity === "MINOR" && a.state === "RAISED").length,
+    }),
+    [alarms],
+  );
 
   return (
     <div className="space-y-6">
@@ -201,8 +202,8 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
               <CardDescription>Real-time alarm monitoring and management</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                <SelectTrigger className="w-40">
+              <Select value={severityFilter} onValueChange={setSeverityFilter} open={severitySelectOpen} onOpenChange={setSeveritySelectOpen}>
+                <SelectTrigger className="w-40" aria-label="Filter alarms by severity">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -214,8 +215,8 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                 </SelectContent>
               </Select>
 
-              <Select value={stateFilter} onValueChange={setStateFilter}>
-                <SelectTrigger className="w-32">
+              <Select value={stateFilter} onValueChange={setStateFilter} open={stateSelectOpen} onOpenChange={setStateSelectOpen}>
+                <SelectTrigger className="w-32" aria-label="Filter alarms by state">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,7 +226,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" size="sm" onClick={loadAlarms}>
+              <Button variant="outline" size="sm" onClick={() => loadAlarms()} aria-label="Refresh alarms">
                 <Activity className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
@@ -244,59 +245,60 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
               <p className="text-sm text-muted-foreground">All systems are operating normally</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2" role="list" aria-label="VOLTHA alarms list">
               {filteredAlarms.map((alarm) => (
                 <div
-                  key={alarm['id']}
+                  key={alarm.id}
                   className={`p-4 rounded-lg border ${
                     alarm.state === "RAISED"
                       ? "border-red-200 bg-red-50"
                       : "border-gray-200 bg-gray-50"
-                  } ${acknowledgedAlarms.has(alarm['id']) ? "opacity-60" : ""}`}
+                  } ${acknowledgedAlarms.has(alarm.id) ? "opacity-60" : ""}`}
+                  role="listitem"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
-                      {getSeverityIcon(alarm['severity'])}
+                      {getSeverityIcon(alarm.severity)}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <div className="font-medium">{alarm['type']}</div>
-                          {getSeverityBadge(alarm['severity'])}
+                          <div className="font-medium">{alarm.type}</div>
+                          {getSeverityBadge(alarm.severity)}
                           {alarm.state === "CLEARED" && (
                             <Badge variant="outline" className="bg-green-100 text-green-700">
                               Cleared
                             </Badge>
                           )}
-                          {acknowledgedAlarms.has(alarm['id']) && (
+                          {acknowledgedAlarms.has(alarm.id) && (
                             <Badge variant="outline" className="bg-blue-100 text-blue-700">
                               Acknowledged
                             </Badge>
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground mb-2">
-                          {alarm['description'] || alarm['category']}
+                          {alarm.description || alarm.category}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                           <div>
                             <span className="text-muted-foreground">Device:</span>{" "}
-                            <span className="font-medium">{alarm['device_id']}</span>
+                            <span className="font-medium">{alarm.device_id}</span>
                           </div>
-                          {alarm['resource_id'] && (
+                          {alarm.resource_id && (
                             <div>
                               <span className="text-muted-foreground">Resource:</span>{" "}
-                              <span className="font-medium">{alarm['resource_id']}</span>
+                              <span className="font-medium">{alarm.resource_id}</span>
                             </div>
                           )}
                           <div>
                             <span className="text-muted-foreground">Raised:</span>{" "}
                             <span className="font-medium">
-                              {new Date(alarm['raised_ts']).toLocaleString()}
+                              {new Date(alarm.raised_ts).toLocaleString()}
                             </span>
                           </div>
-                          {alarm['cleared_ts'] && (
+                          {alarm.cleared_ts && (
                             <div>
                               <span className="text-muted-foreground">Cleared:</span>{" "}
                               <span className="font-medium">
-                                {new Date(alarm['cleared_ts']).toLocaleString()}
+                                {new Date(alarm.cleared_ts).toLocaleString()}
                               </span>
                             </div>
                           )}
@@ -304,11 +306,12 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {alarm.state === "RAISED" && !acknowledgedAlarms.has(alarm['id']) && (
+                      {alarm.state === "RAISED" && !acknowledgedAlarms.has(alarm.id) && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAcknowledgeAlarm(alarm['id'])}
+                          onClick={() => handleAcknowledgeAlarm(alarm.id)}
+                          aria-label={`Acknowledge alarm ${alarm.type}`}
                         >
                           <Bell className="w-4 h-4 mr-1" />
                           Acknowledge
@@ -318,7 +321,8 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleClearAlarm(alarm['id'])}
+                          onClick={() => handleClearAlarm(alarm.id)}
+                          aria-label={`Clear alarm ${alarm.type}`}
                         >
                           <BellOff className="w-4 h-4 mr-1" />
                           Clear
@@ -334,10 +338,15 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
       </Card>
 
       {/* Performance Metrics */}
+      {/*
+        NOTE: The performance metrics below are currently hardcoded placeholder values.
+        These should be replaced with real data from the backend API when available.
+        TODO: Integrate with backend performance metrics endpoints
+      */}
       <Card>
         <CardHeader>
           <CardTitle>Performance Metrics</CardTitle>
-          <CardDescription>Network health and performance indicators</CardDescription>
+          <CardDescription>Network health and performance indicators (Demo Data)</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview">

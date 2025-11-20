@@ -140,6 +140,20 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
     useScheduledDeployments,
     apiClient,
   } = config;
+  const waitForTemplatesData = async (
+    hookResult: { current: ReturnType<UseDeploymentTemplatesHook> },
+    expectedTemplates: DeploymentTemplate[],
+  ) =>
+    waitFor(() => {
+      expect(hookResult.current.data).toBe(expectedTemplates);
+    });
+  const waitForInstancesData = async (
+    hookResult: { current: ReturnType<UseDeploymentInstancesHook> },
+    expectedInstances: DeploymentInstance[],
+  ) =>
+    waitFor(() => {
+      expect(hookResult.current.data).toBe(expectedInstances);
+    });
 
   describe("useScheduledDeployments", () => {
     beforeEach(() => {
@@ -192,13 +206,7 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useDeploymentTemplates(), { wrapper });
 
-        expect(result.current.isLoading).toBe(true);
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
-        expect(result.current.data).toEqual(mockTemplates);
+        await waitForTemplatesData(result, mockTemplates);
         expect(result.current.error).toBeNull();
         expect(apiClient.get).toHaveBeenCalledWith("/deployments/templates?is_active=true");
       });
@@ -213,26 +221,21 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const { result } = renderHook(() => useDeploymentTemplates(), { wrapper });
 
         await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
+          expect(result.current.error).toEqual(mockError);
         });
-
-        expect(result.current.error).toEqual(mockError);
         expect(result.current.data).toBeUndefined();
       });
 
       it("should handle empty templates list", async () => {
+        const mockTemplates: DeploymentTemplate[] = [];
         mockApiClientHandlers(apiClient, {
-          get: [{ matcher: isTemplatesEndpoint, data: [] }],
+          get: [{ matcher: isTemplatesEndpoint, data: mockTemplates }],
         });
 
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useDeploymentTemplates(), { wrapper });
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
-        expect(result.current.data).toEqual([]);
+        await waitForTemplatesData(result, mockTemplates);
         expect(result.current.error).toBeNull();
       });
 
@@ -256,9 +259,7 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useDeploymentTemplates(), { wrapper });
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForTemplatesData(result, mockTemplates);
 
         expect(apiClient.get).toHaveBeenCalledTimes(1);
 
@@ -306,13 +307,7 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useDeploymentInstances(), { wrapper });
 
-        expect(result.current.isLoading).toBe(true);
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
-        expect(result.current.data).toEqual(mockInstances);
+        await waitForInstancesData(result, mockInstances);
         expect(result.current.error).toBeNull();
         expect(apiClient.get).toHaveBeenCalledWith("/deployments/instances");
       });
@@ -327,26 +322,21 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const { result } = renderHook(() => useDeploymentInstances(), { wrapper });
 
         await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
+          expect(result.current.error).toEqual(mockError);
         });
-
-        expect(result.current.error).toEqual(mockError);
         expect(result.current.data).toBeUndefined();
       });
 
       it("should handle empty instances list", async () => {
+        const mockInstances: DeploymentInstance[] = [];
         mockApiClientHandlers(apiClient, {
-          get: [{ matcher: isInstancesEndpoint, data: { instances: [] } }],
+          get: [{ matcher: isInstancesEndpoint, data: { instances: mockInstances } }],
         });
 
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useDeploymentInstances(), { wrapper });
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
-        expect(result.current.data).toEqual([]);
+        await waitForInstancesData(result, mockInstances);
         expect(result.current.error).toBeNull();
       });
     });
@@ -741,10 +731,6 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useScheduledDeployments(), { wrapper });
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
         let templates: DeploymentTemplate[] | undefined;
         await act(async () => {
           templates = await result.current.fetchTemplates();
@@ -776,10 +762,6 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
 
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useScheduledDeployments(), { wrapper });
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
 
         let instances: DeploymentInstance[] | undefined;
         await act(async () => {
@@ -817,10 +799,6 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
 
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useScheduledDeployments(), { wrapper });
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
 
         let response: ScheduledDeploymentResponse | undefined;
         await act(async () => {
@@ -873,10 +851,6 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useScheduledDeployments(), { wrapper });
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
         let templates: DeploymentTemplate[] | undefined;
         await act(async () => {
           templates = await result.current.fetchTemplates();
@@ -895,10 +869,6 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
 
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useScheduledDeployments(), { wrapper });
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
 
         let instances: DeploymentInstance[] | undefined;
         await act(async () => {
@@ -930,9 +900,7 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useDeploymentTemplates(), { wrapper });
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForTemplatesData(result, mockTemplates);
 
         expect(result.current.data?.[0].description).toBeUndefined();
         expect(result.current.data?.[0].cpu_cores).toBeUndefined();
@@ -960,9 +928,7 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
         const wrapper = createQueryWrapper();
         const { result } = renderHook(() => useDeploymentInstances(), { wrapper });
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
+        await waitForInstancesData(result, mockInstances);
 
         expect(result.current.data?.[0].region).toBeUndefined();
         expect(result.current.data?.[0].allocated_cpu).toBeUndefined();

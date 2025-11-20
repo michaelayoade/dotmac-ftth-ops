@@ -169,10 +169,13 @@ describe("utils", () => {
   });
 
   describe("debounce", () => {
-    jest.useFakeTimers();
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
 
     afterEach(() => {
-      jest.clearAllTimers();
+      jest.runOnlyPendingTimers();
+      jest.useRealTimers();
     });
 
     it("should debounce function calls", () => {

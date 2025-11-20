@@ -85,6 +85,12 @@ export const brandingHandlers = [
       brandingConfigs.set(tenantId, branding);
     }
 
+    console.log('[MSW] GET /api/v1/branding - returning:', {
+      product_name: branding.branding.product_name,
+      primary_color: branding.branding.primary_color,
+      hasSeededData: brandingConfigs.has(tenantId),
+    });
+
     return HttpResponse.json(branding);
   }),
 

@@ -288,23 +288,37 @@ describe("useCampaigns", () => {
     it("should use 30 second stale time", async () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
 
+      // Create a custom wrapper with observable staleTime
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: false,
+          },
+          mutations: {
+            retry: false,
+          },
+        },
+      });
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      );
+
       const { result } = renderHook(() => useCampaigns(), {
-        wrapper: createWrapper(),
+        wrapper,
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      // First call
-      expect(apiClient.get).toHaveBeenCalledTimes(1);
+      // Verify staleTime is set to 30 seconds (30_000 ms)
+      const queries = queryClient.getQueryCache().getAll();
+      const campaignQuery = queries.find(
+        (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns"
+      );
+      expect(campaignQuery?.options.staleTime).toBe(30_000);
 
-      // Immediately refetch - should use cached data due to staleTime
-      await act(async () => {
-        await result.current.refetch();
-      });
-
-      // Should still be 1 call because of staleTime
-      // Note: In a real scenario with time manipulation, this would be tested differently
-      expect(apiClient.get).toHaveBeenCalled();
+      // Verify data is considered fresh immediately after fetch
+      expect(result.current.isStale).toBe(false);
     });
   });
 

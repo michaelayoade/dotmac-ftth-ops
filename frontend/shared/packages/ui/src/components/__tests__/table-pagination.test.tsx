@@ -5,8 +5,7 @@
  * Supports both client-side and server-side pagination
  */
 
-import { render, screen } from "@testing-library/react";
-import { renderHook, act } from "@testing-library/react";
+import { act, render, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 

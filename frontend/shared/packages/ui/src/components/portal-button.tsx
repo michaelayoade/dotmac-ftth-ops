@@ -45,9 +45,49 @@ export interface PortalButtonProps
     VariantProps<typeof portalButtonVariants> {}
 
 const PortalButton = React.forwardRef<HTMLButtonElement, PortalButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      style,
+      onMouseEnter,
+      onMouseLeave,
+      onMouseDown,
+      onMouseUp,
+      ...props
+    },
+    ref,
+  ) => {
     const { theme } = usePortalTheme();
     const { animations } = theme;
+    const isDisabled = props.disabled;
+
+    const handleMouseEnter = (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (!isDisabled) {
+        event.currentTarget.style.transform = `scale(${animations.hoverScale})`;
+      }
+      onMouseEnter?.(event);
+    };
+
+    const handleMouseLeave = (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.currentTarget.style.transform = "scale(1)";
+      onMouseLeave?.(event);
+    };
+
+    const handleMouseDown = (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (!isDisabled) {
+        event.currentTarget.style.transform = `scale(${animations.activeScale})`;
+      }
+      onMouseDown?.(event);
+    };
+
+    const handleMouseUp = (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (!isDisabled) {
+        event.currentTarget.style.transform = `scale(${animations.hoverScale})`;
+      }
+      onMouseUp?.(event);
+    };
 
     return (
       <button
@@ -56,25 +96,12 @@ const PortalButton = React.forwardRef<HTMLButtonElement, PortalButtonProps>(
         style={{
           transitionDuration: `${animations.duration}ms`,
           transitionTimingFunction: animations.easing,
+          ...style,
         }}
-        onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-          if (!props.disabled) {
-            e.currentTarget.style.transform = `scale(${animations.hoverScale})`;
-          }
-        }}
-        onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-          e.currentTarget.style.transform = "scale(1)";
-        }}
-        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => {
-          if (!props.disabled) {
-            e.currentTarget.style.transform = `scale(${animations.activeScale})`;
-          }
-        }}
-        onMouseUp={(e: React.MouseEvent<HTMLButtonElement>) => {
-          if (!props.disabled) {
-            e.currentTarget.style.transform = `scale(${animations.hoverScale})`;
-          }
-        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
         {...props}
       />
     );

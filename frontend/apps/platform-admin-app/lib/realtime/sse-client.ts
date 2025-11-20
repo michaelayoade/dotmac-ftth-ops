@@ -242,7 +242,7 @@ export function createSSEClient(config: SSEConfig): SSEClient {
  */
 export class SSEEndpoints {
   private readonly token: string;
-  private readonly overrideBaseUrl?: string;
+  private readonly overrideBaseUrl: string | undefined;
 
   constructor(token: string, overrideBaseUrl?: string) {
     this.token = token;

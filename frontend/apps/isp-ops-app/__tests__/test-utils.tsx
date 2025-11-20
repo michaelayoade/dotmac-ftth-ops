@@ -40,10 +40,8 @@ export function createTestQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         retry: false,
-        cacheTime: 0,
-        staleTime: 0,
-        // Disable automatic refetching in tests
-        refetchOnMount: false,
+        gcTime: Infinity, // Keep data in cache for the duration of the test
+        // Don't disable refetching completely - allow queries to work naturally
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         networkMode: "always",

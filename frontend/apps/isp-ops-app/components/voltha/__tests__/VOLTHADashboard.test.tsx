@@ -5,7 +5,8 @@
  */
 
 import React from "react";
-import { renderQuick, screen, fireEvent, waitFor } from "@dotmac/testing";
+import { screen, fireEvent, waitFor, render } from "@dotmac/testing";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { VOLTHADashboard } from "../VOLTHADashboard";
 
 jest.mock("@/lib/api/client", () => ({
@@ -31,6 +32,30 @@ jest.mock("@dotmac/ui", () => {
     useToast: () => ({ toast: mockToast }),
   };
 });
+
+// Helper to create test QueryClient
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+// Helper to render component with QueryClientProvider
+const renderWithQueryClient = (component: React.ReactElement) => {
+  const testQueryClient = createTestQueryClient();
+  return render(
+    <QueryClientProvider client={testQueryClient}>
+      {component}
+    </QueryClientProvider>
+  );
+};
 
 describe("VOLTHADashboard", () => {
   const mockHealthData = {
@@ -100,7 +125,7 @@ describe("VOLTHADashboard", () => {
         () => new Promise(() => {}), // Never resolves
       );
 
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       expect(screen.getByText("Loading VOLTHA data...")).toBeInTheDocument();
     });
@@ -108,7 +133,7 @@ describe("VOLTHADashboard", () => {
 
   describe("Successful Data Load", () => {
     it("renders dashboard header after loading", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("VOLTHA PON Management")).toBeInTheDocument();
@@ -117,7 +142,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("displays VOLTHA health status", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("VOLTHA Status")).toBeInTheDocument();
@@ -127,7 +152,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("displays OLT count", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("OLTs")).toBeInTheDocument();
@@ -136,7 +161,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("displays ONU count and online percentage", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("ONUs")).toBeInTheDocument();
@@ -145,7 +170,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("displays critical alarms count", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("Critical Alarms")).toBeInTheDocument();
@@ -160,7 +185,7 @@ describe("VOLTHADashboard", () => {
         response: { data: { detail: "Connection failed" } },
       });
 
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith({
@@ -174,12 +199,12 @@ describe("VOLTHADashboard", () => {
     it("uses fallback error message when no detail provided", async () => {
       mockApiClient.get.mockRejectedValue(new Error("Network error"));
 
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith({
           title: "Failed to load VOLTHA data",
-          description: "Could not connect to VOLTHA",
+          description: "Network error",
           variant: "destructive",
         });
       });
@@ -188,7 +213,7 @@ describe("VOLTHADashboard", () => {
 
   describe("ONU List", () => {
     it("displays ONUs header with count", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText(/ONUs \(1\)/)).toBeInTheDocument();
@@ -197,7 +222,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("displays ONU details", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("ONU12345")).toBeInTheDocument();
@@ -207,7 +232,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("shows search input for ONUs", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         const searchInput = screen.getByPlaceholderText("Search ONUs...");
@@ -216,7 +241,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("shows provision ONU button", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("Provision ONU")).toBeInTheDocument();
@@ -226,7 +251,7 @@ describe("VOLTHADashboard", () => {
 
   describe("Refresh Functionality", () => {
     it("shows refresh button", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("Refresh")).toBeInTheDocument();
@@ -234,7 +259,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("reloads data when refresh button is clicked", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("VOLTHA PON Management")).toBeInTheDocument();
@@ -254,7 +279,7 @@ describe("VOLTHADashboard", () => {
 
   describe("OLT Overview", () => {
     it("displays OLT overview section", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("OLT Overview")).toBeInTheDocument();
@@ -265,7 +290,7 @@ describe("VOLTHADashboard", () => {
 
   describe("Status Badge Generation", () => {
     it("shows active status for online ONUs", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         const activeONU = screen.getByText("ONU12345");
@@ -304,7 +329,7 @@ describe("VOLTHADashboard", () => {
         return Promise.reject(new Error("Unknown endpoint"));
       });
 
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText(/ONUs \(25\)/)).toBeInTheDocument();
@@ -345,7 +370,7 @@ describe("VOLTHADashboard", () => {
         return Promise.reject(new Error("Unknown endpoint"));
       });
 
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText(/Critical Alarms \(1\)/)).toBeInTheDocument();
@@ -355,7 +380,7 @@ describe("VOLTHADashboard", () => {
     });
 
     it("does not show alarms section when no critical alarms", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.queryByText(/Critical Alarms \(\d+\)/)).not.toBeInTheDocument();
@@ -365,7 +390,7 @@ describe("VOLTHADashboard", () => {
 
   describe("Health Status Display", () => {
     it("shows healthy status with green indicator", async () => {
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("HEALTHY")).toBeInTheDocument();
@@ -395,7 +420,7 @@ describe("VOLTHADashboard", () => {
         return Promise.reject(new Error("Unknown endpoint"));
       });
 
-      renderQuick(<VOLTHADashboard />);
+      renderWithQueryClient(<VOLTHADashboard />);
 
       await waitFor(() => {
         expect(screen.getByText("UNHEALTHY")).toBeInTheDocument();

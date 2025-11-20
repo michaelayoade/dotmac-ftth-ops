@@ -7,7 +7,7 @@ const react = require("./react");
 module.exports = {
   ...react,
 
-  extends: [...react.extends, "@next/eslint-plugin-next/recommended"],
+  extends: [...react.extends, "plugin:@next/next/recommended"],
 
   plugins: [...react.plugins, "@next/next"],
 

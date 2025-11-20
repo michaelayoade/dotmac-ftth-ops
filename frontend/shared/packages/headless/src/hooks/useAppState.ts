@@ -4,13 +4,8 @@
  */
 
 import { useCallback, useMemo } from "react";
-import { useAppStore } from "@dotmac/headless/stores";
-import type {
-  FilterState,
-  PaginationState,
-  SelectionState,
-  LoadingState,
-} from "@dotmac/headless/stores";
+import { useAppStore } from "../stores";
+import type { FilterState, PaginationState, SelectionState, LoadingState } from "../stores/types";
 
 // Main app state hook
 export const useAppState = () => useAppStore();

@@ -3,7 +3,7 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { useMetrics } from "../index";
+import { useMetrics, type MetricsData } from "../index";
 
 describe("useMetrics", () => {
   let consoleLogSpy: jest.SpyInstance;
@@ -176,7 +176,8 @@ describe("useMetrics", () => {
 
       expect(() => {
         act(() => {
-          result.current.record("test_metric", { value: 100, unit: undefined });
+          const metricData = { value: 100, unit: undefined } as unknown as MetricsData;
+          result.current.record("test_metric", metricData);
         });
       }).not.toThrow();
     });
@@ -186,7 +187,8 @@ describe("useMetrics", () => {
 
       expect(() => {
         act(() => {
-          result.current.record("test_metric", { value: 100, tags: undefined });
+          const metricData = { value: 100, tags: undefined } as unknown as MetricsData;
+          result.current.record("test_metric", metricData);
         });
       }).not.toThrow();
     });

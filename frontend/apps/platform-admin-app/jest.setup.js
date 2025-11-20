@@ -77,14 +77,6 @@ global.BroadcastChannel = class BroadcastChannel {
 
 expect.extend(toHaveNoViolations);
 
-let mswServer = null;
-try {
-  mswServer = require("./__tests__/msw/server").server;
-} catch (error) {
-  console.warn("[jest.setup] MSW server failed to load:", error instanceof Error ? error.message : error);
-  console.warn("[jest.setup] Tests that do not require MSW will still run");
-}
-
 beforeAll(() => {
   console.error = (...args) => {
     if (
@@ -96,23 +88,10 @@ beforeAll(() => {
     }
     originalError.call(console, ...args);
   };
-
-  if (mswServer) {
-    mswServer.listen({ onUnhandledRequest: "warn" });
-  }
-});
-
-afterEach(() => {
-  if (mswServer) {
-    mswServer.resetHandlers();
-  }
 });
 
 afterAll(() => {
   console.error = originalError;
-  if (mswServer) {
-    mswServer.close();
-  }
 });
 
 jest.mock("next/router", () => ({

@@ -127,10 +127,3 @@ export {
   userEvent,
   act,
 };
-
-// Re-export shared MSW utilities so tests can rely on a single helper package.
-export {
-  server,
-  mockServer,
-  setupMSWServer,
-} from "../../../../mocks/server";

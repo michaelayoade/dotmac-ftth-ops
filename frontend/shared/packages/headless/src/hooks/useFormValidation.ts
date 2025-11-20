@@ -84,7 +84,10 @@ export function useFormValidation(
       if (validateOnChange && touched[field]) {
         debouncedValidatorRef.current?.(field, value, (fieldErrors) => {
           if (fieldErrors.length > 0) {
-            setErrors((prev) => ({ ...prev, [field]: fieldErrors[0].message }));
+            const firstError = fieldErrors[0];
+            if (firstError) {
+              setErrors((prev) => ({ ...prev, [field]: firstError.message }));
+            }
           } else {
             setErrors((prev) => {
               const newErrors = { ...prev };
@@ -128,7 +131,10 @@ export function useFormValidation(
       const fieldErrors = validatorRef.current.validateField(field, value);
 
       if (fieldErrors.length > 0) {
-        setErrors((prev) => ({ ...prev, [field]: fieldErrors[0].message }));
+        const firstError = fieldErrors[0];
+        if (firstError) {
+          setErrors((prev) => ({ ...prev, [field]: firstError.message }));
+        }
       } else {
         setErrors((prev) => {
           const newErrors = { ...prev };
@@ -172,23 +178,35 @@ export function useFormValidation(
       const isRequired = validatorRef.current.isFieldRequired(field);
       const hasError = !!errors[field];
 
-      return {
-        value: formData[field] || "",
-        onChange: (e) => {
-          const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-          setValue(field, value);
+      const fieldProps: FieldProps = {
+        value: formData[field] ?? "",
+        onChange: (event) => {
+          const target = event.target as
+            | HTMLInputElement
+            | HTMLSelectElement
+            | HTMLTextAreaElement;
+          const nextValue =
+            target instanceof HTMLInputElement && target.type === "checkbox"
+              ? target.checked
+              : target.value;
+          setValue(field, nextValue);
         },
-        onBlur: (_e) => {
+        onBlur: () => {
           setTouched(field, true);
           if (validateOnBlur) {
-            validateField(field);
+            void validateField(field);
           }
         },
-        error: errors[field],
         required: isRequired,
         "aria-invalid": hasError,
-        "aria-describedby": hasError ? `${field}-error` : undefined,
       };
+
+      if (errors[field]) {
+        fieldProps.error = errors[field];
+        fieldProps["aria-describedby"] = `${field}-error`;
+      }
+
+      return fieldProps;
     },
     [formData, errors, setValue, setTouched, validateField, validateOnBlur],
   );

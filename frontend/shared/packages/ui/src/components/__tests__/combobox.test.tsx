@@ -324,7 +324,6 @@ describe("Combobox", () => {
     });
 
     it("renders language selector", async () => {
-      const user = userEvent.setup();
       const languages: ComboboxOption[] = [
         { value: "en", label: "English" },
         { value: "es", label: "Spanish" },

@@ -333,8 +333,10 @@ describe("CreateLeadModal Integration Tests", () => {
       // Select service types (if checkboxes are available)
       const checkboxes = screen.queryAllByRole("checkbox");
       if (checkboxes.length > 0) {
-        await user.click(checkboxes[0]);
-        await user.click(checkboxes[1]);
+        await user.click(checkboxes[0]!);
+        if (checkboxes.length > 1) {
+          await user.click(checkboxes[1]!);
+        }
       }
 
       // Assert - component should handle selections

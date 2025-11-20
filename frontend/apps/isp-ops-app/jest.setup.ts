@@ -2,8 +2,125 @@ import "@testing-library/jest-dom";
 import "whatwg-fetch"; // Polyfill fetch for jsdom
 import { TextEncoder, TextDecoder } from "util";
 import { TransformStream, ReadableStream, WritableStream } from "stream/web";
-import { resetAllMSWHandlerStorage } from "./__tests__/msw/resetAllHandlers";
+import { Readable } from "stream";
+
+// Mock platform config BEFORE importing apiClient to fix module loading order
+jest.mock("@/lib/config", () => ({
+  platformConfig: {
+    api: {
+      baseUrl: "http://localhost:3000",
+      prefix: "/api/v1",
+      timeout: 30000,
+      buildUrl: (path: string) => {
+        const normalized = path.startsWith("/") ? path : `/${path}`;
+        const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+        return `http://localhost:3000${prefixed}`;
+      },
+      buildPath: (path: string) => {
+        const normalized = path.startsWith("/") ? path : `/${path}`;
+        return normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+      },
+      graphqlEndpoint: "http://localhost:3000/api/v1/graphql",
+    },
+    features: {
+      enableGraphQL: false,
+      enableAnalytics: false,
+      enableBanking: false,
+      enablePayments: false,
+      enableRadius: true,
+      enableNetwork: true,
+      enableAutomation: true,
+    },
+    app: {
+      name: "DotMac Platform",
+      version: "1.0.0",
+      environment: "test",
+    },
+    tenant: {
+      id: null,
+      slug: null,
+      name: "DotMac Platform",
+    },
+    banking: {
+      enabled: false,
+      providers: ["stripe", "paypal"],
+    },
+    pagination: {
+      defaultPageSize: 20,
+      pageSizeOptions: [10, 20, 50, 100],
+    },
+    formats: {
+      date: "yyyy-MM-dd",
+      dateTime: "yyyy-MM-dd HH:mm:ss",
+      time: "HH:mm:ss",
+    },
+    branding: {
+      companyName: "DotMac",
+      productName: "DotMac Platform",
+      productTagline: "Ready to Deploy",
+      logoUrl: "/logo.svg",
+      logo: {
+        light: "/logo.svg",
+        dark: "/logo.svg",
+      },
+      supportEmail: "support@example.com",
+      successEmail: "support@example.com",
+      partnerSupportEmail: "support@example.com",
+      docsUrl: "https://docs.example.com",
+      supportPortalUrl: "/customer-portal/support",
+      statusPageUrl: undefined,
+      termsUrl: "/customer-portal/terms",
+      privacyUrl: "/customer-portal/privacy",
+      faviconUrl: "/favicon.ico",
+      colors: {
+        primary: "#0ea5e9",
+        primaryHover: "#0284c7",
+        primaryForeground: "#ffffff",
+        secondary: "#8b5cf6",
+        secondaryHover: "#7c3aed",
+        secondaryForeground: "#ffffff",
+        accent: undefined,
+        background: undefined,
+        foreground: undefined,
+      },
+      customCss: {
+        "--brand-primary": "#0ea5e9",
+        "--brand-primary-hover": "#0284c7",
+        "--brand-primary-foreground": "#ffffff",
+        "--brand-secondary": "#8b5cf6",
+        "--brand-secondary-hover": "#7c3aed",
+        "--brand-secondary-foreground": "#ffffff",
+        "--brand-accent": undefined,
+        "--brand-background": undefined,
+        "--brand-foreground": undefined,
+      },
+    },
+    realtime: {
+      wsUrl: "",
+      sseUrl: "/api/v1/realtime/events",
+      alertsChannel: "tenant-global",
+    },
+    deployment: {
+      mode: "multi_tenant",
+      tenantId: null,
+      platformRoutesEnabled: true,
+    },
+    license: {
+      allowMultiTenant: true,
+      enforcePlatformAdmin: true,
+    },
+  },
+}));
+
 import apiClient from "@/lib/api/client";
+import axios from "axios";
+
+// Configure axios to use fetch adapter in test environment (for MSW compatibility)
+// This ensures axios can properly read MSW's streamed responses
+if (typeof window !== 'undefined') {
+  axios.defaults.adapter = 'fetch' as any;
+  apiClient.defaults.adapter = 'fetch' as any;
+}
 
 if (!(global as any).TextEncoder) {
   (global as any).TextEncoder = TextEncoder;
@@ -32,6 +149,7 @@ if (!(global as any).BroadcastChannel) {
   (global as any).BroadcastChannel = MockBroadcastChannel;
 }
 
+const { resetAllMSWHandlerStorage } = require("./__tests__/msw/resetAllHandlers");
 const { server } = require("./__tests__/msw/server");
 const globalAny = global as any;
 
@@ -129,29 +247,8 @@ if (shouldPatchRenderHook) {
 
 // Start MSW server before all tests
 beforeAll(() => {
-server.listen({ onUnhandledRequest: "warn" });
-  server.events.on("response:mocked", ({ request, response }: any) => {
-    if (request.url.includes("/orchestration")) {
-      console.log("[MSW response]", request.method, request.url, response.status);
-    }
-  });
+  server.listen({ onUnhandledRequest: "warn" });
 });
-
-apiClient.interceptors.request.use((config) => {
-  if ((config.url || "").includes("orchestration")) {
-    console.log("[axios request]", config.baseURL, config.url);
-  }
-  return config;
-});
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.config?.url?.includes("orchestration")) {
-      console.log("[axios error]", error.response?.status);
-    }
-    return Promise.reject(error);
-  },
-);
 
 // Reset handlers after each test
 afterEach(() => {

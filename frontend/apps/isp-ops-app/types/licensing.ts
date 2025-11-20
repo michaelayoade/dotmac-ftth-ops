@@ -2,236 +2,85 @@
  * Licensing Framework Types
  *
  * Type definitions for the composable licensing and entitlement system.
+ * Uses Zod-inferred types as the source of truth for runtime validation compatibility.
  */
 
 // ============================================================================
-// Enums
+// Import and re-export Zod-inferred types (source of truth)
 // ============================================================================
 
-export enum ModuleCategory {
-  NETWORK = "NETWORK",
-  OSS_INTEGRATION = "OSS_INTEGRATION",
-  BILLING = "BILLING",
-  ANALYTICS = "ANALYTICS",
-  AUTOMATION = "AUTOMATION",
-  COMMUNICATIONS = "COMMUNICATIONS",
-  SECURITY = "SECURITY",
-  REPORTING = "REPORTING",
-  API_MANAGEMENT = "API_MANAGEMENT",
-  OTHER = "OTHER",
-}
+import type {
+  ModuleCategory as ModuleCategoryType,
+  PricingModel as PricingModelType,
+  SubscriptionStatus as SubscriptionStatusType,
+  BillingCycle as BillingCycleType,
+  FeatureModule as FeatureModuleType,
+  ModuleCapability as ModuleCapabilityType,
+  QuotaDefinition as QuotaDefinitionType,
+  ServicePlan as ServicePlanType,
+  PlanModule as PlanModuleType,
+  PlanQuotaAllocation as PlanQuotaAllocationType,
+  PricingTier as PricingTierType,
+  TenantSubscription as TenantSubscriptionType,
+  SubscriptionModule as SubscriptionModuleType,
+  SubscriptionQuotaUsage as SubscriptionQuotaUsageType,
+  CheckEntitlementResponse as CheckEntitlementResponseType,
+  CheckQuotaResponse as CheckQuotaResponseType,
+  PlanPricing as PlanPricingType,
+} from '@shared/utils/licensing-schemas';
 
-export enum PricingModel {
-  FLAT_FEE = "FLAT_FEE",
-  PER_UNIT = "PER_UNIT",
-  TIERED = "TIERED",
-  USAGE_BASED = "USAGE_BASED",
-  CUSTOM = "CUSTOM",
-  FREE = "FREE",
-  BUNDLED = "BUNDLED",
-}
+// Re-export types
+export type ModuleCategory = ModuleCategoryType;
+export type PricingModel = PricingModelType;
+export type SubscriptionStatus = SubscriptionStatusType;
+export type BillingCycle = BillingCycleType;
+export type FeatureModule = FeatureModuleType;
+export type ModuleCapability = ModuleCapabilityType;
+export type QuotaDefinition = QuotaDefinitionType;
+export type ServicePlan = ServicePlanType;
+export type PlanModule = PlanModuleType;
+export type PlanQuotaAllocation = PlanQuotaAllocationType;
+export type PricingTier = PricingTierType;
+export type TenantSubscription = TenantSubscriptionType;
+export type SubscriptionModule = SubscriptionModuleType;
+export type SubscriptionQuotaUsage = SubscriptionQuotaUsageType;
+export type CheckEntitlementResponse = CheckEntitlementResponseType;
+export type CheckQuotaResponse = CheckQuotaResponseType;
+export type PlanPricing = PlanPricingType;
 
-export enum SubscriptionStatus {
-  TRIAL = "TRIAL",
-  ACTIVE = "ACTIVE",
-  PAST_DUE = "PAST_DUE",
-  CANCELED = "CANCELED",
-  EXPIRED = "EXPIRED",
-  SUSPENDED = "SUSPENDED",
-}
-
-export enum BillingCycle {
-  MONTHLY = "MONTHLY",
-  ANNUAL = "ANNUAL",
-}
-
-export enum EventType {
-  SUBSCRIPTION_CREATED = "SUBSCRIPTION_CREATED",
-  TRIAL_STARTED = "TRIAL_STARTED",
-  TRIAL_ENDED = "TRIAL_ENDED",
-  TRIAL_CONVERTED = "TRIAL_CONVERTED",
-  SUBSCRIPTION_RENEWED = "SUBSCRIPTION_RENEWED",
-  SUBSCRIPTION_UPGRADED = "SUBSCRIPTION_UPGRADED",
-  SUBSCRIPTION_DOWNGRADED = "SUBSCRIPTION_DOWNGRADED",
-  SUBSCRIPTION_CANCELED = "SUBSCRIPTION_CANCELED",
-  SUBSCRIPTION_EXPIRED = "SUBSCRIPTION_EXPIRED",
-  SUBSCRIPTION_SUSPENDED = "SUBSCRIPTION_SUSPENDED",
-  SUBSCRIPTION_REACTIVATED = "SUBSCRIPTION_REACTIVATED",
-  ADDON_ADDED = "ADDON_ADDED",
-  ADDON_REMOVED = "ADDON_REMOVED",
-  QUOTA_EXCEEDED = "QUOTA_EXCEEDED",
-  QUOTA_WARNING = "QUOTA_WARNING",
-  PRICE_CHANGED = "PRICE_CHANGED",
-}
+// Re-export schemas for runtime validation
+export {
+  ModuleCategorySchema,
+  PricingModelSchema,
+  SubscriptionStatusSchema,
+  BillingCycleSchema,
+} from '@shared/utils/licensing-schemas';
 
 // ============================================================================
-// Feature Modules
+// Event Types (not in Zod schemas)
 // ============================================================================
 
-export interface FeatureModule {
-  id: string;
-  module_code: string;
-  module_name: string;
-  category: ModuleCategory;
-  description: string;
-  dependencies: string[];
-  pricing_model: PricingModel;
-  base_price: number;
-  price_per_unit?: number;
-  config_schema: Record<string, any>;
-  default_config: Record<string, any>;
-  is_active: boolean;
-  is_public: boolean;
-  extra_metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-  capabilities?: ModuleCapability[];
-}
-
-export interface ModuleCapability {
-  id: string;
-  module_id: string;
-  capability_code: string;
-  capability_name: string;
-  description: string;
-  api_endpoints: string[];
-  ui_routes: string[];
-  config: Record<string, any>;
-  created_at: string;
-}
+export type EventType =
+  | "SUBSCRIPTION_CREATED"
+  | "TRIAL_STARTED"
+  | "TRIAL_ENDED"
+  | "TRIAL_CONVERTED"
+  | "SUBSCRIPTION_RENEWED"
+  | "SUBSCRIPTION_UPGRADED"
+  | "SUBSCRIPTION_DOWNGRADED"
+  | "SUBSCRIPTION_CANCELED"
+  | "SUBSCRIPTION_EXPIRED"
+  | "SUBSCRIPTION_SUSPENDED"
+  | "SUBSCRIPTION_REACTIVATED"
+  | "ADDON_ADDED"
+  | "ADDON_REMOVED"
+  | "QUOTA_EXCEEDED"
+  | "QUOTA_WARNING"
+  | "PRICE_CHANGED";
 
 // ============================================================================
-// Quota Definitions
+// Additional Types (not in Zod schemas)
 // ============================================================================
-
-export interface QuotaDefinition {
-  id: string;
-  quota_code: string;
-  quota_name: string;
-  description: string;
-  unit_name: string;
-  unit_plural: string;
-  pricing_model: PricingModel;
-  overage_rate?: number;
-  is_metered: boolean;
-  reset_period?: string; // 'MONTHLY', 'QUARTERLY', 'ANNUAL', null for lifetime
-  is_active: boolean;
-  extra_metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
-
-// ============================================================================
-// Service Plans
-// ============================================================================
-
-export interface ServicePlan {
-  id: string;
-  plan_name: string;
-  plan_code: string;
-  description: string;
-  version: number;
-  is_template: boolean;
-  is_public: boolean;
-  is_custom: boolean;
-  base_price_monthly: number;
-  annual_discount_percent: number;
-  trial_days: number;
-  trial_modules: string[];
-  extra_metadata: Record<string, any>;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  modules?: PlanModule[];
-  quotas?: PlanQuotaAllocation[];
-}
-
-export interface PlanModule {
-  id: string;
-  plan_id: string;
-  module_id: string;
-  included_by_default: boolean;
-  is_optional_addon: boolean;
-  override_price?: number;
-  trial_only: boolean;
-  promotional_until?: string;
-  config: Record<string, any>;
-  created_at: string;
-  module?: FeatureModule;
-}
-
-export interface PlanQuotaAllocation {
-  id: string;
-  plan_id: string;
-  quota_id: string;
-  included_quantity: number;
-  soft_limit?: number;
-  allow_overage: boolean;
-  overage_rate_override?: number;
-  pricing_tiers: PricingTier[];
-  config: Record<string, any>;
-  created_at: string;
-  quota?: QuotaDefinition;
-}
-
-export interface PricingTier {
-  from: number;
-  to?: number;
-  price_per_unit: number;
-}
-
-// ============================================================================
-// Subscriptions
-// ============================================================================
-
-export interface TenantSubscription {
-  id: string;
-  tenant_id: string;
-  plan_id: string;
-  status: SubscriptionStatus;
-  billing_cycle: BillingCycle;
-  monthly_price: number;
-  annual_price?: number;
-  trial_start?: string;
-  trial_end?: string;
-  current_period_start: string;
-  current_period_end: string;
-  stripe_customer_id?: string;
-  stripe_subscription_id?: string;
-  custom_config: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-  plan?: ServicePlan;
-  modules?: SubscriptionModule[];
-  quota_usage?: SubscriptionQuotaUsage[];
-}
-
-export interface SubscriptionModule {
-  id: string;
-  subscription_id: string;
-  module_id: string;
-  is_enabled: boolean;
-  source: "PLAN" | "ADDON" | "TRIAL" | "PROMOTIONAL";
-  addon_price?: number;
-  expires_at?: string;
-  config: Record<string, any>;
-  activated_at: string;
-  module?: FeatureModule;
-}
-
-export interface SubscriptionQuotaUsage {
-  id: string;
-  subscription_id: string;
-  quota_id: string;
-  period_start: string;
-  period_end?: string;
-  allocated_quantity: number;
-  current_usage: number;
-  overage_quantity: number;
-  overage_charges: number;
-  last_updated: string;
-  quota?: QuotaDefinition;
-}
 
 export interface FeatureUsageLog {
   id: string;
@@ -348,25 +197,9 @@ export interface CheckEntitlementRequest {
   capability_code?: string;
 }
 
-export interface CheckEntitlementResponse {
-  entitled: boolean;
-  message?: string;
-  upgrade_path?: ServicePlan[];
-}
-
 export interface CheckQuotaRequest {
   quota_code: string;
   quantity?: number;
-}
-
-export interface CheckQuotaResponse {
-  available: boolean;
-  current_usage: number;
-  allocated_quantity: number;
-  remaining: number;
-  will_exceed: boolean;
-  overage_allowed: boolean;
-  estimated_overage_charge?: number;
 }
 
 export interface ConsumeQuotaRequest {
@@ -443,7 +276,7 @@ export interface UseLicensingReturn {
   updatePlan: (id: string, data: Partial<ServicePlan>) => Promise<ServicePlan>;
   getPlan: (id: string) => Promise<ServicePlan>;
   duplicatePlan: (id: string) => Promise<ServicePlan>;
-  calculatePlanPrice: (id: string, params: any) => Promise<{ monthly: number; annual: number }>;
+  calculatePlanPrice: (id: string, params: { billing_period?: string; quantity?: number }) => Promise<PlanPricing>;
 
   // Subscriptions
   currentSubscription?: TenantSubscription;
@@ -472,16 +305,6 @@ export type LicensingError = {
   message: string;
   details?: Record<string, any>;
 };
-
-export interface PlanPricing {
-  monthly_price: number;
-  annual_price: number;
-  monthly_with_discount: number;
-  savings_annual: number;
-  base_price: number;
-  modules_total: number;
-  addons_total: number;
-}
 
 export interface QuotaUsageStats {
   total_allocated: number;

@@ -14,27 +14,46 @@ import { organization } from "better-auth/plugins";
 import { createAccessControl } from "better-auth/plugins/access";
 import { Pool } from "pg";
 
-// Environment variables
-const DATABASE_URL = process.env['DATABASE_URL'] || process.env['DOTMAC_DATABASE_URL'];
-const AUTH_SECRET = process.env['BETTER_AUTH_SECRET'] || process.env['JWT_SECRET'];
-const AUTH_URL = process.env['BETTER_AUTH_URL'] || process.env['NEXT_PUBLIC_API_URL'] || "http://localhost:3000";
+type AuthInstance = ReturnType<typeof betterAuth>;
 
-if (!DATABASE_URL) {
-  throw new Error("DATABASE_URL or DOTMAC_DATABASE_URL must be defined");
-}
+const resolveAuthEnvironment = () => {
+  const databaseUrl = process.env['DATABASE_URL'] || process.env['DOTMAC_DATABASE_URL'];
+  const authSecret = process.env['BETTER_AUTH_SECRET'] || process.env['JWT_SECRET'];
+  const authUrl =
+    process.env['BETTER_AUTH_URL'] || process.env['NEXT_PUBLIC_API_URL'] || "http://localhost:3000";
 
-if (!AUTH_SECRET) {
-  throw new Error("BETTER_AUTH_SECRET or JWT_SECRET must be defined");
-}
+  if (!databaseUrl) {
+    throw new Error(
+      "Better Auth is not configured. Set DATABASE_URL or DOTMAC_DATABASE_URL before handling auth routes.",
+    );
+  }
 
-// PostgreSQL connection pool
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  // Convert async URL to sync if needed
-  ...(DATABASE_URL.includes("+asyncpg") ? {
-    connectionString: DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
-  } : {})
-});
+  if (!authSecret) {
+    throw new Error(
+      "Better Auth is not configured. Set BETTER_AUTH_SECRET or JWT_SECRET before handling auth routes.",
+    );
+  }
+
+  return { databaseUrl, authSecret, authUrl };
+};
+
+const normalizeConnectionString = (connectionString: string) =>
+  connectionString.includes("+asyncpg")
+    ? connectionString.replace("postgresql+asyncpg://", "postgresql://")
+    : connectionString;
+
+let cachedPool: Pool | null = null;
+let cachedPoolConnectionString: string | null = null;
+const getPool = (connectionString: string) => {
+  const normalized = normalizeConnectionString(connectionString);
+  if (cachedPool && cachedPoolConnectionString === normalized) {
+    return cachedPool;
+  }
+
+  cachedPool = new Pool({ connectionString: normalized });
+  cachedPoolConnectionString = normalized;
+  return cachedPool;
+};
 
 /**
  * Custom roles for ISP operations
@@ -211,153 +230,167 @@ const roles = {
 /**
  * Better Auth instance with multi-tenant organization support
  */
-export const auth = betterAuth({
-  // Database configuration
-  database: {
-    provider: "pg",
-    connection: pool,
-  },
+const createAuthInstance = (): AuthInstance => {
+  const { databaseUrl, authSecret, authUrl } = resolveAuthEnvironment();
 
-  // Base URL configuration
-  baseURL: AUTH_URL,
+  return betterAuth({
+    // Database configuration
+    database: {
+      provider: "pg",
+      connection: getPool(databaseUrl),
+    },
 
-  // Secret for encryption and hashing
-  secret: AUTH_SECRET,
+    // Base URL configuration
+    baseURL: authUrl,
 
-  // User schema with additional fields
-  user: {
-    additionalFields: {
-      username: {
-        type: "string",
-        required: false,
-      },
-      first_name: {
-        type: "string",
-        required: false,
-      },
-      last_name: {
-        type: "string",
-        required: false,
-      },
-      full_name: {
-        type: "string",
-        required: false,
-      },
-      tenant_id: {
-        type: "string",
-        required: false,
-      },
-      roles: {
-        type: "string[]" as const,
-        required: false,
-      },
-      mfa_enabled: {
-        type: "boolean",
-        required: false,
-        defaultValue: false,
-      },
-      mfa_backup_codes_remaining: {
-        type: "number",
-        required: false,
-      },
-      phone: {
-        type: "string",
-        required: false,
-      },
-      avatar_url: {
-        type: "string",
-        required: false,
-      },
-      role: {
-        type: "string",
-        required: false,
+    // Secret for encryption and hashing
+    secret: authSecret,
+
+    // User schema with additional fields
+    user: {
+      additionalFields: {
+        username: {
+          type: "string",
+          required: false,
+        },
+        first_name: {
+          type: "string",
+          required: false,
+        },
+        last_name: {
+          type: "string",
+          required: false,
+        },
+        full_name: {
+          type: "string",
+          required: false,
+        },
+        tenant_id: {
+          type: "string",
+          required: false,
+        },
+        roles: {
+          type: "string[]" as const,
+          required: false,
+        },
+        mfa_enabled: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+        },
+        mfa_backup_codes_remaining: {
+          type: "number",
+          required: false,
+        },
+        phone: {
+          type: "string",
+          required: false,
+        },
+        avatar_url: {
+          type: "string",
+          required: false,
+        },
+        role: {
+          type: "string",
+          required: false,
+        },
       },
     },
-  },
 
-  // Email/Password authentication
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: true,
-    sendResetPassword: async ({ user, url }) => {
-      // TODO: Implement email sending via your email service
-      console.log(`Reset password URL for ${user.email}: ${url}`);
-    },
-  },
-
-  // Session configuration
-  session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
-    cookieCache: {
+    // Email/Password authentication
+    emailAndPassword: {
       enabled: true,
-      maxAge: 5 * 60, // 5 minutes
-    },
-  },
-
-  // Advanced session security
-  advanced: {
-    crossSubDomainCookies: {
-      enabled: false,
-    },
-    useSecureCookies: process.env['NODE_ENV'] === "production",
-    generateId: () => {
-      // Use crypto for secure ID generation
-      return crypto.randomUUID();
-    },
-  },
-
-  // Two-Factor Authentication
-  twoFactor: {
-    enabled: true,
-    issuer: "DotMac ISP Platform",
-  },
-
-  // Plugins
-  plugins: [
-    // Organization plugin for multi-tenancy
-    organization({
-      // Enable async storage for role-based access control
-      async: true,
-
-      // Access control configuration
-      ac,
-      roles: Object.values(roles) as any,
-
-      // Organization creation callback
-      onCreate: async (organization: { id: string; name: string; slug?: string }) => {
-        console.log(`New organization created: ${organization.name}`);
-        // TODO: Initialize organization-specific resources
-        // - Create default roles
-        // - Set up billing account
-        // - Configure initial settings
+      requireEmailVerification: true,
+      sendResetPassword: async ({ user, url }) => {
+        // TODO: Implement email sending via your email service
+        console.log(`Reset password URL for ${user.email}: ${url}`);
       },
+    },
 
-      // Organization deletion callback
-      onDelete: async (organization: { id: string; name: string; slug?: string }) => {
-        console.log(`Organization deleted: ${organization.name}`);
-        // TODO: Cleanup organization resources
-        // - Archive data
-        // - Cancel subscriptions
-        // - Notify members
+    // Session configuration
+    session: {
+      expiresIn: 60 * 60 * 24 * 7, // 7 days
+      updateAge: 60 * 60 * 24, // 1 day
+      cookieCache: {
+        enabled: true,
+        maxAge: 5 * 60, // 5 minutes
       },
-    }),
-  ],
+    },
 
-  // Trust proxy headers (important for deployment)
-  trustedOrigins: [
-    AUTH_URL,
-    process.env['NEXT_PUBLIC_ADMIN_URL'] || "http://localhost:3001",
-    process.env['NEXT_PUBLIC_ISP_URL'] || "http://localhost:3002",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
-  ],
-});
+    // Advanced session security
+    advanced: {
+      crossSubDomainCookies: {
+        enabled: false,
+      },
+      useSecureCookies: process.env['NODE_ENV'] === "production",
+      generateId: () => {
+        // Use crypto for secure ID generation
+        return crypto.randomUUID();
+      },
+    },
+
+    // Two-Factor Authentication
+    twoFactor: {
+      enabled: true,
+      issuer: "DotMac ISP Platform",
+    },
+
+    // Plugins
+    plugins: [
+      // Organization plugin for multi-tenancy
+      organization({
+        // Enable async storage for role-based access control
+        async: true,
+
+        // Access control configuration
+        ac,
+        roles: Object.values(roles) as any,
+
+        // Organization creation callback
+        onCreate: async (organization: { id: string; name: string; slug?: string }) => {
+          console.log(`New organization created: ${organization.name}`);
+          // TODO: Initialize organization-specific resources
+          // - Create default roles
+          // - Set up billing account
+          // - Configure initial settings
+        },
+
+        // Organization deletion callback
+        onDelete: async (organization: { id: string; name: string; slug?: string }) => {
+          console.log(`Organization deleted: ${organization.name}`);
+          // TODO: Cleanup organization resources
+          // - Archive data
+          // - Cancel subscriptions
+          // - Notify members
+        },
+      }),
+    ],
+
+    // Trust proxy headers (important for deployment)
+    trustedOrigins: [
+      authUrl,
+      process.env['NEXT_PUBLIC_ADMIN_URL'] || "http://localhost:3001",
+      process.env['NEXT_PUBLIC_ISP_URL'] || "http://localhost:3002",
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+    ],
+  });
+};
+
+let cachedAuth: AuthInstance | null = null;
+
+export const getAuth = (): AuthInstance => {
+  if (!cachedAuth) {
+    cachedAuth = createAuthInstance();
+  }
+
+  return cachedAuth;
+};
 
 /**
  * Export type inference helpers
  */
-export type Auth = typeof auth;
-export type Session = typeof auth.$Infer.Session.session;
-export type User = typeof auth.$Infer.Session.user;
+export type Auth = AuthInstance;
+export type Session = AuthInstance["$Infer"]["Session"]["session"];
+export type User = AuthInstance["$Infer"]["Session"]["user"];

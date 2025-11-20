@@ -18,21 +18,21 @@ describe("Separator", () => {
     });
 
     it("renders as div element", () => {
-      const { container } = render(<Separator data-testid="separator" />);
+      render(<Separator data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator.tagName).toBe("DIV");
     });
 
     it("applies base styles", () => {
-      const { container } = render(<Separator data-testid="separator" />);
+      render(<Separator data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("shrink-0", "bg-muted");
     });
 
     it("renders with custom className", () => {
-      const { container } = render(<Separator className="custom-separator" data-testid="separator" />);
+      render(<Separator className="custom-separator" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("custom-separator");
@@ -41,14 +41,14 @@ describe("Separator", () => {
 
   describe("Orientation", () => {
     it("renders horizontal by default", () => {
-      const { container } = render(<Separator data-testid="separator" />);
+      render(<Separator data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("h-[1px]", "w-full");
     });
 
     it("renders horizontal when orientation='horizontal'", () => {
-      const { container } = render(<Separator orientation="horizontal" data-testid="separator" />);
+      render(<Separator orientation="horizontal" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("h-[1px]", "w-full");
@@ -56,7 +56,7 @@ describe("Separator", () => {
     });
 
     it("renders vertical when orientation='vertical'", () => {
-      const { container } = render(<Separator orientation="vertical" data-testid="separator" />);
+      render(<Separator orientation="vertical" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("h-full", "w-[1px]");
@@ -98,21 +98,21 @@ describe("Separator", () => {
     });
 
     it("forwards data attributes", () => {
-      const { container } = render(<Separator data-testid="custom-separator" data-custom="value" />);
+      render(<Separator data-testid="custom-separator" data-custom="value" />);
 
       const separator = screen.getByTestId("custom-separator");
       expect(separator).toHaveAttribute("data-custom", "value");
     });
 
     it("supports aria-label for accessibility", () => {
-      const { container } = render(<Separator aria-label="Section divider" data-testid="separator" />);
+      render(<Separator aria-label="Section divider" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveAttribute("aria-label", "Section divider");
     });
 
     it("supports role attribute", () => {
-      const { container } = render(<Separator role="separator" data-testid="separator" />);
+      render(<Separator role="separator" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveAttribute("role", "separator");
@@ -222,21 +222,21 @@ describe("Separator", () => {
 
   describe("Styling", () => {
     it("can be styled with custom colors", () => {
-      const { container } = render(<Separator className="bg-primary" data-testid="separator" />);
+      render(<Separator className="bg-primary" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("bg-primary");
     });
 
     it("can be styled with custom dimensions", () => {
-      const { container } = render(<Separator className="h-2 w-full" data-testid="separator" />);
+      render(<Separator className="h-2 w-full" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("h-2", "w-full");
     });
 
     it("can be styled with spacing classes", () => {
-      const { container } = render(<Separator className="my-4 mx-2" data-testid="separator" />);
+      render(<Separator className="my-4 mx-2" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("my-4", "mx-2");
@@ -253,14 +253,14 @@ describe("Separator", () => {
     });
 
     it("maintains base classes when adding custom className", () => {
-      const { container } = render(<Separator className="custom-class" data-testid="separator" />);
+      render(<Separator className="custom-class" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("custom-class", "shrink-0", "bg-muted");
     });
 
     it("handles both orientation and className", () => {
-      const { container } = render(
+      render(
         <Separator orientation="vertical" className="custom-class" data-testid="separator" />
       );
 
@@ -271,7 +271,7 @@ describe("Separator", () => {
 
   describe("Accessibility", () => {
     it("can have semantic role", () => {
-      const { container } = render(<Separator role="separator" aria-orientation="horizontal" data-testid="separator" />);
+      render(<Separator role="separator" aria-orientation="horizontal" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveAttribute("role", "separator");
@@ -279,14 +279,14 @@ describe("Separator", () => {
     });
 
     it("can have decorative role", () => {
-      const { container } = render(<Separator role="presentation" data-testid="separator" />);
+      render(<Separator role="presentation" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveAttribute("role", "presentation");
     });
 
     it("supports aria-orientation attribute", () => {
-      const { container } = render(<Separator aria-orientation="vertical" data-testid="separator" />);
+      render(<Separator aria-orientation="vertical" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveAttribute("aria-orientation", "vertical");

@@ -72,8 +72,8 @@ export function seedBillingPlansData(
 }
 
 export const billingPlansHandlers = [
-  // GET /billing/subscriptions/plans - List billing plans
-  http.get('*/billing/subscriptions/plans', ({ request, params }) => {
+  // GET /api/v1/billing/subscriptions/plans - List billing plans
+  http.get('*/api/v1/billing/subscriptions/plans*', ({ request, params }) => {
     const url = new URL(request.url);
     const activeOnly = url.searchParams.get('active_only') === 'true';
     const productId = url.searchParams.get('product_id');
@@ -88,11 +88,12 @@ export const billingPlansHandlers = [
       filtered = filtered.filter((plan) => plan.product_id === productId);
     }
 
+    // Return array directly - axios will wrap it in response.data
     return HttpResponse.json(filtered);
   }),
 
-  // GET /billing/catalog/products - List products
-  http.get('*/billing/catalog/products', ({ request, params }) => {
+  // GET /api/v1/billing/catalog/products - List products
+  http.get('*/api/v1/billing/catalog/products*', ({ request, params }) => {
     const url = new URL(request.url);
     const isActive = url.searchParams.get('is_active') === 'true';
 
@@ -102,11 +103,12 @@ export const billingPlansHandlers = [
       filtered = filtered.filter((product) => product.is_active);
     }
 
+    // Return array directly - axios will wrap it in response.data
     return HttpResponse.json(filtered);
   }),
 
-  // POST /billing/subscriptions/plans - Create plan
-  http.post('*/billing/subscriptions/plans', async ({ request, params }) => {
+  // POST /api/v1/billing/subscriptions/plans - Create plan
+  http.post('*/api/v1/billing/subscriptions/plans', async ({ request, params }) => {
     const data = await request.json();
 
     const newPlan = createMockBillingPlan({
@@ -116,11 +118,12 @@ export const billingPlansHandlers = [
 
     billingPlans.push(newPlan);
 
+    // Return object directly - axios will wrap it in response.data
     return HttpResponse.json(newPlan, { status: 201 });
   }),
 
-  // PATCH /billing/subscriptions/plans/:id - Update plan
-  http.patch('*/billing/subscriptions/plans/:planId', async ({ request, params }) => {
+  // PATCH /api/v1/billing/subscriptions/plans/:id - Update plan
+  http.patch('*/api/v1/billing/subscriptions/plans/:planId', async ({ request, params }) => {
     const { planId } = params;
     const updates = await request.json();
 
@@ -136,11 +139,12 @@ export const billingPlansHandlers = [
       updated_at: new Date().toISOString(),
     };
 
+    // Return object directly - axios will wrap it in response.data
     return HttpResponse.json(billingPlans[index]);
   }),
 
-  // DELETE /billing/subscriptions/plans/:id - Delete plan
-  http.delete('*/billing/subscriptions/plans/:planId', ({ request, params }) => {
+  // DELETE /api/v1/billing/subscriptions/plans/:id - Delete plan
+  http.delete('*/api/v1/billing/subscriptions/plans/:planId', ({ request, params }) => {
     const { planId } = params;
     const index = billingPlans.findIndex((plan) => plan.plan_id === planId);
 

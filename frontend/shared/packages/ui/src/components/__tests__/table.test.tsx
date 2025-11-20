@@ -79,7 +79,7 @@ describe("Table Components", () => {
     });
 
     it("applies border bottom", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableHeader data-testid="header">
             <TableRow>
@@ -94,7 +94,7 @@ describe("Table Components", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableHeader className="custom-header" data-testid="header">
             <TableRow>
@@ -126,7 +126,7 @@ describe("Table Components", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableBody className="custom-body" data-testid="body">
             <TableRow>
@@ -180,7 +180,7 @@ describe("Table Components", () => {
     });
 
     it("applies border top", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableFooter data-testid="footer">
             <TableRow>
@@ -195,7 +195,7 @@ describe("Table Components", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableFooter className="custom-footer" data-testid="footer">
             <TableRow>
@@ -227,7 +227,7 @@ describe("Table Components", () => {
     });
 
     it("applies border and hover styles", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableBody>
             <TableRow data-testid="row">
@@ -242,7 +242,7 @@ describe("Table Components", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableBody>
             <TableRow className="custom-row" data-testid="row">
@@ -292,7 +292,7 @@ describe("Table Components", () => {
     });
 
     it("applies header styles", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableHeader>
             <TableRow>
@@ -313,7 +313,7 @@ describe("Table Components", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableHeader>
             <TableRow>
@@ -365,7 +365,7 @@ describe("Table Components", () => {
     });
 
     it("applies cell styles", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableBody>
             <TableRow>
@@ -380,7 +380,7 @@ describe("Table Components", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableBody>
             <TableRow>
@@ -433,7 +433,7 @@ describe("Table Components", () => {
     });
 
     it("applies caption styles", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableCaption data-testid="caption">A list of users</TableCaption>
         </Table>
@@ -444,7 +444,7 @@ describe("Table Components", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Table>
           <TableCaption className="custom-caption" data-testid="caption">
             A list of users

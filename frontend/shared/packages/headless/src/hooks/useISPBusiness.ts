@@ -109,10 +109,25 @@ export interface UseISPBusinessReturn extends ISPBusinessOperations {
  */
 export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusinessReturn {
   const { portal, tenantId, resellerId } = options;
-  const apiClient = useApiClient({
-    tenantId,
-    metadata: { portal, resellerId },
-  });
+  const metadata: Record<string, unknown> = {};
+
+  if (portal) {
+    metadata.portal = portal;
+  }
+
+  if (resellerId) {
+    metadata.resellerId = resellerId;
+  }
+
+  const apiClientConfig =
+    tenantId || Object.keys(metadata).length
+      ? {
+          ...(tenantId ? { tenantId } : {}),
+          ...(Object.keys(metadata).length ? { metadata } : {}),
+        }
+      : undefined;
+
+  const apiClient = useApiClient(apiClientConfig);
 
   // Create the business service instance
   const businessService = useMemo(() => {

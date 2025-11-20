@@ -58,7 +58,7 @@ describe("useSettings", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    global.mockToast.mockClear();
+    mockToast.mockClear();
     (extractDataOrThrow as jest.Mock).mockImplementation(
       (response: any, _errorMsg: string) => response.data,
     );
@@ -374,18 +374,19 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockLogs });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockLogs);
 
-      const { result } = renderHook(() => useAuditLogs(), {
+      const { result } = renderHook(() => useAuditLogs(0, 100), {
         wrapper: createWrapper(),
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(result.current.data).toEqual(mockLogs);
+      expect(result.current.data?.data).toEqual(mockLogs);
       expect(apiClient.get).toHaveBeenCalledWith("/admin/settings/audit-logs", {
         params: {
+          offset: 0,
+          limit: 100,
           category: undefined,
           user_id: undefined,
-          limit: 100,
         },
       });
       expect(extractDataOrThrow).toHaveBeenCalledWith(
@@ -413,18 +414,19 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockLogs });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockLogs);
 
-      const { result } = renderHook(() => useAuditLogs("database"), {
+      const { result } = renderHook(() => useAuditLogs(0, 100, "database"), {
         wrapper: createWrapper(),
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(result.current.data).toEqual(mockLogs);
+      expect(result.current.data?.data).toEqual(mockLogs);
       expect(apiClient.get).toHaveBeenCalledWith("/admin/settings/audit-logs", {
         params: {
+          offset: 0,
+          limit: 100,
           category: "database",
           user_id: undefined,
-          limit: 100,
         },
       });
     });
@@ -435,17 +437,19 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockLogs });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockLogs);
 
-      const { result } = renderHook(() => useAuditLogs(null, "user-1"), {
+      const { result } = renderHook(() => useAuditLogs(0, 100, null, "user-1"), {
         wrapper: createWrapper(),
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
+      expect(result.current.data?.data).toEqual(mockLogs);
       expect(apiClient.get).toHaveBeenCalledWith("/admin/settings/audit-logs", {
         params: {
+          offset: 0,
+          limit: 100,
           category: undefined,
           user_id: "user-1",
-          limit: 100,
         },
       });
     });
@@ -456,7 +460,7 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockLogs });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockLogs);
 
-      const { result } = renderHook(() => useAuditLogs(null, null, 50), {
+      const { result } = renderHook(() => useAuditLogs(0, 50), {
         wrapper: createWrapper(),
       });
 
@@ -464,9 +468,10 @@ describe("useSettings", () => {
 
       expect(apiClient.get).toHaveBeenCalledWith("/admin/settings/audit-logs", {
         params: {
+          offset: 0,
+          limit: 50,
           category: undefined,
           user_id: undefined,
-          limit: 50,
         },
       });
     });
@@ -477,20 +482,20 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockLogs });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockLogs);
 
-      const { result } = renderHook(() => useAuditLogs(), {
+      const { result } = renderHook(() => useAuditLogs(0, 100), {
         wrapper: createWrapper(),
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(result.current.data).toEqual([]);
+      expect(result.current.data?.data).toEqual([]);
     });
 
     it("should handle fetch error", async () => {
       const error = new Error("Failed to fetch audit logs");
       (apiClient.get as jest.Mock).mockRejectedValue(error);
 
-      const { result } = renderHook(() => useAuditLogs(), {
+      const { result } = renderHook(() => useAuditLogs(0, 100), {
         wrapper: createWrapper(),
       });
 
@@ -507,7 +512,7 @@ describe("useSettings", () => {
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockLogs);
 
       const { result } = renderHook(
-        () => useAuditLogs(null, null, 100, { enabled: false }),
+        () => useAuditLogs(0, 100, undefined, undefined, { enabled: false }),
         {
           wrapper: createWrapper(),
         }
@@ -668,7 +673,7 @@ describe("useSettings", () => {
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "Settings updated",
           description: "Redis Cache settings were updated successfully.",
         });
@@ -702,9 +707,9 @@ describe("useSettings", () => {
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "Update failed",
-          description: "Update failed",
+          description: "Failed to update settings",
           variant: "destructive",
         });
       });
@@ -1099,7 +1104,7 @@ describe("useSettings", () => {
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockLogs);
 
       const { result } = renderHook(
-        () => useAuditLogs(null, null, 100, { enabled: false }),
+        () => useAuditLogs(0, 100, undefined, undefined, { enabled: false }),
         {
           wrapper: createWrapper(),
         }

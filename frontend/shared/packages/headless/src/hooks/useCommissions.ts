@@ -414,7 +414,8 @@ export const useCommissions = (options: UseCommissionsOptions) => {
   const requestCommissionPayout = useCallback(
     async (amount?: number) => {
       try {
-        return await requestPayoutMutation.mutateAsync({ amount });
+        const payload = typeof amount === "number" ? { amount } : {};
+        return await requestPayoutMutation.mutateAsync(payload);
       } catch (error) {
         console.error("Payout request failed:", error);
         throw error;

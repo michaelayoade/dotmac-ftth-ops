@@ -38,10 +38,10 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-const global.mockToast = jest.fn();
+const mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: global.mockToast,
+    toast: mockToast,
   }),
 }));
 
@@ -104,7 +104,7 @@ describe("Platform Admin useWirelessBackend hooks", () => {
     });
     expect(mockedApi.post).toHaveBeenCalledWith("/wireless/devices", { name: "AP-2" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["wireless", "devices"] });
-    expect(global.mockToast).toHaveBeenCalledWith(
+    expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Device Created" }),
     );
 
@@ -124,7 +124,7 @@ describe("Platform Admin useWirelessBackend hooks", () => {
       await deleteHook.result.current.mutateAsync("dev-2");
     });
     expect(mockedApi.delete).toHaveBeenCalledWith("/wireless/devices/dev-2");
-    expect(global.mockToast).toHaveBeenCalledWith(
+    expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Device Deleted" }),
     );
   });

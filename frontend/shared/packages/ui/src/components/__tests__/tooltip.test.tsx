@@ -535,17 +535,18 @@ describe("Tooltip", () => {
       render(
         <TooltipProvider>
           <div>
-            <label>
+            <label htmlFor="email-with-tooltip">
               Email
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span> ℹ️</span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>We'll never share your email with anyone else.</p>
+                  <p>We&apos;ll never share your email with anyone else.</p>
                 </TooltipContent>
               </Tooltip>
             </label>
+            <input id="email-with-tooltip" type="email" />
           </div>
         </TooltipProvider>
       );

@@ -1,6 +1,6 @@
 declare module "@dotmac/primitives" {
   export * from "../../../shared/packages/primitives/src/index.ts";
-  export { sanitizeRichHtml } from "../../../shared/packages/primitives/src/utils/security";
+  export function sanitizeRichHtml(content: string | null | undefined): string;
   export {
     default as UniversalDashboard,
     UniversalDashboardProps,
@@ -27,4 +27,9 @@ declare module "@dotmac/primitives" {
     CardGridSkeleton,
     type CardGridSkeletonProps,
   } from "../../../shared/packages/primitives/src/skeletons/CardSkeleton";
+  export {
+    AnimatedCard,
+    AnimatedCounter,
+    FadeInWhenVisible,
+  } from "../../../shared/packages/primitives/src/animations/Animations";
 }

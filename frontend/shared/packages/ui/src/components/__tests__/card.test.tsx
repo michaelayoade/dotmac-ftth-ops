@@ -219,7 +219,7 @@ describe("Card", () => {
     });
 
     it("applies content styles", () => {
-      const { container } = render(
+      render(
         <Card>
           <CardContent data-testid="content">Content</CardContent>
         </Card>
@@ -230,7 +230,7 @@ describe("Card", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Card>
           <CardContent className="custom-content">Content</CardContent>
         </Card>
@@ -253,7 +253,7 @@ describe("Card", () => {
     });
 
     it("applies footer styles", () => {
-      const { container } = render(
+      render(
         <Card>
           <CardFooter data-testid="footer">Content</CardFooter>
         </Card>
@@ -264,7 +264,7 @@ describe("Card", () => {
     });
 
     it("supports custom className", () => {
-      const { container } = render(
+      render(
         <Card>
           <CardFooter className="custom-footer">Content</CardFooter>
         </Card>
@@ -386,7 +386,7 @@ describe("Card", () => {
 
   describe("HTML Attributes", () => {
     it("forwards data attributes to Card", () => {
-      const { container } = render(
+      render(
         <Card data-testid="custom-card" data-custom="value">
           Content
         </Card>

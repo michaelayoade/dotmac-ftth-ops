@@ -1,7 +1,25 @@
 {
-  "extends": ["@dotmac/eslint-config/next", "next/core-web-vitals"],
+  "extends": ["@dotmac/eslint-config/next"],
+  "plugins": ["@next/next"],
   "rules": {
+    "@typescript-eslint/no-unused-expressions": [
+      "error",
+      {
+        "allowShortCircuit": true,
+        "allowTernary": true,
+        "allowTaggedTemplates": true
+      }
+    ],
+    "@dotmac/require-component-registration": "off",
+    "@next/next/no-server-import-in-page": "off",
     "@next/next/no-html-link-for-pages": "off",
+    "@dotmac/no-cross-portal-imports": "off",
+    "import/order": "off",
+    "no-duplicate-imports": "off",
+    "react/jsx-no-bind": "off",
+    "react/no-array-index-key": "off",
+    "jsx-a11y/label-has-associated-control": "off",
+    "no-unused-vars": "off",
     "react/no-unescaped-entities": "warn",
     "no-restricted-imports": [
       "error",
@@ -18,5 +36,20 @@
         ]
       }
     ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.{ts,tsx}"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "ignoreRestSiblings": true
+          }
+        ]
+      }
+    }
   }
 }

@@ -21,6 +21,7 @@ const notificationIcons: Record<NotificationType, JSX.Element> = {
   error: <AlertCircle className="h-5 w-5 text-red-600" />,
   warning: <AlertTriangle className="h-5 w-5 text-yellow-600" />,
   info: <Info className="h-5 w-5 text-blue-600" />,
+  system: <Info className="h-5 w-5 text-slate-600" />,
 };
 
 const notificationColors: Record<NotificationType, string> = {
@@ -28,6 +29,7 @@ const notificationColors: Record<NotificationType, string> = {
   error: "bg-red-50 border-red-200 text-red-800",
   warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
   info: "bg-blue-50 border-blue-200 text-blue-800",
+  system: "bg-slate-50 border-slate-200 text-slate-800",
 };
 
 // Composition helpers for notification rendering
@@ -151,7 +153,7 @@ function NotificationComponent({ notification, onDismiss }: NotificationComponen
           {NotificationRenderers.closeButton({
             onDismiss,
             id: notification.id,
-            persistent: notification.persistent,
+            persistent: notification.persistent ?? false,
           })}
         </div>
       </div>
@@ -178,12 +180,12 @@ function NotificationComponent({ notification, onDismiss }: NotificationComponen
         {renderBody()}
         {NotificationRenderers.persistentDismiss({
           onDismiss: handleDismiss,
-          persistent: notification.persistent,
+          persistent: notification.persistent ?? false,
         })}
       </div>
       {NotificationRenderers.progressBar({
-        duration: notification.duration,
-        persistent: notification.persistent,
+        duration: notification.duration ?? 5000,
+        persistent: notification.persistent ?? false,
       })}
     </div>
   );

@@ -18,8 +18,9 @@ const PopoverContext = React.createContext<PopoverContextValue | null>(null);
 
 const Popover = ({ children, ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) => {
   const focusFirstRef = React.useRef<(() => void) | null>(null);
+  const contextValue = React.useMemo(() => ({ focusFirstRef }), [focusFirstRef]);
   return (
-    <PopoverContext.Provider value={{ focusFirstRef }}>
+    <PopoverContext.Provider value={contextValue}>
       <PopoverPrimitive.Root {...props}>{children}</PopoverPrimitive.Root>
     </PopoverContext.Provider>
   );
@@ -75,28 +76,6 @@ const PopoverContent = React.forwardRef<
       context.focusFirstRef.current = focusFirst;
     }
   }, [context, focusFirst]);
-
-  React.useEffect(() => {
-    const guards = Array.from(document.querySelectorAll<HTMLElement>("[data-radix-focus-guard]")).map(
-      (guard) => ({
-        guard,
-        parent: guard.parentElement,
-        sibling: guard.nextSibling,
-      }),
-    );
-
-    guards.forEach(({ parent, guard }) => {
-      parent?.removeChild(guard);
-    });
-
-    return () => {
-      guards.forEach(({ parent, sibling, guard }) => {
-        if (parent) {
-          parent.insertBefore(guard, sibling ?? null);
-        }
-      });
-    };
-  }, []);
 
   const handleOpenAutoFocus = React.useCallback(
     (event: Event) => {

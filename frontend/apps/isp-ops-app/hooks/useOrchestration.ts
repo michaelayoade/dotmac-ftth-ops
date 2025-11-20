@@ -34,6 +34,8 @@ export type WorkflowStatus =
   | "failed"
   | "rolling_back"
   | "rolled_back"
+  | "rollback_failed"
+  | "timeout"
   | "compensated";
 
 export type WorkflowStepStatus =
@@ -131,7 +133,7 @@ export function useOrchestrationStats() {
     queryKey: orchestrationKeys.stats(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<WorkflowStatistics>("/orchestration/statistics");
+        const response = await apiClient.get<WorkflowStatistics>("orchestration/statistics");
         return response.data;
       } catch (err: any) {
         logger.error("Failed to fetch orchestration stats", err);
@@ -177,7 +179,7 @@ export function useWorkflows(options: UseWorkflowsOptions = {}) {
         if (status) params["status"] = status;
         if (workflowType) params["workflow_type"] = workflowType;
 
-        const response = await apiClient.get<WorkflowListResponse>("/orchestration/workflows", {
+        const response = await apiClient.get<WorkflowListResponse>("orchestration/workflows", {
           params,
         });
 
@@ -216,7 +218,18 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
     refetchInterval: (query) => {
       // Only auto-refresh if enabled and workflow is still running
       if (!autoRefresh || !query.state.data) return false;
-      if (query.state.data.status === "completed" || query.state.data.status === "failed") return false;
+
+      // Stop polling for terminal states
+      const terminalStates: WorkflowStatus[] = [
+        "completed",
+        "failed",
+        "rolled_back",
+        "rollback_failed",
+        "timeout",
+        "compensated",
+      ];
+      if (terminalStates.includes(query.state.data.status)) return false;
+
       return 2000; // Poll every 2 seconds for running workflows
     },
     refetchOnWindowFocus: true,
@@ -316,7 +329,7 @@ export function useExportWorkflows() {
       }
 
       const response = await apiClient.get(
-        `/orchestration/export/${format}?${params.toString()}`,
+        `orchestration/export/${format}?${params.toString()}`,
         {
           responseType: "blob",
         },

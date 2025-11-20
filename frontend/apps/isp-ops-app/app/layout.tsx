@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { applyPlatformRuntimeConfig, platformConfig } from "@/lib/config";
 import PWAProvider from "@/components/pwa/PWAProvider";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
+import { ClientMSWProvider } from "@shared/mocks/ClientMSWProvider";
 
 const FALLBACK_PRODUCT_NAME = "DotMac Platform";
 const FALLBACK_PRODUCT_TAGLINE = "Reusable SaaS backend and APIs to launch faster.";
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body suppressHydrationWarning>
         <ErrorBoundary>
           <PWAProvider>
+            <ClientMSWProvider />
             <ClientProviders>
               {children}
               <InstallPrompt />

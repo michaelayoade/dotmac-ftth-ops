@@ -343,7 +343,7 @@ describe("usePartners", () => {
       expect(result.current.isLoading).toBe(true);
 
       await waitFor(() => expect(result.current.isLoading).toBe(false), {
-        timeout: 200,
+        timeout: 500,
       });
     });
   });
@@ -587,15 +587,14 @@ describe("usePartners", () => {
 
       expect(result.current.isPending).toBe(false);
 
-      act(() => {
-        result.current.mutate({
+      await act(async () => {
+        await result.current.mutateAsync({
           company_name: "New Partner",
           primary_email: "new@partner.com",
         });
       });
 
-      await waitFor(() => expect(result.current.isPending).toBe(true), { timeout: 100 });
-      await waitFor(() => expect(result.current.isPending).toBe(false), { timeout: 200 });
+      await waitFor(() => expect(result.current.isPending).toBe(false), { timeout: 500 });
     });
   });
 

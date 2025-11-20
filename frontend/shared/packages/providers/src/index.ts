@@ -9,38 +9,14 @@ export { UniversalProviders } from "./UniversalProviders";
 // Local components only - avoiding problematic external re-exports for now
 export { ErrorBoundary } from "./components/ErrorBoundary";
 
-// Re-export RBAC components for convenience
-export {
-  ProtectedComponent,
-  AdminOnly,
-  ManagerOnly,
-  AuthenticatedOnly,
-  ConditionalRender,
-  ShowIfAny,
-  ShowIfAll,
-  HideIf,
-} from "@dotmac/rbac";
+// Re-export hooks from RBAC (only exports that actually exist)
+export { usePermissions, useRBAC, checkPermission } from "@dotmac/rbac";
 
-// Re-export permission-aware UI components
-export {
-  PermissionAwareButton,
-  CreateButton,
-  EditButton,
-  DeleteButton,
-  AdminButton,
-} from "@dotmac/rbac";
+// Re-export types from RBAC
+export type { Role, Permission, User } from "@dotmac/rbac";
 
-// Re-export routing components
-export { ProtectedRoute, AdminRoute, ManagerRoute, AuthenticatedRoute } from "@dotmac/rbac";
-
-// Re-export hooks
-export { usePermissions, useAccessControl } from "@dotmac/rbac";
-
-// Re-export decorators
-export { withAccessControl, accessControlDecorators, createProtected } from "@dotmac/rbac";
-
-// Re-export auth-related types
-export type { FeatureFlags, AuthVariant, TenantVariant } from "./UniversalProviders";
+// Re-export auth-related types (AuthVariant was removed - Better Auth configured at app level)
+export type { FeatureFlags, TenantVariant } from "./UniversalProviders";
 
 // Default configurations for each portal
 export const PORTAL_DEFAULTS = {

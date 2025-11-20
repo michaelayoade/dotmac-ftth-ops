@@ -26,11 +26,11 @@ import { extractDataOrThrow } from "@/lib/api/response-helpers";
 
 jest.unmock("@tanstack/react-query");
 
-const global.mockToast = jest.fn();
+const mockToast = jest.fn();
 
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: global.mockToast,
+    toast: mockToast,
   }),
 }));
 
@@ -154,7 +154,7 @@ describe("Platform Admin usePlugins hooks", () => {
         configuration: {},
       });
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["plugins", "instances"] });
-      expect(global.mockToast).toHaveBeenCalledWith({
+      expect(mockToast).toHaveBeenCalledWith({
         title: "Plugin instance created",
         description: "Stripe was created successfully.",
       });
@@ -185,7 +185,7 @@ describe("Platform Admin usePlugins hooks", () => {
       expect(invalidateSpy).toHaveBeenCalledWith({
         queryKey: ["plugins", "instances", "inst-5", "configuration"],
       });
-      expect(global.mockToast).toHaveBeenCalledWith({
+      expect(mockToast).toHaveBeenCalledWith({
         title: "Configuration updated",
         description: "Plugin configuration was updated successfully.",
       });
@@ -204,7 +204,7 @@ describe("Platform Admin usePlugins hooks", () => {
 
       expect(apiClient.delete).toHaveBeenCalledWith("/plugins/instances/inst-8");
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["plugins", "instances"] });
-      expect(global.mockToast).toHaveBeenCalledWith({
+      expect(mockToast).toHaveBeenCalledWith({
         title: "Plugin instance deleted",
         description: "Plugin instance was removed successfully.",
       });
@@ -258,7 +258,7 @@ describe("Platform Admin usePlugins hooks", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith("/plugins/refresh");
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["plugins", "available"] });
-      expect(global.mockToast).toHaveBeenCalledWith({
+      expect(mockToast).toHaveBeenCalledWith({
         title: "Plugins refreshed",
         description: "Found 5 available plugins.",
       });

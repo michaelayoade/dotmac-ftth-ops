@@ -54,7 +54,7 @@ apiClient.interceptors.request.use(
 
       // Add Authorization header
       if (accessToken && config.headers && !config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${accessToken}`;
+        config.headers["Authorization"] = `Bearer ${accessToken}`;
       }
 
       // Resolve tenant ID from JWT token (production) or fallback to storage (dev)

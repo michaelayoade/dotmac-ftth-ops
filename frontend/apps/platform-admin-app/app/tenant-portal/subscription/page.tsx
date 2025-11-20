@@ -23,7 +23,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { useLicensing } from "../../../hooks/useLicensing";
 import { SubscriptionDashboard } from "../../../components/licensing/SubscriptionDashboard";
 import { PlanSelector } from "../../../components/licensing/PlanSelector";
-import { BillingCycle } from "../../../types/licensing";
+import { BillingCycle, ModuleCategory } from "../../../types/licensing";
 import type {
   ServicePlan as BillingServicePlan,
   TenantSubscription as BillingTenantSubscription,
@@ -60,14 +60,14 @@ export default function TenantSubscriptionPage() {
         id: plan.id,
         plan_name: plan.plan_name,
         plan_code: plan.plan_code,
-        description: plan.description,
-        base_price_monthly: plan.base_price_monthly,
-        annual_discount_percent: plan.annual_discount_percent,
-        trial_days: plan.trial_days,
-        is_public: plan.is_public,
-        is_active: plan.is_active,
-        created_at: plan.created_at,
-        updated_at: plan.updated_at,
+        description: plan.description ?? "",
+        base_price_monthly: plan.base_price_monthly ?? 0,
+        annual_discount_percent: plan.annual_discount_percent ?? 0,
+        trial_days: plan.trial_days ?? 0,
+        is_public: plan.is_public ?? false,
+        is_active: plan.is_active ?? false,
+        created_at: plan.created_at ?? "",
+        updated_at: plan.updated_at ?? "",
       };
 
       if (plan.modules && plan.modules.length > 0) {
@@ -75,18 +75,18 @@ export default function TenantSubscriptionPage() {
           id: module.id,
           module_id: module.module_id,
           included_by_default: module.included_by_default,
-          addon_price: module.override_price,
+          addon_price: module.override_price ?? 0,
           module: module.module
             ? {
                 id: module.module.id,
-                module_name: module.module.module_name,
-                module_code: module.module.module_code,
-                description: module.module.description,
-                category: module.module.category as any,
+                module_name: module.module.module_name ?? "",
+                module_code: module.module.module_code ?? "",
+                description: module.module.description ?? "",
+                category: (module.module.category as string | undefined) ?? "uncategorized",
                 is_core: !module.is_optional_addon,
-                dependencies: module.module.dependencies,
-                created_at: module.module.created_at,
-                updated_at: module.module.updated_at,
+                dependencies: module.module.dependencies ?? [],
+                created_at: module.module.created_at ?? "",
+                updated_at: module.module.updated_at ?? "",
               }
             : undefined,
         })) as NonNullable<BillingServicePlan["modules"]>;
@@ -153,16 +153,18 @@ export default function TenantSubscriptionPage() {
         }
 
         if (module.module) {
+          const moduleCategory =
+            (module.module.category as ModuleCategory | undefined) ?? ModuleCategory.OTHER;
           mappedModule.module = {
             id: module.module.id,
-            module_name: module.module.module_name,
-            module_code: module.module.module_code,
-            description: module.module.description,
-            category: module.module.category as any,
+            module_name: module.module.module_name ?? "",
+            module_code: module.module.module_code ?? "",
+            description: module.module.description ?? "",
+            category: moduleCategory,
             is_core: true,
-            dependencies: module.module.dependencies,
-            created_at: module.module.created_at,
-            updated_at: module.module.updated_at,
+            dependencies: module.module.dependencies ?? [],
+            created_at: module.module.created_at ?? "",
+            updated_at: module.module.updated_at ?? "",
           };
         }
 
@@ -184,10 +186,10 @@ export default function TenantSubscriptionPage() {
         if (usage.quota) {
           mappedQuota.quota = {
             id: usage.quota.id,
-            quota_name: usage.quota.quota_name,
-            quota_code: usage.quota.quota_code,
-            unit_name: usage.quota.unit_name,
-            description: usage.quota.description,
+            quota_name: usage.quota.quota_name ?? "",
+            quota_code: usage.quota.quota_code ?? "",
+            unit_name: usage.quota.unit_name ?? "",
+            description: usage.quota.description ?? "",
           };
         }
 

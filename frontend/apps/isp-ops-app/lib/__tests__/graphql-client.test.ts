@@ -5,16 +5,6 @@
 
 import { graphqlClient } from "../graphql-client";
 
-// Mock platformConfig
-jest.mock("../config", () => ({
-  platformConfig: {
-    api: {
-      graphqlEndpoint: "http://localhost:8000/graphql",
-      buildUrl: (path: string) => `http://localhost:8000${path}`,
-    },
-  },
-}));
-
 // Mock operatorAuth
 jest.mock("../../../../shared/utils/operatorAuth", () => ({
   getOperatorAccessToken: jest.fn(),
@@ -22,16 +12,19 @@ jest.mock("../../../../shared/utils/operatorAuth", () => ({
 
 describe("graphql-client", () => {
   let mockFetch: jest.Mock;
+  let originalFetch: typeof fetch | undefined;
   const { getOperatorAccessToken } = require("../../../../shared/utils/operatorAuth");
 
   beforeEach(() => {
+    originalFetch = (global as any).fetch;
     mockFetch = jest.fn();
     (global as any).fetch = mockFetch;
     getOperatorAccessToken.mockReturnValue("test-token");
   });
 
   afterEach(() => {
-    delete (global as any).fetch;
+    // Restore original fetch instead of deleting (preserves MSW compatibility)
+    (global as any).fetch = originalFetch;
     jest.clearAllMocks();
   });
 
@@ -50,7 +43,7 @@ describe("graphql-client", () => {
       const result = await graphqlClient.request(query);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8000/graphql",
+        "http://localhost:3000/api/v1/graphql",
         expect.objectContaining({
           method: "POST",
           headers: expect.objectContaining({

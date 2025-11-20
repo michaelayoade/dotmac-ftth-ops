@@ -64,7 +64,7 @@ describe("useUsers", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    global.mockToast.mockClear();
+    mockToast.mockClear();
     // Reset extractDataOrThrow to default implementation
     (extractDataOrThrow as jest.Mock).mockImplementation((response, _errorMsg) => response.data);
   });
@@ -487,7 +487,7 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         await result.current.mutateAsync({
@@ -497,7 +497,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "User updated",
           description: "John Updated was updated successfully.",
         });
@@ -520,7 +520,7 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -534,7 +534,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "Update failed",
           description: "Update failed",
           variant: "destructive",
@@ -636,14 +636,14 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         await result.current.mutateAsync("user-1");
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "User deleted",
           description: "User was removed successfully.",
         });
@@ -666,7 +666,7 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -677,7 +677,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "Delete failed",
           description: "Cannot delete user",
           variant: "destructive",
@@ -763,14 +763,14 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         await result.current.mutateAsync("user-1");
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "User disabled",
           description: "User account has been disabled.",
         });
@@ -793,7 +793,7 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -804,7 +804,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "Disable failed",
           description: "Cannot disable user",
           variant: "destructive",
@@ -890,14 +890,14 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         await result.current.mutateAsync("user-1");
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "User enabled",
           description: "User account has been enabled.",
         });
@@ -920,7 +920,7 @@ describe("useUsers", () => {
       });
 
       // Clear the mock before mutation to track toast calls
-      global.mockToast.mockClear();
+      mockToast.mockClear();
 
       await act(async () => {
         try {
@@ -931,7 +931,7 @@ describe("useUsers", () => {
       });
 
       await waitFor(() => {
-        expect(global.mockToast).toHaveBeenCalledWith({
+        expect(mockToast).toHaveBeenCalledWith({
           title: "Enable failed",
           description: "Cannot enable user",
           variant: "destructive",

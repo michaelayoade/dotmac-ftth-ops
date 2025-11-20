@@ -150,7 +150,7 @@ export default function VirtualizedSubscribersPage() {
           rowHeight={64}
           height={600}
           loading={isLoading}
-          onRowClick={(row) => console.log("Clicked:", row)}
+          onRowClick={(row: RADIUSSubscriber) => console.log("Clicked:", row)}
           className="border rounded-md"
         />
 

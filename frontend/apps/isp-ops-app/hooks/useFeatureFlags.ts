@@ -42,6 +42,10 @@ export const featureFlagsKeys = {
  * Helper to normalize feature flags response formats
  */
 function normalizeFlagsResponse(response: any): FeatureFlag[] {
+  // Handle wrapped error responses
+  if (response?.error) {
+    throw new Error(response.error.message || "Failed to fetch feature flags");
+  }
   if (Array.isArray(response?.data)) {
     return response.data;
   }
@@ -73,7 +77,7 @@ function normalizeApiError(error: unknown, fallback: string): string {
   }
 
   if (error instanceof Error && error.message) {
-    return fallback;
+    return error.message;
   }
 
   return fallback;

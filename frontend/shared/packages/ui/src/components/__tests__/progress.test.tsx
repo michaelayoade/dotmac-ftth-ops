@@ -18,14 +18,14 @@ describe("Progress", () => {
     });
 
     it("renders as div element", () => {
-      const { container } = render(<Progress data-testid="progress" />);
+      render(<Progress data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress.tagName).toBe("DIV");
     });
 
     it("applies base styles", () => {
-      const { container } = render(<Progress data-testid="progress" />);
+      render(<Progress data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveClass(
@@ -39,7 +39,7 @@ describe("Progress", () => {
     });
 
     it("renders with custom className", () => {
-      const { container } = render(<Progress className="custom-progress" data-testid="progress" />);
+      render(<Progress className="custom-progress" data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveClass("custom-progress");
@@ -214,28 +214,28 @@ describe("Progress", () => {
     });
 
     it("forwards data attributes", () => {
-      const { container } = render(<Progress data-testid="custom-progress" data-custom="value" />);
+      render(<Progress data-testid="custom-progress" data-custom="value" />);
 
       const progress = screen.getByTestId("custom-progress");
       expect(progress).toHaveAttribute("data-custom", "value");
     });
 
     it("supports aria-label for accessibility", () => {
-      const { container } = render(<Progress aria-label="Upload progress" data-testid="progress" />);
+      render(<Progress aria-label="Upload progress" data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveAttribute("aria-label", "Upload progress");
     });
 
     it("supports aria-valuenow attribute", () => {
-      const { container } = render(<Progress value={50} aria-valuenow={50} data-testid="progress" />);
+      render(<Progress value={50} aria-valuenow={50} data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveAttribute("aria-valuenow", "50");
     });
 
     it("supports aria-valuemin and aria-valuemax", () => {
-      const { container } = render(
+      render(
         <Progress value={50} aria-valuemin={0} aria-valuemax={100} data-testid="progress" />
       );
 
@@ -330,14 +330,14 @@ describe("Progress", () => {
 
   describe("Styling Variations", () => {
     it("renders with custom height", () => {
-      const { container } = render(<Progress className="h-4" data-testid="progress" />);
+      render(<Progress className="h-4" data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveClass("h-4");
     });
 
     it("renders with custom width", () => {
-      const { container } = render(<Progress className="w-1/2" data-testid="progress" />);
+      render(<Progress className="w-1/2" data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveClass("w-1/2");
@@ -390,7 +390,7 @@ describe("Progress", () => {
     });
 
     it("maintains styling with custom className", () => {
-      const { container } = render(<Progress value={50} className="custom-class" data-testid="progress" />);
+      render(<Progress value={50} className="custom-class" data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveClass("custom-class", "rounded-full", "bg-muted");
@@ -399,14 +399,14 @@ describe("Progress", () => {
 
   describe("Accessibility", () => {
     it("can have role='progressbar'", () => {
-      const { container } = render(<Progress role="progressbar" aria-valuenow={50} data-testid="progress" />);
+      render(<Progress role="progressbar" aria-valuenow={50} data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveAttribute("role", "progressbar");
     });
 
     it("supports complete ARIA attributes", () => {
-      const { container } = render(
+      render(
         <Progress
           role="progressbar"
           aria-valuenow={50}

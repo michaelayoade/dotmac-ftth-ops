@@ -203,8 +203,10 @@ describe("Input", () => {
     it("supports aria-labelledby", () => {
       render(
         <div>
-          <label id="email-label">Email</label>
-          <Input aria-labelledby="email-label" />
+          <label id="email-label" htmlFor="email-input">
+            Email
+          </label>
+          <Input id="email-input" aria-labelledby="email-label" />
         </div>
       );
 

@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useCallback } from "react";
-import { useAuth } from "@dotmac/headless/auth";
+import { useAuth } from "../auth/context";
 import { useApiClient } from "../api";
 
 export interface Permission {

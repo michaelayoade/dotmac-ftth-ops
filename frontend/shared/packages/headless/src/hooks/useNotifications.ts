@@ -4,6 +4,23 @@ import { subscribeWithSelector } from "zustand/middleware";
 
 export type NotificationType = "success" | "error" | "warning" | "info" | "system";
 
+const applyNotificationOptions = (
+  base: Omit<Notification, "id" | "timestamp">,
+  options?: Partial<Notification>,
+) => {
+  if (!options) {
+    return base;
+  }
+
+  for (const [key, value] of Object.entries(options)) {
+    if (value !== undefined) {
+      (base as Record<string, unknown>)[key] = value;
+    }
+  }
+
+  return base;
+};
+
 export interface Notification {
   id: string;
   type: NotificationType;
@@ -11,6 +28,7 @@ export interface Notification {
   message?: string;
   duration?: number;
   persistent?: boolean;
+  channel?: string[];
   actions?: {
     label: string;
     action: () => void;
@@ -87,40 +105,67 @@ export function useNotifications() {
   const notify = useMemo(
     () => ({
       success: (title: string, message?: string, options?: Partial<Notification>) => {
-        return store.addNotification({
+        const payload: Omit<Notification, "id" | "timestamp"> = {
           type: "success",
           title,
-          message,
-          ...options,
-        });
+        };
+
+        applyNotificationOptions(payload, options);
+
+        if (message !== undefined) {
+          payload.message = message;
+        }
+
+        return store.addNotification(payload);
       },
 
       error: (title: string, message?: string, options?: Partial<Notification>) => {
-        return store.addNotification({
+        const payload: Omit<Notification, "id" | "timestamp"> = {
           type: "error",
           title,
-          message,
-          persistent: true, // Errors are persistent by default
-          ...options,
-        });
+        };
+
+        applyNotificationOptions(payload, options);
+
+        if (payload.persistent === undefined) {
+          payload.persistent = true;
+        }
+
+        if (message !== undefined) {
+          payload.message = message;
+        }
+
+        return store.addNotification(payload);
       },
 
       warning: (title: string, message?: string, options?: Partial<Notification>) => {
-        return store.addNotification({
+        const payload: Omit<Notification, "id" | "timestamp"> = {
           type: "warning",
           title,
-          message,
-          ...options,
-        });
+        };
+
+        applyNotificationOptions(payload, options);
+
+        if (message !== undefined) {
+          payload.message = message;
+        }
+
+        return store.addNotification(payload);
       },
 
       info: (title: string, message?: string, options?: Partial<Notification>) => {
-        return store.addNotification({
+        const payload: Omit<Notification, "id" | "timestamp"> = {
           type: "info",
           title,
-          message,
-          ...options,
-        });
+        };
+
+        applyNotificationOptions(payload, options);
+
+        if (message !== undefined) {
+          payload.message = message;
+        }
+
+        return store.addNotification(payload);
       },
     }),
     [store],

@@ -74,10 +74,10 @@ describe("useLicensing", () => {
   describe("licensingKeys - Query Key Factory", () => {
     it("should generate correct query keys", () => {
       expect(licensingKeys.all).toEqual(["licensing"]);
-      expect(licensingKeys.modules()).toEqual(["licensing", "modules"]);
+      expect(licensingKeys.modules()).toEqual(["licensing", "modules", 0, 100]);
       expect(licensingKeys.module("mod-1")).toEqual(["licensing", "module", "mod-1"]);
-      expect(licensingKeys.quotas()).toEqual(["licensing", "quotas"]);
-      expect(licensingKeys.plans()).toEqual(["licensing", "plans"]);
+      expect(licensingKeys.quotas()).toEqual(["licensing", "quotas", 0, 100]);
+      expect(licensingKeys.plans()).toEqual(["licensing", "plans", 0, 100]);
       expect(licensingKeys.plan("plan-1")).toEqual(["licensing", "plan", "plan-1"]);
       expect(licensingKeys.subscription()).toEqual(["licensing", "subscription"]);
       expect(licensingKeys.entitlement("MODULE_CODE", "CAPABILITY_CODE")).toEqual([
@@ -125,7 +125,7 @@ describe("useLicensing", () => {
 
       expect(result.current.modules).toEqual(mockModules);
       expect(result.current.modulesError).toBeNull();
-      expect(apiClient.get).toHaveBeenCalledWith("/licensing/modules");
+      expect(apiClient.get).toHaveBeenCalledWith("/licensing/modules?offset=0&limit=100");
     });
 
     it("should handle empty modules array", async () => {
@@ -205,7 +205,7 @@ describe("useLicensing", () => {
 
       expect(result.current.quotas).toEqual(mockQuotas);
       expect(result.current.quotasError).toBeNull();
-      expect(apiClient.get).toHaveBeenCalledWith("/licensing/quotas");
+      expect(apiClient.get).toHaveBeenCalledWith("/licensing/quotas?offset=0&limit=100");
     });
 
     it("should handle quotas fetch error", async () => {
@@ -256,7 +256,7 @@ describe("useLicensing", () => {
 
       expect(result.current.plans).toEqual(mockPlans);
       expect(result.current.plansError).toBeNull();
-      expect(apiClient.get).toHaveBeenCalledWith("/licensing/plans");
+      expect(apiClient.get).toHaveBeenCalledWith("/licensing/plans?offset=0&limit=100");
     });
 
     it("should handle plans fetch error", async () => {
@@ -318,11 +318,10 @@ describe("useLicensing", () => {
 
       await waitFor(() => expect(result.current.subscriptionLoading).toBe(false));
 
-      // TanStack Query treats undefined return value as an error
-      // So when 404 happens and we return undefined, it becomes an error
+      // 404 now returns null which is handled properly - no subscription is returned
+      // and no error is set since this is a valid state
       expect(result.current.currentSubscription).toBeUndefined();
-      // The error is the TanStack Query validation error
-      expect(result.current.subscriptionError).toBeTruthy();
+      expect(result.current.subscriptionError).toBeNull();
     });
 
     it("should handle subscription fetch error", async () => {

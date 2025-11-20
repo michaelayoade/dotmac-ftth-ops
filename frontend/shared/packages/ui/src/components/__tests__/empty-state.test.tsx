@@ -145,7 +145,7 @@ describe("EmptyState", () => {
         icon: Users,
       };
 
-      const { container } = render(<EmptyState title="No items" action={action} />);
+      render(<EmptyState title="No items" action={action} />);
 
       const button = screen.getByText("Create Item");
       const icon = button.querySelector("svg");

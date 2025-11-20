@@ -1,10 +1,10 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@dotmac/ui";
+import { Activity, AlertTriangle, Clock, Users } from "lucide-react";
+
 import { LineChart } from "@/components/charts/LineChart";
 import { useMonitoringMetrics } from "@/lib/graphql/hooks";
-import { Activity, AlertTriangle, Clock, Users } from "lucide-react";
-import { Skeleton } from "@dotmac/ui";
 
 export function MonitoringMetricsCard({ period: _period = "24h" }: { period?: string }) {
   const { data, isLoading, error } = useMonitoringMetrics();
@@ -47,6 +47,7 @@ export function MonitoringMetricsCard({ period: _period = "24h" }: { period?: st
   const formatPercent = (value: number) => {
     return `${(value * 100).toFixed(2)}%`;
   };
+  const periodLabel = _period;
 
   return (
     <div className="space-y-4">
@@ -108,7 +109,7 @@ export function MonitoringMetricsCard({ period: _period = "24h" }: { period?: st
         <Card>
           <CardHeader>
             <CardTitle>Request Volume</CardTitle>
-            <CardDescription>API requests over time</CardDescription>
+            <CardDescription>API requests over the last {periodLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             <LineChart
@@ -130,7 +131,7 @@ export function MonitoringMetricsCard({ period: _period = "24h" }: { period?: st
         <Card>
           <CardHeader>
             <CardTitle>Response Time Trend</CardTitle>
-            <CardDescription>Average response time in milliseconds</CardDescription>
+            <CardDescription>Average response time over the last {periodLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             <LineChart
@@ -151,7 +152,7 @@ export function MonitoringMetricsCard({ period: _period = "24h" }: { period?: st
         <Card>
           <CardHeader>
             <CardTitle>Error Rate</CardTitle>
-            <CardDescription>Percentage of failed requests</CardDescription>
+            <CardDescription>Percentage of failed requests over the last {periodLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             <LineChart

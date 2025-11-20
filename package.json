@@ -5,7 +5,7 @@
   "description": "DotMac ISP Operations Platform Frontend Workspace",
   "scripts": {
     "dev": "pnpm --filter @dotmac/isp-ops-app dev",
-    "build": "pnpm -r --filter ./shared/packages/** run build && pnpm --filter @dotmac/isp-ops-app build && pnpm --filter @dotmac/platform-admin-app build",
+    "build": "pnpm -r --filter \"./frontend/shared/packages/**\" run build && pnpm --filter @dotmac/isp-ops-app build && pnpm --filter @dotmac/platform-admin-app build",
     "test": "pnpm -r run test",
     "test:ci": "pnpm -r run test:ci",
     "lint": "pnpm -r run lint",

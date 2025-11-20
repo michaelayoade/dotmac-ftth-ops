@@ -199,7 +199,7 @@ test("MFA authentication", async ({ page }) => {
 
 ### Playwright Configuration
 
-Key settings in `playwright.config.ts`:
+Key settings in `frontend/e2e/playwright.config.ts`:
 
 - **Browsers**: Chromium, Firefox, WebKit, Mobile browsers
 - **Retries**: 2 retries on CI, 0 locally

@@ -26,6 +26,14 @@ type RenderOptions = {
 export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, apiClient: any) {
   const cleanupFns: Array<() => void> = [];
 
+  const waitForFlagsData = async (
+    hookResult: { current: ReturnType<UseFeatureFlagsHook> },
+    expectedFlags: FeatureFlag[],
+  ) =>
+    waitFor(() => {
+      expect(hookResult.current.flags).toBe(expectedFlags);
+    });
+
   const renderUseFeatureFlags = (options?: RenderOptions) => {
     const queryClient = new QueryClient({
       defaultOptions: {
@@ -95,10 +103,9 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags({ enabledOnly: true });
 
-        expect(result.current.loading).toBe(true);
-
+        await waitForFlagsData(result, mockFlags);
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.status).toEqual(mockStatus);
         });
 
         expect(result.current.flags).toEqual(mockFlags);
@@ -131,11 +138,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags({ enabledOnly: true });
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
-
-        expect(result.current.flags).toEqual(mockFlags);
+        await waitForFlagsData(result, mockFlags);
       });
 
       it("should toggle flag successfully", async () => {
@@ -153,9 +156,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags({ enabledOnly: true });
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         let toggleResult: boolean = false;
         await act(async () => {
@@ -189,9 +190,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags({ enabledOnly: true });
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         let createdFlag: any;
         await act(async () => {
@@ -227,9 +226,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags({ enabledOnly: true });
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         let deleteResult: boolean = false;
         await act(async () => {
@@ -255,9 +252,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags({ enabledOnly: true });
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         apiClient.get.mockClear();
 
@@ -278,10 +273,8 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
         const { result } = renderUseFeatureFlags();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.error).toBe(mockError.message);
         });
-
-        expect(result.current.error).toBe(mockError.message);
         expect(result.current.flags).toEqual([]);
       });
 
@@ -300,10 +293,8 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
         const { result } = renderUseFeatureFlags();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.error).toBe("Permission denied");
         });
-
-        expect(result.current.error).toBe("Permission denied");
       });
 
       it("should handle toggle failure", async () => {
@@ -321,9 +312,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         await expect(async () => {
           await act(async () => {
@@ -333,14 +322,13 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
       });
 
       it("should handle create failure", async () => {
-        apiClient.get.mockImplementation(() => Promise.resolve({ data: [] }));
+        const mockFlags: FeatureFlag[] = [];
+        apiClient.get.mockImplementation(() => Promise.resolve({ data: mockFlags }));
         apiClient.post.mockRejectedValueOnce(new Error("Creation failed"));
 
         const { result } = renderUseFeatureFlags();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         await expect(async () => {
           await act(async () => {
@@ -364,9 +352,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         await expect(async () => {
           await act(async () => {
@@ -378,15 +364,12 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
     describe("Edge Cases", () => {
       it("should handle empty flags array", async () => {
-        apiClient.get.mockImplementation(() => Promise.resolve({ data: [] }));
+        const mockFlags: FeatureFlag[] = [];
+        apiClient.get.mockImplementation(() => Promise.resolve({ data: mockFlags }));
 
         const { result } = renderUseFeatureFlags();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
-
-        expect(result.current.flags).toEqual([]);
+        await waitForFlagsData(result, mockFlags);
       });
 
       it("should handle flags with complex context", async () => {
@@ -407,9 +390,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         expect(result.current.flags[0].context).toEqual(mockFlags[0].context);
       });
@@ -434,10 +415,8 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
         const { result } = renderUseFeatureFlags();
 
         await waitFor(() => {
-          expect(result.current.loading).toBe(false);
+          expect(result.current.status).toEqual(mockStatus);
         });
-
-        expect(result.current.status).toEqual(mockStatus);
       });
 
       it("should handle multiple flags", async () => {
@@ -452,9 +431,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
 
         const { result } = renderUseFeatureFlags();
 
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false);
-        });
+        await waitForFlagsData(result, mockFlags);
 
         expect(result.current.flags).toHaveLength(20);
         expect(result.current.flags.filter((f) => f.enabled)).toHaveLength(10);

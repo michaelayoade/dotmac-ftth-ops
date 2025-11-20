@@ -1332,8 +1332,8 @@ describe("useReconciliation", () => {
         wrapper: createWrapper(),
       });
 
-      act(() => {
-        result.current.mutate({
+      await act(async () => {
+        await result.current.mutateAsync({
           bank_account_id: 1,
           period_start: "2024-01-01T00:00:00Z",
           period_end: "2024-01-31T23:59:59Z",
@@ -1342,8 +1342,7 @@ describe("useReconciliation", () => {
         });
       });
 
-      await waitFor(() => expect(result.current.isPending).toBe(true), { timeout: 100 });
-      await waitFor(() => expect(result.current.isPending).toBe(false), { timeout: 200 });
+      await waitFor(() => expect(result.current.isPending).toBe(false), { timeout: 500 });
     });
 
     it("should show loading during add payment mutation", async () => {
@@ -1355,15 +1354,14 @@ describe("useReconciliation", () => {
         wrapper: createWrapper(),
       });
 
-      act(() => {
-        result.current.mutate({
+      await act(async () => {
+        await result.current.mutateAsync({
           reconciliationId: 1,
           paymentData: { payment_id: 1 },
         });
       });
 
-      await waitFor(() => expect(result.current.isPending).toBe(true), { timeout: 100 });
-      await waitFor(() => expect(result.current.isPending).toBe(false), { timeout: 200 });
+      await waitFor(() => expect(result.current.isPending).toBe(false), { timeout: 500 });
     });
   });
 

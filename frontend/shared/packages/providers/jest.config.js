@@ -7,9 +7,12 @@ const config = {
     "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
     "<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
   ],
-  moduleNameMapping: {
+  moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    // Mock React Query and related provider dependencies
+    "^@tanstack/react-query$": "<rootDir>/__tests__/mocks/react-query.js",
+    "^zustand$": "<rootDir>/__tests__/mocks/zustand.js",
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",
@@ -47,14 +50,6 @@ const config = {
     "process.env": {
       NODE_ENV: "test",
     },
-  },
-  // Mock modules that might cause issues in provider testing
-  moduleNameMapping: {
-    "^@/(.*)$": "<rootDir>/src/$1",
-    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-    // Mock React Query and related provider dependencies
-    "^@tanstack/react-query$": "<rootDir>/__tests__/mocks/react-query.js",
-    "^zustand$": "<rootDir>/__tests__/mocks/zustand.js",
   },
 };
 

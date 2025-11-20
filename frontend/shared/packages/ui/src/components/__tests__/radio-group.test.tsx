@@ -4,7 +4,7 @@
  * Tests shadcn/ui RadioGroup component
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 
@@ -23,7 +23,7 @@ describe("RadioGroup", () => {
     });
 
     it("renders as div element", () => {
-      const { container } = render(
+      render(
         <RadioGroup data-testid="radio-group">
           <RadioGroupItem value="option1" />
         </RadioGroup>
@@ -34,7 +34,7 @@ describe("RadioGroup", () => {
     });
 
     it("applies base styles", () => {
-      const { container } = render(
+      render(
         <RadioGroup data-testid="radio-group">
           <RadioGroupItem value="option1" />
         </RadioGroup>
@@ -45,7 +45,7 @@ describe("RadioGroup", () => {
     });
 
     it("renders with custom className", () => {
-      const { container } = render(
+      render(
         <RadioGroup className="custom-group" data-testid="radio-group">
           <RadioGroupItem value="option1" />
         </RadioGroup>
@@ -159,7 +159,9 @@ describe("RadioGroup", () => {
 
       const radios = screen.getAllByRole("radio");
       radios.forEach((radio) => {
-        expect(radio).toHaveAttribute("name", "radio-group");
+        const nameAttribute = radio.getAttribute("name");
+        expect(nameAttribute).toBeTruthy();
+        expect(nameAttribute).toMatch(/^radio-group-/);
       });
     });
   });

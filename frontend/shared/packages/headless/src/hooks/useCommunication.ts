@@ -175,15 +175,19 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
             case "message_status_update":
               setState((prev) => ({
                 ...prev,
-                messages: prev.messages.map((msg) =>
-                  msg.id === data.messageId
-                    ? {
-                        ...msg,
-                        status: data.status,
-                        deliveredAt: data.deliveredAt ? new Date(data.deliveredAt) : undefined,
-                      }
-                    : msg,
-                ),
+                messages: prev.messages.map((msg) => {
+                  if (msg.id !== data.messageId) {
+                    return msg;
+                  }
+
+                  const update: Partial<CommunicationMessage> = { status: data.status };
+
+                  if (data.deliveredAt) {
+                    update.deliveredAt = new Date(data.deliveredAt);
+                  }
+
+                  return { ...msg, ...update };
+                }),
               }));
               break;
 

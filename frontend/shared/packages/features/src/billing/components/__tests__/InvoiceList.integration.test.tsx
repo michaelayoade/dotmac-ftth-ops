@@ -169,6 +169,7 @@ describe("InvoiceList Integration Tests", () => {
     it("should call onInvoiceSelect when clicking an invoice row", async () => {
       // Arrange
       const invoices = [createMockInvoice()];
+      const firstInvoice = invoices[0]!;
       deps.apiClient.get.mockResolvedValue({ data: { invoices } });
       const onInvoiceSelect = vi.fn();
 
@@ -182,14 +183,14 @@ describe("InvoiceList Integration Tests", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getAllByText(invoices[0].invoice_number)[0]).toBeInTheDocument();
+        expect(screen.getAllByText(firstInvoice.invoice_number)[0]).toBeInTheDocument();
       });
 
       const row = screen.getByTestId("invoice-row-0");
       await user.click(row);
 
       // Assert
-      expect(onInvoiceSelect).toHaveBeenCalledWith(invoices[0]);
+      expect(onInvoiceSelect).toHaveBeenCalledWith(firstInvoice);
     });
   });
 
@@ -197,6 +198,7 @@ describe("InvoiceList Integration Tests", () => {
     it("should handle bulk send action", async () => {
       // Arrange
       const invoices = createMockInvoices(2);
+      const firstInvoice = invoices[0]!;
       deps.apiClient.get.mockResolvedValue({ data: { invoices } });
       deps.apiClient.post.mockResolvedValue({ data: { success: true } });
 
@@ -213,7 +215,7 @@ describe("InvoiceList Integration Tests", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(invoices[0].invoice_number)).toBeInTheDocument();
+        expect(screen.getByText(firstInvoice.invoice_number)).toBeInTheDocument();
       });
 
       // Trigger bulk send (this would normally be triggered by selecting rows and clicking bulk action)
@@ -228,6 +230,7 @@ describe("InvoiceList Integration Tests", () => {
     it("should handle bulk void action with confirmation", async () => {
       // Arrange
       const invoices = createMockInvoices(2);
+      const firstInvoice = invoices[0]!;
       deps.apiClient.get.mockResolvedValue({ data: { invoices } });
       deps.apiClient.post.mockResolvedValue({ data: { success: true } });
 
@@ -245,7 +248,7 @@ describe("InvoiceList Integration Tests", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getAllByText(invoices[0].invoice_number)[0]).toBeInTheDocument();
+        expect(screen.getAllByText(firstInvoice.invoice_number)[0]).toBeInTheDocument();
       });
 
       // Verify component loaded successfully
@@ -257,6 +260,7 @@ describe("InvoiceList Integration Tests", () => {
     it("should handle bulk action failures gracefully", async () => {
       // Arrange
       const invoices = createMockInvoices(2);
+      const firstInvoice = invoices[0]!;
       deps.apiClient.get.mockResolvedValue({ data: { invoices } });
       deps.apiClient.post.mockRejectedValue(new Error("API Error"));
 
@@ -271,7 +275,7 @@ describe("InvoiceList Integration Tests", () => {
 
       // Assert - component should load successfully even if bulk actions might fail later
       await waitFor(() => {
-        expect(screen.getAllByText(invoices[0].invoice_number)[0]).toBeInTheDocument();
+        expect(screen.getAllByText(firstInvoice.invoice_number)[0]).toBeInTheDocument();
       });
     });
 

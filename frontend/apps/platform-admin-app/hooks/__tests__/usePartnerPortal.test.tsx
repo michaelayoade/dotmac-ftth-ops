@@ -12,10 +12,10 @@ import { useToast } from "@dotmac/ui";
 
 jest.unmock("@tanstack/react-query");
 
-const global.mockToast = jest.fn();
+const mockToast = jest.fn();
 jest.mock("@dotmac/ui", () => ({
   useToast: () => ({
-    toast: global.mockToast,
+    toast: mockToast,
   }),
 }));
 
@@ -54,6 +54,7 @@ describe("Platform Admin usePartnerPortal hooks", () => {
   };
 
   beforeEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
     fetchMock.mockReset();
     (global as any).fetch = fetchMock;

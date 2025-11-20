@@ -192,7 +192,7 @@ export class ApiClient {
 
     const authToken = tokenManager.getAccessToken();
     if (authToken) {
-      headers.Authorization = `Bearer ${authToken}`;
+      headers["Authorization"] = `Bearer ${authToken}`;
     }
 
     if (this.config.apiKey) {
@@ -236,7 +236,7 @@ export class ApiClient {
       }
 
       const headers = { ...requestOptions.headers } as Record<string, string>;
-      headers.Authorization = `Bearer ${newAuthToken}`;
+      headers["Authorization"] = `Bearer ${newAuthToken}`;
       const retryResponse = await fetch(url, { ...requestOptions, headers });
 
       if (retryResponse.ok) {
@@ -266,11 +266,12 @@ export class ApiClient {
 
     // Call configured error handler
     // Convert ISPError to ApiError for compatibility
+    const callbackStatus = ispError.status ?? response.status ?? 500;
     const apiErrorForCallback: ApiError = {
       code: ispError.code || "UNKNOWN_ERROR",
       message: ispError.message,
       details: ispError.technicalDetails,
-      statusCode: ispError.status,
+      statusCode: callbackStatus,
     };
     this.config.onError?.(apiErrorForCallback);
 
@@ -357,7 +358,7 @@ export class ApiClient {
     return this.request<T>(endpoint, {
       ...config,
       method: "POST",
-      body: data ?? config.body,
+      body: data ?? config.body ?? null,
     });
   }
 
@@ -369,7 +370,7 @@ export class ApiClient {
     return this.request<T>(endpoint, {
       ...config,
       method: "PUT",
-      body: data ?? config.body,
+      body: data ?? config.body ?? null,
     });
   }
 
@@ -381,7 +382,7 @@ export class ApiClient {
     return this.request<T>(endpoint, {
       ...config,
       method: "DELETE",
-      body: data ?? config.body,
+      body: data ?? config.body ?? null,
     });
   }
 

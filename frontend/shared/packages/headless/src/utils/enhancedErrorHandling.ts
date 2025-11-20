@@ -564,6 +564,87 @@ export const EnhancedErrorFactory = {
       },
       userActions: [`Please correct the ${field} field`, "Review input requirements"],
     }),
+
+  network: (message: string, operation?: string, context: Partial<ErrorContext> = {}) =>
+    new EnhancedISPError({
+      code: ErrorCode.NETWORK_CONNECTION_FAILED,
+      message,
+      context: {
+        operation: operation || "network_operation",
+        resource: "network",
+        businessProcess: context.businessProcess || "network_management",
+        customerImpact: context.customerImpact || "medium",
+        ...context,
+      },
+      retryable: true,
+    }),
+
+  authentication: (operation?: string, context: Partial<ErrorContext> = {}) =>
+    new EnhancedISPError({
+      code: ErrorCode.AUTH_LOGIN_FAILED,
+      message: "Authentication failed",
+      context: {
+        operation: operation || "authentication",
+        resource: "auth",
+        businessProcess: context.businessProcess || "identity_management",
+        customerImpact: context.customerImpact || "high",
+        ...context,
+      },
+      retryable: false,
+    }),
+
+  authorization: (
+    resource: string,
+    operation?: string,
+    context: Partial<ErrorContext> = {},
+  ) =>
+    new EnhancedISPError({
+      code: ErrorCode.AUTHZ_RESOURCE_FORBIDDEN,
+      message: `Access denied to ${resource}`,
+      context: {
+        operation: operation || "authorization",
+        resource,
+        businessProcess: context.businessProcess || "access_control",
+        customerImpact: context.customerImpact || "medium",
+        ...context,
+      },
+      retryable: false,
+    }),
+
+  validation: (
+    message: string,
+    operation?: string,
+    details?: Record<string, any>,
+    context: Partial<ErrorContext> = {},
+  ) =>
+    new EnhancedISPError({
+      code: ErrorCode.VALIDATION_BUSINESS_RULE,
+      message,
+      context: {
+        operation: operation || "validation",
+        resource: "validation_rule",
+        businessProcess: context.businessProcess || "data_entry",
+        customerImpact: context.customerImpact || "low",
+        ...context,
+      },
+      technicalDetails: details,
+      retryable: false,
+    }),
+
+  system: (message: string, operation?: string, context: Partial<ErrorContext> = {}) =>
+    new EnhancedISPError({
+      code: ErrorCode.SYSTEM_DATABASE_ERROR,
+      message,
+      context: {
+        operation: operation || "system_operation",
+        resource: "system",
+        businessProcess: context.businessProcess || "platform",
+        customerImpact: context.customerImpact || "high",
+        ...context,
+      },
+      escalationRequired: true,
+      retryable: true,
+    }),
 };
 
 // Enhanced error handler for API responses

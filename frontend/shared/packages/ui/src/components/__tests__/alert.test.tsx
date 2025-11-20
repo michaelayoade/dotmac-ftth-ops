@@ -472,7 +472,7 @@ describe("Alert", () => {
 
       expect(screen.getByText("Storage Almost Full")).toBeInTheDocument();
       expect(
-        screen.getByText("You&apos;ve used 95% of your storage. Consider upgrading your plan.")
+        screen.getByText("You've used 95% of your storage. Consider upgrading your plan.")
       ).toBeInTheDocument();
     });
 

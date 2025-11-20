@@ -597,6 +597,7 @@ describe("PortalButton", () => {
 
       const button = screen.getByRole("button");
       await user.tab();
+      expect(button).toHaveFocus();
       await user.keyboard("{Enter}");
 
       expect(onClick).toHaveBeenCalled();
@@ -610,6 +611,7 @@ describe("PortalButton", () => {
 
       const button = screen.getByRole("button");
       await user.tab();
+      expect(button).toHaveFocus();
       await user.keyboard("{ }");
 
       expect(onClick).toHaveBeenCalled();

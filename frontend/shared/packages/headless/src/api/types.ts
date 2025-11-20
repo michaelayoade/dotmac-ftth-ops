@@ -34,7 +34,7 @@ export interface RequestConfig extends Omit<RequestInit, "cache" | "headers" | "
   validateResponse?: boolean;
   skipRetryOn?: number[];
   headers?: HeadersInit;
-  params?: Record<string, unknown>;
+  params?: Record<string, unknown> | undefined;
   cache?: boolean;
   cacheTTL?: number;
   portal?: string;
