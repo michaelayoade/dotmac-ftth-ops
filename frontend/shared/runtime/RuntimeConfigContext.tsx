@@ -11,7 +11,11 @@ import {
 } from "react";
 
 import type { RuntimeConfig } from "./runtime-config";
-import { getRuntimeConfigSnapshot, loadRuntimeConfig } from "./runtime-config";
+import {
+  getRuntimeConfigSnapshot,
+  isRuntimeConfigDisabled,
+  loadRuntimeConfig,
+} from "./runtime-config";
 
 type RuntimeConfigState = {
   runtimeConfig: RuntimeConfig | null;
@@ -40,11 +44,20 @@ export function RuntimeConfigProvider({ children, onConfig }: RuntimeConfigProvi
   const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(
     () => getRuntimeConfigSnapshot(),
   );
-  const [loading, setLoading] = useState<boolean>(() => !Boolean(runtimeConfig));
+  const runtimeConfigDisabled = isRuntimeConfigDisabled();
+  const [loading, setLoading] = useState<boolean>(
+    () => !runtimeConfig && !runtimeConfigDisabled,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const resolveRuntimeConfig = useCallback(
     async (force = false) => {
+      if (runtimeConfigDisabled) {
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
       setLoading(true);
       try {
         const payload = await loadRuntimeConfig(force ? { force: true } : undefined);
@@ -64,12 +77,14 @@ export function RuntimeConfigProvider({ children, onConfig }: RuntimeConfigProvi
   );
 
   useEffect(() => {
-    if (!runtimeConfig) {
+    if (!runtimeConfig && !runtimeConfigDisabled) {
       resolveRuntimeConfig().catch(() => {
         /* handled above */
       });
+    } else if (runtimeConfigDisabled) {
+      setLoading(false);
     }
-  }, [runtimeConfig, resolveRuntimeConfig]);
+  }, [runtimeConfig, runtimeConfigDisabled, resolveRuntimeConfig]);
 
   useEffect(() => {
     if (runtimeConfig) {

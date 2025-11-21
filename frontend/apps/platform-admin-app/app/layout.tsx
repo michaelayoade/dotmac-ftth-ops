@@ -2,14 +2,13 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { ReactNode } from "react";
 
-import { RuntimeConfigProvider } from "@shared/runtime/RuntimeConfigContext";
-
 import { ClientProviders } from "@/providers/ClientProviders";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { applyPlatformRuntimeConfig, platformConfig } from "@/lib/config";
+import { platformConfig } from "@/lib/config";
 import PWAProvider from "@/components/pwa/PWAProvider";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import { ClientMSWProvider } from "@shared/mocks/ClientMSWProvider";
+import { RuntimeConfigBoundary } from "@/components/RuntimeConfigBoundary";
 
 const FALLBACK_PRODUCT_NAME = "DotMac Platform";
 const FALLBACK_PRODUCT_TAGLINE = "Reusable SaaS backend and APIs to launch faster.";
@@ -57,7 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="icon" href={favicon} />
       </head>
       <body suppressHydrationWarning>
-        <RuntimeConfigProvider onConfig={applyPlatformRuntimeConfig}>
+        <RuntimeConfigBoundary>
           <ErrorBoundary>
             <PWAProvider>
               <ClientMSWProvider />
@@ -67,7 +66,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </ClientProviders>
             </PWAProvider>
           </ErrorBoundary>
-        </RuntimeConfigProvider>
+        </RuntimeConfigBoundary>
       </body>
     </html>
   );

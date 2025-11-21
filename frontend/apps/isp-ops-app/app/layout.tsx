@@ -6,10 +6,11 @@ import { ReactNode } from "react";
 
 import { ClientProviders } from "@/providers/ClientProviders";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { applyPlatformRuntimeConfig, platformConfig } from "@/lib/config";
+import { platformConfig } from "@/lib/config";
 import PWAProvider from "@/components/pwa/PWAProvider";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import { ClientMSWProvider } from "@shared/mocks/ClientMSWProvider";
+import { RuntimeConfigBoundary } from "@/components/RuntimeConfigBoundary";
 
 const FALLBACK_PRODUCT_NAME = "DotMac Platform";
 const FALLBACK_PRODUCT_TAGLINE = "Reusable SaaS backend and APIs to launch faster.";
@@ -57,15 +58,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="icon" href={favicon} />
       </head>
       <body suppressHydrationWarning>
-        <ErrorBoundary>
-          <PWAProvider>
-            <ClientMSWProvider />
-            <ClientProviders>
-              {children}
-              <InstallPrompt />
-            </ClientProviders>
-          </PWAProvider>
-        </ErrorBoundary>
+        <RuntimeConfigBoundary>
+          <ErrorBoundary>
+            <PWAProvider>
+              <ClientMSWProvider />
+              <ClientProviders>
+                {children}
+                <InstallPrompt />
+              </ClientProviders>
+            </PWAProvider>
+          </ErrorBoundary>
+        </RuntimeConfigBoundary>
       </body>
     </html>
   );

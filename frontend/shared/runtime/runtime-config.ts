@@ -105,6 +105,11 @@ declare global {
   }
 }
 
+const runtimeConfigDisabled =
+  process.env["NEXT_PUBLIC_RUNTIME_CONFIG_DISABLED"] === "true";
+
+export const isRuntimeConfigDisabled = () => runtimeConfigDisabled;
+
 let runtimeConfigCache: RuntimeConfig | null = null;
 let pendingRequest: Promise<RuntimeConfig> | null = null;
 
@@ -136,6 +141,10 @@ export function setRuntimeConfigSnapshot(config: RuntimeConfig): void {
 }
 
 export async function loadRuntimeConfig(options?: { force?: boolean }): Promise<RuntimeConfig> {
+  if (runtimeConfigDisabled) {
+    return Promise.reject(new Error("Runtime config loading is disabled"));
+  }
+
   if (options?.force) {
     runtimeConfigCache = null;
     pendingRequest = null;

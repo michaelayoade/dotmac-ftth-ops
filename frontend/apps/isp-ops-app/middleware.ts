@@ -8,6 +8,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const CSS_BUNDLE_PATH = "/_next/static/css/";
+
 /**
  * Platform admin routes that should NOT be accessible in ISP Ops App
  */
@@ -38,6 +40,25 @@ const ISP_OPS_ROUTES = [
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // Guard against Next dev serving CSS bundles through <script> tags.
+  // When the browser fetches vendor.css as a script, we return an empty JS
+  // response to avoid the "Unexpected token '.'" runtime crash on /login.
+  if (pathname.startsWith(CSS_BUNDLE_PATH)) {
+    const destination = request.headers.get("sec-fetch-dest");
+
+    if (destination === "script") {
+      return new NextResponse("", {
+        status: 200,
+        headers: {
+          "content-type": "application/javascript",
+          "cache-control": "public, max-age=60",
+        },
+      });
+    }
+
+    return NextResponse.next();
+  }
+
   // Check if trying to access platform-only routes
   const isAccessingPlatformRoute = PLATFORM_ONLY_ROUTES.some((route) =>
     pathname.startsWith(route)
@@ -67,6 +88,8 @@ export function middleware(request: NextRequest) {
  */
 export const config = {
   matcher: [
+    // Also run on CSS bundle requests so we can drop accidental script fetches
+    "/_next/static/css/:path*",
     /*
      * Match all request paths except:
      * - _next/static (static files)

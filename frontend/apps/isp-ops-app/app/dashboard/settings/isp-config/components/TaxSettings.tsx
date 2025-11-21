@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Tax Configuration Settings Component
  *

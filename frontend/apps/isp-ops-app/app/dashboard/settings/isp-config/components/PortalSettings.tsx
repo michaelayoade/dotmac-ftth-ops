@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Portal Customization Settings Component
  *
