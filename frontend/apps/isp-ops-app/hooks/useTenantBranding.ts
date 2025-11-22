@@ -8,8 +8,12 @@ import {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+
+// Skip auth/session calls in bypass mode to avoid hangs during E2E tests
+const authBypassEnabled =
+  typeof window !== "undefined" &&
+  (process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
+   process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true");
 
 export interface TenantBrandingConfigDto {
   product_name?: string | null;
@@ -45,16 +49,14 @@ type BrandingQueryOptions = Omit<
 >;
 
 export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
-  const { data: session } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
-
+  // Skip query in bypass mode - no auth/session available
   return useQuery<TenantBrandingResponseDto, Error, TenantBrandingResponseDto, BrandingQueryKey>({
     queryKey: ["tenant-branding"],
     queryFn: async () => {
       const response = await apiClient.get<TenantBrandingResponseDto>("/branding");
       return extractDataOrThrow(response, "Failed to load branding configuration");
     },
-    enabled: Boolean(user?.tenant_id),
+    enabled: !authBypassEnabled && (options?.enabled !== false),
     staleTime: 5 * 60 * 1000,
     ...options,
   });

@@ -4,8 +4,12 @@ import { createContext, ReactNode, useContext, useEffect, useMemo } from "react"
 import { useAppConfig } from "./AppConfigContext";
 import { applyBrandingConfig, applyThemeTokens } from "@/lib/theme";
 import { useTenantBrandingQuery, type TenantBrandingConfigDto } from "@/hooks/useTenantBranding";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+
+// Skip auth/session calls in bypass mode to avoid hangs during E2E tests
+const authBypassEnabled =
+  typeof window !== "undefined" &&
+  (process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
+   process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true");
 
 interface BrandingProviderProps {
   children: ReactNode;
@@ -82,9 +86,8 @@ function updateFavicon(faviconUrl?: string) {
 
 export function BrandingProvider({ children }: BrandingProviderProps) {
   const { branding: defaultBranding } = useAppConfig();
-  const { data: session } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
-  const brandingQuery = useTenantBrandingQuery({ enabled: Boolean(user?.tenant_id) });
+  // Skip session/branding queries in bypass mode to avoid hangs
+  const brandingQuery = useTenantBrandingQuery({ enabled: !authBypassEnabled });
 
   const mergedBranding = useMemo(
     () => mergeBranding(defaultBranding, brandingQuery.data?.branding),

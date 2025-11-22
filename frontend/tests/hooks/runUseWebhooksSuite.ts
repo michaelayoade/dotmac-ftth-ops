@@ -424,80 +424,65 @@ export function runUseWebhooksTestSuite({
     });
 
     describe("testWebhook behaviour", () => {
-      afterEach(() => {
-        jest.restoreAllMocks();
-      });
-
-      it("returns a success summary when random threshold passes", async () => {
-        const mathSpy = jest.spyOn(Math, "random");
-        mathSpy
-          .mockReturnValueOnce(0.5) // timeout duration
-          .mockReturnValueOnce(0.9) // success check
-          .mockReturnValueOnce(0.2); // delivery time
-        const timeoutSpy = jest
-          .spyOn(global, "setTimeout")
-          .mockImplementation(((handler: (...args: any[]) => void) => {
-            handler();
-            return 0 as unknown as ReturnType<typeof setTimeout>;
-          }) as typeof setTimeout);
-
-        const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
-
-        const response = await result.current.testWebhook("webhook-1", "customer.created");
-
-        expect(response).toMatchObject({
-          success: true,
-          status_code: 200,
-          response_body: "OK",
+      it("posts to the backend and returns the parsed response", async () => {
+        const mockPayload = { sample: true };
+        apiClient.post.mockResolvedValueOnce({
+          status: 202,
+          data: {
+            success: true,
+            status_code: 202,
+            response_body: "Queued",
+            delivery_time_ms: 120,
+          },
         });
-        expect(response.delivery_time_ms).toBeGreaterThanOrEqual(100);
-        expect(response.delivery_time_ms).toBeLessThanOrEqual(600);
-
-        timeoutSpy.mockRestore();
-        mathSpy.mockRestore();
-      });
-
-      it("returns a failure summary when random threshold fails", async () => {
-        const mathSpy = jest.spyOn(Math, "random");
-        mathSpy
-          .mockReturnValueOnce(0.5) // timeout duration
-          .mockReturnValueOnce(0.2) // failure path
-          .mockReturnValueOnce(0.4); // delivery time
-        const timeoutSpy = jest
-          .spyOn(global, "setTimeout")
-          .mockImplementation(((handler: (...args: any[]) => void) => {
-            handler();
-            return 0 as unknown as ReturnType<typeof setTimeout>;
-          }) as typeof setTimeout);
 
         const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
 
-        const response = await result.current.testWebhook("webhook-1", "customer.created");
+        const response = await result.current.testWebhook(
+          "webhook-1",
+          "customer.created",
+          mockPayload,
+        );
+
+        expect(apiClient.post).toHaveBeenCalledWith(
+          "/webhooks/subscriptions/webhook-1/test",
+          { event_type: "customer.created", payload: mockPayload },
+        );
+        expect(response).toEqual({
+          success: true,
+          status_code: 202,
+          response_body: "Queued",
+          error_message: undefined,
+          delivery_time_ms: 120,
+        });
+      });
+
+      it("falls back to response status when optional fields are missing", async () => {
+        apiClient.post.mockResolvedValueOnce({
+          status: 500,
+          data: { success: false, error_message: "Endpoint error" },
+        });
+
+        const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
+
+        const response = await result.current.testWebhook("webhook-2", "customer.updated");
 
         expect(response).toMatchObject({
           success: false,
           status_code: 500,
-          error_message: "Internal Server Error",
+          error_message: "Endpoint error",
+          delivery_time_ms: 0,
         });
-        expect(response.delivery_time_ms).toBeGreaterThanOrEqual(200);
-
-        timeoutSpy.mockRestore();
-        mathSpy.mockRestore();
       });
 
-      it("surfaces unexpected errors during testWebhook", async () => {
-        const mathSpy = jest.spyOn(Math, "random");
-        mathSpy.mockImplementationOnce(() => {
-          throw new Error("random failure");
-        });
+      it("surfaces backend errors during testWebhook", async () => {
+        apiClient.post.mockRejectedValueOnce(new Error("random failure"));
 
         const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
 
         await expect(
           result.current.testWebhook("webhook-1", "customer.created"),
         ).rejects.toThrow("random failure");
-
-        mathSpy.mockRestore();
       });
     });
   });

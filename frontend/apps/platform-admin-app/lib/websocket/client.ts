@@ -39,6 +39,8 @@ type StateChangeHandler = (state: WebSocketConnectionState) => void;
 
 export class WebSocketClient {
   private ws: WebSocket | null = null;
+  private baseUrl: string;
+  private token: string | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private pingTimer: NodeJS.Timeout | null = null;
   private pongTimeout: NodeJS.Timeout | null = null;
@@ -50,26 +52,30 @@ export class WebSocketClient {
   private maxReconnectDelay = 30000; // Max 30 seconds
   private pingInterval = 30000; // Send ping every 30 seconds
   private pongWaitTime = 5000; // Wait 5 seconds for pong response
-  private url: string;
   private state: WebSocketConnectionState = {
     connected: false,
     reconnecting: false,
   };
 
   constructor(url: string) {
-    this.url = url;
+    this.baseUrl = url;
   }
 
   /**
    * Connect to WebSocket server
    */
-  connect(): void {
+  connect(token?: string): void {
+    if (token !== undefined) {
+      this.token = token;
+    }
+
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       return;
     }
 
     try {
-      this.ws = new WebSocket(this.url);
+      const wsUrl = this.buildUrl();
+      this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = this.handleOpen.bind(this);
       this.ws.onmessage = this.handleMessage.bind(this);
@@ -256,6 +262,23 @@ export class WebSocketClient {
   }
 
   /**
+   * Build WebSocket URL with authentication token (query param)
+   */
+  private buildUrl(): string {
+    // Fall back to the base URL if URL parsing fails (e.g. SSR without window)
+    try {
+      const url = new URL(this.baseUrl, typeof window !== "undefined" ? window.location.origin : undefined);
+      if (this.token) {
+        url.searchParams.set("token", this.token);
+      }
+      return url.toString();
+    } catch (error) {
+      console.error("Failed to build WebSocket URL, using base URL", error);
+      return this.baseUrl;
+    }
+  }
+
+  /**
    * Start sending periodic ping messages
    */
   private startHeartbeat(): void {
@@ -298,8 +321,8 @@ let wsClient: WebSocketClient | null = null;
  */
 function getWebSocketUrl(): string {
   // Check for explicit environment variable first
-  if (process.env['NEXT_PUBLIC_WS_URL']) {
-    return process.env['NEXT_PUBLIC_WS_URL'];
+  if (process.env["NEXT_PUBLIC_WS_URL"]) {
+    return process.env["NEXT_PUBLIC_WS_URL"];
   }
 
   // Auto-detect based on current page protocol (for production)

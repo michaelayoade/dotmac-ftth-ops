@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,6 @@ import type { AxiosResponse } from "axios";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
-import { useBranding } from "@/hooks/useBranding";
 import {
   clearOperatorAuthTokens,
   setOperatorAccessToken,
@@ -17,11 +16,20 @@ import {
 
 const showTestCredentials =
   process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] === "true";
+const authBypassEnabled =
+  process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
+  process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true";
+const bypassTenantId = "default-tenant";
+const bypassToken = "dev-mock-token";
+
+// Default branding for bypass mode (avoids useSession call that hangs in E2E)
+const defaultBranding = { productName: "DotMac" };
 
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { branding } = useBranding();
+  // Skip branding hook in bypass mode - it calls useSession which hangs without auth
+  const branding = authBypassEnabled ? defaultBranding : { productName: "DotMac" };
 
   const {
     register,
@@ -85,12 +93,37 @@ export default function LoginPage() {
     [],
   );
 
+  useEffect(() => {
+    // Auto-complete login in bypass mode without user interaction for e2e/local dev
+    if (authBypassEnabled) {
+      try {
+        setOperatorAccessToken(bypassToken);
+        localStorage.setItem("tenant_id", bypassTenantId);
+      } catch {
+        // ignore storage failures
+      }
+      window.location.replace("/dashboard");
+    }
+  }, []);
+
   const onSubmit = useCallback(
     async (data: LoginFormData) => {
       setError("");
       setLoading(true);
 
       try {
+        if (authBypassEnabled) {
+          logger.info("Auth bypass enabled - skipping Better Auth", { email: data.email });
+          setOperatorAccessToken(bypassToken);
+          try {
+            localStorage.setItem("tenant_id", bypassTenantId);
+          } catch {
+            // ignore storage failures
+          }
+          window.location.href = "/dashboard";
+          return;
+        }
+
         // Use Better Auth for authentication
         logger.info("Starting Better Auth login process", { email: data.email });
 

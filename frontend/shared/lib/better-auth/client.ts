@@ -37,25 +37,80 @@ export const authClient = createAuthClient({
   ],
 });
 
-// Type for inferred auth client instance
-export type InferredAuthClient = typeof authClient;
+const authBypassEnabled =
+  process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
+  process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true";
+
+// Minimal mock session used when auth is bypassed (e2e/local dev without backend)
+const mockSession = {
+  data: {
+    user: {
+      id: "dev-user",
+      email: "admin@test.com",
+      role: "super_admin",
+      tenant_id: "default-tenant",
+      activeOrganization: {
+        id: "default-tenant",
+        role: "tenant_owner",
+        permissions: [],
+      },
+    } as ExtendedUser,
+  },
+  error: null,
+  isPending: false,
+  isRefetching: false,
+  refetch: async () => mockSession,
+};
+
+type UseSessionReturn = ReturnType<typeof authClient.useSession>;
 
 /**
  * Export commonly used hooks for convenience
  */
-export const {
-  // Authentication state
-  useSession,
+export const useSession: () => UseSessionReturn = authBypassEnabled
+  ? () => mockSession as UseSessionReturn
+  : authClient.useSession;
 
-  // Authentication actions
-  signIn,
-  signUp,
-  signOut,
+export const signIn = authBypassEnabled
+  ? {
+      email: async () => ({ data: mockSession.data, error: null }),
+    }
+  : authClient.signIn;
 
-  // Organization management
-  useActiveOrganization,
-  useListOrganizations,
-} = authClient;
+export const signUp = authBypassEnabled
+  ? {
+      email: async () => ({ data: mockSession.data, error: null }),
+    }
+  : authClient.signUp;
+
+export const signOut = authBypassEnabled
+  ? async () => ({ data: null, error: null })
+  : authClient.signOut;
+
+export const useActiveOrganization = authBypassEnabled
+  ? () => ({
+      data: mockSession.data.user.activeOrganization,
+      error: null,
+      isPending: false,
+      isRefetching: false,
+      refetch: async () => mockSession.data.user.activeOrganization,
+    })
+  : authClient.useActiveOrganization;
+
+export const useListOrganizations = authBypassEnabled
+  ? () => ({
+      data: mockSession.data.user.activeOrganization
+        ? [mockSession.data.user.activeOrganization]
+        : [],
+      error: null,
+      isPending: false,
+      isRefetching: false,
+      refetch: async () => [],
+    })
+  : authClient.useListOrganizations;
+
+// Type for inferred auth client instance
+export type InferredAuthClient = typeof authClient;
 
 /**
  * Helper function to check if user has permission

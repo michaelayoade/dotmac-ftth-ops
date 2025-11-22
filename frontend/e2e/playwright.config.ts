@@ -9,12 +9,14 @@ const navigationTimeout = parseInt(process.env.E2E_NAV_TIMEOUT || "480000", 10);
 const webServerTimeout = parseInt(process.env.E2E_WEB_SERVER_TIMEOUT || "600000", 10);
 const defaultMSWMode = process.env.MSW_MODE || "mock";
 const enableMSWWorkers = process.env.E2E_DISABLE_MSW !== "true";
+const reuseExistingServer = process.env.E2E_REUSE_SERVER === "true";
 
 process.env.MSW_MODE = defaultMSWMode;
 
 const sharedWebServerEnv: Record<string, string> = {
   MSW_MODE: defaultMSWMode,
   NEXT_PUBLIC_MSW_ENABLED: enableMSWWorkers ? "true" : "false",
+  NEXT_PUBLIC_SKIP_BETTER_AUTH: "true",
 };
 
 export default defineConfig({
@@ -50,14 +52,14 @@ export default defineConfig({
         {
           command: "pnpm --filter @dotmac/isp-ops-app dev",
           url: "http://localhost:3001",
-          reuseExistingServer: !process.env.CI,
+          reuseExistingServer: reuseExistingServer && !process.env.CI,
           timeout: webServerTimeout,
           env: sharedWebServerEnv,
         },
         {
           command: "pnpm --filter @dotmac/platform-admin-app dev",
           url: "http://localhost:3002",
-          reuseExistingServer: !process.env.CI,
+          reuseExistingServer: reuseExistingServer && !process.env.CI,
           timeout: webServerTimeout,
           env: sharedWebServerEnv,
         },

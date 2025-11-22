@@ -45,9 +45,9 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token and tenant ID if available
 apiClient.interceptors.request.use(
   (config) => {
-    if (!config.baseURL) {
-      config.baseURL = resolveBaseUrl();
-    }
+    const resolvedBaseUrl = resolveBaseUrl();
+    config.baseURL = resolvedBaseUrl;
+    apiClient.defaults.baseURL = resolvedBaseUrl;
 
     if (typeof window !== "undefined") {
       const accessToken = getOperatorAccessToken();

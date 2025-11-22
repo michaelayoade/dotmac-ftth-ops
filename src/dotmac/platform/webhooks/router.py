@@ -3,7 +3,11 @@ Webhook subscription management API router.
 """
 
 import structlog
+from datetime import UTC, datetime
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.dependencies import UserInfo, get_current_user
@@ -25,6 +29,28 @@ from .service import WebhookSubscriptionService
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
+
+
+class WebhookTestRequest(BaseModel):
+    """Request payload for testing a webhook subscription."""
+
+    event_type: str | None = Field(
+        default=None,
+        description="Event type to use for the test delivery. Defaults to the first subscription event or webhook.test.",
+    )
+    payload: dict[str, Any] | None = Field(
+        default=None, description="Optional JSON payload to include in the test delivery."
+    )
+
+
+class WebhookTestResponse(BaseModel):
+    """Response returned by the webhook test endpoint."""
+
+    success: bool
+    status_code: int | None = None
+    response_body: str | None = None
+    error_message: str | None = None
+    delivery_time_ms: int = 0
 
 
 # Subscription endpoints
@@ -249,6 +275,84 @@ async def delete_webhook_subscription(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete webhook subscription",
+        )
+
+
+@router.post(
+    "/subscriptions/{subscription_id}/test",
+    response_model=WebhookTestResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def test_webhook_subscription(
+    subscription_id: str,
+    test_request: WebhookTestRequest,
+    current_user: UserInfo = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
+) -> WebhookTestResponse:
+    """
+    Trigger a test delivery for a webhook subscription.
+
+    Sends a signed webhook payload to the configured endpoint and returns a summary of the attempt.
+    """
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required for webhook subscriptions",
+        )
+
+    try:
+        subscription_service = WebhookSubscriptionService(db)
+        subscription = await subscription_service.get_subscription(
+            subscription_id=subscription_id,
+            tenant_id=current_user.tenant_id,
+        )
+
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Webhook subscription not found: {subscription_id}",
+            )
+
+        if not subscription.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Webhook subscription is inactive",
+            )
+
+        event_type = (
+            test_request.event_type
+            or (subscription.events[0] if subscription.events else None)
+            or "webhook.test"
+        )
+        payload = test_request.payload or {
+            "test": True,
+            "subscription_id": str(subscription.id),
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+
+        delivery_service = WebhookDeliveryService(db)
+        delivery = await delivery_service.deliver(
+            subscription=subscription,
+            event_type=event_type,
+            event_data=payload,
+            tenant_id=current_user.tenant_id,
+        )
+
+        return WebhookTestResponse(
+            success=delivery.status == DeliveryStatus.SUCCESS,
+            status_code=delivery.response_code,
+            response_body=delivery.response_body,
+            error_message=delivery.error_message,
+            delivery_time_ms=delivery.duration_ms or 0,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to test webhook subscription", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to test webhook subscription",
         )
 
 

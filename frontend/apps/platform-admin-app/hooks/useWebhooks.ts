@@ -376,24 +376,30 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       eventType: string;
       payload?: Record<string, unknown>;
     }): Promise<WebhookTestResult> => {
-      // Simulate API call for now
-      await new Promise((resolve) => setTimeout(resolve, Math.random() * 2000 + 500));
-      const success = Math.random() > 0.3;
+      try {
+        const response = await apiClient.post(`/webhooks/subscriptions/${id}/test`, {
+          event_type: eventType,
+          payload: payload ?? {},
+        });
 
-      if (success) {
-        return {
-          success: true,
-          status_code: 200,
-          response_body: "OK",
-          delivery_time_ms: Math.floor(Math.random() * 500 + 100),
-        };
-      } else {
-        return {
+        const responseData = parseJsonData<WebhookTestResult>(response.data, {
           success: false,
-          status_code: 500,
-          error_message: "Internal Server Error",
-          delivery_time_ms: Math.floor(Math.random() * 1000 + 200),
+          status_code: response.status,
+          response_body: undefined,
+          delivery_time_ms: 0,
+        });
+
+        return {
+          success: Boolean(responseData.success),
+          status_code: responseData.status_code ?? response.status,
+          response_body: responseData.response_body,
+          error_message: responseData.error_message,
+          delivery_time_ms: responseData.delivery_time_ms ?? 0,
         };
+      } catch (err) {
+        const message = getErrorMessage(err);
+        logger.error("Failed to test webhook", err instanceof Error ? err : new Error(message));
+        throw new Error(message);
       }
     },
   });

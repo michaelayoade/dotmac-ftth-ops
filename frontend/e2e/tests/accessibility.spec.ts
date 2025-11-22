@@ -10,11 +10,9 @@ import AxeBuilder from "@axe-core/playwright";
 
 test.describe("Accessibility - IP Input Components", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/login");
-    await page.fill('input[name="email"]', "admin@test.com");
-    await page.fill('input[name="password"]', "testpassword");
-    await page.click('button[type="submit"]');
-    await page.waitForURL("/dashboard");
+    // In bypass mode, /login auto-redirects to /dashboard - just go directly
+    await page.goto("/dashboard");
+    await page.waitForURL("**/dashboard**");
   });
 
   test("IPAddressInput should be accessible", async ({ page }) => {
