@@ -262,6 +262,13 @@ export class WebSocketClient {
   }
 
   /**
+   * Update the authentication token without reconnecting.
+   */
+  setToken(token: string | null): void {
+    this.token = token;
+  }
+
+  /**
    * Build WebSocket URL with authentication token (query param)
    */
   private buildUrl(): string {
@@ -315,6 +322,7 @@ export class WebSocketClient {
 
 // Singleton instance
 let wsClient: WebSocketClient | null = null;
+let wsToken: string | null = null;
 
 /**
  * Get WebSocket URL based on environment and protocol
@@ -339,10 +347,14 @@ function getWebSocketUrl(): string {
 /**
  * Get or create WebSocket client instance
  */
-export function getWebSocketClient(): WebSocketClient {
-  if (!wsClient) {
+export function getWebSocketClient(token?: string | null): WebSocketClient {
+  const resolvedToken = token ?? wsToken ?? null;
+
+  if (!wsClient || resolvedToken !== wsToken) {
     const wsUrl = getWebSocketUrl();
     wsClient = new WebSocketClient(wsUrl);
+    wsToken = resolvedToken;
+    wsClient.setToken(resolvedToken);
   }
 
   return wsClient;

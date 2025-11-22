@@ -22,14 +22,9 @@ export function useWebSocket(authToken?: string) {
     connected: false,
     reconnecting: false,
   });
-  const wsClient = useRef(getWebSocketClient());
+  const wsClient = useRef<ReturnType<typeof getWebSocketClient> | null>(null);
 
   useEffect(() => {
-    const client = wsClient.current;
-
-    // Subscribe to connection state changes
-    const unsubscribe = client.onStateChange(setConnectionState);
-
     // Get auth token from storage if not provided
     const token =
       authToken ||
@@ -37,6 +32,12 @@ export function useWebSocket(authToken?: string) {
       (typeof window !== "undefined"
         ? localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
         : null);
+
+    const client = getWebSocketClient(token);
+    wsClient.current = client;
+
+    // Subscribe to connection state changes
+    const unsubscribe = client.onStateChange(setConnectionState);
 
     // Connect to WebSocket
     if (token) {
@@ -52,11 +53,15 @@ export function useWebSocket(authToken?: string) {
   }, [authToken]);
 
   const connect = useCallback((token?: string) => {
+    if (!wsClient.current) {
+      const client = getWebSocketClient(token);
+      wsClient.current = client;
+    }
     wsClient.current.connect(token);
   }, []);
 
   const disconnect = useCallback(() => {
-    wsClient.current.disconnect();
+    wsClient.current?.disconnect();
   }, []);
 
   return {
