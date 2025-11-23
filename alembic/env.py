@@ -125,6 +125,198 @@ try:
 except ImportError:
     pass
 
+try:
+    from dotmac.platform.licensing.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# RADIUS
+try:
+    from dotmac.platform.radius.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Network and IP Management
+try:
+    from dotmac.platform.network.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.ip_management.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Services
+try:
+    from dotmac.platform.services.internet_plans.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.services.lifecycle.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Orchestration and Workflows
+try:
+    from dotmac.platform.orchestration.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.workflows.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.deployment.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Monitoring and Diagnostics
+try:
+    from dotmac.platform.monitoring.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.diagnostics.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.fault_management.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Jobs and Scheduling
+try:
+    from dotmac.platform.jobs.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Project and Field Service Management
+try:
+    from dotmac.platform.project_management.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.field_service.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# CRM and Sales
+try:
+    from dotmac.platform.crm.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.sales.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Additional Billing Modules
+try:
+    from dotmac.platform.billing.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.addons.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.currency.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.dunning.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.payment_methods.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.usage.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Notifications and Push
+try:
+    from dotmac.platform.notifications.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.push.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# GenieACS and Device Management
+try:
+    from dotmac.platform.genieacs.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# AI and ML
+try:
+    from dotmac.platform.ai.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Cache and Events
+try:
+    from dotmac.platform.cache.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.events.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Integrations and Versioning
+try:
+    from dotmac.platform.integrations.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.versioning.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Tenant and Rate Limiting
+try:
+    from dotmac.platform.tenant.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.rate_limit.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Timeseries
+try:
+    from dotmac.platform.timeseries.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Main platform models
+try:
+    from dotmac.platform.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
 # Use Base.metadata for autogeneration
 target_metadata = Base.metadata
 

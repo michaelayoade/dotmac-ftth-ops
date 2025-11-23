@@ -47,6 +47,10 @@ const mockSession = {
     user: {
       id: "dev-user",
       email: "admin@test.com",
+      emailVerified: true,
+      name: "Admin User",
+      createdAt: new Date(),
+      updatedAt: new Date(),
       role: "super_admin",
       tenant_id: "default-tenant",
       activeOrganization: {
@@ -55,6 +59,15 @@ const mockSession = {
         permissions: [],
       },
     } as ExtendedUser,
+    session: {
+      id: "dev-session",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: "dev-user",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      token: "dev-token",
+      ipAddress: "127.0.0.1",
+    },
   },
   error: null,
   isPending: false,
