@@ -35,8 +35,9 @@ import {
   formatRate,
   type CommunicationStatus,
 } from "@/types/communications";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
 
-export default function CommunicationsDashboard() {
+function CommunicationsDashboardContent() {
   const { stats, health, recentLogs, metrics, isLoading, error } = useCommunicationsDashboard();
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -394,5 +395,13 @@ export default function CommunicationsDashboard() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function CommunicationsDashboard() {
+  return (
+    <RouteGuard permission="communications.read">
+      <CommunicationsDashboardContent />
+    </RouteGuard>
   );
 }

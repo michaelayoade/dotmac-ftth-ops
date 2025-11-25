@@ -71,28 +71,13 @@ export function useWebSocketTechnicianLocations(
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Get WebSocket URL with authentication token
+   * Get WebSocket URL (Better Auth uses cookies; no token param needed unless backend requires it)
    */
   const getWebSocketUrl = useCallback(() => {
-    // Get token from operator auth storage (persists across reloads)
-    // Import dynamically to avoid issues with SSR
-    const { getOperatorAccessToken } = require("../../../shared/utils/operatorAuth");
-    const token = getOperatorAccessToken();
-
-    if (!token) {
-      throw new Error("No authentication token found");
-    }
-
-    // Determine WebSocket protocol based on current protocol
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-
-    // Use environment variable for backend URL or fallback to current host
     const backendUrl = process.env["NEXT_PUBLIC_API_URL"] || `${window.location.host}`;
-
-    // Remove http:// or https:// from backendUrl if present
     const cleanBackendUrl = backendUrl.replace(/^https?:\/\//, "");
-
-    return `${protocol}//${cleanBackendUrl}/api/v1/field-service/ws/technician-locations?token=${token}`;
+    return `${protocol}//${cleanBackendUrl}/api/v1/field-service/ws/technician-locations`;
   }, []);
 
   /**

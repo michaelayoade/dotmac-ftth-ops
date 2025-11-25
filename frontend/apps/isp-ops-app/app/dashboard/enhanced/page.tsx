@@ -31,6 +31,8 @@ import { useServiceStatistics } from "@/hooks/useServiceLifecycle";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useRBAC } from "@/contexts/RBACContext";
 
+type DashboardUser = Pick<ExtendedUser, "id" | "name" | "email" | "roles" | "role">;
+
 type IconRendererProps = {
   className?: string;
 };
@@ -38,7 +40,7 @@ type IconRendererProps = {
 export default function EnhancedDashboardPage() {
   const router = useRouter();
   const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const user = session?.user as DashboardUser | undefined;
   const { hasPermission } = useRBAC();
   const { features } = useAppConfig();
   const [isRefreshing, setIsRefreshing] = useState(false);

@@ -10,6 +10,11 @@ export interface AuthConfig {
   refreshEndpoint?: string;
 }
 
+type RefreshResponse = {
+  access_token?: string;
+  refresh_token?: string;
+};
+
 export class AuthInterceptor {
   private config: AuthConfig;
 
@@ -104,17 +109,27 @@ export class AuthInterceptor {
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const newToken = data.access_token;
+      if (!response.ok) {
+        return null;
+      }
 
-        if (newToken) {
-          this.setToken(newToken);
-          if (data.refresh_token) {
-            this.setRefreshToken(data.refresh_token);
-          }
-          return newToken;
+      const data: unknown = await response.json();
+
+      if (!data || typeof data !== "object") {
+        return null;
+      }
+
+      const { access_token, refresh_token } = data as RefreshResponse;
+      const newToken = typeof access_token === "string" ? access_token : null;
+      const newRefreshToken =
+        typeof refresh_token === "string" ? refresh_token : null;
+
+      if (newToken) {
+        this.setToken(newToken);
+        if (newRefreshToken) {
+          this.setRefreshToken(newRefreshToken);
         }
+        return newToken;
       }
     } catch (error) {
       console.error("Token refresh failed:", error);

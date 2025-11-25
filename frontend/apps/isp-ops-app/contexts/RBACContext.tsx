@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { handleError } from "@/lib/utils/error-handler";
 import { useToast } from "@dotmac/ui";
+import { isAuthBypassEnabled } from "@dotmac/better-auth";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -268,7 +269,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
   // Check if in E2E test mode
-  const isE2ETest = typeof window !== "undefined" && (window as any).__e2e_test__;
+  const authBypassEnabled = isAuthBypassEnabled();
+  const isE2ETest =
+    (typeof window !== "undefined" && (window as any).__e2e_test__) || authBypassEnabled;
 
   // Fetch current user permissions (skip in E2E test mode)
   const {

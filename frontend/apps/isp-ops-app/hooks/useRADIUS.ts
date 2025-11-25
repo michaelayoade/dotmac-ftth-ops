@@ -5,7 +5,6 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getOperatorAccessToken } from '../../../shared/utils/operatorAuth';
 import { useAppConfig } from '@/providers/AppConfigContext';
 import { buildApiUrl, parseListResponse, handleApiError } from '../../../shared/utils/api-utils';
 import {
@@ -28,13 +27,9 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
   return useQuery({
     queryKey: ['radius-subscribers', offset, limit, api.baseUrl, api.prefix],
     queryFn: async () => {
-      const token = getOperatorAccessToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       const url = `${buildApiUrl('/radius/subscribers', api)}?offset=${offset}&limit=${limit}`;
       const response = await fetch(url, {
@@ -59,13 +54,9 @@ export function useRADIUSSessions(offset = 0, limit = 100, options?: UseRADIUSOp
   return useQuery({
     queryKey: ['radius-sessions', offset, limit, api.baseUrl, api.prefix],
     queryFn: async () => {
-      const token = getOperatorAccessToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       const url = `${buildApiUrl('/radius/sessions', api)}?offset=${offset}&limit=${limit}`;
       const response = await fetch(url, {

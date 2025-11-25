@@ -4,12 +4,10 @@ import { createContext, ReactNode, useContext, useEffect, useMemo } from "react"
 import { useAppConfig } from "./AppConfigContext";
 import { applyBrandingConfig, applyThemeTokens } from "@/lib/theme";
 import { useTenantBrandingQuery, type TenantBrandingConfigDto } from "@/hooks/useTenantBranding";
+import { isAuthBypassEnabled } from "@dotmac/better-auth";
 
 // Skip auth/session calls in bypass mode to avoid hangs during E2E tests
-const authBypassEnabled =
-  typeof window !== "undefined" &&
-  (process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
-   process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true");
+const authBypassEnabled = isAuthBypassEnabled();
 
 interface BrandingProviderProps {
   children: ReactNode;

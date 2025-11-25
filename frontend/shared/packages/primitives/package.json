@@ -17,7 +17,7 @@
     "build": "tsup",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "echo 'Linting disabled pending chart component type fixes'",
-    "type-check": "tsc -p tsconfig.json --noEmit",
+    "type-check": "tsc -p tsconfig.json --emitDeclarationOnly",
     "clean": "rm -rf dist",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",

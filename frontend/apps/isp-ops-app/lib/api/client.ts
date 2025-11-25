@@ -6,8 +6,6 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
-import { resolveTenantId } from "../../../../shared/utils/jwtUtils";
 import { platformConfig } from "@/lib/config";
 
 const API_PREFIX = platformConfig.api.prefix || "/api/v1";
@@ -32,18 +30,8 @@ export const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const accessToken = getOperatorAccessToken();
-
-      // Add Authorization header
-      if (accessToken && config['headers'] && !config['headers'].Authorization) {
-        config['headers'].Authorization = `Bearer ${accessToken}`;
-      }
-
-      // Resolve tenant ID from JWT token (production) or fallback to storage (dev)
-      // In production, tenant_id is embedded in the JWT after login
-      // In development, you can manually set localStorage.setItem('tenant_id', 'default-isp')
-      const tenantId = resolveTenantId(accessToken);
-
+      // Preserve multi-tenant header from storage (set at login from Better Auth user)
+      const tenantId = window.localStorage?.getItem("tenant_id");
       if (tenantId && config['headers']) {
         config['headers']["X-Tenant-ID"] = tenantId;
       }

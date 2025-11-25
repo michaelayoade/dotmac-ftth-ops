@@ -10,7 +10,6 @@ import { CustomersList as SharedCustomersList } from "@dotmac/features/customers
 import { Customer } from "@/types";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { logger } from "@/lib/logger";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 import { impersonateCustomer as impersonateCustomerUtil } from "../../../../shared/utils/customerImpersonation";
 
 interface CustomersListProps {
@@ -21,16 +20,9 @@ interface CustomersListProps {
   onDeleteCustomer?: (customer: Customer) => void;
 }
 
-const buildAuthHeaders = (): Record<string, string> => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const token = getOperatorAccessToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
-};
+const buildAuthHeaders = (): Record<string, string> => ({
+  "Content-Type": "application/json",
+});
 
 export function CustomersList(props: CustomersListProps) {
   const { api } = useAppConfig();

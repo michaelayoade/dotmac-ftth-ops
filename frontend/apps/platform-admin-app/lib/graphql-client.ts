@@ -30,17 +30,6 @@ interface GraphQLResponse<T = any> {
 }
 
 /**
- * Get auth token from operator auth storage
- * Reuses the same token accessor as REST/axios clients
- */
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  // Import dynamically to avoid issues with SSR
-  const { getOperatorAccessToken } = require("../../../shared/utils/operatorAuth");
-  return getOperatorAccessToken();
-}
-
-/**
  * Create a lightweight GraphQL client
  */
 function resolveGraphqlUrl(): string {
@@ -50,7 +39,6 @@ function resolveGraphqlUrl(): string {
 function createGraphQLClient(): GraphQLClient {
   return {
     async request<T = any>(query: string, variables?: Record<string, any>): Promise<T> {
-      const token = getAuthToken();
       const graphqlUrl = resolveGraphqlUrl();
 
       const response = await fetch(graphqlUrl, {
@@ -58,7 +46,6 @@ function createGraphQLClient(): GraphQLClient {
         headers: {
           "Content-Type": "application/json",
           "X-Portal-Type": "platformAdmin", // ✅ Identify as platform admin portal
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: "include",
         body: JSON.stringify({

@@ -1,8 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
-import { RuntimeConfigProvider } from "@shared/runtime/RuntimeConfigContext";
+import {
+  RuntimeConfigProvider,
+  useRuntimeConfigState,
+} from "@shared/runtime/RuntimeConfigContext";
 
 import { applyPlatformRuntimeConfig } from "@/lib/config";
 
@@ -12,8 +15,20 @@ type RuntimeConfigBoundaryProps = {
 
 export function RuntimeConfigBoundary({ children }: RuntimeConfigBoundaryProps) {
   return (
-    <RuntimeConfigProvider onConfig={applyPlatformRuntimeConfig}>
-      {children}
+    <RuntimeConfigProvider>
+      <RuntimeConfigApplier>{children}</RuntimeConfigApplier>
     </RuntimeConfigProvider>
   );
+}
+
+function RuntimeConfigApplier({ children }: { children: ReactNode }) {
+  const { runtimeConfig } = useRuntimeConfigState();
+
+  useEffect(() => {
+    if (runtimeConfig) {
+      applyPlatformRuntimeConfig(runtimeConfig);
+    }
+  }, [runtimeConfig]);
+
+  return <>{children}</>;
 }

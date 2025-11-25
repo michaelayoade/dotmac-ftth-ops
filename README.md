@@ -152,6 +152,24 @@ The platform continues to expect the supporting infrastructure listed below, but
 
 > Need to provision a production host? Follow the [Remote Server Deployment Guide](REMOTE_SERVER_DEPLOYMENT_GUIDE.md) for an end-to-end walkthrough covering prerequisites, Docker deployment, Nginx, backups, and hardening.
 
+### Health checklist (Compose bundles)
+
+If containers are `unhealthy`, follow the condensed runbook (full details in [docs/STACK_HEALTH_RUNBOOK.md](docs/STACK_HEALTH_RUNBOOK.md)):
+
+1) Bring up infra + OpenBao with `docker compose -f docker-compose.infra.yml up -d` (OpenBao healthcheck now uses `bao status`).  
+2) Seed Vault/OpenBao dev secrets (minimum: `secret/app/secret_key`, `secret/auth/jwt_secret`, `secret/database/password`, Redis/MinIO creds, Alertmanager webhook, Paystack `sk_test_`/`pk_test_`).  
+3) Ensure worker env includes `VAULT__URL`, `VAULT__TOKEN`, and `SECRET_KEY` (already in `docker-compose.prod.yml`).  
+4) Prune stray `dotmac/platform-api:latest` migration containers:  
+   ```bash
+   docker rm -f $(docker ps -aq --filter ancestor=dotmac/platform-api:latest)
+   ```  
+5) Restart backend + worker and verify:  
+   ```bash
+   docker compose -f docker-compose.base.yml up -d platform-backend platform-worker
+   docker ps --format 'table {{.Names}}\t{{.Status}}'
+   curl -f http://localhost:8000/health
+   ```
+
 ### Prerequisites
 
 - **Docker Desktop** 20.10+ with Compose v2

@@ -51,6 +51,9 @@ services:
     environment:
       NODE_ENV: ${ISP_FRONTEND_NODE_ENV:-production}
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://isp-backend:8000}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:change-me@dotmac-postgres:5432/dotmac}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-better-auth-secret-change-me-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-me}
     ports:
       - "${ISP_FRONTEND_PORT:-3001}:3000"
     depends_on:

@@ -18,3 +18,6 @@ export type { ReceiptListProps } from "./ReceiptList";
 export * from "./RecordPaymentModal";
 export * from "./SkeletonLoaders";
 export * from "./SubscriptionDashboard";
+export * from "./LicenseGuard";
+export * from "./QuotaLimitGuard";
+export * from "./UpgradePrompt";

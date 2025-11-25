@@ -4,7 +4,6 @@
  */
 
 import { platformConfig } from "../config";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 import { Tenant } from "./tenant-service";
 
 export interface OnboardingAdminUser {
@@ -77,15 +76,9 @@ export interface OnboardingStatusResponse {
 
 class TenantOnboardingService {
   private getAuthHeaders(): HeadersInit {
-    const token = getOperatorAccessToken();
     const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
     return headers;
   }
 

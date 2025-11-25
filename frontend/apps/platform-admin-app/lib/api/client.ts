@@ -13,8 +13,6 @@ import axios, {
   AxiosAdapter,
   InternalAxiosRequestConfig,
 } from "axios";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
-import { resolveTenantId } from "../../../../shared/utils/jwtUtils";
 import { platformConfig } from "@/lib/config";
 
 const DEFAULT_API_PREFIX = "/api/v1";
@@ -42,31 +40,12 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true, // Include cookies for authentication
 });
 
-// Request interceptor to add auth token and tenant ID if available
+// Request interceptor to keep baseURL in sync with config
 apiClient.interceptors.request.use(
   (config) => {
     const resolvedBaseUrl = resolveBaseUrl();
     config.baseURL = resolvedBaseUrl;
     apiClient.defaults.baseURL = resolvedBaseUrl;
-
-    if (typeof window !== "undefined") {
-      const accessToken = getOperatorAccessToken();
-
-      // Add Authorization header
-      if (accessToken && config.headers && !config.headers.Authorization) {
-        config.headers["Authorization"] = `Bearer ${accessToken}`;
-      }
-
-      // Resolve tenant ID from JWT token (production) or fallback to storage (dev)
-      // Platform admins may set X-Target-Tenant-ID for cross-tenant management
-      // In development, you can manually set localStorage.setItem('tenant_id', 'default-isp')
-      const tenantId = resolveTenantId(accessToken);
-
-      if (tenantId && config.headers) {
-        config.headers["X-Tenant-ID"] = tenantId;
-      }
-    }
-
     return config;
   },
   (error) => {

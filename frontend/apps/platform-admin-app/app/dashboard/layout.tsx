@@ -69,6 +69,7 @@ import { useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
 import { signOut } from "@dotmac/better-auth";
 import { RealtimeProvider } from "@/contexts/RealtimeProvider";
+import { clearOperatorAuthTokens } from "../../../../shared/utils/operatorAuth";
 
 interface NavItem {
   name: string;
@@ -88,6 +89,8 @@ interface NavSection {
   permission?: string | string[];
   portals?: PortalType[];
 }
+
+type DisplayUser = Pick<ExtendedUser, "email" | "username" | "full_name" | "roles">;
 
 const platformAdminSectionIds = new Set<string>([
   "overview",
@@ -247,7 +250,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { branding } = useBranding();
   const portalType = getPortalType();
   const { data: session, isPending: authLoading } = useSession();
-  const userData = session?.user as ExtendedUser | undefined;
+  const userData = session?.user as DisplayUser | undefined;
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -326,6 +329,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     await signOut();
+    clearOperatorAuthTokens();
     router.push("/login");
   };
 

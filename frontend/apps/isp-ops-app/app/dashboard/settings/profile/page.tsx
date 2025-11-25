@@ -54,6 +54,11 @@ import {
 } from "@/hooks/useProfile";
 import { logger } from "@/lib/logger";
 
+type DisplayUser = Pick<
+  ExtendedUser,
+  "id" | "email" | "username" | "first_name" | "last_name" | "mfa_enabled" | "mfa_backup_codes_remaining"
+>;
+
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
 // - sonner: toast.success('msg') -> useToast: toast({ title: 'Success', description: 'msg' })
@@ -63,7 +68,7 @@ import { logger } from "@/lib/logger";
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
   const { data: session, refetch: refreshSession } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const user = session?.user as DisplayUser | undefined;
   const { data: sessionsData, isLoading: sessionsLoading } = useListSessions();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();

@@ -9,6 +9,25 @@ import { createAuthClient } from "better-auth/react";
 import { organizationClient } from "better-auth/client/plugins";
 import type { ExtendedUser } from "./types";
 
+function isBypassFlagEnabled(): boolean {
+  const envBypass =
+    process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
+    process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true" ||
+    process.env["E2E_AUTH_BYPASS"] === "true" ||
+    process.env["NODE_ENV"] === "test";
+
+  if (envBypass) {
+    return true;
+  }
+
+  if (typeof window !== "undefined") {
+    const win = window as unknown as Record<string, unknown>;
+    return Boolean(win.__SKIP_BETTER_AUTH__ || win.__E2E_AUTH_BYPASS__);
+  }
+
+  return false;
+}
+
 // Determine the auth server URL based on environment
 const getAuthURL = () => {
   // In development, use the Next.js API routes
@@ -37,9 +56,7 @@ export const authClient = createAuthClient({
   ],
 });
 
-const authBypassEnabled =
-  process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
-  process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true";
+const authBypassEnabled = isBypassFlagEnabled();
 
 // Minimal mock session used when auth is bypassed (e2e/local dev without backend)
 const mockSession = {
@@ -237,4 +254,11 @@ export type PortalConfig = typeof PORTAL_CONFIG[PortalType];
  */
 export function getPortalConfig(portal: PortalType): PortalConfig {
   return PORTAL_CONFIG[portal];
+}
+
+/**
+ * Public helper to detect when auth should be bypassed (e.g., E2E/dev)
+ */
+export function isAuthBypassEnabled(): boolean {
+  return isBypassFlagEnabled();
 }

@@ -28,6 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Plus, X, Calculator, DollarSign, Trash2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
+import { useToast } from "@dotmac/ui";
 
 import { type Quote, type Lead } from "../types";
 
@@ -81,6 +82,7 @@ export function CreateQuoteModal({
   leads,
   isSubmitting: externalIsSubmitting,
 }: CreateQuoteModalProps) {
+  const { toast } = useToast();
   const leadsList = leads ?? [];
   const isSubmittingValue = externalIsSubmitting ?? false;
   const [activeTab, setActiveTab] = useState("service");
@@ -182,8 +184,7 @@ export function CreateQuoteModal({
 
   const handleAddLineItem = () => {
     if (!newLineItem.description.trim()) {
-      // TODO: Add toast notification
-      // toast.error("Invalid Line Item: Please provide a description.");
+            // toast.error("Invalid Line Item: Please provide a description.");
       return;
     }
 
@@ -213,6 +214,10 @@ export function CreateQuoteModal({
       };
 
       await onCreate(quoteData);
+      toast({
+        title: "Quote saved",
+        description: "The quote has been created successfully.",
+      });
 
       // Reset form
       setFormData({
@@ -238,7 +243,12 @@ export function CreateQuoteModal({
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
-      // Parent should handle error notifications
+      toast({
+        title: "Failed to save quote",
+        description:
+          error instanceof Error ? error.message : "An unexpected error occurred while saving.",
+        variant: "destructive",
+      });
       throw error;
     }
   };

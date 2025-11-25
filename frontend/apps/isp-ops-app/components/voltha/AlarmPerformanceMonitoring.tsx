@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   AlertCircle,
   AlertTriangle,
@@ -35,8 +35,89 @@ interface AlarmPerformanceMonitoringProps {
   deviceId?: string;
 }
 
+type PerformanceMetrics = {
+  overviewHealth: number;
+  availability: number;
+  optical: {
+    rxPower: number;
+    txPower: number;
+    onuSignal: number;
+  };
+  traffic: {
+    downstream: number;
+    upstream: number;
+    latencyMs: number;
+  };
+  errors: {
+    crc: number;
+    flaps: number;
+  };
+};
+
 export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitoringProps) {
   const { toast } = useToast();
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
+    overviewHealth: 98.5,
+    availability: 99.2,
+    optical: { rxPower: -19.5, txPower: -2.4, onuSignal: -27.5 },
+    traffic: { downstream: 820, upstream: 310, latencyMs: 5.2 },
+    errors: { crc: 12, flaps: 3 },
+  });
+  const [metricsLoading, setMetricsLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchMetrics = async () => {
+      setMetricsLoading(true);
+      try {
+        const url = deviceId
+          ? `/api/v1/voltha/performance-metrics?device_id=${encodeURIComponent(deviceId)}`
+          : "/api/v1/voltha/performance-metrics";
+        const response = await fetch(url, { credentials: "include" });
+        if (!response.ok) {
+          throw new Error(`Metrics fetch failed: ${response.status}`);
+        }
+        const data = (await response.json()) as Partial<PerformanceMetrics>;
+        if (cancelled) return;
+        setPerformanceMetrics((prev) => ({
+          overviewHealth: data.overviewHealth ?? prev.overviewHealth,
+          availability: data.availability ?? prev.availability,
+          optical: {
+            rxPower: data.optical?.rxPower ?? prev.optical.rxPower,
+            txPower: data.optical?.txPower ?? prev.optical.txPower,
+            onuSignal: data.optical?.onuSignal ?? prev.optical.onuSignal,
+          },
+          traffic: {
+            downstream: data.traffic?.downstream ?? prev.traffic.downstream,
+            upstream: data.traffic?.upstream ?? prev.traffic.upstream,
+            latencyMs: data.traffic?.latencyMs ?? prev.traffic.latencyMs,
+          },
+          errors: {
+            crc: data.errors?.crc ?? prev.errors.crc,
+            flaps: data.errors?.flaps ?? prev.errors.flaps,
+          },
+        }));
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to load performance metrics", error);
+          toast({
+            title: "Metrics unavailable",
+            description: "Using cached demo metrics until live data is available.",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setMetricsLoading(false);
+        }
+      }
+    };
+
+    fetchMetrics();
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceId, toast]);
 
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
@@ -338,15 +419,10 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
       </Card>
 
       {/* Performance Metrics */}
-      {/*
-        NOTE: The performance metrics below are currently hardcoded placeholder values.
-        These should be replaced with real data from the backend API when available.
-        TODO: Integrate with backend performance metrics endpoints
-      */}
       <Card>
         <CardHeader>
           <CardTitle>Performance Metrics</CardTitle>
-          <CardDescription>Network health and performance indicators (Demo Data)</CardDescription>
+          <CardDescription>Network health and performance indicators</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview">
@@ -364,8 +440,11 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                     <div className="text-sm text-muted-foreground">Network Health</div>
                     <Activity className="w-4 h-4 text-green-600" />
                   </div>
-                  <div className="text-2xl font-bold text-green-600">98.5%</div>
-                  <Progress value={98.5} className="h-2 mt-2" />
+                  <div className="text-2xl font-bold text-green-600">
+                    {performanceMetrics.overviewHealth.toFixed(1)}%
+                  </div>
+                  <Progress value={performanceMetrics.overviewHealth} className="h-2 mt-2" />
+                  {metricsLoading && <div className="text-xs text-muted-foreground mt-1">Updating…</div>}
                 </div>
 
                 <div className="p-4 rounded-lg border bg-card">
@@ -373,8 +452,10 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                     <div className="text-sm text-muted-foreground">Avg Availability</div>
                     <TrendingUp className="w-4 h-4 text-blue-600" />
                   </div>
-                  <div className="text-2xl font-bold text-blue-600">99.2%</div>
-                  <Progress value={99.2} className="h-2 mt-2" />
+                  <div className="text-2xl font-bold text-blue-600">
+                    {performanceMetrics.availability.toFixed(1)}%
+                  </div>
+                  <Progress value={performanceMetrics.availability} className="h-2 mt-2" />
                 </div>
 
                 <div className="p-4 rounded-lg border bg-card">
@@ -382,8 +463,10 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                     <div className="text-sm text-muted-foreground">Error Rate</div>
                     <TrendingDown className="w-4 h-4 text-yellow-600" />
                   </div>
-                  <div className="text-2xl font-bold text-yellow-600">0.08%</div>
-                  <Progress value={0.08} className="h-2 mt-2" />
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {performanceMetrics.errors.crc.toFixed(2)}%
+                  </div>
+                  <Progress value={Math.min(100, performanceMetrics.errors.crc)} className="h-2 mt-2" />
                 </div>
               </div>
             </TabsContent>

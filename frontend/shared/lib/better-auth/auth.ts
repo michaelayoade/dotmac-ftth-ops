@@ -388,6 +388,10 @@ export const getAuth = (): AuthInstance => {
   return cachedAuth;
 };
 
+// Default export for tooling (e.g., @better-auth/cli) that expects a default auth instance
+const auth = getAuth();
+export default auth;
+
 /**
  * Export type inference helpers
  */

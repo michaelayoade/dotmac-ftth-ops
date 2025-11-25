@@ -8,12 +8,13 @@ Provides endpoints for SaaS platform administrators to:
 - Manage platform-level configurations
 """
 
+import os
 from typing import Any
 
 import structlog
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.db import get_async_session
@@ -221,6 +222,17 @@ class SystemConfigResponse(BaseModel):
     message: str | None = None
 
 
+class BetterAuthHealthResponse(BaseModel):
+    """Health status for Better Auth integration."""
+
+    status: str
+    database_connected: bool
+    tables_present: bool
+    sample_session_present: bool
+    config: dict[str, bool]
+    error: str | None = None
+
+
 # ============================================
 # Platform Admin Endpoints
 # ============================================
@@ -244,6 +256,66 @@ async def platform_admin_health(
         user_id=admin.user_id,
         is_platform_admin=admin.is_platform_admin,
         permissions=admin.permissions,
+    )
+
+
+@router.get("/better-auth/health", response_model=BetterAuthHealthResponse)
+async def better_auth_health(
+    admin: UserInfo = Depends(require_platform_admin),
+    db: AsyncSession = Depends(get_async_session),
+) -> BetterAuthHealthResponse:
+    """Lightweight Better Auth integration health check.
+
+    - Validates required environment variables are set
+    - Confirms DB connectivity
+    - Verifies Better Auth tables are reachable and optionally contain data
+    """
+    config_flags = {
+        "database_url": bool(os.getenv("DATABASE_URL") or os.getenv("DOTMAC_DATABASE_URL")),
+        "secret": bool(os.getenv("BETTER_AUTH_SECRET") or os.getenv("JWT_SECRET")),
+        "base_url": bool(os.getenv("BETTER_AUTH_URL") or os.getenv("NEXT_PUBLIC_API_URL")),
+    }
+
+    db_ok = False
+    tables_present = False
+    sample_session_present = False
+    error_message: str | None = None
+
+    try:
+        # Connectivity check
+        await db.execute(text("SELECT 1"))
+        db_ok = True
+
+        # Better Auth table presence + sample data probe
+        result = await db.execute(text('SELECT id FROM "session" LIMIT 1'))
+        tables_present = True
+        sample_session_present = result.first() is not None
+    except Exception as exc:  # noqa: BLE001
+        error_message = str(exc)
+        logger.warning("better_auth.health_check.failed", error=error_message)
+
+    status = "healthy" if db_ok and tables_present and all(config_flags.values()) else "degraded"
+    if error_message:
+        status = "unhealthy"
+
+    await platform_audit.log_action(
+        user=admin,
+        action="better_auth_health_check",
+        metadata={
+            "status": status,
+            "database_connected": db_ok,
+            "tables_present": tables_present,
+            "sample_session_present": sample_session_present,
+        },
+    )
+
+    return BetterAuthHealthResponse(
+        status=status,
+        database_connected=db_ok,
+        tables_present=tables_present,
+        sample_session_present=sample_session_present,
+        config=config_flags,
+        error=error_message,
     )
 
 

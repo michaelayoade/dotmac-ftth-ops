@@ -6,7 +6,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRADIUSSubscribers, useRADIUSSessions } from "../useRADIUS";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 const buildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
@@ -25,11 +24,6 @@ jest.mock("@/providers/AppConfigContext", () => ({
     branding: {},
     tenant: {},
   }),
-}));
-
-// Mock getOperatorAccessToken
-jest.mock("../../../../shared/utils/operatorAuth", () => ({
-  getOperatorAccessToken: jest.fn(),
 }));
 
 const originalFetch = global.fetch;
@@ -87,7 +81,6 @@ describe("useRADIUS", () => {
         },
       ];
 
-      (getOperatorAccessToken as jest.Mock).mockReturnValue("test-token");
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => mockSubscribers,
@@ -108,14 +101,12 @@ describe("useRADIUS", () => {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer test-token",
           },
         })
       );
     });
 
     it("should fetch without token if not available", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
@@ -139,8 +130,7 @@ describe("useRADIUS", () => {
     });
 
     it("should use custom offset and limit", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -159,8 +149,7 @@ describe("useRADIUS", () => {
     });
 
     it("should handle fetch error", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
         statusText: "Internal Server Error",
       });
@@ -178,8 +167,7 @@ describe("useRADIUS", () => {
     });
 
     it("should be enabled by default", () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -205,8 +193,7 @@ describe("useRADIUS", () => {
     });
 
     it("should have correct stale time", () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -220,8 +207,7 @@ describe("useRADIUS", () => {
     });
 
     it("should handle empty subscriber list", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -255,8 +241,7 @@ describe("useRADIUS", () => {
         created_at: "2024-01-21T00:00:00Z",
       }];
 
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock)
+            (global.fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
           json: async () => page1Data,
@@ -307,8 +292,7 @@ describe("useRADIUS", () => {
         },
       ];
 
-      (getOperatorAccessToken as jest.Mock).mockReturnValue("test-token");
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => mockSessions,
         headers: new Headers(),
@@ -335,8 +319,7 @@ describe("useRADIUS", () => {
     });
 
     it("should fetch without token if not available", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -359,8 +342,7 @@ describe("useRADIUS", () => {
     });
 
     it("should handle fetch error", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
         statusText: "Internal Server Error",
         json: async () => ({ message: "Server error" }),
@@ -380,8 +362,7 @@ describe("useRADIUS", () => {
     });
 
     it("should be enabled by default", () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -404,8 +385,7 @@ describe("useRADIUS", () => {
     });
 
     it("should have correct stale time (10 seconds)", () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -419,8 +399,7 @@ describe("useRADIUS", () => {
     });
 
     it("should handle empty sessions list", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -437,8 +416,7 @@ describe("useRADIUS", () => {
     });
 
     it("should support default pagination parameters", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => [],
         headers: new Headers(),
@@ -476,8 +454,7 @@ describe("useRADIUS", () => {
         },
       ];
 
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-      (global.fetch as jest.Mock).mockResolvedValue({
+            (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => mockSessions,
         headers: new Headers(),

@@ -10,7 +10,7 @@ The backends are expecting these services to be available on the host:
 
 ## Option 1: Quick Docker Setup (Recommended)
 
-Create a simple docker-compose file to run these services:
+Create a simple docker-compose file to run these services (now also includes OpenBao/Vault for secrets):
 
 ```bash
 cat > docker-compose.infra.yml <<'EOF'
@@ -66,6 +66,20 @@ services:
       timeout: 20s
       retries: 3
 
+  openbao:
+    image: openbao/openbao:latest
+    restart: unless-stopped
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev_local_vault_token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "8200:8200"
+    healthcheck:
+      test: ["CMD", "bao", "status"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   redis_data:
@@ -75,9 +89,8 @@ EOF
 # Start infrastructure services
 docker compose -f docker-compose.infra.yml up -d
 
-# Wait for services to be healthy
-echo "Waiting for services to be ready..."
-sleep 15
+# Wait for services to be healthy (OpenBao uses bao status)
+sleep 20
 
 # Check status
 docker compose -f docker-compose.infra.yml ps
@@ -99,6 +112,9 @@ docker exec -it dotmac-ftth-ops-redis-1 redis-cli -a dev_local_redis_password_12
 
 # Test MinIO
 curl http://localhost:9000/minio/health/live
+
+# Test OpenBao/Vault (dev token is printed in logs: dev_local_vault_token)
+docker exec -e BAO_TOKEN=dev_local_vault_token dotmac-openbao bao status
 ```
 
 2. Restart backend services:
@@ -112,7 +128,21 @@ docker logs dotmac-ftth-ops-isp-backend-1 --tail 50
 docker logs dotmac-ftth-ops-platform-backend-1 --tail 50
 ```
 
-4. Run database migrations:
+4. Seed secrets into OpenBao/Vault (minimum set to satisfy production validation):
+```bash
+export BAO_TOKEN=dev_local_vault_token
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/app/secret_key value=13e7e1e98056ce1a440c856b78a78ee070c02e23ebdac20e67b8c10a77fa2906
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/auth/jwt_secret value=721f9941a066e018481095df8c52a31b6c7a87a496419598af7faae162dfb7ff59d79660543fd720f76de001be067ebb
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/database/password value=dev_local_pg_password_123
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/redis/password value=dev_local_redis_password_123
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/storage/access_key value=minioadmin
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/storage/secret_key value=dev_local_minio_root_pw
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/observability/alertmanager/webhook_secret value=dev_webhook_secret
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/billing/paystack/secret_key value=sk_test_example123456
+docker exec -e BAO_TOKEN=$BAO_TOKEN dotmac-openbao bao kv put secret/billing/paystack/public_key value=pk_test_example123456
+```
+
+5. Run database migrations:
 ```bash
 # ISP backend migrations
 docker exec dotmac-ftth-ops-isp-backend-1 alembic upgrade head
@@ -121,7 +151,7 @@ docker exec dotmac-ftth-ops-isp-backend-1 alembic upgrade head
 docker exec dotmac-ftth-ops-platform-backend-1 alembic upgrade head
 ```
 
-5. Verify backends are healthy:
+6. Verify backends are healthy:
 ```bash
 curl http://149.102.135.97:8000/health
 curl http://149.102.135.97:8001/health
@@ -148,6 +178,11 @@ REDIS_PASSWORD=dev_local_redis_password_123
 MINIO_ROOT_USER=minioadmin
 MINIO_ROOT_PASSWORD=dev_local_minio_root_pw
 MINIO_ENDPOINT=minio:9000
+
+# Vault/OpenBao (dev defaults)
+VAULT__ENABLED=true
+VAULT__URL=http://openbao:8200
+VAULT__TOKEN=dev_local_vault_token
 ```
 
 **Note**: These are development passwords. Change them for production!

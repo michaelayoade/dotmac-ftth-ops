@@ -151,6 +151,132 @@ export const createMockNetworkProfile = (overrides?: Partial<any>) => {
 };
 
 /**
+ * Create a mock NAS Device
+ */
+export const createMockNASDevice = (overrides?: Partial<any>) => {
+  return {
+    id: 1,
+    nasname: "192.168.1.10",
+    shortname: "OLT-CORE-01",
+    type: "olt",
+    secret: "radiussecret123",
+    server: "radius-1",
+    community: "public",
+    description: "Primary OLT",
+    secret_configured: true,
+    ...overrides,
+  };
+};
+
+/**
+ * Create a mock Router
+ */
+export const createMockRouter = (overrides?: Partial<any>) => {
+  return createMockNASDevice({
+    type: "router",
+    shortname: "Router-01",
+    ...overrides,
+  });
+};
+
+/**
+ * Create a mock Bandwidth Profile
+ */
+export const createMockBandwidthProfile = (overrides?: Partial<any>) => {
+  return {
+    id: 1,
+    name: "Business 200Mbps",
+    download_rate: 200000, // Kbps
+    upload_rate: 100000, // Kbps
+    download_burst: 0,
+    upload_burst: 0,
+    ...overrides,
+  };
+};
+
+/**
+ * Create a basic profile
+ */
+export const createBasicProfile = (overrides?: Partial<any>) => {
+  return createMockBandwidthProfile({
+    name: "Basic 50Mbps",
+    download_rate: 50000,
+    upload_rate: 10000,
+    ...overrides,
+  });
+};
+
+/**
+ * Create a high speed profile
+ */
+export const createHighSpeedProfile = (overrides?: Partial<any>) => {
+  return createMockBandwidthProfile({
+    name: "Gigabit",
+    download_rate: 1000000,
+    upload_rate: 1000000,
+    ...overrides,
+  });
+};
+
+/**
+ * Create a mock RADIUS Session
+ */
+export const createMockRADIUSSession = (overrides?: Partial<any>) => {
+  const now = new Date();
+  const startTime = new Date(now.getTime() - 3600 * 1000); // 1 hour ago
+  const input = overrides?.acctinputoctets ?? 1000000;
+  const output = overrides?.acctoutputoctets ?? 500000;
+
+  return {
+    radacctid: `session_${Math.random().toString(36).substr(2, 9)}`,
+    acctsessionid: `sess_${Math.random().toString(36).substr(2, 9)}`,
+    acctuniqueid: `unique_${Math.random().toString(36).substr(2, 9)}`,
+    username: "customer@isp.com",
+    groupname: "residential",
+    realm: "isp.com",
+    nasipaddress: "192.168.1.10",
+    nasportid: "port_1",
+    nasporttype: "Ethernet",
+    acctstarttime: startTime.toISOString(),
+    acctupdatetime: now.toISOString(),
+    acctstoptime: null,
+    acctinterval: 300,
+    acctsessiontime: 3600,
+    acctauthentic: "RADIUS",
+    connectinfo_start: "CONNECT 1000Mbps",
+    connectinfo_stop: "",
+    acctinputoctets: input,
+    acctoutputoctets: output,
+    calledstationid: "00-11-22-33-44-55",
+    callingstationid: "AA-BB-CC-DD-EE-FF",
+    acctterminatecause: null,
+    servicetype: "Framed-User",
+    framedprotocol: "PPP",
+    framedipaddress: "10.0.0.100",
+    is_active: true,
+    total_bytes: input + output,
+    ...overrides,
+  };
+};
+
+/**
+ * Create a terminated RADIUS Session
+ */
+export const createTerminatedRADIUSSession = (overrides?: Partial<any>) => {
+  const now = new Date();
+  const startTime = new Date(now.getTime() - 7200 * 1000); // 2 hours ago
+
+  return createMockRADIUSSession({
+    is_active: false,
+    acctstarttime: startTime.toISOString(),
+    acctstoptime: now.toISOString(),
+    acctsessiontime: 7200,
+    acctterminatecause: "User-Request",
+    ...overrides,
+  });
+};
+
+/**
  * Reset counters (useful between test suites)
  */
 export const resetNetworkCounters = () => {

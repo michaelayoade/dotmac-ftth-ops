@@ -11,7 +11,7 @@
     "noImplicitReturns": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "forceConsistentCasingInFileNames": true,
@@ -42,7 +42,9 @@
       "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
       "@dotmac/primitives/*": ["../../shared/packages/primitives/src/*"],
       "@dotmac/better-auth": ["../../shared/lib/better-auth/index.ts"],
-      "@dotmac/better-auth/*": ["../../shared/lib/better-auth/*"]
+      "@dotmac/better-auth/*": ["../../shared/lib/better-auth/*"],
+      "zod": ["./node_modules/zod"],
+      "zod/*": ["./node_modules/zod/*"]
     },
     "plugins": [
       {

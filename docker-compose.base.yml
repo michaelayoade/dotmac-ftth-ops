@@ -8,6 +8,7 @@ services:
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-debug}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-*}
       DATABASE__HOST: ${DATABASE__HOST:-dotmac-postgres}
       DATABASE__PORT: ${DATABASE__PORT:-5432}
       DATABASE__DATABASE: ${DATABASE__DATABASE:-dotmac}
@@ -32,6 +33,11 @@ services:
       CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://dotmac-redis:6379/3}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://dotmac-jaeger:4317}
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dotmac-platform}
+      OBSERVABILITY__OTEL_ENDPOINT: ${OBSERVABILITY__OTEL_ENDPOINT:-http://dotmac-jaeger:4318}
+      OBSERVABILITY__ALERTMANAGER_BASE_URL: ${OBSERVABILITY__ALERTMANAGER_BASE_URL:-http://dotmac-alertmanager:9093}
+      OBSERVABILITY__PROMETHEUS_BASE_URL: ${OBSERVABILITY__PROMETHEUS_BASE_URL:-http://dotmac-prometheus:9090}
+      OBSERVABILITY__GRAFANA_BASE_URL: ${OBSERVABILITY__GRAFANA_BASE_URL:-http://dotmac-grafana:3000}
+      SESSION_REDIS_URL: ${SESSION_REDIS_URL:-redis://:dev_local_redis_password_123@dotmac-redis:6379/1}
       REQUIRE_REDIS_SESSIONS: ${REQUIRE_REDIS_SESSIONS:-false}
     ports:
       - "${PLATFORM_BACKEND_PORT:-8001}:8000"
@@ -73,6 +79,9 @@ services:
       NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${PLATFORM_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-}
       NEXT_PUBLIC_APP_TYPE: ${PLATFORM_NEXT_PUBLIC_APP_TYPE:-platform-admin}
       NEXT_PUBLIC_PORTAL_TYPE: ${PLATFORM_NEXT_PUBLIC_PORTAL_TYPE:-admin}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:change-me@dotmac-postgres:5432/dotmac}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-better-auth-secret-change-me-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-me}
     ports:
       - "${PLATFORM_FRONTEND_PORT:-3002}:3000"
     depends_on:

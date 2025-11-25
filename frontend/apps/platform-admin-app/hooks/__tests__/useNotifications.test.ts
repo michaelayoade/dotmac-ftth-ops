@@ -28,15 +28,6 @@ import React, { ReactNode } from "react";
 // Ensure TanStack Query uses the real implementation even when automock is enabled
 jest.mock("@tanstack/react-query", () => jest.requireActual("@tanstack/react-query"));
 
-// Mock utils that apiClient depends on
-jest.mock("../../../../shared/utils/operatorAuth", () => ({
-  getOperatorAccessToken: jest.fn(() => "mock-token"),
-}));
-
-jest.mock("../../../../shared/utils/jwtUtils", () => ({
-  resolveTenantId: jest.fn(() => "test-tenant"),
-}));
-
 const buildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
   const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;

@@ -43,6 +43,8 @@ import { ROUTES } from "@/lib/routes";
 import { useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
 
+type DisplayUser = Pick<ExtendedUser, "email" | "roles">;
+
 const TENANT_STATUS_LABELS: Record<TenantDetails["status"], string> = {
   active: "Active",
   suspended: "Suspended",
@@ -97,7 +99,7 @@ const QUICK_LINKS = [
 export default function PlatformAdminDashboardPage() {
   const router = useRouter();
   const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const user = session?.user as DisplayUser | undefined;
 
   const { data: tenantData, isLoading: tenantsLoading } = usePlatformTenants({
     page: 1,

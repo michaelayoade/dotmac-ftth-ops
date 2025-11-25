@@ -26,6 +26,7 @@ export {
   useCurrentOrganization,
   PORTAL_CONFIG,
   getPortalConfig,
+  isAuthBypassEnabled,
 } from "./client";
 export type { PortalType, PortalConfig } from "./client";
 

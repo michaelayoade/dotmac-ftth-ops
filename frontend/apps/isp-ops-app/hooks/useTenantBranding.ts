@@ -8,12 +8,10 @@ import {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
+import { isAuthBypassEnabled } from "@dotmac/better-auth";
 
 // Skip auth/session calls in bypass mode to avoid hangs during E2E tests
-const authBypassEnabled =
-  typeof window !== "undefined" &&
-  (process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
-   process.env["NEXT_PUBLIC_MSW_ENABLED"] === "true");
+const authBypassEnabled = isAuthBypassEnabled();
 
 export interface TenantBrandingConfigDto {
   product_name?: string | null;

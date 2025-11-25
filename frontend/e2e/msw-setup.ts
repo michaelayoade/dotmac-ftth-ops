@@ -5,10 +5,12 @@
  * It can run in two modes:
  * 1. Proxy mode - Forward requests to real backend with contract validation
  * 2. Mock mode - Return deterministic data for UI testing
+ *
+ * Note: localStorage polyfill is provided in global-setup.ts
  */
 
 import { setupServer } from "msw/node";
-import { handlers, mockHandlers } from "../shared/mocks/handlers";
+import { handlers, mockHandlers } from "./handlers";
 
 // Determine mode from environment variable
 const MSW_MODE = process.env.MSW_MODE || "proxy";

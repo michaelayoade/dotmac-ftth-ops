@@ -4,7 +4,6 @@
  */
 
 import { platformConfig } from "../config";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 // ============================================
 // Types matching backend schemas
@@ -115,15 +114,9 @@ export interface PaymentRetryResponse {
 
 class ReconciliationService {
   private getAuthHeaders(): HeadersInit {
-    const token = getOperatorAccessToken();
     const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
     return headers;
   }
 

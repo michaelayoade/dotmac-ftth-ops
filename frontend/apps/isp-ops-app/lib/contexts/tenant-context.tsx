@@ -10,7 +10,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { apiClient } from "@/lib/api/client";
 import { useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 export interface Tenant {
   id: string;
@@ -49,12 +48,10 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
   const { data: session, isPending: authLoading } = useSession();
   const user = session?.user as ExtendedUser | undefined;
 
-  const hasTenantAssociation = Boolean(user?.tenant_id);
+  const hasTenantAssociation = Boolean(user?.tenant_id || user?.activeOrganization?.id);
 
   const refreshTenant = async () => {
-    const operatorToken = getOperatorAccessToken();
-
-    if (!hasTenantAssociation || !operatorToken) {
+    if (!hasTenantAssociation) {
       setTenant(null);
       setAvailableTenants([]);
       setError(null);

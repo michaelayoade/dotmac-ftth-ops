@@ -21,6 +21,7 @@ import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from "@/hooks/useCu
 import { AlertBanner } from "@/components/alerts/AlertBanner";
 import { MetricCardEnhanced } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
 
 interface MetricCardProps {
   title: string;
@@ -134,7 +135,7 @@ function RecentActivity({ items }: { items: RecentActivityItem[] }) {
   );
 }
 
-export default function OperationsPage() {
+function OperationsPageContent() {
   // Fetch customer metrics using GraphQL
   const {
     metrics: customerMetrics,
@@ -397,5 +398,13 @@ export default function OperationsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OperationsPage() {
+  return (
+    <RouteGuard permission="operations.read">
+      <OperationsPageContent />
+    </RouteGuard>
   );
 }

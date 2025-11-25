@@ -50,6 +50,7 @@ All operator-facing information now lives in `frontend/PRODUCTION_GUIDE.md` (sch
 
 ## Operations & Troubleshooting
 
+- [STACK_HEALTH_RUNBOOK.md](STACK_HEALTH_RUNBOOK.md) — how to bring every container to `healthy` (Vault seeding, worker env, stray container cleanup).
 - [EXCEPTION_HANDLING_GUIDE.md](EXCEPTION_HANDLING_GUIDE.md) — structured logging patterns and FastAPI error handling.
 - [TROUBLESHOOTING_PLAYBOOKS.md](TROUBLESHOOTING_PLAYBOOKS.md) — production incident runbooks.
 - [REALTIME_STREAMS.md](REALTIME_STREAMS.md) — SSE endpoints, curl examples, and troubleshooting tips.

@@ -21,9 +21,11 @@ import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useFeatureFlag } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
-import { useSession } from "@dotmac/better-auth";
+import { isAuthBypassEnabled, useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
 import { useSubscriberDashboardGraphQL } from "@/hooks/useSubscriberDashboardGraphQL";
+
+type DisplayUser = Pick<ExtendedUser, "email" | "roles">;
 
 function formatDate(value?: string | null): string {
   if (!value) {
@@ -40,17 +42,21 @@ export default function DashboardPage() {
   const router = useRouter();
   const { hasPermission } = useRBAC();
   const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const user = session?.user as DisplayUser | undefined;
+  const authBypassEnabled = isAuthBypassEnabled();
 
   // Feature flags
   const { enabled: radiusSessionsEnabled } = useFeatureFlag('radius-sessions');
   const { enabled: radiusSubscribersEnabled } = useFeatureFlag('radius-subscribers');
 
   const { features } = useAppConfig();
-  const hasRadiusAccess = features.enableRadius && hasPermission("isp.radius.read");
-  const hasNetworkAccess = features.enableNetwork && hasPermission("isp.ipam.read");
+  const allowNetworkCalls = !authBypassEnabled;
+  const hasRadiusAccess =
+    allowNetworkCalls && features.enableRadius && hasPermission("isp.radius.read");
+  const hasNetworkAccess =
+    allowNetworkCalls && features.enableNetwork && hasPermission("isp.ipam.read");
   const hasLifecycleAccess =
-    features.enableAutomation && hasPermission("isp.automation.read");
+    allowNetworkCalls && features.enableAutomation && hasPermission("isp.automation.read");
 
   const { data: serviceStats, isLoading: serviceStatsLoading } = useServiceStatistics({
     enabled: hasLifecycleAccess,
@@ -83,7 +89,7 @@ export default function DashboardPage() {
     enabled: hasNetworkAccess,
   });
 
-  const { data: systemHealth } = useSystemHealth();
+  const { data: systemHealth } = useSystemHealth({ enabled: allowNetworkCalls });
 
   useEffect(() => {
     if (!authLoading && !session) {

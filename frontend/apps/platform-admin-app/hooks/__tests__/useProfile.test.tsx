@@ -19,17 +19,8 @@ import {
   useRevokeSession,
   useRevokeAllSessions,
 } from "../useProfile";
-import { authService } from "@/lib/api/services/auth.service";
 import apiClient from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-
-// Mock authService
-jest.mock("@/lib/api/services/auth.service", () => ({
-  authService: {
-    updateProfile: jest.fn(),
-    uploadAvatar: jest.fn(),
-  },
-}));
 
 // Mock apiClient
 jest.mock("@/lib/api/client", () => ({
@@ -77,7 +68,7 @@ describe("useProfile", () => {
         last_name: "Doe",
       };
 
-      (authService.updateProfile as jest.Mock).mockResolvedValue(mockUser);
+      (apiClient.patch as jest.Mock).mockResolvedValue({ data: mockUser });
 
       const { result } = renderHook(() => useUpdateProfile(), {
         wrapper: createWrapper(),
@@ -93,7 +84,7 @@ describe("useProfile", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(result.current.data).toEqual(mockUser);
-      expect(authService.updateProfile).toHaveBeenCalledWith({
+      expect(apiClient.patch).toHaveBeenCalledWith("/auth/profile", {
         first_name: "John",
         last_name: "Doe",
       });
@@ -104,7 +95,7 @@ describe("useProfile", () => {
 
     it("should handle update error", async () => {
       const mockError = new Error("Update failed");
-      (authService.updateProfile as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.patch as jest.Mock).mockRejectedValue(mockError);
 
       const { result } = renderHook(() => useUpdateProfile(), {
         wrapper: createWrapper(),
@@ -416,7 +407,7 @@ describe("useProfile", () => {
       const mockFile = new File(["avatar"], "avatar.png", { type: "image/png" });
       const mockData = { avatar_url: "/uploads/avatar.png" };
 
-      (authService.uploadAvatar as jest.Mock).mockResolvedValue(mockData);
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: mockData });
 
       const { result } = renderHook(() => useUploadAvatar(), {
         wrapper: createWrapper(),
@@ -429,13 +420,19 @@ describe("useProfile", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(result.current.data).toEqual(mockData);
-      expect(authService.uploadAvatar).toHaveBeenCalledWith(mockFile);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/auth/profile/avatar",
+        expect.any(FormData),
+        expect.objectContaining({
+          headers: { "Content-Type": "multipart/form-data" },
+        }),
+      );
       expect(logger.info).toHaveBeenCalledWith("Avatar uploaded successfully");
     });
 
     it("should log file details", async () => {
       const mockFile = new File(["avatar"], "avatar.png", { type: "image/png" });
-      (authService.uploadAvatar as jest.Mock).mockResolvedValue({});
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: {} });
 
       const { result } = renderHook(() => useUploadAvatar(), {
         wrapper: createWrapper(),
@@ -456,7 +453,7 @@ describe("useProfile", () => {
     it("should handle upload error", async () => {
       const mockFile = new File(["avatar"], "avatar.png", { type: "image/png" });
       const mockError = new Error("File too large");
-      (authService.uploadAvatar as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.post as jest.Mock).mockRejectedValue(mockError);
 
       const { result } = renderHook(() => useUploadAvatar(), {
         wrapper: createWrapper(),

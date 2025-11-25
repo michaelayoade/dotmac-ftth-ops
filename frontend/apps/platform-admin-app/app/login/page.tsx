@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "@dotmac/better-auth";
-import type { AxiosResponse } from "axios";
-import { apiClient } from "@/lib/api/client";
+import type { ExtendedUser } from "@dotmac/better-auth";
 import { logger } from "@/lib/logger";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 import { useBranding } from "@/hooks/useBranding";
@@ -15,8 +14,7 @@ import {
   setOperatorAccessToken,
 } from "../../../../shared/utils/operatorAuth";
 
-const showTestCredentials =
-  process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] === "true";
+const showTestCredentials = false;
 
 export default function LoginPage() {
   const [error, setError] = useState("");
@@ -31,63 +29,6 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
-
-  const establishLegacySession = useCallback(
-    async (
-      credentials: LoginFormData,
-      existingResponse?: AxiosResponse<any>,
-    ): Promise<void> => {
-      const response =
-        existingResponse ??
-        (await apiClient.post("/auth/login", {
-          username: credentials.email,
-          password: credentials.password,
-        }));
-
-      if (!response) {
-        throw new Error("No response from legacy login endpoint");
-      }
-
-      if (response.status !== 200) {
-        throw new Error(`Login failed with status ${response.status}`);
-      }
-
-      const defaultHeaders = (apiClient.defaults?.headers as any)?.common;
-
-      if (response.data?.access_token) {
-        setOperatorAccessToken(response.data.access_token);
-        if (defaultHeaders) {
-          defaultHeaders.Authorization = `Bearer ${response.data.access_token}`;
-        }
-      } else {
-        clearOperatorAuthTokens();
-        if (defaultHeaders?.Authorization) {
-          delete defaultHeaders.Authorization;
-        }
-      }
-
-      if (response.data?.tenant_id) {
-        try {
-          localStorage.setItem("tenant_id", response.data.tenant_id);
-        } catch (storageError) {
-          logger.debug("Unable to persist tenant_id", {
-            error:
-              storageError instanceof Error ? storageError.message : String(storageError),
-          });
-        }
-      } else {
-        try {
-          localStorage.removeItem("tenant_id");
-        } catch {
-          // ignore
-        }
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      window.location.href = "/dashboard";
-    },
-    [],
-  );
 
   const onSubmit = useCallback(
     async (data: LoginFormData) => {
@@ -110,8 +51,48 @@ export default function LoginPage() {
           return;
         }
 
+        const sessionData = result.data;
+        const tokenFromData =
+          sessionData &&
+          typeof sessionData === "object" &&
+          "token" in sessionData
+            ? (sessionData as { token?: string }).token
+            : undefined;
+        const sessionToken =
+          tokenFromData ??
+          (sessionData &&
+            typeof sessionData === "object" &&
+            "session" in sessionData &&
+            typeof sessionData.session === "object"
+            ? (sessionData.session as { token?: string } | null)?.token
+            : undefined);
+        const tenantId =
+          (result.data?.user as ExtendedUser | undefined)?.tenant_id ||
+          (result.data?.user as ExtendedUser | undefined)?.activeOrganization?.id;
+
+        if (sessionToken) {
+          setOperatorAccessToken(sessionToken);
+        } else {
+          clearOperatorAuthTokens();
+        }
+
+        if (tenantId) {
+          try {
+            localStorage.setItem("tenant_id", tenantId);
+          } catch {
+            // ignore storage failures
+          }
+        } else {
+          try {
+            localStorage.removeItem("tenant_id");
+          } catch {
+            // ignore
+          }
+        }
+
         logger.info("Better Auth login successful");
-        await establishLegacySession(data);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        window.location.href = "/dashboard";
       } catch (err: any) {
         logger.error("Login request threw an error", err instanceof Error ? err : new Error(String(err)));
 
@@ -129,7 +110,7 @@ export default function LoginPage() {
         setLoading(false);
       }
     },
-    [establishLegacySession],
+    [],
   );
 
   return (
@@ -274,16 +255,6 @@ export default function LoginPage() {
             </button>
           )}
         </form>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="text-brand hover:text-[var(--brand-primary-hover)] font-medium"
-          >
-            Sign up
-          </Link>
-        </p>
       </div>
     </main>
   );

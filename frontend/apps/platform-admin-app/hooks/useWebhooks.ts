@@ -385,15 +385,14 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
         const responseData = parseJsonData<WebhookTestResult>(response.data, {
           success: false,
           status_code: response.status,
-          response_body: undefined,
           delivery_time_ms: 0,
         });
 
         return {
           success: Boolean(responseData.success),
           status_code: responseData.status_code ?? response.status,
-          response_body: responseData.response_body,
-          error_message: responseData.error_message,
+          ...(responseData.response_body !== undefined && { response_body: responseData.response_body }),
+          ...(responseData.error_message !== undefined && { error_message: responseData.error_message }),
           delivery_time_ms: responseData.delivery_time_ms ?? 0,
         };
       } catch (err) {

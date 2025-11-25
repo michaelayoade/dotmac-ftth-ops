@@ -35,17 +35,6 @@ import {
 } from "../types/realtime";
 import { useAppConfig } from "@/providers/AppConfigContext";
 
-/**
- * Get auth token from operator auth storage
- * Reuses the same token accessor as REST/GraphQL clients
- */
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  // Import dynamically to avoid issues with SSR
-  const { getOperatorAccessToken } = require("../../../shared/utils/operatorAuth");
-  return getOperatorAccessToken();
-}
-
 // ============================================================================
 // SSE Hooks
 // ============================================================================
@@ -61,6 +50,7 @@ export function useSSE<T extends BaseEvent>(
 ) {
   const { data: session } = useSession();
   const user = session?.user;
+  const authToken = session?.session?.token;
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<SSEClient | null>(null);
@@ -71,13 +61,8 @@ export function useSSE<T extends BaseEvent>(
       return;
     }
 
-    // Get token from operator auth storage (persists across reloads)
-    const token = getAuthToken();
-
-    if (!token) {
-      const errorMsg = "No authentication token available";
-      setError(errorMsg);
-      logger.error("SSE connection failed: No auth token", undefined, { endpoint, eventType });
+    if (!authToken) {
+      setError("Missing auth token");
       return;
     }
 
@@ -86,7 +71,7 @@ export function useSSE<T extends BaseEvent>(
     // Create SSE client
     const client = new SSEClient({
       endpoint,
-      token,
+      token: authToken,
       onOpen: () => {
         setStatus(ConnectionStatus.CONNECTED);
         logger.info("SSE connection established", { endpoint, eventType });
@@ -115,7 +100,7 @@ export function useSSE<T extends BaseEvent>(
       client.close();
       clientRef.current = null;
     };
-  }, [endpoint, eventType, enabled, user]);
+  }, [endpoint, eventType, enabled, user, authToken]);
 
   const reconnect = useCallback(() => {
     if (clientRef.current) {
@@ -187,13 +172,8 @@ export function useWebSocket(endpoint: string, enabled = true) {
       return;
     }
 
-    // Get token from operator auth storage (persists across reloads)
-    const token = getAuthToken();
-
-    if (!token) {
-      const errorMsg = "No authentication token available";
-      setError(errorMsg);
-      logger.error("WebSocket connection failed: No auth token", undefined, { endpoint });
+    if (!session?.session?.token) {
+      setError("Missing auth token");
       return;
     }
 
@@ -201,7 +181,7 @@ export function useWebSocket(endpoint: string, enabled = true) {
 
     const client = new WebSocketClient({
       endpoint,
-      token,
+      token: session.session.token,
       onOpen: () => {
         setStatus(ConnectionStatus.CONNECTED);
         logger.info("WebSocket connection established", { endpoint });

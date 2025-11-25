@@ -4,7 +4,6 @@
  */
 
 import { platformConfig } from "../config";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 // ============================================
 // Types matching backend models
@@ -182,16 +181,9 @@ export interface ReconcilePaymentRequest {
 
 class BankAccountsService {
   private getAuthHeaders(): HeadersInit {
-    const token = getOperatorAccessToken();
-    const headers: HeadersInit = {
+    return {
       "Content-Type": "application/json",
     };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    return headers;
   }
 
   // ==================== Bank Accounts ====================
@@ -425,14 +417,12 @@ class BankAccountsService {
   }
 
   async uploadPaymentAttachment(paymentId: number, file: File): Promise<any> {
-    const token = getOperatorAccessToken();
     const formData = new FormData();
     formData.append("file", file);
 
     const response = await fetch(platformConfig.api.buildUrl(`/billing/payments/${paymentId}/attachments`), {
       method: "POST",
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: formData,
     });

@@ -4,7 +4,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { authService, User } from "@/lib/api/services/auth.service";
+import type { User } from "@/lib/types/auth";
 import { logger } from "@/lib/logger";
 import apiClient from "@/lib/api/client";
 
@@ -43,8 +43,8 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async (data: UpdateProfileData) => {
       logger.info("Updating profile", { fields: Object.keys(data) });
-      const user = await authService.updateProfile(data);
-      return user;
+      const response = await apiClient.patch<User>("/auth/profile", data);
+      return response.data;
     },
     onSuccess: (data) => {
       // Update the user in auth context
@@ -227,8 +227,18 @@ export function useUploadAvatar() {
   return useMutation({
     mutationFn: async (file: File) => {
       logger.info("Uploading avatar", { fileName: file.name, size: file.size });
-      const data = await authService.uploadAvatar(file);
-      return data;
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const response = await apiClient.post<{ avatar_url: string }>(
+        "/auth/profile/avatar",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auth", "me"] });

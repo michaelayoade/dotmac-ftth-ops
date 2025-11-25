@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 interface WebSocketMessage {
   type: string;
@@ -83,16 +82,7 @@ export function WebSocketProvider({
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
 
-        // Send authentication if token exists
-        const token = getOperatorAccessToken();
-        if (token) {
-          ws.send(
-            JSON.stringify({
-              type: "auth",
-              token,
-            }),
-          );
-        }
+        // Better Auth uses cookies; if a token handshake is needed, update here.
       };
 
       ws.onmessage = (event) => {

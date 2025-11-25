@@ -2,12 +2,13 @@ import { defineConfig, devices } from "@playwright/test";
 
 const ISP_BASE_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
 const useExternalServers = process.env.E2E_USE_DEV_SERVER === "true";
-const testTimeout = parseInt(process.env.E2E_TEST_TIMEOUT || "600000", 10);
-const expectTimeout = parseInt(process.env.E2E_EXPECT_TIMEOUT || "20000", 10);
-const actionTimeout = parseInt(process.env.E2E_ACTION_TIMEOUT || "60000", 10);
-const navigationTimeout = parseInt(process.env.E2E_NAV_TIMEOUT || "480000", 10);
-const webServerTimeout = parseInt(process.env.E2E_WEB_SERVER_TIMEOUT || "600000", 10);
-const defaultMSWMode = process.env.MSW_MODE || "mock";
+// Reduced timeouts to catch real issues (can be overridden via env vars)
+const testTimeout = parseInt(process.env.E2E_TEST_TIMEOUT || "30000", 10);
+const expectTimeout = parseInt(process.env.E2E_EXPECT_TIMEOUT || "5000", 10);
+const actionTimeout = parseInt(process.env.E2E_ACTION_TIMEOUT || "10000", 10);
+const navigationTimeout = parseInt(process.env.E2E_NAV_TIMEOUT || "30000", 10);
+const webServerTimeout = parseInt(process.env.E2E_WEB_SERVER_TIMEOUT || "120000", 10);
+const defaultMSWMode = process.env.MSW_MODE || "proxy";
 const enableMSWWorkers = process.env.E2E_DISABLE_MSW !== "true";
 const reuseExistingServer = process.env.E2E_REUSE_SERVER === "true";
 
@@ -16,7 +17,6 @@ process.env.MSW_MODE = defaultMSWMode;
 const sharedWebServerEnv: Record<string, string> = {
   MSW_MODE: defaultMSWMode,
   NEXT_PUBLIC_MSW_ENABLED: enableMSWWorkers ? "true" : "false",
-  NEXT_PUBLIC_SKIP_BETTER_AUTH: "true",
 };
 
 export default defineConfig({
@@ -37,12 +37,24 @@ export default defineConfig({
     video: "retain-on-failure",
     actionTimeout,
     navigationTimeout,
+    launchOptions: {
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      chromiumSandbox: false,
+    },
   },
 
   projects: [
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
   ],
 

@@ -6,7 +6,6 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 import {
   getWebSocketClient,
   WebSocketEventType,
@@ -28,7 +27,6 @@ export function useWebSocket(authToken?: string) {
     // Get auth token from storage if not provided
     const token =
       authToken ||
-      getOperatorAccessToken() ||
       (typeof window !== "undefined"
         ? localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
         : null);

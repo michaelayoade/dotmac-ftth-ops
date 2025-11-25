@@ -47,8 +47,15 @@ export class SSEClient {
 
     try {
       // EventSource doesn't support custom headers, so we rely on cookies
-      // withCredentials: true automatically sends HttpOnly cookies with the request
+      // withCredentials: true automatically sends HttpOnly cookies with the request.
+      // Include token as query param when provided for backends that require it.
       const url = new URL(this.config.endpoint, window.location.origin);
+      if (this.config.token) {
+        url.searchParams.set("token", this.config.token);
+      }
+      if (this.config.token) {
+        url.searchParams.set("token", this.config.token);
+      }
 
       this.eventSource = new EventSource(url.toString(), {
         withCredentials: true, // Send cookies automatically

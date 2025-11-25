@@ -33,14 +33,9 @@ const RuntimeConfigContext = createContext<RuntimeConfigState>({
 
 type RuntimeConfigProviderProps = {
   children: ReactNode;
-  /**
-   * Called whenever the runtime config successfully resolves.
-   * Useful for mutating global config singletons (platformConfig, etc.).
-   */
-  onConfig?: (config: RuntimeConfig) => void;
 };
 
-export function RuntimeConfigProvider({ children, onConfig }: RuntimeConfigProviderProps) {
+export function RuntimeConfigProvider({ children }: RuntimeConfigProviderProps) {
   const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(
     () => getRuntimeConfigSnapshot(),
   );
@@ -86,11 +81,8 @@ export function RuntimeConfigProvider({ children, onConfig }: RuntimeConfigProvi
     }
   }, [runtimeConfig, runtimeConfigDisabled, resolveRuntimeConfig]);
 
-  useEffect(() => {
-    if (runtimeConfig) {
-      onConfig?.(runtimeConfig);
-    }
-  }, [runtimeConfig, onConfig]);
+  // onConfig callback removed - not used anywhere in the codebase
+  // Components that need to react to runtime config changes should use useRuntimeConfigState() hook
 
   const refresh = useCallback(async () => {
     await resolveRuntimeConfig(true);

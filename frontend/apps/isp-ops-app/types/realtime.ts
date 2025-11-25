@@ -215,7 +215,7 @@ export interface WebSocketServerMessage {
 
 export interface SSEConfig {
   endpoint: string;
-  token: string;
+  token?: string;
   onEvent?: (event: MessageEvent) => void;
   onError?: (error: Event) => void;
   onOpen?: () => void;
@@ -229,7 +229,7 @@ export interface SSEConfig {
 
 export interface WebSocketConfig {
   endpoint: string;
-  token: string;
+  token?: string;
   protocols?: string[];
   reconnect?: boolean;
   reconnectInterval?: number;

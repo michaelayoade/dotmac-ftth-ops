@@ -7,9 +7,7 @@
     "skipLibCheck": true,
     "exactOptionalPropertyTypes": false,
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     }
   },
   "include": [

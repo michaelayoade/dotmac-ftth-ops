@@ -5,6 +5,7 @@ Provides login, register, token refresh endpoints with rate limiting.
 """
 
 import json
+import os
 import secrets
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
@@ -951,7 +952,19 @@ async def register(
 ) -> TokenResponse:
     """
     Register a new user and return JWT tokens.
+
+    SECURITY: Self-registration can be disabled in production by setting
+    ALLOW_SELF_REGISTRATION=false. When disabled, users must be created
+    by administrators via POST /api/v1/users endpoint.
     """
+    # SECURITY: Check if self-registration is allowed (disabled by default for production)
+    allow_self_registration = os.getenv("ALLOW_SELF_REGISTRATION", "false").lower() == "true"
+    if not allow_self_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Self-registration is disabled. Please contact your administrator to create an account.",
+        )
+
     from dotmac.platform.tenant import get_current_tenant_id
 
     user_service = UserService(session)

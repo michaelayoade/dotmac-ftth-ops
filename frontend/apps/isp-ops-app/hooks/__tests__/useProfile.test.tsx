@@ -19,16 +19,7 @@ import {
   useRevokeSession,
   useRevokeAllSessions,
 } from "../useProfile";
-import { authService } from "@/lib/api/services/auth.service";
 import apiClient from "@/lib/api/client";
-
-// Mock authService
-jest.mock("@/lib/api/services/auth.service", () => ({
-  authService: {
-    updateProfile: jest.fn(),
-    uploadAvatar: jest.fn(),
-  },
-}));
 
 // Mock apiClient
 jest.mock("@/lib/api/client", () => ({
@@ -97,7 +88,6 @@ document.body.removeChild = jest.fn((node: any) => {
 URL.createObjectURL = mockCreateObjectURL as any;
 URL.revokeObjectURL = mockRevokeObjectURL as any;
 
-const mockedAuthService = authService as jest.Mocked<typeof authService>;
 const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
 describe("useProfile", () => {
@@ -125,14 +115,14 @@ describe("useProfile", () => {
     cleanup();
   });
 
-  describe("useUpdateProfile", () => {
-    it("should update profile successfully", async () => {
-      const mockUser = createMockUser();
-      mockedAuthService.updateProfile.mockResolvedValue(mockUser);
+describe("useUpdateProfile", () => {
+  it("should update profile successfully", async () => {
+    const mockUser = createMockUser();
+    mockedApiClient.patch.mockResolvedValue({ data: mockUser });
 
-      const { result } = renderHook(() => useUpdateProfile(), {
-        wrapper: createQueryWrapper(),
-      });
+    const { result } = renderHook(() => useUpdateProfile(), {
+      wrapper: createQueryWrapper(),
+    });
 
       await act(async () => {
         await result.current.mutateAsync({
@@ -141,16 +131,16 @@ describe("useProfile", () => {
         });
       });
 
-      expect(mockedAuthService.updateProfile).toHaveBeenCalledWith({
-        first_name: "Updated",
-        last_name: "Name",
-      });
+    expect(mockedApiClient.patch).toHaveBeenCalledWith("/auth/profile", {
+      first_name: "Updated",
+      last_name: "Name",
     });
+  });
 
-    it("should handle update profile error", async () => {
-      mockedAuthService.updateProfile.mockRejectedValue(
-        new Error("Update failed")
-      );
+  it("should handle update profile error", async () => {
+    mockedApiClient.patch.mockRejectedValue(
+      new Error("Update failed")
+    );
 
       const { result } = renderHook(() => useUpdateProfile(), {
         wrapper: createQueryWrapper(),
@@ -169,7 +159,7 @@ describe("useProfile", () => {
 
     it("should invalidate auth query on success", async () => {
       const mockUser = createMockUser();
-      mockedAuthService.updateProfile.mockResolvedValue(mockUser);
+      mockedApiClient.patch.mockResolvedValue({ data: mockUser });
 
       const queryWrapper = createQueryWrapper();
       const { result } = renderHook(() => useUpdateProfile(), {
@@ -477,8 +467,8 @@ describe("useProfile", () => {
   describe("useUploadAvatar", () => {
     it("should upload avatar successfully", async () => {
       const mockFile = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" });
-      mockedAuthService.uploadAvatar.mockResolvedValue({
-        avatar_url: "https://example.com/avatars/new-avatar.jpg",
+      mockedApiClient.post.mockResolvedValue({
+        data: { avatar_url: "https://example.com/avatars/new-avatar.jpg" },
       } as any);
 
       const { result } = renderHook(() => useUploadAvatar(), {
@@ -489,15 +479,17 @@ describe("useProfile", () => {
         await result.current.mutateAsync(mockFile);
       });
 
-      expect(mockedAuthService.uploadAvatar).toHaveBeenCalledWith(mockFile);
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/auth/profile/avatar",
+        expect.any(FormData),
+        expect.objectContaining({ headers: { "Content-Type": "multipart/form-data" } }),
+      );
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
     });
 
     it("should handle upload avatar error", async () => {
       const mockFile = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" });
-      mockedAuthService.uploadAvatar.mockRejectedValue(
-        new Error("Upload failed")
-      );
+      mockedApiClient.post.mockRejectedValue(new Error("Upload failed"));
 
       const { result } = renderHook(() => useUploadAvatar(), {
         wrapper: createQueryWrapper(),
@@ -828,11 +820,11 @@ describe("useProfile", () => {
         first_name: "Updated",
         last_name: "User",
       });
-      mockedAuthService.updateProfile.mockResolvedValue(mockUpdatedUser);
+      mockedApiClient.patch.mockResolvedValue({ data: mockUpdatedUser });
 
       const mockFile = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" });
-      mockedAuthService.uploadAvatar.mockResolvedValue({
-        avatar_url: "https://example.com/avatars/new.jpg",
+      mockedApiClient.post.mockResolvedValue({
+        data: { avatar_url: "https://example.com/avatars/new.jpg" },
       } as any);
 
       mockedApiClient.post.mockResolvedValue({

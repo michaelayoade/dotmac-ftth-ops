@@ -13,11 +13,6 @@ import { createQueryWrapper } from "../../__tests__/test-utils";
 import { http, HttpResponse } from 'msw';
 const { server } = require("@/__tests__/msw/server");
 
-// Mock the operator auth utility
-jest.mock('../../../../shared/utils/operatorAuth', () => ({
-  getOperatorAccessToken: jest.fn(() => 'mock-token'),
-}));
-
 // Mock useAppConfig
 jest.mock('@/providers/AppConfigContext', () => ({
   AppConfigProvider: ({ children }: { children: React.ReactNode }) => children,

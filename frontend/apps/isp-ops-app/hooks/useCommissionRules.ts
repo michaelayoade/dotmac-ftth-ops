@@ -67,17 +67,7 @@ export interface UpdateCommissionRuleInput {
 
 type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
 
-// Fetch headers helper
-const getAuthHeaders = () => {
-  if (typeof window === "undefined") return {};
-  // Import dynamically to avoid issues with SSR
-  const { getOperatorAccessToken } = require("../../../shared/utils/operatorAuth");
-  const token = getOperatorAccessToken();
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+const defaultHeaders = { "Content-Type": "application/json" };
 
 // API Functions
 async function fetchCommissionRules(
@@ -97,7 +87,7 @@ async function fetchCommissionRules(
   if (params?.page_size) queryParams.append("page_size", String(params.page_size));
 
   const url = buildUrl(`/partners/commission-rules/?${queryParams}`);
-  const res = await fetch(url, { headers: getAuthHeaders(), credentials: "include" });
+  const res = await fetch(url, { headers: defaultHeaders, credentials: "include" });
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: "Failed to fetch commission rules" }));
@@ -110,7 +100,7 @@ async function fetchCommissionRules(
 async function fetchCommissionRule(buildUrl: BuildApiUrl, ruleId: string): Promise<CommissionRule> {
   const url = buildUrl(`/partners/commission-rules/${ruleId}`);
   const res = await fetch(url, {
-    headers: getAuthHeaders(),
+    headers: defaultHeaders,
     credentials: "include",
   });
 
@@ -129,7 +119,7 @@ async function createCommissionRule(
   const url = buildUrl("/partners/commission-rules/");
   const res = await fetch(url, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: defaultHeaders,
     credentials: "include",
     body: JSON.stringify(data),
   });
@@ -150,7 +140,7 @@ async function updateCommissionRule(
   const url = buildUrl(`/partners/commission-rules/${ruleId}`);
   const res = await fetch(url, {
     method: "PATCH",
-    headers: getAuthHeaders(),
+    headers: defaultHeaders,
     credentials: "include",
     body: JSON.stringify(data),
   });
@@ -167,7 +157,7 @@ async function deleteCommissionRule(buildUrl: BuildApiUrl, ruleId: string): Prom
   const url = buildUrl(`/partners/commission-rules/${ruleId}`);
   const res = await fetch(url, {
     method: "DELETE",
-    headers: getAuthHeaders(),
+    headers: defaultHeaders,
     credentials: "include",
   });
 
@@ -192,7 +182,7 @@ async function fetchApplicableRules(
   const url = buildUrl(
     `/partners/commission-rules/partners/${params.partner_id}/applicable?${queryParams}`,
   );
-  const res = await fetch(url, { headers: getAuthHeaders(), credentials: "include" });
+  const res = await fetch(url, { headers: defaultHeaders, credentials: "include" });
 
   if (!res.ok) {
     const error = await res

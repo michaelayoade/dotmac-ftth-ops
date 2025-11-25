@@ -40,11 +40,6 @@ jest.mock("@/providers/AppConfigContext", () => ({
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-// Mock operator auth
-jest.mock("../../../../shared/utils/operatorAuth", () => ({
-  getOperatorAccessToken: () => "mock-token",
-}));
-
 // Import MSW server
 const { server } = require("../../__tests__/msw/server");
 

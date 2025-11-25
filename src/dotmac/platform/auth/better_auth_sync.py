@@ -87,11 +87,18 @@ class BetterAuthSyncService:
                 existing_user.email = email
                 existing_user.full_name = name
                 existing_user.is_active = email_verified
+                existing_user.is_verified = email_verified
+                if not existing_user.username:
+                    existing_user.username = email.split("@")[0]
                 existing_user.updated_at = datetime.now(UTC)
 
                 logger.info("Updated existing user from Better Auth", user_id=user_id, email=email)
                 await self.db.commit()
                 await self.db.refresh(existing_user)
+
+                if self.rbac_service:
+                    await self._sync_user_roles(str(user_uuid))
+
                 return existing_user
             else:
                 # Create new user
@@ -204,15 +211,20 @@ class BetterAuthSyncService:
             return None
 
 
-async def sync_better_auth_user(user_id: str, db: AsyncSession) -> User | None:
+async def sync_better_auth_user(
+    user_id: str,
+    db: AsyncSession,
+    rbac_service: RBACService | None = None,
+) -> User | None:
     """Helper function to sync a Better Auth user.
 
     Args:
         user_id: Better Auth user ID
         db: Database session
+        rbac_service: Optional RBAC service for role synchronization
 
     Returns:
         Synced User model or None
     """
-    sync_service = BetterAuthSyncService(db)
+    sync_service = BetterAuthSyncService(db, rbac_service=rbac_service)
     return await sync_service.ensure_user_synced(user_id)

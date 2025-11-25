@@ -4,8 +4,10 @@ Better Auth Integration Service for FastAPI.
 This module provides session validation and user data extraction from Better Auth.
 Better Auth stores sessions in PostgreSQL tables and uses cookie-based authentication.
 """
+from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import structlog
 from sqlalchemy import text
@@ -13,21 +15,135 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 
+if TYPE_CHECKING:
+    from dotmac.platform.auth.rbac_service import RBACService
+
 logger = structlog.get_logger(__name__)
+
+# Permission matrix aligned to frontend/shared/lib/better-auth/auth.ts.
+# Stored permissions are flattened as "<resource>:<action>" strings.
+_ROLE_PERMISSION_MATRIX: dict[str, dict[str, list[str]]] = {
+    "super_admin": {
+        "users": ["create", "read", "update", "delete"],
+        "customers": ["create", "read", "update", "delete"],
+        "subscribers": ["create", "read", "update", "delete", "provision", "suspend", "terminate"],
+        "network": ["read", "configure", "monitor"],
+        "billing": ["read", "manage", "payments"],
+        "tickets": ["create", "read", "update", "assign"],
+        "organization": ["read", "update", "delete", "members", "billing"],
+        "reports": ["view", "export"],
+    },
+    "platform_admin": {
+        "users": ["read", "update"],
+        "organization": ["read", "update"],
+        "reports": ["view", "export"],
+    },
+    "tenant_owner": {
+        "users": ["create", "read", "update", "delete"],
+        "customers": ["create", "read", "update", "delete"],
+        "subscribers": ["create", "read", "update", "delete", "provision", "suspend", "terminate"],
+        "network": ["read", "configure", "monitor"],
+        "billing": ["read", "manage", "payments"],
+        "tickets": ["create", "read", "update", "assign"],
+        "organization": ["read", "update", "members", "billing"],
+        "reports": ["view", "export"],
+    },
+    "tenant_admin": {
+        "users": ["create", "read", "update"],
+        "customers": ["create", "read", "update"],
+        "subscribers": ["create", "read", "update", "provision", "suspend"],
+        "network": ["read", "monitor"],
+        "billing": ["read"],
+        "tickets": ["create", "read", "update", "assign"],
+        "organization": ["read"],
+        "reports": ["view"],
+    },
+    "tenant_member": {
+        "customers": ["read"],
+        "subscribers": ["read"],
+        "network": ["read"],
+        "billing": ["read"],
+        "tickets": ["create", "read"],
+        "organization": ["read"],
+    },
+    "network_admin": {
+        "network": ["read", "configure", "monitor"],
+        "subscribers": ["read", "provision", "suspend"],
+        "tickets": ["read", "update"],
+    },
+    "support_agent": {
+        "customers": ["read"],
+        "subscribers": ["read"],
+        "tickets": ["create", "read", "update"],
+        "billing": ["read"],
+    },
+    "technician": {
+        "network": ["read", "monitor"],
+        "subscribers": ["read"],
+        "tickets": ["read", "update"],
+    },
+    "sales_manager": {
+        "customers": ["create", "read", "update"],
+        "subscribers": ["create", "read"],
+        "reports": ["view"],
+    },
+    "billing_manager": {
+        "billing": ["read", "manage", "payments"],
+        "customers": ["read"],
+        "subscribers": ["read"],
+        "reports": ["view", "export"],
+    },
+    "customer": {
+        "subscribers": ["read"],
+        "billing": ["read"],
+        "tickets": ["create", "read"],
+    },
+    "reseller_owner": {
+        "customers": ["create", "read", "update"],
+        "subscribers": ["create", "read", "update"],
+        "billing": ["read"],
+        "tickets": ["create", "read"],
+        "organization": ["read", "update", "members"],
+        "reports": ["view"],
+    },
+    "reseller_admin": {
+        "customers": ["create", "read", "update"],
+        "subscribers": ["create", "read", "update"],
+        "billing": ["read"],
+        "tickets": ["create", "read"],
+        "organization": ["read"],
+    },
+    "reseller_agent": {
+        "customers": ["create", "read"],
+        "subscribers": ["read"],
+        "tickets": ["create", "read"],
+    },
+}
+
+ROLE_PERMISSIONS: dict[str, list[str]] = {
+    role: [f"{resource}:{action}" for resource, actions in resources.items() for action in actions]
+    for role, resources in _ROLE_PERMISSION_MATRIX.items()
+}
 
 
 class BetterAuthService:
     """Service for validating Better Auth sessions and extracting user data."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, rbac_service: "RBACService | None" = None):
         """Initialize with database session.
 
         Args:
             db: AsyncSession for querying Better Auth tables
+            rbac_service: Optional RBAC service for syncing roles
         """
         self.db = db
+        self.rbac_service = rbac_service
 
-    async def validate_session(self, session_token: str) -> UserInfo | None:
+    async def validate_session(
+        self,
+        session_token: str,
+        tenant_id: str | None = None,
+    ) -> UserInfo | None:
         """Validate a Better Auth session token and return user info.
 
         Better Auth stores sessions with the following structure:
@@ -35,9 +151,12 @@ class BetterAuthService:
         - user table: id, email, name, email_verified, etc.
         - account table: user_id, provider, provider_account_id, etc.
         - organization_member table: user_id, organization_id, role, permissions
+        - tenant_id: optional tenant context to scope membership selection
 
         Args:
             session_token: The session token from cookie
+            tenant_id: Optional tenant context (e.g., X-Active-Tenant-Id) to
+                select the matching organization membership
 
         Returns:
             UserInfo if session is valid, None otherwise
@@ -83,27 +202,45 @@ class BetterAuthService:
                 FROM "organization_member" om
                 JOIN "organization" o ON om.organization_id = o.id
                 WHERE om.user_id = :user_id
-                LIMIT 1
             """)
 
             org_result = await self.db.execute(org_query, {"user_id": user_id})
-            org_data = org_result.fetchone()
+            org_memberships = org_result.fetchall()
+
+            selected_membership = None
+            if tenant_id:
+                # Prefer membership that matches the requested tenant context
+                selected_membership = next(
+                    (row for row in org_memberships if str(row[0]) == tenant_id),
+                    None,
+                )
+
+            if tenant_id and not selected_membership:
+                logger.warning(
+                    "Requested tenant_id not found in Better Auth memberships",
+                    user_id=user_id,
+                    requested_tenant_id=tenant_id,
+                )
+                return None
+
+            if not tenant_id and not selected_membership and org_memberships:
+                # Fallback to first membership for backwards compatibility when no tenant specified
+                selected_membership = org_memberships[0]
 
             # Extract tenant and role info
-            tenant_id = None
+            resolved_tenant_id = None
             roles = []
             permissions = []
 
-            if org_data:
-                tenant_id = str(org_data[0])  # organization_id becomes tenant_id
-                role = org_data[1]  # role from Better Auth
+            if selected_membership:
+                resolved_tenant_id = str(selected_membership[0])  # organization_id becomes tenant_id
+                role = selected_membership[1]  # role from Better Auth
 
                 # Map Better Auth roles to our system roles
                 roles = self._map_better_auth_role(role)
 
-                # Get permissions for this role from Better Auth
-                # Better Auth stores permissions in the role configuration
-                permissions = await self._get_role_permissions(user_id)
+                # Get permissions for this role from Better Auth configuration
+                permissions = self._get_role_permissions_for_role(role)
             else:
                 # No organization membership - assign default role
                 roles = ["user"]
@@ -116,7 +253,11 @@ class BetterAuthService:
             # This ensures Better Auth users have corresponding records in our User table
             try:
                 from dotmac.platform.auth.better_auth_sync import sync_better_auth_user
-                await sync_better_auth_user(user_id, self.db)
+                await sync_better_auth_user(
+                    user_id,
+                    self.db,
+                    rbac_service=self.rbac_service,
+                )
                 logger.debug("User synced from Better Auth to local database", user_id=user_id)
             except Exception as sync_error:
                 # Don't fail authentication if sync fails
@@ -128,7 +269,7 @@ class BetterAuthService:
                 user_id=user_id,
                 email=email,
                 roles=roles,
-                tenant_id=tenant_id
+                tenant_id=resolved_tenant_id
             )
 
             return UserInfo(
@@ -137,7 +278,7 @@ class BetterAuthService:
                 username=username,
                 roles=roles,
                 permissions=permissions,
-                tenant_id=tenant_id,
+                tenant_id=resolved_tenant_id,
                 is_platform_admin=is_platform_admin,
             )
 
@@ -174,105 +315,19 @@ class BetterAuthService:
         # Our system supports multiple roles, so return as list
         return [better_auth_role] if better_auth_role else ["user"]
 
-    async def _get_role_permissions(self, user_id: str) -> list[str]:
-        """Get permissions for a user based on their organization role.
-
-        Better Auth stores permissions in the organization_member table
-        via the role configuration.
-
-        Args:
-            user_id: User ID
-
-        Returns:
-            List of permission strings
-        """
-        try:
-            # Better Auth stores permissions as JSON array in metadata or via role
-            # For now, we'll derive permissions from role
-            # In Better Auth, permissions are configured per role in the Organization plugin
-
-            # Query role from organization membership
-            query = text("""
-                SELECT om.role
-                FROM "organization_member" om
-                WHERE om.user_id = :user_id
-                LIMIT 1
-            """)
-
-            result = await self.db.execute(query, {"user_id": user_id})
-            row = result.fetchone()
-
-            if not row:
-                return []
-
-            role = row[0]
-
-            # Map roles to permissions based on Better Auth configuration
-            # This matches the permission mapping in frontend/shared/lib/better-auth/auth.ts
-            role_permissions = {
-                "super_admin": [
-                    # All permissions
-                    "users:create", "users:read", "users:update", "users:delete",
-                    "customers:create", "customers:read", "customers:update", "customers:delete",
-                    "subscribers:provision", "subscribers:suspend", "subscribers:terminate",
-                    "network:configure", "network:monitor",
-                    "billing:manage", "billing:payments",
-                    "tickets:assign", "tickets:update",
-                    "organization:members", "organization:billing",
-                    "reports:view", "reports:export",
-                ],
-                "platform_admin": [
-                    "users:read", "users:update",
-                    "customers:read",
-                    "organization:members",
-                    "reports:view",
-                ],
-                "tenant_owner": [
-                    "users:create", "users:read", "users:update", "users:delete",
-                    "customers:create", "customers:read", "customers:update", "customers:delete",
-                    "subscribers:provision", "subscribers:suspend", "subscribers:terminate",
-                    "network:configure", "network:monitor",
-                    "billing:manage", "billing:payments",
-                    "organization:members", "organization:billing",
-                    "reports:view", "reports:export",
-                ],
-                "tenant_admin": [
-                    "users:read", "users:update",
-                    "customers:create", "customers:read", "customers:update",
-                    "subscribers:provision", "subscribers:suspend",
-                    "network:monitor",
-                    "billing:payments",
-                    "reports:view",
-                ],
-                "tenant_member": [
-                    "customers:read",
-                    "subscribers:read",
-                    "reports:view",
-                ],
-                "network_admin": [
-                    "network:configure", "network:monitor",
-                    "subscribers:provision", "subscribers:suspend",
-                ],
-                "support_agent": [
-                    "customers:read", "customers:update",
-                    "tickets:assign", "tickets:update",
-                ],
-                "customer": [
-                    "profile:read", "profile:update",
-                    "billing:view",
-                ],
-            }
-
-            return role_permissions.get(role, [])
-
-        except Exception as e:
-            logger.error("Error getting role permissions", error=str(e))
+    def _get_role_permissions_for_role(self, role: str | None) -> list[str]:
+        """Return permissions for a given Better Auth role."""
+        if not role:
             return []
+
+        return ROLE_PERMISSIONS.get(role, [])
 
 
 async def get_better_auth_user(
     session_token: str,
-    db: AsyncSession
+    db: AsyncSession,
+    tenant_id: str | None = None,
+    rbac_service: "RBACService | None" = None,
 ) -> UserInfo | None:
     """Get user info from Better Auth session token.
 
@@ -281,9 +336,11 @@ async def get_better_auth_user(
     Args:
         session_token: Better Auth session token from cookie
         db: Database session
+        tenant_id: Optional tenant context to scope organization membership
+        rbac_service: Optional RBAC service for syncing roles
 
     Returns:
         UserInfo if valid session, None otherwise
     """
-    service = BetterAuthService(db)
-    return await service.validate_session(session_token)
+    service = BetterAuthService(db, rbac_service=rbac_service)
+    return await service.validate_session(session_token, tenant_id=tenant_id)

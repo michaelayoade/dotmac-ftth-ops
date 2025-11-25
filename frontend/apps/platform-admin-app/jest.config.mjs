@@ -18,7 +18,6 @@ const config = {
     '^@dotmac/testing$': '<rootDir>/../../shared/packages/primitives/src/testing/index.ts',
     '^@dotmac/better-auth$': '<rootDir>/../../shared/lib/better-auth',
     '^@dotmac/better-auth/(.*)$': '<rootDir>/../../shared/lib/better-auth/$1',
-    '^@dotmac/headless/utils$': '<rootDir>/__mocks__/headless-utils.js',
     '^@dotmac/([^/]+)$': '<rootDir>/../../shared/packages/$1/src',
     '^@dotmac/([^/]+)/(.+)$': '<rootDir>/../../shared/packages/$1/src/$2',
     '^react$': reactPath,

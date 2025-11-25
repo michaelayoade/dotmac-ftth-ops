@@ -38,16 +38,7 @@ jest.mock("@/providers/AppConfigContext", () => ({
   }),
 }));
 
-// Mock getOperatorAccessToken
-jest.mock("../../../../shared/utils/operatorAuth", () => ({
-  getOperatorAccessToken: jest.fn(),
-}));
-
-// Import the mocked function to access it in tests
-const { getOperatorAccessToken } = require("../../../../shared/utils/operatorAuth");
-
 describe("useCommissionRules", () => {
-  const mockToken = "test-token-123";
   const originalFetch = global.fetch;
   const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
@@ -78,7 +69,6 @@ describe("useCommissionRules", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (getOperatorAccessToken as jest.Mock).mockReturnValue(mockToken);
     fetchMock.mockReset();
   });
 
@@ -129,7 +119,6 @@ describe("useCommissionRules", () => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${mockToken}`,
           },
           credentials: "include",
         }
@@ -151,7 +140,10 @@ describe("useCommissionRules", () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         "http://localhost:8000/api/v1/partners/commission-rules/?page=2&page_size=25",
-        expect.any(Object)
+        expect.objectContaining({
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        })
       );
     });
 
@@ -332,7 +324,6 @@ describe("useCommissionRules", () => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${mockToken}`,
           },
           credentials: "include",
         }
@@ -475,7 +466,6 @@ describe("useCommissionRules", () => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${mockToken}`,
           },
           credentials: "include",
         }
@@ -626,7 +616,6 @@ describe("useCommissionRules", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${mockToken}`,
           },
           credentials: "include",
           body: JSON.stringify(input),
@@ -953,7 +942,6 @@ describe("useCommissionRules", () => {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${mockToken}`,
           },
           credentials: "include",
           body: JSON.stringify(data),
@@ -1200,7 +1188,6 @@ describe("useCommissionRules", () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${mockToken}`,
           },
           credentials: "include",
         }
@@ -1326,55 +1313,8 @@ describe("useCommissionRules", () => {
     });
   });
 
-  describe("Authentication", () => {
-    it("should include Authorization header when token is available", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue("test-token-456");
+  // Authentication header tests removed (client no longer sets Authorization)
 
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: async () => ({ rules: [], total: 0, page: 1, page_size: 10 }),
-      });
-
-      renderHook(() => useCommissionRules(), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.any(String),
-          expect.objectContaining({
-            headers: expect.objectContaining({
-              Authorization: "Bearer test-token-456",
-            }),
-          })
-        );
-      });
-    });
-
-    it("should not include Authorization header when token is null", async () => {
-      (getOperatorAccessToken as jest.Mock).mockReturnValue(null);
-
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: async () => ({ rules: [], total: 0, page: 1, page_size: 10 }),
-      });
-
-      renderHook(() => useCommissionRules(), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.any(String),
-          expect.objectContaining({
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-        );
-      });
-    });
-  });
 
   describe("Credentials", () => {
     it("should always include credentials: include", async () => {

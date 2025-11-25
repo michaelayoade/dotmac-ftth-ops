@@ -22,6 +22,8 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
+  // Disable Next font optimization to avoid remote font fetch timeouts in CI/e2e
+  optimizeFonts: false,
   images: {
     domains: ['images.unsplash.com'],
   },

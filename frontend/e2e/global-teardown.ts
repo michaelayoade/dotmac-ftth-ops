@@ -1,8 +1,9 @@
-import { server } from "./msw-setup";
-
 /**
- * Playwright global teardown to ensure MSW shuts down cleanly.
+ * Playwright global teardown
+ *
+ * MSW is currently not started in globalSetup; keep teardown as a no-op
+ * to avoid importing MSW in this isolated process.
  */
 export default async function globalTeardown() {
-  server.close();
+  // no-op
 }

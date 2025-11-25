@@ -29,6 +29,9 @@ import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { logger } from "@/lib/logger";
 import { useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
+
+type DisplayUser = Pick<ExtendedUser, "email" | "username" | "full_name" | "tenant_id">;
+
 const toError = (error: unknown) =>
   error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
@@ -207,7 +210,7 @@ interface TenantStats {
 
 function SettingsHubPageContent() {
   const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const user = session?.user as DisplayUser | undefined;
   const [tenantStats, setTenantStats] = useState<TenantStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
