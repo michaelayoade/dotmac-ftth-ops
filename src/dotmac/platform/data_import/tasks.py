@@ -16,11 +16,11 @@ from celery import Task, current_task
 from celery.schedules import crontab
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from dotmac.platform.db import get_async_database_url
 from dotmac.platform.core.tasks import app, idempotent_task
 from dotmac.platform.customer_management.mappers import CustomerImportSchema, CustomerMapper
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.data_import.models import ImportJob, ImportJobStatus, ImportJobType
+from dotmac.platform.db import get_async_database_url
 
 logger = structlog.get_logger(__name__)
 

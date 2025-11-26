@@ -4,12 +4,34 @@
  * Standardized error display component with retry and dismiss actions
  */
 
-import type { AppError, ErrorSeverity } from "@dotmac/types";
 import { AlertCircle, XCircle, RefreshCw, X } from "lucide-react";
 import * as React from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "./alert";
-import { Button } from "./button";
+import { Alert, AlertDescription, AlertTitle } from "./components/alert";
+import { Button } from "./components/button";
+
+// Local type definitions for error handling
+export enum ErrorSeverity {
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  CRITICAL = "critical",
+}
+
+export interface AppError {
+  id: string;
+  message: string;
+  details?: string;
+  category?: string;
+  severity: ErrorSeverity;
+  statusCode?: number;
+  code?: string;
+  fieldErrors?: Record<string, string[]>;
+  timestamp: Date;
+  retryable: boolean;
+  action?: string;
+  context?: Record<string, unknown>;
+}
 
 export interface ErrorAlertProps {
   /** Error to display */
