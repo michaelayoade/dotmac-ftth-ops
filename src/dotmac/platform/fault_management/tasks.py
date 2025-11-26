@@ -5,7 +5,7 @@ Background tasks for alarm correlation, SLA monitoring, and maintenance.
 """
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Coroutine, TypeVar
 from uuid import UUID
 
 import structlog
@@ -36,13 +36,16 @@ from dotmac.platform.user_management.models import User
 
 logger = structlog.get_logger(__name__)
 
+# TypeVar for generic async task return type
+T = TypeVar("T")
+
 
 # =============================================================================
 # Async/Sync Bridge for Celery Tasks
 # =============================================================================
 
 
-def _run_async_task(coro):
+def _run_async_task(coro: Coroutine[Any, Any, T]) -> T:
     """
     Run an async coroutine in a Celery task context.
 
