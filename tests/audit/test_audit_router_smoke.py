@@ -8,8 +8,6 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.audit.models import (
-
-pytestmark = pytest.mark.integration
     AuditActivity,
     AuditActivityCreate,
     ActivitySeverity,

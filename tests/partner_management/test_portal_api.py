@@ -7,8 +7,6 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.partner_management.models import (
-
-pytestmark = pytest.mark.integration
     CommissionModel,
     CommissionStatus,
     PartnerPayout,

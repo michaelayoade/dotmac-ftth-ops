@@ -20,8 +20,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.ip_management.models import (
-
-pytestmark = pytest.mark.integration
     IPPool,
     IPPoolStatus,
     IPPoolType,

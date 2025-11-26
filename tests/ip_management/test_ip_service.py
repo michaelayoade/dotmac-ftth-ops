@@ -7,8 +7,6 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.ip_management.ip_service import (
-
-pytestmark = pytest.mark.integration
     IPConflictError,
     IPManagementService,
     IPPoolDepletedError,

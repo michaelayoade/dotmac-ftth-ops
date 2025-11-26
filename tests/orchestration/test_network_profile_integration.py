@@ -16,8 +16,6 @@ import pytest
 
 from dotmac.platform.network.models import IPv6AssignmentMode
 from dotmac.platform.orchestration.workflows.deprovision_subscriber import (
-
-pytestmark = pytest.mark.integration
     delete_network_profile_handler,
 )
 from dotmac.platform.orchestration.workflows.provision_subscriber import (

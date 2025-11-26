@@ -32,6 +32,10 @@ class ActivityType(str, Enum):
     USER_DELETED = "user.deleted"
     USER_IMPERSONATION = "user.impersonation"
     PASSWORD_RESET_ADMIN = "user.password_reset_admin"
+    AUTH_FAILURE = "auth.failure"
+    USER_ROLE_CHANGE = "user.role_change"
+    USER_MANAGEMENT = "user.management"
+    PERMISSION_CHANGE = "permission.change"
 
     # RBAC activities
     ROLE_CREATED = "rbac.role.created"

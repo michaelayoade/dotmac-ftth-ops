@@ -8,8 +8,6 @@ from pathlib import Path
 from unittest.mock import mock_open, patch
 
 from tests.helpers.docker_env import (
-
-pytestmark = pytest.mark.unit
     get_docker_network_url,
     get_service_host,
     is_running_in_docker,

@@ -23,8 +23,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.usage.models import UsageRecord
 from dotmac.platform.core.rls_middleware import (
-
-pytestmark = pytest.mark.integration
     RLSContextManager,
     bypass_rls_for_migration,
     reset_rls_context,

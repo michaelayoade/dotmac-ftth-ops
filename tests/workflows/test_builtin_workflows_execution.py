@@ -7,8 +7,6 @@ from copy import deepcopy
 import pytest
 
 from dotmac.platform.workflows.builtin_workflows import (
-
-pytestmark = pytest.mark.integration
     LEAD_TO_CUSTOMER_WORKFLOW,
     QUOTE_ACCEPTED_WORKFLOW,
 )

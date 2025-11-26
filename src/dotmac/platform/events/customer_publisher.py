@@ -24,7 +24,7 @@ class CustomerEventPublisher:
     subscribed to specific customer channels.
     """
 
-    def __init__(self, redis: Redis):
+    def __init__(self, redis: Redis[Any]):
         """
         Initialize the customer event publisher.
 
@@ -370,7 +370,7 @@ class CustomerEventPublisher:
 # ============================================================================
 
 
-async def example_publish_network_status():
+async def example_publish_network_status() -> None:
     """Example: Publish network status update."""
     from dotmac.platform.redis_client import redis_manager
 
@@ -393,7 +393,7 @@ async def example_publish_network_status():
     )
 
 
-async def example_publish_device_status():
+async def example_publish_device_status() -> None:
     """Example: Publish device status change."""
     from dotmac.platform.redis_client import redis_manager
 
@@ -420,7 +420,7 @@ async def example_publish_device_status():
     )
 
 
-async def example_publish_ticket_created():
+async def example_publish_ticket_created() -> None:
     """Example: Publish ticket creation."""
     from dotmac.platform.redis_client import redis_manager
 
