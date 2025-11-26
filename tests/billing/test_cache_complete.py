@@ -16,6 +16,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+# These tests require Redis - mark as integration tests
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.billing.cache import (
     BillingCache,
     BillingCacheConfig,

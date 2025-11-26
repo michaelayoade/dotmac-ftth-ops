@@ -7,13 +7,13 @@ import bz2
 import gzip
 import importlib
 import json
+import xml.etree.ElementTree as StdET
 import zipfile
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import pandas as pd
-from defusedxml import ElementTree as ET
 from defusedxml import minidom as defused_minidom
 
 from .core import (
@@ -211,23 +211,23 @@ class XMLExporter(BaseExporter):
             self._progress.status = TransferStatus.RUNNING
 
             # Create root element
-            root = ET.Element(self.options.xml_root_element)
+            root = StdET.Element(self.options.xml_root_element)
 
             # Add records
             async for batch in data:
                 for record in batch.records:
-                    record_elem = ET.SubElement(root, self.options.xml_record_element)
+                    record_elem = StdET.SubElement(root, self.options.xml_record_element)
                     self._dict_to_xml(record.data, record_elem)
                 self.update_progress(processed=len(batch.records))
                 await asyncio.sleep(0)
 
             # Write to file
             if self.options.xml_pretty_print:
-                xml_str = defused_minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
+                xml_str = defused_minidom.parseString(StdET.tostring(root)).toprettyxml(indent="  ")
                 with open(file_path, "w", encoding=self.options.encoding) as f:
                     f.write(xml_str)
             else:
-                tree = ET.ElementTree(root)
+                tree = StdET.ElementTree(root)
                 tree.write(file_path, encoding=self.options.encoding, xml_declaration=True)
 
             self._progress.status = TransferStatus.COMPLETED
@@ -237,21 +237,21 @@ class XMLExporter(BaseExporter):
             self._progress.error_message = str(e)
             raise ExportError(f"Failed to export XML: {e}") from e
 
-    def _dict_to_xml(self, data: dict[str, Any], parent: ET.Element) -> None:
+    def _dict_to_xml(self, data: dict[str, Any], parent: StdET.Element) -> None:
         """Convert dictionary to XML elements."""
         for key, value in data.items():
             if isinstance(value, dict):
-                child = ET.SubElement(parent, str(key))
+                child = StdET.SubElement(parent, str(key))
                 self._dict_to_xml(value, child)
             elif isinstance(value, list):
                 for item in value:
-                    child = ET.SubElement(parent, str(key))
+                    child = StdET.SubElement(parent, str(key))
                     if isinstance(item, dict):
                         self._dict_to_xml(item, child)
                     else:
                         child.text = str(item)
             else:
-                child = ET.SubElement(parent, str(key))
+                child = StdET.SubElement(parent, str(key))
                 child.text = str(value) if value is not None else ""
 
 
