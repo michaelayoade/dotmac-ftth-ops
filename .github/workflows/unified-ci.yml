@@ -862,7 +862,7 @@ jobs:
   # Deployment Job (Production)
   deploy-production:
     name: 🚀 Deploy to Production
-    needs: [e2e-tests, build-frontend]
+    needs: [e2e-tests, frontend-quality, frontend-test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: production

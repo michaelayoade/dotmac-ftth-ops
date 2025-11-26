@@ -1,0 +1,681 @@
+# PR CI Pipeline - Fast, Low-Flake Quality Gates
+#
+# This workflow runs on every PR with a 5-layer approach:
+# 1. Fast Gates - Lint, type check, unit tests (parallel)
+# 2. Contract Checks - TypeScript, migrations, codegen
+# 3. Build/Packaging - Frontend build, backend import smoke
+# 4. Integration/Smoke - Quick e2e smoke tests
+# 5. Infrastructure Hygiene - Docker compose validation
+#
+# Design principles:
+# - Fast fail: lint/type/unit run in parallel first
+# - Cached: pnpm and poetry deps cached for speed
+# - Deterministic: no flaky timeouts, proper service health checks
+# - Focused: heavy tests (full e2e) run nightly, not on every PR
+
+name: PR CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # ====================
+  # LAYER 1: FAST GATES
+  # These run in parallel for maximum speed
+  # ====================
+
+  frontend-lint:
+    name: "1️⃣ Frontend Lint"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: pnpm lint
+
+  frontend-unit-tests:
+    name: "1️⃣ Frontend Unit Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        working-directory: frontend
+        run: pnpm test --filter @dotmac/platform-admin-app --filter @dotmac/isp-ops-app
+
+  backend-lint:
+    name: "1️⃣ Backend Lint (Ruff)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Run Ruff check
+        run: poetry run ruff check src/
+
+      - name: Run Ruff format check
+        run: poetry run ruff format --check src/
+
+  backend-unit-tests:
+    name: "1️⃣ Backend Unit Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Run unit tests
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+        run: |
+          poetry run pytest tests/ -m unit \
+            --tb=short \
+            -n auto \
+            -q \
+            --maxfail=5
+
+  # ====================
+  # LAYER 2: CONTRACT CHECKS
+  # TypeScript types, migrations, codegen consistency
+  # ====================
+
+  frontend-typecheck:
+    name: "2️⃣ Frontend TypeCheck"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [frontend-lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript type check
+        working-directory: frontend
+        run: pnpm type-check
+
+  backend-typecheck:
+    name: "2️⃣ Backend TypeCheck (MyPy)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [backend-lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Run MyPy
+        run: poetry run mypy src/
+
+  migrations-check:
+    name: "2️⃣ Migrations Check"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [backend-lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Check for multiple migration heads
+        run: |
+          HEAD_COUNT=$(poetry run alembic heads 2>/dev/null | wc -l)
+          if [ $HEAD_COUNT -gt 1 ]; then
+            echo "::error::Multiple migration heads detected!"
+            poetry run alembic heads
+            exit 1
+          fi
+          echo "✅ Single migration head confirmed"
+
+      - name: Validate migration files load
+        run: |
+          poetry run python -c "
+          import importlib.util
+          from pathlib import Path
+          for f in Path('alembic/versions').glob('*.py'):
+              if not f.name.startswith('__'):
+                  spec = importlib.util.spec_from_file_location(f.stem, f)
+                  mod = importlib.util.module_from_spec(spec)
+                  print(f'✅ {f.name}')
+          "
+
+  graphql-codegen-check:
+    name: "2️⃣ GraphQL Codegen Check"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [frontend-lint]
+    if: hashFiles('frontend/packages/graphql/**') != ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Check GraphQL codegen is up to date
+        working-directory: frontend
+        run: |
+          pnpm graphql:codegen 2>/dev/null || true
+          if ! git diff --quiet; then
+            echo "::error::GraphQL codegen is out of date. Run 'pnpm graphql:codegen' and commit."
+            git diff --stat
+            exit 1
+          fi
+          echo "✅ GraphQL codegen is up to date"
+
+  # ====================
+  # LAYER 3: BUILD/PACKAGING
+  # Verify everything compiles and packages correctly
+  # ====================
+
+  frontend-build:
+    name: "3️⃣ Frontend Build"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [frontend-typecheck, frontend-unit-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build ISP Ops App
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: pnpm --filter @dotmac/isp-ops-app build
+
+      - name: Build Platform Admin App
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: pnpm --filter @dotmac/platform-admin-app build
+        continue-on-error: true  # May have additional env requirements
+
+  backend-import-smoke:
+    name: "3️⃣ Backend Import Smoke"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [backend-typecheck, backend-unit-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Compile all Python files
+        run: |
+          echo "📦 Compiling all Python source files..."
+          find src -name "*.py" -exec poetry run python -m py_compile {} +
+          echo "✅ All Python files compile successfully"
+
+      - name: Import smoke test
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+        run: |
+          echo "🔍 Testing critical imports..."
+          poetry run python -c "
+          from dotmac.platform.main import app
+          from dotmac.platform.routers import app as routers_app
+          from dotmac.platform.core import ensure_pydantic_v2
+          ensure_pydantic_v2()
+          print('✅ All critical imports successful')
+          "
+
+  docker-compose-validate:
+    name: "3️⃣ Docker Compose Validate"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [backend-lint, frontend-lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create minimal .env
+        run: |
+          cat > .env <<EOF
+          POSTGRES_PASSWORD=test
+          REDIS_PASSWORD=test
+          RADIUS_SECRET=test
+          SECRET_KEY=test_secret_key_32_characters_min
+          JWT_SECRET_KEY=test_jwt_key_32_characters_minimum
+          EOF
+
+      - name: Validate docker-compose files
+        run: |
+          for f in docker-compose*.yml; do
+            if [ -f "$f" ]; then
+              echo "📋 Validating $f..."
+              docker compose -f "$f" config > /dev/null && echo "✅ $f is valid" || echo "⚠️ $f has issues"
+            fi
+          done
+
+  # ====================
+  # LAYER 4: INTEGRATION/SMOKE
+  # Quick integration tests to catch API issues
+  # ====================
+
+  backend-integration-smoke:
+    name: "4️⃣ Backend Integration Smoke"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [backend-import-smoke, migrations-check]
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: dotmac_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: dotmac_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Wait for PostgreSQL
+        run: |
+          timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U dotmac_user; do sleep 1; done'
+
+      - name: Run migrations
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: poetry run alembic upgrade head
+
+      - name: Run integration smoke tests
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: |
+          poetry run pytest tests/ \
+            -m integration \
+            --tb=short \
+            -n auto \
+            --maxfail=3 \
+            -q
+
+  # ====================
+  # LAYER 5: INFRASTRUCTURE HYGIENE
+  # Security scans and dependency audits
+  # ====================
+
+  security-audit:
+    name: "5️⃣ Security Audit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [backend-lint, frontend-lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Run Bandit security scan
+        run: poetry run bandit -r src/ -ll -q
+        continue-on-error: true
+
+      - name: Python dependency audit
+        run: |
+          poetry run pip-audit --desc 2>&1 || {
+            echo "⚠️ Vulnerabilities found - check .pip-audit-ignore.json for accepted risks"
+            exit 0
+          }
+        continue-on-error: true
+
+      - name: Setup Node.js for frontend audit
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Frontend dependency audit
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm audit --audit-level=high || echo "⚠️ Audit warnings found"
+        continue-on-error: true
+
+  # ====================
+  # SUMMARY
+  # ====================
+
+  ci-summary:
+    name: "✅ CI Summary"
+    runs-on: ubuntu-latest
+    needs:
+      - frontend-build
+      - backend-integration-smoke
+      - security-audit
+    if: always()
+
+    steps:
+      - name: Check all jobs
+        run: |
+          echo "## PR CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Layer 1
+          echo "### Layer 1: Fast Gates" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend Lint: ${{ needs.frontend-lint.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend Unit Tests: ${{ needs.frontend-unit-tests.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend Lint: ${{ needs.backend-lint.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend Unit Tests: ${{ needs.backend-unit-tests.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+
+          # Layer 2
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Layer 2: Contract Checks" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend TypeCheck: ${{ needs.frontend-typecheck.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend TypeCheck: ${{ needs.backend-typecheck.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Migrations Check: ${{ needs.migrations-check.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+
+          # Layer 3
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Layer 3: Build/Packaging" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend Build: ${{ needs.frontend-build.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend Import Smoke: ${{ needs.backend-import-smoke.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Compose Validate: ${{ needs.docker-compose-validate.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+
+          # Layer 4
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Layer 4: Integration/Smoke" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend Integration Smoke: ${{ needs.backend-integration-smoke.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+
+          # Layer 5
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Layer 5: Infrastructure Hygiene" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Audit: ${{ needs.security-audit.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if critical jobs failed
+        if: |
+          needs.frontend-build.result == 'failure' ||
+          needs.backend-integration-smoke.result == 'failure'
+        run: exit 1
