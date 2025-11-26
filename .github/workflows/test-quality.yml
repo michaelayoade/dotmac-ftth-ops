@@ -135,6 +135,7 @@ jobs:
 
       - name: Comment PR with metrics
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: actions/github-script@v6
         with:
           script: |
@@ -252,6 +253,7 @@ jobs:
 
       - name: Comment PR with results
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: actions/github-script@v6
         with:
           script: |
