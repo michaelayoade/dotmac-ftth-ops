@@ -447,12 +447,14 @@ jobs:
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
+          BETTER_AUTH_BYPASS: "true"
         run: pnpm --filter @dotmac/isp-ops-app build
 
       - name: Build Platform Admin App
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
+          BETTER_AUTH_BYPASS: "true"
         run: pnpm --filter @dotmac/platform-admin-app build
         continue-on-error: true
 
