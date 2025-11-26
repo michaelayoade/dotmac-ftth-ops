@@ -32,7 +32,7 @@ MAX_CHUNK_SIZE = 5000
 def get_async_session() -> AsyncSession:
     """Create async database session for Celery tasks."""
     engine = create_async_engine(
-        db_module.get_async_database_url(),  # type: ignore[attr-defined]
+        db_module.get_async_database_url(),
         echo=False,
     )
     async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -726,7 +726,7 @@ async def _process_chunk_data(
 
 
 @app.task  # type: ignore[misc]  # Celery decorator is untyped
-@idempotent_task(ttl=300)  # type: ignore[misc]  # Custom decorator is untyped
+@idempotent_task(ttl=300)
 def check_import_health() -> dict[str, Any]:
     """
     Periodic health check for import system.
