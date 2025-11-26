@@ -7,6 +7,8 @@ import json
 import pytest
 
 from dotmac.platform.admin.settings.models import (
+
+pytestmark = pytest.mark.integration
     SettingsCategory,
     SettingsCategoryInfo,
     SettingsResponse,

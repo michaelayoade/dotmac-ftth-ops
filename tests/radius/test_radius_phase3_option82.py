@@ -14,6 +14,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.network.models import (
+
+pytestmark = pytest.mark.integration
     IPv6AssignmentMode,
     Option82Policy,
     SubscriberNetworkProfile,

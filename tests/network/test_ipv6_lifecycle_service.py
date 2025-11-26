@@ -12,6 +12,8 @@ import pytest
 
 from dotmac.platform.network.ipv6_lifecycle_service import IPv6LifecycleService
 from dotmac.platform.network.lifecycle_protocol import (
+
+pytestmark = pytest.mark.integration
     InvalidTransitionError,
     LifecycleError,
 )

@@ -29,9 +29,18 @@ class ModuleData(TypedDict):
 
 
 # Regex patterns for detecting pyramid markers
+# Matches both simple and list formats (including multiline):
+#   pytestmark = pytest.mark.unit
+#   pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+#   pytestmark = [
+#       pytest.mark.integration,
+#       pytest.mark.asyncio,
+#   ]
+#   @pytest.mark.integration
 PYRAMID_MARKERS = re.compile(
-    r"pytestmark\s*=\s*pytest\.mark\.(unit|integration|e2e)"
-    r"|@pytest\.mark\.(unit|integration|e2e)"
+    r"pytestmark\s*=\s*(?:\[[\s\S]*?)?pytest\.mark\.(unit|integration|e2e)"
+    r"|@pytest\.mark\.(unit|integration|e2e)",
+    re.MULTILINE,
 )
 
 

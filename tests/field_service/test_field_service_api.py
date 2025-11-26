@@ -1,4 +1,7 @@
+import pytest
 from datetime import datetime, timedelta
+
+pytestmark = pytest.mark.integration
 
 
 def test_list_technicians_pagination(test_client):

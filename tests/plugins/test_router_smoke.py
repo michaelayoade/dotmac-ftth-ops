@@ -12,6 +12,8 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.plugins.router import router
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def plugins_app(monkeypatch):

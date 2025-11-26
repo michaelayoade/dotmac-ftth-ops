@@ -7,6 +7,8 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
+pytestmark = pytest.mark.integration
+
 pytest_plugins = [
     "tests.billing._fixtures.shared",
     "tests.subscribers.conftest",

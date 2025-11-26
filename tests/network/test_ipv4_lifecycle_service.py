@@ -14,6 +14,8 @@ from sqlalchemy import select
 from dotmac.platform.ip_management.models import IPPool, IPReservation
 from dotmac.platform.network.ipv4_lifecycle_service import IPv4LifecycleService
 from dotmac.platform.network.lifecycle_protocol import (
+
+pytestmark = pytest.mark.integration
     AllocationError,
     InvalidTransitionError,
     LifecycleState,

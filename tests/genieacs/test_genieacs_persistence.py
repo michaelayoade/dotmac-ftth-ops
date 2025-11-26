@@ -10,6 +10,8 @@ import pytest
 import dotmac.platform.genieacs.models  # noqa: F401  # Ensure tables are registered
 from dotmac.platform.genieacs.models import FirmwareUpgradeSchedule, MassConfigJob
 from dotmac.platform.genieacs.schemas import (
+
+pytestmark = pytest.mark.integration
     FirmwareUpgradeScheduleCreate,
     MassConfigFilter,
     MassConfigRequest,

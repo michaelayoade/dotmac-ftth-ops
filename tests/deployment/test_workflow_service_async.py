@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.deployment.adapters.base import DeploymentResult, ExecutionStatus
 from dotmac.platform.deployment.models import (
+
+pytestmark = pytest.mark.integration
     DeploymentBackend,
     DeploymentInstance,
     DeploymentState,

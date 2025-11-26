@@ -12,6 +12,8 @@ import pytest
 
 from dotmac.platform.version import get_version
 
+pytestmark = pytest.mark.integration
+
 # Mock FastAPI components for testing
 
 

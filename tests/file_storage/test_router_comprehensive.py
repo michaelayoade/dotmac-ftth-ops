@@ -21,6 +21,8 @@ from starlette.requests import Request
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.file_storage.router import (
+
+pytestmark = pytest.mark.integration
     FileListResponse,
     FileOperationRequest,
     FileUploadResponse,

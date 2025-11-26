@@ -14,6 +14,8 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.orchestration.workflows.provision_subscriber import (
+
+pytestmark = pytest.mark.integration
     activate_onu_handler,
     allocate_ip_handler,
     configure_cpe_handler,
