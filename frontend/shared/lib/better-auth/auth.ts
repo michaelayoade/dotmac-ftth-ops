@@ -56,12 +56,21 @@ let cachedPool: Pool | null = null;
 let cachedPoolConnectionString: string | null = null;
 const getPool = (connectionString: string) => {
   const normalized = normalizeConnectionString(connectionString);
+
   if (cachedPool && cachedPoolConnectionString === normalized) {
     return cachedPool;
   }
 
   cachedPool = new Pool({ connectionString: normalized });
   cachedPoolConnectionString = normalized;
+
+  // Log pool errors in development
+  if (process.env['NODE_ENV'] !== 'production') {
+    cachedPool.on('error', (err) => {
+      console.error('[better-auth] Pool error:', err.message);
+    });
+  }
+
   return cachedPool;
 };
 
@@ -263,13 +272,11 @@ const createAuthInstance = (): AuthInstance => {
   }
 
   const { databaseUrl, authSecret, authUrl } = env;
+  const pool = getPool(databaseUrl);
 
   return betterAuth({
-    // Database configuration
-    database: {
-      provider: "pg",
-      connection: getPool(databaseUrl),
-    },
+    // Database configuration - pass pg Pool directly to Better Auth
+    database: pool,
 
     // Base URL configuration
     baseURL: authUrl,
@@ -277,8 +284,13 @@ const createAuthInstance = (): AuthInstance => {
     // Secret for encryption and hashing
     secret: authSecret,
 
-    // User schema with additional fields
+    // User schema with snake_case field mappings and additional fields
     user: {
+      fields: {
+        emailVerified: "email_verified",
+        createdAt: "created_at",
+        updatedAt: "updated_at",
+      },
       additionalFields: {
         username: {
           type: "string",
@@ -328,6 +340,40 @@ const createAuthInstance = (): AuthInstance => {
       },
     },
 
+    // Account schema with snake_case field mappings
+    account: {
+      fields: {
+        userId: "user_id",
+        providerId: "provider",
+        accountId: "provider_account_id",
+        accessToken: "access_token",
+        refreshToken: "refresh_token",
+        idToken: "id_token",
+        expiresAt: "expires_at",
+        tokenType: "token_type",
+        createdAt: "created_at",
+        updatedAt: "updated_at",
+      },
+    },
+
+    // Session schema with snake_case field mappings
+    session: {
+      fields: {
+        userId: "user_id",
+        expiresAt: "expires_at",
+        ipAddress: "ip_address",
+        userAgent: "user_agent",
+        createdAt: "created_at",
+        updatedAt: "updated_at",
+      },
+      expiresIn: 60 * 60 * 24 * 7, // 7 days
+      updateAge: 60 * 60 * 24, // 1 day
+      cookieCache: {
+        enabled: true,
+        maxAge: 5 * 60, // 5 minutes
+      },
+    },
+
     // Email/Password authentication
     emailAndPassword: {
       enabled: true,
@@ -366,16 +412,6 @@ const createAuthInstance = (): AuthInstance => {
         if (process.env["NODE_ENV"] !== "production") {
           console.log(`Reset password URL for ${user.email}: ${url}`);
         }
-      },
-    },
-
-    // Session configuration
-    session: {
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // 1 day
-      cookieCache: {
-        enabled: true,
-        maxAge: 5 * 60, // 5 minutes
       },
     },
 

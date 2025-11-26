@@ -10,6 +10,12 @@
     "test:ci": "pnpm -r run test:ci",
     "lint": "pnpm -r run lint",
     "type-check": "pnpm --filter @dotmac/isp-ops-app run type-check && pnpm --filter @dotmac/platform-admin-app run type-check",
+    "analyze:admin": "pnpm --filter @dotmac/platform-admin-app run analyze",
+    "analyze:admin:server": "pnpm --filter @dotmac/platform-admin-app run analyze:server",
+    "analyze:admin:browser": "pnpm --filter @dotmac/platform-admin-app run analyze:browser",
+    "analyze:isp": "pnpm --filter @dotmac/isp-ops-app run analyze",
+    "analyze:isp:server": "pnpm --filter @dotmac/isp-ops-app run analyze:server",
+    "analyze:isp:browser": "pnpm --filter @dotmac/isp-ops-app run analyze:browser",
     "e2e": "cd frontend && pnpm e2e",
     "e2e:headed": "cd frontend && pnpm e2e:headed",
     "clean": "pnpm -r run clean"

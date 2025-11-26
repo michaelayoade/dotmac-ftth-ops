@@ -77,6 +77,8 @@ services:
     networks:
       - default
 
+  # ISP-only MongoDB for GenieACS
+  # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
   mongodb:
     image: mongo:7
     restart: unless-stopped
@@ -94,8 +96,10 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dotmac-network
+      - default
 
+  # ISP-only GenieACS (TR-069 ACS for CPE management)
+  # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
   genieacs:
     image: drumsergio/genieacs:latest
     restart: unless-stopped
@@ -115,11 +119,19 @@ services:
       - genieacs_data:/opt/genieacs/ext
       - genieacs_logs:/var/log/genieacs
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7557/devices?limit=1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
-      - dotmac-network
+      - default
 
   # ISP-only RADIUS (FreeRADIUS)
+  # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
   freeradius:
     image: freeradius/freeradius-server:latest
     container_name: isp-freeradius
@@ -136,8 +148,15 @@ services:
       - "3799:3799/udp"
     volumes:
       - freeradius_config:/etc/raddb
+    healthcheck:
+      # Check if radiusd process is running
+      test: ["CMD", "pgrep", "-x", "radiusd"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     networks:
-      - dotmac-network
+      - default
 
 volumes:
   isp_storage:

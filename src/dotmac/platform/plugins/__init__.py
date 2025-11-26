@@ -6,9 +6,32 @@ This package provides a dynamic plugin system that allows plugins to:
 - Have UI forms auto-generated from schemas
 - Store sensitive configuration in Vault
 - Provide health checks and connection tests
+
+Provider Types:
+- NotificationProvider: Email, SMS, push notifications
+- PaymentProvider: Payment processing integrations
+- StorageProvider: File storage backends
+- SearchProvider: Search engine integrations
+- AuthenticationProvider: External auth providers
+- IntegrationProvider: General integrations
+- AnalyticsProvider: Analytics and tracking
+- WorkflowProvider: Workflow automation
+- AlertDeliveryProvider: Network monitoring alert delivery
 """
 
-from .interfaces import PluginInterface, PluginProvider
+from .interfaces import (
+    AlertDeliveryProvider,
+    AnalyticsProvider,
+    AuthenticationProvider,
+    IntegrationProvider,
+    NotificationProvider,
+    PaymentProvider,
+    PluginInterface,
+    PluginProvider,
+    SearchProvider,
+    StorageProvider,
+    WorkflowProvider,
+)
 from .registry import PluginRegistry, get_plugin_registry
 from .schema import (
     FieldSpec,
@@ -40,4 +63,14 @@ __all__ = [
     "get_plugin_registry",
     "PluginProvider",
     "PluginInterface",
+    # Provider interfaces
+    "AlertDeliveryProvider",
+    "AnalyticsProvider",
+    "AuthenticationProvider",
+    "IntegrationProvider",
+    "NotificationProvider",
+    "PaymentProvider",
+    "SearchProvider",
+    "StorageProvider",
+    "WorkflowProvider",
 ]
