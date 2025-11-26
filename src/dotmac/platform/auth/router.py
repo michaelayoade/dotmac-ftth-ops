@@ -811,7 +811,7 @@ async def _complete_cookie_login(
 
 
 @auth_router.post("/login", response_model=TokenResponse)
-@rate_limit("5/minute")  # type: ignore[misc]  # SECURITY: Prevent brute force attacks
+@rate_limit("5/minute")  # SECURITY: Prevent brute force attacks
 async def login(
     login_request: LoginRequest,
     request: Request,
@@ -1177,7 +1177,7 @@ async def issue_token(
 
 
 @auth_router.post("/register", response_model=TokenResponse)
-@rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent mass account creation
+@rate_limit("3/minute")  # SECURITY: Prevent mass account creation
 async def register(
     register_request: RegisterRequest,
     request: Request,
@@ -1406,7 +1406,7 @@ async def register(
 
 
 @auth_router.post("/refresh", response_model=TokenResponse)
-@rate_limit("10/minute")  # type: ignore[misc]  # SECURITY: Reasonable limit for token refresh
+@rate_limit("10/minute")  # SECURITY: Reasonable limit for token refresh
 async def refresh_token(
     request: Request,
     response: Response,
@@ -1789,7 +1789,7 @@ async def verify_token(
 
 
 @auth_router.post("/password-reset")
-@rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent abuse of password reset
+@rate_limit("3/minute")  # SECURITY: Prevent abuse of password reset
 async def request_password_reset(
     reset_request: PasswordResetRequest,
     request: Request,

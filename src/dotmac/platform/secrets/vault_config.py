@@ -220,7 +220,7 @@ class VaultConnectionManager:
         if not token:
             raise ValueError("AppRole login response missing client_token")
 
-        return token
+        return str(token)
 
     def _authenticate_approle(self) -> None:
         """Authenticate using AppRole."""
@@ -273,7 +273,7 @@ class VaultConnectionManager:
         if not token:
             raise ValueError("Kubernetes login response missing client_token")
 
-        return token
+        return str(token)
 
     def _authenticate_kubernetes(self) -> None:
         """Authenticate using Kubernetes service account."""

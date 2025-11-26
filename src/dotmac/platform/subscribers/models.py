@@ -157,7 +157,7 @@ class SubscriberStatus(str, Enum):
     QUARANTINED = "quarantined"  # Limited access (security/policy)
 
 
-class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
     """
     Network Subscriber Model.
 
@@ -597,3 +597,10 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         new_password = generate_random_password(length)
         self.set_password(new_password, method=PasswordHashingMethod.SHA256)
         return new_password
+
+
+__all__ = [
+    "Subscriber",
+    "SubscriberStatus",
+    "ServiceType",
+]

@@ -7,7 +7,8 @@ Validates that partner users only access tenants they manage.
 from fastapi import HTTPException, Request
 from fastapi.param_functions import Depends
 
-from dotmac.platform.auth.token_with_rbac import User, get_current_user
+from dotmac.platform.auth.token_with_rbac import get_current_user_with_rbac as get_current_user
+from dotmac.platform.user_management.models import User
 from dotmac.platform.tenant import get_current_tenant_id
 
 

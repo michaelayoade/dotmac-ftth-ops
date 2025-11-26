@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.audit.models import ActivityType, AuditActivity
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.billing.cache import CacheTier, cached_result
+from dotmac.platform.core.cache_decorators import CacheTier, cached_result
 from dotmac.platform.db import get_session_dependency
 
 logger = structlog.get_logger(__name__)
@@ -71,7 +71,7 @@ class SecretsMetricsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(  # type: ignore[misc]  # Untyped decorator
+@cached_result(
     ttl=SECRETS_STATS_CACHE_TTL,
     key_prefix="secrets:metrics",
     key_params=["period_days", "tenant_id"],

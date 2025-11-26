@@ -7,6 +7,7 @@ records in our database for application-specific features.
 """
 
 from datetime import UTC, datetime
+from typing import cast
 from uuid import UUID
 
 import structlog
@@ -80,7 +81,7 @@ class BetterAuthSyncService:
             user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
             stmt = select(User).where(User.id == user_uuid)
             result = await self.db.execute(stmt)
-            existing_user = result.scalar_one_or_none()
+            existing_user = cast(User | None, result.scalar_one_or_none())
 
             if existing_user:
                 # Update existing user

@@ -407,7 +407,7 @@ async def monitor_subscriber_data_cap(
     }
 
 
-@celery_app.task(name="services.monitor_data_cap_usage", bind=True, max_retries=3)
+@celery_app.task(name="services.monitor_data_cap_usage", bind=True, max_retries=3)  # type: ignore[misc]
 def monitor_data_cap_usage(self: Any, batch_size: int = 100) -> dict[str, Any]:
     """
     Monitor data cap usage for all active subscriptions with data caps.
@@ -429,8 +429,8 @@ def monitor_data_cap_usage(self: Any, batch_size: int = 100) -> dict[str, Any]:
 
     logger.info("usage_monitoring.task_started", batch_size=batch_size)
 
-    async def run_monitoring():
-        results = {
+    async def run_monitoring() -> dict[str, int]:
+        results: dict[str, int] = {
             "total_checked": 0,
             "alerts_created": 0,
             "skipped": 0,

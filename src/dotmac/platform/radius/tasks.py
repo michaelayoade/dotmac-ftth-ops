@@ -26,7 +26,7 @@ def sync_sessions_to_timescaledb(
     self: Any,
     batch_size: int = 100,
     max_age_hours: int = 24,
-) -> dict:
+) -> dict[str, Any]:
     """
     Sync completed RADIUS sessions from PostgreSQL to TimescaleDB.
 
@@ -60,7 +60,7 @@ def sync_sessions_to_timescaledb(
     return asyncio.run(_sync_sessions_async(batch_size, max_age_hours))
 
 
-async def _sync_sessions_async(batch_size: int, max_age_hours: int) -> dict:
+async def _sync_sessions_async(batch_size: int, max_age_hours: int) -> dict[str, Any]:
     """
     Async implementation of session synchronization.
 
@@ -214,7 +214,7 @@ async def _sync_sessions_async(batch_size: int, max_age_hours: int) -> dict:
 
 
 @celery_app.task(name="radius.cleanup_old_sessions", bind=True)
-def cleanup_old_sessions(self: Any, days_old: int = 90) -> dict:
+def cleanup_old_sessions(self: Any, days_old: int = 90) -> dict[str, Any]:
     """
     Clean up old RADIUS sessions from PostgreSQL.
 
@@ -237,7 +237,7 @@ def cleanup_old_sessions(self: Any, days_old: int = 90) -> dict:
     return asyncio.run(_cleanup_old_sessions_async(days_old))
 
 
-async def _cleanup_old_sessions_async(days_old: int) -> dict:
+async def _cleanup_old_sessions_async(days_old: int) -> dict[str, Any]:
     """
     Async implementation of session cleanup.
 

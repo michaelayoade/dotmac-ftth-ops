@@ -41,7 +41,7 @@ router = APIRouter(
 
 
 # Dependency to check TimescaleDB availability
-async def check_timescaledb_available():
+async def check_timescaledb_available() -> None:
     """Check if TimescaleDB is configured and available."""
     if not settings.timescaledb.is_configured:
         raise HTTPException(
@@ -443,7 +443,7 @@ async def get_top_subscribers(
     summary="Analytics Health Check",
     description="Check if TimescaleDB analytics service is available.",
 )
-async def analytics_health():
+async def analytics_health() -> JSONResponse:
     """
     Health check for analytics service.
 
