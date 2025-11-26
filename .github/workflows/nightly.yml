@@ -1,0 +1,454 @@
+# Nightly CI Pipeline
+#
+# Heavy tests that are too slow/flaky for every PR:
+# - Full E2E tests across all browsers
+# - Visual regression tests
+# - Backend E2E tests
+# - Performance tracking
+# - Full coverage report
+#
+# Runs nightly and can be triggered manually
+
+name: Nightly
+
+on:
+  schedule:
+    # Run at 2 AM UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests'
+        type: boolean
+        default: true
+      run_visual:
+        description: 'Run visual regression tests'
+        type: boolean
+        default: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # ============================================================================
+  # BACKEND E2E TESTS
+  # Full end-to-end API workflow tests
+  # ============================================================================
+
+  backend-e2e:
+    name: "Backend E2E (Python ${{ matrix.python-version }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.13']
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: dotmac_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: dotmac_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Wait for PostgreSQL
+        run: timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U dotmac_user; do sleep 1; done'
+
+      - name: Run migrations
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: poetry run alembic upgrade head
+
+      - name: Start FastAPI server
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: |
+          poetry run uvicorn dotmac.platform.main:app --host 0.0.0.0 --port 8000 &
+          timeout 30 bash -c 'until curl -sf http://localhost:8000/health || curl -sf http://localhost:8000/docs; do sleep 1; done'
+
+      - name: Run E2E tests
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+          E2E_BASE_URL: http://localhost:8000
+        run: |
+          poetry run pytest tests/ \
+            -m e2e \
+            --cov=src/dotmac/platform \
+            --cov-report=xml:coverage-e2e-${{ matrix.python-version }}.xml \
+            --tb=short \
+            -v
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-e2e-${{ matrix.python-version }}
+          path: coverage-e2e-${{ matrix.python-version }}.xml
+          retention-days: 30
+
+  # ============================================================================
+  # FRONTEND E2E TESTS
+  # Full Playwright tests across all browsers
+  # ============================================================================
+
+  frontend-e2e:
+    name: "E2E (${{ matrix.browser }}, shard ${{ matrix.shard }}/4)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ github.event.inputs.run_e2e != 'false' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2, 3, 4]
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: dotmac_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: dotmac_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies
+        run: poetry install --no-interaction
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: pnpm --filter @dotmac/isp-ops-app build
+
+      - name: Setup database
+        env:
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+        run: poetry run alembic upgrade head
+
+      - name: Start backend
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: |
+          poetry run uvicorn dotmac.platform.main:app --host 0.0.0.0 --port 8000 &
+          timeout 30 bash -c 'until curl -sf http://localhost:8000/health || curl -sf http://localhost:8000/; do sleep 1; done'
+
+      - name: Start frontend
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: |
+          pnpm --filter @dotmac/isp-ops-app start &
+          timeout 30 bash -c 'until curl -sf http://localhost:3001; do sleep 1; done'
+
+      - name: Run E2E tests
+        working-directory: frontend
+        env:
+          ISP_OPS_URL: http://localhost:3001
+          API_BASE_URL: http://localhost:8000
+        run: pnpm e2e -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/4
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.browser }}-${{ matrix.shard }}
+          path: frontend/test-results/
+          retention-days: 30
+
+  # ============================================================================
+  # VISUAL REGRESSION TESTS
+  # ============================================================================
+
+  visual-regression:
+    name: "Visual Regression"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ github.event.inputs.run_visual != 'false' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: pnpm --filter @dotmac/isp-ops-app build
+
+      - name: Run visual tests
+        working-directory: frontend
+        env:
+          E2E_USE_DEV_SERVER: "true"
+        run: pnpm e2e -- e2e/tests/visual.spec.ts --project=chromium
+        continue-on-error: true
+        id: visual_tests
+
+      - name: Upload visual results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-test-results
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 30
+
+      - name: Update baselines on main
+        if: github.ref == 'refs/heads/main' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-baselines-${{ github.sha }}
+          path: frontend/e2e/__screenshots__/
+          retention-days: 90
+
+  # ============================================================================
+  # FULL COVERAGE REPORT
+  # ============================================================================
+
+  coverage-report:
+    name: "Coverage Report"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [backend-e2e]
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: dotmac_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: dotmac_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: poetry run alembic upgrade head
+
+      - name: Run all tests with coverage
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: |
+          poetry run pytest tests/ \
+            --cov=src/dotmac/platform \
+            --cov-branch \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --cov-report=term-missing \
+            -n auto \
+            -q
+
+      - name: Download E2E coverage
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-e2e-*
+          path: coverage-artifacts/
+
+      - name: Generate combined report
+        run: |
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          poetry run coverage report --format=markdown >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+          retention-days: 30
+
+  # ============================================================================
+  # SUMMARY
+  # ============================================================================
+
+  nightly-summary:
+    name: "Nightly Summary"
+    runs-on: ubuntu-latest
+    needs: [backend-e2e, frontend-e2e, visual-regression, coverage-report]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Nightly CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend E2E | ${{ needs.backend-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend E2E | ${{ needs.frontend-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Visual Regression | ${{ needs.visual-regression.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage Report | ${{ needs.coverage-report.result }} |" >> $GITHUB_STEP_SUMMARY
