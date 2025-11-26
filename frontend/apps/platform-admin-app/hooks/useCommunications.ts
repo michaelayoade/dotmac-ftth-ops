@@ -252,7 +252,7 @@ export function useRenderTemplate(options?: {
   onSuccess?: (data: RenderTemplateResponse) => void;
   onError?: (error: Error) => void;
 }) {
-  return useMutation<RenderTemplateResponse, Error, { id: string; variables: Record<string, any> }>(
+  return useMutation<RenderTemplateResponse, Error, { id: string; variables: Record<string, unknown> }>(
     {
       mutationFn: ({ id, variables }) => communicationsService.renderTemplate(id, variables),
       onSuccess: (data) => {
@@ -526,7 +526,7 @@ export function useMonitorTask(taskId: string | null) {
 /**
  * Template with preview
  */
-export function useTemplateWithPreview(id: string | null, variables: Record<string, any> = {}) {
+export function useTemplateWithPreview(id: string | null, variables: Record<string, unknown> = {}) {
   const template = useTemplate(id);
   const render = useRenderTemplate();
 

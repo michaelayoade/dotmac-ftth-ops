@@ -9,18 +9,18 @@ import { Badge } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
+  AlertCircle,
+  Calendar,
+  CreditCard,
   Mail,
   MessageSquare,
-  Smartphone,
   Monitor,
-  AlertCircle,
-  TrendingUp,
-  ShieldAlert,
-  CreditCard,
-  Users,
-  Calendar,
-  Save,
   RotateCcw,
+  Save,
+  ShieldAlert,
+  Smartphone,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
@@ -247,7 +247,7 @@ export default function NotificationSettingsPage() {
   }, [setHasChanges, setLoadError, setLoading, setPreferences]);
 
   useEffect(() => {
-    void fetchPreferences();
+    fetchPreferences().catch(() => {});
   }, [fetchPreferences]);
 
   const handleChannelToggle = (channel: ChannelKey, enabled: boolean) => {

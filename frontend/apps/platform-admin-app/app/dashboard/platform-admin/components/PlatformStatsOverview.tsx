@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
-import { Building2, Users, Database, TrendingUp, Activity } from "lucide-react";
+import {
+  Activity,
+  Building2,
+  Database,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { platformAdminService, type PlatformStats } from "@/lib/services/platform-admin-service";
 
@@ -37,9 +43,9 @@ export function PlatformStatsOverview() {
   );
 
   useEffect(() => {
-    void updateStats(true);
+    updateStats(true).catch(() => {});
     const interval = setInterval(() => {
-      void updateStats(false);
+      updateStats(false).catch(() => {});
     }, 30000);
     return () => clearInterval(interval);
   }, [updateStats]);
@@ -54,7 +60,7 @@ export function PlatformStatsOverview() {
             ? `${result.cache_type} cache cleared successfully`
             : "Platform cache cleared successfully",
       });
-      void updateStats(false);
+      updateStats(false).catch(() => {});
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to clear cache";
       toast({
@@ -167,7 +173,7 @@ export function PlatformStatsOverview() {
             <button
               type="button"
               onClick={() => {
-                void handleClearCache();
+                handleClearCache().catch(() => {});
               }}
               className="flex items-center gap-2 p-4 border rounded-lg hover:bg-accent transition-colors"
             >

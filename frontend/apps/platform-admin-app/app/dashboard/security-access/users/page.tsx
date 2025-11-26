@@ -2,18 +2,17 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  Users,
+  Calendar,
+  Clock,
+  Edit,
+  Mail,
+  MoreHorizontal,
   Plus,
   Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Mail,
-  Calendar,
   Shield,
+  Trash2,
   UserCheck,
-  Clock,
+  Users,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -165,7 +164,7 @@ function UsersPageContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }

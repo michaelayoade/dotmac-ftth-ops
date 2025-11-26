@@ -12,7 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
-import { Calculator, TrendingUp, DollarSign, Percent } from "lucide-react";
+import {
+  Calculator,
+  DollarSign,
+  Percent,
+  TrendingUp,
+} from "lucide-react";
 
 type CommissionModel = "revenue_share" | "flat_fee" | "tiered" | "hybrid";
 
@@ -66,7 +71,7 @@ export function CommissionSimulator() {
         rate = base > 0 ? (commission / base) * 100 : 0;
         break;
 
-      case "tiered":
+      case "tiered": {
         // Find applicable tier based on volume
         const applicableTier = tierConfig.find((t) => {
           const inRange = vol >= t.min_volume && (t.max_volume === null || vol < t.max_volume);
@@ -82,8 +87,9 @@ export function CommissionSimulator() {
           tier = `$${applicableTier.min_volume.toLocaleString()} - $${maxVol}`;
         }
         break;
+      }
 
-      case "hybrid":
+      case "hybrid": {
         // Combination of revenue share and flat fee
         const percentRate = parseFloat(revenueShareRate) || 0;
         const flat = parseFloat(flatFeeAmount) || 0;
@@ -91,6 +97,7 @@ export function CommissionSimulator() {
         commission = percentComponent + flat;
         rate = base > 0 ? (commission / base) * 100 : 0;
         break;
+      }
     }
 
     setResult({

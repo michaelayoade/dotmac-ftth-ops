@@ -105,7 +105,7 @@ apiClient.interceptors.response.use(
 /**
  * Generic GET request
  */
-export async function get<T = any>(
+export async function get<T = unknown>(
   url: string,
   config?: AxiosRequestConfig,
 ): Promise<AxiosResponse<T>> {
@@ -115,9 +115,9 @@ export async function get<T = any>(
 /**
  * Generic POST request
  */
-export async function post<T = any>(
+export async function post<T = unknown>(
   url: string,
-  data?: any,
+  data?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<AxiosResponse<T>> {
   return apiClient.post<T>(url, data, config);
@@ -126,9 +126,9 @@ export async function post<T = any>(
 /**
  * Generic PUT request
  */
-export async function put<T = any>(
+export async function put<T = unknown>(
   url: string,
-  data?: any,
+  data?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<AxiosResponse<T>> {
   return apiClient.put<T>(url, data, config);
@@ -137,9 +137,9 @@ export async function put<T = any>(
 /**
  * Generic PATCH request
  */
-export async function patch<T = any>(
+export async function patch<T = unknown>(
   url: string,
-  data?: any,
+  data?: unknown,
   config?: AxiosRequestConfig,
 ): Promise<AxiosResponse<T>> {
   return apiClient.patch<T>(url, data, config);
@@ -148,7 +148,7 @@ export async function patch<T = any>(
 /**
  * Generic DELETE request
  */
-export async function del<T = any>(
+export async function del<T = unknown>(
   url: string,
   config?: AxiosRequestConfig,
 ): Promise<AxiosResponse<T>> {

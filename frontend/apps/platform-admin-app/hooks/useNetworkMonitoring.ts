@@ -169,10 +169,12 @@ export function useAcknowledgeAlert() {
         description: "The alert has been acknowledged successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to acknowledge alert",
+        description: err.response?.data?.detail || "Failed to acknowledge alert",
         variant: "destructive",
       });
     },
@@ -210,10 +212,12 @@ export function useCreateAlertRule() {
         description: `Alert rule "${rule.name}" has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create alert rule",
+        description: err.response?.data?.detail || "Failed to create alert rule",
         variant: "destructive",
       });
     },

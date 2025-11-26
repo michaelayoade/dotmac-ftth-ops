@@ -1,7 +1,7 @@
 """Change data transfer job progress to float.
 
-Revision ID: ae3d5f4c1b2d
-Revises: 2025_11_10_0500-create_ai_chat_tables
+Revision ID: 2025_11_10_0530
+Revises: 2025_11_10_0500
 Create Date: 2025-11-10 05:30:00.000000
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = "ae3d5f4c1b2d"
+revision = "2025_11_10_0530"
 down_revision = "2025_11_10_0500"
 branch_labels = None
 depends_on = None

@@ -1,6 +1,13 @@
 const path = require("path");
 
-const esModules = ["react-leaflet", "@react-leaflet", "leaflet"];
+const esModules = [
+  "react-leaflet",
+  "@react-leaflet",
+  "leaflet",
+  "next-intl",
+  "next-themes",
+  "use-intl",
+];
 const esmPattern = esModules.join("|");
 const transformIgnorePattern = `node_modules/(?!((?:\\.pnpm/[^/]+/node_modules/)?(${esmPattern}))/)`;
 const workspaceRoot = path.resolve(__dirname, "../../..");

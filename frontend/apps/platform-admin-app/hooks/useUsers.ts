@@ -142,10 +142,12 @@ export function useUpdateUser() {
         description: `${data.full_name || data.username} was updated successfully.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Update failed",
-        description: error.response?.data?.detail || "Failed to update user",
+        description: err.response?.data?.detail || "Failed to update user",
         variant: "destructive",
       });
     },
@@ -175,10 +177,12 @@ export function useDeleteUser() {
         description: "User was removed successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Delete failed",
-        description: error.response?.data?.detail || "Failed to delete user",
+        description: err.response?.data?.detail || "Failed to delete user",
         variant: "destructive",
       });
     },
@@ -207,10 +211,12 @@ export function useDisableUser() {
         description: "User account has been disabled.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Disable failed",
-        description: error.response?.data?.detail || "Failed to disable user",
+        description: err.response?.data?.detail || "Failed to disable user",
         variant: "destructive",
       });
     },
@@ -239,10 +245,12 @@ export function useEnableUser() {
         description: "User account has been enabled.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Enable failed",
-        description: error.response?.data?.detail || "Failed to enable user",
+        description: err.response?.data?.detail || "Failed to enable user",
         variant: "destructive",
       });
     },

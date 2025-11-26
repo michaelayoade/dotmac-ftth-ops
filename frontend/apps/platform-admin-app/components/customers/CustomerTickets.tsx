@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Ticket,
-  Plus,
-  ExternalLink,
+  AlertCircle,
   CheckCircle2,
   Clock,
-  AlertCircle,
+  ExternalLink,
+  Plus,
+  Ticket,
   XCircle,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
@@ -106,10 +106,12 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
         `/api/v1/customers/${customerId}/tickets`,
       );
       setTickets(response.data.tickets);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to load tickets",
+        description: err.response?.data?.detail || "Failed to load tickets",
         variant: "destructive",
       });
     } finally {

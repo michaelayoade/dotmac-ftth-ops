@@ -3,7 +3,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Save, Plus, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Plus,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
@@ -19,8 +24,6 @@ import {
 } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
-import { logger } from "@/lib/logger";
-
 interface ContactMethod {
   type: string;
   value: string;
@@ -63,7 +66,7 @@ export default function NewContactPage() {
 
   // Create contact mutation
   const createMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: unknown) => {
       const response = await apiClient.post("/contacts", data);
       return response.data;
     },
@@ -74,10 +77,12 @@ export default function NewContactPage() {
       });
       router.push("/dashboard/crm/contacts");
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create contact",
+        description: err.response?.data?.detail || "Failed to create contact",
         variant: "destructive",
       });
     },
@@ -97,6 +102,7 @@ export default function NewContactPage() {
     }
 
     // Prepare API data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const apiData: any = {
       ...formData,
       tags: tags.length > 0 ? tags : undefined,
@@ -131,6 +137,7 @@ export default function NewContactPage() {
     setContactMethods(contactMethods.filter((_, i) => i !== index));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateContactMethod = (index: number, field: string, value: any) => {
     const updated = [...contactMethods];
     updated[index] = { ...updated[index], [field]: value } as ContactMethod;

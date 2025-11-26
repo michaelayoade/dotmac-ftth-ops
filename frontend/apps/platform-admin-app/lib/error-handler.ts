@@ -168,6 +168,7 @@ export const handleApiError = (
       // Save current path for redirect after login
       const currentPath = window.location.pathname;
       if (currentPath !== ROUTES.LOGIN) {
+        // eslint-disable-next-line no-restricted-globals -- sessionStorage usage
         sessionStorage.setItem('redirectAfterLogin', currentPath);
       }
 

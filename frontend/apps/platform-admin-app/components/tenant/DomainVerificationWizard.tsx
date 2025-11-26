@@ -245,7 +245,6 @@ export function DomainVerificationWizard({
                     value={domain}
                     onChange={(e) => handleDomainChange(e.target.value)}
                     placeholder="example.com"
-                    autoFocus
                   />
                   <p className="text-xs text-muted-foreground">
                     Enter your domain without http:// or www

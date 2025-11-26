@@ -8,7 +8,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Send, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import {
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+} from "lucide-react";
 import {
   useBulkNotifications,
   useNotificationTemplates,
@@ -342,8 +347,8 @@ export default function BulkNotificationSenderPage() {
                     <Label htmlFor="priority">Priority</Label>
                     <Select
                       value={customMessage.priority}
-                      onValueChange={(v: any) =>
-                        setCustomMessage({ ...customMessage, priority: v })
+                      onValueChange={(v: unknown) =>
+                        setCustomMessage({ ...customMessage, priority: v as "low" | "medium" | "high" | "urgent" })
                       }
                     >
                       <SelectTrigger id="priority">

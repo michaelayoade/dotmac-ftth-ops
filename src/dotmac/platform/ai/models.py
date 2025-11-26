@@ -4,13 +4,14 @@ AI Chat Models and Schemas
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from dotmac.platform.models import Base
+from dotmac.platform.db import Base, GUID
 
 
 class ChatRole(str, Enum):
@@ -59,41 +60,57 @@ class ChatSession(Base):
 
     __tablename__ = "ai_chat_sessions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    tenant_id = Column(String(50), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    user_id: Mapped[UUID | None] = mapped_column(GUID, ForeignKey("users.id"), nullable=True)
+    customer_id: Mapped[UUID | None] = mapped_column(
+        GUID, ForeignKey("customers.id"), nullable=True
+    )
 
     # Session metadata
-    session_type = Column(String(50), nullable=False, default=ChatSessionType.CUSTOMER_SUPPORT)
-    status = Column(String(20), nullable=False, default=ChatSessionStatus.ACTIVE)
-    provider = Column(String(20), nullable=False, default=ChatProvider.OPENAI)
-    model = Column(String(50), nullable=True)
+    session_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, default=ChatSessionType.CUSTOMER_SUPPORT.value
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ChatSessionStatus.ACTIVE.value
+    )
+    provider: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ChatProvider.OPENAI.value
+    )
+    model: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Context
-    context = Column(JSON, nullable=True)  # Additional context data
-    metadata = Column(JSON, nullable=True)  # Session metadata
+    context: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    session_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    completed_at = Column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Metrics
-    message_count = Column(Integer, default=0)
-    total_tokens = Column(Integer, default=0)
-    total_cost = Column(Integer, default=0)  # In cents
+    message_count: Mapped[int] = mapped_column(Integer, default=0)
+    total_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    total_cost: Mapped[int] = mapped_column(Integer, default=0)  # In cents
 
     # Satisfaction
-    user_rating = Column(Integer, nullable=True)  # 1-5
-    user_feedback = Column(Text, nullable=True)
+    user_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-5
+    user_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Escalation
-    escalated_to_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    escalation_reason = Column(Text, nullable=True)
+    escalated_to_user_id: Mapped[UUID | None] = mapped_column(
+        GUID, ForeignKey("users.id"), nullable=True
+    )
+    escalation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+    messages: Mapped[list["ChatMessage"]] = relationship(
+        "ChatMessage", back_populates="session", cascade="all, delete-orphan"
+    )
 
 
 class ChatMessage(Base):
@@ -101,28 +118,32 @@ class ChatMessage(Base):
 
     __tablename__ = "ai_chat_messages"
 
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("ai_chat_sessions.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("ai_chat_sessions.id"), nullable=False, index=True
+    )
 
     # Message content
-    role = Column(String(20), nullable=False)
-    content = Column(Text, nullable=False)
+    role: Mapped[str] = mapped_column(String(20), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Function calling
-    function_name = Column(String(100), nullable=True)
-    function_args = Column(JSON, nullable=True)
-    function_result = Column(JSON, nullable=True)
+    function_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    function_args: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    function_result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     # Metadata
-    metadata = Column(JSON, nullable=True)
-    tokens = Column(Integer, nullable=True)
-    cost = Column(Integer, nullable=True)  # In cents
+    message_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cost: Mapped[int | None] = mapped_column(Integer, nullable=True)  # In cents
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
 
     # Relationships
-    session = relationship("ChatSession", back_populates="messages")
+    session: Mapped[ChatSession] = relationship("ChatSession", back_populates="messages")
 
 
 # ============================================================================
@@ -153,7 +174,7 @@ class ChatSessionCreate(BaseModel):
 
     session_type: ChatSessionType = Field(default=ChatSessionType.CUSTOMER_SUPPORT)
     context: dict[str, Any] | None = Field(default=None)
-    customer_id: int | None = None
+    customer_id: UUID | None = None
 
 
 class ChatSessionResponse(BaseModel):

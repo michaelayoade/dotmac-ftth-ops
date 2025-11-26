@@ -44,7 +44,7 @@ const useCustomerActivitiesAdapter = (customerId: string): SharedCustomerActivit
     activities: (activitiesQuery.data || []).map(mapActivityToShared),
     loading: activitiesQuery.isLoading,
     error: activitiesQuery.error ? String(activitiesQuery.error) : undefined,
-    addActivity: async (activity) => {
+    addActivity: async () => {
       // Note: The new hook doesn't expose addActivity mutation
       // This would need to be implemented separately if needed
       throw new Error("Add activity not yet implemented in TanStack Query version");

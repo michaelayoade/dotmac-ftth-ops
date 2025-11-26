@@ -7,9 +7,9 @@ interface CreateWebhookModalProps {
 }
 
 export function CreateWebhookModal({
-  onClose,
-  onWebhookCreated,
-  editingWebhook,
+  onClose: _onClose,
+  onWebhookCreated: _onWebhookCreated,
+  editingWebhook: _editingWebhook,
 }: CreateWebhookModalProps) {
   return <div>CreateWebhookModal Placeholder</div>;
 }

@@ -313,7 +313,7 @@ if HAS_SQLALCHEMY and not _SKIP_DB_FIXTURES:
                 session.close()
             finally:
                 if created_schema:
-                    metadata_base.metadata.drop_all(engine, checkfirst=False)
+                    metadata_base.metadata.drop_all(engine, checkfirst=True)
                 engine.dispose()
 
     __all__ = ["async_db_engine_sync", "async_db_engine", "async_session", "async_db_session"]

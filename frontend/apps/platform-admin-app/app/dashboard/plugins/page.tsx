@@ -14,18 +14,17 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import {
-  Puzzle,
-  Search,
-  RefreshCw,
-  Eye,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Clock,
-  Settings,
   Activity,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Eye,
   Plus,
+  Puzzle,
+  RefreshCw,
+  Search,
   Trash2,
+  XCircle,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
@@ -42,7 +41,7 @@ interface PluginInstance {
   instance_name: string;
   status: PluginStatus;
   enabled: boolean;
-  config_schema: any;
+  config_schema: unknown;
   last_health_check?: string;
   created_at: string;
   updated_at: string;
@@ -79,7 +78,7 @@ function PluginsPageContent() {
   });
 
   const plugins: PluginInstance[] = data?.plugins || [];
-  const total = data?.total || 0;
+  const _total = data?.total || 0;
 
   // Calculate statistics
   const stats: PluginStats = {
@@ -104,7 +103,7 @@ function PluginsPageContent() {
   });
 
   const getStatusBadge = (status: PluginStatus) => {
-    const statusConfig: Record<PluginStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<PluginStatus, { icon: React.ElementType; color: string; label: string }> = {
       active: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       inactive: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Inactive" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },

@@ -77,11 +77,13 @@ export function useInvoiceActions() {
         description: `Invoice has been sent successfully${variables.email ? ` to ${variables.email}` : ""}.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to send invoice email", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Failed to Send Invoice",
-        description: error.response?.data?.detail || "Unable to send invoice. Please try again.",
+        description: err.response?.data?.detail || "Unable to send invoice. Please try again.",
         variant: "destructive",
       });
     },
@@ -99,11 +101,13 @@ export function useInvoiceActions() {
         description: "Invoice has been voided successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to void invoice", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Failed to Void Invoice",
-        description: error.response?.data?.detail || "Unable to void invoice. Please try again.",
+        description: err.response?.data?.detail || "Unable to void invoice. Please try again.",
         variant: "destructive",
       });
     },
@@ -121,12 +125,14 @@ export function useInvoiceActions() {
         description: "Payment reminder has been sent successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to send payment reminder", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Failed to Send Reminder",
         description:
-          error.response?.data?.detail || "Unable to send payment reminder. Please try again.",
+          err.response?.data?.detail || "Unable to send payment reminder. Please try again.",
         variant: "destructive",
       });
     },
@@ -144,12 +150,14 @@ export function useInvoiceActions() {
         description: `Credit note ${data.credit_note_number} has been created successfully.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to create credit note", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Failed to Create Credit Note",
         description:
-          error.response?.data?.detail || "Unable to create credit note. Please try again.",
+          err.response?.data?.detail || "Unable to create credit note. Please try again.",
         variant: "destructive",
       });
     },

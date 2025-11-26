@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
-  X,
-  AlertTriangle,
   AlertCircle,
-  Info,
+  AlertTriangle,
+  Bell,
   CheckCircle,
   ChevronRight,
-  Bell,
+  Info,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { useAlerts } from "@/hooks/useAlerts";
-import { Alert, AlertSeverity } from "@/lib/services/alert-service";
+import { Alert } from "@/lib/services/alert-service";
 
 interface AlertBannerProps {
   category?: string;

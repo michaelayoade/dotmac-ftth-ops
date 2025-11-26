@@ -16,7 +16,14 @@
  */
 
 import { useState } from "react";
-import { Plus, Search, Filter, Download, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  AlertCircle,
+  Download,
+  Filter,
+  Plus,
+  RefreshCw,
+  Search,
+} from "lucide-react";
 import { QueryBoundary, normalizeDashboardHook } from "@dotmac/graphql";
 import { TableSkeleton, CardGridSkeleton } from "@dotmac/primitives";
 import { CustomersList } from "@/components/customers/CustomersList";
@@ -44,6 +51,7 @@ type CustomerDashboardData = {
   customers: CustomerDashboardQueryResult["customers"];
   metrics: CustomerDashboardQueryResult["metrics"];
 };
+type DashboardCustomer = CustomerDashboardData["customers"][number];
 
 export default function TenantCustomersView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -303,16 +311,18 @@ export default function TenantCustomersView() {
         {(data: CustomerDashboardData) => (
           <CustomersList
             customers={data.customers.map(
-              (c: any) =>
-                ({
+              (c: DashboardCustomer) => {
+                const displayName = `${c.firstName} ${c.lastName}`.trim() || c.companyName || c.email;
+                return {
                   id: c.id,
-                  name: c.displayName || `${c.firstName} ${c.lastName}`,
-                  display_name: c.displayName || `${c.firstName} ${c.lastName}`,
+                  name: displayName,
+                  display_name: displayName,
                   email: c.email,
                   status: c.status.toLowerCase() as Customer["status"],
                   created_at: c.createdAt,
-                  updated_at: c.updatedAt || c.createdAt,
-                }) as unknown as Customer,
+                  updated_at: c.createdAt,
+                } as unknown as Customer;
+              },
             )}
             loading={false} // Already handled by QueryBoundary
             onCustomerSelect={handleViewCustomer}

@@ -7,7 +7,7 @@
 "use client";
 
 import { TenantSelector as SharedTenantSelector, TenantBadge as SharedTenantBadge, type Tenant as SharedTenant } from "@dotmac/features/workspace";
-import { useTenant, type Tenant } from "@/lib/contexts/tenant-context";
+import { useTenant } from "@/lib/contexts/tenant-context";
 
 export function TenantSelector() {
   const { currentTenant, availableTenants, setTenant, isLoading } = useTenant();

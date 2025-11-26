@@ -13,7 +13,6 @@
  * />
  */
 
-import React from "react";
 import {
   Alert,
   AlertDescription,
@@ -36,6 +35,7 @@ import {
   BarChart3,
   Shield,
 } from "lucide-react";
+import React from "react";
 
 export type UpgradeReason =
   | "quota_exceeded"

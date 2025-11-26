@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import {
-  Plus,
-  Key,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  Copy,
-  Calendar,
-  Shield,
   AlertTriangle,
+  Calendar,
+  Copy,
+  Edit,
+  Eye,
+  Filter,
+  Key,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Shield,
+  Trash2,
 } from "lucide-react";
 import { useApiKeys, APIKey } from "@/hooks/useApiKeys";
 import { CreateApiKeyModal } from "@/components/api-keys/CreateApiKeyModal";
@@ -219,7 +219,7 @@ export default function ApiKeysPage() {
         <div className="bg-card rounded-lg overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <div className="animate-spin w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full mx-auto mb-4" />
               <p className="text-muted-foreground">Loading API keys...</p>
             </div>
           ) : filteredApiKeys.length === 0 ? (

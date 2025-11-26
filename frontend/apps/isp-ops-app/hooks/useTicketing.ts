@@ -121,12 +121,14 @@ export interface AddMessageRequest {
 
 interface UseTicketsOptions {
   status?: TicketStatus | undefined;
+  priority?: TicketPriority | undefined;
+  search?: string | undefined;
   autoRefresh?: boolean | undefined;
   refreshInterval?: number | undefined;
 }
 
 export function useTickets(options: UseTicketsOptions = {}) {
-  const { status, autoRefresh = false, refreshInterval = 30000 } = options;
+  const { status, priority, search, autoRefresh = false, refreshInterval = 30000 } = options;
 
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,6 +139,8 @@ export function useTickets(options: UseTicketsOptions = {}) {
       setLoading(true);
       const params: Record<string, any> = {};
       if (status) params['status'] = status;
+      if (priority) params['priority'] = priority;
+      if (search) params['search'] = search;
 
       const response = await apiClient.get<TicketSummary[]>("/tickets", {
         params,
@@ -342,35 +346,26 @@ export function useTicketStats() {
     try {
       setLoading(true);
 
-      // Since there's no stats endpoint, we'll calculate from tickets
-      const response = await apiClient.get<TicketSummary[]>("/tickets");
-      const tickets = response['data'];
+      const response = await apiClient.get<TicketStats>("/tickets/metrics");
+      const metrics = response['data'];
 
-      const stats: TicketStats = {
-        total: tickets.length,
-        open: tickets.filter((t) => t.status === "open").length,
-        in_progress: tickets.filter((t) => t.status === "in_progress").length,
-        waiting: tickets.filter((t) => t.status === "waiting").length,
-        resolved: tickets.filter((t) => t.status === "resolved").length,
-        closed: tickets.filter((t) => t.status === "closed").length,
+      setStats({
+        total: metrics.total ?? 0,
+        open: metrics.open ?? 0,
+        in_progress: metrics.in_progress ?? 0,
+        waiting: metrics.waiting ?? 0,
+        resolved: metrics.resolved ?? 0,
+        closed: metrics.closed ?? 0,
         by_priority: {
-          low: tickets.filter((t) => t.priority === "low").length,
-          normal: tickets.filter((t) => t.priority === "normal").length,
-          high: tickets.filter((t) => t.priority === "high").length,
-          urgent: tickets.filter((t) => t.priority === "urgent").length,
+          low: metrics.by_priority?.low ?? 0,
+          normal: metrics.by_priority?.normal ?? 0,
+          high: metrics.by_priority?.high ?? 0,
+          urgent: metrics.by_priority?.urgent ?? 0,
         },
-        by_type: {},
-        sla_breached: tickets.filter((t) => t.sla_breached).length,
-      };
-
-      // Count by type
-      tickets.forEach((ticket) => {
-        if (ticket.ticket_type) {
-          stats['by_type'][ticket.ticket_type] = (stats['by_type'][ticket.ticket_type] || 0) + 1;
-        }
+        by_type: metrics.by_type || {},
+        sla_breached: metrics.sla_breached ?? 0,
+        avg_resolution_time_minutes: metrics.avg_resolution_time_minutes ?? 0,
       });
-
-      setStats(stats);
       setError(null);
     } catch (err: any) {
       logger.error("Failed to fetch ticket stats", toError(err));

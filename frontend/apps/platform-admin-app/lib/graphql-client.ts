@@ -11,7 +11,7 @@ import { platformConfig } from "./config";
  * GraphQL client interface
  */
 export interface GraphQLClient {
-  request<T = any>(query: string, variables?: Record<string, any>): Promise<T>;
+  request<T = unknown>(query: string, variables?: Record<string, unknown>): Promise<T>;
 }
 
 /**
@@ -21,10 +21,10 @@ interface GraphQLError {
   message: string;
   locations?: Array<{ line: number; column: number }>;
   path?: string[];
-  extensions?: Record<string, any>;
+  extensions?: Record<string, unknown>;
 }
 
-interface GraphQLResponse<T = any> {
+interface GraphQLResponse<T = unknown> {
   data?: T;
   errors?: GraphQLError[];
 }
@@ -38,7 +38,7 @@ function resolveGraphqlUrl(): string {
 
 function createGraphQLClient(): GraphQLClient {
   return {
-    async request<T = any>(query: string, variables?: Record<string, any>): Promise<T> {
+    async request<T = unknown>(query: string, variables?: Record<string, unknown>): Promise<T> {
       const graphqlUrl = resolveGraphqlUrl();
 
       const response = await fetch(graphqlUrl, {

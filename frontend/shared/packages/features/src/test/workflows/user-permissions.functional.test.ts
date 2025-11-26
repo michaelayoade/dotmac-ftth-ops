@@ -11,8 +11,8 @@
  * 7. Administrative Overrides
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
 import type { Role, Permission, User } from "@dotmac/rbac";
+import { describe, it, expect, beforeEach } from "vitest";
 
 // Test data factories
 const createMockUser = (overrides?: Partial<User>): User => ({
@@ -49,7 +49,7 @@ const hasPermission = (user: User, permission: string): boolean => {
     // Handle "resource:*" matching "resource:action"
     if (heldPermission.endsWith(':*')) {
       const resourcePart = heldPermission.slice(0, -2);
-      if (requiredPermission.startsWith(resourcePart + ':')) {
+      if (requiredPermission.startsWith(`${resourcePart  }:`)) {
         return true;
       }
     }

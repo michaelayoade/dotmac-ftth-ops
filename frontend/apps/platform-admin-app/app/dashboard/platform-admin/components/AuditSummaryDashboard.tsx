@@ -12,14 +12,14 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Clock,
+  RefreshCw,
   Shield,
   TrendingUp,
   Users,
-  AlertTriangle,
-  Activity,
-  Clock,
-  BarChart3,
-  RefreshCw,
 } from "lucide-react";
 import { useActivitySummary } from "@/hooks/useAudit";
 import {
@@ -62,7 +62,7 @@ export function AuditSummaryDashboard() {
       <Card>
         <CardContent className="pt-6">
           <div className="text-center py-8">
-            <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
             <p className="text-muted-foreground">Loading audit summary...</p>
           </div>
         </CardContent>
@@ -223,7 +223,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (criticalCount / totalActivities) * 100 : 0}%`,
                     }}
-                  ></div>
+                   />
                 </div>
               </div>
 
@@ -239,7 +239,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (highCount / totalActivities) * 100 : 0}%`,
                     }}
-                  ></div>
+                   />
                 </div>
               </div>
 
@@ -255,7 +255,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (mediumCount / totalActivities) * 100 : 0}%`,
                     }}
-                  ></div>
+                   />
                 </div>
               </div>
 
@@ -271,7 +271,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (lowCount / totalActivities) * 100 : 0}%`,
                     }}
-                  ></div>
+                   />
                 </div>
               </div>
             </div>
@@ -304,7 +304,7 @@ export function AuditSummaryDashboard() {
                       <div
                         className="bg-blue-600 h-2 rounded-full transition-all"
                         style={{ width: `${percentage}%` }}
-                      ></div>
+                      />
                     </div>
                   </div>
                 );

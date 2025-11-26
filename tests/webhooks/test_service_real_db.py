@@ -92,6 +92,20 @@ class TestCreateSubscription:
 
         assert sub1.secret != sub2.secret
 
+    @pytest.mark.asyncio
+    async def test_create_subscription_accepts_arbitrary_events(
+        self, webhook_service: WebhookSubscriptionService
+    ):
+        """Ensure arbitrary event names are persisted for UI compatibility."""
+        sub_data = WebhookSubscriptionCreate(
+            url="https://hooks.example.com/anything",
+            events=["custom.event", "tenant.something-happened"],
+        )
+
+        sub = await webhook_service.create_subscription("tenant-compat", sub_data)
+
+        assert sub.events == ["custom.event", "tenant.something-happened"]
+
 
 @pytest.mark.integration
 class TestGetSubscription:
@@ -218,9 +232,7 @@ class TestUpdateSubscription:
         self, webhook_service: WebhookSubscriptionService, sample_subscription
     ):
         """Test updating subscription URL."""
-        from pydantic import HttpUrl
-
-        update_data = WebhookSubscriptionUpdate(url=HttpUrl("https://new-url.com/webhook"))
+        update_data = WebhookSubscriptionUpdate(url="https://new-url.com/webhook")
 
         result = await webhook_service.update_subscription(
             str(sample_subscription.id), "test-tenant", update_data

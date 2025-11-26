@@ -102,3 +102,5 @@ class TechnicianListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+    page: int
+    page_size: int

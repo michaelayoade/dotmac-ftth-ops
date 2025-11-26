@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { X, AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import {
+  X,
+  AlertTriangle,
+  Trash2,
+  Loader2,
+} from "lucide-react";
 import { APIKey } from "@/hooks/useApiKeys";
 
 interface RevokeConfirmModalProps {
@@ -31,12 +36,20 @@ export function RevokeConfirmModal({ apiKey, onClose, onConfirm }: RevokeConfirm
     }
   };
 
+  const handleBackdropKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+      onClose();
+    }
+  };
+
   const isConfirmValid = confirmText === "REVOKE";
 
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
+      onKeyDown={handleBackdropKeyDown}
+      role="presentation"
     >
       <div className="bg-slate-900 rounded-lg shadow-xl w-full max-w-md">
         {/* Header */}

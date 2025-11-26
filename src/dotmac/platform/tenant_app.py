@@ -351,13 +351,6 @@ TENANT_ROUTER_CONFIGS = [
     },
     # Monitoring & Diagnostics
     {
-        "module_path": "dotmac.platform.diagnostics.router",
-        "router_name": "router",
-        "prefix": "/diagnostics",  # Module has empty prefix
-        "tags": ["ISP - Diagnostics"],
-        "description": "Network diagnostics tools",
-    },
-    {
         "module_path": "dotmac.platform.fault_management.router",
         "router_name": "router",
         "prefix": "/faults",  # Module defines /faults

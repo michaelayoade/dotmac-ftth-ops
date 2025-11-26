@@ -13,7 +13,7 @@ export const queryKeys = {
   customers: {
     all: ["customers"] as const,
     lists: () => [...queryKeys.customers.all, "list"] as const,
-    list: (filters?: Record<string, any>) => [...queryKeys.customers.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.customers.lists(), filters] as const,
     details: () => [...queryKeys.customers.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.customers.details(), id] as const,
     activities: (customerId: string) =>
@@ -23,7 +23,7 @@ export const queryKeys = {
   users: {
     all: ["users"] as const,
     lists: () => [...queryKeys.users.all, "list"] as const,
-    list: (filters?: Record<string, any>) => [...queryKeys.users.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.users.lists(), filters] as const,
     details: () => [...queryKeys.users.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.users.details(), id] as const,
   },
@@ -63,7 +63,7 @@ export const optimisticHelpers = {
     newItem: T,
     options?: { position?: "start" | "end" },
   ): void => {
-    queryClient.setQueryData<T[]>(queryKey as any, (oldData) => {
+    queryClient.setQueryData<T[]>(queryKey, (oldData) => {
       if (!oldData) return [newItem];
       return options?.position === "start" ? [newItem, ...oldData] : [...oldData, newItem];
     });
@@ -76,9 +76,9 @@ export const optimisticHelpers = {
     queryClient: QueryClient,
     queryKey: readonly unknown[],
     itemId: string,
-    updates: Partial<T> | T | Record<string, any>,
+    updates: Partial<T> | T | Record<string, unknown>,
   ): void => {
-    queryClient.setQueryData<T[]>(queryKey as any, (oldData) => {
+    queryClient.setQueryData<T[]>(queryKey, (oldData) => {
       if (!oldData) return undefined;
       return oldData.map((item) => (item.id === itemId ? ({ ...item, ...updates } as T) : item));
     });
@@ -92,7 +92,7 @@ export const optimisticHelpers = {
     queryKey: readonly unknown[],
     updates: Partial<T> | T,
   ): void => {
-    queryClient.setQueryData<T>(queryKey as any, (oldData) => {
+    queryClient.setQueryData<T>(queryKey, (oldData) => {
       if (!oldData) return updates as T;
       return { ...oldData, ...updates };
     });
@@ -106,7 +106,7 @@ export const optimisticHelpers = {
     queryKey: readonly unknown[],
     itemId: string,
   ): void => {
-    queryClient.setQueryData<T[]>(queryKey as any, (oldData) => {
+    queryClient.setQueryData<T[]>(queryKey, (oldData) => {
       if (!oldData) return undefined;
       return oldData.filter((item) => item.id !== itemId);
     });
@@ -155,7 +155,7 @@ export const invalidateHelpers = {
     queryKeys: readonly (readonly unknown[])[],
   ) => {
     await Promise.all(
-      queryKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey: queryKey as any })),
+      queryKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
     );
   },
 };

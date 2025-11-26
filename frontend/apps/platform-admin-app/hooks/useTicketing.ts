@@ -39,7 +39,7 @@ export interface TicketMessage {
   sender_type: TicketActorType;
   sender_user_id?: string;
   body: string;
-  attachments: any[];
+  attachments: unknown[];
   created_at: string;
   updated_at: string;
 }
@@ -57,7 +57,7 @@ export interface TicketSummary {
   partner_id?: string;
   assigned_to_user_id?: string;
   last_response_at?: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
 
   // ISP-specific fields
   ticket_type?: TicketType;
@@ -87,8 +87,8 @@ export interface CreateTicketRequest {
   priority?: TicketPriority;
   partner_id?: string;
   tenant_id?: string;
-  metadata?: Record<string, any>;
-  attachments?: any[];
+  metadata?: Record<string, unknown>;
+  attachments?: unknown[];
 
   // ISP-specific fields
   ticket_type?: TicketType;
@@ -104,7 +104,8 @@ export interface CreateTicketRequest {
 export const ticketingKeys = {
   all: ["ticketing"] as const,
   lists: () => [...ticketingKeys.all, "list"] as const,
-  list: (filters?: { status?: TicketStatus }) => [...ticketingKeys.lists(), filters] as const,
+  list: (filters?: { status?: TicketStatus; priority?: TicketPriority; search?: string }) =>
+    [...ticketingKeys.lists(), filters] as const,
   details: () => [...ticketingKeys.all, "detail"] as const,
   detail: (id: string) => [...ticketingKeys.details(), id] as const,
   stats: () => [...ticketingKeys.all, "stats"] as const,
@@ -114,7 +115,7 @@ export interface UpdateTicketRequest {
   status?: TicketStatus;
   priority?: TicketPriority;
   assigned_to_user_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   ticket_type?: TicketType;
   service_address?: string;
   affected_services?: string[];
@@ -125,7 +126,7 @@ export interface UpdateTicketRequest {
 
 export interface AddMessageRequest {
   message: string;
-  attachments?: any[];
+  attachments?: unknown[];
   new_status?: TicketStatus;
 }
 
@@ -134,9 +135,15 @@ export interface AddMessageRequest {
 // ============================================================================
 
 const ticketingApi = {
-  fetchTickets: async (filters?: { status?: TicketStatus }): Promise<TicketSummary[]> => {
-    const params: Record<string, any> = {};
+  fetchTickets: async (filters?: {
+    status?: TicketStatus;
+    priority?: TicketPriority;
+    search?: string;
+  }): Promise<TicketSummary[]> => {
+    const params: Record<string, unknown> = {};
     if (filters?.status) params['status'] = filters.status;
+    if (filters?.priority) params['priority'] = filters.priority;
+    if (filters?.search) params['search'] = filters.search;
 
     const response = await apiClient.get<TicketSummary[]>("/tickets", { params });
     return response.data;
@@ -163,33 +170,26 @@ const ticketingApi = {
   },
 
   fetchStats: async (): Promise<TicketStats> => {
-    const response = await apiClient.get<TicketSummary[]>("/tickets");
-    const tickets = response.data;
+    const response = await apiClient.get<TicketStats>("/tickets/metrics");
+    const stats = response.data;
 
-    const stats: TicketStats = {
-      total: tickets.length,
-      open: tickets.filter((t) => t.status === "open").length,
-      in_progress: tickets.filter((t) => t.status === "in_progress").length,
-      waiting: tickets.filter((t) => t.status === "waiting").length,
-      resolved: tickets.filter((t) => t.status === "resolved").length,
-      closed: tickets.filter((t) => t.status === "closed").length,
+    return {
+      total: stats.total ?? 0,
+      open: stats.open ?? 0,
+      in_progress: stats.in_progress ?? 0,
+      waiting: stats.waiting ?? 0,
+      resolved: stats.resolved ?? 0,
+      closed: stats.closed ?? 0,
       by_priority: {
-        low: tickets.filter((t) => t.priority === "low").length,
-        normal: tickets.filter((t) => t.priority === "normal").length,
-        high: tickets.filter((t) => t.priority === "high").length,
-        urgent: tickets.filter((t) => t.priority === "urgent").length,
+        low: stats.by_priority?.low ?? 0,
+        normal: stats.by_priority?.normal ?? 0,
+        high: stats.by_priority?.high ?? 0,
+        urgent: stats.by_priority?.urgent ?? 0,
       },
-      by_type: {},
-      sla_breached: tickets.filter((t) => t.sla_breached).length,
+      by_type: stats.by_type || {},
+      sla_breached: stats.sla_breached ?? 0,
+      avg_resolution_time_minutes: stats.avg_resolution_time_minutes,
     };
-
-    tickets.forEach((ticket) => {
-      if (ticket.ticket_type) {
-        stats.by_type[ticket.ticket_type] = (stats.by_type[ticket.ticket_type] || 0) + 1;
-      }
-    });
-
-    return stats;
   },
 };
 
@@ -199,16 +199,18 @@ const ticketingApi = {
 
 interface UseTicketsOptions {
   status?: TicketStatus;
+  priority?: TicketPriority;
+  search?: string;
   autoRefresh?: boolean;
   refreshInterval?: number;
 }
 
 export function useTickets(options: UseTicketsOptions = {}) {
-  const { status, autoRefresh = false, refreshInterval = 30000 } = options;
+  const { status, priority, search, autoRefresh = false, refreshInterval = 30000 } = options;
 
   const query = useQuery({
-    queryKey: ticketingKeys.list(status ? { status } : {}),
-    queryFn: () => ticketingApi.fetchTickets(status ? { status } : {}),
+    queryKey: ticketingKeys.list({ status, priority, search }),
+    queryFn: () => ticketingApi.fetchTickets({ status, priority, search }),
     staleTime: 60000, // 1 minute
     refetchInterval: autoRefresh ? refreshInterval : false,
   });
@@ -336,8 +338,8 @@ export function useUpdateTicket() {
       const previousTicket = queryClient.getQueryData(ticketingKeys.detail(ticketId));
       const previousTickets = queryClient.getQueryData(ticketingKeys.lists());
 
-      optimisticHelpers.updateItem(queryClient, ticketingKeys.detail(ticketId), data);
-      optimisticHelpers.updateInList(queryClient, ticketingKeys.lists(), ticketId, data);
+      optimisticHelpers.updateItem(queryClient, ticketingKeys.detail(ticketId), data as Record<string, unknown>);
+      optimisticHelpers.updateInList(queryClient, ticketingKeys.lists(), ticketId, data as Record<string, unknown>);
 
       logger.info("Updating ticket optimistically", { ticketId, updates: data });
 

@@ -45,7 +45,7 @@ export interface IntegrationResponse {
   settings_count: number;
   has_secrets: boolean;
   required_packages: string[];
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
 }
 
 export interface IntegrationListResponse {
@@ -123,10 +123,12 @@ export function useHealthCheck() {
         description: `${data.name}: ${data.status}`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Health check failed",
-        description: error.response?.data?.detail || "Failed to check integration health",
+        description: err.response?.data?.detail || "Failed to check integration health",
         variant: "destructive",
       });
     },

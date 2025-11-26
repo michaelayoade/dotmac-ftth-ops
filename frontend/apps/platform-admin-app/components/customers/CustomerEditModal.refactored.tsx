@@ -4,7 +4,12 @@ import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X, Save, User, Building } from "lucide-react";
+import {
+  X,
+  Save,
+  User,
+  Building,
+} from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import {
@@ -219,7 +224,7 @@ export function CustomerEditModalRefactored({
   const mutation = useFormMutation(
     {
       reset: form.reset,
-      setError: (field, errorDetails) => form.setError(field as any, errorDetails),
+      setError: (field, errorDetails) => form.setError(field as never, errorDetails),
     },
     {
       mutationFn,
@@ -259,7 +264,7 @@ export function CustomerEditModalRefactored({
         <form
           className="space-y-6"
           onSubmit={form.handleSubmit((data) => {
-            mutate(data as any);
+            mutate(data);
           })}
           noValidate
         >

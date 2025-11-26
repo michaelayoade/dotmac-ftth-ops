@@ -21,7 +21,10 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 # Permission matrix aligned to frontend/shared/lib/better-auth/auth.ts.
-# Stored permissions are flattened as "<resource>:<action>" strings.
+# Stored permissions are flattened as "<resource>.<action>" strings so that:
+# - "category" = resource
+# - "action" = action
+# This matches the frontend PermissionCategory/PermissionAction model.
 _ROLE_PERMISSION_MATRIX: dict[str, dict[str, list[str]]] = {
     "super_admin": {
         "users": ["create", "read", "update", "delete"],
@@ -121,7 +124,7 @@ _ROLE_PERMISSION_MATRIX: dict[str, dict[str, list[str]]] = {
 }
 
 ROLE_PERMISSIONS: dict[str, list[str]] = {
-    role: [f"{resource}:{action}" for resource, actions in resources.items() for action in actions]
+    role: [f"{resource}.{action}" for resource, actions in resources.items() for action in actions]
     for role, resources in _ROLE_PERMISSION_MATRIX.items()
 }
 
@@ -249,10 +252,10 @@ class BetterAuthService:
             # Check if user is platform admin (super_admin role in Better Auth)
             is_platform_admin = "super_admin" in roles or "platform_admin" in roles
 
-            # Sync user to our database if not already synced
-            # This ensures Better Auth users have corresponding records in our User table
+            # Sync user + roles into local RBAC if available
             try:
                 from dotmac.platform.auth.better_auth_sync import sync_better_auth_user
+
                 await sync_better_auth_user(
                     user_id,
                     self.db,
@@ -260,9 +263,25 @@ class BetterAuthService:
                 )
                 logger.debug("User synced from Better Auth to local database", user_id=user_id)
             except Exception as sync_error:
-                # Don't fail authentication if sync fails
-                # User can still be authenticated via Better Auth session
-                logger.warning("Failed to sync user to local database", user_id=user_id, error=str(sync_error))
+                # Don't fail authentication if sync fails; user can still be authenticated
+                logger.warning(
+                    "Failed to sync user to local database", user_id=user_id, error=str(sync_error)
+                )
+
+            # Derive effective permissions:
+            # - Prefer RBACService snapshot when available (authoritative, uses DB roles/permissions)
+            # - Fallback to static Better Auth matrix when RBACService is not provided
+            if self.rbac_service:
+                try:
+                    snapshot = await self.rbac_service.get_user_permissions(user_id)
+                    permissions = list(snapshot.allows)
+                except Exception as rbac_error:
+                    logger.warning(
+                        "Failed to load RBAC permissions for Better Auth user",
+                        user_id=user_id,
+                        error=str(rbac_error),
+                    )
+                    permissions = self._get_role_permissions_for_role(role if selected_membership else None)
 
             logger.info(
                 "Better Auth session validated",

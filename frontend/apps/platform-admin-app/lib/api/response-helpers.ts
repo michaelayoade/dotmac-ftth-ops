@@ -10,16 +10,16 @@ export interface ApiError {
   message: string;
   code?: string;
   status?: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   success: boolean;
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   items: T[];
   total: number;
   page: number;

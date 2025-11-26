@@ -14,7 +14,10 @@ import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Addon } from "@/hooks/useTenantAddons";
-import { Check, Star } from "lucide-react";
+import {
+  Check,
+  Star,
+} from "lucide-react";
 
 interface AddonCardProps {
   addon: Addon;

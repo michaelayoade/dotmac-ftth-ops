@@ -112,7 +112,7 @@ export interface LicenseAllocationInput {
   license_template_id: string;
   license_count?: number;
   tenant_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LicenseAllocationResult {
@@ -161,7 +161,7 @@ export interface TenantProvisioningResult {
   partner_number: string;
   partner_name: string;
   white_label_applied: boolean;
-  white_label_config?: Record<string, any>;
+  white_label_config?: Record<string, unknown>;
   custom_domain?: string;
   engagement_type: string;
   status: string;
@@ -183,7 +183,7 @@ export interface CommissionRecordInput {
   invoice_id?: string;
   tenant_id?: string;
   currency?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
@@ -202,7 +202,7 @@ export interface CommissionRecordResult {
   invoice_id?: string;
   partner_balance: string;
   partner_outstanding_balance: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PartnerOnboardingInput {

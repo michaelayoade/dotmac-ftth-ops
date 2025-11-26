@@ -59,9 +59,9 @@ export function ClientProviders({ children }: { children: ReactNode }) {
 
   return (
     <MSWProvider>
-      <PortalThemeProvider>
-        <AccessibilityProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <PortalThemeProvider>
+          <AccessibilityProvider>
             <QueryClientProvider client={queryClient}>
               <ApolloProvider>
                 <PartnerTenantProvider>
@@ -75,9 +75,9 @@ export function ClientProviders({ children }: { children: ReactNode }) {
                 </PartnerTenantProvider>
               </ApolloProvider>
             </QueryClientProvider>
-          </ThemeProvider>
-        </AccessibilityProvider>
-      </PortalThemeProvider>
+          </AccessibilityProvider>
+        </PortalThemeProvider>
+      </ThemeProvider>
     </MSWProvider>
   );
 }

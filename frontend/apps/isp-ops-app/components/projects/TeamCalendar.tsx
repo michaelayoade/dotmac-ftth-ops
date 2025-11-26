@@ -10,6 +10,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,7 +20,7 @@ import {
   Plus,
 } from "lucide-react";
 import type { Task, TaskStatus, TaskPriority } from "@/types/project-management";
-import { useTasks } from "@/hooks/useProjects";
+import { useTasks, useTeams } from "@/hooks/useProjects";
 
 // ============================================================================
 // Types
@@ -187,9 +188,10 @@ interface DayDetailProps {
   selectedDate: Date;
   tasks: Task[];
   onClose: () => void;
+  teamNameById: Map<string, string>;
 }
 
-function DayDetail({ selectedDate, tasks, onClose }: DayDetailProps) {
+function DayDetail({ selectedDate, tasks, onClose, teamNameById }: DayDetailProps) {
   return (
     <Card className="w-80">
       <CardHeader>
@@ -234,6 +236,12 @@ function DayDetail({ selectedDate, tasks, onClose }: DayDetailProps) {
                     {task.assignee.name}
                   </div>
                 )}
+                {!task.assignee && task.reporterId && (
+                  <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                    <Users className="h-3 w-3" />
+                    {teamNameById.get(task.reporterId) ?? "Unassigned"}
+                  </div>
+                )}
                 {task.dueDate && (
                   <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
@@ -269,6 +277,14 @@ export function TeamCalendar({ projectId }: TeamCalendarProps) {
   const { data: tasksData, isLoading } = useTasks(
     projectId ? { projectId: [projectId] } : undefined
   );
+  const { data: teams } = useTeams();
+  const [selectedTeam, setSelectedTeam] = useState<string>("");
+
+  const teamNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    (teams ?? []).forEach((team) => map.set(team.id, team.name));
+    return map;
+  }, [teams]);
 
   const calendarDays = useMemo(() => {
     const days = getMonthDays(currentDate.getFullYear(), currentDate.getMonth());
@@ -314,12 +330,14 @@ export function TeamCalendar({ projectId }: TeamCalendarProps) {
 
   const selectedDayTasks = useMemo(() => {
     if (!selectedDate || !tasksData?.tasks) return [];
-    return tasksData.tasks.filter(
-      (task) =>
-        (task.dueDate && isSameDay(new Date(task.dueDate), selectedDate)) ||
-        (task.startDate && isSameDay(new Date(task.startDate), selectedDate))
-    );
-  }, [selectedDate, tasksData]);
+    return tasksData.tasks
+      .filter(
+        (task) =>
+          (task.dueDate && isSameDay(new Date(task.dueDate), selectedDate)) ||
+          (task.startDate && isSameDay(new Date(task.startDate), selectedDate))
+      )
+      .filter((task) => (selectedTeam ? task.reporterId === selectedTeam : true));
+  }, [selectedDate, tasksData, selectedTeam]);
 
   if (isLoading) {
     return (
@@ -343,17 +361,32 @@ export function TeamCalendar({ projectId }: TeamCalendarProps) {
                 {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleToday}>
-                Today
-              </Button>
-              <div className="flex gap-1">
-                <Button variant="outline" size="sm" onClick={handlePrevMonth}>
-                  <ChevronLeft className="h-4 w-4" />
+            <div className="flex gap-3 items-center">
+              <Select onValueChange={(val) => setSelectedTeam(val)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All teams" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All teams</SelectItem>
+                  {(teams ?? []).map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleToday}>
+                  Today
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleNextMonth}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button variant="outline" size="sm" onClick={handlePrevMonth}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleNextMonth}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -391,6 +424,7 @@ export function TeamCalendar({ projectId }: TeamCalendarProps) {
             selectedDate={selectedDate}
             tasks={selectedDayTasks}
             onClose={() => setSelectedDate(null)}
+            teamNameById={teamNameById}
           />
         )}
       </div>

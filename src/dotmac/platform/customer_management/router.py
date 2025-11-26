@@ -54,7 +54,7 @@ def _convert_customer_to_response(customer: Any) -> CustomerResponse:
         metadata = getattr(customer, "metadata_", None)
 
     if metadata is not None:
-        response.metadata = metadata
+        response.metadata = metadata if isinstance(metadata, dict) else {}
     return response
 
 

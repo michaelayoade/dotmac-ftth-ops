@@ -20,7 +20,11 @@ import {
 } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Checkbox } from "@dotmac/ui";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  AlertCircle,
+} from "lucide-react";
 import { useDataImport, type ImportJobType } from "@/hooks/useDataImport";
 
 interface FileUploadDialogProps {

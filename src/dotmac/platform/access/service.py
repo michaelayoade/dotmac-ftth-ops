@@ -9,6 +9,7 @@ service so that callers can treat both implementations uniformly.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -24,9 +25,7 @@ from dotmac.platform.access.drivers import (
     ONUProvisionResult,
 )
 from dotmac.platform.access.registry import AccessDriverRegistry, DriverDescriptor
-from dotmac.platform.voltha.schemas import (
-    Device as VolthaDevice,
-)
+from dotmac.platform.voltha.schemas import Device as VolthaDevice
 from dotmac.platform.voltha.schemas import (
     DeviceDetailResponse,
     DeviceListResponse,
@@ -39,6 +38,7 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAAlarmListResponse,
     VOLTHAHealthResponse,
 )
+from dotmac.platform.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 
@@ -72,6 +72,8 @@ class AccessNetworkService:
 
     def __init__(self, registry: AccessDriverRegistry) -> None:
         self.registry = registry
+        # Track acknowledge/clear operations even if drivers lack native support
+        self._alarm_state: dict[str, dict[str, Any]] = {}
 
     # ------------------------------------------------------------------ #
     # Helper
@@ -159,6 +161,98 @@ class AccessNetworkService:
         logger.debug("access.alarms", olt_id=olt_id, alarm_count=len(alarms))
         return alarms
 
+    def _mark_alarm_state(
+        self,
+        alarm_id: str,
+        state: str,
+        actor: str | None = None,
+        note: str | None = None,
+        driver_supported: bool | None = None,
+    ) -> None:
+        """Record the most recent state change for an alarm."""
+        self._alarm_state[alarm_id] = {
+            "state": state.upper(),
+            "actor": actor,
+            "note": note,
+            "driver_supported": driver_supported,
+            "updated_at": datetime.now(UTC),
+        }
+
+    async def acknowledge_alarm(
+        self, alarm_id: str, olt_id: str | None = None, actor: str | None = None, note: str | None = None
+    ) -> dict[str, Any]:
+        """
+        Attempt to acknowledge an alarm.
+
+        If olt_id is provided, the request is routed to that driver.
+        Otherwise, each registered driver is tried until one succeeds.
+        """
+        driver_supported = False
+        drivers = (
+            [self._driver(olt_id)]
+            if olt_id
+            else [self._instantiate(desc) for desc in self._descriptors()]
+        )
+        for driver in drivers:
+            try:
+                if await driver.acknowledge_alarm(alarm_id):
+                    driver_supported = True
+                    logger.info("access.alarm.acknowledged", alarm_id=alarm_id, olt_id=olt_id)
+                    break
+            except NotImplementedError:
+                continue
+            except Exception as exc:  # pragma: no cover - driver-specific failures
+                logger.warning("access.alarm.ack.failed", alarm_id=alarm_id, error=str(exc))
+                continue
+        # Even if drivers don't support it, track the acknowledgement locally so the UI
+        # can reflect the operator's action.
+        self._mark_alarm_state(
+            alarm_id, "ACKNOWLEDGED", actor=actor, note=note, driver_supported=driver_supported
+        )
+        return {
+            "success": True,
+            "driver_supported": driver_supported,
+            "acknowledged_by": actor,
+            "note": note,
+        }
+
+    async def clear_alarm(
+        self, alarm_id: str, olt_id: str | None = None, actor: str | None = None, note: str | None = None
+    ) -> dict[str, Any]:
+        """
+        Attempt to clear an alarm.
+
+        If olt_id is provided, the request is routed to that driver.
+        Otherwise, each registered driver is tried until one succeeds.
+        """
+        driver_supported = False
+        drivers = (
+            [self._driver(olt_id)]
+            if olt_id
+            else [self._instantiate(desc) for desc in self._descriptors()]
+        )
+        for driver in drivers:
+            try:
+                if await driver.clear_alarm(alarm_id):
+                    driver_supported = True
+                    logger.info("access.alarm.cleared", alarm_id=alarm_id, olt_id=olt_id)
+                    break
+            except NotImplementedError:
+                continue
+            except Exception as exc:  # pragma: no cover - driver-specific failures
+                logger.warning("access.alarm.clear.failed", alarm_id=alarm_id, error=str(exc))
+                continue
+        # Track locally for UI if drivers do not implement clearing
+        self._mark_alarm_state(
+            alarm_id, "CLEARED", actor=actor, note=note, driver_supported=driver_supported
+        )
+        return {
+            "success": True,
+            "driver_supported": driver_supported,
+            "cleared_by": actor,
+            "note": note,
+        }
+
     async def backup_configuration(self, olt_id: str) -> bytes:
         driver = self._driver(olt_id)
         backup = await driver.backup_configuration()
@@ -210,11 +304,15 @@ class AccessNetworkService:
             result.get("message", "") for result in results if result.get("message")
         )
 
+        settings = get_settings()
+        alarm_actions_enabled = settings.features.pon_alarm_actions_enabled
+
         return VOLTHAHealthResponse(
             healthy=overall_healthy,
             state=state,
             message=message or state.title(),
             total_devices=total_devices,
+            alarm_actions_enabled=alarm_actions_enabled,
         )
 
     async def list_logical_devices(self) -> LogicalDeviceListResponse:
@@ -353,16 +451,26 @@ class AccessNetworkService:
             except NotImplementedError:
                 continue
             for alarm in driver_alarms:
+                cached_state = self._alarm_state.get(alarm.alarm_id, {})
+                state = cached_state.get("state", "RAISED")
+                context: dict[str, Any] = {}
+                if cached_state:
+                    context = {
+                        "acknowledged_by": cached_state.get("actor"),
+                        "note": cached_state.get("note"),
+                        "state_updated_at": cached_state.get("updated_at"),
+                        "driver_supported": cached_state.get("driver_supported"),
+                    }
                 alarms.append(
                     VOLTHAAlarm(
                         id=alarm.alarm_id,
                         type="ACCESS",
                         category="OLT",
                         severity=alarm.severity,
-                        state="RAISED",
+                        state=state,
                         resource_id=alarm.resource_id or descriptor.config.olt_id,
                         description=alarm.message,
-                        context={},
+                        context=context,
                         raised_ts=str(alarm.raised_at),
                     )
                 )

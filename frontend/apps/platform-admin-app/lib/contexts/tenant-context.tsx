@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
 import { apiClient } from "@/lib/api/client";
 
 export interface Tenant {
@@ -15,7 +15,7 @@ export interface Tenant {
   slug: string;
   plan?: string;
   status?: string;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 interface TenantContextValue {
@@ -39,7 +39,7 @@ export interface TenantProviderProps {
 
 export function TenantProvider({ children, initialTenant = null }: TenantProviderProps) {
   const [tenant, setTenant] = useState<Tenant | null>(initialTenant);
-  const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
+  const [availableTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -66,17 +66,20 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
     }
   }, [initialTenant]);
 
-  const value: TenantContextValue = {
-    tenant,
-    currentTenant: tenant,
-    tenantId: tenant?.id || null,
-    loading,
-    isLoading: loading, // Alias for loading
-    error,
-    availableTenants,
-    setTenant,
-    refreshTenant,
-  };
+  const value: TenantContextValue = useMemo(
+    () => ({
+      tenant,
+      currentTenant: tenant,
+      tenantId: tenant?.id || null,
+      loading,
+      isLoading: loading, // Alias for loading
+      error,
+      availableTenants,
+      setTenant,
+      refreshTenant,
+    }),
+    [availableTenants, error, loading, tenant],
+  );
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 }

@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Edit, Filter, Plus, Search, Shield, Trash2, Users } from "lucide-react";
+import {
+  Edit,
+  Filter,
+  Plus,
+  Search,
+  Shield,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { toast, useConfirmDialog } from "@dotmac/ui";
 
 import AssignRoleModal from "@/components/admin/AssignRoleModal";

@@ -27,7 +27,7 @@ export interface TeamNotificationRequest {
   action_label?: string;
   related_entity_type?: string;
   related_entity_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   auto_send?: boolean;
 }
 

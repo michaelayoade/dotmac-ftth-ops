@@ -113,6 +113,27 @@ const mockTickets: TicketSummary[] = [
   },
 ];
 
+const mockTicketMetrics: TicketStats = {
+  total: 3,
+  open: 1,
+  in_progress: 1,
+  waiting: 0,
+  resolved: 1,
+  closed: 0,
+  by_priority: {
+    low: 1,
+    normal: 1,
+    high: 1,
+    urgent: 0,
+  },
+  by_type: {
+    connectivity_issue: 1,
+    billing_issue: 1,
+    installation_request: 1,
+  },
+  sla_breached: 1,
+};
+
 // Create wrapper with QueryClient
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -585,8 +606,8 @@ describe("useTicketing", () => {
   });
 
   describe("useTicketStats", () => {
-    it("should fetch and compute ticket stats correctly", async () => {
-      (apiClient.get as jest.Mock).mockResolvedValue({ data: mockTickets });
+    it("should fetch metrics from the API", async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: mockTicketMetrics });
 
       const { result } = renderHook(() => useTicketStats(), {
         wrapper: createWrapper(),
@@ -595,30 +616,15 @@ describe("useTicketing", () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.stats).toEqual({
-        total: 3,
-        open: 1,
-        in_progress: 1,
-        waiting: 0,
-        resolved: 1,
-        closed: 0,
-        by_priority: {
-          low: 1,
-          normal: 1,
-          high: 1,
-          urgent: 0,
-        },
-        by_type: {
-          connectivity_issue: 1,
-          billing_issue: 1,
-          installation_request: 1,
-        },
-        sla_breached: 1,
+        ...mockTicketMetrics,
+        avg_resolution_time_minutes: undefined,
       });
       expect(result.current.error).toBeNull();
+      expect(apiClient.get).toHaveBeenCalledWith("/tickets/metrics");
     });
 
-    it("should handle empty tickets list", async () => {
-      (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
+    it("should handle missing fields by returning zeroed defaults", async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: {} });
 
       const { result } = renderHook(() => useTicketStats(), {
         wrapper: createWrapper(),
@@ -641,23 +647,8 @@ describe("useTicketing", () => {
         },
         by_type: {},
         sla_breached: 0,
+        avg_resolution_time_minutes: undefined,
       });
-    });
-
-    it("should handle tickets without ticket_type", async () => {
-      const ticketsWithoutType = mockTickets.map((t) => ({
-        ...t,
-        ticket_type: undefined,
-      }));
-      (apiClient.get as jest.Mock).mockResolvedValue({ data: ticketsWithoutType });
-
-      const { result } = renderHook(() => useTicketStats(), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => expect(result.current.loading).toBe(false));
-
-      expect(result.current.stats?.by_type).toEqual({});
     });
 
     it("should handle fetch errors", async () => {
@@ -673,34 +664,8 @@ describe("useTicketing", () => {
       expect(result.current.error).toContain(errorMessage);
     });
 
-    it("should count multiple tickets of same type correctly", async () => {
-      const ticketsWithDuplicateTypes = [
-        ...mockTickets,
-        {
-          ...mockTicketSummary,
-          id: "ticket_4",
-          ticket_type: "connectivity_issue" as const,
-        },
-        {
-          ...mockTicketSummary,
-          id: "ticket_5",
-          ticket_type: "connectivity_issue" as const,
-        },
-      ];
-
-      (apiClient.get as jest.Mock).mockResolvedValue({ data: ticketsWithDuplicateTypes });
-
-      const { result } = renderHook(() => useTicketStats(), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => expect(result.current.loading).toBe(false));
-
-      expect(result.current.stats?.by_type.connectivity_issue).toBe(3);
-    });
-
     it("should refetch stats when refetch is called", async () => {
-      (apiClient.get as jest.Mock).mockResolvedValue({ data: mockTickets });
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: mockTicketMetrics });
 
       const { result } = renderHook(() => useTicketStats(), {
         wrapper: createWrapper(),
@@ -708,8 +673,8 @@ describe("useTicketing", () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      const updatedTickets = [...mockTickets.slice(0, 2)]; // Remove one ticket
-      (apiClient.get as jest.Mock).mockResolvedValue({ data: updatedTickets });
+      const updatedMetrics = { ...mockTicketMetrics, total: 2, open: 0 };
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: updatedMetrics });
 
       await act(async () => {
         await result.current.refetch();

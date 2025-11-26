@@ -18,7 +18,7 @@ export interface TenantDetails {
   contact_email?: string;
   billing_email?: string;
   contact_phone?: string;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   subscription: {
     plan: string;
     status: string;
@@ -103,7 +103,7 @@ export async function getTenantStatistics(tenantId: string): Promise<TenantStati
  */
 export async function updateTenantSettings(
   tenantId: string,
-  settings: Record<string, any>,
+  settings: Record<string, unknown>,
 ): Promise<TenantDetails> {
   const response = await apiClient.patch<TenantDetails>(
     `/platform-admin/tenants/${tenantId}/settings`,

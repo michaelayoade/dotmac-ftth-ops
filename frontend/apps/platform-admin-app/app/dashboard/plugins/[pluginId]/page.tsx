@@ -7,18 +7,17 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
-  ArrowLeft,
-  Puzzle,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Clock,
-  Settings,
   Activity,
-  RefreshCw,
-  TestTube,
-  Shield,
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
   Info,
+  Puzzle,
+  RefreshCw,
+  Settings,
+  TestTube,
+  XCircle,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
@@ -35,7 +34,7 @@ interface PluginInstance {
   instance_name: string;
   status: PluginStatus;
   enabled: boolean;
-  config_schema: any;
+  config_schema: unknown;
   last_health_check?: string;
   created_at: string;
   updated_at: string;
@@ -43,8 +42,8 @@ interface PluginInstance {
 
 interface PluginConfiguration {
   plugin_instance_id: string;
-  configuration: Record<string, any>;
-  schema: any;
+  configuration: Record<string, unknown>;
+  schema: unknown;
   status: string;
   last_updated?: string;
 }
@@ -54,7 +53,7 @@ interface PluginHealthCheck {
   status: string;
   healthy: boolean;
   message?: string;
-  details?: any;
+  details?: unknown;
   checked_at: string;
 }
 
@@ -62,7 +61,7 @@ function PluginDetailsPageContent() {
   const params = useParams();
   const pluginId = params?.['pluginId'] as string;
   const { toast } = useToast();
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [_isTestingConnection, _setIsTestingConnection] = useState(false);
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl || "";
 
@@ -158,7 +157,7 @@ function PluginDetailsPageContent() {
   });
 
   const getStatusBadge = (status: PluginStatus) => {
-    const statusConfig: Record<PluginStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<PluginStatus, { icon: React.ElementType; color: string; label: string }> = {
       active: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       inactive: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Inactive" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
@@ -298,7 +297,7 @@ function PluginDetailsPageContent() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
-          {plugin.config_schema && <TabsTrigger value="schema">Schema</TabsTrigger>}
+          {!!plugin.config_schema && <TabsTrigger value="schema">Schema</TabsTrigger>}
         </TabsList>
 
         {/* Overview Tab */}
@@ -357,11 +356,11 @@ function PluginDetailsPageContent() {
                       {format(new Date(plugin.updated_at), "PPpp")}
                     </span>
                   </div>
-                  {plugin.last_health_check && (
+                  {!!plugin.last_health_check && (
                     <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
                       <span className="text-sm">Last Health Check</span>
                       <span className="font-mono text-xs">
-                        {format(new Date(plugin.last_health_check), "PPpp")}
+                        {format(new Date(plugin.last_health_check as string), "PPpp")}
                       </span>
                     </div>
                   )}
@@ -391,7 +390,7 @@ function PluginDetailsPageContent() {
         </TabsContent>
 
         {/* Schema Tab */}
-        {plugin.config_schema && (
+        {!!plugin.config_schema && (
           <TabsContent value="schema" className="space-y-4">
             <Card>
               <CardHeader>

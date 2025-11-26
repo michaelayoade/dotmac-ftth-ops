@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
-import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import { Separator } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -32,18 +31,18 @@ import {
   TableRow,
 } from "@dotmac/ui";
 import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  MoreHorizontal,
+  Pause,
+  Play,
   Plug,
   Plus,
-  Settings,
-  MoreHorizontal,
-  CheckCircle2,
-  AlertCircle,
   RefreshCw,
+  Settings,
   Trash2,
   Unlink,
-  Play,
-  Pause,
-  Loader2,
   Zap,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
@@ -68,9 +67,9 @@ export default function IntegrationsPage() {
 
   // Dialog states
   const [selectedPlugin, setSelectedPlugin] = useState<PluginConfig | null>(null);
-  const [selectedInstance, setSelectedInstance] = useState<PluginInstance | null>(null);
-  const [isConfigureOpen, setIsConfigureOpen] = useState(false);
+  const [_selectedInstance, setSelectedInstance] = useState<PluginInstance | null>(null);
   const [isConnectOpen, setIsConnectOpen] = useState(false);
+  const [_isConfigureOpen, setIsConfigureOpen] = useState(false);
   const [isWebhookOpen, setIsWebhookOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 

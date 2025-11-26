@@ -292,6 +292,12 @@ class WorkflowStatsResponse(BaseModel):
     success_rate: float
     average_duration_seconds: float
     total_compensations: int
+    active_workflows: int = Field(
+        0, description="Currently active workflows (pending|running|rolling_back)"
+    )
+    recent_failures: int = Field(
+        0, description="Failures observed in the recent lookback window (24h)"
+    )
 
     by_type: dict[str, int]
     by_status: dict[str, int]

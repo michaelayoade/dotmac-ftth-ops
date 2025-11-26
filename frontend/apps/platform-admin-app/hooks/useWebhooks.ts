@@ -174,9 +174,9 @@ const enrichDelivery = (
 export const webhooksKeys = {
   all: ["webhooks"] as const,
   subscriptions: () => [...webhooksKeys.all, "subscriptions"] as const,
-  subscription: (filters: any) => [...webhooksKeys.subscriptions(), filters] as const,
+  subscription: (filters: unknown) => [...webhooksKeys.subscriptions(), filters] as const,
   events: () => [...webhooksKeys.all, "events"] as const,
-  deliveries: (subscriptionId: string, filters: any) =>
+  deliveries: (subscriptionId: string, filters: unknown) =>
     [...webhooksKeys.all, "deliveries", subscriptionId, filters] as const,
 };
 
@@ -297,8 +297,14 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       };
 
       const response = await apiClient.post("/webhooks/subscriptions", payload);
-      const responseData = parseJsonData<any>(response.data, {});
-      return enrichSubscription(responseData);
+      const responseData = parseJsonData<unknown>(response.data, {});
+      return enrichSubscription(responseData as Record<string, unknown> & {
+        custom_metadata?: Record<string, unknown>;
+        description?: string;
+        success_count: number;
+        failure_count: number;
+        last_triggered_at: string | null;
+      });
     },
     onSuccess: (newWebhook) => {
       // Optimistically add to cache
@@ -325,8 +331,14 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       data: WebhookSubscriptionUpdate;
     }): Promise<WebhookSubscription> => {
       const response = await apiClient.patch(`/webhooks/subscriptions/${id}`, data);
-      const responseData = parseJsonData<any>(response.data, {});
-      return enrichSubscription(responseData);
+      const responseData = parseJsonData<unknown>(response.data, {});
+      return enrichSubscription(responseData as Record<string, unknown> & {
+        custom_metadata?: Record<string, unknown>;
+        description?: string;
+        success_count: number;
+        failure_count: number;
+        last_triggered_at: string | null;
+      });
     },
     onSuccess: (updatedWebhook) => {
       // Optimistically update cache

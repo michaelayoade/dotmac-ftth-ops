@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, Filter, Download, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  AlertCircle,
+  Download,
+  Filter,
+  Plus,
+  RefreshCw,
+  Search,
+} from "lucide-react";
 import { CustomersList } from "@/components/customers/CustomersList";
 import { CustomersMetrics } from "@/components/customers/CustomersMetrics";
 import { CreateCustomerModal } from "@/components/customers/CreateCustomerModal";
@@ -37,9 +44,7 @@ export default function TenantCustomersView() {
   // Fetch customers using GraphQL
   const {
     customers: graphqlCustomers,
-    total: totalCustomers,
     isLoading: customersLoading,
-    error: customersError,
     refetch: refetchCustomers,
   } = useCustomerListGraphQL({
     limit: 100,

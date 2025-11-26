@@ -642,6 +642,23 @@ describe("useVOLTHA Hooks", () => {
 
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: volthaKeys.alarms() });
     });
+
+    it("surfaces feature-flag/driver 501 details gracefully", async () => {
+      apiClient.post.mockRejectedValue({
+        response: { status: 501, data: { detail: "Alarm acknowledgement is disabled by feature flag" } },
+      });
+
+      const { result } = renderHook(() => useAcknowledgeAlarm(), {
+        wrapper: createWrapper(queryClient),
+      });
+
+      await act(async () => {
+        result.current.mutate("alarm-1");
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(result.current.error?.message).toContain("feature flag");
+    });
   });
 
   describe("useClearAlarm", () => {
@@ -681,6 +698,23 @@ describe("useVOLTHA Hooks", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: volthaKeys.alarms() });
+    });
+
+    it("surfaces feature-flag/driver 501 details gracefully", async () => {
+      apiClient.post.mockRejectedValue({
+        response: { status: 501, data: { detail: "Alarm clear is disabled by feature flag" } },
+      });
+
+      const { result } = renderHook(() => useClearAlarm(), {
+        wrapper: createWrapper(queryClient),
+      });
+
+      await act(async () => {
+        result.current.mutate("alarm-1");
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true));
+      expect(result.current.error?.message).toContain("feature flag");
     });
   });
 });

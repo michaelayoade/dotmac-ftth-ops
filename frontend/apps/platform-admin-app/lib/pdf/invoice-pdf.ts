@@ -7,6 +7,16 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { type Invoice } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils";
+import type { jsPDF as JsPDFType } from "jspdf";
+
+type JsPdfWithAutoTable = JsPDFType & {
+  lastAutoTable?: {
+    finalY: number;
+  };
+  internal: JsPDFType["internal"] & {
+    getNumberOfPages(): number;
+  };
+};
 
 interface CompanyInfo {
   name: string;
@@ -29,14 +39,14 @@ export interface InvoicePDFOptions {
 }
 
 export class InvoicePDFGenerator {
-  private doc: jsPDF;
+  private doc: JsPdfWithAutoTable;
   private pageWidth: number;
   private pageHeight: number;
   private margin: number = 20;
   private currentY: number = 20;
 
   constructor() {
-    this.doc = new jsPDF();
+    this.doc = new jsPDF() as JsPdfWithAutoTable;
     this.pageWidth = this.doc.internal.pageSize.getWidth();
     this.pageHeight = this.doc.internal.pageSize.getHeight();
   }
@@ -187,7 +197,6 @@ export class InvoicePDFGenerator {
     },
   ): void {
     const leftX = this.margin;
-    const rightX = this.pageWidth / 2 + 10;
 
     // Bill To section
     this.doc.setFontSize(12);
@@ -295,7 +304,8 @@ export class InvoicePDFGenerator {
       },
     });
 
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 10;
+    const finalY = this.doc.lastAutoTable?.finalY ?? this.currentY;
+    this.currentY = finalY + 10;
   }
 
   /**
@@ -438,7 +448,7 @@ export class InvoicePDFGenerator {
    * Add footer with page numbers
    */
   private addFooter(): void {
-    const pageCount = (this.doc as any).internal.getNumberOfPages();
+    const pageCount = this.doc.internal.getNumberOfPages();
 
     for (let i = 1; i <= pageCount; i++) {
       this.doc.setPage(i);

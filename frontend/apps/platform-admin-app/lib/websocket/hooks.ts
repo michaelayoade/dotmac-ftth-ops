@@ -28,6 +28,7 @@ export function useWebSocket(authToken?: string) {
     const token =
       authToken ||
       (typeof window !== "undefined"
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
         ? localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
         : null);
 
@@ -75,10 +76,10 @@ export function useWebSocket(authToken?: string) {
 /**
  * Hook to subscribe to specific WebSocket event
  */
-export function useWebSocketEvent<T = any>(
+export function useWebSocketEvent<T = unknown>(
   event: WebSocketEventType | string,
   handler: (message: WebSocketMessage<T>) => void,
-  deps: any[] = [],
+  deps: unknown[] = [],
 ) {
   const wsClient = useRef(getWebSocketClient());
   const handlerRef = useRef(handler);
@@ -107,10 +108,10 @@ export function useWebSocketEvent<T = any>(
 /**
  * Hook to subscribe to multiple WebSocket events
  */
-export function useWebSocketEvents<T = any>(
+export function useWebSocketEvents<T = unknown>(
   events: (WebSocketEventType | string)[],
   handler: (message: WebSocketMessage<T>) => void,
-  deps: any[] = [],
+  deps: unknown[] = [],
 ) {
   const wsClient = useRef(getWebSocketClient());
   const handlerRef = useRef(handler);
@@ -142,8 +143,8 @@ export function useWebSocketEvents<T = any>(
  * Hook for network monitoring events
  */
 export function useNetworkMonitoring() {
-  const [deviceUpdates, setDeviceUpdates] = useState<any[]>([]);
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const [deviceUpdates, setDeviceUpdates] = useState<unknown[]>([]);
+  const [alerts, setAlerts] = useState<unknown[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useWebSocketEvent(WebSocketEventType.DEVICE_STATUS_CHANGED, (message) => {
@@ -170,7 +171,7 @@ export function useNetworkMonitoring() {
   }, []);
 
   const dismissAlert = useCallback((alertId: string) => {
-    setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
+    setAlerts((prev) => prev.filter((alert) => (alert as { id: string }).id !== alertId));
   }, []);
 
   return {
@@ -187,25 +188,27 @@ export function useNetworkMonitoring() {
  * Hook for diagnostic events
  */
 export function useDiagnosticEvents(subscriberId?: string) {
-  const [runningDiagnostics, setRunningDiagnostics] = useState<Map<string, any>>(new Map());
-  const [completedDiagnostics, setCompletedDiagnostics] = useState<any[]>([]);
-  const [failedDiagnostics, setFailedDiagnostics] = useState<any[]>([]);
+  const [runningDiagnostics, setRunningDiagnostics] = useState<Map<string, unknown>>(new Map());
+  const [completedDiagnostics, setCompletedDiagnostics] = useState<unknown[]>([]);
+  const [failedDiagnostics, setFailedDiagnostics] = useState<unknown[]>([]);
 
   useWebSocketEvent(WebSocketEventType.DIAGNOSTIC_STARTED, (message) => {
-    if (!subscriberId || message.data.subscriber_id === subscriberId) {
+    const data = message.data as { subscriber_id?: string; diagnostic_id: string };
+    if (!subscriberId || data.subscriber_id === subscriberId) {
       setRunningDiagnostics((prev) => {
         const next = new Map(prev);
-        next.set(message.data.diagnostic_id, message.data);
+        next.set(data.diagnostic_id, message.data);
         return next;
       });
     }
   });
 
   useWebSocketEvent(WebSocketEventType.DIAGNOSTIC_COMPLETED, (message) => {
-    if (!subscriberId || message.data.subscriber_id === subscriberId) {
+    const data = message.data as { subscriber_id?: string; diagnostic_id: string };
+    if (!subscriberId || data.subscriber_id === subscriberId) {
       setRunningDiagnostics((prev) => {
         const next = new Map(prev);
-        next.delete(message.data.diagnostic_id);
+        next.delete(data.diagnostic_id);
         return next;
       });
       setCompletedDiagnostics((prev) => [message.data, ...prev].slice(0, 20));
@@ -213,10 +216,11 @@ export function useDiagnosticEvents(subscriberId?: string) {
   });
 
   useWebSocketEvent(WebSocketEventType.DIAGNOSTIC_FAILED, (message) => {
-    if (!subscriberId || message.data.subscriber_id === subscriberId) {
+    const data = message.data as { subscriber_id?: string; diagnostic_id: string };
+    if (!subscriberId || data.subscriber_id === subscriberId) {
       setRunningDiagnostics((prev) => {
         const next = new Map(prev);
-        next.delete(message.data.diagnostic_id);
+        next.delete(data.diagnostic_id);
         return next;
       });
       setFailedDiagnostics((prev) => [message.data, ...prev].slice(0, 20));
@@ -234,7 +238,7 @@ export function useDiagnosticEvents(subscriberId?: string) {
  * Hook for system health events
  */
 export function useSystemHealth() {
-  const [healthStatus, setHealthStatus] = useState<any>(null);
+  const [healthStatus, setHealthStatus] = useState<unknown>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useWebSocketEvent(WebSocketEventType.SYSTEM_HEALTH_UPDATE, (message) => {

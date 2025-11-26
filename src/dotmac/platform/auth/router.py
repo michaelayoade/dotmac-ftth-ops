@@ -12,7 +12,17 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 
 import structlog
-from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
@@ -41,6 +51,13 @@ from dotmac.platform.core.rate_limiting import rate_limit
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.integrations import IntegrationStatus, get_integration_async
 from dotmac.platform.settings import settings
+from dotmac.platform.communications.email_service import EmailMessage, get_email_service
+from dotmac.platform.tenant.service import (
+    TenantAlreadyExistsError,
+    TenantNotFoundError,
+    TenantService,
+)
+from dotmac.platform.tenant.schemas import TenantCreate
 from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
@@ -49,6 +66,13 @@ from ..webhooks.events import get_event_bus
 from ..webhooks.models import WebhookEvent
 
 logger = structlog.get_logger(__name__)
+
+# Create router early so it is available for all route decorators
+auth_router = APIRouter(
+    prefix="/auth",
+)
+# Alias used by external imports/tests that expect `router`
+router = auth_router
 
 
 def _tenant_scope_kwargs(
@@ -149,12 +173,192 @@ async def get_async_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cov
         yield session
 
 
-# Create router
-auth_router = APIRouter(
-    prefix="/auth",
-)
-# Alias used by external imports/tests that expect `router`
-router = auth_router
+def _get_better_auth_webhook_secret() -> str | None:
+    """Shared secret for Better Auth webhooks (optional)."""
+    return os.getenv("BETTER_AUTH_WEBHOOK_SECRET")
+
+
+async def _authenticate_better_auth_webhook(
+    request: Request,
+    token_header: str | None = Header(default=None, alias="X-Better-Auth-Webhook-Secret"),
+) -> None:
+    """
+    Validate shared secret for Better Auth webhook requests when configured.
+
+    If BETTER_AUTH_WEBHOOK_SECRET is not set, this is a no-op.
+    """
+    secret = _get_better_auth_webhook_secret()
+    if not secret:
+        return
+
+    candidate = token_header.strip() if isinstance(token_header, str) else None
+    if candidate is None:
+        candidate = request.query_params.get("token")
+
+    if not candidate or not secrets.compare_digest(candidate, secret):
+        logger.warning(
+            "better_auth.webhook.auth_failed",
+            client=request.client.host if request.client else None,
+            path=str(request.url),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Better Auth webhook token",
+        )
+
+
+# ========================================
+# Better Auth webhooks (reset email, org events)
+# ========================================
+
+
+@auth_router.post("/better-auth/reset-email")
+async def better_auth_reset_email(
+    payload: "BetterAuthResetEmailRequest",
+    _: None = Depends(_authenticate_better_auth_webhook),
+) -> dict[str, Any]:
+    """
+    Internal webhook used by Better Auth to dispatch password reset emails.
+
+    Better Auth sends:
+    - email: user email address
+    - url: Better Auth password reset URL
+    """
+    app_name = getattr(settings, "app_name", "DotMac Platform")
+
+    subject = f"Reset Your Password - {app_name}"
+    text_body = f"""
+Hi,
+
+We received a request to reset the password for your {app_name} account ({payload.email}).
+
+Click the link below to reset your password:
+{payload.url}
+
+If you didn't request this, you can safely ignore this email.
+
+Best regards,
+The {app_name} Team
+""".strip()
+    html_body = text_body.replace("\n", "<br>")
+
+    message = EmailMessage(
+        to=[payload.email],
+        subject=subject,
+        text_body=text_body,
+        html_body=html_body,
+    )
+
+    try:
+        service = get_email_service()
+        response = await service.send_email(message)
+        logger.info(
+            "better_auth.reset_email.sent",
+            email=payload.email,
+            message_id=response.id,
+            status=response.status,
+        )
+        return {"status": response.status, "message_id": response.id}
+    except Exception as exc:  # noqa: BLE001
+        logger.error(
+            "better_auth.reset_email.failed",
+            email=payload.email,
+            error=str(exc),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send reset email",
+        ) from exc
+
+
+@auth_router.post("/better-auth/org-events")
+async def better_auth_org_events(
+    payload: "BetterAuthOrgEvent",
+    session: AsyncSession = Depends(get_auth_session),
+    _: None = Depends(_authenticate_better_auth_webhook),
+) -> dict[str, Any]:
+    """
+    Internal webhook used by Better Auth organization plugin.
+
+    Synchronizes Better Auth organizations with Tenant records:
+    - organization.created -> create tenant (if missing)
+    - organization.deleted -> soft-delete tenant (if present)
+    """
+    tenant_service = TenantService(session)
+    slug_source = payload.organization.slug or payload.organization.id
+    slug = slug_source.lower()
+
+    if payload.event == "organization.created":
+        tenant_data = TenantCreate(
+            name=payload.organization.name,
+            slug=slug,
+            domain=None,
+            email=None,
+            phone=None,
+        )
+
+        try:
+            tenant = await tenant_service.create_tenant(tenant_data, created_by=None)
+            logger.info(
+                "better_auth.org.created",
+                org_id=payload.organization.id,
+                tenant_id=str(tenant.id),
+                slug=tenant.slug,
+            )
+            return {"status": "created", "tenant_id": str(tenant.id), "slug": tenant.slug}
+        except TenantAlreadyExistsError:
+            logger.info(
+                "better_auth.org.created.tenant_exists",
+                org_id=payload.organization.id,
+                slug=slug,
+            )
+            return {"status": "exists", "slug": slug}
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                "better_auth.org.created.failed",
+                org_id=payload.organization.id,
+                slug=slug,
+                error=str(exc),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to sync organization.created event",
+            ) from exc
+
+    if payload.event == "organization.deleted":
+        try:
+            tenant = await tenant_service.get_tenant_by_slug(slug, include_deleted=False)
+        except TenantNotFoundError:
+            logger.info(
+                "better_auth.org.deleted.no_tenant",
+                org_id=payload.organization.id,
+                slug=slug,
+            )
+            return {"status": "ignored", "reason": "tenant_not_found", "slug": slug}
+
+        try:
+            await tenant_service.delete_tenant(str(tenant.id), permanent=False, deleted_by=None)
+            logger.info(
+                "better_auth.org.deleted",
+                org_id=payload.organization.id,
+                tenant_id=str(tenant.id),
+                slug=tenant.slug,
+            )
+            return {"status": "deleted", "tenant_id": str(tenant.id), "slug": tenant.slug}
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                "better_auth.org.deleted.failed",
+                org_id=payload.organization.id,
+                tenant_id=str(tenant.id),
+                error=str(exc),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to sync organization.deleted event",
+            ) from exc
+
+    # Should not be reachable due to model validation, but kept for safety
+    return {"status": "ignored", "reason": "unknown_event"}
 
 
 async def _auth_exception_handler(request: Request, exc: AuthError) -> JSONResponse:
@@ -277,6 +481,36 @@ class PasswordResetConfirm(BaseModel):
 
     token: str = Field(..., description="Reset token")
     new_password: str = Field(..., min_length=8, description="New password")
+
+
+class BetterAuthResetEmailRequest(BaseModel):
+    """Webhook payload from Better Auth for password reset emails."""
+
+    model_config = ConfigDict()
+
+    email: EmailStr = Field(..., description="User email address")
+    url: str = Field(..., description="Better Auth password reset URL")
+
+
+class BetterAuthOrganization(BaseModel):
+    """Organization payload from Better Auth organization plugin."""
+
+    model_config = ConfigDict()
+
+    id: str = Field(..., description="Better Auth organization ID")
+    name: str = Field(..., description="Organization name")
+    slug: str | None = Field(None, description="Optional organization slug")
+
+
+class BetterAuthOrgEvent(BaseModel):
+    """Webhook payload from Better Auth for organization lifecycle events."""
+
+    model_config = ConfigDict()
+
+    event: Literal["organization.created", "organization.deleted"] = Field(
+        ..., description="Organization event type",
+    )
+    organization: BetterAuthOrganization
 
 
 async def _authenticate_and_issue_tokens(

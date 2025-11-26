@@ -5,6 +5,6 @@ interface TestWebhookModalProps {
   onClose: () => void;
 }
 
-export function TestWebhookModal({ webhook, onClose }: TestWebhookModalProps) {
+export function TestWebhookModal({ webhook: _webhook, onClose: _onClose }: TestWebhookModalProps) {
   return <div>TestWebhookModal Placeholder</div>;
 }

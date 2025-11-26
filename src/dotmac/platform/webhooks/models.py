@@ -208,14 +208,13 @@ class WebhookSubscriptionCreate(BaseModel):  # BaseModel resolves to Any in isol
     @field_validator("events")
     @classmethod
     def validate_events(cls, v: list[str]) -> list[str]:
-        """Validate event types."""
-        valid_events = {e.value for e in WebhookEvent}
-        invalid_events = [evt for evt in v if evt not in valid_events]
-        if invalid_events:
-            raise ValueError(
-                f"Invalid event types: {invalid_events}. Valid events: {sorted(valid_events)}"
-            )
-        return v
+        """Validate event types.
+
+        Frontend may use custom event names (e.g. customer.created); accept any non-empty list.
+        """
+        if not v:
+            raise ValueError("At least one event type is required")
+        return [evt.strip() for evt in v if evt]
 
 
 class WebhookSubscriptionUpdate(BaseModel):  # BaseModel resolves to Any in isolation
@@ -239,14 +238,10 @@ class WebhookSubscriptionUpdate(BaseModel):  # BaseModel resolves to Any in isol
     @field_validator("events")
     @classmethod
     def validate_events(cls, v: list[str] | None) -> list[str] | None:
-        """Validate event types."""
+        """Validate event types (allow arbitrary names for compatibility)."""
         if v is None:
             return v
-        valid_events = {e.value for e in WebhookEvent}
-        invalid_events = [evt for evt in v if evt not in valid_events]
-        if invalid_events:
-            raise ValueError(f"Invalid event types: {invalid_events}")
-        return v
+        return [evt.strip() for evt in v if evt]
 
 
 class WebhookSubscriptionResponse(BaseModel):  # BaseModel resolves to Any in isolation

@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import {
-  AlertCircle,
   CheckCircle2,
   Clock,
   DollarSign,
@@ -26,7 +25,7 @@ import {
   type QuickFilter,
   type Row,
 } from "@dotmac/ui";
-import { UniversalChart } from "@dotmac/primitives";
+import { UniversalChart, type UniversalChartProps } from "@dotmac/primitives";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useRBAC } from "@/contexts/RBACContext";
 import {
@@ -300,6 +299,7 @@ export default function DunningDashboardPage() {
         label: "Cancel Executions",
         icon: CancelIcon,
         action: async (selected) => {
+    // eslint-disable-next-line no-alert
           const reason = prompt("Enter cancellation reason:");
           if (!reason) return;
 
@@ -542,7 +542,7 @@ export default function DunningDashboardPage() {
                   categories: recoveryChartCategories,
                   height: 300,
                   yAxisFormatter: (value: number) => `$${value.toFixed(0)}`,
-                } as any)}
+                } satisfies UniversalChartProps)}
               />
             )}
           </div>
@@ -573,7 +573,7 @@ export default function DunningDashboardPage() {
             <CardDescription>Manage automated collection workflows</CardDescription>
           </CardHeader>
           <CardContent>
-            <EnhancedDataTable
+            <EnhancedDataTable<DunningCampaign, unknown>
               data={campaigns}
               columns={campaignColumns}
               bulkActions={campaignBulkActions}
@@ -581,7 +581,11 @@ export default function DunningDashboardPage() {
               searchConfig={campaignSearchConfig}
               isLoading={isLoading}
               emptyMessage="No campaigns found"
-              getRowId={(campaign: any) => campaign.id}
+              getRowId={(campaign: unknown) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const c = campaign as any;
+                return c.id;
+              }}
             />
           </CardContent>
         </Card>
@@ -592,7 +596,7 @@ export default function DunningDashboardPage() {
             <CardDescription>Track collection attempts for past-due accounts</CardDescription>
           </CardHeader>
           <CardContent>
-            <EnhancedDataTable
+            <EnhancedDataTable<DunningExecution, unknown>
               data={executions}
               columns={executionColumns}
               bulkActions={executionBulkActions}
@@ -600,7 +604,11 @@ export default function DunningDashboardPage() {
               searchConfig={executionSearchConfig}
               isLoading={isLoading}
               emptyMessage="No executions found"
-              getRowId={(execution: any) => execution.id}
+              getRowId={(execution: unknown) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const e = execution as any;
+                return e.id;
+              }}
             />
           </CardContent>
         </Card>

@@ -6,18 +6,18 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
-  ArrowLeft,
-  Plug,
-  CheckCircle,
-  XCircle,
+  Activity,
   AlertCircle,
+  ArrowLeft,
+  CheckCircle,
   Clock,
-  Settings,
+  Info,
   Key,
   Package,
-  Info,
+  Plug,
   RefreshCw,
-  Activity,
+  Settings,
+  XCircle,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -39,13 +39,13 @@ interface Integration {
   settings_count: number;
   has_secrets: boolean;
   required_packages: string[];
-  metadata?: any;
+  metadata?: unknown;
 }
 
 function IntegrationDetailsPageContent() {
   const params = useParams();
   const integrationName = decodeURIComponent(params?.['integrationName'] as string);
-  const { toast } = useToast();
+  const { toast: _toast } = useToast();
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl;
 
@@ -69,7 +69,7 @@ function IntegrationDetailsPageContent() {
   });
 
   const getStatusBadge = (status: IntegrationStatus) => {
-    const statusConfig: Record<IntegrationStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<IntegrationStatus, { icon: React.ElementType; color: string; label: string }> = {
       healthy: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Healthy" },
       degraded: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Degraded" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
@@ -139,7 +139,7 @@ function IntegrationDetailsPageContent() {
       </div>
 
       {/* Status Message */}
-      {integration.message && (
+      {!!integration.message && (
         <Card className={
           integration.status === "healthy"
             ? "border-green-200 bg-green-50"
@@ -226,7 +226,7 @@ function IntegrationDetailsPageContent() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="packages">Required Packages</TabsTrigger>
-          {integration.metadata && <TabsTrigger value="metadata">Metadata</TabsTrigger>}
+          {!!integration.metadata && <TabsTrigger value="metadata">Metadata</TabsTrigger>}
         </TabsList>
 
         {/* Overview Tab */}
@@ -267,13 +267,13 @@ function IntegrationDetailsPageContent() {
                 </div>
               </div>
 
-              {integration.last_check && (
+              {!!integration.last_check && (
                 <div className="pt-4 border-t">
                   <div className="flex items-center gap-2 mb-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Last Health Check</p>
                   </div>
-                  <p className="font-medium">{format(new Date(integration.last_check), "PPpp")}</p>
+                  <p className="font-medium">{format(new Date(integration.last_check as string), "PPpp")}</p>
                 </div>
               )}
 
@@ -333,7 +333,7 @@ function IntegrationDetailsPageContent() {
         </TabsContent>
 
         {/* Metadata Tab */}
-        {integration.metadata && (
+        {!!integration.metadata && (
           <TabsContent value="metadata" className="space-y-4">
             <Card>
               <CardHeader>

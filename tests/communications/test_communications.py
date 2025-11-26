@@ -423,6 +423,7 @@ class TestTaskService:
         assert task_id == "convenience-123"
         mock_task.delay.assert_called_once()
 
+    @pytest.mark.integration  # Requires communication_bulk_jobs table
     @patch("dotmac.platform.communications.task_service.send_bulk_email_task")
     def test_queue_bulk_emails_convenience(self, mock_task):
         """Test queue bulk emails convenience function."""

@@ -23,8 +23,8 @@ export interface ImportJob {
   started_at: string | null;
   completed_at: string | null;
   initiated_by: string | null;
-  config: Record<string, any>;
-  summary: Record<string, any>;
+  config: Record<string, unknown>;
+  summary: Record<string, unknown>;
   error_message: string | null;
   celery_task_id: string | null;
   created_at: string;
@@ -38,7 +38,7 @@ export interface ImportFailure {
   row_number: number;
   error_type: string;
   error_message: string;
-  row_data: Record<string, any>;
+  row_data: Record<string, unknown>;
   field_errors: Record<string, string>;
 }
 

@@ -78,6 +78,26 @@ class TicketMessageCreate(BaseModel):  # BaseModel resolves to Any in isolation
     )
 
 
+class TicketMessageResponse(BaseModel):
+    """Serialized ticket message for list endpoints."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    ticket_id: UUID
+    sender_type: TicketActorType | None = None
+    sender_user_id: UUID | None = None
+    author_name: str | None = None
+    author_email: str | None = None
+    is_staff: bool | None = None
+    body: str | None = None
+    message: str | None = None  # fallback for legacy field name
+    attachments: list[dict[str, Any]] = Field(default_factory=lambda: [])
+    is_internal: bool | None = None
+    created_at: datetime
+    updated_at: datetime | None = None
+
+
 class TicketUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Partial update payload for ticket metadata."""
 
@@ -182,12 +202,44 @@ class AgentPerformanceMetrics(BaseModel):
     )
 
 
+class TicketCountStats(BaseModel):
+    """Ticket counts by status."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    total_tickets: int
+    open_tickets: int
+    in_progress_tickets: int
+    waiting_tickets: int
+    resolved_tickets: int
+    closed_tickets: int
+
+
+class TicketStats(BaseModel):
+    """Aggregated ticket statistics for dashboards."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    total: int
+    open: int
+    in_progress: int
+    waiting: int
+    resolved: int
+    closed: int
+    sla_breached: int
+    by_priority: dict[str, int] = Field(default_factory=dict)
+    by_type: dict[str, int] = Field(default_factory=dict)
+
+
 __all__ = [
     "AgentPerformanceMetrics",
     "TicketCreate",
     "TicketMessageCreate",
+    "TicketMessageResponse",
     "TicketUpdate",
     "TicketSummary",
     "TicketDetail",
     "TicketMessageRead",
+    "TicketCountStats",
+    "TicketStats",
 ]

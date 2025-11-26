@@ -6,7 +6,6 @@ import {
   useAlertEvents,
   useTicketEvents,
   useSubscriberEvents,
-  useRADIUSSessionEvents,
 } from "../hooks/useRealtime";
 import {
   ConnectionStatus,
@@ -14,7 +13,6 @@ import {
   type AlertEvent,
   type TicketEvent,
   type SubscriberEvent,
-  type RADIUSSessionEvent,
 } from "../types/realtime";
 
 interface RealtimeContextValue {
@@ -23,8 +21,8 @@ interface RealtimeContextValue {
   alerts: AlertEvent[];
   tickets: TicketEvent[];
   subscribers: SubscriberEvent[];
-  sessions: RADIUSSessionEvent[];
-  
+  sessions: unknown[];
+
   // Status for each connection
   statuses: {
     onu: ConnectionStatus;
@@ -65,7 +63,6 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const [alerts, setAlerts] = useState<AlertEvent[]>([]);
   const [tickets, setTickets] = useState<TicketEvent[]>([]);
   const [subscribers, setSubscribers] = useState<SubscriberEvent[]>([]);
-  const [sessions, setSessions] = useState<RADIUSSessionEvent[]>([]);
 
   // Create SSE connections (these will be created once per provider instance)
   const onuStatus = useONUStatusEvents((event) => {
@@ -84,16 +81,11 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     setSubscribers((prev) => [...prev.slice(-99), event]);
   });
 
-  const sessionStatus = useRADIUSSessionEvents((event) => {
-    setSessions((prev) => [...prev.slice(-99), event]);
-  });
-
   const clearEvents = useCallback(() => {
     setOnuEvents([]);
     setAlerts([]);
     setTickets([]);
     setSubscribers([]);
-    setSessions([]);
   }, []);
 
   const statuses = {
@@ -101,7 +93,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     alerts: alertStatus.status,
     tickets: ticketStatus.status,
     subscribers: subscriberStatus.status,
-    sessions: sessionStatus.status,
+    sessions: ConnectionStatus.DISCONNECTED,
   };
 
   // Calculate health metrics
@@ -124,7 +116,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     alerts,
     tickets,
     subscribers,
-    sessions,
+    sessions: [],
     statuses,
     clearEvents,
     overallStatus,

@@ -37,18 +37,20 @@ async function fetchCreditNotes(limit: number, buildUrl: BuildApiUrl): Promise<C
   const payload = await response.json();
   const notes = Array.isArray(payload?.credit_notes) ? payload.credit_notes : [];
 
-  return notes.map((note: any) => {
-    const id: string = note?.credit_note_id ?? "";
+  return notes.map((note: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const n = note as any;
+    const id: string = n?.credit_note_id ?? "";
     return {
       id,
-      number: note?.credit_note_number ?? id ?? "",
-      customerId: note?.customer_id ?? null,
-      invoiceId: note?.invoice_id ?? null,
-      issuedAt: note?.issue_date ?? null,
-      currency: note?.currency ?? "USD",
-      totalAmountMinor: Number(note?.total_amount ?? 0),
-      remainingAmountMinor: Number(note?.remaining_credit_amount ?? 0),
-      status: (note?.status ?? "draft").toString(),
+      number: n?.credit_note_number ?? id ?? "",
+      customerId: n?.customer_id ?? null,
+      invoiceId: n?.invoice_id ?? null,
+      issuedAt: n?.issue_date ?? null,
+      currency: n?.currency ?? "USD",
+      totalAmountMinor: Number(n?.total_amount ?? 0),
+      remainingAmountMinor: Number(n?.remaining_credit_amount ?? 0),
+      status: (n?.status ?? "draft").toString(),
       downloadUrl: id ? `/api/v1/billing/credit-notes/${id}/download` : "#",
     };
   });

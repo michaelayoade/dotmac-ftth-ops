@@ -60,7 +60,8 @@ export function useNetBoxHealth() {
 
 interface UseIPAddressesParams {
   tenant?: string;
-  vrf_id?: number;
+  vrf?: string | number;
+  vrf_id?: number; // Backward compatibility
   limit?: number;
   offset?: number;
 }
@@ -71,7 +72,8 @@ export function useIPAddresses(params: UseIPAddressesParams = {}) {
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params.tenant) searchParams.append("tenant", params.tenant);
-      if (params.vrf_id) searchParams.append("vrf_id", params.vrf_id.toString());
+      const vrf = params.vrf ?? params.vrf_id;
+      if (vrf !== undefined) searchParams.append("vrf", vrf.toString());
       if (params.limit) searchParams.append("limit", params.limit.toString());
       if (params.offset) searchParams.append("offset", params.offset.toString());
 
@@ -182,7 +184,8 @@ export function useDeleteIPAddress() {
 interface UsePrefixesParams {
   tenant?: string;
   site?: string;
-  vrf_id?: number;
+  vrf?: string | number;
+  vrf_id?: number; // Backward compatibility
   limit?: number;
   offset?: number;
 }
@@ -194,7 +197,8 @@ export function usePrefixes(params: UsePrefixesParams = {}) {
       const searchParams = new URLSearchParams();
       if (params.tenant) searchParams.append("tenant", params.tenant);
       if (params.site) searchParams.append("site", params.site);
-      if (params.vrf_id) searchParams.append("vrf_id", params.vrf_id.toString());
+      const vrf = params.vrf ?? params.vrf_id;
+      if (vrf !== undefined) searchParams.append("vrf", vrf.toString());
       if (params.limit) searchParams.append("limit", params.limit.toString());
       if (params.offset) searchParams.append("offset", params.offset.toString());
 

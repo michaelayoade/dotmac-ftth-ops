@@ -4,7 +4,14 @@ import { useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
-import { Shield, Clock, ChevronLeft, ChevronRight, ExternalLink, AlertCircle } from "lucide-react";
+import {
+  Shield,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { AuditLogFilters, type AuditFilters } from "./AuditLogFilters";
@@ -164,7 +171,7 @@ export function AuditLogViewer() {
         <ScrollArea className="h-[600px] pr-4">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
               Loading audit log...
             </div>
           ) : activities.length === 0 ? (

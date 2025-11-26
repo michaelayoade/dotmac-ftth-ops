@@ -301,7 +301,7 @@ async def better_auth_health(
     await platform_audit.log_action(
         user=admin,
         action="better_auth_health_check",
-        metadata={
+        details={
             "status": status,
             "database_connected": db_ok,
             "tables_present": tables_present,

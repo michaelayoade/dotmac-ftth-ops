@@ -4,7 +4,7 @@
  * Utilities for portal type detection and access control
  */
 
-import { detectPortalFromRoute, type PortalDesignType as PortalType } from "@dotmac/ui";
+import { type PortalDesignType as PortalType } from "@dotmac/ui";
 
 /**
  * Get the current portal type based on the current route

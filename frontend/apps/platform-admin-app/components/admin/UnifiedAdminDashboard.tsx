@@ -5,15 +5,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotm
 import { Badge } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import {
-  AlertCircle,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  DollarSign,
   Activity,
-  Server,
+  AlertCircle,
   CreditCard,
+  DollarSign,
+  Server,
+  TrendingDown,
+  TrendingUp,
   UserCheck,
+  Users,
 } from "lucide-react";
 
 export function UnifiedAdminDashboard() {
@@ -186,17 +186,21 @@ export function UnifiedAdminDashboard() {
             {paymentMetrics?.topPaymentMethods && paymentMetrics.topPaymentMethods.length > 0 && (
               <div className="space-y-2 pt-2 border-t">
                 <h4 className="text-sm font-medium">Top Payment Methods</h4>
-                {paymentMetrics.topPaymentMethods.slice(0, 3).map((method: any) => (
-                  <div key={method.method} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{method.method}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{method.count}</span>
-                      <span className="text-muted-foreground">
-                        (${method.totalAmount.toLocaleString()})
-                      </span>
+                {paymentMetrics.topPaymentMethods.slice(0, 3).map((method: unknown) => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const m = method as any;
+                  return (
+                    <div key={m.method} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{m.method}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{m.count}</span>
+                        <span className="text-muted-foreground">
+                          (${m.totalAmount.toLocaleString()})
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

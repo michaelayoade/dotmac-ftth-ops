@@ -19,7 +19,7 @@ import { logger } from "@/lib/logger";
 
 export type AlarmSeverity = "critical" | "major" | "minor" | "warning" | "info";
 export type AlarmStatus = "active" | "acknowledged" | "cleared" | "resolved";
-export type AlarmSource = "genieacs" | "voltha" | "netbox" | "manual" | "api";
+export type AlarmSource = "genieacs" | "netbox" | "manual" | "api";
 
 export interface Alarm {
   id: string;
@@ -56,8 +56,8 @@ export interface Alarm {
   assigned_to?: string;
   ticket_id?: string;
 
-  tags: Record<string, any>;
-  metadata: Record<string, any>;
+  tags: Record<string, unknown>;
+  metadata: Record<string, unknown>;
   probable_cause?: string;
   recommended_action?: string;
 

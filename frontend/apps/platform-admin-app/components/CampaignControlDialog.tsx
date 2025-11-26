@@ -32,8 +32,11 @@ export function CampaignControlDialog(props: CampaignControlDialogProps) {
   const useSharedUpdateCampaign = () => {
     const mutation = useUpdateCampaign();
     return {
-      mutateAsync: async ({ campaignId, data }: { campaignId: string; data: any }) => {
-        await mutation.mutateAsync({ campaignId, data });
+      mutateAsync: async ({ campaignId, data }: { campaignId: string; data: unknown }) => {
+        await mutation.mutateAsync({
+          campaignId,
+          data: data as Partial<Pick<DunningCampaign, "priority" | "is_active">> & Record<string, unknown>
+        });
       },
     };
   };

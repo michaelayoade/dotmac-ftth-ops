@@ -25,7 +25,7 @@ import {
 export const ossConfigKeys = {
   all: ["oss-config"] as const,
   lists: () => [...ossConfigKeys.all, "list"] as const,
-  list: (filters: Record<string, any>) => [...ossConfigKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...ossConfigKeys.lists(), filters] as const,
   details: () => [...ossConfigKeys.all, "detail"] as const,
   detail: (service: OSSService) => [...ossConfigKeys.details(), service] as const,
   allConfigurations: () => [...ossConfigKeys.all, "all-configurations"] as const,
@@ -44,7 +44,7 @@ export const ossConfigKeys = {
  *
  * @example
  * ```tsx
- * const { data: config, isLoading } = useOSSConfiguration('voltha');
+ * const { data: config, isLoading } = useOSSConfiguration('genieacs');
  * ```
  */
 export function useOSSConfiguration(service: OSSService | null, enabled = true) {
@@ -95,8 +95,8 @@ export function useAllOSSConfigurations() {
  * });
  *
  * updateConfig.mutate({
- *   service: 'voltha',
- *   updates: { url: 'https://voltha.example.com', verify_ssl: true },
+ *   service: 'genieacs',
+ *   updates: { url: 'https://acs.example.com', verify_ssl: true },
  * });
  * ```
  */
@@ -149,7 +149,7 @@ export function useUpdateOSSConfiguration(options?: {
  *   },
  * });
  *
- * resetConfig.mutate('voltha');
+ * resetConfig.mutate('genieacs');
  * ```
  */
 export function useResetOSSConfiguration(options?: {
@@ -201,7 +201,7 @@ export function useResetOSSConfiguration(options?: {
  *   },
  * });
  *
- * testConnection.mutate('voltha');
+ * testConnection.mutate('genieacs');
  * ```
  */
 export function useTestOSSConnection(options?: {
@@ -247,7 +247,7 @@ export function useTestOSSConnection(options?: {
  *
  * @example
  * ```tsx
- * const { hasOverrides, overriddenFields, isValid } = useOSSConfigStatus('voltha');
+ * const { hasOverrides, overriddenFields, isValid } = useOSSConfigStatus('genieacs');
  * ```
  */
 export function useOSSConfigStatus(service: OSSService | null) {
@@ -318,7 +318,7 @@ export function useOSSConfigStatistics() {
  * });
  *
  * batchUpdate.mutate([
- *   { service: 'voltha', updates: { verify_ssl: true } },
+ *   { service: 'genieacs', updates: { verify_ssl: true } },
  *   { service: 'genieacs', updates: { timeout_seconds: 60 } },
  * ]);
  * ```

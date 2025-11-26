@@ -175,8 +175,10 @@ const sections: NavSection[] = [
       { name: "Revenue Overview", href: "/dashboard/billing-revenue", icon: BarChart3 },
       { name: "Invoices", href: "/dashboard/billing-revenue/invoices", icon: FileText },
       { name: "Subscriptions", href: "/dashboard/billing-revenue/subscriptions", icon: Repeat },
+      { name: "Usage Billing", href: "/dashboard/billing-revenue/usage", icon: Activity, permission: "billing.read" },
       { name: "Payments", href: "/dashboard/billing-revenue/payments", icon: CreditCard },
       { name: "Plans", href: "/dashboard/billing-revenue/plans", icon: Package },
+      { name: "Add-ons", href: "/dashboard/billing-revenue/addons", icon: Plug, permission: "billing.read" },
       {
         name: "Banking Overview",
         href: "/dashboard/banking",
@@ -267,7 +269,10 @@ const sections: NavSection[] = [
     href: "/dashboard/security-access",
     items: [
       { name: "Security Overview", href: "/dashboard/security-access", icon: Shield },
-      { name: "API Keys", href: "/dashboard/security-access/api-keys", icon: Key },
+      { name: "API Keys", href: "/dashboard/security-access/api-keys", icon: Key, permission: "security.manage" },
+      { name: "MFA & 2FA", href: "/dashboard/security-access/mfa", icon: Shield },
+      { name: "Sessions", href: "/dashboard/security-access/sessions", icon: User },
+      { name: "Auth Metrics", href: "/dashboard/security-access/auth-metrics", icon: Activity },
       { name: "Secrets", href: "/dashboard/security-access/secrets", icon: Lock },
       { name: "Roles", href: "/dashboard/security-access/roles", icon: Shield },
       { name: "Users", href: "/dashboard/security-access/users", icon: Users },

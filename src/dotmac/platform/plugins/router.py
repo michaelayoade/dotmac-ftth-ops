@@ -5,6 +5,7 @@ This module provides REST API endpoints for managing plugins,
 their configurations, and testing connections.
 """
 
+import logging
 from datetime import UTC
 from typing import Any
 from uuid import UUID
@@ -24,6 +25,8 @@ from .schema import (
     PluginSchemaResponse,
     PluginTestResult,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     tags=["Plugin Management"],
@@ -60,6 +63,18 @@ class TestConnectionRequest(BaseModel):  # BaseModel resolves to Any in isolatio
     configuration: dict[str, Any] | None = None
 
 
+class PluginInfo(BaseModel):  # BaseModel resolves to Any in isolation
+    """Frontend-friendly plugin summary."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    description: str | None = None
+    version: str | None = None
+    enabled: bool = True
+
+
 # Dependencies
 
 
@@ -75,18 +90,67 @@ async def get_registry() -> PluginRegistry:
 # Endpoints
 
 
-@router.get("/", response_model=list[PluginConfig])
-async def list_available_plugins(
+@router.get("/", response_model=list[PluginInfo])
+async def list_plugins(
+    registry: PluginRegistry = Depends(get_registry),
+    current_user: UserInfo = Depends(get_current_user),
+) -> list[PluginInfo]:
+    """
+    List available plugins (frontend-friendly summary).
+
+    Returns minimal plugin metadata (id/name/description/version/enabled) to match UI expectations.
+    """
+    plugins = []
+    for plugin in registry.list_available_plugins():
+        plugins.append(
+            PluginInfo(
+                id=plugin.name,
+                name=plugin.name,
+                description=plugin.description,
+                version=plugin.version,
+                enabled=True,
+            )
+        )
+    return plugins
+
+
+@router.get("/available", response_model=list[PluginConfig])
+async def list_available_plugins_alias(
     registry: PluginRegistry = Depends(get_registry),
     current_user: UserInfo = Depends(get_current_user),
 ) -> list[PluginConfig]:
     """
-    List all available plugins with their configuration schemas.
-
-    Returns the configuration schema for each registered plugin,
-    allowing the UI to understand what fields need to be configured.
+    Alias endpoint for UI compatibility. Returns the same payload as GET /plugins.
     """
     return registry.list_available_plugins()
+
+
+@router.patch("/{plugin_id}")
+async def toggle_plugin(
+    plugin_id: str,
+    enabled: bool | None = None,
+    registry: PluginRegistry = Depends(get_registry),
+    current_user: UserInfo = Depends(get_current_user),
+) -> dict[str, Any]:
+    """
+    Toggle plugin enabled state (no-op placeholder).
+
+    Registry does not persist enablement yet; we return an acknowledgment for UI parity.
+    """
+    # Ensure plugin exists
+    available = {p.name for p in registry.list_available_plugins()}
+    if plugin_id not in available:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Plugin '{plugin_id}' not found",
+        )
+
+    return {
+        "id": plugin_id,
+        "name": plugin_id,
+        "enabled": True if enabled is None else bool(enabled),
+        "status": "ok",
+    }
 
 
 @router.get("/instances", response_model=PluginListResponse)
@@ -284,6 +348,30 @@ async def test_plugin_connection(
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/instances/{instance_id}/refresh", response_model=dict, status_code=status.HTTP_202_ACCEPTED)
+async def refresh_plugin_instance(
+    instance_id: UUID,
+    registry: PluginRegistry = Depends(get_registry),
+    current_user: UserInfo = Depends(get_current_user),
+) -> dict[str, str]:
+    """
+    Frontend-friendly refresh endpoint that re-runs a connection test/health check.
+    """
+    instance = await registry.get_plugin_instance(instance_id)
+    if not instance:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Plugin instance '{instance_id}' not found",
+        )
+
+    try:
+        await registry.test_plugin_connection(instance_id=instance_id, test_config=None)
+    except Exception as exc:
+        logger.warning("Plugin refresh/test failed", instance_id=str(instance_id), error=str(exc))
+
+    return {"status": "refresh_triggered", "instance_id": str(instance_id)}
 
 
 # Bulk operations

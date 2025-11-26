@@ -40,7 +40,7 @@ export const dynamicParams = true;
 export default function RootLayout({ children }: { children: ReactNode }) {
   const branding = platformConfig.branding;
   const productName = branding.productName || FALLBACK_PRODUCT_NAME;
-  const productTagline = branding.productTagline || FALLBACK_PRODUCT_TAGLINE;
+  const _productTagline = branding.productTagline || FALLBACK_PRODUCT_TAGLINE;
   const favicon = branding.faviconUrl || FALLBACK_FAVICON;
 
   return (

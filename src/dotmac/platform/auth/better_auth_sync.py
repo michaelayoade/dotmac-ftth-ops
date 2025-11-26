@@ -156,26 +156,52 @@ class BetterAuthSyncService:
             result = await self.db.execute(query, {"user_id": user_id})
             memberships = result.fetchall()
 
+            # Map Better Auth role names to existing RBAC role names where appropriate.
+            role_name_map: dict[str, str] = {
+                # Platform / super admin map to existing 'admin' RBAC role
+                "super_admin": "admin",
+                "platform_admin": "admin",
+                # Tenant ownership/admin map
+                "tenant_owner": "tenant_admin",
+                "tenant_admin": "tenant_admin",
+                "tenant_member": "tenant_user",
+                # Billing manager maps to tenant billing manager role
+                "billing_manager": "tenant_billing_manager",
+                # Generic customer role gets base tenant user permissions
+                "customer": "tenant_user",
+            }
+
             for membership in memberships:
                 org_id = str(membership[0])
-                role_name = membership[1]
+                raw_role_name = membership[1]
+                role_name = role_name_map.get(raw_role_name, raw_role_name)
 
                 # Assign role to user in our RBAC system
-                # Map organization_id to tenant_id
                 try:
                     await self.rbac_service.assign_role_to_user(
                         user_id=UUID(user_id),
                         role_name=role_name,
-                        tenant_id=org_id
+                        granted_by=UUID(user_id),
+                        metadata={
+                            "source": "better_auth",
+                            "organization_id": org_id,
+                            "better_auth_role": raw_role_name,
+                        },
                     )
                     logger.info(
                         "Synced role from Better Auth",
                         user_id=user_id,
                         role=role_name,
-                        org_id=org_id
+                        org_id=org_id,
                     )
                 except Exception as e:
-                    logger.warning("Failed to sync role", user_id=user_id, role=role_name, error=str(e))
+                    logger.warning(
+                        "Failed to sync role",
+                        user_id=user_id,
+                        role=role_name,
+                        better_auth_role=raw_role_name,
+                        error=str(e),
+                    )
 
         except Exception as e:
             logger.error("Error syncing user roles", user_id=user_id, error=str(e))

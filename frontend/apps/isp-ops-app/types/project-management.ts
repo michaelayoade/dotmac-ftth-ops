@@ -430,6 +430,34 @@ export interface TeamMemberMetrics {
   totalHours: number;
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  teamCode?: string;
+  description?: string;
+  type?: string;
+  isActive?: boolean;
+}
+
+export interface TeamMembership {
+  id: string;
+  tenantId: string;
+  technicianId: string;
+  teamId: string;
+  role: TeamRole;
+  isPrimaryTeam: boolean;
+  isActive: boolean;
+  joinedAt: string;
+  leftAt?: string;
+}
+
+export interface TeamMembershipListResponse {
+  memberships: TeamMembership[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 // ============================================================================
 // Filters & Search
 // ============================================================================
@@ -442,6 +470,9 @@ export interface ProjectFilter {
   startDateFrom?: string;
   startDateTo?: string;
   search?: string;
+  projectType?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface TaskFilter {
@@ -454,6 +485,8 @@ export interface TaskFilter {
   dueDateFrom?: string;
   dueDateTo?: string;
   search?: string;
+  limit?: number;
+  offset?: number;
 }
 
 // ============================================================================
@@ -463,17 +496,21 @@ export interface TaskFilter {
 export interface ProjectListResponse {
   projects: Project[];
   total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
+  page?: number;
+  pageSize?: number;
+  hasMore?: boolean;
+  limit?: number;
+  offset?: number;
 }
 
 export interface TaskListResponse {
   tasks: Task[];
   total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
+  page?: number;
+  pageSize?: number;
+  hasMore?: boolean;
+  limit?: number;
+  offset?: number;
 }
 
 export interface TemplateListResponse {
@@ -499,6 +536,7 @@ export interface CreateProjectData {
   ownerId: string;
   teamMemberIds?: string[];
   templateId?: string;
+  projectType?: string;
   budget?: number;
   estimatedHours?: number;
   tags?: string[];
@@ -508,6 +546,9 @@ export interface CreateProjectData {
 
 export interface UpdateProjectData extends Partial<CreateProjectData> {
   id: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  notes?: string;
 }
 
 export interface CreateTaskData {
@@ -530,6 +571,10 @@ export interface CreateTaskData {
 export interface UpdateTaskData extends Partial<CreateTaskData> {
   id: string;
   position?: number;
+  actualStartDate?: string;
+  completedAt?: string;
+  progress?: number;
+  notes?: string;
 }
 
 export interface CreateTemplateData {

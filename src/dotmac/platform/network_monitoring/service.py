@@ -81,6 +81,7 @@ class NetworkMonitoringService:
         self._alert_status: dict[str, str] = {}
         self._prometheus_client: PrometheusClient | None = None
         self._prometheus_config: ServiceConfig | None = None
+        self._device_type_cache: dict[str, DeviceType] = {}
 
     # --------------------------------------------------------------------
     # Tenant helpers
@@ -427,12 +428,47 @@ class NetworkMonitoringService:
     # Device Health Monitoring
     # ========================================================================
 
+    async def _resolve_device_type(
+        self, device_id: str, device_type: DeviceType | None, tenant_id: str
+    ) -> DeviceType | None:
+        """
+        Resolve device type when the caller does not provide one.
+
+        Attempts to reuse a simple cache before falling back to inventory lookups.
+        """
+        if device_type:
+            self._device_type_cache[device_id] = device_type
+            return device_type
+
+        if device_id in self._device_type_cache:
+            return self._device_type_cache[device_id]
+
+        try:
+            devices = await self._get_tenant_devices(tenant_id)
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            logger.warning("Failed to resolve device type from inventory", error=str(exc))
+            devices = []
+
+        for device in devices:
+            if str(device.get("id")) == device_id or device.get("name") == device_id:
+                raw_type = device.get("type") or device.get("device_type")
+                try:
+                    resolved = DeviceType(raw_type) if raw_type else None
+                except Exception:
+                    resolved = None
+                if resolved:
+                    self._device_type_cache[device_id] = resolved
+                    return resolved
+
+        return None
+
     async def get_device_health(
-        self, device_id: str, device_type: DeviceType, tenant_id: str
+        self, device_id: str, device_type: DeviceType | None, tenant_id: str
     ) -> DeviceHealthResponse:
         """Get health status for a specific device"""
 
         tenant_scope = self._ensure_tenant_scope(tenant_id)
+        resolved_type = await self._resolve_device_type(device_id, device_type, tenant_scope)
 
         # Check cache first
         cache_key = f"device_health:{tenant_scope}:{device_id}"
@@ -441,11 +477,11 @@ class NetworkMonitoringService:
             return DeviceHealthResponse(**cached)
 
         try:
-            if device_type == DeviceType.ONU:
+            if resolved_type == DeviceType.ONU:
                 health = await self._get_onu_health(device_id)
-            elif device_type == DeviceType.CPE:
+            elif resolved_type == DeviceType.CPE:
                 health = await self._get_cpe_health(device_id)
-            elif device_type in (DeviceType.OLT, DeviceType.ROUTER, DeviceType.SWITCH):
+            elif resolved_type in (DeviceType.OLT, DeviceType.ROUTER, DeviceType.SWITCH):
                 health = await self._get_network_device_health(device_id)
             else:
                 health = await self._get_generic_device_health(device_id)
@@ -460,7 +496,7 @@ class NetworkMonitoringService:
             return DeviceHealthResponse(
                 device_id=device_id,
                 device_name=f"Device {device_id}",
-                device_type=device_type,
+                device_type=resolved_type or DeviceType.OTHER,
                 status=DeviceStatus.UNKNOWN,
                 tenant_id=self.tenant_id,
             )
@@ -613,11 +649,12 @@ class NetworkMonitoringService:
     # ========================================================================
 
     async def get_traffic_stats(
-        self, device_id: str, device_type: DeviceType, tenant_id: str
+        self, device_id: str, device_type: DeviceType | None, tenant_id: str
     ) -> TrafficStatsResponse:
         """Get traffic statistics for a device"""
 
         tenant_scope = self._ensure_tenant_scope(tenant_id)
+        resolved_type = await self._resolve_device_type(device_id, device_type, tenant_scope)
 
         cache_key = f"traffic_stats:{tenant_scope}:{device_id}"
         cached = cache_get(cache_key)
@@ -625,9 +662,9 @@ class NetworkMonitoringService:
             return TrafficStatsResponse(**cached)
 
         try:
-            if device_type == DeviceType.ONU:
+            if resolved_type == DeviceType.ONU:
                 stats = await self._get_onu_traffic(device_id)
-            elif device_type in (DeviceType.OLT, DeviceType.ROUTER, DeviceType.SWITCH):
+            elif resolved_type in (DeviceType.OLT, DeviceType.ROUTER, DeviceType.SWITCH):
                 stats = await self._get_network_device_traffic(device_id)
             else:
                 # Return empty stats for unsupported types
@@ -727,14 +764,23 @@ class NetworkMonitoringService:
     # ========================================================================
 
     async def get_device_metrics(
-        self, device_id: str, device_type: DeviceType, tenant_id: str
+        self, device_id: str, device_type: DeviceType | None, tenant_id: str
     ) -> DeviceMetricsResponse:
         """Get comprehensive metrics for a device"""
 
+        resolved_type = await self._resolve_device_type(device_id, device_type, tenant_id)
+        if resolved_type is None:
+            logger.warning(
+                "network_monitoring.device_type_unresolved",
+                device_id=device_id,
+                tenant_id=tenant_id,
+            )
+            resolved_type = DeviceType.OTHER
+
         # Get health and traffic in parallel
         health_result, traffic_result = await asyncio.gather(
-            self.get_device_health(device_id, device_type, tenant_id),
-            self.get_traffic_stats(device_id, device_type, tenant_id),
+            self.get_device_health(device_id, resolved_type, tenant_id),
+            self.get_traffic_stats(device_id, resolved_type, tenant_id),
             return_exceptions=True,
         )
 
@@ -744,7 +790,7 @@ class NetworkMonitoringService:
             health = DeviceHealthResponse(
                 device_id=device_id,
                 device_name=f"Device {device_id}",
-                device_type=device_type,
+                device_type=resolved_type,
                 status=DeviceStatus.UNKNOWN,
             )
         else:
@@ -763,15 +809,15 @@ class NetworkMonitoringService:
         onu_metrics = None
         cpe_metrics = None
 
-        if device_type == DeviceType.ONU:
+        if resolved_type == DeviceType.ONU:
             onu_metrics = await self._get_onu_metrics(device_id)
-        elif device_type == DeviceType.CPE:
+        elif resolved_type == DeviceType.CPE:
             cpe_metrics = await self._get_cpe_metrics(device_id)
 
         return DeviceMetricsResponse(
             device_id=device_id,
             device_name=health.device_name,
-            device_type=device_type,
+            device_type=resolved_type,
             health=health,
             traffic=traffic,
             onu_metrics=onu_metrics,
@@ -1174,7 +1220,7 @@ class NetworkMonitoringService:
             "threshold": threshold,
             "severity": severity.value,
             "enabled": enabled,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.utcnow(),
         }
 
     async def get_alert_rules(self, tenant_id: str) -> list[dict]:

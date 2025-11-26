@@ -470,6 +470,22 @@ class TestActivitySummary:
         # Should return summary data
         assert data is not None
 
+    @pytest.mark.asyncio
+    async def test_get_activity_summary_includes_ui_fields(
+        self, authenticated_client: AsyncClient, sample_activities: SampleActivities
+    ) -> None:
+        """Summary should include UI-friendly aggregations."""
+        response = await authenticated_client.get("/api/v1/audit/activities/summary")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert "by_severity" in data and isinstance(data["by_severity"], dict)
+        assert "by_type" in data and isinstance(data["by_type"], dict)
+        assert "by_user" in data and isinstance(data["by_user"], list)
+        assert "timeline" in data and isinstance(data["timeline"], list)
+        assert "recent_critical" in data and isinstance(data["recent_critical"], list)
+
 
 # ==================== Single Activity Tests ====================
 

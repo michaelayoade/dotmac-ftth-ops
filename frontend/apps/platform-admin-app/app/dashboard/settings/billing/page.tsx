@@ -2,31 +2,29 @@
 
 import { useState, useEffect } from "react";
 import {
-  Building2,
-  Receipt,
-  CreditCard,
-  Calculator,
-  Bell,
-  FileText,
-  Save,
-  RotateCcw,
   AlertCircle,
-  CheckCircle,
-  ChevronRight,
-  Globe,
-  Mail,
-  Phone,
-  MapPin,
-  Hash,
+  Bell,
+  Building2,
+  Calculator,
   Calendar,
-  DollarSign,
-  Percent,
+  CheckCircle,
   Clock,
+  CreditCard,
+  DollarSign,
+  FileText,
+  Globe,
+  Hash,
+  Mail,
+  MapPin,
+  Palette,
+  Percent,
+  Phone,
   RefreshCw,
-  Webhook,
+  RotateCcw,
+  Save,
   ToggleLeft,
   ToggleRight,
-  Palette,
+  Webhook,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useConfirmDialog } from "@dotmac/ui";
@@ -1008,7 +1006,7 @@ export default function BillingSettingsPage() {
                               method,
                             )}
                             onChange={(e) => {
-                              const methods = e.target.checked
+                              const updatedMethods = e.target.checked
                                 ? [...settings.payment_settings.enabled_payment_methods, method]
                                 : settings.payment_settings.enabled_payment_methods.filter(
                                     (m) => m !== method,
@@ -1017,7 +1015,7 @@ export default function BillingSettingsPage() {
                                 ...settings,
                                 payment_settings: {
                                   ...settings.payment_settings,
-                                  enabled_payment_methods: methods,
+                                  enabled_payment_methods: updatedMethods,
                                 },
                               });
                             }}

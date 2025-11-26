@@ -17,11 +17,6 @@ export enum EventType {
   ONU_PROVISIONED = "onu.provisioned",
   ONU_DEPROVISIONED = "onu.deprovisioned",
 
-  // RADIUS Session Events
-  SESSION_STARTED = "session.started",
-  SESSION_UPDATED = "session.updated",
-  SESSION_STOPPED = "session.stopped",
-
   // Job Progress Events
   JOB_CREATED = "job.created",
   JOB_PROGRESS = "job.progress",
@@ -83,22 +78,6 @@ export interface ONUStatusEvent extends BaseEvent {
   previous_status?: string;
   olt_id?: string;
   pon_port?: number;
-}
-
-// ============================================================================
-// RADIUS Session Events
-// ============================================================================
-
-export interface RADIUSSessionEvent extends BaseEvent {
-  event_type: EventType.SESSION_STARTED | EventType.SESSION_UPDATED | EventType.SESSION_STOPPED;
-  username: string;
-  session_id: string;
-  nas_ip_address: string;
-  framed_ip_address?: string;
-  bytes_in: number;
-  bytes_out: number;
-  session_time: number;
-  terminate_cause?: string;
 }
 
 // ============================================================================
@@ -290,8 +269,6 @@ export enum RealtimeChannel {
   ALERTS = "/api/v1/realtime/alerts",
   TICKETS = "/api/v1/realtime/tickets",
   SUBSCRIBERS = "/api/v1/realtime/subscribers",
-  RADIUS_SESSIONS = "/api/v1/realtime/radius-sessions",
-  WS_SESSIONS = "/api/v1/realtime/ws/sessions",
   WS_JOB = "/api/v1/realtime/ws/jobs",
   WS_CAMPAIGN = "/api/v1/realtime/ws/campaigns",
 }
@@ -323,10 +300,8 @@ export interface RealtimeContextValue {
   subscribeToAlerts: (handler: EventHandler<AlertEvent>) => () => void;
   subscribeToTickets: (handler: EventHandler<TicketEvent>) => () => void;
   subscribeToSubscribers: (handler: EventHandler<SubscriberEvent>) => () => void;
-  subscribeToRadiusSessions: (handler: EventHandler<RADIUSSessionEvent>) => () => void;
 
   // WebSocket Connections
-  connectToSessionsWS: () => WebSocketConnection;
   connectToJobWS: (jobId: string) => WebSocketConnection;
   connectToCampaignWS: (campaignId: string) => WebSocketConnection;
 
@@ -348,9 +323,6 @@ export type RealtimeEventMap = {
   [EventType.ONU_SIGNAL_DEGRADED]: ONUStatusEvent;
   [EventType.ONU_PROVISIONED]: ONUStatusEvent;
   [EventType.ONU_DEPROVISIONED]: ONUStatusEvent;
-  [EventType.SESSION_STARTED]: RADIUSSessionEvent;
-  [EventType.SESSION_UPDATED]: RADIUSSessionEvent;
-  [EventType.SESSION_STOPPED]: RADIUSSessionEvent;
   [EventType.JOB_CREATED]: JobProgressEvent;
   [EventType.JOB_PROGRESS]: JobProgressEvent;
   [EventType.JOB_COMPLETED]: JobProgressEvent;

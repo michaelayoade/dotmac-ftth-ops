@@ -20,15 +20,15 @@ import {
   DropdownMenuTrigger,
 } from "@dotmac/ui";
 import {
-  MoreHorizontal,
-  Eye,
-  XCircle,
-  Download,
-  RefreshCw,
+  AlertCircle,
   CheckCircle2,
   Clock,
-  AlertCircle,
+  Download,
+  Eye,
   Loader2,
+  MoreHorizontal,
+  RefreshCw,
+  XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useDataImport, type ImportJob, type ImportJobStatus } from "@/hooks/useDataImport";
@@ -39,13 +39,16 @@ interface ImportJobsListProps {
 
 export function ImportJobsList({ onViewDetails }: ImportJobsListProps) {
   const { useImportJobs, cancelImport, isCancelling, downloadFailures } = useDataImport();
-  const [statusFilter, setStatusFilter] = useState<ImportJobStatus | undefined>();
+  const [statusFilter] = useState<ImportJobStatus | undefined>();
   const { data, isLoading, error, refetch } = useImportJobs(
     statusFilter ? { status: statusFilter } : {},
   );
 
   const getStatusBadge = (status: ImportJobStatus) => {
-    const variants: Record<ImportJobStatus, { variant: "default" | "destructive" | "outline" | "secondary"; icon: any }> = {
+    const variants: Record<
+      ImportJobStatus,
+      { variant: "default" | "destructive" | "outline" | "secondary"; icon: React.ElementType }
+    > = {
       pending: { variant: "outline", icon: Clock },
       validating: { variant: "outline", icon: RefreshCw },
       in_progress: { variant: "default", icon: Loader2 },
@@ -207,7 +210,7 @@ export function ImportJobsList({ onViewDetails }: ImportJobsListProps) {
                       </DropdownMenuItem>
 
                       {job.failed_records > 0 && (
-                        <DropdownMenuItem onClick={() => void downloadFailures(job.id)}>
+                        <DropdownMenuItem onClick={() => downloadFailures(job.id)}>
                           <Download className="h-4 w-4 mr-2" />
                           Download Failures
                         </DropdownMenuItem>

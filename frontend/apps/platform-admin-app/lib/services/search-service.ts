@@ -270,7 +270,7 @@ class SearchService {
     const routes: Record<string, string> = {
       customer: `/dashboard/customers/${id}`,
       subscriber: `/dashboard/subscribers/${id}`,
-      invoice: `/dashboard/billing/invoices/${id}`,
+      invoice: `/tenant-portal/billing/receipts`,
       ticket: `/dashboard/ticketing/tickets/${id}`,
       user: `/dashboard/users/${id}`,
       device: `/dashboard/network/devices/${id}`,

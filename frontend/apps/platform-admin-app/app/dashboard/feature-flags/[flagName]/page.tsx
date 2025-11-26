@@ -10,17 +10,15 @@ import { Switch } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import {
-  ArrowLeft,
-  ToggleLeft,
-  CheckCircle,
-  XCircle,
-  Clock,
-  RefreshCw,
-  Edit,
-  Save,
-  TestTube,
-  Info,
   Activity,
+  ArrowLeft,
+  Clock,
+  Edit,
+  Info,
+  RefreshCw,
+  Save,
+  ToggleLeft,
+  XCircle,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
@@ -33,7 +31,7 @@ import { format } from "date-fns";
 interface FeatureFlag {
   name: string;
   enabled: boolean;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   description?: string;
   updated_at: number;
   created_at?: number;

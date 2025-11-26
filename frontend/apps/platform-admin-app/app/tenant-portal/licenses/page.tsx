@@ -17,14 +17,14 @@ import { Skeleton } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import {
   AlertCircle,
-  Users,
-  TrendingUp,
+  Crown,
+  Eye,
+  Info,
   Package,
   ShieldCheck,
-  Eye,
+  TrendingUp,
   UserCog,
-  Crown,
-  Info,
+  Users,
 } from "lucide-react";
 import { SubscriptionStatus, BillingCycle } from "@/types/licensing";
 
@@ -53,7 +53,6 @@ export default function LicensesPage(): React.ReactElement {
     modulesLoading,
     quotas,
     quotasLoading,
-    plans,
   } = useLicensing();
 
   // Calculate seat allocations (example - would come from real API)

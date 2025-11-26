@@ -109,6 +109,11 @@ jobs:
           docker compose -f docker-compose.base.yml config > /dev/null
           echo "✅ docker-compose.base.yml is valid"
 
+      - name: Validate docker-compose.infra.yml
+        run: |
+          docker compose -f docker-compose.infra.yml config > /dev/null
+          echo "✅ docker-compose.infra.yml is valid"
+
       - name: Validate docker-compose.isp.yml
         run: |
           docker compose -f docker-compose.base.yml -f docker-compose.isp.yml config > /dev/null

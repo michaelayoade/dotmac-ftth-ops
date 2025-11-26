@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.ip_management.models import IPReservation, IPReservationStatus
+from dotmac.platform.ip_management.ip_service import IPManagementService
 from dotmac.platform.network.lifecycle_protocol import (
     ActivationError,
     AllocationError,
@@ -74,6 +75,7 @@ class IPv4LifecycleService:
         self.netbox_client = netbox_client
         self.radius_client = radius_client
         self.dhcp_client = dhcp_client
+        self.ip_service = IPManagementService(db, tenant_id)
 
     async def allocate(
         self,
@@ -119,57 +121,103 @@ class IPv4LifecycleService:
         )
 
         try:
-            # Check for existing reservation
-            stmt = select(IPReservation).where(
+            filters = [
                 IPReservation.tenant_id == self.tenant_id,
-                IPReservation.subscriber_id == str(subscriber_id),
+                IPReservation.deleted_at.is_(None),
                 IPReservation.ip_type == "ipv4",
+                IPReservation.status == IPReservationStatus.RELEASED,
+            ]
+
+            if pool_id:
+                filters.append(IPReservation.pool_id == pool_id)
+            if requested_address:
+                filters.append(IPReservation.ip_address == requested_address)
+
+            stmt = (
+                select(IPReservation)
+                .where(*filters)
+                .order_by(
+                    IPReservation.reserved_at.asc().nullsfirst(),
+                    IPReservation.created_at.asc(),
+                )
+                .limit(1)
             )
             result = await self.db.execute(stmt)
-            existing = result.scalar_one_or_none()
+            reservation = result.scalar_one_or_none()
 
-            if existing:
-                # Validate transition
-                current_state = LifecycleState(existing.lifecycle_state)
-                validate_lifecycle_transition(
-                    current_state, LifecycleState.ALLOCATED, raise_on_invalid=True
-                )
+            if not reservation:
+                raise AllocationError("No available IP addresses found for allocation")
 
-                # Update existing reservation
-                existing.lifecycle_state = LifecycleState.ALLOCATED
-                existing.lifecycle_allocated_at = datetime.now(UTC)
-                if metadata:
-                    existing.lifecycle_metadata = {
-                        **(existing.lifecycle_metadata or {}),
-                        **metadata,
-                    }
+            # Validate state transition
+            current_state = LifecycleState(reservation.lifecycle_state)
+            validate_lifecycle_transition(
+                current_state, LifecycleState.ALLOCATED, raise_on_invalid=True
+            )
 
-                if commit:
-                    await self.db.commit()
-                    await self.db.refresh(existing)
+            previous_status = reservation.status
+            now = datetime.now(UTC)
 
-                logger.info(
-                    "Updated existing IPv4 reservation to ALLOCATED",
-                    reservation_id=str(existing.id),
-                    ip_address=existing.ip_address,
-                )
+            reservation.subscriber_id = str(subscriber_id)
+            reservation.status = IPReservationStatus.ASSIGNED
+            reservation.lifecycle_state = LifecycleState.ALLOCATED
+            reservation.lifecycle_allocated_at = now
+            reservation.ip_type = reservation.ip_type or "ipv4"
 
-                return LifecycleResult(
-                    success=True,
-                    state=LifecycleState.ALLOCATED,
-                    address=existing.ip_address,
-                    subscriber_id=subscriber_id,
-                    tenant_id=self.tenant_id,
-                    allocated_at=existing.lifecycle_allocated_at,
-                    metadata=existing.lifecycle_metadata,
-                )
+            if metadata:
+                reservation.lifecycle_metadata = {
+                    **(reservation.lifecycle_metadata or {}),
+                    **metadata,
+                }
 
-            # No existing reservation - need to allocate from pool
-            # This requires integration with IPManagementService
-            # For now, raise an error indicating the service needs to be called first
-            raise AllocationError(
-                f"No existing IPv4 reservation found for subscriber {subscriber_id}. "
-                "Use IPManagementService.allocate_static_ip() to create the reservation first."
+            # Optional NetBox sync - best effort
+            netbox_ip_id: int | None = reservation.netbox_ip_id
+            if self.netbox_client:
+                try:
+                    netbox_response = await self.netbox_client.reserve_ip(
+                        ip_address=reservation.ip_address,
+                        pool_id=str(reservation.pool_id),
+                        tenant_id=self.tenant_id,
+                        subscriber_id=str(subscriber_id),
+                    )
+                    if isinstance(netbox_response, dict):
+                        netbox_ip_id = (
+                            netbox_response.get("id")
+                            or netbox_response.get("ip_id")
+                            or netbox_ip_id
+                        )
+                        if netbox_ip_id:
+                            reservation.netbox_ip_id = netbox_ip_id
+                            self._merge_metadata(reservation, {"netbox_ip_id": netbox_ip_id})
+                except Exception as e:
+                    logger.warning(
+                        "ipv4.allocation.netbox_failed",
+                        ip_address=reservation.ip_address,
+                        error=str(e),
+                    )
+
+            await self._update_pool_after_assignment(reservation, previous_status)
+
+            if commit:
+                await self.db.commit()
+                await self.db.refresh(reservation)
+            else:
+                await self.db.flush()
+
+            logger.info(
+                "IPv4 allocation complete",
+                reservation_id=str(reservation.id),
+                ip_address=reservation.ip_address,
+            )
+
+            return LifecycleResult(
+                success=True,
+                state=LifecycleState.ALLOCATED,
+                address=reservation.ip_address,
+                subscriber_id=subscriber_id,
+                tenant_id=self.tenant_id,
+                allocated_at=reservation.lifecycle_allocated_at,
+                metadata=reservation.lifecycle_metadata,
+                netbox_ip_id=reservation.netbox_ip_id,
             )
 
         except InvalidTransitionError:
@@ -252,6 +300,8 @@ class IPv4LifecycleService:
             reservation.lifecycle_state = LifecycleState.ACTIVE
             reservation.lifecycle_activated_at = datetime.now(UTC)
             reservation.status = IPReservationStatus.ASSIGNED  # Update old status too
+            coa_result: dict[str, Any] | None = None
+            netbox_ip_id: int | str | None = reservation.netbox_ip_id
 
             if reservation.lifecycle_metadata is None:
                 reservation.lifecycle_metadata = {}
@@ -263,30 +313,45 @@ class IPv4LifecycleService:
                 }
 
             # Update NetBox if configured
-            if update_netbox and self.netbox_client and reservation.netbox_ip_id:
+            if update_netbox and self.netbox_client:
                 try:
-                    await self._update_netbox_ip_status(reservation.netbox_ip_id, "active")
-                    reservation.lifecycle_metadata["netbox_synced"] = True
-                    reservation.lifecycle_metadata["netbox_synced_at"] = datetime.now(
-                        UTC
-                    ).isoformat()
+                    netbox_result = await self._update_netbox_ip_status(
+                        netbox_ip_id or reservation.ip_address, "active"
+                    )
+                    if isinstance(netbox_result, dict):
+                        netbox_ip_id = netbox_result.get("id") or netbox_ip_id
+                    if netbox_ip_id:
+                        reservation.netbox_ip_id = netbox_ip_id  # type: ignore[assignment]
+                        self._merge_metadata(
+                            reservation,
+                            {
+                                "netbox_ip_id": netbox_ip_id,
+                                "netbox_synced": True,
+                                "netbox_synced_at": datetime.now(UTC).isoformat(),
+                            },
+                        )
                 except Exception as e:
                     logger.warning(f"Failed to update NetBox: {e}")
-                    reservation.lifecycle_metadata["netbox_sync_error"] = str(e)
+                    self._merge_metadata(reservation, {"netbox_sync_error": str(e)})
 
             # Send RADIUS CoA if configured
             if send_coa and self.radius_client and username and nas_ip:
                 try:
-                    await self._send_radius_coa(
+                    coa_result = await self._send_radius_coa(
                         username=username,
                         nas_ip=nas_ip,
                         ipv4_address=reservation.ip_address,
                     )
-                    reservation.lifecycle_metadata["coa_sent"] = True
-                    reservation.lifecycle_metadata["coa_sent_at"] = datetime.now(UTC).isoformat()
+                    metadata_updates = {
+                        "coa_sent": True,
+                        "coa_sent_at": datetime.now(UTC).isoformat(),
+                    }
+                    if coa_result is not None:
+                        metadata_updates["coa_result"] = coa_result
+                    self._merge_metadata(reservation, metadata_updates)
                 except Exception as e:
                     logger.warning(f"Failed to send RADIUS CoA: {e}")
-                    reservation.lifecycle_metadata["coa_error"] = str(e)
+                    self._merge_metadata(reservation, {"coa_error": str(e)})
 
             if commit:
                 await self.db.commit()
@@ -307,10 +372,14 @@ class IPv4LifecycleService:
                 allocated_at=reservation.lifecycle_allocated_at,
                 activated_at=reservation.lifecycle_activated_at,
                 metadata=reservation.lifecycle_metadata,
+                coa_result=coa_result,
+                netbox_ip_id=netbox_ip_id if netbox_ip_id is not None else None,
             )
 
-        except InvalidTransitionError:
-            raise
+        except InvalidTransitionError as exc:
+            raise InvalidTransitionError(
+                current_state, LifecycleState.ACTIVE, message=f"Cannot activate from state: {current_state.value}"
+            ) from exc
         except Exception as e:
             logger.error(
                 "IPv4 activation failed",
@@ -380,15 +449,10 @@ class IPv4LifecycleService:
             reservation.lifecycle_suspended_at = datetime.now(UTC)
 
             if metadata:
-                reservation.lifecycle_metadata = {
-                    **(reservation.lifecycle_metadata or {}),
-                    **metadata,
-                }
+                self._merge_metadata(reservation, metadata)
 
             if reason:
-                if reservation.lifecycle_metadata is None:
-                    reservation.lifecycle_metadata = {}
-                reservation.lifecycle_metadata["suspension_reason"] = reason
+                self._merge_metadata(reservation, {"suspension_reason": reason})
 
             # Send CoA to update session
             if send_coa and self.radius_client and username and nas_ip:
@@ -471,20 +535,27 @@ class IPv4LifecycleService:
             if not reservation:
                 raise RevocationError(f"No IPv4 reservation found for subscriber {subscriber_id}")
 
+            previous_status = reservation.status
             # Set to REVOKING first
             reservation.lifecycle_state = LifecycleState.REVOKING
+            disconnect_result: dict[str, Any] | None = None
 
             # Send RADIUS disconnect
             if send_disconnect and self.radius_client and username and nas_ip:
                 try:
-                    await self._send_radius_disconnect(username, nas_ip)
+                    disconnect_result = await self._send_radius_disconnect(username, nas_ip)
                 except Exception as e:
                     logger.warning("Failed to send RADIUS disconnect", error=str(e))
 
             # Update NetBox
-            if update_netbox and self.netbox_client and reservation.netbox_ip_id:
+            if update_netbox and self.netbox_client:
                 try:
-                    await self._delete_netbox_ip(reservation.netbox_ip_id)
+                    if hasattr(self.netbox_client, "release_ip"):
+                        await self.netbox_client.release_ip(
+                            ip_id=reservation.netbox_ip_id, ip_address=reservation.ip_address
+                        )
+                    elif reservation.netbox_ip_id:
+                        await self._delete_netbox_ip(reservation.netbox_ip_id)
                 except Exception as e:
                     logger.warning("Failed to delete from NetBox", error=str(e))
 
@@ -495,6 +566,9 @@ class IPv4LifecycleService:
 
             if release_to_pool:
                 reservation.released_at = datetime.now(UTC)
+                reservation.subscriber_id = None
+
+            await self._update_pool_after_release(reservation, previous_status)
 
             if metadata:
                 reservation.lifecycle_metadata = {
@@ -516,6 +590,7 @@ class IPv4LifecycleService:
                 tenant_id=self.tenant_id,
                 revoked_at=reservation.lifecycle_revoked_at,
                 metadata=reservation.lifecycle_metadata,
+                disconnect_result=disconnect_result,
             )
 
         except Exception as e:
@@ -662,24 +737,86 @@ class IPv4LifecycleService:
     # Private Helper Methods
     # =======================================================================
 
-    async def _update_netbox_ip_status(self, netbox_ip_id: int, status: str) -> None:
-        """Update NetBox IP address status."""
-        if not self.netbox_client:
+    @staticmethod
+    def _merge_metadata(reservation: IPReservation, extra: dict[str, Any]) -> None:
+        """Safely merge lifecycle metadata ensuring SQLAlchemy detects changes."""
+        base = reservation.lifecycle_metadata or {}
+        reservation.lifecycle_metadata = {**base, **extra}
+
+    async def _update_pool_after_assignment(
+        self, reservation: IPReservation, previous_status: IPReservationStatus
+    ) -> None:
+        """Keep pool counters in sync when assigning an IP."""
+        try:
+            pool = await self.ip_service.get_pool(reservation.pool_id)
+        except Exception:
+            pool = None
+
+        if not pool:
             return
 
-        # Placeholder for NetBox integration
-        logger.debug(f"Would update NetBox IP {netbox_ip_id} to status {status}")
-        # await self.netbox_client.ipam.ip_addresses.update(
-        #     id=netbox_ip_id, status=status
-        # )
+        if previous_status == IPReservationStatus.RESERVED:
+            pool.reserved_count = max(pool.reserved_count - 1, 0)
+        if previous_status in {
+            IPReservationStatus.RELEASED,
+            IPReservationStatus.RESERVED,
+            IPReservationStatus.EXPIRED,
+        }:
+            pool.assigned_count += 1
 
-    async def _delete_netbox_ip(self, netbox_ip_id: int) -> None:
-        """Delete IP address from NetBox."""
-        if not self.netbox_client:
+        await self.ip_service._update_pool_utilization(pool)
+
+    async def _update_pool_after_release(
+        self, reservation: IPReservation, previous_status: IPReservationStatus
+    ) -> None:
+        """Keep pool counters accurate when releasing an IP back to the pool."""
+        try:
+            pool = await self.ip_service.get_pool(reservation.pool_id)
+        except Exception:
+            pool = None
+
+        if not pool:
             return
 
-        logger.debug(f"Would delete NetBox IP {netbox_ip_id}")
-        # await self.netbox_client.ipam.ip_addresses.delete(id=netbox_ip_id)
+        if previous_status == IPReservationStatus.RESERVED:
+            pool.reserved_count = max(pool.reserved_count - 1, 0)
+        elif previous_status == IPReservationStatus.ASSIGNED:
+            pool.assigned_count = max(pool.assigned_count - 1, 0)
+
+        await self.ip_service._update_pool_utilization(pool)
+
+    async def _update_netbox_ip_status(
+        self, netbox_ip_id: int | str, status: str
+    ) -> dict[str, Any] | None:
+        """Update NetBox IP address status (best effort)."""
+        if not self.netbox_client:
+            return None
+
+        try:
+            return await self.netbox_client.update_ip_status(ip_id=netbox_ip_id, status=status)
+        except Exception as exc:
+            logger.warning(
+                "netbox.update.failed",
+                ip_id=netbox_ip_id,
+                status=status,
+                error=str(exc),
+            )
+            return None
+
+    async def _delete_netbox_ip(self, netbox_ip_id: int | str) -> dict[str, Any] | None:
+        """Delete IP address from NetBox (fallback)."""
+        if not self.netbox_client:
+            return None
+
+        try:
+            return await self.netbox_client.delete_ip(ip_id=netbox_ip_id)
+        except Exception as exc:
+            logger.warning(
+                "netbox.delete.failed",
+                ip_id=netbox_ip_id,
+                error=str(exc),
+            )
+            return None
 
     async def _send_radius_coa(
         self,
@@ -687,27 +824,20 @@ class IPv4LifecycleService:
         nas_ip: str,
         ipv4_address: str,
         suspend: bool = False,
-    ) -> None:
+    ) -> Any:
         """Send RADIUS CoA packet."""
         if not self.radius_client:
-            return
+            return None
 
-        logger.debug(
-            f"Would send RADIUS CoA to {nas_ip} for {username} "
-            f"(IPv4: {ipv4_address}, suspend: {suspend})"
+        return await self.radius_client.send_coa(
+            username=username,
+            nas_ip=nas_ip,
+            attributes={"Framed-IP-Address": ipv4_address, "Suspend-Session": suspend},
         )
-        # await self.radius_client.send_coa(
-        #     username=username,
-        #     nas_ip=nas_ip,
-        #     attributes={"Framed-IP-Address": ipv4_address}
-        # )
 
-    async def _send_radius_disconnect(self, username: str, nas_ip: str) -> None:
+    async def _send_radius_disconnect(self, username: str, nas_ip: str) -> Any:
         """Send RADIUS Disconnect-Request."""
         if not self.radius_client:
-            return
+            return None
 
-        logger.debug(f"Would send RADIUS disconnect to {nas_ip} for {username}")
-        # await self.radius_client.send_disconnect(
-        #     username=username, nas_ip=nas_ip
-        # )
+        return await self.radius_client.send_disconnect(username=username, nas_ip=nas_ip)

@@ -1,25 +1,24 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
-  ArrowLeft,
-  Key,
-  CheckCircle,
-  XCircle,
-  Clock,
+  AlertCircle,
   AlertTriangle,
+  ArrowLeft,
   Ban,
   Calendar,
-  User,
-  Package,
-  AlertCircle,
-  RefreshCw,
+  CheckCircle,
+  Clock,
+  Key,
   Loader,
+  Package,
+  RefreshCw,
+  User,
+  XCircle,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
@@ -44,9 +43,9 @@ interface License {
   max_activations: number;
   suspended_reason?: string;
   revoked_reason?: string;
-  metadata?: any;
-  features?: any[];
-  restrictions?: any[];
+  metadata?: unknown;
+  features?: unknown[];
+  restrictions?: unknown[];
   created_at: string;
   updated_at: string;
 }
@@ -157,7 +156,7 @@ function LicenseDetailsPageContent() {
   });
 
   const getStatusBadge = (status: LicenseStatus) => {
-    const statusConfig: Record<LicenseStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<LicenseStatus, { icon: React.ElementType; color: string; label: string }> = {
       ACTIVE: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       EXPIRED: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Expired" },
       SUSPENDED: { icon: Ban, color: "bg-orange-100 text-orange-800", label: "Suspended" },
@@ -238,6 +237,7 @@ function LicenseDetailsPageContent() {
             <Button
               variant="outline"
               onClick={() => {
+    // eslint-disable-next-line no-alert
                 const reason = prompt("Reason for suspension:");
                 if (reason) {
                   suspendMutation.mutate(reason);
@@ -252,6 +252,7 @@ function LicenseDetailsPageContent() {
           {(license.status === "EXPIRED" || license.status === "SUSPENDED") && (
             <Button
               onClick={() => {
+    // eslint-disable-next-line no-alert
                 const days = prompt("Renewal duration (days):", "365");
                 if (days) {
                   renewMutation.mutate(parseInt(days));
@@ -392,7 +393,7 @@ function LicenseDetailsPageContent() {
                 </div>
               </div>
 
-              {license.metadata && Object.keys(license.metadata).length > 0 && (
+              {!!license.metadata && Object.keys(license.metadata as Record<string, unknown>).length > 0 && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Metadata</p>
                   <pre className="p-3 bg-accent rounded-lg overflow-x-auto text-xs">
@@ -488,7 +489,7 @@ function LicenseDetailsPageContent() {
               <CardContent>
                 {license.features && license.features.length > 0 ? (
                   <ul className="space-y-2">
-                    {license.features.map((feature: any, index: number) => (
+                    {license.features.map((feature: unknown, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
                         <span className="text-sm">{JSON.stringify(feature)}</span>
@@ -509,7 +510,7 @@ function LicenseDetailsPageContent() {
               <CardContent>
                 {license.restrictions && license.restrictions.length > 0 ? (
                   <ul className="space-y-2">
-                    {license.restrictions.map((restriction: any, index: number) => (
+                    {license.restrictions.map((restriction: unknown, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5" />
                         <span className="text-sm">{JSON.stringify(restriction)}</span>

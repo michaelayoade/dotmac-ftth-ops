@@ -192,6 +192,15 @@ class BaseOLTDriver(abc.ABC):
     async def get_health(self) -> dict[str, Any]:
         """Return health information."""
 
+    # Optional alarm operations (not all drivers implement these)
+    async def acknowledge_alarm(self, alarm_id: str) -> bool:
+        """Acknowledge an alarm if the driver supports it."""
+        raise NotImplementedError("Alarm acknowledgement not supported by driver")
+
+    async def clear_alarm(self, alarm_id: str) -> bool:
+        """Clear an alarm if the driver supports it."""
+        raise NotImplementedError("Alarm clear not supported by driver")
+
 
 class Tr069ACSClient(Protocol):
     """Minimal protocol describing the TR-069 ACS interactions drivers expect."""

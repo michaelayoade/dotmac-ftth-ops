@@ -16,7 +16,7 @@ export interface CommissionRule {
   commission_type: CommissionModel;
   commission_rate?: number;
   flat_fee_amount?: number;
-  tier_config?: Record<string, any>;
+  tier_config?: Record<string, unknown>;
   applies_to_products?: string[];
   applies_to_customers?: string[];
   effective_from: string;
@@ -41,7 +41,7 @@ export interface CreateCommissionRuleInput {
   commission_type: CommissionModel;
   commission_rate?: number;
   flat_fee_amount?: number;
-  tier_config?: Record<string, any>;
+  tier_config?: Record<string, unknown>;
   applies_to_products?: string[];
   applies_to_customers?: string[];
   effective_from: string;
@@ -56,7 +56,7 @@ export interface UpdateCommissionRuleInput {
   commission_type?: CommissionModel;
   commission_rate?: number;
   flat_fee_amount?: number;
-  tier_config?: Record<string, any>;
+  tier_config?: Record<string, unknown>;
   applies_to_products?: string[];
   applies_to_customers?: string[];
   effective_from?: string;

@@ -36,7 +36,7 @@ import type {
   TaskStatus,
 } from "@/types/project-management";
 import { TaskType, TaskPriority } from "@/types/project-management";
-import { useKanbanBoard, useUpdateTask, useCreateTask } from "@/hooks/useProjects";
+import { useKanbanBoard, useUpdateTask, useCreateTask, useTeams } from "@/hooks/useProjects";
 
 // ============================================================================
 // Types
@@ -49,19 +49,21 @@ interface KanbanBoardProps {
 interface TaskCardProps {
   task: Task;
   isDragging?: boolean;
+  teamName?: string;
 }
 
 interface ColumnProps {
   column: KanbanColumn;
   tasks: Task[];
   onAddTask: (columnId: string) => void;
+  teamNameById: Map<string, string>;
 }
 
 // ============================================================================
 // Task Card Component
 // ============================================================================
 
-function TaskCard({ task, isDragging = false }: TaskCardProps) {
+function TaskCard({ task, isDragging = false, teamName }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -133,6 +135,12 @@ function TaskCard({ task, isDragging = false }: TaskCardProps) {
                 {task.assignee.name}
               </div>
             )}
+            {!task.assignee && teamName && (
+              <div className="flex items-center text-xs text-muted-foreground">
+                <User className="h-3 w-3 mr-1" />
+                {teamName}
+              </div>
+            )}
           </div>
 
           {task.progress > 0 && (
@@ -177,7 +185,7 @@ function TaskCard({ task, isDragging = false }: TaskCardProps) {
 // Column Component
 // ============================================================================
 
-function Column({ column, tasks, onAddTask }: ColumnProps) {
+function Column({ column, tasks, onAddTask, teamNameById }: ColumnProps) {
   const taskIds = useMemo(() => tasks.map((t) => t.id), [tasks]);
 
   return (
@@ -217,7 +225,16 @@ function Column({ column, tasks, onAddTask }: ColumnProps) {
                 </p>
               </div>
             ) : (
-              tasks.map((task) => <TaskCard key={task.id} task={task} />)
+              tasks.map((task) => {
+                const teamName = teamNameById.get(task.reporterId ?? "");
+                return (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    {...(teamName ? { teamName } : {})}
+                  />
+                );
+              })
             )}
           </SortableContext>
         </CardContent>
@@ -234,6 +251,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const { data: board, isLoading } = useKanbanBoard(projectId);
   const { mutate: updateTask } = useUpdateTask();
   const { mutate: createTask } = useCreateTask();
+  const { data: teams } = useTeams();
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
@@ -244,6 +262,12 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       setColumns(board.columns);
     }
   }, [board]);
+
+  const teamNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    (teams ?? []).forEach((team) => map.set(team.id, team.name));
+    return map;
+  }, [teams]);
 
   // Sensors for drag and drop
   const sensors = useSensors(
@@ -407,12 +431,20 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
             column={column}
             tasks={column.tasks}
             onAddTask={handleAddTask}
+            teamNameById={teamNameById}
           />
         ))}
       </div>
 
       <DragOverlay>
-        {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
+        {activeTask ? (() => {
+          const teamName = teamNameById.get(activeTask.reporterId ?? "");
+          return teamName ? (
+            <TaskCard task={activeTask} isDragging teamName={teamName} />
+          ) : (
+            <TaskCard task={activeTask} isDragging />
+          );
+        })() : null}
       </DragOverlay>
     </DndContext>
   );

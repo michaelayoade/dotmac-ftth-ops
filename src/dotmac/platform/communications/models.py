@@ -30,6 +30,7 @@ class CommunicationStatus(str, Enum):
     """Communication delivery status."""
 
     PENDING = "pending"
+    QUEUED = "queued"
     SENT = "sent"
     DELIVERED = "delivered"
     FAILED = "failed"
@@ -228,6 +229,35 @@ class CommunicationStats(Base, TimestampMixin, TenantMixin):  # type: ignore[mis
             "pending": self.total_pending,
             "avg_delivery_time": self.avg_delivery_time_seconds,
             "metadata": self.metadata_,
+        }
+
+
+class BulkJobMetadata(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+    """Stored metadata for bulk communication jobs and task linkage."""
+
+    __tablename__ = "communication_bulk_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
+    )
+    job_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    task_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    template_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    recipient_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="queued", nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, default=dict, nullable=False)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "job_id": self.job_id,
+            "task_id": self.task_id,
+            "template_id": self.template_id,
+            "recipient_count": self.recipient_count,
+            "status": self.status,
+            "metadata": self.metadata_,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "tenant_id": self.tenant_id,
         }
 
 

@@ -73,14 +73,10 @@ export const TYPE_COLORS: Record<string, string> = {
 // Helper to get route for entity detail page
 export function getEntityRoute(type: string, id: string): string {
   const routes: Record<string, string> = {
-    customer: `/dashboard/customers/${id}`,
-    subscriber: `/dashboard/subscribers/${id}`,
-    invoice: `/dashboard/billing/invoices/${id}`,
-    ticket: `/dashboard/ticketing/tickets/${id}`,
-    user: `/dashboard/users/${id}`,
-    device: `/dashboard/network/devices/${id}`,
-    service: `/dashboard/services/${id}`,
-    order: `/dashboard/orders/${id}`,
+    customer: `/dashboard/crm/contacts/${id}`,
+    invoice: `/tenant-portal/billing/receipts`,
+    ticket: `/dashboard/ticketing/${id}`,
+    user: `/dashboard/security-access/users`,
   };
 
   return routes[type] || "#";

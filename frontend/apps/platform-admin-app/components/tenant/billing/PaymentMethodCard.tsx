@@ -5,7 +5,11 @@ import { Card, CardHeader, CardContent, CardFooter } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { PaymentMethod } from "@/hooks/useTenantPaymentMethods";
-import { CreditCard, Building2, Wallet, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+} from "lucide-react";
 
 interface PaymentMethodCardProps {
   paymentMethod: PaymentMethod;
@@ -45,19 +49,6 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
   onVerify,
   isUpdating = false,
 }) => {
-  const getMethodIcon = () => {
-    switch (paymentMethod.method_type) {
-      case "card":
-        return <CreditCard className="w-5 h-5" />;
-      case "bank_account":
-        return <Building2 className="w-5 h-5" />;
-      case "wallet":
-        return <Wallet className="w-5 h-5" />;
-      default:
-        return <CreditCard className="w-5 h-5" />;
-    }
-  };
-
   const getMethodDisplay = () => {
     if (paymentMethod.method_type === "card") {
       return {

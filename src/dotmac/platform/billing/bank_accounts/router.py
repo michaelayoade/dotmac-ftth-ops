@@ -38,9 +38,11 @@ from dotmac.platform.file_storage.service import FileStorageService
 
 logger = logging.getLogger(__name__)
 
-# Note: This router is included by the parent billing router which already has /billing prefix
-# So we only need /bank-accounts here to avoid /billing/billing/bank-accounts
-router = APIRouter(prefix="/bank-accounts", tags=["Billing - Bank Accounts"])
+# Note: The parent billing router already applies the /billing prefix.
+# Keep this router unprefixed so explicit paths below map to:
+#   /api/v1/billing/bank-accounts/*
+#   /api/v1/billing/payments/* (manual payments recorded against bank accounts)
+router = APIRouter(prefix="", tags=["Billing - Bank Accounts"])
 
 # ============================================================================
 # Company Bank Account Endpoints

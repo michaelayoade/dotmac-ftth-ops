@@ -491,7 +491,7 @@ describe("useTeamNotifications", () => {
 
   describe("loading states", () => {
     it("should set isLoading to true during request", async () => {
-      let resolvePromise: (value: any) => void;
+      let resolvePromise: (value: unknown) => void;
       const promise = new Promise((resolve) => {
         resolvePromise = resolve;
       });

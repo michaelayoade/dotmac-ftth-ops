@@ -40,7 +40,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Calendar,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
@@ -140,11 +139,13 @@ function APITokensContent() {
       });
 
       await loadTokens();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Failed to create API token", toError(error));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create API token",
+        description: err.response?.data?.detail || "Failed to create API token",
         variant: "destructive",
       });
     } finally {
@@ -162,11 +163,13 @@ function APITokensContent() {
       });
 
       await loadTokens();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Failed to revoke API token", toError(error), { tokenId });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to revoke token",
+        description: err.response?.data?.detail || "Failed to revoke token",
         variant: "destructive",
       });
     }

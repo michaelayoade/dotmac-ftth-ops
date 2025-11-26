@@ -5,14 +5,13 @@ import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
   Mail,
   Send,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   TrendingUp,
-  Users,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useCommunicationStats, useCommunicationLogs } from "@/hooks/useCommunications";
@@ -32,8 +31,8 @@ interface EmailDisplay {
  */
 export function CommunicationsDashboard() {
   // Fetch real data from API using hooks
-  const { data: statsData, isLoading: statsLoading } = useCommunicationStats();
-  const { data: emailsData, isLoading: emailsLoading } = useCommunicationLogs({
+  const { data: statsData } = useCommunicationStats();
+  const { data: emailsData } = useCommunicationLogs({
     page: 1,
     page_size: 10,
     sort_by: "created_at",

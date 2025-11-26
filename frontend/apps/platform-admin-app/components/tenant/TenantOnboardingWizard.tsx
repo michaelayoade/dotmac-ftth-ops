@@ -30,20 +30,20 @@ import {
   usePasswordGeneration,
 } from "@/hooks/useTenantOnboarding";
 import {
-  Building2,
-  User,
-  Settings,
-  Mail,
-  CheckCircle2,
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  CheckCircle2,
   Copy,
   Eye,
   EyeOff,
-  Plus,
-  Trash2,
-  ArrowLeft,
-  ArrowRight,
   Loader2,
+  Mail,
+  Plus,
+  Settings,
+  Trash2,
+  User,
 } from "lucide-react";
 import { TenantOnboardingRequest } from "@/lib/services/tenant-onboarding-service";
 
@@ -251,11 +251,11 @@ export function TenantOnboardingWizard({
     if (!validateStep("review")) return;
 
     try {
-      let metadataObj: Record<string, any> = {};
+      let metadataObj: Record<string, unknown> = {};
       if (metadata.trim()) {
         try {
           metadataObj = JSON.parse(metadata);
-        } catch (e) {
+        } catch {
           toast({
             title: "Invalid Metadata",
             description: "Metadata must be valid JSON",

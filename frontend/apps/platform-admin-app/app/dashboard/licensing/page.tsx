@@ -14,18 +14,15 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import {
-  Key,
-  Search,
-  RefreshCw,
-  Eye,
-  CheckCircle,
-  XCircle,
-  Clock,
   AlertTriangle,
   Ban,
-  BarChart3,
-  Users,
-  Calendar,
+  CheckCircle,
+  Clock,
+  Eye,
+  Key,
+  RefreshCw,
+  Search,
+  XCircle,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
@@ -48,7 +45,7 @@ interface License {
   activation_count: number;
   max_activations: number;
   suspended_reason?: string;
-  metadata?: any;
+  metadata?: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -88,7 +85,7 @@ function LicensingPageContent() {
   });
 
   const licenses: License[] = data?.data || [];
-  const total = data?.total || 0;
+  const _total = data?.total || 0;
 
   // Suspend license mutation
   const suspendMutation = useMutation({
@@ -137,7 +134,7 @@ function LicensingPageContent() {
   };
 
   const getStatusBadge = (status: LicenseStatus) => {
-    const statusConfig: Record<LicenseStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<LicenseStatus, { icon: React.ElementType; color: string; label: string }> = {
       ACTIVE: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       EXPIRED: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Expired" },
       SUSPENDED: { icon: Ban, color: "bg-orange-100 text-orange-800", label: "Suspended" },
@@ -379,6 +376,7 @@ function LicensingPageContent() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
+    // eslint-disable-next-line no-alert
                         const reason = prompt("Reason for suspension:");
                         if (reason) {
                           suspendMutation.mutate({ licenseId: license.id, reason });

@@ -350,6 +350,10 @@ export function InvoiceListPage() {
 | `isLoading`         | `boolean`                    | `false`                 | Loading state            |
 | `onRowClick`        | `(row: TData) => void`       | `undefined`             | Row click handler        |
 | `toolbarActions`    | `React.ReactNode`            | `undefined`             | Custom toolbar buttons   |
+| `translations`      | `Partial<EnhancedDataTableTranslations>` | Defaults (EN) | Override UI labels for i18n |
+| `enableResponsiveCards` | `boolean`               | `false`                 | Show card layout on mobile |
+| `renderMobileCard`  | `(row: Row<TData>) => React.ReactNode` | `undefined` | Renderer for mobile cards |
+| `responsiveCardBreakpoint` | `number`             | `768`                   | Max width for card view  |
 
 ## BulkAction Type
 
@@ -408,6 +412,98 @@ All existing props are compatible! Just add new features as needed.
 2. **Memoize bulk actions**: Define actions outside component or use `useCallback`
 3. **Virtualization**: For 1000+ rows, consider using `@tanstack/react-virtual`
 4. **Server-side pagination**: For large datasets, implement server-side pagination
+
+### Internationalization
+
+All labels support override via `translations`:
+
+```tsx
+<EnhancedDataTable
+  data={data}
+  columns={columns}
+  translations={{
+    searchPlaceholder: t("tables.search"),
+    filtersLabel: t("tables.filters"),
+    exportLabel: t("tables.export"),
+    rowsPerPage: t("tables.rowsPerPage"),
+    pageOf: (page, count) => t("tables.pageOf", { page, count }),
+  }}
+/>
+```
+
+Defaults are provided for English; pass your i18n strings to localize controls and aria-labels.
+
+### Responsive Card View (Mobile)
+
+Render a mobile-friendly card layout below a breakpoint:
+
+```tsx
+<EnhancedDataTable
+  data={data}
+  columns={columns}
+  enableResponsiveCards
+  responsiveCardBreakpoint={768}
+  renderMobileCard={(row) => (
+    <div className="space-y-1">
+      <div className="font-semibold">{row.original.invoice_number}</div>
+      <div className="text-muted-foreground">{row.original.customer_name}</div>
+      <div>${row.original.amount.toFixed(2)}</div>
+    </div>
+  )}
+/>
+```
+
+### Server-Side Pagination Pattern
+
+For 10k+ rows, disable built-in pagination and manage it externally:
+
+```tsx
+const [pageIndex, setPageIndex] = useState(0);
+const [pageSize, setPageSize] = useState(50);
+const { rows, total, isLoading } = useInvoices({ pageIndex, pageSize });
+const pageCount = Math.ceil(total / pageSize);
+
+return (
+  <>
+    <EnhancedDataTable
+      data={rows}
+      columns={columns}
+      pagination={false}
+      searchable={false}
+      isLoading={isLoading}
+    />
+    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+      <span>
+        Page {pageIndex + 1} of {pageCount}
+      </span>
+      <button onClick={() => setPageIndex((p) => Math.max(p - 1, 0))} disabled={pageIndex === 0}>
+        Prev
+      </button>
+      <button
+        onClick={() => setPageIndex((p) => Math.min(p + 1, pageCount - 1))}
+        disabled={pageIndex >= pageCount - 1}
+      >
+        Next
+      </button>
+      <select
+        value={pageSize}
+        onChange={(e) => {
+          setPageSize(Number(e.target.value));
+          setPageIndex(0);
+        }}
+      >
+        {[20, 50, 100].map((size) => (
+          <option key={size} value={size}>
+            {size} / page
+          </option>
+        ))}
+      </select>
+    </div>
+  </>
+);
+```
+
+See `EnhancedDataTable.examples.tsx` for a working mock of this pattern.
 
 ## Use Cases
 

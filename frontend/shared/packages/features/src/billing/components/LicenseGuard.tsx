@@ -10,9 +10,9 @@
  * </LicenseGuard>
  */
 
-import React, { type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle, Button, Card } from "@dotmac/ui";
 import { Lock, TrendingUp } from "lucide-react";
+import React, { type ReactNode } from "react";
 
 export interface LicenseGuardProps {
   /**

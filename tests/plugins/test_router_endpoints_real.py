@@ -189,27 +189,24 @@ class TestListAvailablePlugins:
         assert isinstance(plugins, list)
         assert len(plugins) >= 1
 
-        # Should contain our test plugin
+        # Should contain our test plugin in summary form
         plugin_names = [p["name"] for p in plugins]
         assert "Test Notification" in plugin_names
+        test_plugin = next(p for p in plugins if p["name"] == "Test Notification")
+        assert test_plugin["id"] == "Test Notification"
+        assert test_plugin["enabled"] is True
+        assert "version" in test_plugin
 
     @pytest.mark.asyncio
-    async def test_list_plugins_returns_schemas(self, client, setup_registry, auth_headers):
-        """Test that plugins include configuration schemas."""
+    async def test_list_plugins_is_frontend_friendly(self, client, setup_registry, auth_headers):
+        """List endpoint should return compact UI-friendly shape (no schema)."""
         response = client.get("/api/v1/plugins/")
         assert response.status_code == 200
 
         plugins = response.json()
         test_plugin = next(p for p in plugins if p["name"] == "Test Notification")
 
-        # Should have schema fields
-        assert "fields" in test_plugin
-        assert len(test_plugin["fields"]) == 3
-
-        # Check field details
-        field_keys = [f["key"] for f in test_plugin["fields"]]
-        assert "api_key" in field_keys
-        assert "endpoint" in field_keys
+        assert set(test_plugin.keys()) == {"id", "name", "description", "version", "enabled"}
 
 
 class TestGetPluginSchema:

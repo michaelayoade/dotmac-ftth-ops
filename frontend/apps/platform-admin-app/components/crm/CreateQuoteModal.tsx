@@ -7,11 +7,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CreateQuoteModal as SharedCreateQuoteModal,
-  type CreateQuoteModalProps as SharedCreateQuoteModalProps,
-  type QuoteCreateRequest as SharedQuoteCreateRequest,
-} from "@dotmac/features/crm";
+import { CreateQuoteModal as SharedCreateQuoteModal, type QuoteCreateRequest as SharedQuoteCreateRequest } from "@dotmac/features/crm";
 import {
   type Quote,
   useLeads,

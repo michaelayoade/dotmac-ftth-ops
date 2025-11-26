@@ -4,15 +4,15 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Users,
+  Building2,
+  Edit,
+  Mail,
+  MoreVertical,
+  Phone,
   Plus,
   Search,
-  MoreVertical,
-  Edit,
   Trash2,
-  Mail,
-  Phone,
-  Building2,
+  Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
@@ -100,10 +100,12 @@ export default function ContactsPage() {
         description: "The contact has been deleted successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete contact",
+        description: err.response?.data?.detail || "Failed to delete contact",
         variant: "destructive",
       });
     },
@@ -305,7 +307,7 @@ export default function ContactsPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => {
-                                void handleDelete(contact);
+                                handleDelete(contact).catch(() => {});
                               }}
                               className="text-destructive"
                             >

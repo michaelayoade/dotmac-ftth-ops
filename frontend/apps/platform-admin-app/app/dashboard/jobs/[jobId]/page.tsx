@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
@@ -8,19 +7,18 @@ import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import {
-  ArrowLeft,
-  Briefcase,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Loader,
   AlertTriangle,
-  Calendar,
-  User,
+  ArrowLeft,
   BarChart3,
+  Briefcase,
+  Calendar,
+  CheckCircle,
+  Clock,
   FileText,
-  RefreshCw,
+  Loader,
   RotateCcw,
+  User,
+  XCircle,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -43,7 +41,7 @@ interface Job {
   current_item?: string;
   error_message?: string;
   error_traceback?: string;
-  result?: any;
+  result?: unknown;
   created_by?: string;
   created_at: string;
   started_at?: string;
@@ -131,7 +129,7 @@ function JobDetailsPageContent() {
   });
 
   const getStatusBadge = (status: JobStatus) => {
-    const statusConfig: Record<JobStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<JobStatus, { icon: React.ElementType; color: string; label: string }> = {
       pending: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Pending" },
       running: { icon: Loader, color: "bg-blue-100 text-blue-800", label: "Running" },
       completed: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Completed" },

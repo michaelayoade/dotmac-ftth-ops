@@ -46,7 +46,7 @@ export interface TransferJobResponse {
   records_failed: number;
   records_total: number | null;
   error_message: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
   duration?: number | null;
   success_rate?: number;
 }
@@ -64,7 +64,7 @@ export interface ImportRequest {
   source_path: string;
   format: DataFormat;
   mapping?: Record<string, string> | null;
-  options?: Record<string, any> | null;
+  options?: Record<string, unknown> | null;
   validation_level?: ValidationLevel;
   batch_size?: number;
   encoding?: string;
@@ -76,9 +76,9 @@ export interface ExportRequest {
   target_type: ExportTarget;
   target_path: string;
   format: DataFormat;
-  filters?: Record<string, any> | null;
+  filters?: Record<string, unknown> | null;
   fields?: string[] | null;
-  options?: Record<string, any> | null;
+  options?: Record<string, unknown> | null;
   compression?: CompressionType;
   batch_size?: number;
   encoding?: string;
@@ -92,7 +92,7 @@ export interface DataFormatInfo {
   mime_types: string[];
   supports_compression: boolean;
   supports_streaming: boolean;
-  options: Record<string, any>;
+  options: Record<string, unknown>;
 }
 
 export interface FormatsResponse {
@@ -223,10 +223,11 @@ export function useCreateImportJob() {
         description: `Job "${data.name}" has been queued for processing.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { detail?: string } } };
       toast({
         title: "Import failed",
-        description: error.response?.data?.detail || "Failed to create import job",
+        description: err.response?.data?.detail || "Failed to create import job",
         variant: "destructive",
       });
     },
@@ -253,10 +254,11 @@ export function useCreateExportJob() {
         description: `Job "${data.name}" has been queued for processing.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { detail?: string } } };
       toast({
         title: "Export failed",
-        description: error.response?.data?.detail || "Failed to create export job",
+        description: err.response?.data?.detail || "Failed to create export job",
         variant: "destructive",
       });
     },
@@ -289,10 +291,11 @@ export function useCancelJob() {
         description: "Transfer job has been cancelled successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { detail?: string } } };
       toast({
         title: "Cancellation failed",
-        description: error.response?.data?.detail || "Failed to cancel job",
+        description: err.response?.data?.detail || "Failed to cancel job",
         variant: "destructive",
       });
     },

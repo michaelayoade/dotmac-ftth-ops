@@ -27,7 +27,7 @@ export interface Tenant {
   created_at?: string;
   trial_ends_at?: string;
   logo_url?: string;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 export interface TenantInvitation {
@@ -68,7 +68,7 @@ export async function updateTenant(id: string, data: Partial<Tenant>): Promise<T
   return response.data;
 }
 
-export async function updateTenantSettings(settings: Record<string, any>): Promise<Tenant> {
+export async function updateTenantSettings(settings: Record<string, unknown>): Promise<Tenant> {
   const response = await apiClient.patch<Tenant>("/tenant/settings", {
     settings,
   });

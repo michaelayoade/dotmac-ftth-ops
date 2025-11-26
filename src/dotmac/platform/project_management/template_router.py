@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.token_with_rbac import get_current_user_with_rbac
-from dotmac.platform.db import get_db
+from dotmac.platform.db import get_async_session
 from dotmac.platform.project_management.template_schemas import (
     ProjectTemplateCloneRequest,
     ProjectTemplateCloneResponse,
@@ -40,7 +40,7 @@ router = APIRouter(prefix="/project-management/templates", tags=["project-templa
 async def create_template(
     data: ProjectTemplateCreate,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectTemplateWithTasks:
     """
     Create a new project template with tasks.
@@ -84,7 +84,7 @@ async def create_template(
 async def get_template(
     template_id: UUID,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectTemplateWithTasks:
     """Get template by ID with all tasks"""
     service = TemplateBuilderService(session, current_user.tenant_id)
@@ -108,7 +108,7 @@ async def list_templates(
     limit: int = Query(default=50, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectTemplateListResponse:
     """
     List project templates with filtering.
@@ -143,7 +143,7 @@ async def update_template(
     template_id: UUID,
     data: ProjectTemplateUpdate,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectTemplateResponse:
     """Update template metadata (not tasks)"""
     service = TemplateBuilderService(session, current_user.tenant_id)
@@ -163,7 +163,7 @@ async def update_template(
 async def delete_template(
     template_id: UUID,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Soft delete template"""
     service = TemplateBuilderService(session, current_user.tenant_id)
@@ -184,7 +184,7 @@ async def clone_template(
     template_id: UUID,
     data: ProjectTemplateCloneRequest,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectTemplateCloneResponse:
     """
     Clone a template to create a new version.
@@ -226,7 +226,7 @@ async def preview_template(
     template_id: UUID,
     data: TemplatePreviewRequest,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TemplatePreviewResponse:
     """
     Preview what would be created from this template.
@@ -266,7 +266,7 @@ async def add_task_to_template(
     template_id: UUID,
     data: TaskTemplateCreate,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TaskTemplateResponse:
     """
     Add a new task to an existing template.
@@ -299,7 +299,7 @@ async def update_task_template(
     task_id: UUID,
     data: TaskTemplateUpdate,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TaskTemplateResponse:
     """Update a task template"""
     service = TemplateBuilderService(session, current_user.tenant_id)
@@ -319,7 +319,7 @@ async def update_task_template(
 async def delete_task_template(
     task_id: UUID,
     current_user: User = Depends(get_current_user_with_rbac),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete a task template"""
     service = TemplateBuilderService(session, current_user.tenant_id)

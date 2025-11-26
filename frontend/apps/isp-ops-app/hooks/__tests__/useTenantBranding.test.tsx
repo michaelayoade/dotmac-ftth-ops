@@ -28,6 +28,7 @@ jest.mock('@/lib/api/client', () => ({
 
 jest.mock('@dotmac/better-auth', () => ({
   useSession: jest.fn(),
+  isAuthBypassEnabled: jest.fn(() => false),
 }));
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;

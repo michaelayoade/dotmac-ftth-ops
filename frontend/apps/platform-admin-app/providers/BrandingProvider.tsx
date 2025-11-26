@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, ReactNode, useContext, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { useAppConfig } from "./AppConfigContext";
-import { applyBrandingConfig, applyThemeTokens } from "@/lib/theme";
+import { applyBrandingConfig } from "@/lib/theme";
 
 interface BrandingProviderProps {
   children: ReactNode;
@@ -31,22 +32,13 @@ function updateFavicon(faviconUrl?: string) {
 
 export function BrandingProvider({ children }: BrandingProviderProps) {
   const { branding } = useAppConfig();
+  const { resolvedTheme } = useTheme();
+  const themeMode = resolvedTheme === "dark" ? "dark" : "light";
 
   useEffect(() => {
-    applyThemeTokens({
-      "brand-primary": branding.colors?.primary,
-      "brand-primary-hover": branding.colors?.primaryHover,
-      "brand-primary-foreground": branding.colors?.primaryForeground,
-      "brand-secondary": branding.colors?.secondary,
-      "brand-secondary-hover": branding.colors?.secondaryHover,
-      "brand-secondary-foreground": branding.colors?.secondaryForeground,
-      "brand-accent": branding.colors?.accent,
-      "brand-background": branding.colors?.background,
-      "brand-foreground": branding.colors?.foreground,
-    });
-    applyBrandingConfig(branding);
+    applyBrandingConfig(branding, { theme: themeMode });
     updateFavicon(branding.faviconUrl);
-  }, [branding]);
+  }, [branding, themeMode]);
 
   return (
     <BrandingContext.Provider value={{ branding, isLoading: false }}>

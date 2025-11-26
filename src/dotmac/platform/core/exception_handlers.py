@@ -19,7 +19,7 @@ from dotmac.platform.core.error_contract import (
     StandardErrorResponse,
 )
 from dotmac.platform.core.exceptions import DotMacError, ValidationError
-from dotmac.platform.core.request_context import get_correlation_id
+from dotmac.platform.core.request_context import ensure_correlation_id, get_correlation_id
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ async def validation_error_handler(request: Request, exc: PydanticValidationErro
     Returns:
         JSONResponse with standard error format
     """
-    correlation_id = get_correlation_id()
+    correlation_id = ensure_correlation_id()
 
     # Extract field errors from Pydantic validation error
     field_errors = {}
@@ -122,7 +122,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     Returns:
         JSONResponse with standard error format
     """
-    correlation_id = get_correlation_id()
+    correlation_id = ensure_correlation_id()
 
     # Log the full exception with stack trace
     logger.exception(
@@ -187,7 +187,7 @@ async def http_exception_handler(request: Request, exc: Any) -> JSONResponse:
     Returns:
         JSONResponse with standard error format
     """
-    correlation_id = get_correlation_id()
+    correlation_id = ensure_correlation_id()
 
     # Determine error category and severity based on status code
     from dotmac.platform.core.error_contract import (

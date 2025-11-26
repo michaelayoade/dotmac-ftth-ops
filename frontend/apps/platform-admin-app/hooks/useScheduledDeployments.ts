@@ -28,7 +28,7 @@ export interface ProvisionRequest {
   template_id: number;
   environment: string;
   region?: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   allocated_cpu?: number;
   allocated_memory_gb?: number;
   allocated_storage_gb?: number;
@@ -38,7 +38,7 @@ export interface ProvisionRequest {
 
 export interface UpgradeRequest {
   to_version: string;
-  config_updates?: Record<string, any>;
+  config_updates?: Record<string, unknown>;
   rollback_on_failure?: boolean;
   maintenance_window_start?: string;
   maintenance_window_end?: string;
@@ -59,7 +59,7 @@ export interface ScheduledDeploymentRequest {
   scale_request?: ScaleRequest;
   cron_expression?: string; // For recurring schedules
   interval_seconds?: number; // For recurring schedules (60-2592000)
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ScheduledDeploymentResponse {
@@ -70,7 +70,7 @@ export interface ScheduledDeploymentResponse {
   cron_expression?: string;
   interval_seconds?: number;
   next_run_at?: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 export interface DeploymentTemplate {

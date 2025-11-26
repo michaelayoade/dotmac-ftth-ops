@@ -7,7 +7,9 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import {
+  X,
+} from "lucide-react";
 import type { TemplateCreateRequest, CommunicationType } from "@/hooks/useNotifications";
 import {
   Dialog,

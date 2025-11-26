@@ -4,7 +4,11 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import Link from "next/link";
-import { Users, UserPlus, Shield } from "lucide-react";
+import {
+  Shield,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";

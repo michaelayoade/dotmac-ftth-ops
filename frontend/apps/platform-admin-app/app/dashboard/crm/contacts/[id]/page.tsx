@@ -5,13 +5,13 @@ import { useRouter, useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  Save,
-  Mail,
-  Phone,
   Building2,
   Calendar,
-  User,
+  Mail,
+  Phone,
+  Save,
   Trash2,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
@@ -128,10 +128,12 @@ export default function ContactDetailPage() {
       });
       setIsEditing(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update contact",
+        description: err.response?.data?.detail || "Failed to update contact",
         variant: "destructive",
       });
     },
@@ -149,10 +151,12 @@ export default function ContactDetailPage() {
       });
       router.push("/dashboard/crm/contacts");
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete contact",
+        description: err.response?.data?.detail || "Failed to delete contact",
         variant: "destructive",
       });
     },
@@ -239,7 +243,7 @@ export default function ContactDetailPage() {
               <Button
                 variant="destructive"
                 onClick={() => {
-                  void handleDelete();
+                  handleDelete().catch(() => {});
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4" />

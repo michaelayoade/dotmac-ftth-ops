@@ -223,6 +223,7 @@ class AuditActivityList(BaseModel):  # BaseModel resolves to Any in isolation
     total: int
     page: int = 1
     per_page: int = 50
+    total_pages: int = 0
     has_next: bool
     has_prev: bool
 

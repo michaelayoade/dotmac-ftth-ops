@@ -69,51 +69,6 @@ export function applyTheme(theme: Theme): void {
 }
 
 /**
- * Get current theme from localStorage
- */
-export function getCurrentTheme(): string {
-  if (typeof window === "undefined") return "light";
-
-  return localStorage.getItem("theme") || "light";
-}
-
-/**
- * Set theme and persist to localStorage
- */
-export function setTheme(themeName: "light" | "dark"): void {
-  if (typeof window === "undefined") return;
-
-  localStorage.setItem("theme", themeName);
-
-  const theme = themeName === "dark" ? darkTheme : defaultTheme;
-  applyTheme(theme);
-
-  // Update document class for Tailwind dark mode
-  if (themeName === "dark") {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
-  }
-}
-
-/**
- * Toggle between light and dark themes
- */
-export function toggleTheme(): void {
-  const current = getCurrentTheme();
-  const newTheme = current === "dark" ? "light" : "dark";
-  setTheme(newTheme as "light" | "dark");
-}
-
-/**
- * Initialize theme on app load
- */
-export function initializeTheme(): void {
-  const savedTheme = getCurrentTheme();
-  setTheme(savedTheme as "light" | "dark");
-}
-
-/**
  * Apply theme tokens (alias for applyTheme for backwards compatibility)
  */
 export function applyThemeTokens(themeTokens: any): void {
@@ -139,10 +94,97 @@ export function applyThemeTokens(themeTokens: any): void {
 /**
  * Apply branding configuration
  */
-export function applyBrandingConfig(branding: any): void {
+type BrandThemeMode = "light" | "dark";
+
+type BrandingColors = {
+  primary?: string;
+  primaryHover?: string;
+  primaryForeground?: string;
+  secondary?: string;
+  secondaryHover?: string;
+  secondaryForeground?: string;
+  accent?: string;
+  background?: string;
+  foreground?: string;
+  light?: BrandingColors;
+  dark?: BrandingColors;
+};
+
+function resolveBrandingPalette(branding: any, mode: BrandThemeMode): BrandingColors {
+  const colors = (branding?.colors || {}) as BrandingColors;
+  const themeColors = (mode === "dark" ? colors.dark : colors.light) || (colors as BrandingColors);
+
+  const result: BrandingColors = {};
+
+  const primary = themeColors.primary ?? colors.primary;
+  if (primary) result.primary = primary;
+
+  const primaryHover = themeColors.primaryHover ?? colors.primaryHover;
+  if (primaryHover) result.primaryHover = primaryHover;
+
+  const primaryForeground = themeColors.primaryForeground ?? colors.primaryForeground;
+  if (primaryForeground) result.primaryForeground = primaryForeground;
+
+  const secondary = themeColors.secondary ?? colors.secondary;
+  if (secondary) result.secondary = secondary;
+
+  const secondaryHover = themeColors.secondaryHover ?? colors.secondaryHover;
+  if (secondaryHover) result.secondaryHover = secondaryHover;
+
+  const secondaryForeground = themeColors.secondaryForeground ?? colors.secondaryForeground;
+  if (secondaryForeground) result.secondaryForeground = secondaryForeground;
+
+  const accent = themeColors.accent ?? colors.accent;
+  if (accent) result.accent = accent;
+
+  const background = themeColors.background ?? colors.background;
+  if (background) result.background = background;
+
+  const foreground = themeColors.foreground ?? colors.foreground;
+  if (foreground) result.foreground = foreground;
+
+  return result;
+}
+
+function applyBrandingPalette(
+  root: HTMLElement,
+  palette: BrandingColors,
+  suffix?: BrandThemeMode,
+): void {
+  const suffixToken = suffix ? `-${suffix}` : "";
+  const setVar = (name: string, value?: string) => {
+    const varName = `${name}${suffixToken}`;
+    if (value) {
+      root.style.setProperty(varName, value);
+    } else {
+      root.style.removeProperty(varName);
+    }
+  };
+
+  setVar("--brand-primary", palette.primary);
+  setVar("--brand-primary-hover", palette.primaryHover ?? palette.primary);
+  setVar("--brand-primary-foreground", palette.primaryForeground);
+  setVar("--brand-secondary", palette.secondary);
+  setVar("--brand-secondary-hover", palette.secondaryHover ?? palette.secondary);
+  setVar("--brand-secondary-foreground", palette.secondaryForeground);
+  setVar("--brand-accent", palette.accent);
+  setVar("--brand-background", palette.background);
+  setVar("--brand-foreground", palette.foreground);
+}
+
+export function applyBrandingConfig(branding: any, options?: { theme?: BrandThemeMode }): void {
   if (!branding || typeof document === "undefined") return;
 
   const root = document.documentElement;
+  const mode: BrandThemeMode = options?.theme === "dark" ? "dark" : "light";
+
+  const lightPalette = resolveBrandingPalette(branding, "light");
+  const darkPalette = resolveBrandingPalette(branding, "dark");
+  const activePalette = mode === "dark" ? darkPalette : lightPalette;
+
+  applyBrandingPalette(root, lightPalette, "light");
+  applyBrandingPalette(root, darkPalette, "dark");
+  applyBrandingPalette(root, activePalette);
 
   // Determine logos (support both new and legacy properties)
   const lightLogo = branding.logo?.light || branding.logoLight || branding.logoUrl;
@@ -155,44 +197,15 @@ export function applyBrandingConfig(branding: any): void {
     root.style.setProperty("--brand-logo-dark", `url(${darkLogo})`);
   }
 
-  // Helper to apply color tokens with sensible defaults
-  const applyColor = (cssVar: string, value?: string) => {
-    if (value) {
-      root.style.setProperty(cssVar, value);
-    }
-  };
-
+  // Text/brand metadata tokens
   const applyText = (cssVar: string, value?: string) => {
     if (value) {
       root.style.setProperty(cssVar, value);
+    } else {
+      root.style.removeProperty(cssVar);
     }
   };
 
-  // Primary palette
-  applyColor("--brand-primary", branding.primaryColor || branding.colors?.primary);
-  applyColor("--brand-primary-hover", branding.primaryHoverColor || branding.colors?.primaryHover);
-  applyColor(
-    "--brand-primary-foreground",
-    branding.primaryForegroundColor || branding.colors?.primaryForeground,
-  );
-
-  // Secondary palette
-  applyColor("--brand-secondary", branding.secondaryColor || branding.colors?.secondary);
-  applyColor(
-    "--brand-secondary-hover",
-    branding.secondaryHoverColor || branding.colors?.secondaryHover,
-  );
-  applyColor(
-    "--brand-secondary-foreground",
-    branding.secondaryForegroundColor || branding.colors?.secondaryForeground,
-  );
-
-  // Accent/background/foreground tokens (optional)
-  applyColor("--brand-accent", branding.accentColor || branding.colors?.accent);
-  applyColor("--brand-background", branding.backgroundColor || branding.colors?.background);
-  applyColor("--brand-foreground", branding.foregroundColor || branding.colors?.foreground);
-
-  // Text/brand metadata tokens
   applyText("--brand-product-name", branding.productName);
   applyText("--brand-product-tagline", branding.productTagline);
   applyText("--brand-company-name", branding.companyName);
@@ -214,10 +227,6 @@ export const theme = {
   apply: applyTheme,
   applyTokens: applyThemeTokens,
   applyBranding: applyBrandingConfig,
-  getCurrent: getCurrentTheme,
-  set: setTheme,
-  toggle: toggleTheme,
-  initialize: initializeTheme,
 };
 
 export default theme;

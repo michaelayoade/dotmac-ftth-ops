@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
+import { useTheme } from "next-themes";
 import { useAppConfig } from "./AppConfigContext";
-import { applyBrandingConfig, applyThemeTokens } from "@/lib/theme";
+import { applyBrandingConfig } from "@/lib/theme";
 import { useTenantBrandingQuery, type TenantBrandingConfigDto } from "@/hooks/useTenantBranding";
 import { isAuthBypassEnabled } from "@dotmac/better-auth";
 
@@ -28,17 +29,73 @@ function mergeBranding(
     return defaultBranding;
   }
 
-  const mergedColors = {
-    ...defaultBranding.colors,
-    primary: overrides.primary_color ?? defaultBranding.colors?.primary,
-    primaryHover: overrides.primary_color ?? defaultBranding.colors?.primaryHover,
-    primaryForeground: defaultBranding.colors?.primaryForeground,
-    secondary: overrides.secondary_color ?? defaultBranding.colors?.secondary,
-    secondaryHover: overrides.secondary_color ?? defaultBranding.colors?.secondaryHover,
-    secondaryForeground: defaultBranding.colors?.secondaryForeground,
-    accent: overrides.accent_color ?? defaultBranding.colors?.accent,
-    background: defaultBranding.colors?.background,
-    foreground: defaultBranding.colors?.foreground,
+  const baseColors = defaultBranding.colors || {};
+  const mergedLight = {
+    ...(baseColors.light || {}),
+    primary: overrides.primary_color ?? baseColors.light?.primary ?? baseColors.primary,
+    primaryHover:
+      overrides.primary_hover_color ??
+      baseColors.light?.primaryHover ??
+      baseColors.primaryHover ??
+      overrides.primary_color,
+    primaryForeground:
+      overrides.primary_foreground_color ??
+      baseColors.light?.primaryForeground ??
+      baseColors.primaryForeground,
+    secondary: overrides.secondary_color ?? baseColors.light?.secondary ?? baseColors.secondary,
+    secondaryHover:
+      overrides.secondary_hover_color ??
+      baseColors.light?.secondaryHover ??
+      baseColors.secondaryHover ??
+      overrides.secondary_color,
+    secondaryForeground:
+      overrides.secondary_foreground_color ??
+      baseColors.light?.secondaryForeground ??
+      baseColors.secondaryForeground,
+    accent: overrides.accent_color ?? baseColors.light?.accent ?? baseColors.accent,
+    background:
+      overrides.background_color ??
+      baseColors.light?.background ??
+      baseColors.background,
+    foreground:
+      overrides.foreground_color ??
+      baseColors.light?.foreground ??
+      baseColors.foreground,
+  };
+
+  const mergedDark = {
+    ...(baseColors.dark || {}),
+    primary: overrides.primary_color_dark ?? baseColors.dark?.primary ?? mergedLight.primary,
+    primaryHover:
+      overrides.primary_hover_color_dark ??
+      baseColors.dark?.primaryHover ??
+      baseColors.primaryHover ??
+      mergedLight.primaryHover,
+    primaryForeground:
+      overrides.primary_foreground_color_dark ??
+      baseColors.dark?.primaryForeground ??
+      baseColors.primaryForeground,
+    secondary: overrides.secondary_color_dark ?? baseColors.dark?.secondary ?? mergedLight.secondary,
+    secondaryHover:
+      overrides.secondary_hover_color_dark ??
+      baseColors.dark?.secondaryHover ??
+      baseColors.secondaryHover ??
+      mergedLight.secondaryHover,
+    secondaryForeground:
+      overrides.secondary_foreground_color_dark ??
+      baseColors.dark?.secondaryForeground ??
+      baseColors.secondaryForeground,
+    accent: overrides.accent_color_dark ?? baseColors.dark?.accent ?? mergedLight.accent,
+    background:
+      overrides.background_color_dark ??
+      baseColors.dark?.background ??
+      baseColors.background ??
+      "#0b1220",
+    foreground:
+      overrides.foreground_color_dark ??
+      baseColors.dark?.foreground ??
+      baseColors.foreground ??
+      "#e2e8f0",
   };
 
   const mergedLogos = {
@@ -56,7 +113,12 @@ function mergeBranding(
     successEmail: overrides.success_email ?? defaultBranding.successEmail,
     partnerSupportEmail:
       overrides.partner_support_email ?? defaultBranding.partnerSupportEmail,
-    colors: mergedColors,
+    colors: {
+      ...baseColors,
+      ...mergedLight,
+      light: mergedLight,
+      dark: mergedDark,
+    },
     logo: mergedLogos,
     faviconUrl: overrides.favicon_url ?? defaultBranding.faviconUrl ?? "/favicon.ico",
     docsUrl: overrides.docs_url ?? defaultBranding.docsUrl,
@@ -86,6 +148,8 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
   const { branding: defaultBranding } = useAppConfig();
   // Skip session/branding queries in bypass mode to avoid hangs
   const brandingQuery = useTenantBrandingQuery({ enabled: !authBypassEnabled });
+  const { resolvedTheme } = useTheme();
+  const themeMode = resolvedTheme === "dark" ? "dark" : "light";
 
   const mergedBranding = useMemo(
     () => mergeBranding(defaultBranding, brandingQuery.data?.branding),
@@ -93,20 +157,9 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
   );
 
   useEffect(() => {
-    applyThemeTokens({
-      "brand-primary": mergedBranding.colors?.primary,
-      "brand-primary-hover": mergedBranding.colors?.primaryHover,
-      "brand-primary-foreground": mergedBranding.colors?.primaryForeground,
-      "brand-secondary": mergedBranding.colors?.secondary,
-      "brand-secondary-hover": mergedBranding.colors?.secondaryHover,
-      "brand-secondary-foreground": mergedBranding.colors?.secondaryForeground,
-      "brand-accent": mergedBranding.colors?.accent,
-      "brand-background": mergedBranding.colors?.background,
-      "brand-foreground": mergedBranding.colors?.foreground,
-    });
-    applyBrandingConfig(mergedBranding);
+    applyBrandingConfig(mergedBranding, { theme: themeMode });
     updateFavicon(mergedBranding.faviconUrl);
-  }, [mergedBranding]);
+  }, [mergedBranding, themeMode]);
 
   return (
     <BrandingContext.Provider

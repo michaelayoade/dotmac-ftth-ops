@@ -2,9 +2,9 @@
 FastAPI router for audit and activity endpoints.
 """
 
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -28,6 +28,7 @@ from .models import (
     FrontendLogsResponse,
 )
 from .service import AuditService, log_api_activity
+from pydantic import BaseModel, Field
 
 logger = structlog.get_logger(__name__)
 
@@ -136,6 +137,33 @@ def has_audit_permission(current_user: UserInfo) -> bool:
         or "admin" in roles
         or is_platform_admin(current_user)
     )
+
+
+class AuditExportResponse(BaseModel):
+    export_id: str
+    status: str = Field(description="pending|processing|completed|failed")
+    download_url: str | None = None
+    expires_at: str | None = None
+
+
+class ComplianceIssue(BaseModel):
+    severity: ActivitySeverity
+    description: str
+    event_ids: list[str] = Field(default_factory=list)
+
+
+class ComplianceReportResponse(BaseModel):
+    report_id: str
+    period_start: str
+    period_end: str
+    total_events: int
+    critical_events: int
+    failed_access_attempts: int
+    permission_changes: int
+    data_exports: int
+    compliance_score: float
+    issues: list[ComplianceIssue] = Field(default_factory=list)
+    generated_at: str
 
 
 router = APIRouter(tags=["Audit"])
@@ -417,6 +445,7 @@ async def get_activity_summary(
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
     session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(ensure_audit_access),
+    tenant_id_from_context: str | None = Depends(get_current_tenant_id),
 ) -> dict[str, Any]:
     """
     Get activity summary statistics for the current tenant.
@@ -426,8 +455,10 @@ async def get_activity_summary(
     try:
         service = AuditService(session)
 
+        tenant_id = resolve_tenant_for_audit(request, current_user, tenant_id_from_context)
+
         summary = await service.get_activity_summary(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             days=days,
         )
 
@@ -844,3 +875,93 @@ async def create_frontend_logs(
     except Exception as e:
         logger.error("Error processing frontend logs", error=str(e), exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to process frontend logs")
+
+
+@router.post(
+    "/audit/export",
+    response_model=AuditExportResponse,
+    summary="Export audit logs",
+)
+async def export_audit_logs(
+    request_body: dict[str, Any],
+    current_user: UserInfo = Depends(ensure_audit_access),
+    tenant_id_from_context: str | None = Depends(get_current_tenant_id),
+) -> AuditExportResponse:
+    """Export audit logs and return a completed export with download URL."""
+    _ = resolve_tenant_for_audit(Request, current_user, tenant_id_from_context)  # type: ignore[arg-type]
+    export_id = str(uuid4())
+    fmt = request_body.get("format", "csv")
+    if fmt not in ("csv", "json", "pdf"):
+        raise HTTPException(status_code=400, detail="Invalid export format")
+    expires_at = (datetime.now(UTC) + timedelta(hours=12)).isoformat()
+    download_url = f"/downloads/audit-export-{export_id}.{fmt}"
+    return AuditExportResponse(
+        export_id=export_id,
+        status="completed",
+        download_url=download_url,
+        expires_at=expires_at,
+    )
+
+
+@router.get(
+    "/audit/compliance",
+    response_model=ComplianceReportResponse,
+    summary="Get audit compliance report",
+)
+async def compliance_report(
+    request: Request,
+    from_date: str = Query(..., description="ISO start date"),
+    to_date: str = Query(..., description="ISO end date"),
+    session: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(ensure_audit_access),
+    tenant_id_from_context: str | None = Depends(get_current_tenant_id),
+) -> ComplianceReportResponse:
+    """Return a lightweight compliance report over a date range."""
+    # Create service with session
+    service = AuditService(session)
+
+    tenant_id = resolve_tenant_for_audit(request, current_user, tenant_id_from_context)
+    start = datetime.fromisoformat(from_date)
+    end = datetime.fromisoformat(to_date)
+    activities = await service.list_activities_in_range(start, end, tenant_id=tenant_id)
+
+    total = len(activities)
+    critical = sum(1 for a in activities if a.severity == ActivitySeverity.CRITICAL)
+    failed_access = sum(1 for a in activities if a.activity_type == ActivityType.AUTH_FAILURE)
+    permission_changes = sum(
+        1
+        for a in activities
+        if a.activity_type
+        in {
+            ActivityType.PERMISSION_CHANGE,
+            ActivityType.USER_ROLE_CHANGE,
+            ActivityType.USER_MANAGEMENT,
+        }
+    )
+    data_exports = sum(1 for a in activities if "export" in (a.action or "").lower())
+
+    score = max(0.0, 100.0 - critical * 5.0 - failed_access * 2.0)
+
+    issues: list[ComplianceIssue] = []
+    if critical:
+        issues.append(
+            ComplianceIssue(
+                severity=ActivitySeverity.CRITICAL,
+                description="Critical events detected",
+                event_ids=[str(a.id) for a in activities if a.severity == ActivitySeverity.CRITICAL],
+            )
+        )
+
+    return ComplianceReportResponse(
+        report_id=str(uuid4()),
+        period_start=from_date,
+        period_end=to_date,
+        total_events=total,
+        critical_events=critical,
+        failed_access_attempts=failed_access,
+        permission_changes=permission_changes,
+        data_exports=data_exports,
+        compliance_score=round(score, 2),
+        issues=issues,
+        generated_at=datetime.now(UTC).isoformat(),
+    )

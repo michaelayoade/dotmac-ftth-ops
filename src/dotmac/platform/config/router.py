@@ -57,6 +57,7 @@ PUBLIC_FEATURE_FLAGS: tuple[str, ...] = (
     "ticketing_enabled",
     "crm_enabled",
     "notification_enabled",
+    "pon_alarm_actions_enabled",
 )
 
 PRIVATE_FEATURE_FLAGS: tuple[str, ...] = (
@@ -149,7 +150,7 @@ async def get_runtime_frontend_config(
     tenant_slug = settings.tenant_slug or settings.tenant.default_tenant_id
     tenant_name = settings.tenant_display_name or settings.brand.product_name
 
-    sse_url = _join_url(restUrl, "/realtime/events")
+    sse_url = _join_url(rest_url, "/realtime/events")
 
     runtime_payload = {
         "version": settings.app_version,

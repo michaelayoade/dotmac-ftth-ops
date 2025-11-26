@@ -6,20 +6,20 @@ export const dynamicParams = true;
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  CheckCircle,
+  CheckSquare,
+  Download,
+  Edit,
+  Eye,
+  Filter,
+  MoreHorizontal,
+  Send,
+  Trash2,
+  TrendingUp,
+  UserCheck,
   UserPlus,
   Users,
-  CheckCircle,
-  Send,
-  TrendingUp,
-  Filter,
-  Download,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  CheckSquare,
   XSquare,
-  UserCheck,
-  Trash2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -72,7 +72,7 @@ function formatRelativeDate(value?: string | null) {
 }
 
 export default function LeadsManagementPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const { toast } = useToast();
 
   // Filters
@@ -189,6 +189,7 @@ export default function LeadsManagementPage() {
 
   const handleDisqualify = useCallback(
     async (leadId: string) => {
+    // eslint-disable-next-line no-alert
       const reason = prompt("Reason for disqualification:");
       if (!reason) {
         return;
@@ -341,7 +342,7 @@ export default function LeadsManagementPage() {
     () => [
       {
         label: "Mark as Contacted",
-        icon: UserCheck as any,
+        icon: UserCheck as unknown as React.ComponentType,
         action: async (selected) => {
           for (const lead of selected) {
             if (lead.status === "new") {
@@ -358,10 +359,10 @@ export default function LeadsManagementPage() {
       },
       {
         label: "Qualify Leads",
-        icon: CheckCircle as any,
+        icon: CheckCircle as unknown as React.ComponentType,
         action: async (selected) => {
           for (const lead of selected) {
-            if (lead.status === "contacted" || lead.status === "site_survey_completed") {
+            if (lead.status === "contacted") {
               await qualifyLeadMutation.mutateAsync(lead.id);
             }
           }
@@ -375,7 +376,7 @@ export default function LeadsManagementPage() {
       },
       {
         label: "Delete Leads",
-        icon: Trash2 as any,
+        icon: Trash2 as unknown as React.ComponentType,
         action: async (selected) => {
           // Implement delete logic
           toast({
@@ -517,8 +518,6 @@ export default function LeadsManagementPage() {
                     <SelectItem value="new">New</SelectItem>
                     <SelectItem value="contacted">Contacted</SelectItem>
                     <SelectItem value="qualified">Qualified</SelectItem>
-                    <SelectItem value="site_survey_scheduled">Survey Scheduled</SelectItem>
-                    <SelectItem value="site_survey_completed">Survey Completed</SelectItem>
                     <SelectItem value="quote_sent">Quote Sent</SelectItem>
                     <SelectItem value="negotiating">Negotiating</SelectItem>
                     <SelectItem value="won">Won</SelectItem>
@@ -590,7 +589,7 @@ export default function LeadsManagementPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => refetch()}
         onCreate={async (data) => {
-          await createLeadMutation.mutateAsync(data as any);
+          await createLeadMutation.mutateAsync(data as unknown as Parameters<typeof createLeadMutation.mutateAsync>[0]);
         }}
       />
       <LeadDetailModal

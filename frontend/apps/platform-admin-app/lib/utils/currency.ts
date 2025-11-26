@@ -13,7 +13,7 @@ export function parseCurrency(value: string): number {
 
 export function formatPercent(value: number): string {
   const fixed = value.toFixed(2);
-  return fixed + "%";
+  return `${fixed  }%`;
 }
 
 const currencyUtils = { formatCurrency, parseCurrency, formatPercent };

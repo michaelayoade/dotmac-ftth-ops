@@ -4,7 +4,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { User } from "@/lib/types/auth";
+import type { User } from "@/types/auth";
 import { logger } from "@/lib/logger";
 import apiClient from "@/lib/api/client";
 

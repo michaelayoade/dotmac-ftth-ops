@@ -48,8 +48,6 @@ export type NotificationType =
   | "quote_sent"
   | "quote_accepted"
   | "quote_rejected"
-  | "site_survey_scheduled"
-  | "site_survey_completed"
   // Ticketing events
   | "ticket_created"
   | "ticket_assigned"
@@ -93,7 +91,7 @@ export interface Notification {
   sms_sent_at?: string;
   push_sent: boolean;
   push_sent_at?: string;
-  notification_metadata?: Record<string, any>;
+  notification_metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -115,7 +113,7 @@ export interface NotificationCreateRequest {
   related_entity_type?: string;
   related_entity_id?: string;
   channels?: NotificationChannel[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type CommunicationType = "email" | "webhook" | "sms" | "push";
@@ -167,7 +165,7 @@ export interface CommunicationLog {
   template_name?: string;
   user_id?: string;
   job_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -298,8 +296,10 @@ export function useNotifications(options?: {
         const endpoint = buildUrlWithParams("/notifications", params);
         const response = await apiClient.get<NotificationListResponse>(endpoint);
         return response.data;
-      } catch (err: any) {
-        if (err.response?.status === 403) {
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const e = err as any;
+        if (e.response?.status === 403) {
           logger.warn("Notifications endpoint returned 403. Using empty fallback data.");
           return { notifications: [], total: 0, unread_count: 0 };
         }
@@ -555,8 +555,10 @@ export function useNotificationTemplates(options?: {
         const endpoint = buildUrlWithParams("/communications/templates", params);
         const response = await apiClient.get<CommunicationTemplate[]>(endpoint);
         return response.data;
-      } catch (err: any) {
-        if (err.response?.status === 403) {
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const e = err as any;
+        if (e.response?.status === 403) {
           logger.warn("Templates endpoint returned 403. Falling back to empty template list.");
           return [];
         }
@@ -615,7 +617,7 @@ export function useNotificationTemplates(options?: {
   // Helper: Render template preview
   const renderTemplatePreview = async (
     templateId: string,
-    data: Record<string, any>
+    data: Record<string, unknown>
   ): Promise<{ subject?: string; text?: string; html?: string } | null> => {
     try {
       const response = await apiClient.post<{
@@ -713,8 +715,10 @@ export function useCommunicationLogs(options?: {
           total: number;
         }>(endpoint);
         return response.data;
-      } catch (err: any) {
-        if (err.response?.status === 403) {
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const e = err as any;
+        if (e.response?.status === 403) {
           logger.warn("Communications logs endpoint returned 403. Falling back to empty log set.");
           return { logs: [], total: 0 };
         }
@@ -825,8 +829,10 @@ export function useUnreadCount(options?: { autoRefresh?: boolean; refreshInterva
       try {
         const response = await apiClient.get<{ unread_count: number }>("/notifications/unread-count");
         return response.data?.unread_count ?? 0;
-      } catch (err: any) {
-        if (err.response?.status === 403) {
+      } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const e = err as any;
+        if (e.response?.status === 403) {
           logger.warn("Unread count endpoint returned 403. Defaulting to zero unread notifications.");
           return 0;
         }

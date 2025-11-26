@@ -5,12 +5,13 @@
  * Main page for viewing and managing projects with strict TypeScript
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Plus,
   Search,
@@ -23,7 +24,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-import { useProjects, useProjectMetrics } from "@/hooks/useProjects";
+import { useProjects, useProjectMetrics, useTeams } from "@/hooks/useProjects";
 import {
   Project,
   ProjectStatus,
@@ -78,9 +79,10 @@ function MetricCard({ title, value, icon: Icon, color, trend }: MetricCardProps)
 interface ProjectCardProps {
   project: Project;
   onSelect: (project: Project) => void;
+  teamNameById: Map<string, string>;
 }
 
-function ProjectCard({ project, onSelect }: ProjectCardProps) {
+function ProjectCard({ project, onSelect, teamNameById }: ProjectCardProps) {
   const statusColors: Record<ProjectStatus, string> = {
     DRAFT: "bg-gray-200 text-gray-800",
     PLANNING: "bg-blue-200 text-blue-800",
@@ -171,9 +173,17 @@ function ProjectCard({ project, onSelect }: ProjectCardProps) {
           <div className="flex items-center justify-between pt-2 border-t">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
-                {project.owner.name.charAt(0).toUpperCase()}
+                {(
+                  teamNameById.get(project.ownerId) ??
+                  project.owner.name ??
+                  "U"
+                )
+                  .charAt(0)
+                  .toUpperCase()}
               </div>
-              <span className="text-sm text-muted-foreground">{project.owner.name}</span>
+              <span className="text-sm text-muted-foreground">
+                {teamNameById.get(project.ownerId) ?? project.owner.name ?? "Unassigned"}
+              </span>
             </div>
             <div className={`text-sm font-medium ${priorityColors[project.priority]}`}>
               {project.priority}
@@ -201,6 +211,13 @@ export default function ProjectDashboard() {
     ...(trimmedSearch ? { search: trimmedSearch } : {}),
   });
   const { data: metrics } = useProjectMetrics();
+  const { data: teams } = useTeams();
+
+  const teamNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    (teams ?? []).forEach((team) => map.set(team.id, team.name));
+    return map;
+  }, [teams]);
 
   const handleProjectSelect = (project: Project) => {
     router.push(`/dashboard/projects/${project.id}`);
@@ -270,6 +287,31 @@ export default function ProjectDashboard() {
               />
             </div>
 
+            <Select
+              onValueChange={(val) => {
+                if (val) {
+                  setFilter((prev) => ({ ...prev, ownerId: [val] }));
+                } else {
+                  setFilter((prev) => {
+                    const { ownerId, ...rest } = prev;
+                    return rest;
+                  });
+                }
+              }}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All teams" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All teams</SelectItem>
+                {(teams ?? []).map((team) => (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Button variant="outline">
               <Filter className="h-4 w-4 mr-2" />
               Filters
@@ -311,7 +353,12 @@ export default function ProjectDashboard() {
           }
         >
           {projectsData.projects.map((project) => (
-            <ProjectCard key={project.id} project={project} onSelect={handleProjectSelect} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onSelect={handleProjectSelect}
+              teamNameById={teamNameById}
+            />
           ))}
         </div>
       ) : (

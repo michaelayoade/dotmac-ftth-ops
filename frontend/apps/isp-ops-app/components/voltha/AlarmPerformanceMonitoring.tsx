@@ -29,7 +29,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { VOLTHAAlarm, AlarmSeverity } from "@/types/voltha";
-import { useVOLTHAAlarms, useAcknowledgeAlarm, useClearAlarm } from "@/hooks/useVOLTHA";
+import {
+  useVOLTHAHealth,
+  useVOLTHAAlarms,
+  useAcknowledgeAlarm,
+  useClearAlarm,
+} from "@/hooks/useVOLTHA";
 
 interface AlarmPerformanceMonitoringProps {
   deviceId?: string;
@@ -124,6 +129,21 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
   const [acknowledgedAlarms, setAcknowledgedAlarms] = useState<Set<string>>(new Set());
   const [severitySelectOpen, setSeveritySelectOpen] = useState(false);
   const [stateSelectOpen, setStateSelectOpen] = useState(false);
+  const [alarmActionsDisabled, setAlarmActionsDisabled] = useState(false);
+  const [alarmActionNotice, setAlarmActionNotice] = useState<string | null>(null);
+
+  const handleAlarmActionError = (message: string) => {
+    const normalized = message.toLowerCase();
+    if (
+      normalized.includes("not supported") ||
+      normalized.includes("disabled") ||
+      normalized.includes("feature") ||
+      normalized.includes("driver")
+    ) {
+      setAlarmActionsDisabled(true);
+      setAlarmActionNotice(message);
+    }
+  };
 
   // Use React Query hooks
   const {
@@ -131,9 +151,12 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     isLoading: loading,
     refetch: loadAlarms,
   } = useVOLTHAAlarms(deviceId);
+  const { data: volthaHealth } = useVOLTHAHealth();
 
   const acknowledgeMutation = useAcknowledgeAlarm({
     onSuccess: (alarmId: string) => {
+      setAlarmActionsDisabled(false);
+      setAlarmActionNotice(null);
       setAcknowledgedAlarms((prev) => new Set(prev).add(alarmId));
       toast({
         title: "Alarm Acknowledged",
@@ -141,9 +164,11 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
       });
     },
     onError: (error: Error) => {
+      const message = error.message || "Could not acknowledge alarm";
+      handleAlarmActionError(message);
       toast({
         title: "Failed to acknowledge alarm",
-        description: error.message || "Could not acknowledge alarm",
+        description: message,
         variant: "destructive",
       });
     },
@@ -151,27 +176,44 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
 
   const clearMutation = useClearAlarm({
     onSuccess: () => {
+      setAlarmActionsDisabled(false);
+      setAlarmActionNotice(null);
       toast({
         title: "Alarm Cleared",
         description: "Alarm has been cleared",
       });
     },
     onError: (error: Error) => {
+      const message = error.message || "Could not clear alarm";
+      handleAlarmActionError(message);
       toast({
         title: "Failed to clear alarm",
-        description: error.message || "Could not clear alarm",
+        description: message,
         variant: "destructive",
       });
     },
   });
 
   const handleAcknowledgeAlarm = (alarmId: string) => {
+    if (alarmActionsDisabled) return;
     acknowledgeMutation.mutate(alarmId);
   };
 
   const handleClearAlarm = (alarmId: string) => {
+    if (alarmActionsDisabled) return;
     clearMutation.mutate(alarmId);
   };
+
+  useEffect(() => {
+    if (!volthaHealth) return;
+    if (volthaHealth.alarm_actions_enabled === false) {
+      setAlarmActionsDisabled(true);
+      setAlarmActionNotice("Alarm acknowledge/clear is disabled for this tenant or driver.");
+    } else if (volthaHealth.alarm_actions_enabled === true) {
+      setAlarmActionsDisabled(false);
+      setAlarmActionNotice(null);
+    }
+  }, [volthaHealth]);
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
@@ -315,6 +357,14 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
           </div>
         </CardHeader>
         <CardContent>
+          {alarmActionsDisabled && (
+            <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              Alarm acknowledge/clear is disabled by the VOLTHA driver or tenant configuration.
+              {alarmActionNotice && (
+                <span className="block text-xs text-amber-800">{alarmActionNotice}</span>
+              )}
+            </div>
+          )}
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-muted-foreground">Loading alarms...</div>
@@ -391,6 +441,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                         <Button
                           variant="ghost"
                           size="sm"
+                          disabled={alarmActionsDisabled || acknowledgeMutation.isPending}
                           onClick={() => handleAcknowledgeAlarm(alarm.id)}
                           aria-label={`Acknowledge alarm ${alarm.type}`}
                         >
@@ -402,6 +453,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                         <Button
                           variant="ghost"
                           size="sm"
+                          disabled={alarmActionsDisabled || clearMutation.isPending}
                           onClick={() => handleClearAlarm(alarm.id)}
                           aria-label={`Clear alarm ${alarm.type}`}
                         >

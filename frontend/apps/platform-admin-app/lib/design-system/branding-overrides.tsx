@@ -8,7 +8,7 @@
 "use client";
 
 import Image from "next/image";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { usePortalTheme } from "@dotmac/ui";
 
 /**
@@ -92,7 +92,6 @@ export function ISPBrandingProvider({
   children: React.ReactNode;
   initialBranding?: Partial<ISPBrandingConfig>;
 }) {
-  const { theme, currentPortal } = usePortalTheme();
   const [branding, setBranding] = useState<ISPBrandingConfig>(() => ({
     ...defaultBrandingConfig,
     ...initialBranding,
@@ -154,17 +153,16 @@ export function ISPBrandingProvider({
     setBranding(defaultBrandingConfig);
   };
 
-  return (
-    <BrandingContext.Provider
-      value={{
-        branding,
-        updateBranding,
-        resetBranding,
-      }}
-    >
-      {children}
-    </BrandingContext.Provider>
+  const value = useMemo(
+    () => ({
+      branding,
+      updateBranding,
+      resetBranding,
+    }),
+    [branding],
   );
+
+  return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;
 }
 
 /**

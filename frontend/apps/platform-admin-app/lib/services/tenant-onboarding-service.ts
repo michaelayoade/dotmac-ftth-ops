@@ -46,8 +46,8 @@ export interface TenantOnboardingRequest {
   tenant_id: string | undefined;
   options: OnboardingOptions;
   admin_user: OnboardingAdminUser | undefined;
-  settings: Array<{ key: string; value: any; value_type: string | undefined }> | undefined;
-  metadata: Record<string, any> | undefined;
+  settings: Array<{ key: string; value: unknown; value_type: string | undefined }> | undefined;
+  metadata: Record<string, unknown> | undefined;
   invitations: TenantInvitation[] | undefined;
   feature_flags: Record<string, boolean> | undefined;
 }
@@ -58,9 +58,9 @@ export interface TenantOnboardingResponse {
   onboarding_status: string;
   admin_user_id: string | undefined;
   admin_user_password: string | undefined;
-  invitations: any[];
+  invitations: unknown[];
   applied_settings: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   feature_flags_updated: boolean;
   warnings: string[];
   logs: string[];
@@ -70,7 +70,7 @@ export interface OnboardingStatusResponse {
   tenant_id: string;
   status: string;
   completed: boolean;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   updated_at: string | undefined;
 }
 

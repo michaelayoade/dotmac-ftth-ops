@@ -13,19 +13,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
+import type { LucideIcon } from "lucide-react";
 import {
-  Plug,
-  Search,
-  RefreshCw,
-  Eye,
-  CheckCircle,
-  XCircle,
   AlertCircle,
+  CheckCircle,
   Clock,
-  Settings,
+  Eye,
   Key,
-  Package,
   Link as LinkIcon,
+  Package,
+  Plug,
+  RefreshCw,
+  Search,
+  Settings,
+  XCircle,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -47,7 +48,7 @@ interface Integration {
   settings_count: number;
   has_secrets: boolean;
   required_packages: string[];
-  metadata?: any;
+  metadata?: unknown;
 }
 
 interface IntegrationStats {
@@ -63,7 +64,7 @@ function IntegrationsPageContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const { toast } = useToast();
+  const { toast: _toast } = useToast();
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl;
 
@@ -80,7 +81,7 @@ function IntegrationsPageContent() {
   });
 
   const integrations: Integration[] = data?.integrations || [];
-  const total = data?.total || 0;
+  const _total = data?.total || 0;
 
   // Calculate statistics
   const stats: IntegrationStats = {
@@ -109,7 +110,7 @@ function IntegrationsPageContent() {
   });
 
   const getStatusBadge = (status: IntegrationStatus) => {
-    const statusConfig: Record<IntegrationStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<IntegrationStatus, { icon: React.ElementType; color: string; label: string }> = {
       healthy: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Healthy" },
       degraded: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Degraded" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
@@ -128,7 +129,7 @@ function IntegrationsPageContent() {
   };
 
   const getTypeIcon = (type: IntegrationType) => {
-    const icons: Record<IntegrationType, any> = {
+    const icons: Record<IntegrationType, LucideIcon> = {
       payment: Package,
       sms: LinkIcon,
       email: LinkIcon,

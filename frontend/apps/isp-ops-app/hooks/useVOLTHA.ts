@@ -313,7 +313,19 @@ export function useAcknowledgeAlarm(options?: {
   return useMutation({
     mutationFn: async (alarmId: string) => {
       logger.info("Acknowledging alarm", { alarmId });
-      await apiClient.post(`/access/alarms/${alarmId}/acknowledge`);
+      try {
+        await apiClient.post(`/access/alarms/${alarmId}/acknowledge`);
+      } catch (err: any) {
+        const status = err?.response?.status;
+        const detail = err?.response?.data?.detail;
+        if (status === 501 && detail) {
+          throw new Error(detail);
+        }
+        if (status === 501) {
+          throw new Error("Alarm acknowledgement not supported by this driver");
+        }
+        throw err;
+      }
       return alarmId;
     },
     onSuccess: (alarmId) => {
@@ -339,7 +351,19 @@ export function useClearAlarm(options?: {
   return useMutation({
     mutationFn: async (alarmId: string) => {
       logger.info("Clearing alarm", { alarmId });
-      await apiClient.post(`/access/alarms/${alarmId}/clear`);
+      try {
+        await apiClient.post(`/access/alarms/${alarmId}/clear`);
+      } catch (err: any) {
+        const status = err?.response?.status;
+        const detail = err?.response?.data?.detail;
+        if (status === 501 && detail) {
+          throw new Error(detail);
+        }
+        if (status === 501) {
+          throw new Error("Alarm clearing not supported by this driver");
+        }
+        throw err;
+      }
       return alarmId;
     },
     onSuccess: (alarmId) => {

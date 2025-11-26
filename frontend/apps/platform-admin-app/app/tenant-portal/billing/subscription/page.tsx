@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTenantSubscription, AvailablePlan } from "@/hooks/useTenantSubscription";
+import { useTenantSubscription, AvailablePlan, type SubscriptionCancelRequest } from "@/hooks/useTenantSubscription";
 import { SubscriptionCard } from "@/components/tenant/billing/SubscriptionCard";
 import { PlanComparison } from "@/components/tenant/billing/PlanComparison";
 import { UpgradeModal } from "@/components/tenant/billing/UpgradeModal";
@@ -10,7 +10,12 @@ import { SubscriptionPageSkeleton } from "@/components/tenant/billing/SkeletonLo
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
-import { AlertCircle, Receipt, CreditCard, TrendingUp } from "lucide-react";
+import {
+  AlertCircle,
+  CreditCard,
+  Receipt,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function SubscriptionPage() {
@@ -54,8 +59,10 @@ export default function SubscriptionPage() {
         new_plan_id: plan.plan_id,
         billing_cycle: plan.billing_cycle,
       });
-    } catch (err: any) {
-      setModalError(err.message || "Failed to load pricing preview");
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      setModalError(e.message || "Failed to load pricing preview");
     } finally {
       setIsLoadingPreview(false);
     }
@@ -74,22 +81,26 @@ export default function SubscriptionPage() {
       });
       setUpgradeModalOpen(false);
       setSelectedPlan(null);
-    } catch (err: any) {
-      setModalError(err.message || "Failed to change plan");
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      setModalError(e.message || "Failed to change plan");
     } finally {
       setIsChangingPlan(false);
     }
   };
 
-  const handleCancelSubscription = async (request: any) => {
+  const handleCancelSubscription = async (request: unknown) => {
     setIsCanceling(true);
     setModalError(null);
 
     try {
-      await cancelSubscription(request);
+      await cancelSubscription(request as SubscriptionCancelRequest);
       setCancelModalOpen(false);
-    } catch (err: any) {
-      setModalError(err.message || "Failed to cancel subscription");
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      setModalError(e.message || "Failed to cancel subscription");
     } finally {
       setIsCanceling(false);
     }
@@ -98,7 +109,7 @@ export default function SubscriptionPage() {
   const handleReactivateSubscription = async () => {
     try {
       await reactivateSubscription();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to reactivate subscription:", err);
     }
   };

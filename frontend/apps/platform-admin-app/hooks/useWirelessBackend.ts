@@ -91,10 +91,12 @@ export function useCreateDevice() {
         description: `${device.name} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create device",
+        description: err.response?.data?.detail || "Failed to create device",
         variant: "destructive",
       });
     },
@@ -118,10 +120,12 @@ export function useUpdateDevice() {
         description: `${device.name} has been updated successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update device",
+        description: err.response?.data?.detail || "Failed to update device",
         variant: "destructive",
       });
     },
@@ -144,10 +148,12 @@ export function useDeleteDevice() {
         description: "Device has been deleted successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete device",
+        description: err.response?.data?.detail || "Failed to delete device",
         variant: "destructive",
       });
     },
@@ -229,10 +235,12 @@ export function useCreateRadio() {
         description: `${radio.radio_name} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create radio",
+        description: err.response?.data?.detail || "Failed to create radio",
         variant: "destructive",
       });
     },
@@ -258,10 +266,12 @@ export function useUpdateRadio() {
         description: `${radio.radio_name} has been updated successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update radio",
+        description: err.response?.data?.detail || "Failed to update radio",
         variant: "destructive",
       });
     },
@@ -283,10 +293,12 @@ export function useDeleteRadio() {
         description: "Radio has been deleted successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete radio",
+        description: err.response?.data?.detail || "Failed to delete radio",
         variant: "destructive",
       });
     },
@@ -339,10 +351,12 @@ export function useCreateCoverageZone() {
         description: `${zone.zone_name} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create coverage zone",
+        description: err.response?.data?.detail || "Failed to create coverage zone",
         variant: "destructive",
       });
     },
@@ -366,10 +380,12 @@ export function useDeleteCoverageZone() {
         description: "Coverage zone has been deleted successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete coverage zone",
+        description: err.response?.data?.detail || "Failed to delete coverage zone",
         variant: "destructive",
       });
     },
@@ -421,10 +437,12 @@ export function useCreateSignalMeasurement() {
         queryKey: ["wireless", "signal-measurements"],
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create signal measurement",
+        description: err.response?.data?.detail || "Failed to create signal measurement",
         variant: "destructive",
       });
     },

@@ -12,8 +12,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { createMockCustomer } from "../factories/customer";
+
 import { createMockInvoice } from "../factories/billing";
+import { createMockCustomer } from "../factories/customer";
 
 // Data migration types
 interface ImportResult {

@@ -9,9 +9,9 @@
 import { useState, useEffect } from "react";
 import {
   InvoiceDetailModal as SharedInvoiceDetailModal,
-  type InvoiceDetailModalProps as SharedInvoiceDetailModalProps,
   type CompanyInfo,
   type CustomerInfo,
+  type Invoice as SharedInvoice,
 } from "@dotmac/features/billing";
 import { type Invoice } from "@/types/billing";
 import { useInvoiceActions } from "@/hooks/useInvoiceActions";
@@ -122,6 +122,7 @@ export function InvoiceDetailModal({
 
   const handleVoid = async () => {
     if (!invoice) return;
+    // eslint-disable-next-line no-alert
     const reason = prompt(
       `Are you sure you want to void invoice ${invoice.invoice_number}?\n\nThis action cannot be undone. Please provide a reason:`,
     );
@@ -169,7 +170,7 @@ export function InvoiceDetailModal({
 
       await generator.downloadInvoicePDF({
         company,
-        invoice: invoice,
+        invoice,
         customerName,
       });
 
@@ -205,11 +206,13 @@ export function InvoiceDetailModal({
     setShowCreditNoteModal(true);
   };
 
+  const sharedInvoice = (invoice as unknown as SharedInvoice) || null;
+
   return (
     <SharedInvoiceDetailModal
       isOpen={isOpen}
       onClose={onClose}
-      invoice={invoice as any}
+      invoice={sharedInvoice}
       companyInfo={companyInfo}
       customerInfo={customerInfo}
       onSendEmail={handleSendEmail}

@@ -158,28 +158,30 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
   useEffect(() => {
     if (devices && devices.length > 0) {
       const deviceMap = new Map<string, DeviceHealth>();
-      devices.forEach((device: any) => {
-        deviceMap.set(device.deviceId, {
+      devices.forEach((device: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const d = device as any;
+        deviceMap.set(d.deviceId, {
           __typename: "DeviceHealth",
-          deviceId: device.deviceId,
-          deviceName: device.deviceName,
-          deviceType: device.deviceType,
-          status: device.status,
-          ipAddress: device.ipAddress || "",
-          firmwareVersion: device.firmwareVersion,
-          cpuUsagePercent: device.cpuUsagePercent,
-          memoryUsagePercent: device.memoryUsagePercent,
-          temperatureCelsius: device.temperatureCelsius,
-          uptimeSeconds: device.uptimeSeconds,
-          uptimeDays: device.uptimeDays,
-          lastSeen: device.lastSeen,
-          isHealthy: device.isHealthy,
-          location: device.location,
-          model: device.model,
-          powerStatus: device.powerStatus,
-          packetLossPercent: device.packetLossPercent,
-          pingLatencyMs: device.pingLatencyMs,
-          tenantId: device.tenantId,
+          deviceId: d.deviceId,
+          deviceName: d.deviceName,
+          deviceType: d.deviceType,
+          status: d.status,
+          ipAddress: d.ipAddress || "",
+          firmwareVersion: d.firmwareVersion,
+          cpuUsagePercent: d.cpuUsagePercent,
+          memoryUsagePercent: d.memoryUsagePercent,
+          temperatureCelsius: d.temperatureCelsius,
+          uptimeSeconds: d.uptimeSeconds,
+          uptimeDays: d.uptimeDays,
+          lastSeen: d.lastSeen,
+          isHealthy: d.isHealthy,
+          location: d.location,
+          model: d.model,
+          powerStatus: d.powerStatus,
+          packetLossPercent: d.packetLossPercent,
+          pingLatencyMs: d.pingLatencyMs,
+          tenantId: d.tenantId,
         });
       });
       setRealtimeDevices(deviceMap);
@@ -332,8 +334,10 @@ export function useNetworkAlertsRealtime(params: UseAlertsRealtimeParams = {}) {
   useEffect(() => {
     if (alerts && alerts.length > 0) {
       const alertMap = new Map<string, NetworkAlert>();
-      alerts.forEach((alert: any) => {
-        alertMap.set(alert.alertId, alert);
+      alerts.forEach((alert: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const a = alert as any;
+        alertMap.set(a.alertId, a);
       });
       setRealtimeAlerts(alertMap);
     }

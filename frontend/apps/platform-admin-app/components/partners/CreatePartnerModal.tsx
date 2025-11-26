@@ -60,6 +60,7 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
       onClose();
     } catch (error) {
       console.error("Failed to save partner:", error);
+    // eslint-disable-next-line no-alert
       alert("Failed to save partner");
     }
   };
@@ -153,7 +154,7 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    tier: e.target.value as any,
+                    tier: e.target.value as CreatePartnerInput["tier"],
                   })
                 }
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -172,7 +173,7 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    commission_model: e.target.value as any,
+                    commission_model: e.target.value as CreatePartnerInput["commission_model"],
                   })
                 }
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"

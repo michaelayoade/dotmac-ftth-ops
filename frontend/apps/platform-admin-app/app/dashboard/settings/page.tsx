@@ -3,26 +3,23 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
+  ArrowUpRight,
+  Bell,
+  Building,
+  Cloud,
+  CreditCard,
+  Database,
+  FileText,
+  Lock,
+  Mail,
+  Package,
+  Palette,
+  Settings as SettingsIcon,
+  Shield,
+  Smartphone,
   User,
   Users,
-  CreditCard,
-  Mail,
-  Lock,
-  Bell,
-  Shield,
-  Globe,
-  Palette,
-  Database,
-  Key,
-  Package,
-  Building,
-  ArrowUpRight,
-  Settings as SettingsIcon,
-  Sliders,
-  FileText,
   Zap,
-  Cloud,
-  Smartphone,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -240,7 +237,7 @@ function SettingsHubPageContent() {
       }
     };
 
-    void fetchSettingsData();
+    fetchSettingsData();
 
     return () => {
       isMounted = false;

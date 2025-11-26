@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
+import type { LucideIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,14 +24,14 @@ import {
   TableRow,
 } from "@dotmac/ui";
 import {
-  Users,
-  DollarSign,
-  TrendingUp,
-  Target,
   Calendar,
-  Plus,
-  Eye,
+  DollarSign,
   Download,
+  Eye,
+  Plus,
+  Target,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -176,7 +177,7 @@ export default function PartnerPortalPage() {
   }, []);
 
   useEffect(() => {
-    void loadMockData();
+    loadMockData().catch(() => {});
   }, [loadMockData]);
 
   const handleRefresh = useCallback(async () => {
@@ -190,7 +191,7 @@ export default function PartnerPortalPage() {
         id: "total-customers",
         title: "Total Customers",
         value: dashboard?.totalCustomers ?? 0,
-        icon: Users as any,
+        icon: Users as LucideIcon,
         format: "number",
         trend: {
           direction: "up",
@@ -205,7 +206,7 @@ export default function PartnerPortalPage() {
         id: "pending-commissions",
         title: "Pending Commissions",
         value: commissions?.pending ?? 0,
-        icon: DollarSign as any,
+        icon: DollarSign as LucideIcon,
         format: "currency",
         currency: "USD",
         subtitle: `${commissions?.pendingCount ?? 0} transactions`,
@@ -217,7 +218,7 @@ export default function PartnerPortalPage() {
         id: "total-earned",
         title: "Total Earned",
         value: commissions?.totalEarned ?? 0,
-        icon: TrendingUp as any,
+        icon: TrendingUp as LucideIcon,
         format: "currency",
         currency: "USD",
         trend: {
@@ -233,7 +234,7 @@ export default function PartnerPortalPage() {
         id: "conversion-rate",
         title: "Conversion Rate",
         value: `${analytics?.conversionRate ?? 0}%`,
-        icon: Target as any,
+        icon: Target as LucideIcon,
         progress: {
           current: analytics?.conversionRate ?? 0,
           target: 100,
@@ -258,18 +259,18 @@ export default function PartnerPortalPage() {
         {
           id: "add-customer",
           label: "Add Customer",
-          icon: Plus as any,
-          onClick: () => console.log("Add customer"),
+          icon: Plus as LucideIcon,
+          onClick: () => handleRefresh(),
           variant: "primary",
         },
         {
           id: "export",
           label: "Export Report",
-          icon: Download as any,
-          onClick: () => console.log("Export"),
+          icon: Download as LucideIcon,
+          onClick: () => handleRefresh(),
           variant: "outline",
         },
-      ] as any}
+      ]}
       isLoading={isLoading}
       onRefresh={handleRefresh}
       maxWidth="7xl"

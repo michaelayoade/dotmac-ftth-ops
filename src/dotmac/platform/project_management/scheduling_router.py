@@ -8,12 +8,12 @@ from datetime import date, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from dotmac.platform.auth.token_with_rbac import get_current_user_with_rbac
-from dotmac.platform.db import get_db_session
+from dotmac.platform.db import get_async_session
 from dotmac.platform.field_service.models import Technician
 from dotmac.platform.project_management.assignment_algorithms import (
     TaskAssignmentAlgorithm,
@@ -33,11 +33,13 @@ from dotmac.platform.project_management.scheduling_schemas import (
     TaskAssignmentAutoCreate,
     # Assignment schemas
     TaskAssignmentCreate,
+    TaskAssignmentListResponse,
     TaskAssignmentReschedule,
     TaskAssignmentResponse,
     TaskAssignmentUpdate,
     # Schedule schemas
     TechnicianScheduleCreate,
+    TechnicianScheduleListResponse,
     TechnicianScheduleResponse,
     TechnicianScheduleUpdate,
 )
@@ -59,7 +61,7 @@ router = APIRouter(prefix="/api/v1/scheduling", tags=["scheduling"])
 async def create_technician_schedule(
     technician_id: UUID,
     schedule: TechnicianScheduleCreate,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: dict = Depends(get_current_user_with_rbac),
 ) -> TechnicianSchedule:
@@ -116,6 +118,75 @@ async def create_technician_schedule(
 
 
 @router.get(
+    "/schedules",
+    response_model=TechnicianScheduleListResponse,
+)
+async def list_schedules(
+    technician_id: UUID | None = Query(None),
+    start_date: date | None = Query(None, alias="dateFrom"),
+    end_date: date | None = Query(None, alias="dateTo"),
+    status: str | None = Query(None),
+    limit: int = Query(default=100, le=1000),
+    offset: int = Query(default=0, ge=0),
+    session: AsyncSession = Depends(get_async_session),
+    tenant_id: str = Depends(get_current_tenant_id),
+) -> TechnicianScheduleListResponse:
+    """
+    List schedules with optional technician/date/status filters.
+    """
+    query = select(TechnicianSchedule).where(TechnicianSchedule.tenant_id == tenant_id)
+
+    if technician_id:
+        query = query.where(TechnicianSchedule.technician_id == technician_id)
+    if start_date:
+        query = query.where(TechnicianSchedule.schedule_date >= start_date)
+    if end_date:
+        query = query.where(TechnicianSchedule.schedule_date <= end_date)
+    if status:
+        query = query.where(TechnicianSchedule.status == status)
+
+    total = (await session.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
+    page = (offset // limit) + 1 if limit else 1
+
+    result = await session.execute(query.order_by(TechnicianSchedule.schedule_date).limit(limit).offset(offset))
+    schedules = list(result.scalars().all())
+
+    return TechnicianScheduleListResponse(
+        schedules=schedules,
+        total=total,
+        page=page,
+        page_size=limit,
+    )
+
+
+@router.get(
+    "/technicians/schedules",
+    response_model=TechnicianScheduleListResponse,
+)
+async def list_schedules_alias(
+    technician_id: UUID | None = Query(None),
+    start_date: date | None = Query(None, alias="dateFrom"),
+    end_date: date | None = Query(None, alias="dateTo"),
+    status: str | None = Query(None),
+    limit: int = Query(default=100, le=1000),
+    offset: int = Query(default=0, ge=0),
+    session: AsyncSession = Depends(get_async_session),
+    tenant_id: str = Depends(get_current_tenant_id),
+) -> TechnicianScheduleListResponse:
+    """Alias for list_schedules to support legacy path used by UI."""
+    return await list_schedules(
+        technician_id=technician_id,
+        start_date=start_date,
+        end_date=end_date,
+        status=status,
+        limit=limit,
+        offset=offset,
+        session=session,
+        tenant_id=tenant_id,
+    )
+
+
+@router.get(
     "/technicians/{technician_id}/schedules",
     response_model=list[TechnicianScheduleResponse],
 )
@@ -123,7 +194,7 @@ async def get_technician_schedules(
     technician_id: UUID,
     start_date: date | None = Query(None),
     end_date: date | None = Query(None),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> list[TechnicianSchedule]:
     """
@@ -154,7 +225,7 @@ async def get_technician_schedules(
 async def update_technician_schedule(
     schedule_id: UUID,
     schedule_update: TechnicianScheduleUpdate,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: dict = Depends(get_current_user_with_rbac),
 ) -> TechnicianSchedule:
@@ -195,7 +266,7 @@ async def update_technician_schedule(
 )
 async def create_task_assignment(
     assignment: TaskAssignmentCreate,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: dict = Depends(get_current_user_with_rbac),
 ) -> TaskAssignment:
@@ -283,7 +354,7 @@ async def create_task_assignment(
 )
 async def auto_assign_task(
     auto_assignment: TaskAssignmentAutoCreate,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: dict = Depends(get_current_user_with_rbac),
 ) -> TaskAssignment:
@@ -342,7 +413,7 @@ async def auto_assign_task(
 async def get_assignment_candidates(
     assignment_id: UUID,
     max_candidates: int = Query(default=10, ge=1, le=20),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> list[AssignmentCandidateResponse]:
     """
@@ -398,19 +469,19 @@ async def get_assignment_candidates(
 
 @router.get(
     "/assignments",
-    response_model=list[TaskAssignmentResponse],
+    response_model=TaskAssignmentListResponse,
 )
 async def list_task_assignments(
     technician_id: UUID | None = Query(None),
     task_id: UUID | None = Query(None),
     status_filter: str | None = Query(None),
-    start_date: datetime | None = Query(None),
-    end_date: datetime | None = Query(None),
+    start_date: datetime | None = Query(None, alias="dateFrom"),
+    end_date: datetime | None = Query(None, alias="dateTo"),
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
-) -> list[TaskAssignment]:
+) -> TaskAssignmentListResponse:
     """
     List task assignments with optional filtering.
     """
@@ -421,16 +492,28 @@ async def list_task_assignments(
     if task_id:
         query = query.where(TaskAssignment.task_id == task_id)
     if status_filter:
-        query = query.where(TaskAssignment.status == status_filter)
+        statuses = [s for s in status_filter.split(",") if s]
+        if statuses:
+          query = query.where(TaskAssignment.status.in_(statuses))
     if start_date:
         query = query.where(TaskAssignment.scheduled_start >= start_date)
     if end_date:
         query = query.where(TaskAssignment.scheduled_end <= end_date)
 
-    query = query.order_by(TaskAssignment.scheduled_start).limit(limit).offset(offset)
+    total = (await session.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
+    page = (offset // limit) + 1 if limit else 1
 
-    result = await session.execute(query)
-    return list(result.scalars().all())
+    result = await session.execute(
+        query.order_by(TaskAssignment.scheduled_start).limit(limit).offset(offset)
+    )
+    assignments = list(result.scalars().all())
+
+    return TaskAssignmentListResponse(
+        assignments=assignments,
+        total=total,
+        page=page,
+        page_size=limit,
+    )
 
 
 @router.put(
@@ -440,7 +523,7 @@ async def list_task_assignments(
 async def update_task_assignment(
     assignment_id: UUID,
     assignment_update: TaskAssignmentUpdate,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: dict = Depends(get_current_user_with_rbac),
 ) -> TaskAssignment:
@@ -476,7 +559,7 @@ async def update_task_assignment(
 async def reschedule_task_assignment(
     assignment_id: UUID,
     reschedule: TaskAssignmentReschedule,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: dict = Depends(get_current_user_with_rbac),
 ) -> TaskAssignment:
@@ -518,7 +601,7 @@ async def reschedule_task_assignment(
 )
 async def cancel_task_assignment(
     assignment_id: UUID,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: dict = Depends(get_current_user_with_rbac),
 ) -> None:
@@ -551,7 +634,7 @@ async def cancel_task_assignment(
 )
 async def check_availability(
     availability_check: AvailabilityCheckRequest,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> list[AvailabilityCheckResponse]:
     """

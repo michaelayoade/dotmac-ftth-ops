@@ -507,6 +507,14 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.monitoring.infrastructure_router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /monitoring prefix
+        tags=["Monitoring - Compatibility"],
+        description="Frontend-friendly monitoring aliases (metrics, infrastructure)",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.monitoring.traces_router",
         router_name="traces_router",
         prefix="/api/v1",  # Module has /observability prefix
@@ -784,14 +792,6 @@ ROUTER_CONFIGS = [
         prefix="/api/v1",
         tags=["Notifications"],
         description="User notifications and preferences",
-        requires_auth=True,
-    ),
-    RouterConfig(
-        module_path="dotmac.platform.diagnostics.router",
-        router_name="router",
-        prefix="/api/v1",
-        tags=["Diagnostics"],
-        description="Network diagnostics and troubleshooting tools",
         requires_auth=True,
     ),
     RouterConfig(

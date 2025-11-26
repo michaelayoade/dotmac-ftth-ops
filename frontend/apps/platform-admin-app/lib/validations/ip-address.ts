@@ -12,7 +12,6 @@ import {
   isValidIPv6CIDR,
   isValidCIDR,
   detectIPFamily,
-  IPFamily,
 } from "@/lib/utils/ip-address";
 
 // IPv4 address validation
@@ -148,20 +147,6 @@ export const netboxBulkAllocationSchema = z.object({
   tenant: z.number().int().positive().optional(),
 });
 
-// RADIUS subscriber schema with IPv6 support
-export const radiusSubscriberSchema = z.object({
-  subscriber_id: z.string().min(1),
-  username: z.string().min(1),
-  password: z.string().min(8),
-  bandwidth_profile_id: z.string().optional().nullable(),
-  framed_ip_address: optionalIPv4Schema,
-  framed_ipv6_prefix: optionalIPv6CIDRSchema,
-  framed_ipv6_address: optionalIPv6CIDRSchema,
-  delegated_ipv6_prefix: optionalIPv6CIDRSchema,
-  session_timeout: z.number().int().positive().optional().nullable(),
-  idle_timeout: z.number().int().positive().optional().nullable(),
-});
-
 // WireGuard server schema with IPv6 support
 export const wireguardServerSchema = z.object({
   name: z.string().min(1).max(100),
@@ -235,7 +220,6 @@ export type DualStackCIDR = z.infer<typeof dualStackCIDRSchema>;
 export type NetBoxIPAllocation = z.infer<typeof netboxIPAllocationSchema>;
 export type NetBoxDualStackAllocation = z.infer<typeof netboxDualStackAllocationSchema>;
 export type NetBoxBulkAllocation = z.infer<typeof netboxBulkAllocationSchema>;
-export type RADIUSSubscriber = z.infer<typeof radiusSubscriberSchema>;
 export type WireGuardServer = z.infer<typeof wireguardServerSchema>;
 export type WireGuardPeer = z.infer<typeof wireguardPeerSchema>;
 export type DeviceMonitoring = z.infer<typeof deviceMonitoringSchema>;

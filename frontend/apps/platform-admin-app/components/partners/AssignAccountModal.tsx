@@ -68,6 +68,7 @@ export default function AssignAccountModal({ partnerId, onClose }: AssignAccount
       await assignMutation.mutateAsync(formData);
     } catch (error) {
       console.error("Failed to assign account:", error);
+    // eslint-disable-next-line no-alert
       alert("Failed to assign account");
     }
   };
@@ -105,7 +106,7 @@ export default function AssignAccountModal({ partnerId, onClose }: AssignAccount
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  engagement_type: e.target.value as any,
+                  engagement_type: e.target.value as AssignAccountInput["engagement_type"],
                 })
               }
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"

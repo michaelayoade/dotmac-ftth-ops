@@ -3,14 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type PropsWithChildren, useMemo } from "react";
-import {
-  Handshake,
-  LayoutDashboard,
-  Users,
-  FileText,
-  Compass,
-  type LucideIcon,
-} from "lucide-react";
+import { Handshake, LayoutDashboard, Users, FileText, type LucideIcon } from "lucide-react";
 
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { Card, CardContent } from "@dotmac/ui";
@@ -42,12 +35,6 @@ const NAV_ITEMS: NavItem[] = [
     label: "Quotes",
     description: "Proposals, pricing, and acceptance tracking",
     icon: FileText,
-  },
-  {
-    href: "/dashboard/crm/site-surveys",
-    label: "Site Surveys",
-    description: "Schedule field visits and track serviceability",
-    icon: Compass,
   },
 ];
 
@@ -83,8 +70,8 @@ function CRMLayoutContent({ children }: PropsWithChildren) {
             <span>Customer Relationship Management</span>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Guide prospects through the FTTH sales pipeline — manage leads, generate quotes, and
-            verify serviceability to convert opportunities into paying subscribers.
+            Guide prospects through the BSS pipeline — manage leads, generate quotes, and keep
+            tenant onboarding on track without network operations dependencies.
           </p>
         </div>
         <Badge variant="outline" className="self-start">
@@ -95,7 +82,7 @@ function CRMLayoutContent({ children }: PropsWithChildren) {
       <Card>
         <CardContent className="p-0">
           <nav
-            className="flex flex-col divide-y divide-border md:grid md:grid-cols-4 md:divide-y-0"
+            className="flex flex-col divide-y divide-border md:grid md:grid-cols-3 md:divide-y-0"
             aria-label="CRM navigation"
           >
             {NAV_ITEMS.map((item) => {

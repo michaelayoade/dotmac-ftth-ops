@@ -29,7 +29,11 @@ import {
 } from "@dotmac/ui";
 import { Prefix } from "@/types/netbox";
 import { detectIPFamily, IPFamily, getIPv4UsableHosts, parseCIDR } from "@/lib/utils/ip-address";
-import { MoreHorizontal, Plus, Search } from "lucide-react";
+import {
+  MoreHorizontal,
+  Plus,
+  Search,
+} from "lucide-react";
 
 export interface PrefixListProps {
   prefixes: Prefix[];

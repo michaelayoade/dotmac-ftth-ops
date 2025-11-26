@@ -12,7 +12,7 @@ export interface ErrorDetails {
   message: string;
   code?: string;
   status?: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 /**
@@ -88,7 +88,7 @@ export function handleValidationError(
   const errorDetails = parseError(error);
 
   // Extract field-level validation errors if available
-  const fieldErrors = errorDetails.details?.['fields'] || {};
+  const fieldErrors: Record<string, string[]> = (errorDetails.details?.['fields'] as Record<string, string[]>) || {};
 
   if (showAlert && Object.keys(fieldErrors).length === 0) {
     alertService.error(errorDetails.message, "Validation Error");

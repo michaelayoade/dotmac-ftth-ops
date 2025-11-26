@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
     CommunicationLog,
+    BulkJobMetadata,
     CommunicationStats,
     CommunicationStatus,
     CommunicationType,
@@ -92,6 +93,7 @@ class CommunicationMetricsService:
             communication_id=str(log_entry.id),
             type=type.value,
             recipient=recipient,
+            job_id=job_id,
         )
 
         return log_entry
@@ -211,7 +213,24 @@ class CommunicationMetricsService:
                 + status_counts.get(CommunicationStatus.BOUNCED.value, 0)
             ),
             "pending": status_counts.get(CommunicationStatus.PENDING.value, 0),
+            "total_logs": sum(status_counts.values()),
+            "total_templates": await self._count_templates(tenant_id),
         }
+
+    async def _count_templates(self, tenant_id: str | None = None) -> int:
+        try:
+            tmpl_conditions = []
+            if tenant_id:
+                tmpl_conditions.append(BulkJobMetadata.tenant_id == tenant_id)
+            from dotmac.platform.communications.models import CommunicationTemplate
+
+            stmt = select(func.count(CommunicationTemplate.id))
+            if tenant_id:
+                stmt = stmt.where(CommunicationTemplate.tenant_id == tenant_id)
+            result = await self.db.execute(stmt)
+            return int(result.scalar() or 0)
+        except Exception:
+            return 0
 
     async def get_recent_activity(
         self,

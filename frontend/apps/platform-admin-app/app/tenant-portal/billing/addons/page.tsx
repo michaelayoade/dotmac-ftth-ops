@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useTenantAddons, Addon, CancelAddonRequest } from "@/hooks/useTenantAddons";
+import { useTenantAddons, CancelAddonRequest } from "@/hooks/useTenantAddons";
 import { AddonCard } from "@/components/tenant/billing/AddonCard";
 import { ActiveAddonCard } from "@/components/tenant/billing/ActiveAddonCard";
 import { AddonsPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +24,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@dotmac/ui";
-import { AlertCircle, Search, Package, TrendingUp, Zap } from "lucide-react";
+import {
+  AlertCircle,
+  Package,
+  Search,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { toast } from "@dotmac/ui";
 
 export default function AddonsPage() {
@@ -59,9 +64,11 @@ export default function AddonsPage() {
         if (availableAddons.length === 0) {
           await fetchAvailableAddons();
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Error already set by hook, but surface to user
-        const errorMsg = err?.response?.data?.detail || "Failed to load add-ons marketplace";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const error = err as any;
+        const errorMsg = error?.response?.data?.detail || "Failed to load add-ons marketplace";
         toast.error(errorMsg);
       }
     };
@@ -100,8 +107,10 @@ export default function AddonsPage() {
     try {
       await purchaseAddon(addonId, { quantity });
       toast.success("Add-on purchased successfully!");
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Failed to purchase add-on";
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      const errorMsg = error?.response?.data?.detail || "Failed to purchase add-on";
       toast.error(errorMsg);
       console.error("Failed to purchase add-on:", err);
     } finally {
@@ -114,8 +123,10 @@ export default function AddonsPage() {
     try {
       await updateAddonQuantity(tenantAddonId, { quantity });
       toast.success("Add-on quantity updated successfully!");
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Failed to update add-on quantity";
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      const errorMsg = error?.response?.data?.detail || "Failed to update add-on quantity";
       toast.error(errorMsg);
       console.error("Failed to update add-on quantity:", err);
     } finally {
@@ -146,8 +157,10 @@ export default function AddonsPage() {
       );
       setCancelModalOpen(false);
       setAddonToCancel(null);
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Failed to cancel add-on";
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      const errorMsg = error?.response?.data?.detail || "Failed to cancel add-on";
       toast.error(errorMsg);
       console.error("Failed to cancel add-on:", err);
     } finally {
@@ -160,8 +173,10 @@ export default function AddonsPage() {
     try {
       await reactivateAddon(tenantAddonId);
       toast.success("Add-on reactivated successfully!");
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail || "Failed to reactivate add-on";
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      const errorMsg = error?.response?.data?.detail || "Failed to reactivate add-on";
       toast.error(errorMsg);
       console.error("Failed to reactivate add-on:", err);
     } finally {

@@ -73,6 +73,15 @@ class TechnicianScheduleResponse(TechnicianScheduleBase):
         from_attributes = True
 
 
+class TechnicianScheduleListResponse(BaseModel):
+    """Paginated list of technician schedules"""
+
+    schedules: list[TechnicianScheduleResponse]
+    total: int
+    page: int
+    page_size: int
+
+
 # Task Assignment Schemas
 class TaskAssignmentBase(BaseModel):
     scheduled_start: datetime
@@ -147,6 +156,15 @@ class TaskAssignmentResponse(TaskAssignmentBase):
 
     class Config:
         from_attributes = True
+
+
+class TaskAssignmentListResponse(BaseModel):
+    """Paginated list of task assignments"""
+
+    assignments: list[TaskAssignmentResponse]
+    total: int
+    page: int
+    page_size: int
 
 
 # Assignment Candidate Schema

@@ -14,19 +14,19 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import {
-  Mail,
-  Send,
-  CheckCircle2,
-  XCircle,
-  Eye,
-  MousePointerClick,
-  Loader2,
-  AlertCircle,
-  FileText,
-  Users,
-  TrendingUp,
   Activity,
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  FileText,
+  Loader2,
+  Mail,
+  MousePointerClick,
   RefreshCw,
+  Send,
+  TrendingUp,
+  Users,
+  XCircle,
 } from "lucide-react";
 import {
   getStatusColor,
@@ -38,7 +38,7 @@ import {
 
 export default function CommunicationsDashboard() {
   const { stats, health, recentLogs, metrics, isLoading, error } = useCommunicationsDashboard();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [_refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);

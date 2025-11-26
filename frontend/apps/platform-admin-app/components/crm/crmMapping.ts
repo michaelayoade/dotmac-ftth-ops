@@ -1,5 +1,5 @@
-import type { Lead as AppLead, Quote as AppQuote, SiteSurvey as AppSiteSurvey } from "@/hooks/useCRM";
-import type { Lead as SharedLead, Quote as SharedQuote, SiteSurvey as SharedSiteSurvey } from "@dotmac/features/crm";
+import type { Lead as AppLead, Quote as AppQuote } from "@/hooks/useCRM";
+import type { Lead as SharedLead, Quote as SharedQuote } from "@dotmac/features/crm";
 
 type SharedSignature = SharedQuote["signature_data"];
 
@@ -25,6 +25,12 @@ export const mapQuoteToShared = (quote: AppQuote): SharedQuote => {
 
   return {
     ...quote,
+    installation_fee: quote.installation_fee ?? 0,
+    equipment_fee: quote.equipment_fee ?? 0,
+    activation_fee: quote.activation_fee ?? 0,
+    contract_term_months: quote.contract_term_months ?? 0,
+    total_upfront_cost: quote.total_upfront_cost ?? 0,
+    line_items: quote.line_items ?? [],
     early_termination_fee: quote.early_termination_fee ?? undefined,
     promo_discount_months: quote.promo_discount_months ?? undefined,
     promo_monthly_discount: quote.promo_monthly_discount ?? undefined,
@@ -68,28 +74,3 @@ export const mapLeadToShared = (lead: AppLead): SharedLead => ({
 });
 
 export const mapLeadsToShared = (leads: AppLead[]): SharedLead[] => leads.map(mapLeadToShared);
-
-export const mapSiteSurveyToShared = (survey: AppSiteSurvey): SharedSiteSurvey => ({
-  ...survey,
-  completed_date: survey.completed_date ?? undefined,
-  technician_id: survey.technician_id ?? undefined,
-  serviceability: survey.serviceability ?? undefined,
-  nearest_fiber_distance_meters: survey.nearest_fiber_distance_meters ?? undefined,
-  fiber_extension_cost: survey.fiber_extension_cost ?? undefined,
-  nearest_olt_id: survey.nearest_olt_id ?? undefined,
-  available_pon_ports: survey.available_pon_ports ?? undefined,
-  estimated_installation_time_hours: survey.estimated_installation_time_hours ?? undefined,
-  installation_complexity: survey.installation_complexity ?? undefined,
-  recommendations: survey.recommendations ?? undefined,
-  obstacles: survey.obstacles ?? undefined,
-  metadata: survey.metadata ?? undefined,
-  notes: survey.notes ?? undefined,
-  photos: survey.photos.map((photo) => ({
-    url: photo.url,
-    description: photo.description ?? undefined,
-    timestamp: photo.timestamp,
-  })),
-});
-
-export const mapSiteSurveysToShared = (surveys: AppSiteSurvey[]): SharedSiteSurvey[] =>
-  surveys.map(mapSiteSurveyToShared);

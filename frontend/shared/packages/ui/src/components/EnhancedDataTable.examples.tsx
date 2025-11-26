@@ -5,6 +5,7 @@
  * across different features in the application.
  */
 
+import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   AlertTriangle,
@@ -541,5 +542,104 @@ export function DeviceListExample({ devices }: { devices: Device[] }) {
       filterable
       onRowClick={(device) => console.log("View device details:", device)}
     />
+  );
+}
+
+// ============================================================================
+// Example 5: Server-Side Pagination Pattern (10k+ rows)
+// ============================================================================
+
+export function ServerSidePaginationExample() {
+  const [pageIndex, setPageIndex] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(20);
+  const [rows, setRows] = React.useState<Invoice[]>([]);
+  const [total, setTotal] = React.useState(0);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    setLoading(true);
+    const timeout = setTimeout(() => {
+      // Simulate a backend with 10,000 rows
+      const simulatedTotal = 10000;
+      const start = pageIndex * pageSize;
+      const generated: Invoice[] = Array.from({ length: pageSize }, (_v, idx) => {
+        const id = start + idx + 1;
+        return {
+          invoice_id: `inv-${id}`,
+          invoice_number: `INV-${id.toString().padStart(5, "0")}`,
+          customer_name: `Customer ${id}`,
+          amount: 100 + (id % 50),
+          status: id % 3 === 0 ? "paid" : "open",
+          due_date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        };
+      });
+      setRows(generated);
+      setTotal(simulatedTotal);
+      setLoading(false);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [pageIndex, pageSize]);
+
+  const pageCount = Math.ceil(total / pageSize);
+
+  return (
+    <div className="space-y-3">
+      <EnhancedDataTable
+        data={rows}
+        columns={invoiceColumns}
+        pagination={false}
+        searchable={false}
+        isLoading={loading}
+        emptyMessage="No invoices"
+        enableResponsiveCards
+        renderMobileCard={(row) => (
+          <div className="space-y-1">
+            <div className="text-sm font-semibold">{row.original.invoice_number}</div>
+            <div className="text-sm text-muted-foreground">{row.original.customer_name}</div>
+            <div className="text-sm">${row.original.amount.toFixed(2)}</div>
+            <Badge>{row.original.status}</Badge>
+          </div>
+        )}
+      />
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          Page {pageIndex + 1} of {pageCount}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPageIndex((idx) => Math.max(idx - 1, 0))}
+            disabled={pageIndex === 0 || loading}
+          >
+            Previous
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPageIndex((idx) => Math.min(idx + 1, pageCount - 1))}
+            disabled={pageIndex >= pageCount - 1 || loading}
+          >
+            Next
+          </Button>
+          <select
+            className="h-8 rounded-md border border-input bg-card px-2 text-sm"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPageIndex(0);
+            }}
+          >
+            {[10, 20, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size} / page
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -24,7 +24,12 @@ import { Checkbox } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { IPCIDRInput } from "@/components/forms/IPCIDRInput";
 import { Badge } from "@dotmac/ui";
-import { Loader2, AlertCircle, Info, Sparkles } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  Info,
+  Sparkles,
+} from "lucide-react";
 import { wireguardPeerSchema, WireGuardPeer } from "@/lib/validations/ip-address";
 
 type FormData = WireGuardPeer;

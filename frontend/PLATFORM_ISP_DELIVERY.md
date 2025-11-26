@@ -1,4 +1,5 @@
 # Platform-ISP Integration - Complete Delivery Report
+> Scope note: The platform-admin app is a control plane for tenants/partners/licensing. Network, RADIUS, and ISP operational features remain in the ISP Ops app; platform routes are blocked from those areas (see `apps/platform-admin-app/SCOPE.md` and `middleware.ts`).
 
 **Delivered**: November 23, 2025
 **Status**: ✅ **COMPLETE - ALL TESTS PASSING**

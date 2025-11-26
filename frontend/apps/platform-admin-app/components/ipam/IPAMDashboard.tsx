@@ -10,8 +10,11 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import { parseCIDR, IPFamily, getIPv4UsableHosts } from "@/lib/utils/ip-address";
-import { Network, Globe, Server, TrendingUp } from "lucide-react";
+import {
+  Network,
+  Globe,
+  Server,
+} from "lucide-react";
 
 export interface IPAMStats {
   totalPrefixes: number;
@@ -37,11 +40,6 @@ export interface IPAMDashboardProps {
 }
 
 export function IPAMDashboard({ stats }: IPAMDashboardProps) {
-  const totalUtilization =
-    stats.totalAllocated > 0
-      ? ((stats.ipv4Allocated + stats.ipv6Allocated) / stats.totalAllocated) * 100
-      : 0;
-
   return (
     <div className="space-y-6">
       {/* Summary Cards */}

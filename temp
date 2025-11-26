@@ -1,1 +1,0 @@
-# mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr"

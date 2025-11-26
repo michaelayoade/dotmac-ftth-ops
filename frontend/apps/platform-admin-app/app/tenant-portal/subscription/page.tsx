@@ -19,7 +19,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@dotmac/ui";
-import { AlertCircle, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { useLicensing } from "../../../hooks/useLicensing";
 import { SubscriptionDashboard } from "../../../components/licensing/SubscriptionDashboard";
 import { PlanSelector } from "../../../components/licensing/PlanSelector";
@@ -127,7 +130,7 @@ export default function TenantSubscriptionPage() {
       tenant_id: currentSubscription.tenant_id,
       plan_id: currentSubscription.plan_id,
       status: currentSubscription.status as BillingSubscriptionStatus,
-      billing_cycle: currentSubscription.billing_cycle as any,
+      billing_cycle: currentSubscription.billing_cycle as BillingCycle,
       monthly_price: currentSubscription.monthly_price,
       current_period_start: currentSubscription.current_period_start,
       current_period_end: currentSubscription.current_period_end,

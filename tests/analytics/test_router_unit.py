@@ -5,16 +5,56 @@ Tests helper functions, datetime handling, and router configuration.
 """
 
 from datetime import UTC, datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from httpx import AsyncClient
 
 from dotmac.platform.analytics.router import (
     _ensure_utc,
     _isoformat,
     analytics_router,
     get_analytics_service,
+    get_operations_metrics,
+    get_security_metrics,
 )
+from dotmac.platform.auth.core import TokenType, jwt_service
+
+
+@pytest.fixture(autouse=True)
+def _mock_jwt(monkeypatch):
+    """Provide deterministic JWT behaviour for analytics tests."""
+
+    def _create_access_token(*args, **kwargs) -> str:
+        return "test-access-token"
+
+    def _verify_token(token: str, expected_type: TokenType | None = None):
+        token_type = expected_type.value if expected_type else TokenType.ACCESS.value
+        return {
+            "sub": "analytics-test-user",
+            "tenant_id": "test-tenant",
+            "type": token_type,
+            "roles": ["admin"],
+            "permissions": [
+                "analytics:read",
+                "analytics.metrics.read",
+                "security.read",
+                "platform:analytics.read",
+            ],
+        }
+
+    monkeypatch.setattr(jwt_service, "create_access_token", _create_access_token)
+    monkeypatch.setattr(jwt_service, "verify_token", _verify_token)
+    yield
+
+
+@pytest.fixture
+def auth_headers():
+    """Standard auth headers for analytics tests."""
+    return {
+        "Authorization": "Bearer test-access-token",
+        "X-Tenant-ID": "test-tenant",
+    }
 
 
 @pytest.mark.unit
@@ -151,3 +191,110 @@ class TestRouterConfiguration:
         routes = [route.path for route in analytics_router.routes]
         assert "/analytics/events" in routes
         assert "/analytics/metrics" in routes
+
+
+@pytest.mark.integration
+class TestSecurityAndOperationsEndpoints:
+    """Integration-style checks for analytics security and operations endpoints."""
+
+    async def test_security_metrics_maps_cached_data(self):
+        with patch(
+            "dotmac.platform.analytics.router._get_auth_metrics_cached", new_callable=AsyncMock
+        ) as mock_auth, patch(
+            "dotmac.platform.analytics.router._get_api_key_metrics_cached", new_callable=AsyncMock
+        ) as mock_keys, patch(
+            "dotmac.platform.analytics.router._get_secrets_metrics_cached", new_callable=AsyncMock
+        ) as mock_secrets:
+            mock_auth.return_value = {
+                "active_users": 10,
+                "failed_logins": 2,
+                "mfa_enabled_users": 6,
+                "password_reset_requests": 1,
+            }
+            mock_keys.return_value = {
+                "total_keys": 5,
+                "active_keys": 4,
+                "keys_expiring_soon": 1,
+            }
+            mock_secrets.return_value = {
+                "total_secrets_created": 8,
+                "unique_secrets_accessed": 5,
+                "secrets_deleted_last_7d": 1,
+                "secrets_created_last_7d": 2,
+                "failed_access_attempts": 1,
+            }
+
+            request = MagicMock()
+            request.headers = {"X-Tenant-ID": "test-tenant"}
+            request.query_params = {}
+
+            user = MagicMock()
+            user.tenant_id = "test-tenant"
+
+            data = await get_security_metrics(
+                request=request,
+                timeRange="30d",
+                session=AsyncMock(),
+                current_user=user,
+            )
+            assert data["auth"]["activeSessions"] == 10
+            assert data["apiKeys"]["expiring"] == 1
+            assert data["secrets"]["total"] == 8
+            assert data["compliance"]["issues"] == 1
+
+    async def test_operations_metrics_combines_sources(self):
+        with patch(
+            "dotmac.platform.analytics.router._get_customer_metrics_cached", new_callable=AsyncMock
+        ) as mock_customers, patch(
+            "dotmac.platform.analytics.router._get_communication_stats_cached",
+            new_callable=AsyncMock,
+        ) as mock_comms, patch(
+            "dotmac.platform.analytics.router._get_file_stats_cached", new_callable=AsyncMock
+        ) as mock_files, patch(
+            "dotmac.platform.analytics.router._get_monitoring_metrics_cached",
+            new_callable=AsyncMock,
+        ) as mock_monitoring:
+            mock_customers.return_value = {
+                "total_customers": 100,
+                "new_customers_this_month": 5,
+                "customer_growth_rate": 2.5,
+                "at_risk_customers": 4,
+            }
+            mock_comms.return_value = {
+                "total_sent": 200,
+                "delivery_rate": 98.0,
+            }
+            mock_files.return_value = {
+                "total_files": 50,
+                "total_size_mb": 123.4,
+            }
+            mock_monitoring.return_value = {
+                "total_requests": 240,
+                "user_activities": 12,
+            }
+
+            request = MagicMock()
+            request.headers = {"X-Tenant-ID": "test-tenant"}
+            request.query_params = {}
+            user = MagicMock()
+            user.tenant_id = "test-tenant"
+
+            data = await get_operations_metrics(
+                request=request,
+                timeRange="30d",
+                session=AsyncMock(),
+                current_user=user,
+            )
+            assert data["customers"]["total"] == 100
+            assert data["customers"]["churnRisk"] == pytest.approx(4.0)
+            assert data["communications"]["totalSent"] == 200
+            assert data["files"]["totalSize"] == 123.4
+            assert data["activity"]["eventsPerHour"] == pytest.approx(10.0)
+            # Flattened aliases for legacy callers
+            assert data["totalCustomers"] == 100
+            assert data["newCustomersThisMonth"] == 5
+            assert data["customerGrowthRate"] == 2.5
+            assert data["customersAtRisk"] == pytest.approx(4.0)
+            assert data["totalCommunications"] == 200
+            assert data["totalFiles"] == 50
+            assert data["eventsPerHour"] == pytest.approx(10.0)

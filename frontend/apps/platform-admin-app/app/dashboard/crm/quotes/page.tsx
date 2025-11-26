@@ -6,20 +6,19 @@ export const dynamicParams = true;
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FileText,
-  Send,
-  CheckCircle,
-  XCircle,
-  Clock,
-  TrendingUp,
-  Filter,
-  Download,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
   AlertTriangle,
+  CheckCircle,
+  Clock,
   DollarSign,
+  Download,
+  Edit,
+  Eye,
+  FileText,
+  Filter,
+  MoreHorizontal,
+  Send,
+  Trash2,
+  TrendingUp,
 } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 
@@ -54,7 +53,7 @@ import { Input } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 
 export default function QuotesPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
 
@@ -272,7 +271,7 @@ export default function QuotesPage() {
         header: "Upfront",
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
-            ${row.original.total_upfront_cost.toFixed(2)}
+            ${(row.original.total_upfront_cost ?? 0).toFixed(2)}
           </span>
         ),
       },
@@ -378,7 +377,7 @@ export default function QuotesPage() {
     () => [
       {
         label: "Send Quotes",
-        icon: Send as any,
+        icon: Send as unknown as React.ComponentType,
         variant: "default" as const,
         action: async (selectedQuotes) => {
           const draftQuotes = selectedQuotes.filter((q) => q.status === "draft");
@@ -408,7 +407,7 @@ export default function QuotesPage() {
       },
       {
         label: "Delete Quotes",
-        icon: Trash2 as any,
+        icon: Trash2 as unknown as React.ComponentType,
         variant: "destructive" as const,
         action: async (selectedQuotes) => {
           const confirmed = await confirmDialog({
@@ -671,11 +670,11 @@ function convertToCSV(quotes: Quote[]): string {
     quote.service_plan_name,
     quote.bandwidth || "",
     quote.monthly_recurring_charge.toString(),
-    quote.total_upfront_cost.toString(),
-    quote.installation_fee.toString(),
-    quote.equipment_fee.toString(),
-    quote.activation_fee.toString(),
-    quote.contract_term_months.toString(),
+    (quote.total_upfront_cost ?? 0).toString(),
+    (quote.installation_fee ?? 0).toString(),
+    (quote.equipment_fee ?? 0).toString(),
+    (quote.activation_fee ?? 0).toString(),
+    (quote.contract_term_months ?? 0).toString(),
     quote.status,
     quote.sent_at || "",
     quote.valid_until || "",

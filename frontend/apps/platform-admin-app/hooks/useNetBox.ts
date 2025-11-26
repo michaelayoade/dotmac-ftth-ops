@@ -111,10 +111,12 @@ export function useCreateIPAddress() {
         description: `IP address ${ip.address} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create IP address",
+        description: err.response?.data?.detail || "Failed to create IP address",
         variant: "destructive",
       });
     },
@@ -140,10 +142,12 @@ export function useUpdateIPAddress() {
         description: "IP address has been updated successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update IP address",
+        description: err.response?.data?.detail || "Failed to update IP address",
         variant: "destructive",
       });
     },
@@ -165,10 +169,12 @@ export function useDeleteIPAddress() {
         description: "IP address has been deleted successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete IP address",
+        description: err.response?.data?.detail || "Failed to delete IP address",
         variant: "destructive",
       });
     },
@@ -234,10 +240,12 @@ export function useCreatePrefix() {
         description: `Prefix ${prefix.prefix} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create prefix",
+        description: err.response?.data?.detail || "Failed to create prefix",
         variant: "destructive",
       });
     },
@@ -278,10 +286,12 @@ export function useAllocateIP() {
         description: `IP address ${ip.address} has been allocated successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to allocate IP address",
+        description: err.response?.data?.detail || "Failed to allocate IP address",
         variant: "destructive",
       });
     },
@@ -318,10 +328,12 @@ export function useCreateVRF() {
         description: `VRF ${vrf.name} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create VRF",
+        description: err.response?.data?.detail || "Failed to create VRF",
         variant: "destructive",
       });
     },
@@ -383,10 +395,12 @@ export function useCreateVLAN() {
         description: `VLAN ${vlan.vid} (${vlan.name}) has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create VLAN",
+        description: err.response?.data?.detail || "Failed to create VLAN",
         variant: "destructive",
       });
     },
@@ -409,10 +423,12 @@ export function useUpdateVLAN() {
         description: "VLAN has been updated successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update VLAN",
+        description: err.response?.data?.detail || "Failed to update VLAN",
         variant: "destructive",
       });
     },
@@ -472,10 +488,12 @@ export function useCreateSite() {
         description: `Site ${site.name} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create site",
+        description: err.response?.data?.detail || "Failed to create site",
         variant: "destructive",
       });
     },
@@ -537,10 +555,12 @@ export function useCreateDevice() {
         description: `Device ${device.name} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create device",
+        description: err.response?.data?.detail || "Failed to create device",
         variant: "destructive",
       });
     },
@@ -563,10 +583,12 @@ export function useUpdateDevice() {
         description: "Device has been updated successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update device",
+        description: err.response?.data?.detail || "Failed to update device",
         variant: "destructive",
       });
     },
@@ -616,10 +638,12 @@ export function useCreateInterface() {
         description: `Interface ${iface.name} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create interface",
+        description: err.response?.data?.detail || "Failed to create interface",
         variant: "destructive",
       });
     },
@@ -656,10 +680,12 @@ export function useCreateCircuit() {
         description: `Circuit ${circuit.cid} has been created successfully`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create circuit",
+        description: err.response?.data?.detail || "Failed to create circuit",
         variant: "destructive",
       });
     },

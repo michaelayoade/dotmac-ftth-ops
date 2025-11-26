@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { SkipLink } from "@dotmac/ui";
 import {
-  Home,
   Settings,
   Users,
   UserCheck,
   Shield,
-  Database,
   Activity,
   Mail,
   Search,
@@ -23,52 +21,27 @@ import {
   User,
   ChevronDown,
   ChevronRight,
-  Key,
   Webhook,
   CreditCard,
-  Repeat,
   Package,
-  DollarSign,
-  Server,
-  Lock,
   BarChart3,
   Building2,
   Handshake,
   LifeBuoy,
   LayoutDashboard,
-  Wifi,
-  MapPin,
-  Network as NetworkIcon,
-  AlertTriangle,
-  Cable,
-  Bell,
-  Calendar,
-  Router as RouterIcon,
-  Plus,
-  Zap,
-  FileCode,
-  ArrowLeftRight,
-  ShoppingCart,
-  Briefcase,
-  Ticket,
+  Network as Bell,
   Plug,
-  GitBranch,
-  Puzzle,
-  TrendingUp,
 } from "lucide-react";
 import { ThemeToggle } from "@dotmac/ui";
 import { Can } from "@/components/auth/PermissionGuard";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useBranding } from "@/hooks/useBranding";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
-import { ConnectionStatusIndicator } from "@/components/realtime/ConnectionStatusIndicator";
-import { RealtimeAlerts } from "@/components/realtime/RealtimeAlerts";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
 import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
 import { useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
 import { signOut } from "@dotmac/better-auth";
-import { RealtimeProvider } from "@/contexts/RealtimeProvider";
 import { clearOperatorAuthTokens } from "../../../../shared/utils/operatorAuth";
 
 interface NavItem {
@@ -141,10 +114,7 @@ const allSections: NavSection[] = [
     label: "Analytics & Insights",
     icon: BarChart3,
     href: "/dashboard/analytics",
-    items: [
-      { name: "Analytics Overview", href: "/dashboard/analytics", icon: BarChart3 },
-      { name: "Billing & Revenue", href: "/dashboard/billing-revenue", icon: DollarSign },
-    ],
+    items: [{ name: "Analytics Overview", href: "/dashboard/analytics", icon: BarChart3 }],
   },
   {
     id: "audit",
@@ -164,10 +134,6 @@ const allSections: NavSection[] = [
     href: "/dashboard/jobs",
     items: [
       { name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity },
-      { name: "Orchestration", href: "/dashboard/orchestration", icon: GitBranch },
-      { name: "Workflows", href: "/dashboard/workflows", icon: Repeat },
-      { name: "Data Import", href: "/dashboard/data-import", icon: Database },
-      { name: "Data Pipelines", href: "/dashboard/data-transfer", icon: ArrowLeftRight },
     ],
   },
   {
@@ -189,7 +155,6 @@ const allSections: NavSection[] = [
     items: [
       { name: "Plugin Catalog", href: "/dashboard/plugins", icon: Package },
       { name: "Partner Integrations", href: "/dashboard/partners", icon: Handshake },
-      { name: "Partner Revenue", href: "/dashboard/partners/revenue", icon: TrendingUp },
     ],
   },
 ];
@@ -244,6 +209,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [navSearch, setNavSearch] = useState("");
   const pathname = usePathname();
   const router = useRouter();
   const { hasPermission, hasAnyPermission } = useRBAC();
@@ -251,6 +217,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const portalType = getPortalType();
   const { data: session, isPending: authLoading } = useSession();
   const userData = session?.user as DisplayUser | undefined;
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const navLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    sections.forEach((section) => {
+      map.set(section.href, section.label);
+      section.items?.forEach((item) => map.set(item.href, item.name));
+    });
+    return map;
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -274,11 +249,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Filter sections based on permissions
   const visibleSections = useMemo(
     () =>
-      portalScopedSections.filter((section) =>
-        checkSectionVisibility(section, hasPermission, hasAnyPermission),
-      ),
-    [hasAnyPermission, hasPermission, portalScopedSections],
+      portalScopedSections
+        .filter((section) => checkSectionVisibility(section, hasPermission, hasAnyPermission))
+        .map((section) => {
+          if (!navSearch.trim()) return section;
+          const term = navSearch.toLowerCase();
+          const filteredItems =
+            section.items?.filter(
+              (item) =>
+                item.name.toLowerCase().includes(term) ||
+                item.href.toLowerCase().includes(term) ||
+                section.label.toLowerCase().includes(term),
+            ) || [];
+          const matchesSection = section.label.toLowerCase().includes(term);
+          if (matchesSection || filteredItems.length > 0) {
+            return { ...section, items: filteredItems.length > 0 ? filteredItems : section.items };
+          }
+          return null;
+        })
+        .filter(Boolean) as NavSection[],
+    [hasAnyPermission, hasPermission, navSearch, portalScopedSections],
   );
+
+  const breadcrumbs = useMemo(() => {
+    const segments = pathname.split("/").filter(Boolean);
+    let currentPath = "";
+    return segments.map((segment) => {
+      currentPath += `/${segment}`;
+      const label =
+        navLabelMap.get(currentPath) ??
+        segment
+          .split("-")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" ");
+      return { href: currentPath || "/", label };
+    });
+  }, [navLabelMap, pathname]);
 
   // Toggle section expansion
   const toggleSection = (sectionId: string) => {
@@ -327,6 +333,50 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     });
   }, [pathname, visibleSections]);
 
+  useEffect(() => {
+    if (!navSearch.trim()) return;
+    const expandedIds = visibleSections
+      .filter((section) => section.items && section.items.length > 0)
+      .map((section) => section.id);
+    setExpandedSections(new Set(expandedIds));
+  }, [navSearch, visibleSections]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const nav = sidebarRef.current;
+      if (!nav) return;
+      if (!nav.contains(event.target as Node)) return;
+      const focusable = Array.from(
+        nav.querySelectorAll<HTMLElement>("[data-nav-link='true']"),
+      ).filter((el) => !el.hasAttribute("disabled"));
+      if (event.key === "Tab" && focusable.length > 0) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first && last) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last && first) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const currentIndex = focusable.findIndex((el) => el === document.activeElement);
+      if (currentIndex === -1) return;
+      event.preventDefault();
+      if (event.key === "ArrowDown") {
+        const next = focusable[currentIndex + 1] ?? focusable[0];
+        next?.focus();
+      } else if (event.key === "ArrowUp") {
+        const prev = focusable[currentIndex - 1] ?? focusable[focusable.length - 1];
+        prev?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen]);
+
   const handleLogout = async () => {
     await signOut();
     clearOperatorAuthTokens();
@@ -334,8 +384,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <RealtimeProvider>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <SkipLink />
         {/* Top Navigation Bar */}
         <nav
@@ -460,7 +509,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Navigation items - scrollable area */}
-        <nav className="flex-1 overflow-y-auto mt-8 px-4 pb-4">
+        <nav
+          ref={sidebarRef}
+          className="flex-1 overflow-y-auto mt-8 px-4 pb-4"
+          aria-label="Sidebar"
+        >
+          <div className="mb-3">
+            <label className="sr-only" htmlFor="nav-search">
+              Filter navigation
+            </label>
+            <div className="relative">
+              <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                id="nav-search"
+                type="search"
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
+                placeholder="Filter navigation"
+                className="w-full rounded-md border border-input bg-card pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+          </div>
           <ul className="space-y-1">
             {visibleSections.map((section) => {
               const isExpanded = expandedSections.has(section.id);
@@ -488,6 +557,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                               : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         }`}
                         onClick={() => setSidebarOpen(false)}
+                        data-nav-link="true"
+                        tabIndex={0}
                       >
                         <section.icon className="h-5 w-5 flex-shrink-0" />
                         <span>{section.label}</span>
@@ -527,6 +598,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                     }`}
                                     onClick={() => setSidebarOpen(false)}
+                                    data-nav-link="true"
                                   >
                                     <item.icon className="h-4 w-4 flex-shrink-0" />
                                     <span>{item.name}</span>
@@ -552,6 +624,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                 }`}
                                 onClick={() => setSidebarOpen(false)}
+                                data-nav-link="true"
                               >
                                 <item.icon className="h-4 w-4 flex-shrink-0" />
                                 <span>{item.name}</span>
@@ -589,15 +662,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="min-h-screen p-4 sm:p-6 lg:p-8 bg-background"
           aria-label="Main content"
         >
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
+            <Link href="/dashboard" className="hover:text-foreground">
+              Home
+            </Link>
+            {breadcrumbs.map((crumb, idx) => (
+              <div key={crumb.href} className="flex items-center gap-2">
+                <span aria-hidden="true">/</span>
+                {idx === breadcrumbs.length - 1 ? (
+                  <span className="text-foreground font-medium">{crumb.label}</span>
+                ) : (
+                  <Link href={crumb.href} className="hover:text-foreground">
+                    {crumb.label}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
           {children}
         </main>
       </div>
-
-      {/* Real-time connection status indicator */}
-      <ConnectionStatusIndicator position="bottom-right" />
-
-      {/* Real-time alerts notifications */}
-      <RealtimeAlerts minSeverity="warning" />
 
       {/* Global Command Palette (⌘K) */}
       <GlobalCommandPalette />
@@ -607,9 +691,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div
           className="fixed inset-0 z-30 bg-black/50 dark:bg-black/70 lg:hidden"
           onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.currentTarget.click(); } }}
+          role="button"
+          tabIndex={0}
         />
       )}
-      </div>
-    </RealtimeProvider>
+    </div>
   );
 }

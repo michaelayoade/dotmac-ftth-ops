@@ -381,6 +381,8 @@ async def list_workflows(
         alias="status",
         description="Filter by status",
     ),
+    date_from: datetime | None = Query(None, description="Filter workflows created after this date"),
+    date_to: datetime | None = Query(None, description="Filter workflows created before this date"),
     limit: int = Query(50, ge=1, le=200, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     service: OrchestrationService = Depends(get_orchestration_service),
@@ -405,6 +407,8 @@ async def list_workflows(
             status=status_filter,
             limit=limit,
             offset=offset,
+            date_from=date_from,
+            date_to=date_to,
         )
 
         if isinstance(result, dict):
@@ -614,6 +618,8 @@ async def export_workflows_csv(
             status=status_filter,
             limit=limit,
             offset=0,
+            date_from=date_from,
+            date_to=date_to,
         )
         if isinstance(result, dict):
             workflows = [
@@ -622,8 +628,6 @@ async def export_workflows_csv(
             ]
         else:
             workflows = [wf if isinstance(wf, WorkflowResponse) else wf for wf in list(result)]
-        workflows = list(result)
-        workflows = list(result)
 
         # Create CSV in memory
         output = io.StringIO()
@@ -729,6 +733,8 @@ async def export_workflows_json(
             status=status_filter,
             limit=limit,
             offset=0,
+            date_from=date_from,
+            date_to=date_to,
         )
         if isinstance(result, dict):
             workflows = [

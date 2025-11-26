@@ -41,8 +41,10 @@ export const healthKeys = {
 /**
  * Helper to normalize health response formats
  */
-function normalizeHealthResponse(response: any): HealthSummary {
-  const payload = response.data;
+function normalizeHealthResponse(response: unknown): HealthSummary {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const r = response as any;
+  const payload = r.data;
 
   // Handle wrapped success response
   if (payload?.success && payload.data) {

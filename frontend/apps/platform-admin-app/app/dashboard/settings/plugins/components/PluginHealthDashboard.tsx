@@ -3,17 +3,16 @@
 import { useState } from "react";
 import {
   Activity,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Clock,
-  RefreshCw,
-  TrendingUp,
-  TrendingDown,
-  Zap,
-  Shield,
   AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
   Info,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  XCircle,
+  Zap,
 } from "lucide-react";
 import type { PluginInstance, PluginHealthCheck } from "@/hooks/usePlugins";
 import { logger } from "@/lib/logger";
@@ -103,7 +102,6 @@ export const PluginHealthDashboard = ({
   const totalInstances = instances.length;
   const healthyCount = healthStats['healthy'] || 0;
   const unhealthyCount = (healthStats['unhealthy'] || 0) + (healthStats['error'] || 0);
-  const unknownCount = healthStats['unknown'] || 0;
 
   const healthPercentage =
     totalInstances > 0 ? Math.round((healthyCount / totalInstances) * 100) : 0;
@@ -257,8 +255,9 @@ export const PluginHealthDashboard = ({
               className="bg-card/50 border border-border rounded-lg overflow-hidden"
               data-testid="health-instance"
             >
-              <div
-                className={`p-4 cursor-pointer transition-colors ${
+              <button
+                type="button"
+                className={`w-full text-left p-4 cursor-pointer transition-colors ${
                   isSelected ? "bg-accent/50" : "hover:bg-accent/30"
                 }`}
                 onClick={() => setSelectedInstance(isSelected ? null : instance.id)}
@@ -301,7 +300,7 @@ export const PluginHealthDashboard = ({
                   <Clock className="h-3 w-3" />
                   Last checked: {health?.timestamp ? formatTimestamp(health.timestamp) : "Never"}
                 </div>
-              </div>
+              </button>
 
               {/* Expanded Details */}
               {isSelected && health && (

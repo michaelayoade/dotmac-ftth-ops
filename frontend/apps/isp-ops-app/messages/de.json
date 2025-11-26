@@ -1,0 +1,413 @@
+{
+  "common": {
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolgreich",
+    "warning": "Warnung",
+    "info": "Information",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "update": "Aktualisieren",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "refresh": "Aktualisieren",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Vorherige",
+    "submit": "Absenden",
+    "reset": "Zurücksetzen",
+    "clear": "Löschen",
+    "apply": "Anwenden",
+    "download": "Herunterladen",
+    "upload": "Hochladen",
+    "view": "Ansehen",
+    "viewDetails": "Details ansehen",
+    "actions": "Aktionen",
+    "status": "Status",
+    "type": "Typ",
+    "name": "Name",
+    "description": "Beschreibung",
+    "date": "Datum",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Aktualisiert am",
+    "yes": "Ja",
+    "no": "Nein",
+    "all": "Alle",
+    "none": "Keine",
+    "other": "Andere",
+    "noData": "Keine Daten verfügbar",
+    "noResults": "Keine Ergebnisse gefunden",
+    "selectOption": "Option auswählen",
+    "required": "Erforderlich",
+    "optional": "Optional",
+    "selectLanguage": "Sprache auswählen"
+  },
+
+  "errors": {
+    "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "notFound": "Die angeforderte Ressource wurde nicht gefunden.",
+    "unauthorized": "Sie sind nicht berechtigt, auf diese Ressource zuzugreifen.",
+    "forbidden": "Sie haben keine Berechtigung, diese Aktion auszuführen.",
+    "validationFailed": "Bitte überprüfen Sie Ihre Eingabe und versuchen Sie es erneut.",
+    "serverError": "Ein Serverfehler ist aufgetreten. Unser Team wurde benachrichtigt.",
+    "timeout": "Die Anfrage ist abgelaufen. Bitte versuchen Sie es erneut.",
+    "retry": "Bitte versuchen Sie es erneut",
+    "contactSupport": "Wenn dieses Problem weiterhin besteht, wenden Sie sich bitte an den Support.",
+    "field": {
+      "required": "{field} ist erforderlich",
+      "invalid": "{field} ist ungültig",
+      "tooShort": "{field} ist zu kurz",
+      "tooLong": "{field} ist zu lang",
+      "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+      "phone": "Bitte geben Sie eine gültige Telefonnummer ein",
+      "url": "Bitte geben Sie eine gültige URL ein"
+    }
+  },
+
+  "navigation": {
+    "dashboard": "Dashboard",
+    "customers": "Kunden",
+    "billing": "Abrechnung",
+    "network": "Netzwerk",
+    "support": "Support",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "profile": "Profil",
+    "help": "Hilfe",
+    "documentation": "Dokumentation"
+  },
+
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "signUp": "Registrieren",
+    "forgotPassword": "Passwort vergessen?",
+    "resetPassword": "Passwort zurücksetzen",
+    "changePassword": "Passwort ändern",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "rememberMe": "Angemeldet bleiben",
+    "loginSuccess": "Erfolgreich angemeldet",
+    "logoutSuccess": "Erfolgreich abgemeldet",
+    "loginError": "Ungültige E-Mail oder Passwort",
+    "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+    "twoFactor": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "enable": "2FA aktivieren",
+      "disable": "2FA deaktivieren",
+      "verify": "Code überprüfen",
+      "enterCode": "Geben Sie Ihren 2FA-Code ein",
+      "backupCodes": "Backup-Codes",
+      "regenerateBackupCodes": "Backup-Codes neu generieren",
+      "enabled": "Zwei-Faktor-Authentifizierung aktiviert",
+      "disabled": "Zwei-Faktor-Authentifizierung deaktiviert",
+      "required": "Zwei-Faktor-Authentifizierung ist erforderlich"
+    }
+  },
+
+  "customers": {
+    "title": "Kunden",
+    "createCustomer": "Kunde erstellen",
+    "editCustomer": "Kunde bearbeiten",
+    "deleteCustomer": "Kunde löschen",
+    "customerDetails": "Kundendetails",
+    "viewCustomer": "Kunde ansehen",
+    "searchCustomers": "Kunden suchen...",
+    "totalCustomers": "Kunden gesamt",
+    "activeCustomers": "Aktive Kunden",
+    "inactiveCustomers": "Inaktive Kunden",
+    "fields": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "address": "Adresse",
+      "city": "Stadt",
+      "state": "Bundesland",
+      "zipCode": "Postleitzahl",
+      "country": "Land",
+      "status": "Status",
+      "type": "Kundentyp",
+      "tier": "Kundenstufe",
+      "notes": "Notizen"
+    },
+    "status": {
+      "prospect": "Interessent",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "suspended": "Gesperrt",
+      "churned": "Verloren",
+      "archived": "Archiviert"
+    },
+    "type": {
+      "individual": "Einzelperson",
+      "business": "Geschäftskunde",
+      "enterprise": "Unternehmen",
+      "partner": "Partner",
+      "vendor": "Anbieter"
+    },
+    "messages": {
+      "created": "Kunde erfolgreich erstellt",
+      "updated": "Kunde erfolgreich aktualisiert",
+      "deleted": "Kunde erfolgreich gelöscht",
+      "deleteConfirm": "Sind Sie sicher, dass Sie diesen Kunden löschen möchten?"
+    }
+  },
+
+  "jobs": {
+    "title": "Aufgaben",
+    "viewJob": "Aufgabe ansehen",
+    "cancelJob": "Aufgabe abbrechen",
+    "retryJob": "Aufgabe wiederholen",
+    "jobDetails": "Aufgabendetails",
+    "status": {
+      "pending": "Ausstehend",
+      "assigned": "Zugewiesen",
+      "running": "Läuft",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen",
+      "retrying": "Wird wiederholt",
+      "timeout": "Zeitüberschreitung"
+    },
+    "type": {
+      "bulkImport": "Massenimport",
+      "bulkExport": "Massenexport",
+      "dataMigration": "Datenmigration",
+      "firmwareUpgrade": "Firmware-Upgrade",
+      "batchProvisioning": "Batch-Bereitstellung",
+      "batchDeprovisioning": "Batch-Entbereitstellung",
+      "reportGeneration": "Berichtserstellung",
+      "auditExport": "Audit-Export",
+      "custom": "Benutzerdefiniert"
+    },
+    "priority": {
+      "low": "Niedrig",
+      "normal": "Normal",
+      "high": "Hoch",
+      "critical": "Kritisch"
+    },
+    "fields": {
+      "jobId": "Aufgaben-ID",
+      "jobName": "Aufgabenname",
+      "jobType": "Aufgabentyp",
+      "status": "Status",
+      "priority": "Priorität",
+      "progress": "Fortschritt",
+      "startedAt": "Gestartet um",
+      "completedAt": "Abgeschlossen um",
+      "duration": "Dauer",
+      "error": "Fehler"
+    },
+    "messages": {
+      "cancelled": "Aufgabe erfolgreich abgebrochen",
+      "retried": "Aufgabe wird wiederholt",
+      "cancelConfirm": "Sind Sie sicher, dass Sie diese Aufgabe abbrechen möchten?"
+    }
+  },
+
+  "billing": {
+    "title": "Abrechnung",
+    "invoices": "Rechnungen",
+    "payments": "Zahlungen",
+    "subscriptions": "Abonnements",
+    "paymentMethods": "Zahlungsmethoden",
+    "createInvoice": "Rechnung erstellen",
+    "viewInvoice": "Rechnung ansehen",
+    "payInvoice": "Rechnung bezahlen",
+    "invoice": {
+      "status": {
+        "draft": "Entwurf",
+        "open": "Offen",
+        "paid": "Bezahlt",
+        "void": "Storniert",
+        "overdue": "Überfällig",
+        "partiallyPaid": "Teilweise bezahlt"
+      }
+    },
+    "payment": {
+      "status": {
+        "pending": "Ausstehend",
+        "processing": "In Bearbeitung",
+        "succeeded": "Erfolgreich",
+        "failed": "Fehlgeschlagen",
+        "refunded": "Erstattet",
+        "partiallyRefunded": "Teilweise erstattet",
+        "cancelled": "Abgebrochen"
+      }
+    },
+    "fields": {
+      "invoiceNumber": "Rechnungsnummer",
+      "amount": "Betrag",
+      "dueDate": "Fälligkeitsdatum",
+      "paidDate": "Zahlungsdatum",
+      "customer": "Kunde",
+      "description": "Beschreibung",
+      "total": "Gesamt",
+      "subtotal": "Zwischensumme",
+      "tax": "Steuer",
+      "discount": "Rabatt"
+    },
+    "messages": {
+      "invoiceCreated": "Rechnung erfolgreich erstellt",
+      "paymentProcessed": "Zahlung erfolgreich verarbeitet",
+      "paymentFailed": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    }
+  },
+
+  "tickets": {
+    "title": "Support-Tickets",
+    "createTicket": "Ticket erstellen",
+    "viewTicket": "Ticket ansehen",
+    "updateTicket": "Ticket aktualisieren",
+    "closeTicket": "Ticket schließen",
+    "status": {
+      "open": "Offen",
+      "inProgress": "In Bearbeitung",
+      "waiting": "Wartend",
+      "resolved": "Gelöst",
+      "closed": "Geschlossen"
+    },
+    "priority": {
+      "low": "Niedrig",
+      "normal": "Normal",
+      "high": "Hoch",
+      "urgent": "Dringend"
+    },
+    "type": {
+      "generalInquiry": "Allgemeine Anfrage",
+      "billingIssue": "Abrechnungsproblem",
+      "technicalSupport": "Technischer Support",
+      "installationRequest": "Installationsanfrage",
+      "outageReport": "Ausfall melden",
+      "serviceUpgrade": "Service-Upgrade",
+      "serviceDowngrade": "Service-Downgrade",
+      "cancellationRequest": "Kündigungsantrag",
+      "equipmentIssue": "Geräteproblem",
+      "speedIssue": "Geschwindigkeitsproblem",
+      "networkIssue": "Netzwerkproblem",
+      "connectivityIssue": "Verbindungsproblem",
+      "fault": "Störung",
+      "outage": "Ausfall",
+      "maintenance": "Wartung"
+    },
+    "fields": {
+      "ticketNumber": "Ticketnummer",
+      "subject": "Betreff",
+      "description": "Beschreibung",
+      "status": "Status",
+      "priority": "Priorität",
+      "type": "Typ",
+      "assignedTo": "Zugewiesen an",
+      "createdBy": "Erstellt von",
+      "lastUpdated": "Zuletzt aktualisiert"
+    },
+    "messages": {
+      "created": "Ticket erfolgreich erstellt",
+      "updated": "Ticket erfolgreich aktualisiert",
+      "closed": "Ticket erfolgreich geschlossen",
+      "closeConfirm": "Sind Sie sicher, dass Sie dieses Ticket schließen möchten?"
+    }
+  },
+
+  "forms": {
+    "validation": {
+      "required": "Dieses Feld ist erforderlich",
+      "email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+      "minLength": "Muss mindestens {min} Zeichen lang sein",
+      "maxLength": "Darf nicht mehr als {max} Zeichen enthalten",
+      "pattern": "Bitte passen Sie das angeforderte Format an",
+      "number": "Bitte geben Sie eine gültige Zahl ein",
+      "positive": "Bitte geben Sie eine positive Zahl ein",
+      "url": "Bitte geben Sie eine gültige URL ein",
+      "phone": "Bitte geben Sie eine gültige Telefonnummer ein"
+    },
+    "messages": {
+      "unsavedChanges": "Sie haben nicht gespeicherte Änderungen. Sind Sie sicher, dass Sie verlassen möchten?",
+      "saveSuccess": "Änderungen erfolgreich gespeichert",
+      "saveError": "Fehler beim Speichern der Änderungen"
+    }
+  },
+
+  "pagination": {
+    "showing": "Zeige {start} bis {end} von {total} Ergebnissen",
+    "page": "Seite {page} von {total}",
+    "rowsPerPage": "Zeilen pro Seite:",
+    "firstPage": "Erste Seite",
+    "previousPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite",
+    "lastPage": "Letzte Seite"
+  },
+
+  "theme": {
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System",
+    "switchTo": "Zum {theme}-Design wechseln",
+    "modeTitle": "{theme}-Design"
+  },
+
+  "time": {
+    "now": "Gerade eben",
+    "minutesAgo": "{count, plural, =1 {vor 1 Minute} other {vor # Minuten}}",
+    "hoursAgo": "{count, plural, =1 {vor 1 Stunde} other {vor # Stunden}}",
+    "daysAgo": "{count, plural, =1 {vor 1 Tag} other {vor # Tagen}}",
+    "weeksAgo": "{count, plural, =1 {vor 1 Woche} other {vor # Wochen}}",
+    "monthsAgo": "{count, plural, =1 {vor 1 Monat} other {vor # Monaten}}",
+    "yearsAgo": "{count, plural, =1 {vor 1 Jahr} other {vor # Jahren}}"
+  },
+
+  "accessibility": {
+    "skipToMainContent": "Zum Hauptinhalt springen",
+    "statusLabel": "Status: {status}",
+    "editItem": "{item} bearbeiten",
+    "deleteItem": "{item} löschen",
+    "viewItem": "{item} ansehen",
+    "cancelItem": "{item} abbrechen",
+    "retryItem": "{item} wiederholen",
+    "goToPage": "Zu Seite {page} gehen",
+    "firstPage": "Zur ersten Seite gehen",
+    "previousPage": "Zur vorherigen Seite gehen",
+    "nextPage": "Zur nächsten Seite gehen",
+    "lastPage": "Zur letzten Seite gehen",
+    "sortBy": "Sortieren nach {column}",
+    "sortedBy": "Sortiert nach {column}, {direction}",
+    "ascending": "aufsteigend",
+    "descending": "absteigend",
+    "searchEntity": "{entity} suchen",
+    "filterBy": "Filtern nach {filter}",
+    "filterByWithCount": "Filtern nach {filter}, {count} aktiv",
+    "requiredField": "Dieses Feld ist erforderlich",
+    "minLength": "Mindestens {min} Zeichen",
+    "maxLength": "Maximal {max} Zeichen",
+    "format": {
+      "email": "Muss eine gültige E-Mail-Adresse sein",
+      "phone": "Muss eine gültige Telefonnummer sein",
+      "url": "Muss eine gültige URL sein",
+      "date": "Muss ein gültiges Datum sein",
+      "number": "Muss eine Zahl sein"
+    },
+    "progressLabel": "{action} Fortschritt: {progress}%",
+    "loadingEntity": "{entity} wird geladen...",
+    "closeDialog": "{title}-Dialog schließen",
+    "close": "Schließen",
+    "expand": "Erweitern",
+    "collapse": "Einklappen",
+    "menu": "Menü",
+    "openMenu": "Menü öffnen",
+    "closeMenu": "Menü schließen",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "rowsPerPage": "Zeilen pro Seite",
+    "of": "von"
+  }
+}

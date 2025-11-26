@@ -1,21 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Upload,
-  Calendar,
-  Play,
-  XCircle,
-  CheckCircle2,
-  Loader2,
-  Clock,
-  AlertTriangle,
-  FileUp,
-  Server,
-  Download,
-  Info,
-  Pause,
-} from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle2, Clock, FileUp, Info, Loader2, Pause, Play, Server, XCircle } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import {
@@ -34,7 +20,6 @@ import { Badge } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   FileResponse,
   FirmwareUpgradeSchedule,
@@ -82,10 +67,11 @@ export function FirmwareManagement() {
 
       setFirmwareFiles(filesRes.data);
       setSchedules(schedulesRes.data.schedules);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       toast({
         title: "Failed to load data",
-        description: err?.response?.data?.detail || "Could not fetch firmware data",
+        description: error?.response?.data?.detail || "Could not fetch firmware data",
         variant: "destructive",
       });
     } finally {
@@ -106,10 +92,11 @@ export function FirmwareManagement() {
         `/genieacs/firmware-upgrades/schedules/${scheduleId}`,
       );
       setScheduleDetails(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       toast({
         title: "Failed to load schedule details",
-        description: err?.response?.data?.detail || "Could not fetch schedule details",
+        description: error?.response?.data?.detail || "Could not fetch schedule details",
         variant: "destructive",
       });
     }
@@ -126,10 +113,10 @@ export function FirmwareManagement() {
     }
 
     // Parse device filter
-    let parsedFilter: Record<string, any>;
+    let parsedFilter: Record<string, unknown>;
     try {
       parsedFilter = JSON.parse(deviceFilter);
-    } catch (e) {
+    } catch {
       toast({
         title: "Invalid Device Filter",
         description: "Device filter must be valid JSON",
@@ -169,10 +156,11 @@ export function FirmwareManagement() {
       setDeviceFilter("{}");
 
       await loadData();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       toast({
         title: "Failed to create schedule",
-        description: err?.response?.data?.detail || "Could not create firmware upgrade schedule",
+        description: error?.response?.data?.detail || "Could not create firmware upgrade schedule",
         variant: "destructive",
       });
     } finally {
@@ -195,10 +183,11 @@ export function FirmwareManagement() {
       if (selectedSchedule?.schedule_id === scheduleId) {
         await loadScheduleDetails(scheduleId);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       toast({
         title: "Failed to execute schedule",
-        description: err?.response?.data?.detail || "Could not execute firmware upgrade",
+        description: error?.response?.data?.detail || "Could not execute firmware upgrade",
         variant: "destructive",
       });
     }
@@ -219,10 +208,11 @@ export function FirmwareManagement() {
         setSelectedSchedule(null);
         setScheduleDetails(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       toast({
         title: "Failed to cancel schedule",
-        description: err?.response?.data?.detail || "Could not cancel firmware upgrade",
+        description: error?.response?.data?.detail || "Could not cancel firmware upgrade",
         variant: "destructive",
       });
     }
@@ -237,7 +227,8 @@ export function FirmwareManagement() {
   };
 
   const getStatusBadge = (status: string) => {
-    const styles: Record<string, { variant: any; icon: any; color: string }> = {
+    type BadgeVariant = "default" | "destructive" | "outline" | "secondary" | "warning" | "success" | "info";
+    const styles: Record<string, { variant: BadgeVariant; icon: React.ElementType; color: string }> = {
       pending: { variant: "secondary", icon: Clock, color: "text-blue-600" },
       running: { variant: "default", icon: Play, color: "text-green-600" },
       completed: {
@@ -270,7 +261,8 @@ export function FirmwareManagement() {
   };
 
   const getDeviceResultBadge = (status: string) => {
-    const styles: Record<string, { variant: any; icon: any }> = {
+    type BadgeVariant = "default" | "destructive" | "outline" | "secondary" | "warning" | "success" | "info";
+    const styles: Record<string, { variant: BadgeVariant; icon: React.ElementType }> = {
       success: { variant: "outline", icon: CheckCircle2 },
       failed: { variant: "destructive", icon: XCircle },
       pending: { variant: "secondary", icon: Clock },

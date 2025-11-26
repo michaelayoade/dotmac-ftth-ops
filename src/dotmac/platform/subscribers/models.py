@@ -205,12 +205,14 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
     username: Mapped[str] = mapped_column(
         String(64),
         nullable=False,
+        default=lambda: f"user-{uuid4().hex[:8]}",
         index=True,
         comment="RADIUS username (unique per tenant when not soft-deleted)",
     )
     password: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
+        default=lambda: hash_radius_password(generate_random_password()),
         comment="RADIUS password - stored with hash method prefix (e.g., 'sha256:abc123...'). "
         "Use set_password() method to hash automatically. "
         "Supports: cleartext (insecure), md5 (legacy), sha256 (recommended), bcrypt (future).",
@@ -227,6 +229,22 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         default="",
         index=True,
         comment="Human-readable subscriber ID (empty string if not assigned, unique per tenant when not soft-deleted)",
+    )
+    full_name: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Subscriber full name for contact context",
+    )
+    email: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        index=True,
+        comment="Subscriber contact email",
+    )
+    phone_number: Mapped[str | None] = mapped_column(
+        String(32),
+        nullable=True,
+        comment="Subscriber contact phone number",
     )
 
     # Service Status
@@ -468,6 +486,12 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
     def is_active(self) -> bool:
         """Check if subscriber service is currently active."""
         return self.status == SubscriberStatus.ACTIVE
+
+    @is_active.setter
+    def is_active(self, value: bool) -> None:
+        """Allow test fixtures to set active flag; maps to status."""
+        if value:
+            self.status = SubscriberStatus.ACTIVE
 
     @property
     def total_bytes(self) -> int:

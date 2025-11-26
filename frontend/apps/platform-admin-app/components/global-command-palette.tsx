@@ -26,21 +26,19 @@ import {
   CommandShortcut,
 } from "@dotmac/ui";
 import {
-  Search,
-  Home,
-  Users,
-  Receipt,
-  Ticket,
-  Server,
-  Mail,
-  Shield,
-  Settings,
-  FileText,
   Activity,
-  Package,
   Clock,
-  TrendingUp,
+  FileText,
+  Home,
   Loader2,
+  Package,
+  Receipt,
+  Search,
+  Server,
+  Shield,
+  Ticket,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import { useDebouncedSearch } from "@/hooks/useSearch";
 import { getEntityRoute, formatEntityType } from "@/types/search";
@@ -63,11 +61,13 @@ export function GlobalCommandPalette() {
   // Debounced search results
   const { data: results, isLoading } = useDebouncedSearch(searchQuery);
 
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
   // Recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Load recent searches on mount
   useEffect(() => {
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
     const saved = localStorage.getItem("recentSearches");
     if (saved) {
       try {
@@ -84,7 +84,9 @@ export function GlobalCommandPalette() {
 
     setRecentSearches((prev) => {
       const updated = [query, ...prev.filter((q) => q !== query)].slice(0, 5);
-      localStorage.setItem("recentSearches", JSON.stringify(updated));
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("recentSearches", JSON.stringify(updated));
+      }
       return updated;
     });
   }, []);
@@ -274,7 +276,7 @@ export function GlobalCommandPalette() {
           <>
             <CommandSeparator />
             <CommandGroup heading="Search Results">
-              {results.results.map((result: any) => {
+              {results.results.map((result) => {
                 // Determine icon based on entity type
                 const Icon =
                   result.type === "customer"

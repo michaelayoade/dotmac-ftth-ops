@@ -69,7 +69,7 @@ export interface CompanyBankAccountResponse {
   created_at: string;
   updated_at: string;
   notes: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface BankAccountSummary {
@@ -153,7 +153,7 @@ export interface ManualPaymentResponse {
   approved_at: string | null;
   created_at: string;
   updated_at: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface PaymentSearchFilters {
@@ -370,7 +370,11 @@ class BankAccountsService {
     const response = await fetch(platformConfig.api.buildUrl("/billing/payments/search"), {
       method: "POST",
       headers: this.getAuthHeaders(),
-      body: JSON.stringify(filters),
+      body: JSON.stringify({
+        ...filters,
+        limit,
+        offset,
+      }),
     });
 
     if (!response.ok) {
@@ -416,7 +420,7 @@ class BankAccountsService {
     return response.json();
   }
 
-  async uploadPaymentAttachment(paymentId: number, file: File): Promise<any> {
+  async uploadPaymentAttachment(paymentId: number, file: File): Promise<unknown> {
     const formData = new FormData();
     formData.append("file", file);
 
