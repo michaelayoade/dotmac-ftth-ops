@@ -124,7 +124,7 @@ jobs:
 
       - name: Upload metrics artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-metrics
           path: |
@@ -239,13 +239,13 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload performance data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: performance-data
           path: .test_performance.json
 
       - name: Upload coverage dashboard
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-dashboard
           path: coverage-dashboard.html
