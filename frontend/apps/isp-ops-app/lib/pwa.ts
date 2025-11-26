@@ -7,9 +7,11 @@
 // Service Worker Registration
 // ============================================================================
 
+const isDev = process.env["NODE_ENV"] !== "production";
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
-    console.log("Service workers not supported");
+    if (isDev) console.log("Service workers not supported");
     return null;
   }
 
@@ -18,7 +20,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       scope: "/",
     });
 
-    console.log("Service worker registered:", registration.scope);
+    if (isDev) console.log("Service worker registered:", registration.scope);
 
     // Check for updates every hour
     setInterval(() => {
@@ -58,7 +60,7 @@ function notifyUpdate() {
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!("Notification" in window)) {
-    console.log("Notifications not supported");
+    if (isDev) console.log("Notifications not supported");
     return "denied";
   }
 
@@ -81,7 +83,7 @@ export async function subscribeToPushNotifications(
     const permission = await requestNotificationPermission();
 
     if (permission !== "granted") {
-      console.log("Notification permission denied");
+      if (isDev) console.log("Notification permission denied");
       return null;
     }
 
@@ -98,7 +100,7 @@ export async function subscribeToPushNotifications(
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
     });
 
-    console.log("Push subscription:", subscription);
+    if (isDev) console.log("Push subscription:", subscription);
 
     // Send subscription to server
     await fetch("/api/v1/push/subscribe", {
@@ -167,7 +169,7 @@ export function showLocalNotification(
   options?: NotificationOptions
 ): void {
   if (!("Notification" in window)) {
-    console.log("Notifications not supported");
+    if (isDev) console.log("Notifications not supported");
     return;
   }
 
@@ -221,7 +223,7 @@ export async function saveOfflineTimeEntry(
     timestamp: new Date().toISOString(),
   });
 
-  console.log("Time entry saved offline");
+  if (isDev) console.log("Time entry saved offline");
 
   // Request background sync
   if ("serviceWorker" in navigator && "sync" in ServiceWorkerRegistration.prototype) {
@@ -241,7 +243,7 @@ export async function saveOfflineLocation(
     data: location,
   });
 
-  console.log("Location saved offline");
+  if (isDev) console.log("Location saved offline");
 
   // Request background sync
   if ("serviceWorker" in navigator && "sync" in ServiceWorkerRegistration.prototype) {
@@ -275,7 +277,7 @@ export async function clearPendingData(): Promise<void> {
   const tx2 = db.transaction("pending-locations", "readwrite");
   await tx2.objectStore("pending-locations").clear();
 
-  console.log("Pending data cleared");
+  if (isDev) console.log("Pending data cleared");
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -353,7 +355,7 @@ export function setupInstallPrompt(
   });
 
   window.addEventListener("appinstalled", () => {
-    console.log("PWA installed");
+    if (isDev) console.log("PWA installed");
     deferredPrompt = null;
   });
 }
@@ -366,7 +368,7 @@ export async function showInstallPrompt(): Promise<boolean> {
   await deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
 
-  console.log("Install prompt outcome:", outcome);
+  if (isDev) console.log("Install prompt outcome:", outcome);
 
   deferredPrompt = null;
   return outcome === "accepted";
@@ -388,7 +390,7 @@ export async function registerPeriodicSync(
     !("serviceWorker" in navigator) ||
     !("periodicSync" in ServiceWorkerRegistration.prototype)
   ) {
-    console.log("Periodic background sync not supported");
+    if (isDev) console.log("Periodic background sync not supported");
     return false;
   }
 
@@ -402,10 +404,10 @@ export async function registerPeriodicSync(
       await (registration as any).periodicSync.register(tag, {
         minInterval,
       });
-      console.log(`Periodic sync registered: ${tag}`);
+      if (isDev) console.log(`Periodic sync registered: ${tag}`);
       return true;
     } else {
-      console.log("Periodic background sync permission not granted");
+      if (isDev) console.log("Periodic background sync permission not granted");
       return false;
     }
   } catch (error) {
@@ -425,7 +427,7 @@ export async function unregisterPeriodicSync(tag: string): Promise<boolean> {
   try {
     const registration = await navigator.serviceWorker.ready;
     await (registration as any).periodicSync.unregister(tag);
-    console.log(`Periodic sync unregistered: ${tag}`);
+    if (isDev) console.log(`Periodic sync unregistered: ${tag}`);
     return true;
   } catch (error) {
     console.error("Failed to unregister periodic sync:", error);

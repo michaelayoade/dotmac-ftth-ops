@@ -17,7 +17,9 @@ module.exports = {
     "no-new-func": "error",
     "no-script-url": "error",
     "no-alert": "error",
-    "no-console": ["warn", { allow: ["warn", "error"] }],
+    // Disallow console.log/debug/info in production code
+    // console.warn and console.error are allowed for legitimate error handling
+    "no-console": ["error", { allow: ["warn", "error"] }],
 
     // Prevent dangerous patterns
     "no-caller": "error",
