@@ -145,9 +145,9 @@ jobs:
         run: poetry run ruff format --check src/
 
   backend-unit-tests:
-    name: "1. Backend Tests"
+    name: "1. Backend Unit Tests"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -179,7 +179,146 @@ jobs:
             --tb=short \
             -n auto \
             -q \
-            --maxfail=5
+            --maxfail=10
+
+  backend-integration-tests:
+    name: "1. Backend Integration Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: dotmac_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: dotmac_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Wait for services
+        run: |
+          timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U dotmac_user; do sleep 1; done'
+          timeout 30 bash -c 'until redis-cli -h localhost ping; do sleep 1; done'
+
+      - name: Run integration tests
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: |
+          poetry run pytest tests/ -m integration \
+            --tb=short \
+            -n auto \
+            -q \
+            --maxfail=10
+
+  backend-e2e-tests:
+    name: "1. Backend E2E Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: dotmac_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: dotmac_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Wait for services
+        run: |
+          timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U dotmac_user; do sleep 1; done'
+          timeout 30 bash -c 'until redis-cli -h localhost ping; do sleep 1; done'
+
+      - name: Run E2E tests
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: |
+          poetry run pytest tests/ -m e2e \
+            --tb=short \
+            -n auto \
+            -q \
+            --maxfail=10
+        continue-on-error: true  # E2E tests may not exist yet
 
   # ============================================================================
   # LAYER 2: CONTRACT CHECKS (~10 min)
@@ -534,87 +673,6 @@ jobs:
           done
 
   # ============================================================================
-  # LAYER 4: INTEGRATION/SMOKE (~15 min)
-  # Quick integration tests with real services
-  # ============================================================================
-
-  backend-integration:
-    name: "4. Integration Tests"
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [backend-import-smoke, migrations-check]
-
-    services:
-      postgres:
-        image: postgres:14-alpine
-        env:
-          POSTGRES_USER: dotmac_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: dotmac_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Cache virtualenv
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
-
-      - name: Install dependencies
-        run: poetry install --with dev --no-interaction
-
-      - name: Wait for PostgreSQL
-        run: timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U dotmac_user; do sleep 1; done'
-
-      - name: Run migrations
-        env:
-          PYTHONPATH: "${{ github.workspace }}/src"
-          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
-          DOTMAC_REDIS_URL: redis://localhost:6379/0
-        run: poetry run alembic upgrade head
-
-      - name: Run integration tests
-        env:
-          PYTHONPATH: "${{ github.workspace }}/src"
-          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
-          DOTMAC_REDIS_URL: redis://localhost:6379/0
-        run: |
-          poetry run pytest tests/ \
-            -m integration \
-            --tb=short \
-            -n auto \
-            --maxfail=5 \
-            -q
-
-  # ============================================================================
   # LAYER 5: INFRASTRUCTURE HYGIENE (~10 min)
   # Security scans and dependency audits
   # ============================================================================
@@ -675,7 +733,9 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - frontend-build
-      - backend-integration
+      - backend-unit-tests
+      - backend-integration-tests
+      - backend-e2e-tests
       - security-audit
       - docker-validate
     if: always()
@@ -690,20 +750,22 @@ jobs:
           echo "| 1 | Frontend Lint | ${{ needs.frontend-lint.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 1 | Frontend Tests | ${{ needs.frontend-unit-tests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 1 | Backend Lint | ${{ needs.backend-lint.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 1 | Backend Tests | ${{ needs.backend-unit-tests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 1 | Backend Unit Tests | ${{ needs.backend-unit-tests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 1 | Backend Integration Tests | ${{ needs.backend-integration-tests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 1 | Backend E2E Tests | ${{ needs.backend-e2e-tests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 2 | Frontend Types | ${{ needs.frontend-typecheck.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 2 | Backend Types | ${{ needs.backend-typecheck.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 2 | Migrations | ${{ needs.migrations-check.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 3 | Frontend Build | ${{ needs.frontend-build.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 3 | Backend Import | ${{ needs.backend-import-smoke.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 3 | Docker Validate | ${{ needs.docker-validate.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 4 | Integration | ${{ needs.backend-integration.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 5 | Security | ${{ needs.security-audit.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Fail if critical jobs failed
         if: |
           needs.frontend-build.result == 'failure' ||
-          needs.backend-integration.result == 'failure'
+          needs.backend-unit-tests.result == 'failure' ||
+          needs.backend-integration-tests.result == 'failure'
         run: |
           echo "::error::Critical CI jobs failed"
           exit 1
