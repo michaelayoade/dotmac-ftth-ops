@@ -5,7 +5,22 @@
  * (OpenTelemetry, Prometheus, Grafana)
  */
 
-import type { AppError } from "@dotmac/types";
+// Local type definition for AppError
+export interface AppError {
+  id: string;
+  message: string;
+  details?: string;
+  category?: string;
+  severity: string;
+  statusCode?: number;
+  code?: string;
+  fieldErrors?: Record<string, string[]>;
+  timestamp: Date;
+  retryable: boolean;
+  action?: string;
+  context?: Record<string, unknown>;
+  originalError?: Error;
+}
 
 /**
  * Get OpenTelemetry endpoint from environment

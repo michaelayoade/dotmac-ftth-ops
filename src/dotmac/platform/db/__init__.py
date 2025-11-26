@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     get_session_dependency: Any
     get_sync_engine: Any
     get_async_engine: Any
+    get_async_database_url: Any
     SyncSessionLocal: Any
     AsyncSessionLocal: Any
     async_session_maker: Any

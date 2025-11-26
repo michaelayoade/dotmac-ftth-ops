@@ -701,7 +701,7 @@ class EmailAlertPlugin(AlertDeliveryProvider):
                 ),
                 FieldSpec(
                     name="smtp_port",
-                    field_type=FieldType.NUMBER,
+                    field_type=FieldType.INTEGER,
                     label="SMTP Port",
                     description="SMTP port number",
                     required=False,

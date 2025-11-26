@@ -1,0 +1,20 @@
+{
+  "name": "@dotmac/utils",
+  "version": "1.0.0",
+  "description": "Shared utilities (a11y warnings, observability helpers)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.9.2"
+  }
+}

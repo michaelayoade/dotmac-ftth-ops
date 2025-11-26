@@ -373,7 +373,7 @@ class IPv4LifecycleService:
                 activated_at=reservation.lifecycle_activated_at,
                 metadata=reservation.lifecycle_metadata,
                 coa_result=coa_result,
-                netbox_ip_id=netbox_ip_id if netbox_ip_id is not None else None,
+                netbox_ip_id=int(netbox_ip_id) if netbox_ip_id is not None else None,
             )
 
         except InvalidTransitionError as exc:

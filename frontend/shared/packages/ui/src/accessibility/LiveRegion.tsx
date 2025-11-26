@@ -44,7 +44,7 @@ export function LiveRegion({
   priority = "polite",
   autoClear = true,
   clearDelay = 1000,
-}: LiveRegionProps) {
+}: LiveRegionProps): JSX.Element | null {
   const regionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,6 +63,8 @@ export function LiveRegion({
 
       return () => clearTimeout(timer);
     }
+
+    return undefined;
   }, [message, autoClear, clearDelay]);
 
   return (

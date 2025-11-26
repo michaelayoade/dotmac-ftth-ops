@@ -3,3 +3,4 @@
  */
 
 export * from "./observability";
+export * from "./a11y-dev-warnings";

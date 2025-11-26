@@ -77,7 +77,7 @@ def _parse_datetime(value: str | None) -> datetime | None:
 
 def _render_from_strings(
     subject: str, text_body: str | None, html_body: str | None, data: dict[str, Any]
-) -> RenderedTemplate:
+) -> dict[str, str]:
     """Render subject/text/html with quick_render for reuse."""
     result = quick_render(
         subject=subject or "",
@@ -178,7 +178,7 @@ class SendEmailResponseSchema(BaseModel):  # BaseModel resolves to Any in isolat
 async def send_email_endpoint(
     request: EmailRequest,
     current_user: UserInfo | None = Depends(get_current_user),
-) -> EmailResponse:
+) -> Any:
     """Send a single email immediately."""
     try:
         email_service = get_email_service()
@@ -568,7 +568,7 @@ async def list_templates_endpoint(
     end = start + page_size
     paged = filtered[start:end]
 
-    resp_templates: list[TemplateResponse] = []
+    resp_templates = []
     for template in paged:
         resp_templates.append(
             TemplateResponse(
@@ -851,10 +851,10 @@ async def render_template_by_id(
                         data=request.variables,
                     )
                     return {
-                        "subject": rendered.subject,
-                        "text": rendered.text_body,
-                        "html": rendered.html_body,
-                        "variables": rendered.variables_used,
+                        "subject": rendered["subject"],
+                        "text": rendered.get("text_body", ""),
+                        "html": rendered.get("html_body", ""),
+                        "variables": [],
                     }
         except Exception:
             logger.warning("DB render failed, fallback to in-memory")
@@ -864,7 +864,7 @@ async def render_template_by_id(
             "subject": result.subject,
             "text": result.text_body,
             "html": result.html_body,
-            "variables": result.variables,
+            "variables": result.variables_used,
         }
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -1591,7 +1591,7 @@ async def get_communications_metrics(
             except Exception as exc:
                 logger.warning("Bulk job summary unavailable", error=str(exc))
 
-            stats_block = {
+            stats_block: dict[str, Any] = {
                 "total_sent": raw_stats.get("sent", 0),
                 "total_delivered": raw_stats.get("delivered", 0),
                 "total_failed": raw_stats.get("failed", 0),
