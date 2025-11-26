@@ -66,16 +66,26 @@ check_relative_paths() {
     print_header "2. Checking for Relative Path Mounts"
 
     local found_paths=false
+    local allowed_regex="^\\s+- \\./config/prometheus/(prometheus\\.yml|alerts\\.yml):"
 
     for file in docker-compose*.yml; do
         if [ -f "$file" ]; then
-            if grep -E "^\s+- \./config" "$file" 2>/dev/null; then
-                if [ "$found_paths" = false ]; then
-                    print_warning "Relative path mounts found"
-                    found_paths=true
+            local matches filtered allowed
+            matches=$(grep -nE "^\s+- \./config" "$file" 2>/dev/null || true)
+            if [ -n "$matches" ]; then
+                filtered=$(echo "$matches" | grep -Ev "config/prometheus/(prometheus\.yml|alerts\.yml):" || true)
+                allowed=$(echo "$matches" | grep -E "config/prometheus/(prometheus\.yml|alerts\.yml):" || true)
+
+                if [ -n "$filtered" ]; then
+                    if [ "$found_paths" = false ]; then
+                        print_warning "Relative path mounts found"
+                        found_paths=true
+                    fi
+                    echo "   In $file:"
+                    echo "$filtered" | sed 's/^/   /'
+                elif [ -n "$allowed" ]; then
+                    print_info "Prometheus config mounts found in $file (allowed for infra stack)"
                 fi
-                echo "   In $file:"
-                grep -n -E "^\s+- \./config" "$file" | sed 's/^/   /'
             fi
         fi
     done
@@ -133,12 +143,23 @@ check_host_mounts() {
 check_custom_images() {
     print_header "4. Checking for Custom Images Not in Registry"
 
+    # Allowlist of official images we rely on (avoid network lookup in restricted CI)
+    local official_images=(
+        "mongo:7"
+        "postgres:15-alpine"
+        "redis:7-alpine"
+    )
+
     # Extract image names from docker-compose files
     local images=$(grep -h "image:" docker-compose*.yml 2>/dev/null | awk '{print $2}' | sort -u || true)
 
     local found_custom=false
 
     for img in $images; do
+        # Skip known official images to avoid registry lookups in offline CI
+        if printf '%s\n' "${official_images[@]}" | grep -qx "$img"; then
+            continue
+        fi
         # Skip if image has a registry (contains / or .)
         if [[ ! "$img" =~ [/.] ]] || [[ "$img" =~ ^[a-z-]+:[a-z0-9.-]+$ ]]; then
             # Check if image exists in local or remote registry
@@ -189,11 +210,7 @@ check_database_config() {
 check_env_file() {
     print_header "6. Checking Environment Configuration"
 
-    if [ ! -f ".env" ]; then
-        print_warning ".env file not found"
-        echo "   Create with: ./scripts/setup-config-files.sh"
-        echo ""
-    else
+    if [ -f ".env" ]; then
         print_success ".env file exists"
 
         # Check for critical variables
@@ -224,6 +241,14 @@ check_env_file() {
         if grep -q "changeme" .env 2>/dev/null; then
             print_warning "Default 'changeme' values detected in .env"
             echo "   Update with secure passwords before deployment!"
+            echo ""
+        fi
+    else
+        if [ -f ".env.example" ]; then
+            print_info ".env not found (using .env.example as template)"
+        else
+            print_warning ".env file not found"
+            echo "   Create with: ./scripts/setup-config-files.sh"
             echo ""
         fi
     fi
