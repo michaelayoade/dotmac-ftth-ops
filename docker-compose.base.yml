@@ -39,6 +39,10 @@ services:
       OBSERVABILITY__GRAFANA_BASE_URL: ${OBSERVABILITY__GRAFANA_BASE_URL:-http://dotmac-grafana:3000}
       SESSION_REDIS_URL: ${SESSION_REDIS_URL:-redis://:dev_local_redis_password_123@dotmac-redis:6379/1}
       REQUIRE_REDIS_SESSIONS: ${REQUIRE_REDIS_SESSIONS:-false}
+      # CORS Configuration - add your server IP/domain here
+      CORS__ENABLED: ${CORS__ENABLED:-true}
+      CORS__ORIGINS: ${CORS__ORIGINS:-["http://localhost:3000","http://localhost:3001","http://localhost:3002","http://localhost:8000","http://localhost:8001","http://127.0.0.1:3000","http://127.0.0.1:3002","http://149.102.135.97:3001","http://149.102.135.97:3002","http://149.102.135.97:8000","http://149.102.135.97:8001"]}
+      CORS__CREDENTIALS: ${CORS__CREDENTIALS:-true}
     ports:
       - "${PLATFORM_BACKEND_PORT:-8001}:8000"
     volumes:
