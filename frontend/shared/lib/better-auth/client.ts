@@ -117,6 +117,14 @@ export const signOut = authBypassEnabled
   ? async () => ({ data: null, error: null })
   : authClient.signOut;
 
+export const forgetPassword = authBypassEnabled
+  ? async () => ({ data: null, error: null })
+  : authClient.forgetPassword;
+
+export const resetPassword = authBypassEnabled
+  ? async () => ({ data: null, error: null })
+  : authClient.resetPassword;
+
 export const useActiveOrganization = authBypassEnabled
   ? () => ({
       data: mockSession.data.user.activeOrganization,
