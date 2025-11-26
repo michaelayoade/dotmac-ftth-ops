@@ -247,6 +247,7 @@ jobs:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
           DOTMAC_REDIS_URL: redis://localhost:6379/0
+          DOTMAC_AUTOSTART_SERVICES: "0"
         run: |
           poetry run pytest tests/ -m integration \
             --tb=short \
@@ -320,6 +321,7 @@ jobs:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
           DOTMAC_REDIS_URL: redis://localhost:6379/0
+          DOTMAC_AUTOSTART_SERVICES: "0"
         run: |
           poetry run pytest tests/ -m e2e \
             --tb=short \
