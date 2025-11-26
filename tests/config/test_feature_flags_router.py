@@ -7,6 +7,8 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.config.router import router as config_router, health_router, PUBLIC_FEATURE_FLAGS
 from dotmac.platform.settings import Settings, Environment, get_settings
 

@@ -27,6 +27,8 @@ from dotmac.platform.network_monitoring.schemas import (
     TrafficStatsResponse,
 )
 
+pytestmark = pytest.mark.integration
+
 
 def _now() -> datetime:
     return datetime.now()

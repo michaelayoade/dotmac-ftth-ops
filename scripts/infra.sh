@@ -40,9 +40,6 @@ INFRA_SERVICES=(
     "postgres:5432:PostgreSQL Database"
     "redis:6379:Redis Cache"
     "minio:9000:MinIO Object Storage"
-    "freeradius:1812:FreeRADIUS (Auth/Acct)"
-    "mongodb:27017:MongoDB (GenieACS)"
-    "genieacs:7567:GenieACS UI"
     "netbox:8080:NetBox (IPAM/DCIM)"
     "meilisearch:7700:MeiliSearch"
     "prometheus:9090:Prometheus"
@@ -59,6 +56,9 @@ PLATFORM_SERVICES=(
 ISP_SERVICES=(
     "isp-backend:8001:ISP API"
     "isp-frontend:3001:ISP Operations UI"
+    "freeradius:1812:FreeRADIUS (Auth/Acct)"
+    "mongodb:27017:MongoDB (GenieACS)"
+    "genieacs:7567:GenieACS UI"
 )
 
 # ---------------------------------------------------------------------------
@@ -109,6 +109,12 @@ check_docker() {
 container_name() {
     local service=$1
     local compose_file=$2
+
+    # Explicit overrides (container_name set in compose)
+    if [[ "${compose_file}" == "${COMPOSE_ISP}" && "${service}" == "freeradius" ]]; then
+        echo "isp-freeradius"
+        return
+    fi
 
     # Infrastructure services use explicit container names (e.g., "dotmac-postgres")
     if [[ "${compose_file}" == "${COMPOSE_INFRA}" ]]; then
@@ -212,7 +218,7 @@ start_platform() {
 
 start_isp() {
     echo -e "${CYAN}Starting ISP services...${NC}"
-    docker compose -f "${COMPOSE_ISP}" up -d isp-backend isp-frontend
+    docker compose -f "${COMPOSE_ISP}" up -d isp-backend isp-frontend freeradius mongodb genieacs
     echo ""
     status_isp
 }
@@ -257,7 +263,7 @@ restart_platform() {
 
 restart_isp() {
     echo -e "${CYAN}Restarting ISP services...${NC}"
-    docker compose -f "${COMPOSE_ISP}" up -d --force-recreate isp-backend isp-frontend
+    docker compose -f "${COMPOSE_ISP}" up -d --force-recreate isp-backend isp-frontend freeradius mongodb genieacs
     echo ""
     status_isp
 }

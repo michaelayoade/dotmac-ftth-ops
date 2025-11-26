@@ -271,7 +271,7 @@ export default function QuotesPage() {
         header: "Upfront",
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
-            ${row.original.total_upfront_cost.toFixed(2)}
+            ${(row.original.total_upfront_cost ?? 0).toFixed(2)}
           </span>
         ),
       },
@@ -670,11 +670,11 @@ function convertToCSV(quotes: Quote[]): string {
     quote.service_plan_name,
     quote.bandwidth || "",
     quote.monthly_recurring_charge.toString(),
-    quote.total_upfront_cost.toString(),
-    quote.installation_fee.toString(),
-    quote.equipment_fee.toString(),
-    quote.activation_fee.toString(),
-    quote.contract_term_months.toString(),
+    (quote.total_upfront_cost ?? 0).toString(),
+    (quote.installation_fee ?? 0).toString(),
+    (quote.equipment_fee ?? 0).toString(),
+    (quote.activation_fee ?? 0).toString(),
+    (quote.contract_term_months ?? 0).toString(),
     quote.status,
     quote.sent_at || "",
     quote.valid_until || "",

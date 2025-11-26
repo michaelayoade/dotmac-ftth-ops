@@ -330,63 +330,6 @@ export interface NeighboringAP {
 }
 
 // ============================================================================
-// Site Survey
-// ============================================================================
-
-export interface SiteSurvey {
-  id: string;
-  name: string;
-  status: "planned" | "in_progress" | "completed" | "cancelled";
-
-  // Survey Area
-  survey_area: GeoPath;
-  center: Coordinates;
-
-  // Measurements
-  measurement_points: MeasurementPoint[];
-
-  // Coverage Analysis
-  coverage_percentage: number;
-  avg_signal_strength_dbm: number;
-  dead_zones?: GeoPath[];
-
-  // Recommendations
-  recommended_ap_locations?: RecommendedAPLocation[];
-
-  // Survey Details
-  surveyed_by?: string;
-  survey_date?: string;
-  equipment_used?: string;
-  notes?: string;
-
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MeasurementPoint {
-  id: string;
-  coordinates: Coordinates;
-  rssi_dbm: number;
-  snr_db?: number;
-  throughput_mbps?: number;
-  packet_loss_percent?: number;
-  latency_ms?: number;
-  access_point_id?: string;
-  timestamp: string;
-}
-
-export interface RecommendedAPLocation {
-  id: string;
-  coordinates: Coordinates;
-  antenna_height_meters: number;
-  antenna_azimuth_degrees?: number;
-  antenna_type: AntennaType;
-  tx_power_dbm: number;
-  predicted_coverage_radius_meters: number;
-  reasoning: string;
-}
-
-// ============================================================================
 // Wireless Infrastructure Statistics
 // ============================================================================
 
@@ -428,8 +371,7 @@ export interface MapLayer {
     | "coverage_zones"
     | "signal_heat_map"
     | "clients"
-    | "interference"
-    | "site_survey";
+    | "interference";
   visible: boolean;
   color?: string;
   opacity?: number;
@@ -473,13 +415,6 @@ export interface CoverageZonesResponse {
 
 export interface RFAnalyticsResponse {
   analytics: RFAnalytics[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-
-export interface SiteSurveysResponse {
-  site_surveys: SiteSurvey[];
   total: number;
   page: number;
   page_size: number;
@@ -539,12 +474,4 @@ export interface CreateCoverageZoneRequest {
   max_signal_dbm: number;
   avg_signal_dbm: number;
   access_points: string[];
-}
-
-export interface CreateSiteSurveyRequest {
-  name: string;
-  survey_area: Coordinates[];
-  surveyed_by?: string;
-  survey_date?: string;
-  notes?: string;
 }

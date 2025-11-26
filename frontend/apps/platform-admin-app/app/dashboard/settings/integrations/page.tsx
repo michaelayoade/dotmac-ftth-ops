@@ -67,9 +67,9 @@ export default function IntegrationsPage() {
 
   // Dialog states
   const [selectedPlugin, setSelectedPlugin] = useState<PluginConfig | null>(null);
-  const [selectedInstance, setSelectedInstance] = useState<PluginInstance | null>(null);
+  const [_selectedInstance, setSelectedInstance] = useState<PluginInstance | null>(null);
   const [isConnectOpen, setIsConnectOpen] = useState(false);
-  const [isConfigureOpen, setIsConfigureOpen] = useState(false);
+  const [_isConfigureOpen, setIsConfigureOpen] = useState(false);
   const [isWebhookOpen, setIsWebhookOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 

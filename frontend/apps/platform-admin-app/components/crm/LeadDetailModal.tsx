@@ -15,14 +15,13 @@ import {
 import {
   type Lead,
   useQuotes,
-  useSiteSurveys,
   useUpdateLead,
   useQualifyLead,
   useDisqualifyLead,
   useConvertToCustomer,
 } from "@/hooks/useCRM";
 import { useToast } from "@dotmac/ui";
-import { mapQuotesToShared, mapSiteSurveysToShared } from "./crmMapping";
+import { mapQuotesToShared } from "./crmMapping";
 
 interface LeadDetailModalProps {
   isOpen: boolean;
@@ -41,7 +40,7 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
   const disqualifyLeadMutation = useDisqualifyLead();
   const convertLeadMutation = useConvertToCustomer();
   const { data: quotes = [] } = useQuotes(lead?.id ? { leadId: lead.id } : {});
-  const { data: surveys = [] } = useSiteSurveys(lead?.id ? { leadId: lead.id } : {});
+  const sharedQuotes = useMemo(() => mapQuotesToShared(quotes), [quotes]);
 
   const handleSave = async (leadId: string, data: Partial<LeadUpdateRequest>) => {
     setIsSaving(true);
@@ -114,15 +113,13 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
     }
   };
 
-  const sharedSurveys = useMemo(() => mapSiteSurveysToShared(surveys), [surveys]);
-
   return (
     <SharedLeadDetailModal
       isOpen={isOpen}
       onClose={onClose}
       lead={lead as unknown as SharedLead}
-      quotes={mapQuotesToShared(quotes)}
-      surveys={sharedSurveys}
+      quotes={sharedQuotes}
+      surveys={[]}
       onUpdate={onUpdate ?? (() => undefined)}
       onSave={handleSave}
       onQualify={handleQualify}

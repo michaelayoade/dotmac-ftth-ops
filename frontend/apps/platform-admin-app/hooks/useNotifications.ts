@@ -48,8 +48,6 @@ export type NotificationType =
   | "quote_sent"
   | "quote_accepted"
   | "quote_rejected"
-  | "site_survey_scheduled"
-  | "site_survey_completed"
   // Ticketing events
   | "ticket_created"
   | "ticket_assigned"

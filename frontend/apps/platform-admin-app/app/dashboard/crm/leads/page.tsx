@@ -362,7 +362,7 @@ export default function LeadsManagementPage() {
         icon: CheckCircle as unknown as React.ComponentType,
         action: async (selected) => {
           for (const lead of selected) {
-            if (lead.status === "contacted" || lead.status === "site_survey_completed") {
+            if (lead.status === "contacted") {
               await qualifyLeadMutation.mutateAsync(lead.id);
             }
           }

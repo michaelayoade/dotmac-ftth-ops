@@ -59,8 +59,74 @@ services:
     depends_on:
       - isp-backend
 
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: dev_local_mongo_password
+      MONGO_INITDB_DATABASE: genieacs
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dotmac-network
+
+  genieacs:
+    image: drumsergio/genieacs:latest
+    restart: unless-stopped
+    environment:
+      GENIEACS_CWMP_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-cwmp-access.log
+      GENIEACS_NBI_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-nbi-access.log
+      GENIEACS_FS_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-fs-access.log
+      GENIEACS_UI_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-ui-access.log
+      GENIEACS_DEBUG_FILE: /var/log/genieacs/genieacs-debug.yaml
+      GENIEACS_MONGODB_CONNECTION_URL: mongodb://admin:dev_local_mongo_password@mongodb:27017/genieacs?authSource=admin
+    ports:
+      - "7547:7547"
+      - "7557:7557"
+      - "7567:7567"
+      - "7577:7577"
+    volumes:
+      - genieacs_data:/opt/genieacs/ext
+      - genieacs_logs:/var/log/genieacs
+    depends_on:
+      - mongodb
+    networks:
+      - dotmac-network
+
+  # ISP-only RADIUS (FreeRADIUS)
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    container_name: isp-freeradius
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: ${ISP_RADIUS_POSTGRES_HOST:-dotmac-postgres}
+      POSTGRES_PORT: ${ISP_RADIUS_POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${ISP_RADIUS_POSTGRES_DB:-dotmac}
+      POSTGRES_USER: ${ISP_RADIUS_POSTGRES_USER:-dotmac_user}
+      POSTGRES_PASSWORD: ${ISP_RADIUS_POSTGRES_PASSWORD:-dev_local_pg_password_123}
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+      - "3799:3799/udp"
+    volumes:
+      - freeradius_config:/etc/raddb
+    networks:
+      - dotmac-network
+
 volumes:
   isp_storage:
+  freeradius_config:
+  mongodb_data:
+  genieacs_data:
+  genieacs_logs:
 
 networks:
   default:

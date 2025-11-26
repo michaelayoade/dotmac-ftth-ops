@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { ShieldCheck, RefreshCw } from "lucide-react";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { apiClient } from "@/lib/api/client";
@@ -129,7 +130,7 @@ export default function MFAPage() {
             {setupData ? (
               <>
                 <p className="text-sm text-muted-foreground">Scan the QR code in your authenticator app.</p>
-                <img src={setupData.qr_code} alt="MFA QR code" className="w-48 h-48 border rounded" />
+                <Image src={setupData.qr_code} alt="MFA QR code" width={192} height={192} className="border rounded" />
                 <p className="text-sm">Secret: {setupData.secret}</p>
               </>
             ) : (

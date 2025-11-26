@@ -5,7 +5,7 @@ export const dynamicParams = true;
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Calendar, Users, TrendingUp } from "lucide-react";
+import { ClipboardList, Users, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { MetricCardEnhanced } from "@dotmac/ui";
@@ -244,13 +244,14 @@ export default function CRMOverviewPage() {
           emptyStateMessage="No quotes generated"
         />
         <MetricCardEnhanced
-          title="Site Surveys"
-          value={0}
-          subtitle="Site surveys are handled in ISP operations"
-          icon={Calendar}
-          href="/dashboard"
-          loading={false}
-          emptyStateMessage="Not available in platform admin"
+          title="Captured Leads"
+          value={leadStats.total}
+          subtitle="Discovery and quoting handled here; field work lives in ISP ops"
+          icon={Users}
+          href="/dashboard/crm/leads"
+          loading={leadsLoading}
+          {...(leadsError?.message && { error: leadsError.message })}
+          emptyStateMessage="No leads captured yet"
         />
       </div>
 
@@ -331,14 +332,6 @@ function LeadStatusBadge({ status }: { status: Lead["status"] }) {
     qualified: {
       label: "Qualified",
       className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    },
-    site_survey_scheduled: {
-      label: "Survey Scheduled",
-      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-    },
-    site_survey_completed: {
-      label: "Survey Completed",
-      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
     },
     quote_sent: {
       label: "Quote Sent",

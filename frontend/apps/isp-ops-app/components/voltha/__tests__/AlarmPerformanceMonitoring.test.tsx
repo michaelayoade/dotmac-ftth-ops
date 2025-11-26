@@ -37,7 +37,7 @@ jest.mock("@dotmac/ui", () => ({
   SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SelectItem: ({ children, ...rest }: any) => (
     // eslint-disable-next-line react/forbid-elements
-    <div role="option" {...rest}>
+    <div role="option" aria-selected="false" {...rest}>
       {children}
     </div>
   ),

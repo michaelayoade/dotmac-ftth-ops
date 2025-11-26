@@ -795,14 +795,6 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
-        module_path="dotmac.platform.diagnostics.router",
-        router_name="router",
-        prefix="/api/v1",
-        tags=["Diagnostics"],
-        description="Network diagnostics and troubleshooting tools",
-        requires_auth=True,
-    ),
-    RouterConfig(
         module_path="dotmac.platform.fault_management.router",
         router_name="router",
         prefix="",  # Router defines its own prefix: /api/v1/faults
