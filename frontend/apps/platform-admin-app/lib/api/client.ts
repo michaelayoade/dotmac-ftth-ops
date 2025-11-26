@@ -55,7 +55,7 @@ apiClient.interceptors.request.use(
       }
 
       // Add X-Active-Tenant-Id header for partner multi-tenant access
-      const activeManagedTenantId = localStorage.getItem("active_managed_tenant_id");
+      const activeManagedTenantId = window.localStorage?.getItem("active_managed_tenant_id");
       if (activeManagedTenantId && config.headers) {
         config.headers["X-Active-Tenant-Id"] = activeManagedTenantId;
       }
