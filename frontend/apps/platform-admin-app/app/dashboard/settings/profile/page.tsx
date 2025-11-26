@@ -20,24 +20,23 @@ import {
 } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
-  User,
-  Shield,
-  Smartphone,
+  AlertCircle,
+  Camera,
+  Clock,
+  Download,
   Eye,
   EyeOff,
-  Camera,
-  Save,
-  X,
-  AlertCircle,
   LogOut,
+  Save,
+  Shield,
+  Smartphone,
   Trash2,
-  Download,
-  Clock,
+  User,
+  X,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { useSession } from "@dotmac/better-auth";
 import type { ExtendedUser } from "@dotmac/better-auth";
-import { signOut } from "@dotmac/better-auth";
 import {
   useUpdateProfile,
   useChangePassword,

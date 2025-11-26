@@ -6,7 +6,6 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import { Switch } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
 import {
   Table,
@@ -26,19 +25,19 @@ import {
 } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
-  Shield,
-  Lock,
-  Smartphone,
-  Key,
   AlertCircle,
   CheckCircle2,
-  Loader2,
   Copy,
   Download,
-  Trash2,
   Eye,
   EyeOff,
+  Key,
+  Loader2,
+  Lock,
   Save,
+  Shield,
+  Smartphone,
+  Trash2,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
@@ -177,10 +176,12 @@ function SecuritySettingsContent() {
       setNewPassword("");
       setConfirmPassword("");
       await loadSecuritySettings();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to change password",
+        description: err.response?.data?.detail || "Failed to change password",
         variant: "destructive",
       });
     } finally {
@@ -197,10 +198,12 @@ function SecuritySettingsContent() {
       setQrCode(response.data.qr_code);
       setBackupCodes(response.data.backup_codes || []);
       setShow2FADialog(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to enable 2FA",
+        description: err.response?.data?.detail || "Failed to enable 2FA",
         variant: "destructive",
       });
     } finally {
@@ -232,10 +235,12 @@ function SecuritySettingsContent() {
       setVerificationCode("");
       setShowBackupCodesDialog(true);
       await loadSecuritySettings();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Invalid verification code",
+        description: err.response?.data?.detail || "Invalid verification code",
         variant: "destructive",
       });
     }
@@ -251,10 +256,12 @@ function SecuritySettingsContent() {
       });
 
       await loadSecuritySettings();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to disable 2FA",
+        description: err.response?.data?.detail || "Failed to disable 2FA",
         variant: "destructive",
       });
     }
@@ -270,10 +277,12 @@ function SecuritySettingsContent() {
       });
 
       await loadSecuritySettings();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to revoke session",
+        description: err.response?.data?.detail || "Failed to revoke session",
         variant: "destructive",
       });
     }

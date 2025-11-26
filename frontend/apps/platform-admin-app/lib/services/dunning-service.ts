@@ -34,7 +34,7 @@ export interface DunningActionConfig {
   delay_days: number;
   template?: string;
   webhook_url?: string;
-  custom_config?: Record<string, any>;
+  custom_config?: Record<string, unknown>;
 }
 
 export interface DunningExclusionRules {
@@ -100,10 +100,10 @@ export interface DunningExecution {
   completed_at?: string;
   outstanding_amount: number;
   recovered_amount: number;
-  execution_log: Array<Record<string, any>>;
+  execution_log: Array<Record<string, unknown>>;
   canceled_reason?: string;
   canceled_by_user_id?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -545,7 +545,7 @@ class DunningService {
   formatCurrency(amount: number, currency: string = "USD"): string {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency,
     }).format(amount);
   }
 }

@@ -80,8 +80,8 @@ export interface Subscriber {
   payment_method?: string;
 
   // Metadata
-  tags?: Record<string, any>;
-  metadata?: Record<string, any>;
+  tags?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 
   created_at: string;
@@ -107,7 +107,7 @@ export interface SubscriberService {
   // Equipment
   equipment_ids?: string[];
 
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -176,7 +176,7 @@ export interface CreateSubscriberRequest {
 
   // Metadata
   notes?: string;
-  tags?: Record<string, any>;
+  tags?: Record<string, unknown>;
 }
 
 export interface UpdateSubscriberRequest {
@@ -193,7 +193,7 @@ export interface UpdateSubscriberRequest {
   service_plan?: string;
   bandwidth_mbps?: number;
   notes?: string;
-  tags?: Record<string, any>;
+  tags?: Record<string, unknown>;
 }
 
 // ============================================================================

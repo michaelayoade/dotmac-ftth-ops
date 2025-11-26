@@ -6,20 +6,19 @@ export const dynamicParams = true;
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FileText,
-  Send,
-  CheckCircle,
-  XCircle,
-  Clock,
-  TrendingUp,
-  Filter,
-  Download,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
   AlertTriangle,
+  CheckCircle,
+  Clock,
   DollarSign,
+  Download,
+  Edit,
+  Eye,
+  FileText,
+  Filter,
+  MoreHorizontal,
+  Send,
+  Trash2,
+  TrendingUp,
 } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 
@@ -54,7 +53,7 @@ import { Input } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 
 export default function QuotesPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
 
@@ -378,7 +377,7 @@ export default function QuotesPage() {
     () => [
       {
         label: "Send Quotes",
-        icon: Send as any,
+        icon: Send as unknown as React.ComponentType,
         variant: "default" as const,
         action: async (selectedQuotes) => {
           const draftQuotes = selectedQuotes.filter((q) => q.status === "draft");
@@ -408,7 +407,7 @@ export default function QuotesPage() {
       },
       {
         label: "Delete Quotes",
-        icon: Trash2 as any,
+        icon: Trash2 as unknown as React.ComponentType,
         variant: "destructive" as const,
         action: async (selectedQuotes) => {
           const confirmed = await confirmDialog({

@@ -9,7 +9,7 @@
 import { useCallback, useState } from "react";
 import {
   QuoteDetailModal as SharedQuoteDetailModal,
-  type QuoteDetailModalProps as SharedQuoteDetailModalProps,
+  type Quote as SharedQuote,
 } from "@dotmac/features/crm";
 import {
   type Quote,
@@ -64,10 +64,13 @@ export function QuoteDetailModal({
     }
   };
 
-  const handleAccept = async (quoteId: string, signatureData: any) => {
+  const handleAccept = async (quoteId: string, signatureData: unknown) => {
     setIsProcessing(true);
     try {
-      await acceptQuoteMutation.mutateAsync({ id: quoteId, signatureData });
+      await acceptQuoteMutation.mutateAsync({
+        id: quoteId,
+        signatureData: signatureData as Record<string, unknown> | undefined
+      });
       toast({
         title: "Quote Accepted",
         description: `Quote ${quote?.quote_number} has been accepted! Ready to convert lead.`,
@@ -162,7 +165,7 @@ export function QuoteDetailModal({
   };
 
   const handleEditQuote = useCallback(
-    (sharedQuote: any) => {
+    (sharedQuote: unknown) => {
       if (onEdit) {
         onEdit(sharedQuote as Quote);
       }
@@ -174,7 +177,7 @@ export function QuoteDetailModal({
     <SharedQuoteDetailModal
       isOpen={isOpen}
       onClose={onClose}
-      quote={quote as any}
+      quote={quote as unknown as SharedQuote | null}
       onUpdate={onUpdate ?? undefined}
       onEdit={onEdit ? handleEditQuote : undefined}
       onSend={handleSend}

@@ -89,9 +89,7 @@ class TestUpdateSubscription:
 
         service.get_subscription = AsyncMock(return_value=mock_sub)
 
-        from pydantic import HttpUrl
-
-        update_data = WebhookSubscriptionUpdate(url=HttpUrl("https://new.example.com/webhook"))
+        update_data = WebhookSubscriptionUpdate(url="https://new.example.com/webhook")
 
         await service.update_subscription(
             subscription_id=str(mock_sub.id), tenant_id="tenant-123", update_data=update_data

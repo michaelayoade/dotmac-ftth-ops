@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChevronDown, Building2, Check, Loader2 } from "lucide-react";
 
 import { Badge } from "@dotmac/ui";
 import { cn } from "@dotmac/ui";
+import { ChevronDown, Building2, Check, Loader2 } from "lucide-react";
+import React, { useState } from "react";
 
 export interface Tenant {
   id: string;

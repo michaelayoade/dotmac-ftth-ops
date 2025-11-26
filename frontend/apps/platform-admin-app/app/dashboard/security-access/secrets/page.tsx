@@ -2,20 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  Shield,
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
+  AlertTriangle,
+  Calendar,
+  Copy,
   Edit,
-  Trash2,
   Eye,
   EyeOff,
-  Copy,
-  Calendar,
   Key,
   Lock,
-  AlertTriangle,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Shield,
+  Trash2,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -129,7 +128,7 @@ function SecretsPageContent() {
         message: "Copied to clipboard!",
         type: "success",
       });
-    } catch (error) {
+    } catch {
       setToast({
         show: true,
         message: "Failed to copy to clipboard",
@@ -188,7 +187,7 @@ function SecretsPageContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }

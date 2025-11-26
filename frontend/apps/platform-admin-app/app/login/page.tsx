@@ -78,12 +78,14 @@ export default function LoginPage() {
 
         if (tenantId) {
           try {
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
             localStorage.setItem("tenant_id", tenantId);
           } catch {
             // ignore storage failures
           }
         } else {
           try {
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
             localStorage.removeItem("tenant_id");
           } catch {
             // ignore
@@ -93,13 +95,14 @@ export default function LoginPage() {
         logger.info("Better Auth login successful");
         await new Promise((resolve) => setTimeout(resolve, 100));
         window.location.href = "/dashboard";
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error("Login request threw an error", err instanceof Error ? err : new Error(String(err)));
 
         // Extract error message from various possible locations
+        const error = err as { message?: string };
         let errorMessage = "Login failed";
-        if (err?.message) {
-          errorMessage = err.message;
+        if (error?.message) {
+          errorMessage = error.message;
         }
 
         logger.error("Login failed", {

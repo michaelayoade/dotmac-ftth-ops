@@ -27,20 +27,20 @@ import {
   DropdownMenuTrigger,
 } from "@dotmac/ui";
 import {
-  Package,
   BarChart3,
-  FileText,
-  Plus,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Copy,
-  Search,
   CheckCircle2,
+  Copy,
+  Edit,
+  FileText,
+  MoreVertical,
+  Package,
+  Plus,
+  Search,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import { useLicensing } from "../../../../hooks/useLicensing";
-import { ModuleCategory, PricingModel } from "../../../../types/licensing";
+import type { ModuleCategory as _ModuleCategory, PricingModel as _PricingModel } from "../../../../types/licensing";
 
 export default function PlatformAdminLicensingPage() {
   const { modules, modulesLoading, quotas, quotasLoading, plans, plansLoading } = useLicensing();

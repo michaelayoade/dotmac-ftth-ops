@@ -9,7 +9,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -18,7 +18,7 @@ from dotmac.platform.auth.rbac_dependencies import (
     require_field_service_technician_location,
     require_field_service_technician_read,
 )
-from dotmac.platform.db import get_db
+from dotmac.platform.db import get_async_session
 from dotmac.platform.field_service.geofencing_service import GeofencingService
 from dotmac.platform.field_service.models import (
     Technician,
@@ -54,7 +54,7 @@ async def list_technicians(
     limit: int = 50,
     offset: int = 0,
     current_user: UserInfo = Depends(require_field_service_technician_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TechnicianListResponse:
     """
     List technicians with optional filtering.
@@ -76,6 +76,10 @@ async def list_technicians(
     if is_active is not None:
         query = query.where(Technician.is_active == is_active)
 
+    # Get total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total = (await session.execute(count_query)).scalar() or 0
+
     # Add pagination
     query = query.offset(offset).limit(limit)
 
@@ -83,21 +87,15 @@ async def list_technicians(
     result = await session.execute(query)
     technicians = list(result.scalars().all())
 
-    # Get total count
-    count_query = select(Technician).where(Technician.tenant_id == tenant_id)
-    if status is not None:
-        count_query = count_query.where(Technician.status == status)
-    if is_active is not None:
-        count_query = count_query.where(Technician.is_active == is_active)
-
-    count_result = await session.execute(count_query)
-    total = len(list(count_result.scalars().all()))
+    page = (offset // limit) + 1 if limit else 1
 
     return TechnicianListResponse(
         technicians=[TechnicianResponse.model_validate(t) for t in technicians],
         total=total,
         limit=limit,
         offset=offset,
+        page=page,
+        page_size=limit,
     )
 
 
@@ -105,7 +103,7 @@ async def list_technicians(
 async def get_technician(
     technician_id: UUID,
     current_user: UserInfo = Depends(require_field_service_technician_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TechnicianResponse:
     """Get technician details by ID."""
     tenant_id = _require_tenant_id(current_user)
@@ -131,7 +129,7 @@ async def update_technician_location(
     technician_id: UUID,
     location_data: TechnicianLocationUpdate,
     current_user: UserInfo = Depends(require_field_service_technician_location),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TechnicianLocationResponse:
     """
     Update technician's current location.
@@ -247,7 +245,7 @@ async def update_technician_location(
 @router.get("/technicians/locations/active", response_model=list[TechnicianLocationResponse])
 async def get_active_technician_locations(
     current_user: UserInfo = Depends(require_field_service_technician_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> list[TechnicianLocationResponse]:
     """
     Get current locations of all active technicians.
@@ -295,7 +293,7 @@ async def get_technician_location_history(
     end_time: datetime | None = None,
     limit: int = 100,
     current_user: UserInfo = Depends(require_field_service_technician_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, Any]:
     """
     Get technician's location history.
@@ -361,7 +359,7 @@ async def get_technician_location_history(
 async def websocket_technician_locations(
     websocket: WebSocket,
     token: str,
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> None:
     """
     WebSocket endpoint for real-time technician location updates.
@@ -491,7 +489,7 @@ async def get_nearby_jobs(
     technician_id: UUID,
     radius_meters: float = 1000.0,
     current_user: UserInfo = Depends(require_field_service_geofence_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, Any]:
     """
     Get jobs near technician's current location.
@@ -562,7 +560,7 @@ async def get_nearby_jobs(
 async def get_job_time_on_site(
     job_id: UUID,
     current_user: UserInfo = Depends(require_field_service_geofence_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> dict[str, Any]:
     """
     Get time spent on-site for a specific job.

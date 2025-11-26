@@ -7,7 +7,14 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Users, AlertCircle, CheckCircle2, Loader2, Bell } from "lucide-react";
+import {
+  AlertCircle,
+  Bell,
+  CheckCircle2,
+  Loader2,
+  Send,
+  Users,
+} from "lucide-react";
 import {
   useTeamNotifications,
   AVAILABLE_ROLES,
@@ -50,6 +57,7 @@ export default function TeamNotificationPage() {
   const [actionLabel, setActionLabel] = useState("");
 
   // Success state
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [successResponse, setSuccessResponse] = useState<any>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {

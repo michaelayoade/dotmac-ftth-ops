@@ -14,10 +14,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "@dotmac/better-auth";
 import { logger } from "../lib/logger";
-import { SSEClient, SSEEndpoints } from "../lib/realtime/sse-client";
+import { SSEClient } from "../lib/realtime/sse-client";
 import {
   WebSocketClient,
-  WebSocketEndpoints,
   JobControl,
   CampaignControl,
 } from "../lib/realtime/websocket-client";
@@ -29,9 +28,9 @@ import {
   type EventType,
   type JobProgressEvent,
   type ONUStatusEvent,
-  type RADIUSSessionEvent,
   type SubscriberEvent,
   type TicketEvent,
+  type WebSocketClientMessage,
 } from "../types/realtime";
 import { useAppConfig } from "@/providers/AppConfigContext";
 
@@ -144,14 +143,6 @@ export function useSubscriberEvents(handler: EventHandler<SubscriberEvent>, enab
   return useSSE(api.buildUrl("/realtime/subscribers"), "*", handler, enabled);
 }
 
-/**
- * Hook for RADIUS session events
- */
-export function useRADIUSSessionEvents(handler: EventHandler<RADIUSSessionEvent>, enabled = true) {
-  const { api } = useAppConfig();
-  return useSSE(api.buildUrl("/realtime/radius-sessions"), "*", handler, enabled);
-}
-
 // ============================================================================
 // WebSocket Hooks
 // ============================================================================
@@ -224,10 +215,10 @@ export function useWebSocket(endpoint: string, enabled = true) {
     [endpoint],
   );
 
-  const send = useCallback((message: any) => {
+  const send = useCallback((message: unknown) => {
     if (clientRef.current) {
       logger.debug("Sending WebSocket message", { endpoint });
-      clientRef.current.send(message);
+      clientRef.current.send(message as WebSocketClientMessage);
     } else {
       logger.warn("Cannot send: WebSocket client not initialized", { endpoint });
     }
@@ -249,24 +240,6 @@ export function useWebSocket(endpoint: string, enabled = true) {
     reconnect,
     client: clientRef.current,
   };
-}
-
-/**
- * Hook for RADIUS sessions WebSocket
- */
-export function useSessionsWebSocket(handler: EventHandler<RADIUSSessionEvent>, enabled = true) {
-  const { api } = useAppConfig();
-  const { subscribe, ...rest } = useWebSocket(api.buildUrl("/realtime/ws/sessions"), enabled);
-
-  useEffect(() => {
-    if (rest.isConnected) {
-      const unsubscribe = subscribe("*", handler);
-      return unsubscribe;
-    }
-    return undefined;
-  }, [rest.isConnected, subscribe, handler]);
-
-  return rest;
 }
 
 /**
@@ -334,7 +307,7 @@ export function useCampaignWebSocket(campaignId: string | null, enabled = true) 
   const { api } = useAppConfig();
   const endpoint = campaignId ? api.buildUrl(`/realtime/ws/campaigns/${campaignId}`) : "";
   const { client, subscribe, ...rest } = useWebSocket(endpoint, enabled && !!campaignId);
-  const [campaignProgress, setCampaignProgress] = useState<any>(null);
+  const [campaignProgress, setCampaignProgress] = useState<unknown>(null);
   const controlRef = useRef<CampaignControl | null>(null);
 
   useEffect(() => {
@@ -347,7 +320,7 @@ export function useCampaignWebSocket(campaignId: string | null, enabled = true) 
 
   useEffect(() => {
     if (rest.isConnected) {
-      const unsubscribe = subscribe("*", (event: any) => {
+      const unsubscribe = subscribe("*", (event: unknown) => {
         setCampaignProgress(event);
       });
       return unsubscribe;

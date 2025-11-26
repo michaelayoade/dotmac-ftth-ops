@@ -24,6 +24,16 @@ logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/isp-settings", tags=["ISP Settings"])
 
 
+def _require_tenant_id(current_user: UserInfo) -> str:
+    """Ensure current user has an associated tenant ID."""
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context is required for ISP settings operations",
+        )
+    return current_user.tenant_id
+
+
 # ============================================================================
 # Request/Response Schemas
 # ============================================================================
@@ -115,7 +125,8 @@ async def get_isp_settings(
     service = ISPSettingsService(session)
 
     try:
-        settings = await service.get_settings(current_user.tenant_id)
+        tenant_id = _require_tenant_id(current_user)
+        settings = await service.get_settings(tenant_id)
         return settings
     except ISPSettingsError as exc:
         logger.error("Failed to get ISP settings", error=str(exc), tenant_id=current_user.tenant_id)
@@ -141,8 +152,9 @@ async def update_isp_settings(
     service = ISPSettingsService(session)
 
     try:
+        tenant_id = _require_tenant_id(current_user)
         updated = await service.update_settings(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             updates=request.updates,
             validate_only=request.validate_only,
         )
@@ -177,8 +189,9 @@ async def get_settings_section(
     service = ISPSettingsService(session)
 
     try:
+        tenant_id = _require_tenant_id(current_user)
         section_data = await service.get_setting_section(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             section=section,
         )
         return section_data
@@ -212,8 +225,9 @@ async def update_settings_section(
     service = ISPSettingsService(session)
 
     try:
+        tenant_id = _require_tenant_id(current_user)
         updated_section = await service.update_setting_section(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             section=section,
             updates=request.updates,
         )
@@ -278,8 +292,9 @@ async def reset_settings_to_defaults(
     service = ISPSettingsService(session)
 
     try:
-        defaults = await service.reset_to_defaults(current_user.tenant_id)
-        logger.warning("Settings reset to defaults", tenant_id=current_user.tenant_id, user=current_user.email)
+        tenant_id = _require_tenant_id(current_user)
+        defaults = await service.reset_to_defaults(tenant_id)
+        logger.warning("Settings reset to defaults", tenant_id=tenant_id, user=current_user.email)
         return defaults
     except ISPSettingsError as exc:
         logger.error("Failed to reset settings", error=str(exc), tenant_id=current_user.tenant_id)
@@ -303,8 +318,9 @@ async def export_settings(
     """Export settings as dictionary."""
     service = ISPSettingsService(session)
 
-    settings_dict = await service.export_settings(current_user.tenant_id)
-    logger.info("Settings exported", tenant_id=current_user.tenant_id, user=current_user.email)
+    tenant_id = _require_tenant_id(current_user)
+    settings_dict = await service.export_settings(tenant_id)
+    logger.info("Settings exported", tenant_id=tenant_id, user=current_user.email)
 
     return settings_dict
 
@@ -325,8 +341,9 @@ async def import_settings(
     service = ISPSettingsService(session)
 
     try:
+        tenant_id = _require_tenant_id(current_user)
         imported = await service.import_settings(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             settings_dict=request.settings,
             validate_only=request.validate_only,
         )

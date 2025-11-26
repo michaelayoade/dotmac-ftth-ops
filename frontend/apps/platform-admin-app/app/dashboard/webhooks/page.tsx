@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import {
-  Plus,
-  Webhook,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  TestTube,
   Activity,
   AlertTriangle,
   Calendar,
-  Clock,
   CheckCircle,
+  Clock,
+  Edit,
+  Eye,
+  Filter,
+  MoreHorizontal,
+  Plus,
+  Search,
+  TestTube,
+  Trash2,
+  Webhook,
   XCircle,
   Zap,
 } from "lucide-react";
@@ -237,7 +237,7 @@ export default function WebhooksPage() {
         <div className="bg-card rounded-lg overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <div className="animate-spin w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full mx-auto mb-4" />
               <p className="text-muted-foreground">Loading webhooks...</p>
             </div>
           ) : filteredWebhooks.length === 0 ? (

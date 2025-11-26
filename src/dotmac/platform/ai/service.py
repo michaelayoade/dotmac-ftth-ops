@@ -8,19 +8,20 @@ import json
 import logging
 from datetime import datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 import openai
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.ai.models import (
-    ChatSession,
-    ChatMessage,
-    ChatRole,
-    ChatSessionType,
-    ChatSessionStatus,
-    ChatProvider,
     AIConfig,
+    ChatMessage,
+    ChatProvider,
+    ChatRole,
+    ChatSession,
+    ChatSessionStatus,
+    ChatSessionType,
 )
 from dotmac.platform.auth.models import User
 
@@ -50,8 +51,8 @@ class AIService:
         self,
         tenant_id: str,
         session_type: ChatSessionType,
-        user_id: int | None = None,
-        customer_id: int | None = None,
+        user_id: UUID | None = None,
+        customer_id: UUID | None = None,
         context: dict[str, Any] | None = None,
     ) -> ChatSession:
         """Create a new chat session."""
@@ -60,11 +61,11 @@ class AIService:
             tenant_id=tenant_id,
             user_id=user_id,
             customer_id=customer_id,
-            session_type=session_type,
-            provider=self.config.provider,
+            session_type=session_type.value,
+            provider=self.config.provider.value,
             model=self.config.default_model,
             context=context or {},
-            status=ChatSessionStatus.ACTIVE,
+            status="active",
         )
 
         self.session.add(session)
@@ -78,7 +79,7 @@ class AIService:
         self,
         session_id: int,
         message: str,
-        user_id: int | None = None,
+        user_id: UUID | None = None,
     ) -> tuple[ChatSession, ChatMessage]:
         """Send a message and get AI response."""
 
@@ -90,7 +91,7 @@ class AIService:
         if not chat_session:
             raise ValueError(f"Session {session_id} not found")
 
-        if chat_session.status != ChatSessionStatus.ACTIVE:
+        if chat_session.status != "active":
             raise ValueError(f"Session {session_id} is not active")
 
         # Check rate limits
@@ -120,7 +121,7 @@ class AIService:
         # Save assistant response
         assistant_message = ChatMessage(
             session_id=session_id,
-            role=ChatRole.ASSISTANT,
+            role=ChatRole.ASSISTANT.value,
             content=assistant_content,
             tokens=tokens,
             cost=cost,
@@ -170,12 +171,12 @@ class AIService:
 
             elif self.config.provider == ChatProvider.ANTHROPIC:
                 # Implement Anthropic API call
-                pass
+                raise NotImplementedError("Anthropic provider is not yet implemented")
 
             else:
                 raise ValueError(f"Unsupported provider: {self.config.provider}")
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - network/LLM errors
             logger.error(f"LLM API error: {e}")
             raise
 
@@ -215,7 +216,15 @@ Your role is to:
 Be technical and precise. Focus on actionable recommendations.""",
         }
 
-        prompt = base_prompts.get(chat_session.session_type, base_prompts[ChatSessionType.CUSTOMER_SUPPORT])
+        try:
+            session_type = ChatSessionType(chat_session.session_type)
+        except ValueError:
+            session_type = ChatSessionType.CUSTOMER_SUPPORT
+
+        prompt = base_prompts.get(
+            session_type,
+            base_prompts[ChatSessionType.CUSTOMER_SUPPORT],
+        )
 
         # Add context if available
         if chat_session.context:
@@ -237,12 +246,14 @@ Be technical and precise. Focus on actionable recommendations.""",
         messages = result.scalars().all()
 
         # Reverse to get chronological order
-        history = []
+        history: list[dict[str, str]] = []
         for msg in reversed(messages):
-            history.append({
-                "role": msg.role,
-                "content": msg.content,
-            })
+            history.append(
+                {
+                    "role": str(msg.role),
+                    "content": str(msg.content),
+                }
+            )
 
         return history
 
@@ -281,13 +292,13 @@ Be technical and precise. Focus on actionable recommendations.""",
         )
 
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def escalate_to_human(
         self,
         session_id: int,
         reason: str,
-        escalate_to_user_id: int | None = None,
+        escalate_to_user_id: UUID | None = None,
     ) -> ChatSession:
         """Escalate chat session to human agent."""
 
@@ -298,7 +309,7 @@ Be technical and precise. Focus on actionable recommendations.""",
         if not chat_session:
             raise ValueError(f"Session {session_id} not found")
 
-        chat_session.status = ChatSessionStatus.ESCALATED
+        chat_session.status = ChatSessionStatus.ESCALATED.value
         chat_session.escalation_reason = reason
         chat_session.escalated_to_user_id = escalate_to_user_id
 
@@ -324,7 +335,7 @@ Be technical and precise. Focus on actionable recommendations.""",
 
         chat_session.user_rating = rating
         chat_session.user_feedback = feedback
-        chat_session.status = ChatSessionStatus.COMPLETED
+        chat_session.status = ChatSessionStatus.COMPLETED.value
         chat_session.completed_at = datetime.utcnow()
 
         await self.session.commit()
@@ -334,7 +345,7 @@ Be technical and precise. Focus on actionable recommendations.""",
 
     async def get_user_sessions(
         self,
-        user_id: int,
+        user_id: UUID,
         limit: int = 20,
     ) -> list[ChatSession]:
         """Get recent sessions for a user."""
@@ -347,4 +358,4 @@ Be technical and precise. Focus on actionable recommendations.""",
         )
 
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())

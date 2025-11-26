@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
@@ -14,125 +13,57 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import {
-  Ticket,
-  Search,
-  RefreshCw,
-  Eye,
-  Plus,
-  Clock,
-  CheckCircle,
-  XCircle,
   AlertCircle,
+  CheckCircle,
+  Clock,
+  Eye,
   Loader,
-  BarChart3,
-  Users,
-  MessageSquare,
+  Plus,
+  RefreshCw,
+  Search,
+  Ticket,
+  XCircle,
 } from "lucide-react";
-import { useAppConfig } from "@/providers/AppConfigContext";
-import { useToast } from "@dotmac/ui";
+import {
+  TicketPriority,
+  TicketStatus,
+  useTicketStats,
+  useTickets,
+  TicketSummary,
+} from "@/hooks/useTicketing";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-
-type TicketStatus = "open" | "in_progress" | "waiting" | "resolved" | "closed";
-type TicketPriority = "low" | "medium" | "high" | "urgent";
-
-interface TicketData {
-  id: number;
-  ticket_number: string;
-  subject: string;
-  description: string;
-  status: TicketStatus;
-  priority: TicketPriority;
-  category?: string;
-  customer_id?: string;
-  customer_email?: string;
-  customer_name?: string;
-  organization_slug?: string;
-  assigned_to?: string;
-  tags?: string[];
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  closed_at?: string;
-  message_count?: number;
-}
-
-interface TicketStats {
-  total_tickets: number;
-  open_tickets: number;
-  in_progress_tickets: number;
-  waiting_tickets: number;
-  resolved_tickets: number;
-  closed_tickets: number;
-  avg_response_time?: number;
-  avg_resolution_time?: number;
-}
 
 function TicketingPageContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const { api } = useAppConfig();
-  const apiBaseUrl = api.baseUrl;
 
-  // Fetch tickets
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["tickets", apiBaseUrl, statusFilter, priorityFilter, searchQuery],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (priorityFilter !== "all") params.append("priority", priorityFilter);
-      if (searchQuery) params.append("search", searchQuery);
-
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/tickets?${params.toString()}`,
-        { credentials: "include" },
-      );
-      if (!response.ok) throw new Error("Failed to fetch tickets");
-      return response.json();
-    },
+  const { tickets, loading: ticketsLoading, refetch } = useTickets({
+    status: statusFilter !== "all" ? (statusFilter as TicketStatus) : undefined,
+    priority: priorityFilter !== "all" ? (priorityFilter as TicketPriority) : undefined,
+    search: searchQuery || undefined,
   });
 
-  const tickets: TicketData[] = data?.tickets || [];
-  const total = data?.total || 0;
+  const { stats, loading: statsLoading } = useTicketStats();
 
-  // Fetch statistics
-  const { data: statsData } = useQuery({
-    queryKey: ["ticket-stats", apiBaseUrl],
-    queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/tickets/stats`, {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to fetch stats");
-      return response.json();
-    },
-  });
-
-  const stats: TicketStats = statsData || {
-    total_tickets: tickets.length,
-    open_tickets: tickets.filter(t => t.status === "open").length,
-    in_progress_tickets: tickets.filter(t => t.status === "in_progress").length,
-    waiting_tickets: tickets.filter(t => t.status === "waiting").length,
-    resolved_tickets: tickets.filter(t => t.status === "resolved").length,
-    closed_tickets: tickets.filter(t => t.status === "closed").length,
+  const countStats = stats || {
+    total: tickets.length,
+    open: tickets.filter((t) => t.status === "open").length,
+    in_progress: tickets.filter((t) => t.status === "in_progress").length,
+    waiting: tickets.filter((t) => t.status === "waiting").length,
+    resolved: tickets.filter((t) => t.status === "resolved").length,
+    closed: tickets.filter((t) => t.status === "closed").length,
+    by_priority: { low: 0, normal: 0, high: 0, urgent: 0 },
+    by_type: {},
+    sla_breached: 0,
   };
 
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch =
-      !searchQuery ||
-      ticket.ticket_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (ticket.customer_email && ticket.customer_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (ticket.customer_name && ticket.customer_name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    return matchesSearch;
-  });
+  const filteredTickets: TicketSummary[] = tickets;
 
   const getStatusBadge = (status: TicketStatus) => {
-    const statusConfig: Record<TicketStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<TicketStatus, { icon: React.ElementType; color: string; label: string }> = {
       open: { icon: AlertCircle, color: "bg-blue-100 text-blue-800", label: "Open" },
       in_progress: { icon: Loader, color: "bg-yellow-100 text-yellow-800", label: "In Progress" },
       waiting: { icon: Clock, color: "bg-orange-100 text-orange-800", label: "Waiting" },
@@ -154,7 +85,7 @@ function TicketingPageContent() {
   const getPriorityBadge = (priority: TicketPriority) => {
     const priorityColors: Record<TicketPriority, string> = {
       low: "bg-gray-100 text-gray-800",
-      medium: "bg-blue-100 text-blue-800",
+      normal: "bg-blue-100 text-blue-800",
       high: "bg-orange-100 text-orange-800",
       urgent: "bg-red-100 text-red-800",
     };
@@ -196,7 +127,7 @@ function TicketingPageContent() {
             <Ticket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total_tickets}</div>
+            <div className="text-2xl font-bold">{countStats.total}</div>
             <p className="text-xs text-muted-foreground">All tickets</p>
           </CardContent>
         </Card>
@@ -207,7 +138,7 @@ function TicketingPageContent() {
             <AlertCircle className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.open_tickets}</div>
+            <div className="text-2xl font-bold">{countStats.open}</div>
             <p className="text-xs text-muted-foreground">New tickets</p>
           </CardContent>
         </Card>
@@ -218,7 +149,7 @@ function TicketingPageContent() {
             <Loader className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.in_progress_tickets}</div>
+            <div className="text-2xl font-bold">{countStats.in_progress}</div>
             <p className="text-xs text-muted-foreground">Being worked on</p>
           </CardContent>
         </Card>
@@ -229,7 +160,7 @@ function TicketingPageContent() {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.waiting_tickets}</div>
+            <div className="text-2xl font-bold">{countStats.waiting}</div>
             <p className="text-xs text-muted-foreground">Awaiting response</p>
           </CardContent>
         </Card>
@@ -240,7 +171,7 @@ function TicketingPageContent() {
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.resolved_tickets}</div>
+            <div className="text-2xl font-bold">{countStats.resolved}</div>
             <p className="text-xs text-muted-foreground">Fixed</p>
           </CardContent>
         </Card>
@@ -251,7 +182,7 @@ function TicketingPageContent() {
             <XCircle className="h-4 w-4 text-gray-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.closed_tickets}</div>
+            <div className="text-2xl font-bold">{countStats.closed}</div>
             <p className="text-xs text-muted-foreground">Completed</p>
           </CardContent>
         </Card>
@@ -292,7 +223,7 @@ function TicketingPageContent() {
               <SelectContent>
                 <SelectItem value="all">All Priorities</SelectItem>
                 <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
                 <SelectItem value="high">High</SelectItem>
                 <SelectItem value="urgent">Urgent</SelectItem>
               </SelectContent>
@@ -303,7 +234,7 @@ function TicketingPageContent() {
 
       {/* Tickets Grid */}
       <div className="grid gap-4">
-        {isLoading ? (
+        {ticketsLoading || statsLoading ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
               Loading tickets...
@@ -347,16 +278,18 @@ function TicketingPageContent() {
                   <div>
                     <p className="text-sm text-muted-foreground">Customer</p>
                     <p className="font-medium truncate">
-                      {ticket.customer_name || ticket.customer_email || "N/A"}
+                      {ticket.customer_id || ticket.tenant_id || "N/A"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Category</p>
-                    <p className="font-medium">{ticket.category || "General"}</p>
+                    <p className="font-medium">{ticket.ticket_type || "General"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Assigned To</p>
-                    <p className="font-medium">{ticket.assigned_to || "Unassigned"}</p>
+                    <p className="font-medium">
+                      {ticket.assigned_to_user_id ? ticket.assigned_to_user_id : "Unassigned"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Updated</p>
@@ -366,16 +299,6 @@ function TicketingPageContent() {
                   </div>
                 </div>
 
-                {ticket.tags && ticket.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-3">
-                    {ticket.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
                 <div className="flex gap-2 mt-4 pt-4 border-t">
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/ticketing/${ticket.id}`}>
@@ -383,15 +306,6 @@ function TicketingPageContent() {
                       View Details
                     </Link>
                   </Button>
-
-                  {ticket.message_count !== undefined && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/dashboard/ticketing/${ticket.id}#messages`}>
-                        <MessageSquare className="h-3 w-3 mr-1" />
-                        {ticket.message_count} {ticket.message_count === 1 ? "Message" : "Messages"}
-                      </Link>
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>

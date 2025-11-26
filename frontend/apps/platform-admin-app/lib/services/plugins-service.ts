@@ -21,7 +21,7 @@ export interface PluginInstance {
   id: string;
   plugin_name: string;
   instance_name: string;
-  configuration: Record<string, any>;
+  configuration: Record<string, unknown>;
   status: string;
   error_message?: string;
   last_health_check?: string;
@@ -53,7 +53,7 @@ export async function listPluginInstances(): Promise<{
 export async function createPluginInstance(data: {
   plugin_name: string;
   instance_name: string;
-  configuration: Record<string, any>;
+  configuration: Record<string, unknown>;
 }): Promise<PluginInstance> {
   const response = await apiClient.post<PluginInstance>("/plugins/instances", data);
   return response.data;

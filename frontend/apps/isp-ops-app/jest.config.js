@@ -17,8 +17,8 @@ const config = {
     '^@dotmac/testing$': '<rootDir>/../../shared/packages/primitives/src/testing/index.ts',
     '^@dotmac/better-auth$': '<rootDir>/../../shared/lib/better-auth',
     '^@dotmac/better-auth/(.*)$': '<rootDir>/../../shared/lib/better-auth/$1',
-    '^@dotmac/([^/]+)$': '<rootDir>/../../shared/packages/$1/src',
-    '^@dotmac/([^/]+)/(.+)$': '<rootDir>/../../shared/packages/$1/src/$2',
+    '^@dotmac/(?!better-auth)([^/]+)$': '<rootDir>/../../shared/packages/$1/src',
+    '^@dotmac/(?!better-auth)([^/]+)/(.+)$': '<rootDir>/../../shared/packages/$1/src/$2',
     // MSW v2 with legacy compatibility layer for handlers using rest.get() syntax
     '^msw$': '<rootDir>/__tests__/msw/legacy.cjs',
     '^until-async$': '<rootDir>/jest.until-async.cjs',

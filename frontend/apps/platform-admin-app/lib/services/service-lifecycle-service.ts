@@ -5,7 +5,7 @@
  * - Managing service instances (provision, activate, suspend, resume, terminate)
  * - Monitoring service health and status
  * - Tracking service lifecycle statistics
- * - Service workflow orchestration
+ * - Service workflow management
  */
 
 import { platformConfig } from "@/lib/config";
@@ -41,13 +41,13 @@ export interface ServiceInstanceSummary {
   activated_at?: string;
   suspended_at?: string;
   terminated_at?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ServiceInstanceDetail extends ServiceInstanceSummary {
   tenant_id: string;
   plan_id?: string;
-  service_config?: Record<string, any>;
+  service_config?: Record<string, unknown>;
   equipment_assigned?: string[];
   ip_address?: string;
   vlan_id?: number;
@@ -78,8 +78,8 @@ export interface ProvisionServiceRequest {
   service_type: string;
   subscription_id?: string;
   plan_id?: string;
-  service_config?: Record<string, any>;
-  metadata?: Record<string, any>;
+  service_config?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProvisionServiceResponse {
@@ -90,13 +90,13 @@ export interface ProvisionServiceResponse {
 
 export interface ServiceActionRequest {
   reason?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ServiceModifyRequest {
-  service_config?: Record<string, any>;
+  service_config?: Record<string, unknown>;
   plan_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 }
 
@@ -163,8 +163,10 @@ class ServiceLifecycleService {
       "Content-Type": "application/json",
     };
 
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
     // Add tenant ID header if available from localStorage
     if (typeof window !== "undefined") {
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
       const tenantId = localStorage.getItem("tenant_id");
       if (tenantId) {
         headers["X-Tenant-ID"] = tenantId;

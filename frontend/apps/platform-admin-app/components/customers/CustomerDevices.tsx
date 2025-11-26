@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Router,
-  Wifi,
-  Server,
-  RefreshCw,
-  Power,
   AlertCircle,
   CheckCircle2,
-  XCircle,
-  Settings,
   ExternalLink,
+  Power,
+  RefreshCw,
+  Router,
+  Server,
+  Settings,
+  Wifi,
+  XCircle,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
@@ -113,10 +113,12 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
         `/api/v1/customers/${customerId}/devices`,
       );
       setDevices(response.data.devices);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to load devices",
+        description: err.response?.data?.detail || "Failed to load devices",
         variant: "destructive",
       });
     } finally {
@@ -135,10 +137,12 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
         title: "Reboot Initiated",
         description: "Device reboot command has been sent",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to reboot device",
+        description: err.response?.data?.detail || "Failed to reboot device",
         variant: "destructive",
       });
     }

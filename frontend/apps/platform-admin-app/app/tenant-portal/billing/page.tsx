@@ -10,7 +10,12 @@ import { useTenant } from "@/lib/contexts/tenant-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import { CreditCard, FileText, TrendingUp, Wallet } from "lucide-react";
+import {
+  CreditCard,
+  FileText,
+  Wallet,
+  TrendingUp,
+} from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import type { Invoice, Payment } from "@/types/billing";
 import InvoiceList from "@/components/billing/InvoiceList";
@@ -144,7 +149,7 @@ export default function TenantBillingPage() {
               body={
                 <div className="flex flex-col gap-1 text-sm">
                   <Link
-                    href="/dashboard/billing-revenue/invoices"
+                    href="/tenant-portal/billing/receipts"
                     className="text-primary underline-offset-2 hover:underline"
                   >
                     Review invoices
@@ -198,10 +203,10 @@ export default function TenantBillingPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button asChild>
-              <Link href="/dashboard/billing-revenue/plans">Compare plans</Link>
+              <Link href="/tenant-portal/billing/subscription">Manage plan</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/dashboard/billing-revenue/subscriptions">View subscriptions</Link>
+              <Link href="/tenant-portal/billing/subscription">View subscription</Link>
             </Button>
           </CardContent>
         </Card>
@@ -215,10 +220,10 @@ export default function TenantBillingPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button asChild>
-              <Link href="/dashboard/billing-revenue/payments">Manage payment methods</Link>
+              <Link href="/tenant-portal/billing/payment-methods">Manage payment methods</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/dashboard/billing-revenue/invoices">Open invoice workspace</Link>
+              <Link href="/tenant-portal/billing/receipts">Open invoice workspace</Link>
             </Button>
           </CardContent>
         </Card>

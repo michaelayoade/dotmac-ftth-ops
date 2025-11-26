@@ -311,6 +311,15 @@ class TeamListResponse(BaseModel):
     offset: int
 
 
+class TeamMembershipListResponse(BaseModel):
+    """Paginated team membership list"""
+
+    memberships: list["TechnicianTeamMembershipResponse"]
+    total: int
+    limit: int
+    offset: int
+
+
 # ============================================================================
 # Search/Filter Schemas
 # ============================================================================
@@ -358,6 +367,24 @@ class ProjectStats(BaseModel):
     sla_breached_count: int
     avg_completion_time_hours: float | None = None
     completion_rate: float | None = None
+
+
+class DashboardMetrics(BaseModel):
+    """Aggregated project/task metrics for dashboards"""
+
+    total_projects: int = 0
+    active_projects: int = 0
+    completed_projects: int = 0
+    overdue_projects: int = 0
+
+    total_tasks: int = 0
+    completed_tasks: int = 0
+    in_progress_tasks: int = 0
+    overdue_tasks: int = 0
+
+    average_completion_time_days: float | None = None
+    team_utilization: float | None = None
+    on_time_delivery_rate: float | None = None
 
 
 class TeamPerformanceStats(BaseModel):

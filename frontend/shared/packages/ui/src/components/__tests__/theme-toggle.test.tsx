@@ -7,16 +7,29 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeProvider } from "next-themes";
+import { NextIntlClientProvider } from "next-intl";
 import React from "react";
 
 import { ThemeToggle, ThemeToggleButton } from "../theme-toggle";
 
+const messages = {
+  theme: {
+    light: "Light",
+    dark: "Dark",
+    system: "System",
+    switchTo: "Switch to {theme} theme",
+    modeTitle: "{theme} theme",
+  },
+};
+
 // Wrapper component with ThemeProvider
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system">
-      {children}
-    </ThemeProvider>
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <ThemeProvider attribute="class" defaultTheme="system">
+        {children}
+      </ThemeProvider>
+    </NextIntlClientProvider>
   );
 }
 

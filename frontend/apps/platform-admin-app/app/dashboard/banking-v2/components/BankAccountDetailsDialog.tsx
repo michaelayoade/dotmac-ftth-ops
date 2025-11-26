@@ -11,7 +11,12 @@ import { Card, CardContent } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { useBankAccountSummary } from "@/hooks/useBankAccounts";
-import { Building2, DollarSign, TrendingUp, Calendar } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+} from "lucide-react";
 
 interface BankAccountDetailsDialogProps {
   open: boolean;

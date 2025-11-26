@@ -278,11 +278,22 @@ class TestIPv4ActivationWorkflow:
         tenant_id = str(uuid4())
         subscriber_id = str(uuid4())
 
+        pool = IPPool(
+            id=uuid4(),
+            tenant_id=tenant_id,
+            pool_name="invalid-state-pool",
+            pool_type=IPPoolType.IPV4_PUBLIC,
+            network_cidr="192.0.2.0/24",
+            status=IPPoolStatus.ACTIVE,
+            total_addresses=254,
+        )
+        async_db_session.add(pool)
+
         # Create reservation already in ACTIVE state
         reservation = IPReservation(
             id=uuid4(),
             tenant_id=tenant_id,
-            pool_id=uuid4(),
+            pool_id=pool.id,
             subscriber_id=subscriber_id,
             ip_address="192.0.2.200",
             status=IPReservationStatus.ASSIGNED,
@@ -291,6 +302,18 @@ class TestIPv4ActivationWorkflow:
             lifecycle_activated_at=datetime.now(UTC),
         )
         async_db_session.add(reservation)
+
+        subscriber = Subscriber(
+            id=subscriber_id,
+            tenant_id=tenant_id,
+            subscriber_number=f"SUB-{uuid4().hex[:8]}",
+            full_name="Active Subscriber",
+            email=f"active{uuid4().hex[:8]}@example.com",
+            phone_number="+1234567890",
+            status=SubscriberStatus.ACTIVE,
+            is_active=True,
+        )
+        async_db_session.add(subscriber)
         await async_db_session.commit()
 
         # Act & Assert
@@ -314,10 +337,21 @@ class TestIPv4SuspensionWorkflow:
         tenant_id = str(uuid4())
         subscriber_id = str(uuid4())
 
+        pool = IPPool(
+            id=uuid4(),
+            tenant_id=tenant_id,
+            pool_name="suspend-pool",
+            pool_type=IPPoolType.IPV4_PUBLIC,
+            network_cidr="203.0.113.0/24",
+            status=IPPoolStatus.ACTIVE,
+            total_addresses=254,
+        )
+        async_db_session.add(pool)
+
         reservation = IPReservation(
             id=uuid4(),
             tenant_id=tenant_id,
-            pool_id=uuid4(),
+            pool_id=pool.id,
             subscriber_id=subscriber_id,
             ip_address="203.0.113.50",
             status=IPReservationStatus.ASSIGNED,
@@ -326,6 +360,18 @@ class TestIPv4SuspensionWorkflow:
             lifecycle_activated_at=datetime.now(UTC) - timedelta(hours=12),
         )
         async_db_session.add(reservation)
+
+        subscriber = Subscriber(
+            id=subscriber_id,
+            tenant_id=tenant_id,
+            subscriber_number=f"SUB-{uuid4().hex[:8]}",
+            full_name="Active Subscriber",
+            email=f"active{uuid4().hex[:8]}@example.com",
+            phone_number="+1234567890",
+            status=SubscriberStatus.ACTIVE,
+            is_active=True,
+        )
+        async_db_session.add(subscriber)
         await async_db_session.commit()
 
         mock_radius = AsyncMock()
@@ -409,6 +455,17 @@ class TestIPv4RevocationWorkflow:
             lifecycle_netbox_ip_id=12345,
         )
         async_db_session.add(reservation)
+        subscriber = Subscriber(
+            id=subscriber_id,
+            tenant_id=tenant_id,
+            subscriber_number=f"SUB-{uuid4().hex[:8]}",
+            full_name="Active Subscriber",
+            email=f"active{uuid4().hex[:8]}@example.com",
+            phone_number="+1234567890",
+            status=SubscriberStatus.ACTIVE,
+            is_active=True,
+        )
+        async_db_session.add(subscriber)
         await async_db_session.commit()
 
         # Mock RADIUS client
@@ -468,10 +525,21 @@ class TestIPv4RevocationWorkflow:
         tenant_id = str(uuid4())
         subscriber_id = str(uuid4())
 
+        pool = IPPool(
+            id=uuid4(),
+            tenant_id=tenant_id,
+            pool_name="revocation-pool",
+            pool_type=IPPoolType.IPV4_PUBLIC,
+            network_cidr="192.0.2.0/24",
+            status=IPPoolStatus.ACTIVE,
+            total_addresses=254,
+        )
+        async_db_session.add(pool)
+
         reservation = IPReservation(
             id=uuid4(),
             tenant_id=tenant_id,
-            pool_id=uuid4(),
+            pool_id=pool.id,
             subscriber_id=subscriber_id,
             ip_address="192.0.2.250",
             status=IPReservationStatus.ASSIGNED,
@@ -481,6 +549,16 @@ class TestIPv4RevocationWorkflow:
             lifecycle_suspended_at=datetime.now(UTC) - timedelta(days=30),
         )
         async_db_session.add(reservation)
+        subscriber = Subscriber(
+            id=subscriber_id,
+            tenant_id=tenant_id,
+            subscriber_number=f"SUB-{uuid4().hex[:8]}",
+            full_name="Suspended Subscriber",
+            email=f"suspended{uuid4().hex[:8]}@example.com",
+            phone_number="+1234567890",
+            status=SubscriberStatus.SUSPENDED,
+        )
+        async_db_session.add(subscriber)
         await async_db_session.commit()
 
         # Act
@@ -592,6 +670,7 @@ class TestIPv4ErrorHandlingAndRollback:
             lifecycle_state="pending",
         )
         async_db_session.add(reservation)
+        reservation_id = reservation.id
 
         subscriber = Subscriber(
             id=subscriber_id,
@@ -626,7 +705,7 @@ class TestIPv4ErrorHandlingAndRollback:
 
         # Verify reservation was not committed (because commit=False)
         await async_db_session.rollback()
-        stmt = select(IPReservation).where(IPReservation.id == reservation.id)
+        stmt = select(IPReservation).where(IPReservation.id == reservation_id)
         db_result = await async_db_session.execute(stmt)
         rolled_back_reservation = db_result.scalar_one()
         assert rolled_back_reservation.lifecycle_state == "pending"  # Rolled back

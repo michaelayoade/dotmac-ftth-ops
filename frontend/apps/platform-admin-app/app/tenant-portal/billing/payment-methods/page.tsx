@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import {
   useTenantPaymentMethods,
   VerifyPaymentMethodRequest,
+  type AddPaymentMethodRequest,
 } from "@/hooks/useTenantPaymentMethods";
 import { PaymentMethodCard } from "@/components/tenant/billing/PaymentMethodCard";
 import { AddPaymentMethodModal } from "@/components/tenant/billing/AddPaymentMethodModal";
@@ -21,7 +22,13 @@ import {
 } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import { AlertCircle, CreditCard, Plus, Shield, Lock } from "lucide-react";
+import {
+  AlertCircle,
+  CreditCard,
+  Plus,
+  Shield,
+  Lock,
+} from "lucide-react";
 
 export default function PaymentMethodsPage() {
   const {
@@ -50,15 +57,17 @@ export default function PaymentMethodsPage() {
   // Remove state
   const [paymentMethodToRemove, setPaymentMethodToRemove] = useState<string | null>(null);
 
-  const handleAddPaymentMethod = async (request: any) => {
+  const handleAddPaymentMethod = async (request: unknown) => {
     setIsAdding(true);
     setModalError(null);
 
     try {
-      await addPaymentMethod(request);
+      await addPaymentMethod(request as AddPaymentMethodRequest);
       setAddModalOpen(false);
-    } catch (err: any) {
-      setModalError(err.message || "Failed to add payment method");
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      setModalError(e.message || "Failed to add payment method");
       throw err;
     } finally {
       setIsAdding(false);
@@ -69,7 +78,7 @@ export default function PaymentMethodsPage() {
     setIsUpdating(true);
     try {
       await setDefaultPaymentMethod(paymentMethodId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to set default payment method:", err);
     } finally {
       setIsUpdating(false);
@@ -89,7 +98,7 @@ export default function PaymentMethodsPage() {
       await removePaymentMethod(paymentMethodToRemove);
       setRemoveModalOpen(false);
       setPaymentMethodToRemove(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to remove payment method:", err);
     } finally {
       setIsUpdating(false);
@@ -118,8 +127,10 @@ export default function PaymentMethodsPage() {
       await verifyPaymentMethod(paymentMethodToVerify, request);
       setVerifyModalOpen(false);
       setPaymentMethodToVerify(null);
-    } catch (err: any) {
-      setModalError(err.message || "Verification failed. Please check the amounts and try again.");
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      setModalError(e.message || "Verification failed. Please check the amounts and try again.");
     } finally {
       setIsUpdating(false);
     }

@@ -35,6 +35,15 @@ def get_correlation_id() -> str | None:
     return correlation_id_var.get()
 
 
+def ensure_correlation_id() -> str:
+    """Get a non-empty correlation ID, generating one if needed."""
+    correlation_id = correlation_id_var.get()
+    if correlation_id is None:
+        correlation_id = f"corr_{uuid.uuid4().hex[:16]}"
+        correlation_id_var.set(correlation_id)
+    return correlation_id
+
+
 def get_trace_id() -> str | None:
     """Get the current trace ID."""
     return trace_id_var.get()

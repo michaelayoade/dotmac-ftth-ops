@@ -17,7 +17,7 @@ interface CreateLeadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  onCreate: (data: LeadCreateRequest) => Promise<any>;
+  onCreate: (data: LeadCreateRequest) => Promise<unknown>;
 }
 
 export function CreateLeadModal({ isOpen, onClose, onSuccess, onCreate }: CreateLeadModalProps) {

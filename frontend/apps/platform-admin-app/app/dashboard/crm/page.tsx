@@ -5,7 +5,7 @@ export const dynamicParams = true;
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Users, TrendingUp, ClipboardList, Calendar } from "lucide-react";
+import { ClipboardList, Calendar, Users, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { MetricCardEnhanced } from "@dotmac/ui";
@@ -14,14 +14,7 @@ import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { EnhancedDataTable, type ColumnDef, type Row } from "@dotmac/ui";
 import { EmptyState } from "@dotmac/ui";
-import {
-  useLeads,
-  useQuotes,
-  useSiteSurveys,
-  type Lead,
-  type Quote,
-  type SiteSurvey,
-} from "@/hooks/useCRM";
+import { useLeads, useQuotes, type Lead, type Quote } from "@/hooks/useCRM";
 import { useToast } from "@dotmac/ui";
 
 function formatRelativeDate(value?: string | null) {
@@ -48,12 +41,6 @@ export default function CRMOverviewPage() {
     error: quotesError,
     refetch: refetchQuotes,
   } = useQuotes();
-  const {
-    data: surveys = [],
-    isLoading: surveysLoading,
-    error: surveysError,
-    refetch: refetchSurveys,
-  } = useSiteSurveys();
 
   const leadStats = useMemo(() => {
     const total = leads.length;
@@ -103,24 +90,6 @@ export default function CRMOverviewPage() {
     };
   }, [quotes]);
 
-  const surveyStats = useMemo(() => {
-    const total = surveys.length;
-    const scheduled = surveys.filter((survey) => survey.status === "scheduled").length;
-    const inProgress = surveys.filter((survey) => survey.status === "in_progress").length;
-    const completed = surveys.filter((survey) => survey.status === "completed").length;
-    const requiresConstruction = surveys.filter(
-      (survey) => survey.serviceability === "requires_construction",
-    ).length;
-
-    return {
-      total,
-      scheduled,
-      inProgress,
-      completed,
-      requiresConstruction,
-    };
-  }, [surveys]);
-
   const recentLeads = useMemo(
     () =>
       [...leads]
@@ -135,15 +104,6 @@ export default function CRMOverviewPage() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5),
     [quotes],
-  );
-
-  const upcomingSurveys = useMemo(
-    () =>
-      surveys
-        .filter((survey) => survey.status === "scheduled")
-        .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
-        .slice(0, 5),
-    [surveys],
   );
 
   const leadColumns: ColumnDef<Lead>[] = useMemo(
@@ -229,53 +189,11 @@ export default function CRMOverviewPage() {
     [],
   );
 
-  const surveyColumns: ColumnDef<SiteSurvey>[] = useMemo(
-    () => [
-      {
-        id: "survey",
-        header: "Survey",
-        cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.survey_number}</span>
-            <span className="text-xs text-muted-foreground">
-              Lead #{row.original.lead_id.slice(0, 8)}
-            </span>
-          </div>
-        ),
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }) => <SurveyStatusBadge status={row.original.status} />,
-      },
-      {
-        id: "scheduled",
-        header: "Scheduled Date",
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
-            {row.original.scheduled_date
-              ? new Date(row.original.scheduled_date).toLocaleString()
-              : "—"}
-          </span>
-        ),
-      },
-      {
-        id: "technician",
-        header: "Technician",
-        accessorKey: "technician_id",
-        cell: ({ row }) => (
-          <span className="text-sm">{row.original.technician_id ?? "Unassigned"}</span>
-        ),
-      },
-    ],
-    [],
-  );
-
   const handleRefresh = async () => {
-    await Promise.all([refetchLeads(), refetchQuotes(), refetchSurveys()]);
+    await Promise.all([refetchLeads(), refetchQuotes()]);
     toast({
       title: "CRM Data Refreshed",
-      description: "Leads, quotes, and site surveys have been updated.",
+      description: "Leads and quotes have been updated.",
     });
   };
 
@@ -327,13 +245,12 @@ export default function CRMOverviewPage() {
         />
         <MetricCardEnhanced
           title="Site Surveys"
-          value={surveyStats.scheduled + surveyStats.inProgress}
-          subtitle={`${surveyStats.completed} completed • ${surveyStats.requiresConstruction} requiring build`}
+          value={0}
+          subtitle="Site surveys are handled in ISP operations"
           icon={Calendar}
-          href="/dashboard/crm/site-surveys"
-          loading={surveysLoading}
-          {...(surveysError?.message && { error: surveysError.message })}
-          emptyStateMessage="No surveys scheduled"
+          href="/dashboard"
+          loading={false}
+          emptyStateMessage="Not available in platform admin"
         />
       </div>
 
@@ -397,35 +314,6 @@ export default function CRMOverviewPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upcoming Site Surveys</CardTitle>
-          <CardDescription>
-            Coordinate field teams and ensure serviceability checks happen on time.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {upcomingSurveys.length === 0 ? (
-            <EmptyState
-              title="No site surveys scheduled"
-              description="Plan technical assessments to validate feasibility before installation."
-              action={{
-                label: "Schedule Survey",
-                onClick: () => router.push("/dashboard/crm/site-surveys"),
-              }}
-            />
-          ) : (
-            <EnhancedDataTable
-              data={upcomingSurveys}
-              columns={surveyColumns}
-              isLoading={surveysLoading}
-              {...(surveysError?.message && { error: surveysError.message })}
-              pagination={false}
-              hideToolbar
-            />
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -546,35 +434,6 @@ function QuoteStatusBadge({ status }: { status: Quote["status"] }) {
   };
 
   const { label, className } = config[status] ?? config.draft;
-
-  return <Badge className={className}>{label}</Badge>;
-}
-
-function SurveyStatusBadge({ status }: { status: SiteSurvey["status"] }) {
-  const config: Record<SiteSurvey["status"], { label: string; className: string }> = {
-    scheduled: {
-      label: "Scheduled",
-      className: "bg-sky-500/20 text-sky-300 border-sky-500/30",
-    },
-    in_progress: {
-      label: "In Progress",
-      className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-    },
-    completed: {
-      label: "Completed",
-      className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    },
-    failed: {
-      label: "Failed",
-      className: "bg-red-500/20 text-red-300 border-red-500/30",
-    },
-    canceled: {
-      label: "Canceled",
-      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-    },
-  };
-
-  const { label, className } = config[status] ?? config.scheduled;
 
   return <Badge className={className}>{label}</Badge>;
 }

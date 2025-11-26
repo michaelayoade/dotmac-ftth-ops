@@ -5,6 +5,8 @@
  * from network monitoring, alerts, and diagnostic events.
  */
 
+import { logger } from "@/lib/logger";
+
 export enum WebSocketEventType {
   // Network monitoring events
   DEVICE_STATUS_CHANGED = "device_status_changed",
@@ -21,7 +23,7 @@ export enum WebSocketEventType {
   CONNECTION_STATE = "connection_state",
 }
 
-export interface WebSocketMessage<T = any> {
+export interface WebSocketMessage<T = unknown> {
   event: WebSocketEventType | string;
   data: T;
   timestamp: string;
@@ -34,7 +36,7 @@ export interface WebSocketConnectionState {
   error?: string;
 }
 
-type MessageHandler<T = any> = (message: WebSocketMessage<T>) => void;
+type MessageHandler<T = unknown> = (message: WebSocketMessage<T>) => void;
 type StateChangeHandler = (state: WebSocketConnectionState) => void;
 
 export class WebSocketClient {
@@ -82,7 +84,7 @@ export class WebSocketClient {
       this.ws.onerror = this.handleError.bind(this);
       this.ws.onclose = this.handleClose.bind(this);
     } catch (error) {
-      console.error("Failed to create WebSocket connection:", error);
+      logger.error("Failed to create WebSocket connection", error);
       this.updateState({
         connected: false,
         reconnecting: false,
@@ -113,7 +115,7 @@ export class WebSocketClient {
   /**
    * Subscribe to specific event type
    */
-  on<T = any>(event: WebSocketEventType | string, handler: MessageHandler<T>): () => void {
+  on<T = unknown>(event: WebSocketEventType | string, handler: MessageHandler<T>): () => void {
     if (!this.messageHandlers.has(event)) {
       this.messageHandlers.set(event, new Set());
     }
@@ -159,7 +161,7 @@ export class WebSocketClient {
         }),
       );
     } else {
-      console.warn("WebSocket is not connected. Message not sent:", message);
+      logger.warn("WebSocket is not connected. Message not sent", message);
     }
   }
 
@@ -178,7 +180,7 @@ export class WebSocketClient {
   }
 
   private handleOpen(): void {
-    console.log("WebSocket connected");
+    logger.info("WebSocket connected");
     this.reconnectAttempts = 0;
     this.reconnectDelay = 1000;
     this.updateState({ connected: true, reconnecting: false });
@@ -210,12 +212,12 @@ export class WebSocketClient {
         wildcardHandlers.forEach((handler) => handler(message));
       }
     } catch (error) {
-      console.error("Failed to parse WebSocket message:", error);
+      logger.error("Failed to parse WebSocket message", error);
     }
   }
 
   private handleError(event: Event): void {
-    console.error("WebSocket error:", event);
+    logger.error("WebSocket error", event);
     this.updateState({
       connected: false,
       reconnecting: false,
@@ -224,7 +226,7 @@ export class WebSocketClient {
   }
 
   private handleClose(event: CloseEvent): void {
-    console.log("WebSocket closed:", event.code, event.reason);
+    logger.info("WebSocket closed", { code: event.code, reason: event.reason });
     this.updateState({ connected: false, reconnecting: false });
 
     // Attempt to reconnect if it wasn't a clean closure
@@ -245,9 +247,11 @@ export class WebSocketClient {
       this.maxReconnectDelay,
     );
 
-    console.log(
-      `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`,
-    );
+    logger.info("Reconnecting WebSocket", {
+      delay,
+      attempt: this.reconnectAttempts + 1,
+      maxAttempts: this.maxReconnectAttempts,
+    });
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
@@ -280,7 +284,7 @@ export class WebSocketClient {
       }
       return url.toString();
     } catch (error) {
-      console.error("Failed to build WebSocket URL, using base URL", error);
+      logger.error("Failed to build WebSocket URL, using base URL", error);
       return this.baseUrl;
     }
   }
@@ -296,9 +300,9 @@ export class WebSocketClient {
         // Send ping
         this.send({ event: "ping" });
 
-        // Set timeout for pong response
-        this.pongTimeout = setTimeout(() => {
-          console.warn("No pong received, connection may be stale. Reconnecting...");
+          // Set timeout for pong response
+          this.pongTimeout = setTimeout(() => {
+          logger.warn("No pong received, connection may be stale. Reconnecting...");
           this.ws?.close(); // This will trigger handleClose which handles reconnection
         }, this.pongWaitTime);
       }

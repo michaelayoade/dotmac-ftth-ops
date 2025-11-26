@@ -108,7 +108,7 @@ function buildCache() {
         fields: {
           sessions: {
             keyArgs: ["filters", "status"],
-            merge(existing = [], incoming: any[], { args }) {
+            merge(existing = [], incoming: unknown[], { args }) {
               if (args?.['offset'] === 0 || !existing.length) {
                 return incoming;
               }

@@ -162,7 +162,14 @@ const fetchSchedules = async (
   filter?: ScheduleFilter,
 ): Promise<ScheduleListResponse> => {
   const params = buildQueryParams(filter);
-  return fetchJSON(`${buildUrl(SCHEDULING_API)}/technicians/schedules?${params}`);
+  const data = await fetchJSON<any>(`${buildUrl(SCHEDULING_API)}/technicians/schedules?${params}`);
+  const schedules = Array.isArray(data) ? data : data?.schedules ?? [];
+  return {
+    schedules,
+    total: data?.total ?? schedules.length,
+    page: data?.page ?? 1,
+    pageSize: data?.pageSize ?? schedules.length,
+  };
 };
 
 const fetchSchedule = async (
@@ -198,7 +205,14 @@ const fetchAssignments = async (
   filter?: AssignmentFilter,
 ): Promise<AssignmentListResponse> => {
   const params = buildQueryParams(filter);
-  return fetchJSON(`${buildUrl(SCHEDULING_API)}/assignments?${params}`);
+  const data = await fetchJSON<any>(`${buildUrl(SCHEDULING_API)}/assignments?${params}`);
+  const assignments = Array.isArray(data) ? data : data?.assignments ?? [];
+  return {
+    assignments,
+    total: data?.total ?? assignments.length,
+    page: data?.page ?? 1,
+    pageSize: data?.pageSize ?? assignments.length,
+  };
 };
 
 const fetchAssignment = async (
@@ -295,7 +309,14 @@ const fetchTimeEntries = async (
   filter?: TimeEntryFilter,
 ): Promise<TimeEntryListResponse> => {
   const params = buildQueryParams(filter);
-  return fetchJSON(`${buildUrl(TIME_API)}/entries?${params}`);
+  const data = await fetchJSON<any>(`${buildUrl(TIME_API)}/entries?${params}`);
+  const entries = Array.isArray(data) ? data : data?.entries ?? [];
+  return {
+    entries,
+    total: data?.total ?? entries.length,
+    page: data?.page ?? 1,
+    pageSize: data?.pageSize ?? entries.length,
+  };
 };
 
 const fetchTimeEntry = async (

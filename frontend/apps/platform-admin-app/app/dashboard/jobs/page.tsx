@@ -13,21 +13,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
+import type { LucideIcon } from "lucide-react";
 import {
-  Briefcase,
-  Search,
-  RefreshCw,
-  Eye,
-  XCircle,
-  CheckCircle,
-  Clock,
-  Loader,
   AlertTriangle,
   BarChart3,
-  FileText,
-  Upload,
+  Briefcase,
+  CheckCircle,
+  Clock,
   Download,
+  Eye,
+  FileText,
+  Loader,
+  RefreshCw,
+  Search,
   Settings,
+  Upload,
+  XCircle,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -52,7 +53,7 @@ interface Job {
   current_item?: string;
   error_message?: string;
   error_traceback?: string;
-  result?: any;
+  result?: unknown;
   created_by?: string;
   created_at: string;
   started_at?: string;
@@ -105,7 +106,7 @@ function JobsPageContent() {
   });
 
   const jobs: Job[] = data?.jobs || [];
-  const total = data?.total || 0;
+  const _total = data?.total || 0;
 
   // Fetch statistics
   const { data: statsData } = useQuery({
@@ -163,7 +164,7 @@ function JobsPageContent() {
   });
 
   const getStatusBadge = (status: JobStatus) => {
-    const statusConfig: Record<JobStatus, { icon: any; color: string; label: string }> = {
+    const statusConfig: Record<JobStatus, { icon: React.ElementType; color: string; label: string }> = {
       pending: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Pending" },
       running: { icon: Loader, color: "bg-blue-100 text-blue-800", label: "Running" },
       completed: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Completed" },
@@ -183,7 +184,7 @@ function JobsPageContent() {
   };
 
   const getJobTypeIcon = (jobType: JobType) => {
-    const icons: Record<JobType, any> = {
+    const icons: Record<JobType, LucideIcon> = {
       bulk_import: Upload,
       bulk_export: Download,
       firmware_upgrade: Settings,

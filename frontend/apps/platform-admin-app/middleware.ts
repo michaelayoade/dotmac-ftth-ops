@@ -13,14 +13,13 @@ import type { NextRequest } from "next/server";
  */
 const ISP_ONLY_ROUTES = [
   "/dashboard/network",
-  "/dashboard/radius",
   "/dashboard/pon",
   "/dashboard/devices",
   "/dashboard/automation",
   "/dashboard/fiber",
   "/dashboard/wireless",
   "/dashboard/subscribers",
-  "/dashboard/services/internet-plans",
+  "/dashboard/isp",
   "/dashboard/infrastructure/ipam",
   "/dashboard/infrastructure/dcim",
   "/dashboard/infrastructure/devices",

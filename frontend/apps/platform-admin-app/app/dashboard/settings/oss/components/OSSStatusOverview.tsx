@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import { Button } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -12,15 +11,13 @@ import {
   TableRow,
 } from "@dotmac/ui";
 import {
-  CheckCircle2,
-  XCircle,
-  Settings,
-  Network,
-  Router,
-  Database,
-  Cog,
   AlertCircle,
-  RefreshCw,
+  CheckCircle2,
+  Cog,
+  Database,
+  Router,
+  Settings,
+  XCircle,
 } from "lucide-react";
 import { OSS_SERVICE_INFO, type OSSServiceConfigResponse } from "@/lib/services/oss-config-service";
 
@@ -40,7 +37,6 @@ interface OSSStatusOverviewProps {
 }
 
 const SERVICE_ICONS = {
-  voltha: Network,
   genieacs: Router,
   netbox: Database,
   ansible: Cog,

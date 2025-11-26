@@ -23,7 +23,7 @@ from dotmac.platform.auth.rbac_dependencies import (
     require_field_service_time_manage,
     require_field_service_time_read,
 )
-from dotmac.platform.db import get_db_session
+from dotmac.platform.db import get_async_session
 from dotmac.platform.field_service.models import Technician
 from dotmac.platform.project_management.resource_models import (
     Equipment,
@@ -279,7 +279,7 @@ def _assignment_response(assignment: ResourceAssignment) -> ResourceAssignmentRe
 )
 async def clock_in(
     clock_in_request: ClockInRequest,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: UserInfo = Depends(require_field_service_time_manage),
 ) -> TimeEntryResponse:
@@ -366,7 +366,7 @@ async def clock_in(
 async def clock_out(
     entry_id: UUID,
     clock_out_request: ClockOutRequest,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: UserInfo = Depends(require_field_service_time_manage),
 ) -> TimeEntryResponse:
@@ -421,7 +421,7 @@ async def list_time_entries(
     active_only: bool = Query(False),
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     _current_user: UserInfo = Depends(require_field_service_time_read),
 ) -> list[TimeEntryResponse]:
@@ -462,7 +462,7 @@ async def list_time_entries(
 )
 async def create_equipment(
     equipment: EquipmentCreate,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: UserInfo = Depends(require_field_service_resource_manage),
 ) -> EquipmentResponse:
@@ -493,7 +493,7 @@ async def list_equipment(
     available_only: bool = Query(False),
     assigned_to: UUID | None = Query(None),
     limit: int = Query(default=100, le=1000),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     _current_user: UserInfo = Depends(require_field_service_resource_read),
 ) -> list[EquipmentResponse]:
@@ -532,7 +532,7 @@ async def list_equipment(
 )
 async def create_vehicle(
     vehicle: VehicleCreate,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: UserInfo = Depends(require_field_service_resource_manage),
 ) -> VehicleResponse:
@@ -563,7 +563,7 @@ async def list_vehicles(
     available_only: bool = Query(False),
     assigned_to: UUID | None = Query(None),
     limit: int = Query(default=100, le=1000),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     _current_user: UserInfo = Depends(require_field_service_resource_read),
 ) -> list[VehicleResponse]:
@@ -603,7 +603,7 @@ async def list_vehicles(
 )
 async def assign_resource(
     assignment: ResourceAssignRequest,
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: UserInfo = Depends(require_field_service_resource_manage),
 ) -> ResourceAssignmentResponse:
@@ -688,7 +688,7 @@ async def return_resource(
     condition: str | None = Query(None),
     damage_description: str | None = Query(None),
     notes: str | None = Query(None),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     current_user: UserInfo = Depends(require_field_service_resource_manage),
 ) -> ResourceAssignmentResponse:
@@ -747,7 +747,7 @@ async def list_resource_assignments(
     vehicle_id: UUID | None = Query(None),
     active_only: bool = Query(False),
     limit: int = Query(default=100, le=1000),
-    session: AsyncSession = Depends(get_db_session),
+    session: AsyncSession = Depends(get_async_session),
     tenant_id: str = Depends(get_current_tenant_id),
     _current_user: UserInfo = Depends(require_field_service_resource_read),
 ) -> list[ResourceAssignmentResponse]:

@@ -7,7 +7,11 @@ import {
   PartnerCustomerInput,
   PartnerOnboardingInput,
 } from "@/hooks/usePartners";
-import { CheckCircle, Circle, Loader2 } from "lucide-react";
+import {
+  CheckCircle,
+  Circle,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@dotmac/ui";
 
 type OnboardingStep = "partner" | "customer" | "license" | "deployment" | "review";
@@ -45,19 +49,21 @@ export default function PartnerOnboardingWorkflow() {
     support_phone: "",
   });
   const [environment, setEnvironment] = useState<string>("production");
-  const [region, setRegion] = useState<string>("");
+  const [region] = useState<string>("");
 
   const completeOnboarding = useCompletePartnerOnboarding();
 
   const updatePartnerData = (update: Partial<CreatePartnerInput>) => {
     setPartnerData((prev) => {
-      const next = { ...prev };
+      const next: CreatePartnerInput = { ...prev };
       Object.entries(update).forEach(([key, value]) => {
+        const typedKey = key as keyof CreatePartnerInput;
         if (value === undefined) {
-          delete (next as any)[key];
-        } else {
-          (next as any)[key] = value;
+          delete next[typedKey];
+          return;
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (next as any)[typedKey] = value;
       });
       return next;
     });
@@ -121,6 +127,7 @@ export default function PartnerOnboardingWorkflow() {
 
       const result = await completeOnboarding.mutateAsync(onboardingData);
 
+    // eslint-disable-next-line no-alert
       alert(
         `Partner onboarding completed successfully!\n\n` +
           `Partner: ${result.partner.company_name}\n` +
@@ -129,8 +136,10 @@ export default function PartnerOnboardingWorkflow() {
           `Tenant URL: ${result.tenant.tenant_url}\n\n` +
           `Workflow ID: ${result.workflow_id}`,
       );
-    } catch (error: any) {
-      alert(`Failed to complete onboarding: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      // eslint-disable-next-line no-alert
+      alert(`Failed to complete onboarding: ${message}`);
     }
   };
 

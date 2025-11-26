@@ -6,7 +6,6 @@
 
 "use client";
 
-import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -19,9 +18,11 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import { Check, Sparkles, TrendingUp, Building2, Clock, Percent } from "lucide-react";
-import { ServicePlan, BillingCycle, ModuleCategory } from "../types";
 import { cn } from "@dotmac/ui";
+import { Check, Sparkles, TrendingUp, Building2, Clock, Percent } from "lucide-react";
+import React, { useState } from "react";
+
+import { ServicePlan, BillingCycle, ModuleCategory } from "../types";
 
 interface PlanSelectorProps {
   plans: ServicePlan[];

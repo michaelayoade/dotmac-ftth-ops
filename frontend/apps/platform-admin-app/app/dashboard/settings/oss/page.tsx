@@ -4,18 +4,25 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
-import { Database, Cog, Settings } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@dotmac/ui";
+import {
+  Database,
+  Settings,
+} from "lucide-react";
 import { useAllOSSConfigurations, useOSSConfigStatistics } from "@/hooks/useOSSConfig";
 import { OSSConfigurationCard } from "./components/OSSConfigurationCard";
 import { OSSStatusOverview } from "./components/OSSStatusOverview";
 import type { OSSService } from "@/lib/services/oss-config-service";
 
 // Platform Admin only manages infrastructure-level OSS (NetBox for DCIM/IPAM)
-// Tenant-specific services (GenieACS, VOLTHA) are configured in ISP Ops App
-const OSS_SERVICES: Array<{ service: OSSService; icon: any }> = [
+// Subscriber/device tooling is configured in the ISP Operations App
+const OSS_SERVICES: Array<{ service: OSSService; icon: React.ElementType }> = [
   { service: "netbox", icon: Database },
 ];
 

@@ -15,7 +15,7 @@ import { logger } from "@/lib/logger";
 export interface FeatureFlag {
   name: string;
   enabled: boolean;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   description?: string;
   updated_at: number;
   created_at?: number;
@@ -41,9 +41,10 @@ export const featureFlagsKeys = {
 /**
  * Helper to normalize feature flags response formats
  */
-function normalizeFlagsResponse(response: any): FeatureFlag[] {
-  if (Array.isArray(response?.data)) {
-    return response.data;
+function normalizeFlagsResponse(response: unknown): FeatureFlag[] {
+  const resp = response as { data?: unknown };
+  if (Array.isArray(resp?.data)) {
+    return resp.data;
   }
   return Array.isArray(response) ? response : [];
 }
@@ -51,8 +52,9 @@ function normalizeFlagsResponse(response: any): FeatureFlag[] {
 /**
  * Helper to normalize status response formats
  */
-function normalizeStatusResponse(response: any): FlagStatus | null {
-  return response?.data ?? null;
+function normalizeStatusResponse(response: unknown): FlagStatus | null {
+  const resp = response as { data?: unknown };
+  return resp?.data as FlagStatus | null ?? null;
 }
 
 /**

@@ -49,7 +49,6 @@ export const platformConfig = {
     enableAnalytics: process.env['NEXT_PUBLIC_ENABLE_ANALYTICS'] === "true",
     enableBanking: process.env['NEXT_PUBLIC_ENABLE_BANKING'] === "true",
     enablePayments: process.env['NEXT_PUBLIC_ENABLE_PAYMENTS'] === "true",
-    enableRadius: process.env['NEXT_PUBLIC_ENABLE_RADIUS'] !== "false",
     enableNetwork: process.env['NEXT_PUBLIC_ENABLE_NETWORK'] !== "false",
     enableAutomation: process.env["NEXT_PUBLIC_ENABLE_AUTOMATION"] !== "false",
   },
@@ -244,6 +243,26 @@ function buildBrandingConfig() {
     process.env['NEXT_PUBLIC_SECONDARY_HOVER_COLOR'] || shadeColor(secondary, -12);
   const secondaryForeground = process.env['NEXT_PUBLIC_SECONDARY_FOREGROUND_COLOR'] || "#ffffff";
 
+  const accent = process.env['NEXT_PUBLIC_ACCENT_COLOR'];
+  const background = process.env['NEXT_PUBLIC_BACKGROUND_COLOR'];
+  const foreground = process.env['NEXT_PUBLIC_FOREGROUND_COLOR'];
+
+  const darkPrimary = process.env['NEXT_PUBLIC_PRIMARY_COLOR_DARK'] || primary;
+  const darkPrimaryHover =
+    process.env['NEXT_PUBLIC_PRIMARY_HOVER_COLOR_DARK'] || shadeColor(darkPrimary, 8);
+  const darkPrimaryForeground =
+    process.env['NEXT_PUBLIC_PRIMARY_FOREGROUND_COLOR_DARK'] || "#020617";
+
+  const darkSecondary = process.env['NEXT_PUBLIC_SECONDARY_COLOR_DARK'] || secondary;
+  const darkSecondaryHover =
+    process.env['NEXT_PUBLIC_SECONDARY_HOVER_COLOR_DARK'] || shadeColor(darkSecondary, 8);
+  const darkSecondaryForeground =
+    process.env['NEXT_PUBLIC_SECONDARY_FOREGROUND_COLOR_DARK'] || "#020617";
+
+  const darkAccent = process.env['NEXT_PUBLIC_ACCENT_COLOR_DARK'] || accent;
+  const darkBackground = process.env['NEXT_PUBLIC_BACKGROUND_COLOR_DARK'] || "#0b1220";
+  const darkForeground = process.env['NEXT_PUBLIC_FOREGROUND_COLOR_DARK'] || "#e2e8f0";
+
   const supportEmail = process.env['NEXT_PUBLIC_SUPPORT_EMAIL'] || "support@example.com";
   const successEmail = process.env['NEXT_PUBLIC_SUCCESS_EMAIL'] || supportEmail;
   const partnerSupportEmail =
@@ -282,9 +301,31 @@ function buildBrandingConfig() {
       secondary,
       secondaryHover,
       secondaryForeground,
-      accent: process.env['NEXT_PUBLIC_ACCENT_COLOR'],
-      background: process.env['NEXT_PUBLIC_BACKGROUND_COLOR'],
-      foreground: process.env['NEXT_PUBLIC_FOREGROUND_COLOR'],
+      accent,
+      background,
+      foreground,
+      light: {
+        primary,
+        primaryHover,
+        primaryForeground,
+        secondary,
+        secondaryHover,
+        secondaryForeground,
+        accent,
+        background,
+        foreground,
+      },
+      dark: {
+        primary: darkPrimary,
+        primaryHover: darkPrimaryHover,
+        primaryForeground: darkPrimaryForeground,
+        secondary: darkSecondary,
+        secondaryHover: darkSecondaryHover,
+        secondaryForeground: darkSecondaryForeground,
+        accent: darkAccent,
+        background: darkBackground,
+        foreground: darkForeground,
+      },
     },
     customCss: {
       "--brand-primary": primary,
@@ -293,9 +334,27 @@ function buildBrandingConfig() {
       "--brand-secondary": secondary,
       "--brand-secondary-hover": secondaryHover,
       "--brand-secondary-foreground": secondaryForeground,
-      "--brand-accent": process.env['NEXT_PUBLIC_ACCENT_COLOR'] || undefined,
-      "--brand-background": process.env['NEXT_PUBLIC_BACKGROUND_COLOR'] || undefined,
-      "--brand-foreground": process.env['NEXT_PUBLIC_FOREGROUND_COLOR'] || undefined,
+      "--brand-accent": accent || undefined,
+      "--brand-background": background || undefined,
+      "--brand-foreground": foreground || undefined,
+      "--brand-primary-light": primary,
+      "--brand-primary-hover-light": primaryHover,
+      "--brand-primary-foreground-light": primaryForeground,
+      "--brand-secondary-light": secondary,
+      "--brand-secondary-hover-light": secondaryHover,
+      "--brand-secondary-foreground-light": secondaryForeground,
+      "--brand-accent-light": accent || undefined,
+      "--brand-background-light": background || undefined,
+      "--brand-foreground-light": foreground || undefined,
+      "--brand-primary-dark": darkPrimary,
+      "--brand-primary-hover-dark": darkPrimaryHover,
+      "--brand-primary-foreground-dark": darkPrimaryForeground,
+      "--brand-secondary-dark": darkSecondary,
+      "--brand-secondary-hover-dark": darkSecondaryHover,
+      "--brand-secondary-foreground-dark": darkSecondaryForeground,
+      "--brand-accent-dark": darkAccent || undefined,
+      "--brand-background-dark": darkBackground || undefined,
+      "--brand-foreground-dark": darkForeground || undefined,
     },
   };
 }

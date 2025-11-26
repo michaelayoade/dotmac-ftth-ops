@@ -11,17 +11,18 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
+
+import {
+  createMockCustomer,
+  createActiveCustomer,
+} from "../factories/customer";
+import { createMockONU } from "../factories/network";
 import {
   createMockTenant,
   createMockSubscription,
   resetPlatformCounters,
   type Tenant,
 } from "../factories/platform";
-import {
-  createMockCustomer,
-  createActiveCustomer,
-} from "../factories/customer";
-import { createMockONU } from "../factories/network";
 
 // Mock database query helper for testing
 interface TenantScopedData {

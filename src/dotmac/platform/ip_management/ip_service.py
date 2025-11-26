@@ -125,6 +125,7 @@ class IPManagementService:
             total_addresses=total_addresses,
             reserved_count=0,
             assigned_count=0,
+            available_count=total_addresses,
         )
 
         self.db.add(pool)
@@ -587,6 +588,7 @@ class IPManagementService:
         """
         total = pool.total_addresses
         used = pool.reserved_count + pool.assigned_count
+        pool.available_count = max(total - used, 0)
 
         # Update status based on utilization
         if total > 0:

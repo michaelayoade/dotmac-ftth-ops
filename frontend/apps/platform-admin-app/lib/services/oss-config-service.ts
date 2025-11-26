@@ -2,7 +2,7 @@
  * OSS Configuration Service - API client for tenant OSS integration management
  *
  * Provides methods for:
- * - Managing OSS service configurations (VOLTHA, GenieACS, NetBox, Ansible)
+ * - Managing OSS service configurations (GenieACS, NetBox, Ansible)
  * - Getting current configurations with overrides
  * - Updating tenant-specific overrides
  * - Resetting to defaults
@@ -14,7 +14,7 @@ import { platformConfig } from "@/lib/config";
 // Type Definitions
 // ============================================
 
-export type OSSService = "voltha" | "genieacs" | "netbox" | "ansible";
+export type OSSService = "genieacs" | "netbox" | "ansible";
 
 export interface ServiceConfig {
   url: string;
@@ -29,7 +29,7 @@ export interface ServiceConfig {
 export interface OSSServiceConfigResponse {
   service: OSSService;
   config: ServiceConfig;
-  overrides: Record<string, any>;
+  overrides: Record<string, unknown>;
 }
 
 export interface OSSServiceConfigUpdate {
@@ -47,11 +47,6 @@ export const OSS_SERVICE_INFO: Record<
   OSSService,
   { name: string; description: string; icon: string }
 > = {
-  voltha: {
-    name: "VOLTHA",
-    description: "Virtual OLT Hardware Abstraction - PON/ONT management",
-    icon: "Network",
-  },
   genieacs: {
     name: "GenieACS",
     description: "TR-069 Auto Configuration Server - CPE management",
@@ -64,7 +59,7 @@ export const OSS_SERVICE_INFO: Record<
   },
   ansible: {
     name: "Ansible AWX",
-    description: "Automation and orchestration platform",
+    description: "Automation platform",
     icon: "Cog",
   },
 };
@@ -131,7 +126,7 @@ class OSSConfigService {
    * @returns Array of all service configurations
    */
   async getAllConfigurations(): Promise<OSSServiceConfigResponse[]> {
-    const services: OSSService[] = ["voltha", "genieacs", "netbox", "ansible"];
+    const services: OSSService[] = ["genieacs", "netbox", "ansible"];
     const promises = services.map((service) => this.getConfiguration(service));
 
     // Use Promise.allSettled to handle individual failures gracefully

@@ -7,20 +7,19 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import {
-  Settings,
-  Database,
-  Trash2,
-  CheckCircle2,
-  Edit,
-  Save,
-  Loader2,
   AlertCircle,
+  CheckCircle2,
   Clock,
+  Database,
+  Edit,
+  Loader2,
+  Save,
+  Settings,
+  Trash2,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { platformAdminService, type SystemConfig } from "@/lib/services/platform-admin-service";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import { Separator } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
@@ -50,7 +49,7 @@ export function SystemConfiguration() {
   // Settings management state
   const [activeTab, setActiveTab] = useState<"overview" | "settings">("overview");
   const [selectedCategory, setSelectedCategory] = useState<SettingsCategoryType>("jwt");
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
 
   // Fetch categories and settings
   const { data: categoriesData, isLoading: isLoadingCategories } = useSettingsCategories();
@@ -81,7 +80,7 @@ export function SystemConfiguration() {
   }, [toast]);
 
   useEffect(() => {
-    void fetchSystemConfig();
+    fetchSystemConfig();
   }, [fetchSystemConfig]);
 
   useEffect(() => {
@@ -113,7 +112,7 @@ export function SystemConfiguration() {
               ? `${result.cache_type} cache cleared successfully`
               : "Cache cleared successfully",
         });
-        void fetchSystemConfig();
+        fetchSystemConfig();
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to clear cache";
         toast({ title: "Error", description: message, variant: "destructive" });
@@ -154,14 +153,14 @@ export function SystemConfiguration() {
     [selectedCategory, updateQueryParams],
   );
 
-  const getFieldValue = (field: SettingField): any => {
+  const getFieldValue = (field: SettingField): unknown => {
     if (formData[field.name] !== undefined) {
       return formData[field.name];
     }
     return field.value;
   };
 
-  const handleFieldChange = (fieldName: string, value: any) => {
+  const handleFieldChange = (fieldName: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
   };
 
@@ -231,7 +230,7 @@ export function SystemConfiguration() {
           <Input
             id={field.name}
             type="number"
-            value={value ?? ""}
+            value={String(value ?? "")}
             onChange={(e) => handleFieldChange(field.name, parseFloat(e.target.value))}
             placeholder={field.default !== null ? String(field.default) : undefined}
           />
@@ -258,7 +257,7 @@ export function SystemConfiguration() {
           <Textarea
             id={field.name}
             rows={4}
-            value={field.sensitive ? maskSensitiveValue(value, true) : (value ?? "")}
+            value={field.sensitive ? maskSensitiveValue(value, true) : String(value ?? "")}
             onChange={(e) => handleFieldChange(field.name, e.target.value)}
             placeholder={field.default !== null ? String(field.default) : undefined}
             readOnly={field.sensitive && !value}
@@ -285,7 +284,7 @@ export function SystemConfiguration() {
         <Input
           id={field.name}
           type={field.sensitive ? "password" : "text"}
-          value={field.sensitive ? maskSensitiveValue(value, true) : (value ?? "")}
+          value={field.sensitive ? maskSensitiveValue(value, true) : String(value ?? "")}
           onChange={(e) => handleFieldChange(field.name, e.target.value)}
           placeholder={field.default !== null ? String(field.default) : undefined}
         />

@@ -63,7 +63,7 @@ export interface SelectOption {
 
 export interface ValidationRule {
   type: string;
-  value: any;
+  value: unknown;
   message?: string | null;
 }
 
@@ -73,7 +73,7 @@ export interface FieldSpec {
   type: FieldType;
   description?: string | null;
   required: boolean;
-  default?: any;
+  default?: unknown;
   validation_rules: ValidationRule[];
   min_length?: number | null;
   max_length?: number | null;
@@ -123,7 +123,7 @@ export interface PluginHealthCheck {
   plugin_instance_id: string;
   status: "healthy" | "unhealthy" | "unknown" | "error";
   message?: string | null;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   timestamp: string;
   response_time_ms?: number | null;
 }
@@ -131,14 +131,14 @@ export interface PluginHealthCheck {
 export interface PluginTestResult {
   success: boolean;
   message: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   timestamp: string;
   response_time_ms?: number | null;
 }
 
 export interface PluginConfigurationResponse {
   plugin_instance_id: string;
-  configuration: Record<string, any>;
+  configuration: Record<string, unknown>;
   schema: PluginConfig;
   status: PluginStatus;
   last_updated?: string | null;
@@ -147,15 +147,15 @@ export interface PluginConfigurationResponse {
 export interface CreatePluginInstanceRequest {
   plugin_name: string;
   instance_name: string;
-  configuration: Record<string, any>;
+  configuration: Record<string, unknown>;
 }
 
 export interface UpdatePluginConfigurationRequest {
-  configuration: Record<string, any>;
+  configuration: Record<string, unknown>;
 }
 
 export interface TestConnectionRequest {
-  configuration?: Record<string, any> | null;
+  configuration?: Record<string, unknown> | null;
 }
 
 // ============================================
@@ -298,10 +298,12 @@ export function useCreatePluginInstance() {
         description: `${data.instance_name} was created successfully.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Creation failed",
-        description: error.response?.data?.detail || "Failed to create plugin instance",
+        description: err.response?.data?.detail || "Failed to create plugin instance",
         variant: "destructive",
       });
     },
@@ -343,10 +345,12 @@ export function useUpdatePluginConfiguration() {
         description: "Plugin configuration was updated successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Update failed",
-        description: error.response?.data?.detail || "Failed to update configuration",
+        description: err.response?.data?.detail || "Failed to update configuration",
         variant: "destructive",
       });
     },
@@ -376,10 +380,12 @@ export function useDeletePluginInstance() {
         description: "Plugin instance was removed successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Deletion failed",
-        description: error.response?.data?.detail || "Failed to delete plugin instance",
+        description: err.response?.data?.detail || "Failed to delete plugin instance",
         variant: "destructive",
       });
     },
@@ -396,7 +402,7 @@ export function useTestPluginConnection() {
       configuration,
     }: {
       instanceId: string;
-      configuration?: Record<string, any> | null;
+      configuration?: Record<string, unknown> | null;
     }) => {
       const response = await apiClient.post<PluginTestResult>(
         `/plugins/instances/${instanceId}/test`,
@@ -473,10 +479,12 @@ export function useRefreshPlugins() {
         description: `Found ${data.available_plugins} available plugins.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Refresh failed",
-        description: error.response?.data?.detail || "Failed to refresh plugins",
+        description: err.response?.data?.detail || "Failed to refresh plugins",
         variant: "destructive",
       });
     },

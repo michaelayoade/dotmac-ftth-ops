@@ -48,6 +48,11 @@ export interface ReconciliationResponse {
   period_start: string;
   period_end: string;
   bank_account_id: number;
+  bank_account?: {
+    account_name: string;
+    account_nickname?: string;
+    account_number_last_four: string;
+  };
 
   // Balances
   opening_balance: number;
@@ -59,9 +64,13 @@ export interface ReconciliationResponse {
   total_withdrawals: number;
   unreconciled_count: number;
   discrepancy_amount: number;
+  payments_reconciled_count?: number;
+  total_amount_reconciled?: number;
+  discrepancies_count?: number;
 
   // Status
   status: string;
+  created_by_user_id?: string;
 
   // Approval tracking
   completed_by: string | null;
@@ -75,7 +84,7 @@ export interface ReconciliationResponse {
   reconciled_items: ReconciledItem[];
   created_at: string;
   updated_at: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface ReconciliationListResponse {
@@ -296,7 +305,7 @@ class ReconciliationService {
     return response.json();
   }
 
-  async getCircuitBreakerStatus(): Promise<any> {
+  async getCircuitBreakerStatus(): Promise<unknown> {
     const response = await fetch(
       platformConfig.api.buildUrl("/billing/reconciliations/circuit-breaker/status"),
       {

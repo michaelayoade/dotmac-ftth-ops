@@ -1689,6 +1689,9 @@ class Settings(BaseSettings):
         ticketing_enabled: bool = Field(True, description="Enable ticketing system")
         crm_enabled: bool = Field(True, description="Enable CRM features")
         notification_enabled: bool = Field(True, description="Enable notification center")
+        pon_alarm_actions_enabled: bool = Field(
+            True, description="Enable alarm acknowledge/clear actions for PON/VOLTHA views"
+        )
 
     features: FeatureFlags = FeatureFlags()  # type: ignore[call-arg]
 

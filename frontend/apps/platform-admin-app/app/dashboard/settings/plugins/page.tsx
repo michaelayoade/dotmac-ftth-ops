@@ -2,18 +2,18 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  Puzzle,
-  Plus,
-  Settings,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  RefreshCw,
-  Trash2,
-  Edit,
   Activity,
-  Search,
+  AlertTriangle,
+  CheckCircle,
+  Edit,
   Loader2,
+  Plus,
+  Puzzle,
+  RefreshCw,
+  Search,
+  Settings,
+  Trash2,
+  XCircle,
 } from "lucide-react";
 import { PluginForm } from "./components/PluginForm";
 import { PluginCard } from "./components/PluginCard";
@@ -355,10 +355,10 @@ export default function PluginsPage() {
               }`}
             >
               <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                <div className="bg-current rounded-sm"></div>
-                <div className="bg-current rounded-sm"></div>
-                <div className="bg-current rounded-sm"></div>
-                <div className="bg-current rounded-sm"></div>
+                <div className="bg-current rounded-sm" />
+                <div className="bg-current rounded-sm" />
+                <div className="bg-current rounded-sm" />
+                <div className="bg-current rounded-sm" />
               </div>
             </button>
             <button
@@ -370,9 +370,9 @@ export default function PluginsPage() {
               }`}
             >
               <div className="space-y-1 w-4 h-4">
-                <div className="bg-current h-0.5 rounded"></div>
-                <div className="bg-current h-0.5 rounded"></div>
-                <div className="bg-current h-0.5 rounded"></div>
+                <div className="bg-current h-0.5 rounded" />
+                <div className="bg-current h-0.5 rounded" />
+                <div className="bg-current h-0.5 rounded" />
               </div>
             </button>
             <button
@@ -409,8 +409,8 @@ export default function PluginsPage() {
                     key={plugin.name}
                     plugin={plugin}
                     instances={pluginInstances.filter((inst) => inst.plugin_name === plugin.name)}
-                    onInstall={(plugin) => {
-                      setSelectedPlugin(plugin as any);
+                    onInstall={(pluginConfig) => {
+                      setSelectedPlugin(pluginConfig);
                       setShowCreateForm(true);
                     }}
                   />

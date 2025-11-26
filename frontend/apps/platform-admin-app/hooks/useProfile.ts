@@ -4,7 +4,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { User } from "@/lib/types/auth";
+import type { User } from "@/types/auth";
 import { logger } from "@/lib/logger";
 import apiClient from "@/lib/api/client";
 
@@ -291,7 +291,7 @@ export function useExportData() {
     mutationFn: async () => {
       logger.info("Exporting user data");
 
-      const response = await apiClient.get<any>("/auth/me/export");
+      const response = await apiClient.get<unknown>("/auth/me/export");
 
       if (response.status < 200 || response.status >= 300) {
         throw new Error("Failed to export data");

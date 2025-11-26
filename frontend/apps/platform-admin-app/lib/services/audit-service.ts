@@ -12,14 +12,13 @@
  */
 
 import { platformConfig } from "@/lib/config";
-import { ActivitySeverity } from "@/types/audit";
 import type {
   AuditActivity,
   AuditActivityList,
   AuditFilterParams,
   ActivitySummary,
-  ActivityType,
 } from "@/types/audit";
+import { ActivitySeverity } from "@/types/audit";
 
 // ============================================
 // Additional Interfaces

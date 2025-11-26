@@ -308,15 +308,4 @@ export class SSEEndpoints {
       ...config,
     });
   }
-
-  /**
-   * Create RADIUS sessions SSE client
-   */
-  radiusSessions(config?: Partial<SSEConfig>): SSEClient {
-    return createSSEClient({
-      endpoint: this.buildEndpoint("/realtime/radius-sessions"),
-      token: this.token,
-      ...config,
-    });
-  }
 }

@@ -24,11 +24,15 @@ from .dependencies import get_ticket_service
 from .models import TicketStatus
 from .schemas import (
     AgentPerformanceMetrics,
+    TicketPriority,
+    TicketCountStats,
     TicketCreate,
     TicketDetail,
+    TicketMessageResponse,
     TicketMessageCreate,
     TicketSummary,
     TicketUpdate,
+    TicketStats,
 )
 from .service import (
     TicketAccessDeniedError,
@@ -87,41 +91,47 @@ async def list_tickets(
         alias="status",
         description="Optional status filter (open, in_progress, waiting, resolved, closed).",
     ),
+    priority: str | None = Query(
+        None,
+        description="Optional priority filter (low, normal, high, urgent). 'medium' is accepted as 'normal'.",
+    ),
+    search: str | None = Query(
+        None,
+        min_length=2,
+        description="Search across ticket number or subject (case-insensitive).",
+    ),
     service: TicketService = Depends(get_ticket_service),
     current_user: UserInfo = Depends(get_current_user),
 ) -> Sequence[TicketSummary]:
     """List tickets scoped to the current actor."""
     tenant_id = get_current_tenant_id()
+
+    priority_filter: TicketPriority | None = None
+    if priority:
+        try:
+            priority_filter = TicketPriority(priority)
+        except ValueError:
+            if priority.lower() == "medium":
+                priority_filter = TicketPriority.NORMAL
+            else:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid priority value. Expected one of: low, normal, high, urgent.",
+                )
+
+    search_value = search.strip() if search else None
     try:
         tickets = await service.list_tickets(
             current_user=current_user,
             tenant_id=tenant_id,
             status=status_filter,
+            priority=priority_filter,
+            search=search_value,
             include_messages=False,
         )
         return [TicketSummary.model_validate(ticket, from_attributes=True) for ticket in tickets]
     except Exception as exc:  # pragma: no cover
         logger.warning("ticket.list.failed", error=str(exc))
-        _handle_ticket_error(exc)
-
-
-@router.get(
-    "/{ticket_id}",
-    response_model=TicketDetail,
-    summary="Retrieve ticket details",
-)
-async def get_ticket(
-    ticket_id: UUID = Path(..., description="Ticket identifier"),
-    service: TicketService = Depends(get_ticket_service),
-    current_user: UserInfo = Depends(get_current_user),
-) -> TicketDetail:
-    """Fetch ticket details and threaded messages."""
-    tenant_id = get_current_tenant_id()
-    try:
-        ticket = await service.get_ticket(ticket_id, current_user, tenant_id, include_messages=True)
-        return TicketDetail.model_validate(ticket, from_attributes=True)
-    except Exception as exc:  # pragma: no cover
-        logger.warning("ticket.get.failed", ticket_id=str(ticket_id), error=str(exc))
         _handle_ticket_error(exc)
 
 
@@ -144,6 +154,84 @@ async def add_ticket_message(
         return TicketDetail.model_validate(ticket, from_attributes=True)
     except Exception as exc:  # pragma: no cover
         logger.warning("ticket.message.failed", ticket_id=str(ticket_id), error=str(exc))
+        _handle_ticket_error(exc)
+
+
+@router.get(
+    "/{ticket_id}/messages",
+    response_model=list[TicketMessageResponse],
+    summary="List messages for a ticket",
+)
+async def list_ticket_messages(
+    ticket_id: UUID,
+    service: TicketService = Depends(get_ticket_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> list[TicketMessageResponse]:
+    """Return all messages for a ticket."""
+    tenant_id = get_current_tenant_id()
+    try:
+        ticket = await service.get_ticket(ticket_id, current_user, tenant_id, include_messages=True)
+        return [TicketMessageResponse.model_validate(m, from_attributes=True) for m in ticket.messages]
+    except Exception as exc:  # pragma: no cover
+        logger.warning("ticket.messages.list.failed", ticket_id=str(ticket_id), error=str(exc))
+        _handle_ticket_error(exc)
+
+
+@router.get(
+    "/stats",
+    response_model=TicketCountStats,
+    summary="Get ticket count statistics by status",
+)
+async def get_ticket_stats(
+    service: TicketService = Depends(get_ticket_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> TicketCountStats:
+    """Return counts of tickets by status for the current tenant/actor."""
+    tenant_id = get_current_tenant_id()
+    try:
+        stats = await service.get_ticket_counts(current_user=current_user, tenant_id=tenant_id)
+        return TicketCountStats.model_validate(stats)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("ticket.stats.failed", error=str(exc))
+        _handle_ticket_error(exc)
+
+
+@router.get(
+    "/metrics",
+    response_model=TicketStats,
+    summary="Get aggregated ticket metrics",
+)
+async def get_ticket_metrics(
+    service: TicketService = Depends(get_ticket_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> TicketStats:
+    """Aggregated counts grouped by status, priority, and type with SLA breaches."""
+    tenant_id = get_current_tenant_id()
+    try:
+        metrics = await service.get_ticket_metrics(current_user=current_user, tenant_id=tenant_id)
+        return TicketStats.model_validate(metrics)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("ticket.metrics.failed", error=str(exc))
+        _handle_ticket_error(exc)
+
+
+@router.get(
+    "/{ticket_id}",
+    response_model=TicketDetail,
+    summary="Retrieve ticket details",
+)
+async def get_ticket(
+    ticket_id: UUID = Path(..., description="Ticket identifier"),
+    service: TicketService = Depends(get_ticket_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> TicketDetail:
+    """Fetch ticket details and threaded messages."""
+    tenant_id = get_current_tenant_id()
+    try:
+        ticket = await service.get_ticket(ticket_id, current_user, tenant_id, include_messages=True)
+        return TicketDetail.model_validate(ticket, from_attributes=True)
+    except Exception as exc:  # pragma: no cover
+        logger.warning("ticket.get.failed", ticket_id=str(ticket_id), error=str(exc))
         _handle_ticket_error(exc)
 
 

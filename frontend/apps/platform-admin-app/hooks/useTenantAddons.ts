@@ -34,7 +34,7 @@ export interface Addon {
   is_featured: boolean;
   features: string[];
   icon?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TenantAddon {
@@ -50,12 +50,12 @@ export interface TenantAddon {
   current_usage: number;
   price: number;
   currency: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PurchaseAddonRequest {
   quantity?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateAddonQuantityRequest {

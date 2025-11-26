@@ -145,6 +145,19 @@ BETTER_AUTH_URL=http://localhost:3000
 # Database (uses existing DATABASE_URL)
 DATABASE_URL=postgresql://user:password@localhost:5432/dotmac
 
+# Optional Better Auth webhooks (handled by backend)
+# If set, Better Auth will POST JSON payloads to these URLs:
+# - BETTER_AUTH_RESET_EMAIL_WEBHOOK:
+#     POST { email, url } to your backend (e.g. http://backend:8000/api/v1/auth/better-auth/reset-email)
+# - BETTER_AUTH_ORG_WEBHOOK_URL:
+#     POST { event: \"organization.created\" | \"organization.deleted\", organization } to your backend
+#     (e.g. http://backend:8000/api/v1/auth/better-auth/org-events)
+# - BETTER_AUTH_WEBHOOK_SECRET (optional):
+#     Shared secret added as X-Better-Auth-Webhook-Secret header on all webhook calls.
+BETTER_AUTH_RESET_EMAIL_WEBHOOK=http://backend:8000/api/v1/auth/better-auth/reset-email
+BETTER_AUTH_ORG_WEBHOOK_URL=http://backend:8000/api/v1/auth/better-auth/org-events
+BETTER_AUTH_WEBHOOK_SECRET=super-secure-shared-secret
+
 # Public URLs
 NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_ADMIN_URL=http://localhost:3001

@@ -238,6 +238,9 @@ class VOLTHAHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
     state: str
     message: str
     total_devices: int | None = None
+    alarm_actions_enabled: bool | None = Field(
+        default=None, description="Indicates whether alarm acknowledge/clear is enabled"
+    )
 
 
 # ============================================================================

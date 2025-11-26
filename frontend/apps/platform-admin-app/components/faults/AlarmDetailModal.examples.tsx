@@ -104,7 +104,7 @@ export function AlarmDetailWithUpdateExample() {
     alarm_id: "ALM-2024-002",
     severity: "major",
     status: "acknowledged",
-    source: "voltha",
+    source: "genieacs",
     alarm_type: "HIGH_LATENCY",
     title: "High Network Latency",
     description: "Network latency exceeded threshold of 100ms",
@@ -128,7 +128,6 @@ export function AlarmDetailWithUpdateExample() {
 
   const handleUpdate = () => {
     setUpdateCount((prev) => prev + 1);
-    console.log("Alarm updated, refresh your data here");
   };
 
   return (
@@ -241,7 +240,7 @@ export function MultipleSeverityExample() {
       alarm_id: "ALM-WARN-001",
       severity: "warning",
       status: "active",
-      source: "voltha",
+      source: "genieacs",
       alarm_type: "THRESHOLD_WARNING",
       title: "Bandwidth Threshold Warning",
       description: "Bandwidth usage approaching limit",

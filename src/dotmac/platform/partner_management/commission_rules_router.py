@@ -71,7 +71,7 @@ async def create_commission_rule(
     try:
         rule = await service.create_rule(
             data=data,
-            created_by=current_user.user_id,
+            created_by=UUID(current_user.user_id),
         )
         return PartnerCommissionRuleResponse.model_validate(rule, from_attributes=True)
     except ValueError as e:
@@ -195,7 +195,7 @@ async def update_commission_rule(
         rule = await service.update_rule(
             rule_id=rule_id,
             data=data,
-            updated_by=current_user.user_id,
+            updated_by=UUID(current_user.user_id),
         )
         if not rule:
             raise HTTPException(
@@ -242,7 +242,7 @@ async def delete_commission_rule(
     """
     success = await service.delete_rule(
         rule_id=rule_id,
-        deleted_by=current_user.user_id,
+        deleted_by=UUID(current_user.user_id),
     )
     if not success:
         raise HTTPException(

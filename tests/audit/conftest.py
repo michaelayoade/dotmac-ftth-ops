@@ -37,39 +37,45 @@ async def clean_rate_limit_redis():
             pass
         rl_decorators._redis_pool = None
 
-    # Create a temporary client to clear keys
-    redis_client = await aioredis.from_url(
-        settings.redis.redis_url,
-        encoding="utf-8",
-        decode_responses=True,
-    )
+    # Create a temporary client to clear keys (skip if Redis unavailable in test env)
+    try:
+        redis_client = await aioredis.from_url(
+            settings.redis.redis_url,
+            encoding="utf-8",
+            decode_responses=True,
+        )
+    except Exception:
+        yield
+        return
 
     try:
-        # Clear all rate limit keys before test
-        keys = []
-        async for key in redis_client.scan_iter(match="ratelimit:*"):
-            keys.append(key)
-        if keys:
-            await redis_client.delete(*keys)
+        async def _clear_keys() -> None:
+            keys = []
+            async for key in redis_client.scan_iter(match="ratelimit:*"):
+                keys.append(key)
+            if keys:
+                await redis_client.delete(*keys)
 
-        yield
-
-        # Clear all rate limit keys after test
-        keys = []
-        async for key in redis_client.scan_iter(match="ratelimit:*"):
-            keys.append(key)
-        if keys:
-            await redis_client.delete(*keys)
-    finally:
-        await redis_client.aclose()
-
-    # Reset the global pool again after test
-    if rl_decorators._redis_pool is not None:
         try:
-            await rl_decorators._redis_pool.aclose()
+            await _clear_keys()
+            yield
+            await _clear_keys()
         except Exception:
-            pass
-        rl_decorators._redis_pool = None
+            # If Redis is unavailable in the test environment, skip cleanup gracefully
+            yield
+        finally:
+            try:
+                await redis_client.aclose()
+            except Exception:
+                pass
+    finally:
+        # Reset the global pool again after test
+        if rl_decorators._redis_pool is not None:
+            try:
+                await rl_decorators._redis_pool.aclose()
+            except Exception:
+                pass
+            rl_decorators._redis_pool = None
 
 
 @pytest.fixture(autouse=True)

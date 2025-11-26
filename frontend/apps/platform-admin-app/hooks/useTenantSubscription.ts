@@ -37,7 +37,7 @@ export interface TenantSubscription {
     storage: { current: number; limit?: number };
     api_calls: { current: number; limit?: number };
   };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -51,9 +51,9 @@ export interface AvailablePlan {
   price_amount: number;
   currency: string;
   trial_days: number;
-  features: Record<string, any>;
+  features: Record<string, unknown>;
   is_featured: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProrationPreview {

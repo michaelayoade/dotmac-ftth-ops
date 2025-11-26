@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, User, FileText, Loader2, MapPin } from "lucide-react";
+import { Calendar, FileText, Loader2, MapPin } from "lucide-react";
 import { useLeads, useScheduleSurvey } from "@/hooks/useCRM";
-import type { Lead } from "@/hooks/useCRM";
 import {
   Dialog,
   DialogContent,
@@ -115,10 +114,12 @@ export function ScheduleSurveyModal({
 
         onSuccess?.();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.message || "Failed to schedule survey",
+        description: err.message || "Failed to schedule survey",
         variant: "destructive",
       });
     } finally {

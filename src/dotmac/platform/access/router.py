@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -33,6 +33,8 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAAlarmListResponse,
     VOLTHAHealthResponse,
 )
+from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.settings import Settings, get_settings
 
 router = APIRouter(prefix="/access", tags=["Access Network"])
 
@@ -151,7 +153,33 @@ async def get_device_alarms(device_id: str, service: AccessServiceDep) -> VOLTHA
 
 
 @router.post("/alarms/{alarm_id}/acknowledge")
-async def acknowledge_alarm(alarm_id: str) -> dict[str, str]:
+async def acknowledge_alarm(
+    alarm_id: str,
+    service: AccessServiceDep,
+    olt_id: str | None = None,
+    current_user: UserInfo | None = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    """
+    Attempt to acknowledge an alarm. Returns 501 if no driver supports it.
+    """
+    if not settings.features.pon_alarm_actions_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Alarm acknowledgement is disabled by feature flag",
+        )
+
+    result = await service.acknowledge_alarm(
+        alarm_id,
+        olt_id,
+        actor=getattr(current_user, "username", None) if current_user else None,
+    )
+    if result.get("success"):
+        return {
+            "status": "acknowledged",
+            "acknowledged_by": result.get("acknowledged_by"),
+            "driver_supported": result.get("driver_supported", False),
+        }
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Alarm acknowledgement is not supported by access drivers yet",
@@ -159,7 +187,33 @@ async def acknowledge_alarm(alarm_id: str) -> dict[str, str]:
 
 
 @router.post("/alarms/{alarm_id}/clear")
-async def clear_alarm(alarm_id: str) -> dict[str, str]:
+async def clear_alarm(
+    alarm_id: str,
+    service: AccessServiceDep,
+    olt_id: str | None = None,
+    current_user: UserInfo | None = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    """
+    Attempt to clear an alarm. Returns 501 if no driver supports it.
+    """
+    if not settings.features.pon_alarm_actions_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Alarm clear is disabled by feature flag",
+        )
+
+    result = await service.clear_alarm(
+        alarm_id,
+        olt_id,
+        actor=getattr(current_user, "username", None) if current_user else None,
+    )
+    if result.get("success"):
+        return {
+            "status": "cleared",
+            "cleared_by": result.get("cleared_by"),
+            "driver_supported": result.get("driver_supported", False),
+        }
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Alarm clearing is not supported by access drivers yet",

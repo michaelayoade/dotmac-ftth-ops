@@ -407,6 +407,8 @@ def sample_workflow_stats():
         "success_rate": 0.88,
         "average_duration_seconds": 45.5,
         "total_compensations": 15,
+        "active_workflows": 15,
+        "recent_failures": 4,
         "by_status": {
             "pending": 5,
             "running": 10,

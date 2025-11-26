@@ -87,6 +87,20 @@ async def test_create_and_list_subscriptions(webhooks_client):
 
 
 @pytest.mark.asyncio
+async def test_create_subscription_with_custom_events(webhooks_client):
+    """Router should accept arbitrary event names for UI compatibility."""
+    payload = {
+        "url": "https://hooks.example.com/custom",
+        "description": "Custom events",
+        "events": ["custom.event", "tenant.something-happened"],
+    }
+    response = await webhooks_client.post("/api/v1/webhooks/subscriptions", json=payload)
+    assert response.status_code == 201
+    body = response.json()
+    assert body["events"] == ["custom.event", "tenant.something-happened"]
+
+
+@pytest.mark.asyncio
 async def test_get_update_and_delete_subscription(webhooks_client):
     sub_id, _ = await _create_subscription(webhooks_client)
 

@@ -109,7 +109,7 @@ export interface Lead {
   expected_close_date?: string;
 
   // Metadata
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 
   created_at: string;
@@ -151,7 +151,7 @@ export interface Quote {
   rejection_reason?: string;
 
   // E-Signature
-  signature_data?: Record<string, any>;
+  signature_data?: Record<string, unknown>;
 
   // Line Items
   line_items: Array<{
@@ -162,7 +162,7 @@ export interface Quote {
   }>;
 
   // Metadata
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 
   created_at: string;
@@ -208,7 +208,7 @@ export interface SiteSurvey {
   obstacles?: string;
 
   // Metadata
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 
   created_at: string;
@@ -236,7 +236,7 @@ export interface LeadCreateRequest {
   assigned_to_id?: string;
   partner_id?: string;
   priority?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 }
 
@@ -262,7 +262,7 @@ export interface LeadUpdateRequest {
   partner_id?: string;
   priority?: number;
   expected_close_date?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 }
 
@@ -285,7 +285,7 @@ export interface QuoteCreateRequest {
     unit_price: number;
     total: number;
   }>;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   notes?: string;
 }
 
@@ -403,7 +403,7 @@ const leadApi = {
     });
   },
 
-  convertToCustomer: async (id: string, conversionData?: Record<string, any>): Promise<any> => {
+  convertToCustomer: async (id: string, conversionData?: Record<string, unknown>): Promise<unknown> => {
     const response = await apiClient.post(
       `/crm/leads/${id}/convert-to-customer`,
       conversionData || {},
@@ -713,7 +713,7 @@ export function useConvertToCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, conversionData }: { id: string; conversionData?: Record<string, any> }) =>
+    mutationFn: ({ id, conversionData }: { id: string; conversionData?: Record<string, unknown> }) =>
       leadApi.convertToCustomer(id, conversionData),
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: crmKeys.leads.lists() });
@@ -765,7 +765,7 @@ const quoteApi = {
     await apiClient.post(`/crm/quotes/${id}/send`, {});
   },
 
-  acceptQuote: async (id: string, signatureData?: Record<string, any>): Promise<void> => {
+  acceptQuote: async (id: string, signatureData?: Record<string, unknown>): Promise<void> => {
     await apiClient.post(`/crm/quotes/${id}/accept`, { signature_data: signatureData });
   },
 
@@ -899,7 +899,7 @@ export function useAcceptQuote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, signatureData }: { id: string; signatureData?: Record<string, any> }) =>
+    mutationFn: ({ id, signatureData }: { id: string; signatureData?: Record<string, unknown> }) =>
       quoteApi.acceptQuote(id, signatureData),
     onMutate: async ({ id, signatureData }) => {
       await queryClient.cancelQueries({ queryKey: crmKeys.quotes.lists() });

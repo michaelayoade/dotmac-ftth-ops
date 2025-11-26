@@ -1,18 +1,27 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import { logger } from "@/lib/logger";
 
 interface WebSocketMessage {
   type: string;
-  data: any;
+  data: unknown;
   timestamp: string;
 }
 
 interface WebSocketContextValue {
   isConnected: boolean;
   lastMessage: WebSocketMessage | null;
-  subscribe: (channel: string, callback: (data: any) => void) => () => void;
-  sendMessage: (type: string, data: any) => void;
+  subscribe: (channel: string, callback: (data: unknown) => void) => () => void;
+  sendMessage: (type: string, data: unknown) => void;
   connectionStatus: "connecting" | "connected" | "disconnected" | "error";
 }
 
@@ -59,7 +68,7 @@ export function WebSocketProvider({
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const subscribersRef = useRef<Map<string, Set<(data: any) => void>>>(new Map());
+  const subscribersRef = useRef<Map<string, Set<(data: unknown) => void>>>(new Map());
 
   // Get WebSocket URL from props or environment
   const wsUrl =
@@ -77,7 +86,6 @@ export function WebSocketProvider({
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log("WebSocket connected");
         setIsConnected(true);
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
@@ -97,7 +105,7 @@ export function WebSocketProvider({
               try {
                 callback(message.data);
               } catch (error) {
-                console.error("Error in WebSocket subscriber callback:", error);
+                logger.error("Error in WebSocket subscriber callback", error);
               }
             });
           }
@@ -109,22 +117,21 @@ export function WebSocketProvider({
               try {
                 callback(message);
               } catch (error) {
-            console.error("Error in WebSocket \"all\" subscriber callback:", error);
+                logger.error('Error in WebSocket "all" subscriber callback', error);
               }
             });
           }
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
+          logger.error("Error parsing WebSocket message", error);
         }
       };
 
       ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        logger.error("WebSocket error", error);
         setConnectionStatus("error");
       };
 
       ws.onclose = () => {
-        console.log("WebSocket disconnected");
         setIsConnected(false);
         setConnectionStatus("disconnected");
         wsRef.current = null;
@@ -135,7 +142,6 @@ export function WebSocketProvider({
             reconnectInterval * Math.pow(2, reconnectAttemptsRef.current),
             30000,
           );
-          console.log(`Reconnecting in ${delay}ms...`);
 
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;
@@ -146,7 +152,7 @@ export function WebSocketProvider({
 
       wsRef.current = ws;
     } catch (error) {
-      console.error("Error creating WebSocket connection:", error);
+      logger.error("Error creating WebSocket connection", error);
       setConnectionStatus("error");
     }
   }, [wsUrl, autoConnect, reconnectInterval, maxReconnectAttempts]);
@@ -166,7 +172,7 @@ export function WebSocketProvider({
     setConnectionStatus("disconnected");
   }, []);
 
-  const subscribe = useCallback((channel: string, callback: (data: any) => void) => {
+  const subscribe = useCallback((channel: string, callback: (data: unknown) => void) => {
     if (!subscribersRef.current.has(channel)) {
       subscribersRef.current.set(channel, new Set());
     }
@@ -185,7 +191,7 @@ export function WebSocketProvider({
     };
   }, []);
 
-  const sendMessage = useCallback((type: string, data: any) => {
+  const sendMessage = useCallback((type: string, data: unknown) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(
         JSON.stringify({
@@ -194,11 +200,6 @@ export function WebSocketProvider({
           timestamp: new Date().toISOString(),
         }),
       );
-    } else {
-      console.warn("WebSocket is not connected. Message not sent:", {
-        type,
-        data,
-      });
     }
   }, []);
 
@@ -213,13 +214,16 @@ export function WebSocketProvider({
     };
   }, [autoConnect, connect, disconnect]);
 
-  const value: WebSocketContextValue = {
-    isConnected,
-    lastMessage,
-    subscribe,
-    sendMessage,
-    connectionStatus,
-  };
+  const value: WebSocketContextValue = useMemo(
+    () => ({
+      isConnected,
+      lastMessage,
+      subscribe,
+      sendMessage,
+      connectionStatus,
+    }),
+    [connectionStatus, isConnected, lastMessage, sendMessage, subscribe],
+  );
 
   return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;
 }
@@ -244,7 +248,7 @@ export function WebSocketProvider({
  * }
  * ```
  */
-export function useWebSocket(channel?: string, callback?: (data: any) => void) {
+export function useWebSocket<T = unknown>(channel?: string, callback?: (data: T) => void) {
   const context = useContext(WebSocketContext);
 
   if (!context) {
@@ -253,7 +257,7 @@ export function useWebSocket(channel?: string, callback?: (data: any) => void) {
 
   useEffect(() => {
     if (channel && callback) {
-      return context.subscribe(channel, callback);
+      return context.subscribe(channel, callback as (data: unknown) => void);
     }
     return undefined;
   }, [channel, callback, context]);
@@ -283,7 +287,7 @@ export function useWebSocket(channel?: string, callback?: (data: any) => void) {
  * }
  * ```
  */
-export function useWebSocketSubscription<T = any>(
+export function useWebSocketSubscription<T = unknown>(
   channel: string,
 ): [T | null, React.Dispatch<React.SetStateAction<T | null>>] {
   const [data, setData] = useState<T | null>(null);
@@ -294,8 +298,8 @@ export function useWebSocketSubscription<T = any>(
   }
 
   useEffect(() => {
-    return context.subscribe(channel, (newData: T) => {
-      setData(newData);
+    return context.subscribe(channel, (newData: unknown) => {
+      setData(newData as T);
     });
   }, [channel, context]);
 

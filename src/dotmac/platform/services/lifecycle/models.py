@@ -207,10 +207,9 @@ class ServiceInstance(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, A
     )
 
     # Relationships
-    customer_id: Mapped[UUID] = mapped_column(
+    customer_id: Mapped[UUID | None] = mapped_column(
         PostgresUUID(as_uuid=True),
-        ForeignKey("customers.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
         comment="Customer who owns this service",
     )

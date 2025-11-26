@@ -73,6 +73,43 @@ const DEFAULT_PAGE_SIZE_OPTIONS: number[] = [10, 20, 30, 50, 100];
 const EMPTY_FILTERS: FilterConfig[] = [];
 const EMPTY_QUICK_FILTERS: QuickFilter<never>[] = [];
 const EMPTY_BULK_ACTIONS: BulkAction<never>[] = [];
+const DEFAULT_CARD_BREAKPOINT = 768;
+
+type TranslationFormatter = (value: number) => string;
+
+export interface EnhancedDataTableTranslations {
+  searchPlaceholder: string;
+  filtersLabel: string;
+  clearFilters: string;
+  quickFiltersClear: string;
+  exportLabel: string;
+  columnsLabel: string;
+  bulkActionsLabel: string;
+  selectedCount: (selected: number, total: number) => string;
+  totalCount: TranslationFormatter;
+  loadingLabel: string;
+  rowsPerPage: string;
+  pageOf: (page: number, pageCount: number) => string;
+  previous: string;
+  next: string;
+}
+
+const DEFAULT_TRANSLATIONS: EnhancedDataTableTranslations = {
+  searchPlaceholder: "Search...",
+  filtersLabel: "Filters",
+  clearFilters: "Clear filters",
+  quickFiltersClear: "Clear filters",
+  exportLabel: "Export",
+  columnsLabel: "Columns",
+  bulkActionsLabel: "Bulk Actions",
+  selectedCount: (selected, total) => `${selected} of ${total} row(s) selected`,
+  totalCount: (total) => `${total} total row(s)`,
+  loadingLabel: "Loading...",
+  rowsPerPage: "Rows per page",
+  pageOf: (page, pageCount) => `Page ${page} of ${pageCount}`,
+  previous: "Previous",
+  next: "Next",
+};
 
 // ============================================================================
 // Types
@@ -154,6 +191,14 @@ export interface EnhancedDataTableProps<TData, TValue> {
   errorMessage?: string;
   error?: string;
   hideToolbar?: boolean;
+
+  // Translations/i18n
+  translations?: Partial<EnhancedDataTableTranslations>;
+
+  // Responsive cards
+  enableResponsiveCards?: boolean;
+  renderMobileCard?: (row: Row<TData>) => React.ReactNode;
+  responsiveCardBreakpoint?: number;
 }
 
 // ============================================================================
@@ -257,7 +302,16 @@ export function EnhancedDataTable<TData, TValue>({
   hideToolbar,
   errorMessage,
   error,
+  translations,
+  enableResponsiveCards = false,
+  renderMobileCard,
+  responsiveCardBreakpoint = DEFAULT_CARD_BREAKPOINT,
 }: EnhancedDataTableProps<TData, TValue>) {
+  const copy: EnhancedDataTableTranslations = {
+    ...DEFAULT_TRANSLATIONS,
+    ...(searchPlaceholder ? { searchPlaceholder } : {}),
+    ...translations,
+  };
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibilityState, setColumnVisibilityState] = React.useState<VisibilityState>({});
@@ -267,6 +321,7 @@ export function EnhancedDataTable<TData, TValue>({
   const [activeQuickFilters, setActiveQuickFilters] = React.useState<string[]>(() =>
     quickFilters.filter((filter) => filter.defaultActive).map((filter) => filter.label),
   );
+  const [isMobileCards, setIsMobileCards] = React.useState(false);
   const confirmDialog = useConfirmDialog();
 
   React.useEffect(() => {
@@ -280,6 +335,18 @@ export function EnhancedDataTable<TData, TValue>({
     });
   }, [quickFilters]);
 
+  React.useEffect(() => {
+    if (!enableResponsiveCards) {
+      setIsMobileCards(false);
+      return;
+    }
+    const mediaQuery = window.matchMedia(`(max-width: ${responsiveCardBreakpoint}px)`);
+    const updateMatch = () => setIsMobileCards(mediaQuery.matches);
+    updateMatch();
+    mediaQuery.addEventListener("change", updateMatch);
+    return () => mediaQuery.removeEventListener("change", updateMatch);
+  }, [enableResponsiveCards, responsiveCardBreakpoint]);
+
   const searchFields = React.useMemo<string[]>(() => {
     if (searchConfig?.searchableFields?.length) {
       return searchConfig.searchableFields.map(String);
@@ -290,7 +357,7 @@ export function EnhancedDataTable<TData, TValue>({
   }, [searchConfig, searchKey, searchColumn]);
 
   const enableSearch = searchable && searchFields.length > 0;
-  const searchInputPlaceholder = searchConfig?.placeholder ?? searchPlaceholder;
+  const searchInputPlaceholder = searchConfig?.placeholder ?? copy.searchPlaceholder;
   const isPaginated = pagination ?? paginated;
   const resolvedErrorMessage = errorMessage ?? error;
 
@@ -438,6 +505,8 @@ export function EnhancedDataTable<TData, TValue>({
     columnVisibility ||
     (selectable && bulkActions.length > 0);
   const showToolbar = !hideToolbar && hasToolbarContent;
+  const showCardView =
+    enableResponsiveCards && typeof renderMobileCard === "function" && isMobileCards;
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -457,7 +526,7 @@ export function EnhancedDataTable<TData, TValue>({
                   value={globalFilter}
                   onChange={(event) => setGlobalFilter(event.target.value)}
                   className="max-w-sm"
-                  aria-label="Search table"
+                  aria-label={copy.searchPlaceholder}
                 />
               )}
 
@@ -466,10 +535,10 @@ export function EnhancedDataTable<TData, TValue>({
                   variant={showFilters ? "default" : "outline"}
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
-                  aria-label="Toggle filters"
+                  aria-label={copy.filtersLabel}
                 >
                   <Filter className="h-4 w-4 mr-2" />
-                  Filters
+                  {copy.filtersLabel}
                 </Button>
               )}
             </div>
@@ -483,18 +552,18 @@ export function EnhancedDataTable<TData, TValue>({
                   size="sm"
                   onClick={handleExport}
                   disabled={filteredData.length === 0}
-                  aria-label="Export data"
+                  aria-label={copy.exportLabel}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {copy.exportLabel}
                 </Button>
               )}
 
               {columnVisibility && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Columns
+                    <Button variant="outline" size="sm" aria-label={copy.columnsLabel}>
+                      {copy.columnsLabel}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-card">
@@ -523,7 +592,7 @@ export function EnhancedDataTable<TData, TValue>({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-card">
-                    <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
+                  <DropdownMenuLabel>{copy.bulkActionsLabel}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {bulkActions.map((action, index) => {
                       const Icon = action.icon;
@@ -570,7 +639,7 @@ export function EnhancedDataTable<TData, TValue>({
               })}
               {activeQuickFilters.length > 0 && (
                 <Button size="sm" variant="ghost" onClick={() => setActiveQuickFilters([])}>
-                  Clear filters
+                  {copy.quickFiltersClear}
                 </Button>
               )}
             </div>
@@ -616,14 +685,49 @@ export function EnhancedDataTable<TData, TValue>({
                 onClick={() => table.resetColumnFilters()}
                 className="mt-6"
               >
-                Clear filters
+                {copy.clearFilters}
               </Button>
             </div>
           )}
         </div>
       )}
 
-      <div className="rounded-md border border-border bg-card">
+      {showCardView && (
+        <div className="space-y-3 md:hidden">
+          {isLoading ? (
+            <div className="rounded-md border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+              {copy.loadingLabel}
+            </div>
+          ) : table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <div
+                key={row.id}
+                className={cn(
+                  "rounded-md border border-border bg-card p-4",
+                  onRowClick && "cursor-pointer hover:bg-muted/50",
+                )}
+                onClick={(event) => {
+                  if (
+                    (event.target as HTMLElement).closest('[role="checkbox"]') ||
+                    (event.target as HTMLElement).closest("button")
+                  ) {
+                    return;
+                  }
+                  onRowClick?.(row.original);
+                }}
+              >
+                {renderMobileCard?.(row)}
+              </div>
+            ))
+          ) : (
+            <div className="rounded-md border border-border bg-card px-4 py-6 text-sm text-muted-foreground text-center">
+              {emptyMessage}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className={cn("rounded-md border border-border bg-card", showCardView && "hidden md:block")}>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -642,7 +746,7 @@ export function EnhancedDataTable<TData, TValue>({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={tableColumns.length} className="h-24 text-center">
-                  <div className="text-muted-foreground">Loading...</div>
+                  <div className="text-muted-foreground">{copy.loadingLabel}</div>
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -684,16 +788,18 @@ export function EnhancedDataTable<TData, TValue>({
           <div className="text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length > 0 ? (
               <span>
-                {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                {table.getFilteredRowModel().rows.length} row(s) selected
+                {copy.selectedCount(
+                  table.getFilteredSelectedRowModel().rows.length,
+                  table.getFilteredRowModel().rows.length,
+                )}
               </span>
             ) : (
-              <span>{table.getFilteredRowModel().rows.length} total row(s)</span>
+              <span>{copy.totalCount(table.getFilteredRowModel().rows.length)}</span>
             )}
           </div>
           <div className="flex items-center space-x-6 lg:space-x-8">
             <div className="flex items-center space-x-2">
-              <p className="text-sm font-medium text-foreground">Rows per page</p>
+              <p className="text-sm font-medium text-foreground">{copy.rowsPerPage}</p>
               <select
                 value={table.getState().pagination.pageSize}
                 onChange={(event) => table.setPageSize(Number(event.target.value))}
@@ -708,7 +814,7 @@ export function EnhancedDataTable<TData, TValue>({
               </select>
             </div>
             <div className="flex w-[100px] items-center justify-center text-sm font-medium text-foreground">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              {copy.pageOf(table.getState().pagination.pageIndex + 1, table.getPageCount())}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -716,18 +822,18 @@ export function EnhancedDataTable<TData, TValue>({
                 size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                aria-label="Go to previous page"
+                aria-label={copy.previous}
               >
-                Previous
+                {copy.previous}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                aria-label="Go to next page"
+                aria-label={copy.next}
               >
-                Next
+                {copy.next}
               </Button>
             </div>
           </div>

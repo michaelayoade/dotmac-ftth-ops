@@ -13,7 +13,6 @@ interface BarChartProps {
   data: DataPoint[];
   className?: string;
   height?: number;
-  horizontal?: boolean;
   showValues?: boolean;
   animated?: boolean;
   colorScheme?: "blue" | "green" | "purple" | "gradient";
@@ -23,7 +22,6 @@ export function BarChart({
   data,
   className = "",
   height = 300,
-  horizontal = false,
   showValues = true,
   animated = true,
   colorScheme = "blue",

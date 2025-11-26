@@ -21,7 +21,9 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+} from "lucide-react";
 import { useCreateBankAccount, useUpdateBankAccount } from "@/hooks/useBankAccounts";
 import type {
   CompanyBankAccountCreate,

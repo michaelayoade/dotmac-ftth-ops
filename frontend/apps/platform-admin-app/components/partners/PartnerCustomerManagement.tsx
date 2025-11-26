@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { useCreatePartnerCustomer, PartnerCustomerInput } from "@/hooks/usePartners";
-import { UserPlus, X } from "lucide-react";
+import {
+  UserPlus,
+  X,
+} from "lucide-react";
 import { Button } from "@dotmac/ui";
 
 interface PartnerCustomerManagementProps {
@@ -42,6 +45,7 @@ export default function PartnerCustomerManagement({
         ...(tenantId && { tenantId }),
       });
 
+    // eslint-disable-next-line no-alert
       alert(
         `Customer created successfully!\nCustomer ID: ${result.customer_id}\nQuota remaining: ${result.quota_remaining}`,
       );
@@ -58,8 +62,11 @@ export default function PartnerCustomerManagement({
         billing_address: "",
       });
       setShowForm(false);
-    } catch (error: any) {
-      alert(`Failed to create customer: ${error.message}`);
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
+      // eslint-disable-next-line no-alert
+      alert(`Failed to create customer: ${err.message}`);
     }
   };
 

@@ -18,7 +18,6 @@ export enum DiagnosticType {
   TRACEROUTE = "traceroute",
 
   // Service-specific checks
-  RADIUS_SESSION = "radius_session",
   ONU_STATUS = "onu_status",
   CPE_STATUS = "cpe_status",
   IP_VERIFICATION = "ip_verification",
@@ -99,19 +98,11 @@ export interface ConnectivityCheckResults {
   status: "online" | "inactive";
   checks: {
     subscriber_active: boolean;
-    radius_auth: boolean;
     ip_allocated: boolean;
   };
   ip_address?: string;
   last_seen_seconds?: number;
   last_seen_hours?: number;
-}
-
-export interface RadiusSessionResults {
-  username: string;
-  active_sessions: number;
-  sessions: any[];
-  simultaneous_use_limit: number;
 }
 
 export interface ONUStatusResults {
@@ -152,11 +143,6 @@ export interface CPERestartResults {
 export interface HealthCheckResults {
   checks: {
     connectivity?: {
-      status: string;
-      summary?: string;
-      severity?: string;
-    };
-    radius?: {
       status: string;
       summary?: string;
       severity?: string;
@@ -219,13 +205,6 @@ export const DIAGNOSTIC_TOOLS: DiagnosticTool[] = [
     name: "Connectivity Check",
     description: "Check overall subscriber connectivity status",
     icon: "Wifi",
-    category: "check",
-  },
-  {
-    type: DiagnosticType.RADIUS_SESSION,
-    name: "RADIUS Sessions",
-    description: "View active RADIUS authentication sessions",
-    icon: "Key",
     category: "check",
   },
   {

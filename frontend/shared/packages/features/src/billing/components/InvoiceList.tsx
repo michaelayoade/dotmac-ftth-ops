@@ -19,8 +19,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
-import { formatCurrency } from "../utils";
 import type { Invoice } from "../types";
+import { formatCurrency } from "../utils";
 
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";

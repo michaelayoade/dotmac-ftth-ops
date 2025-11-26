@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
-import { Loader2, Upload, X } from "lucide-react";
+import {
+  Loader2,
+  Upload,
+  X,
+} from "lucide-react";
 import {
   useRecordCashPayment,
   useRecordCheckPayment,
@@ -232,7 +236,7 @@ export function PaymentRecordDialog({ open, onOpenChange, onSuccess }: PaymentRe
 
       onSuccess?.();
       resetForm();
-    } catch (error) {
+    } catch {
       // Error handled by hooks
     }
   };

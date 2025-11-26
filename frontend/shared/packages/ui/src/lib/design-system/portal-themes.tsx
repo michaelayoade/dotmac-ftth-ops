@@ -9,6 +9,7 @@
 
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useTheme } from "next-themes";
 
 import { portalAnimations } from "./tokens/animations";
 import { colorTokens, detectPortalFromRoute, type PortalType } from "./tokens/colors";
@@ -69,18 +70,92 @@ export const portalMetadata = {
 export interface PortalTheme {
   portal: PortalType;
   metadata: (typeof portalMetadata)[PortalType];
-  colors: (typeof colorTokens)[PortalType];
+  colors: PortalColorPalette;
   fontSize: (typeof portalFontSizes)[PortalType];
   spacing: (typeof portalSpacing)[PortalType];
   animations: (typeof portalAnimations)[PortalType];
   cssVars: Record<string, string>;
+  mode: "light" | "dark";
 }
 
 /**
  * Generate CSS custom properties for a portal theme
  */
-function generateCSSVars(portal: PortalType): Record<string, string> {
-  const colors = colorTokens[portal];
+type PortalColorPalette = {
+  primary: (typeof colorTokens)[PortalType]["primary"];
+  accent: { DEFAULT: string };
+  sidebar: (typeof colorTokens)[PortalType]["sidebar"];
+  surface: {
+    background: string;
+    foreground: string;
+    muted: string;
+    border: string;
+  };
+};
+
+const surfacePalette = {
+  light: {
+    background: "hsl(210 40% 98%)",
+    foreground: "hsl(222.2 47.4% 11.2%)",
+    muted: "hsl(210 16% 93%)",
+    border: "hsl(214.3 31.8% 91.4%)",
+  },
+  dark: {
+    background: "hsl(222.2 84% 4.9%)",
+    foreground: "hsl(210 40% 98%)",
+    muted: "hsl(217.2 32.6% 17.5%)",
+    border: "hsl(217.2 32.6% 20%)",
+  },
+} as const;
+
+const DARK_LIGHTNESS_SHIFT = 8;
+
+function adjustHslLightness(color: string, delta: number): string {
+  const match = color.match(/hsl\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%\s*\)/i);
+  if (!match) {
+    return color;
+  }
+
+  const [, hue, saturation, lightness] = match;
+  if (!lightness) {
+    return color;
+  }
+  const nextLightness = Math.min(100, Math.max(0, parseFloat(lightness) + delta));
+
+  return `hsl(${hue} ${saturation}% ${nextLightness}%)`;
+}
+
+function deriveDarkScale(
+  scale: (typeof colorTokens)[PortalType]["primary"],
+): (typeof colorTokens)[PortalType]["primary"] {
+  return Object.entries(scale).reduce(
+    (acc, [shade, value]) => ({
+      ...acc,
+      [shade]: adjustHslLightness(value, DARK_LIGHTNESS_SHIFT),
+    }),
+    scale,
+  ) as (typeof colorTokens)[PortalType]["primary"];
+}
+
+function getPortalPalette(portal: PortalType, mode: "light" | "dark"): PortalColorPalette {
+  const base = colorTokens[portal];
+  const primary =
+    mode === "dark" ? deriveDarkScale(base.primary) : (base.primary as PortalColorPalette["primary"]);
+  const accent =
+    mode === "dark"
+      ? adjustHslLightness(base.accent.DEFAULT, DARK_LIGHTNESS_SHIFT / 2)
+      : base.accent.DEFAULT;
+
+  return {
+    primary,
+    accent: { DEFAULT: accent },
+    sidebar: base.sidebar,
+    surface: surfacePalette[mode],
+  };
+}
+
+function generateCSSVars(palette: PortalColorPalette): Record<string, string> {
+  const colors = palette;
 
   return {
     // Primary color scale
@@ -97,6 +172,10 @@ function generateCSSVars(portal: PortalType): Record<string, string> {
 
     // Accent color
     "--portal-accent": colors.accent.DEFAULT,
+    "--portal-surface": colors.surface.background,
+    "--portal-surface-foreground": colors.surface.foreground,
+    "--portal-surface-muted": colors.surface.muted,
+    "--portal-surface-border": colors.surface.border,
 
     // Semantic colors (shared)
     "--portal-success": colorTokens.semantic.success,
@@ -129,8 +208,14 @@ const PortalThemeContext = createContext<PortalThemeContextValue | null>(null);
  */
 export function PortalThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
   const [currentPortal, setCurrentPortal] = useState<PortalType>(() =>
     detectPortalFromRoute(pathname || ""),
+  );
+  const colorMode: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
+  const palette = useMemo(
+    () => getPortalPalette(currentPortal, colorMode),
+    [colorMode, currentPortal],
   );
 
   // Auto-detect portal from route changes
@@ -141,7 +226,7 @@ export function PortalThemeProvider({ children }: { children: React.ReactNode })
 
   // Apply CSS variables to document root
   useEffect(() => {
-    const cssVars = generateCSSVars(currentPortal);
+    const cssVars = generateCSSVars(palette);
     const root = document.documentElement;
 
     Object.entries(cssVars).forEach(([key, value]) => {
@@ -158,19 +243,20 @@ export function PortalThemeProvider({ children }: { children: React.ReactNode })
       });
       root.removeAttribute("data-portal");
     };
-  }, [currentPortal]);
+  }, [currentPortal, palette]);
 
   const theme: PortalTheme = useMemo(
     () => ({
       portal: currentPortal,
       metadata: portalMetadata[currentPortal],
-      colors: colorTokens[currentPortal],
+      colors: palette,
       fontSize: portalFontSizes[currentPortal],
       spacing: portalSpacing[currentPortal],
       animations: portalAnimations[currentPortal],
-      cssVars: generateCSSVars(currentPortal),
+      cssVars: generateCSSVars(palette),
+      mode: colorMode,
     }),
-    [currentPortal],
+    [colorMode, currentPortal, palette],
   );
 
   const contextValue = useMemo(

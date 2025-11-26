@@ -33,8 +33,8 @@ export interface BillingPlan {
   currency: string;
   trial_days: number;
   is_active: boolean;
-  features?: Record<string, any>;
-  metadata?: Record<string, any>;
+  features?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -53,7 +53,7 @@ export interface ProductCatalogItem {
   usage_type?: string;
   usage_unit_name?: string;
   is_active: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -63,15 +63,15 @@ export interface PlanCreateRequest {
   billing_interval: "monthly" | "quarterly" | "annual";
   interval_count?: number;
   trial_days?: number;
-  features?: Record<string, any>;
-  metadata?: Record<string, any>;
+  features?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PlanUpdateRequest {
   display_name?: string;
   description?: string;
   trial_days?: number;
-  features?: Record<string, any>;
+  features?: Record<string, unknown>;
   is_active?: boolean;
 }
 
@@ -81,24 +81,28 @@ export interface PlanUpdateRequest {
 
 export const billingPlansKeys = {
   all: ["billing-plans"] as const,
-  plans: (filters?: any) => [...billingPlansKeys.all, "plans", filters] as const,
-  products: (filters?: any) => [...billingPlansKeys.all, "products", filters] as const,
+  plans: (filters?: unknown) => [...billingPlansKeys.all, "plans", filters] as const,
+  products: (filters?: unknown) => [...billingPlansKeys.all, "products", filters] as const,
 };
 
 // ============================================================================
 // Helper Functions for Response Normalization
 // ============================================================================
 
-function normalizePlansResponse(response: any): BillingPlan[] {
-  if (Array.isArray(response?.data)) return response.data;
-  if (response?.error) {
-    logger.warn("Plans response contains error", response.error);
+function normalizePlansResponse(response: unknown): BillingPlan[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res = response as any;
+  if (Array.isArray(res?.data)) return res.data;
+  if (res?.error) {
+    logger.warn("Plans response contains error", res.error);
   }
   return [];
 }
 
-function normalizeProductsResponse(response: any): ProductCatalogItem[] {
-  if (Array.isArray(response?.data)) return response.data;
+function normalizeProductsResponse(response: unknown): ProductCatalogItem[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res = response as any;
+  if (Array.isArray(res?.data)) return res.data;
   return [];
 }
 

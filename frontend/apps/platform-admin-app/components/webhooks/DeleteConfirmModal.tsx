@@ -6,6 +6,6 @@ interface DeleteConfirmModalProps {
   onConfirm: () => Promise<void>;
 }
 
-export function DeleteConfirmModal({ webhook, onClose, onConfirm }: DeleteConfirmModalProps) {
+export function DeleteConfirmModal({ webhook: _webhook, onClose: _onClose, onConfirm: _onConfirm }: DeleteConfirmModalProps) {
   return <div>DeleteConfirmModal Placeholder</div>;
 }

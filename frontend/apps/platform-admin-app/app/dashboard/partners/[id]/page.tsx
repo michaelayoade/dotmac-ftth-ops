@@ -6,6 +6,7 @@ export const dynamicParams = true;
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { usePartner, useCheckLicenseQuota } from "@/hooks/usePartners";
+import type { QuotaCheckResult } from "@/hooks/usePartners";
 import Link from "next/link";
 import CreatePartnerModal from "@/components/partners/CreatePartnerModal";
 import PartnerCustomerManagement from "@/components/partners/PartnerCustomerManagement";
@@ -16,11 +17,17 @@ export default function PartnerDetailPage() {
   const partnerId = params['id'] as string;
   const { data: partner, isLoading, error } = usePartner(partnerId);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "customers" | "commissions" | "referrals" | "quota"
-  >("overview");
+  type PartnerTab = "overview" | "customers" | "commissions" | "referrals" | "quota";
+  const [activeTab, setActiveTab] = useState<PartnerTab>("overview");
   const checkQuota = useCheckLicenseQuota();
-  const [quotaInfo, setQuotaInfo] = useState<any>(null);
+  const [quotaInfo, setQuotaInfo] = useState<QuotaCheckResult | null>(null);
+  const tabs: Array<{ id: PartnerTab; label: string }> = [
+    { id: "overview", label: "Overview" },
+    { id: "customers", label: "Customers" },
+    { id: "commissions", label: "Commissions" },
+    { id: "quota", label: "License Quota" },
+    { id: "referrals", label: "Referrals" },
+  ];
 
   const handleCheckQuota = async (requestedLicenses: number = 1) => {
     try {
@@ -29,8 +36,10 @@ export default function PartnerDetailPage() {
         requestedLicenses,
       });
       setQuotaInfo(result);
-    } catch (error: any) {
-      alert(`Failed to check quota: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      // eslint-disable-next-line no-alert
+      alert(`Failed to check quota: ${message}`);
     }
   };
 
@@ -102,12 +111,6 @@ export default function PartnerDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Link
-            href="/dashboard/partners/revenue"
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded-lg transition-colors"
-          >
-            View Revenue Dashboard
-          </Link>
           <button
             onClick={() => setShowEditModal(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg transition-colors"
@@ -162,18 +165,13 @@ export default function PartnerDetailPage() {
       {/* Tabs */}
       <div className="border-b border-border mb-6">
         <div className="flex gap-6">
-          {[
-            { id: "overview", label: "Overview" },
-            { id: "customers", label: "Customers" },
-            { id: "commissions", label: "Commissions" },
-            { id: "quota", label: "License Quota" },
-            { id: "referrals", label: "Referrals" },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab['id'] as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`pb-3 px-1 border-b-2 transition-colors ${
-                activeTab === tab['id']? "border-blue-600 dark:border-blue-400 text-foreground"
+                activeTab === tab.id
+                  ? "border-blue-600 dark:border-blue-400 text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >

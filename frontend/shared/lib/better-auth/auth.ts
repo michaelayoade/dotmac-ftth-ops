@@ -16,7 +16,17 @@ import { Pool } from "pg";
 
 type AuthInstance = ReturnType<typeof betterAuth>;
 
+const shouldBypassAuth = () =>
+  process.env['NODE_ENV'] === "test" ||
+  process.env['BETTER_AUTH_BYPASS'] === "true" ||
+  process.env['NEXT_PUBLIC_SKIP_BETTER_AUTH'] === "true" ||
+  process.env['E2E_AUTH_BYPASS'] === "true";
+
 const resolveAuthEnvironment = () => {
+  if (shouldBypassAuth()) {
+    return null;
+  }
+
   const databaseUrl = process.env['DATABASE_URL'] || process.env['DOTMAC_DATABASE_URL'];
   const authSecret = process.env['BETTER_AUTH_SECRET'] || process.env['JWT_SECRET'];
   const authUrl =
@@ -230,8 +240,29 @@ const roles = {
 /**
  * Better Auth instance with multi-tenant organization support
  */
+const createMockAuthInstance = (): AuthInstance => {
+  const noop = async () => ({ data: null, error: null });
+  const mock = {
+    signIn: { email: noop },
+    signUp: { email: noop },
+    signOut: noop,
+    useSession: () => ({ data: null, error: null, isPending: false, isRefetching: false, refetch: noop }),
+    useActiveOrganization: () => ({ data: null, error: null, isPending: false, isRefetching: false, refetch: noop }),
+    useListOrganizations: () => ({ data: [], error: null, isPending: false, isRefetching: false, refetch: noop }),
+    handlers: {},
+    $Infer: { Session: { session: {}, user: {} } },
+  } as unknown as AuthInstance;
+  return mock;
+};
+
 const createAuthInstance = (): AuthInstance => {
-  const { databaseUrl, authSecret, authUrl } = resolveAuthEnvironment();
+  const env = resolveAuthEnvironment();
+  if (!env) {
+    console.warn("[better-auth] Bypassing Better Auth initialization (test/bypass mode)");
+    return createMockAuthInstance();
+  }
+
+  const { databaseUrl, authSecret, authUrl } = env;
 
   return betterAuth({
     // Database configuration
@@ -302,7 +333,36 @@ const createAuthInstance = (): AuthInstance => {
       enabled: true,
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }) => {
-        // TODO: Implement email sending via your email service
+        const webhook = process.env['BETTER_AUTH_RESET_EMAIL_WEBHOOK'];
+        const secret = process.env['BETTER_AUTH_WEBHOOK_SECRET'];
+
+        if (webhook && typeof fetch === "function") {
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          if (secret) {
+            headers["X-Better-Auth-Webhook-Secret"] = secret;
+          }
+
+          try {
+            await fetch(webhook, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                email: user.email,
+                url,
+              }),
+            });
+            return;
+          } catch (err) {
+            console.error(
+              "[better-auth] Failed to send reset password email via webhook",
+              err,
+            );
+          }
+        }
+
+        // Fallback: log the reset URL for manual use in development
         console.log(`Reset password URL for ${user.email}: ${url}`);
       },
     },
@@ -346,22 +406,68 @@ const createAuthInstance = (): AuthInstance => {
         ac,
         roles: Object.values(roles) as any,
 
-        // Organization creation callback
         onCreate: async (organization: { id: string; name: string; slug?: string }) => {
+          const webhook = process.env['BETTER_AUTH_ORG_WEBHOOK_URL'];
+          const secret = process.env['BETTER_AUTH_WEBHOOK_SECRET'];
+
+          if (webhook && typeof fetch === "function") {
+            const headers: Record<string, string> = {
+              "Content-Type": "application/json",
+            };
+            if (secret) {
+              headers["X-Better-Auth-Webhook-Secret"] = secret;
+            }
+
+            try {
+              await fetch(webhook, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                  event: "organization.created",
+                  organization,
+                }),
+              });
+            } catch (err) {
+              console.error(
+                "[better-auth] Failed to send organization.created webhook",
+                err,
+              );
+            }
+          }
+
           console.log(`New organization created: ${organization.name}`);
-          // TODO: Initialize organization-specific resources
-          // - Create default roles
-          // - Set up billing account
-          // - Configure initial settings
         },
 
-        // Organization deletion callback
         onDelete: async (organization: { id: string; name: string; slug?: string }) => {
+          const webhook = process.env['BETTER_AUTH_ORG_WEBHOOK_URL'];
+          const secret = process.env['BETTER_AUTH_WEBHOOK_SECRET'];
+
+          if (webhook && typeof fetch === "function") {
+            const headers: Record<string, string> = {
+              "Content-Type": "application/json",
+            };
+            if (secret) {
+              headers["X-Better-Auth-Webhook-Secret"] = secret;
+            }
+
+            try {
+              await fetch(webhook, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                  event: "organization.deleted",
+                  organization,
+                }),
+              });
+            } catch (err) {
+              console.error(
+                "[better-auth] Failed to send organization.deleted webhook",
+                err,
+              );
+            }
+          }
+
           console.log(`Organization deleted: ${organization.name}`);
-          // TODO: Cleanup organization resources
-          // - Archive data
-          // - Cancel subscriptions
-          // - Notify members
         },
       }),
     ],

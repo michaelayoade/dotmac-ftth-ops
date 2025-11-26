@@ -22,7 +22,7 @@ function isBypassFlagEnabled(): boolean {
 
   if (typeof window !== "undefined") {
     const win = window as unknown as Record<string, unknown>;
-    return Boolean(win.__SKIP_BETTER_AUTH__ || win.__E2E_AUTH_BYPASS__);
+    return Boolean(win['__SKIP_BETTER_AUTH__'] || win['__E2E_AUTH_BYPASS__']);
   }
 
   return false;

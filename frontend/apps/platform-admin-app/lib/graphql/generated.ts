@@ -29,7 +29,7 @@ export type Scalars = {
   Float: { input: number; output: number };
   DateTime: { input: string; output: string };
   Decimal: { input: number; output: number };
-  JSON: { input: any; output: any };
+  JSON: { input: unknown; output: unknown };
 };
 
 export type ApiKeyMetrics = {
@@ -3225,7 +3225,7 @@ export type CustomerNetworkInfoQueryVariables = Exact<{
 
 export type CustomerNetworkInfoQuery = {
   __typename?: "Query";
-  customerNetworkInfo: any;
+  customerNetworkInfo: unknown;
 };
 
 export type CustomerDevicesQueryVariables = Exact<{
@@ -3236,7 +3236,7 @@ export type CustomerDevicesQueryVariables = Exact<{
 
 export type CustomerDevicesQuery = {
   __typename?: "Query";
-  customerDevices: any;
+  customerDevices: unknown;
 };
 
 export type CustomerTicketsQueryVariables = Exact<{
@@ -3247,7 +3247,7 @@ export type CustomerTicketsQueryVariables = Exact<{
 
 export type CustomerTicketsQuery = {
   __typename?: "Query";
-  customerTickets: any;
+  customerTickets: unknown;
 };
 
 export type CustomerBillingQueryVariables = Exact<{
@@ -3258,7 +3258,7 @@ export type CustomerBillingQueryVariables = Exact<{
 
 export type CustomerBillingQuery = {
   __typename?: "Query";
-  customerBilling: any;
+  customerBilling: unknown;
 };
 
 export type Customer360ViewQueryVariables = Exact<{
@@ -3267,10 +3267,10 @@ export type Customer360ViewQueryVariables = Exact<{
 
 export type Customer360ViewQuery = {
   __typename?: "Query";
-  customerNetworkInfo: any;
-  customerDevices: any;
-  customerTickets: any;
-  customerBilling: any;
+  customerNetworkInfo: unknown;
+  customerDevices: unknown;
+  customerTickets: unknown;
+  customerBilling: unknown;
   customer?: {
     __typename?: "Customer";
     id: string;
@@ -4801,7 +4801,7 @@ export type SubscriptionListQuery = {
       canceledAt?: string | null;
       endedAt?: string | null;
       customPrice?: number | null;
-      usageRecords: any;
+      usageRecords: unknown;
       createdAt: string;
       updatedAt: string;
       isActive: boolean;
@@ -4831,8 +4831,8 @@ export type SubscriptionListQuery = {
         isActive: boolean;
         hasTrial: boolean;
         hasSetupFee: boolean;
-        includedUsage: any;
-        overageRates: any;
+        includedUsage: unknown;
+        overageRates: unknown;
         createdAt: string;
         updatedAt: string;
       } | null;
@@ -4874,7 +4874,7 @@ export type SubscriptionDetailQuery = {
     canceledAt?: string | null;
     endedAt?: string | null;
     customPrice?: number | null;
-    usageRecords: any;
+    usageRecords: unknown;
     createdAt: string;
     updatedAt: string;
     isActive: boolean;
@@ -4904,8 +4904,8 @@ export type SubscriptionDetailQuery = {
       isActive: boolean;
       hasTrial: boolean;
       hasSetupFee: boolean;
-      includedUsage: any;
-      overageRates: any;
+      includedUsage: unknown;
+      overageRates: unknown;
       createdAt: string;
       updatedAt: string;
     } | null;
@@ -4984,8 +4984,8 @@ export type PlanListQuery = {
       updatedAt: string;
       hasTrial: boolean;
       hasSetupFee: boolean;
-      includedUsage: any;
-      overageRates: any;
+      includedUsage: unknown;
+      overageRates: unknown;
     }>;
   };
 };
@@ -5134,7 +5134,7 @@ export type UserListQuery = {
       primaryRole: string;
       createdAt: string;
       updatedAt: string;
-      metadata?: any | null;
+      metadata?: unknown | null;
       roles?: Array<{
         __typename?: "Role";
         id: string;
@@ -5209,7 +5209,7 @@ export type UserDetailQuery = {
     primaryRole: string;
     createdAt: string;
     updatedAt: string;
-    metadata?: any | null;
+    metadata?: unknown | null;
     roles: Array<{
       __typename?: "Role";
       id: string;

@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import {
-  X,
-  TestTube,
-  Loader2,
+  Calendar,
   CheckCircle,
-  XCircle,
+  Clock,
   Eye,
   EyeOff,
+  Loader2,
+  TestTube,
   Upload,
-  Calendar,
-  Clock,
+  X,
+  XCircle,
 } from "lucide-react";
 import type { FieldSpec, PluginConfig, PluginInstance, PluginTestResult } from "@/hooks/usePlugins";
 
@@ -354,7 +354,7 @@ export const PluginForm = ({
 }: PluginFormProps) => {
   const [selectedPlugin, setSelectedPlugin] = useState<PluginConfig | null>(plugin || null);
   const [instanceName, setInstanceName] = useState(instance?.instance_name || "");
-  const [configuration, setConfiguration] = useState<Record<string, any>>({});
+  const [configuration, setConfiguration] = useState<Record<string, unknown>>({});
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -365,7 +365,7 @@ export const PluginForm = ({
   useEffect(() => {
     if (instance && instance.has_configuration) {
       // Load existing configuration (would need API call to get unmasked values for editing)
-      const defaultConfig: Record<string, any> = {};
+      const defaultConfig: Record<string, unknown> = {};
       instance.config_schema.fields.forEach((field) => {
         if (field.default !== undefined) {
           defaultConfig[field.key] = field.default;
@@ -374,7 +374,7 @@ export const PluginForm = ({
       setConfiguration(defaultConfig);
     } else if (selectedPlugin) {
       // Set default values
-      const defaultConfig: Record<string, any> = {};
+      const defaultConfig: Record<string, unknown> = {};
       selectedPlugin.fields.forEach((field) => {
         if (field.default !== undefined) {
           defaultConfig[field.key] = field.default;
@@ -419,12 +419,14 @@ export const PluginForm = ({
       }
 
       if (value !== undefined && value !== null && value !== "") {
+        const stringValue = String(value);
+
         // Type-specific validation
-        if (field.type === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        if (field.type === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stringValue)) {
           newErrors[field.key] = "Invalid email format";
         }
 
-        if (field.type === "url" && value && !/^https?:\/\/.+/.test(value)) {
+        if (field.type === "url" && value && !/^https?:\/\/.+/.test(stringValue)) {
           newErrors[field.key] = "Invalid URL format";
         }
 
@@ -432,16 +434,16 @@ export const PluginForm = ({
           field.type === "phone" &&
           value &&
           field.pattern &&
-          !new RegExp(field.pattern).test(value)
+          !new RegExp(field.pattern).test(stringValue)
         ) {
           newErrors[field.key] = "Invalid phone number format";
         }
 
-        if (field.min_length != null && value.length < field.min_length) {
+        if (field.min_length != null && stringValue.length < field.min_length) {
           newErrors[field.key] = `Minimum length is ${field.min_length} characters`;
         }
 
-        if (field.max_length != null && value.length > field.max_length) {
+        if (field.max_length != null && stringValue.length > field.max_length) {
           newErrors[field.key] = `Maximum length is ${field.max_length} characters`;
         }
 

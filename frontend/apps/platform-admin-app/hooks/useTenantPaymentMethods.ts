@@ -64,7 +64,7 @@ export interface PaymentMethod {
   created_at: string;
   expires_at?: string;
 
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AddPaymentMethodRequest {

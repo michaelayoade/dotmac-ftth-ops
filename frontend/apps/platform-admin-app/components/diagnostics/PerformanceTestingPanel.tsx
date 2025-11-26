@@ -8,7 +8,6 @@ import {
   TrendingDown,
   Gauge,
   PlayCircle,
-  StopCircle,
   Loader2,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
@@ -17,8 +16,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
-import { DiagnosticType } from "@/types/diagnostics";
-
 interface PerformanceTestingPanelProps {
   subscriberId: string;
 }
@@ -83,11 +80,12 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
         title: "Bandwidth test completed",
         description: `Download: ${result.download_mbps.toFixed(2)} Mbps, Upload: ${result.upload_mbps.toFixed(2)} Mbps`,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       setBandwidthTest({ running: false, progress: 0, result: null });
       toast({
         title: "Bandwidth test failed",
-        description: err?.response?.data?.detail || "Test failed to complete",
+        description: error?.response?.data?.detail || "Test failed to complete",
         variant: "destructive",
       });
     }
@@ -118,11 +116,12 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
         title: "Latency test completed",
         description: `Avg: ${result.avg_latency_ms.toFixed(1)}ms, Jitter: ${result.jitter_ms.toFixed(1)}ms, Loss: ${result.packet_loss_percent.toFixed(1)}%`,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       setLatencyTest({ running: false, progress: 0, result: null });
       toast({
         title: "Latency test failed",
-        description: err?.response?.data?.detail || "Test failed to complete",
+        description: error?.response?.data?.detail || "Test failed to complete",
         variant: "destructive",
       });
     }

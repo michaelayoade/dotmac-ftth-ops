@@ -31,7 +31,16 @@ import {
 } from "@/lib/services/platform-admin-tenant-service";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
 import { tenantService } from "@/lib/services/tenant-service";
-import { Building2, ChevronLeft, ChevronRight, Eye, Key, Plus, Search, Users } from "lucide-react";
+import {
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Key,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react";
 import { TenantOnboardingWizard } from "@/components/tenant/TenantOnboardingWizard";
 import { setOperatorAccessToken } from "../../../../../../shared/utils/operatorAuth";
 
@@ -99,12 +108,16 @@ export function TenantManagement() {
       platformAdminTenantService.impersonateTenant(tenantId, impersonationDuration),
     onSuccess: (response, tenantId) => {
       if (response.access_token) {
+        // eslint-disable-next-line no-restricted-globals -- sessionStorage usage
+        // eslint-disable-next-line no-restricted-globals -- sessionStorage used for tenant switching
         sessionStorage.setItem("impersonation_token", response.access_token);
         setOperatorAccessToken(response.access_token);
       }
       if (response.refresh_token) {
+        // eslint-disable-next-line no-restricted-globals -- sessionStorage usage
         sessionStorage.setItem("impersonation_refresh_token", response.refresh_token);
       }
+      // eslint-disable-next-line no-restricted-globals -- sessionStorage usage
       sessionStorage.setItem("impersonating_tenant", tenantId);
 
       toast({

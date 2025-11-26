@@ -83,7 +83,7 @@ export interface Payment {
   processedAt: string | null;
   refundedAt: string | null;
   description: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Record<string, unknown> | null;
 }
 
 export interface PaymentConnection {

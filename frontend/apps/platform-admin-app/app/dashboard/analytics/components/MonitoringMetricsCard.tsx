@@ -1,7 +1,12 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@dotmac/ui";
-import { Activity, AlertTriangle, Clock, Users } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  Clock,
+  Users,
+} from "lucide-react";
 
 import { LineChart } from "@/components/charts/LineChart";
 import { useMonitoringMetrics } from "@/lib/graphql/hooks";

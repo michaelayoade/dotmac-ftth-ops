@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useMemo,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import { platformConfig } from "@/lib/config";
 
@@ -46,6 +54,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // eslint-disable-next-line no-restricted-globals -- localStorage usage
         const token = localStorage.getItem("customer_access_token");
 
         if (!token) {
@@ -73,12 +82,16 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
           });
         } else {
           // Token is invalid, clear it
+          // eslint-disable-next-line no-restricted-globals -- localStorage usage
           localStorage.removeItem("customer_access_token");
+          // eslint-disable-next-line no-restricted-globals -- localStorage usage
           localStorage.removeItem("customer_refresh_token");
         }
       } catch (err) {
         console.error("Auth check failed:", err);
+        // eslint-disable-next-line no-restricted-globals -- localStorage usage
         localStorage.removeItem("customer_access_token");
+        // eslint-disable-next-line no-restricted-globals -- localStorage usage
         localStorage.removeItem("customer_refresh_token");
       } finally {
         setLoading(false);
@@ -88,7 +101,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -109,8 +122,10 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       // Store tokens
+      // eslint-disable-next-line no-restricted-globals -- localStorage usage
       localStorage.setItem("customer_access_token", data.access_token);
       if (data.refresh_token) {
+        // eslint-disable-next-line no-restricted-globals -- localStorage usage
         localStorage.setItem("customer_refresh_token", data.refresh_token);
       }
 
@@ -133,11 +148,13 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     // Clear tokens
+    // eslint-disable-next-line no-restricted-globals -- localStorage usage
     localStorage.removeItem("customer_access_token");
+    // eslint-disable-next-line no-restricted-globals -- localStorage usage
     localStorage.removeItem("customer_refresh_token");
 
     // Clear user state
@@ -145,16 +162,19 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
 
     // Redirect to login
     router.push("/customer-portal/login");
-  };
+  }, [router]);
 
-  const value: CustomerAuthContextType = {
-    user,
-    loading,
-    error,
-    login,
-    logout,
-    isAuthenticated: !!user,
-  };
+  const value: CustomerAuthContextType = useMemo(
+    () => ({
+      user,
+      loading,
+      error,
+      login,
+      logout,
+      isAuthenticated: !!user,
+    }),
+    [error, loading, login, logout, user],
+  );
 
   return <CustomerAuthContext.Provider value={value}>{children}</CustomerAuthContext.Provider>;
 }
@@ -189,7 +209,7 @@ export function CustomerProtectedRoute({ children }: { children: ReactNode }) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>

@@ -11,11 +11,6 @@
  * import { useFeatureFlag, isFeatureEnabled } from '@/lib/feature-flags';
  *
  * // In React components
- * const { enabled } = useFeatureFlag('radius-sessions');
- * if (enabled) {
- *   return <RADIUSSessionsWidget />;
- * }
- *
  * // In utility functions
  * if (isFeatureEnabled('experimental-ui')) {
  *   // Use new UI
@@ -31,8 +26,6 @@ import { logger } from './logger';
  * Add new flags here as they are created
  */
 export type FeatureFlag =
-  | 'radius-sessions'
-  | 'radius-subscribers'
   | 'opentelemetry-tracing'
   | 'experimental-ui'
   | 'graphql-migration'
@@ -64,7 +57,7 @@ interface FeatureFlagConfig {
 
   /**
    * Environment variable name to override
-   * e.g., NEXT_PUBLIC_FEATURE_RADIUS_SESSIONS
+   * e.g., NEXT_PUBLIC_FEATURE_GRAPHQL_MIGRATION
    */
   envVar?: string;
 }
@@ -73,18 +66,6 @@ interface FeatureFlagConfig {
  * Feature flag definitions
  */
 const FEATURE_FLAGS: Record<FeatureFlag, FeatureFlagConfig> = {
-  'radius-sessions': {
-    name: 'radius-sessions',
-    description: 'Enable RADIUS sessions widget on dashboard',
-    defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_RADIUS_SESSIONS',
-  },
-  'radius-subscribers': {
-    name: 'radius-subscribers',
-    description: 'Enable RADIUS subscribers widget on dashboard',
-    defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_RADIUS_SUBSCRIBERS',
-  },
   'opentelemetry-tracing': {
     name: 'opentelemetry-tracing',
     description: 'Enable OpenTelemetry distributed tracing',

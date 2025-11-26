@@ -7,12 +7,12 @@ High-level service for managing workflows and orchestrations.
 # mypy: disable-error-code="assignment,arg-type,union-attr,var-annotated,no-overload-impl,empty-body"
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, cast
 from unittest.mock import MagicMock, Mock
 from uuid import uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
@@ -461,6 +461,8 @@ class OrchestrationService:
         limit: int = 50,
         offset: int = 0,
         skip: int | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
     ) -> WorkflowListResult:
         """
         List workflows with filtering.
@@ -483,6 +485,11 @@ class OrchestrationService:
 
         if status:
             filters.append(Workflow.status == status)
+
+        if date_from:
+            filters.append(Workflow.created_at >= date_from)
+        if date_to:
+            filters.append(Workflow.created_at <= date_to)
 
         if self._is_async:
             count_stmt = select(func.count(Workflow.id)).where(*filters)
@@ -736,6 +743,43 @@ class OrchestrationService:
         compensated += by_status.get(WorkflowStatus.PARTIALLY_COMPLETED.value, 0)
         compensated += by_status.get(WorkflowStatus.ROLLBACK_FAILED.value, 0)
 
+        # Active workflows for UI (pending|running|rolling_back)
+        active_workflows = (
+            by_status.get(WorkflowStatus.PENDING.value, 0)
+            + by_status.get(WorkflowStatus.RUNNING.value, 0)
+            + by_status.get(WorkflowStatus.ROLLING_BACK.value, 0)
+        )
+
+        # Recent failures in the last 24h (fallback to updated_at when failed_at is null)
+        lookback = datetime.now() - timedelta(hours=24)
+        if self._is_async:
+            recent_failures_stmt = select(func.count(Workflow.id)).where(
+                Workflow.tenant_id == self.tenant_id,
+                Workflow.status == WorkflowStatus.FAILED,
+                or_(
+                    and_(Workflow.failed_at.is_not(None), Workflow.failed_at >= lookback),
+                    Workflow.updated_at >= lookback,
+                ),
+            )
+            recent_failures = (await self._execute(recent_failures_stmt)).scalar_one_or_none() or 0
+        else:
+            try:
+                recent_query = self.db.query(func.count(Workflow.id))
+            except StopIteration:
+                recent_failures = 0
+            else:
+                recent_failures = (
+                    recent_query.filter(
+                        Workflow.tenant_id == self.tenant_id,
+                        Workflow.status == WorkflowStatus.FAILED,
+                        or_(
+                            and_(Workflow.failed_at.is_not(None), Workflow.failed_at >= lookback),
+                            Workflow.updated_at >= lookback,
+                        ),
+                    ).scalar()
+                    or 0
+                )
+
         return WorkflowStatsResponse(
             total_workflows=total,
             pending_workflows=by_status.get(WorkflowStatus.PENDING.value, 0),
@@ -747,6 +791,8 @@ class OrchestrationService:
             success_rate=success_rate,
             average_duration_seconds=avg_duration,
             total_compensations=compensated,
+            active_workflows=active_workflows,
+            recent_failures=recent_failures,
             by_type=by_type,
             by_status=by_status,
         )

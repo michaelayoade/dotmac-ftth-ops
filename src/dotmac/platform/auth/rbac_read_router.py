@@ -103,19 +103,36 @@ async def get_my_permissions(
                 )
             )
 
-    # Convert permission names to PermissionInfo objects
+    # Convert permission names to PermissionInfo objects.
+    # Support both legacy "category.resource.action" and Better Auth style "category.action"
+    # (and older "category:action") so the frontend always receives consistent category/action.
     permissions = []
     for perm_name in current_user.permissions or []:
-        # Parse permission name (e.g., "user.profile.read" -> category=user, resource=profile, action=read)
-        parts = perm_name.split(".")
-        category = parts[0] if len(parts) > 0 else ""
-        resource = parts[1] if len(parts) > 1 else ""
-        action = parts[2] if len(parts) > 2 else ""
+        category = ""
+        resource = ""
+        action = ""
+
+        if "." in perm_name:
+            parts = perm_name.split(".")
+            # "a.b.c" -> category=a, resource=b, action=c
+            # "a.b"   -> category=a, action=b
+            category = parts[0] if len(parts) > 0 else ""
+            if len(parts) >= 3:
+                resource = parts[1]
+                action = parts[2]
+            elif len(parts) == 2:
+                resource = ""
+                action = parts[1]
+        elif ":" in perm_name:
+            # Support older "category:action" style
+            parts = perm_name.split(":")
+            category = parts[0] if len(parts) > 0 else ""
+            action = parts[1] if len(parts) > 1 else ""
 
         permissions.append(
             PermissionInfo(
                 name=perm_name,
-                display_name=perm_name.replace(".", " ").title(),
+                display_name=perm_name.replace(".", " ").replace(":", " ").title(),
                 description="",
                 category=category,
                 resource=resource,

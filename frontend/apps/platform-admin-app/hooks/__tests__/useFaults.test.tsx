@@ -93,7 +93,7 @@ describe("useFaults", () => {
           alarm_id: "ALM-001",
           severity: "critical",
           status: "active",
-          source: "voltha",
+          source: "netbox",
           alarm_type: "ont_offline",
           title: "ONT Offline",
           description: "ONT is offline",
@@ -162,7 +162,7 @@ describe("useFaults", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
 
       const params: AlarmQueryParams = {
-        source: ["voltha", "genieacs"],
+        source: ["netbox", "genieacs"],
       };
 
       renderHook(() => useAlarms(params), {
@@ -171,7 +171,7 @@ describe("useFaults", () => {
 
       await waitFor(() => {
         const callArg = (apiClient.get as jest.Mock).mock.calls[0][0];
-        expect(callArg).toContain("source=voltha");
+        expect(callArg).toContain("source=netbox");
         expect(callArg).toContain("source=genieacs");
       });
     });
@@ -182,7 +182,7 @@ describe("useFaults", () => {
       const params: AlarmQueryParams = {
         severity: ["critical"],
         status: ["active"],
-        source: ["voltha"],
+        source: ["netbox"],
         alarm_type: "ont_offline",
         resource_type: "ont",
         resource_id: "ont-123",
@@ -203,7 +203,7 @@ describe("useFaults", () => {
         const callArg = (apiClient.get as jest.Mock).mock.calls[0][0];
         expect(callArg).toContain("severity=critical");
         expect(callArg).toContain("status=active");
-        expect(callArg).toContain("source=voltha");
+        expect(callArg).toContain("source=netbox");
         expect(callArg).toContain("alarm_type=ont_offline");
         expect(callArg).toContain("resource_type=ont");
         expect(callArg).toContain("resource_id=ont-123");
@@ -302,7 +302,7 @@ describe("useFaults", () => {
     });
 
     it("should handle different alarm sources", async () => {
-      const sources: AlarmSource[] = ["genieacs", "voltha", "netbox", "manual", "api"];
+      const sources: AlarmSource[] = ["genieacs", "netbox", "netbox", "manual", "api"];
 
       for (const source of sources) {
         const mockAlarm: Alarm = {
@@ -372,7 +372,7 @@ describe("useFaults", () => {
         alarm_id: "ALM-001",
         severity: "critical",
         status: "acknowledged",
-        source: "voltha",
+        source: "netbox",
         alarm_type: "ont_offline",
         title: "ONT Offline",
         description: "Detailed description",
@@ -439,7 +439,7 @@ describe("useFaults", () => {
         },
         by_source: {
           genieacs: 25,
-          voltha: 40,
+          netbox: 40,
           netbox: 15,
           manual: 10,
           api: 10,
@@ -481,7 +481,7 @@ describe("useFaults", () => {
         },
         by_source: {
           genieacs: 0,
-          voltha: 0,
+          netbox: 0,
           netbox: 0,
           manual: 0,
           api: 0,
@@ -523,7 +523,7 @@ describe("useFaults", () => {
         },
         by_source: {
           genieacs: 25,
-          voltha: 40,
+          netbox: 40,
           netbox: 15,
           manual: 10,
           api: 10,

@@ -18,8 +18,10 @@ from dotmac.platform.project_management.models import (
     Task,
     TaskStatus,
     Team,
+    TechnicianTeamMembership,
 )
 from dotmac.platform.project_management.schemas import (
+    DashboardMetrics,
     ProjectCreate,
     ProjectSearchParams,
     ProjectUpdate,
@@ -396,6 +398,120 @@ class ProjectManagementService:
 
         logger.info("task.deleted", task_id=task_id)
         return True
+
+    async def list_team_memberships(
+        self, limit: int = 50, offset: int = 0
+    ) -> tuple[list[TechnicianTeamMembership], int]:
+        """List technician-team memberships"""
+        base_filter = and_(
+            TechnicianTeamMembership.tenant_id == self.tenant_id,
+            TechnicianTeamMembership.is_active.is_(True),
+        )
+
+        query = (
+            select(TechnicianTeamMembership)
+            .where(base_filter)
+            .order_by(TechnicianTeamMembership.created_at.desc())
+        )
+        count_query = select(func.count()).select_from(query.subquery())
+
+        total = (await self.session.execute(count_query)).scalar() or 0
+        memberships = (
+            await self.session.execute(query.limit(limit).offset(offset))
+        ).scalars().all()
+
+        return list(memberships), total
+
+    async def get_dashboard_metrics(self) -> DashboardMetrics:
+        """Aggregate high-level project and task metrics for dashboards."""
+        base_project_filter = and_(Project.tenant_id == self.tenant_id, Project.deleted_at.is_(None))
+        base_task_filter = and_(Task.tenant_id == self.tenant_id, Task.deleted_at.is_(None))
+        now = datetime.now(UTC)
+
+        total_projects = (
+            await self.session.execute(select(func.count()).select_from(Project).where(base_project_filter))
+        ).scalar() or 0
+
+        active_statuses = [
+            ProjectStatus.PLANNED,
+            ProjectStatus.SCHEDULED,
+            ProjectStatus.IN_PROGRESS,
+            ProjectStatus.BLOCKED,
+            ProjectStatus.ON_HOLD,
+        ]
+        active_projects = (
+            await self.session.execute(
+                select(func.count()).where(and_(base_project_filter, Project.status.in_(active_statuses)))
+            )
+        ).scalar() or 0
+
+        completed_projects = (
+            await self.session.execute(
+                select(func.count()).where(and_(base_project_filter, Project.status == ProjectStatus.COMPLETED))
+            )
+        ).scalar() or 0
+
+        overdue_projects = (
+            await self.session.execute(
+                select(func.count()).where(
+                    and_(
+                        base_project_filter,
+                        Project.due_date.is_not(None),
+                        Project.due_date < now,
+                        Project.status.notin_(
+                            [ProjectStatus.COMPLETED, ProjectStatus.CANCELLED, ProjectStatus.FAILED]
+                        ),
+                    )
+                )
+            )
+        ).scalar() or 0
+
+        total_tasks = (
+            await self.session.execute(select(func.count()).select_from(Task).where(base_task_filter))
+        ).scalar() or 0
+
+        completed_tasks = (
+            await self.session.execute(
+                select(func.count()).where(and_(base_task_filter, Task.status == TaskStatus.COMPLETED))
+            )
+        ).scalar() or 0
+
+        in_progress_tasks = (
+            await self.session.execute(
+                select(func.count()).where(and_(base_task_filter, Task.status == TaskStatus.IN_PROGRESS))
+            )
+        ).scalar() or 0
+
+        overdue_tasks = (
+            await self.session.execute(
+                select(func.count()).where(
+                    and_(
+                        base_task_filter,
+                        Task.scheduled_end.is_not(None),
+                        Task.scheduled_end < now,
+                        Task.status.notin_(
+                            [
+                                TaskStatus.COMPLETED,
+                                TaskStatus.CANCELLED,
+                                TaskStatus.FAILED,
+                                TaskStatus.SKIPPED,
+                            ]
+                        ),
+                    )
+                )
+            )
+        ).scalar() or 0
+
+        return DashboardMetrics(
+            total_projects=total_projects,
+            active_projects=active_projects,
+            completed_projects=completed_projects,
+            overdue_projects=overdue_projects,
+            total_tasks=total_tasks,
+            completed_tasks=completed_tasks,
+            in_progress_tasks=in_progress_tasks,
+            overdue_tasks=overdue_tasks,
+        )
 
     # ========================================================================
     # Team CRUD Operations

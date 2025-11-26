@@ -12,7 +12,9 @@ import {
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { AvailablePlan } from "@/hooks/useTenantSubscription";
-import { Check } from "lucide-react";
+import {
+  Check,
+} from "lucide-react";
 
 interface PlanComparisonProps {
   plans: AvailablePlan[];
@@ -103,7 +105,7 @@ export const PlanComparison: React.FC<PlanComparisonProps> = ({
                       // Handle different feature value types
                       let featureText = key.replace(/_/g, " ");
                       if (typeof value === "boolean" && value) {
-                        featureText = featureText;
+                        // featureText = featureText // no-self-assign;
                       } else if (typeof value === "number") {
                         featureText = `${featureText}: ${value}`;
                       } else if (typeof value === "string") {

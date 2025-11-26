@@ -4,6 +4,7 @@
  */
 
 import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Service Worker Registration
@@ -11,7 +12,7 @@ import { platformConfig } from "@/lib/config";
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
-    console.log("Service workers not supported");
+    logger.warn("Service workers not supported");
     return null;
   }
 
@@ -20,7 +21,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       scope: "/",
     });
 
-    console.log("Service worker registered:", registration.scope);
+    logger.info("Service worker registered", { scope: registration.scope });
 
     // Check for updates every hour
     setInterval(() => {
@@ -43,12 +44,13 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     return registration;
   } catch (error) {
-    console.error("Service worker registration failed:", error);
+    logger.error("Service worker registration failed", error);
     return null;
   }
 }
 
 function notifyUpdate() {
+    // eslint-disable-next-line no-alert
   if (confirm("A new version is available. Reload to update?")) {
     window.location.reload();
   }
@@ -60,7 +62,6 @@ function notifyUpdate() {
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!("Notification" in window)) {
-    console.log("Notifications not supported");
     return "denied";
   }
 
@@ -83,7 +84,6 @@ export async function subscribeToPushNotifications(
     const permission = await requestNotificationPermission();
 
     if (permission !== "granted") {
-      console.log("Notification permission denied");
       return null;
     }
 
@@ -91,7 +91,7 @@ export async function subscribeToPushNotifications(
     const vapidPublicKey = process['env']['NEXT_PUBLIC_VAPID_PUBLIC_KEY'] || "";
 
     if (!vapidPublicKey) {
-      console.error("VAPID public key not configured");
+      logger.warn("VAPID public key not configured");
       return null;
     }
 
@@ -99,8 +99,6 @@ export async function subscribeToPushNotifications(
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as unknown as ArrayBuffer,
     });
-
-    console.log("Push subscription:", subscription);
 
     // Send subscription to server
     await fetch(platformConfig.api.buildUrl("/push/subscribe"), {
@@ -113,7 +111,7 @@ export async function subscribeToPushNotifications(
 
     return subscription;
   } catch (error) {
-    console.error("Failed to subscribe to push notifications:", error);
+    logger.error("Failed to subscribe to push notifications", error);
     return null;
   }
 }
@@ -141,7 +139,7 @@ export async function unsubscribeFromPushNotifications(
 
     return false;
   } catch (error) {
-    console.error("Failed to unsubscribe from push notifications:", error);
+    logger.error("Failed to unsubscribe from push notifications", error);
     return false;
   }
 }
@@ -169,7 +167,7 @@ export function showLocalNotification(
   options?: NotificationOptions
 ): void {
   if (!("Notification" in window)) {
-    console.log("Notifications not supported");
+    logger.warn("Notifications not supported");
     return;
   }
 
@@ -223,12 +221,16 @@ export async function saveOfflineTimeEntry(
     timestamp: new Date().toISOString(),
   });
 
-  console.log("Time entry saved offline");
+  logger.info("Time entry saved offline");
 
   // Request background sync
   if ("serviceWorker" in navigator && "sync" in ServiceWorkerRegistration.prototype) {
-    const registration = await navigator.serviceWorker.ready;
-    await (registration as any).sync.register("sync-time-entries");
+    const registration = (await navigator.serviceWorker.ready) as ServiceWorkerRegistration & {
+      sync?: { register: (tag: string) => Promise<void> };
+    };
+    if (registration.sync) {
+      await registration.sync.register("sync-time-entries");
+    }
   }
 }
 
@@ -243,12 +245,16 @@ export async function saveOfflineLocation(
     data: location,
   });
 
-  console.log("Location saved offline");
+  logger.info("Location saved offline");
 
   // Request background sync
   if ("serviceWorker" in navigator && "sync" in ServiceWorkerRegistration.prototype) {
-    const registration = await navigator.serviceWorker.ready;
-    await (registration as any).sync.register("sync-location");
+    const registration = (await navigator.serviceWorker.ready) as ServiceWorkerRegistration & {
+      sync?: { register: (tag: string) => Promise<void> };
+    };
+    if (registration.sync) {
+      await registration.sync.register("sync-location");
+    }
   }
 }
 
@@ -277,7 +283,7 @@ export async function clearPendingData(): Promise<void> {
   const tx2 = db.transaction("pending-locations", "readwrite");
   await tx2.objectStore("pending-locations").clear();
 
-  console.log("Pending data cleared");
+  logger.info("Pending data cleared");
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -355,7 +361,7 @@ export function setupInstallPrompt(
   });
 
   window.addEventListener("appinstalled", () => {
-    console.log("PWA installed");
+    logger.info("PWA installed");
     deferredPrompt = null;
   });
 }
@@ -365,10 +371,9 @@ export async function showInstallPrompt(): Promise<boolean> {
     return false;
   }
 
+    // eslint-disable-next-line no-alert
   await deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
-
-  console.log("Install prompt outcome:", outcome);
 
   deferredPrompt = null;
   return outcome === "accepted";
@@ -390,28 +395,35 @@ export async function registerPeriodicSync(
     !("serviceWorker" in navigator) ||
     !("periodicSync" in ServiceWorkerRegistration.prototype)
   ) {
-    console.log("Periodic background sync not supported");
     return false;
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
-    const status = await (navigator as any).permissions.query({
+    const registration = (await navigator.serviceWorker.ready) as ServiceWorkerRegistration & {
+      periodicSync?: { register: (tag: string, options: { minInterval: number }) => Promise<void> };
+    };
+    const permissionsApi = (navigator as Navigator & {
+      permissions?: {
+        query: (descriptor: { name: string }) => Promise<{ state: PermissionState }>;
+      };
+    }).permissions;
+
+    if (!permissionsApi) {
+      return false;
+    }
+
+    const status = await permissionsApi.query({
       name: "periodic-background-sync",
     });
 
     if (status.state === "granted") {
-      await (registration as any).periodicSync.register(tag, {
-        minInterval,
-      });
-      console.log(`Periodic sync registered: ${tag}`);
+      await registration.periodicSync?.register(tag, { minInterval });
       return true;
     } else {
-      console.log("Periodic background sync permission not granted");
       return false;
     }
   } catch (error) {
-    console.error("Failed to register periodic sync:", error);
+    logger.error("Failed to register periodic sync", error);
     return false;
   }
 }
@@ -425,12 +437,14 @@ export async function unregisterPeriodicSync(tag: string): Promise<boolean> {
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
-    await (registration as any).periodicSync.unregister(tag);
-    console.log(`Periodic sync unregistered: ${tag}`);
+    const registration = (await navigator.serviceWorker.ready) as ServiceWorkerRegistration & {
+      periodicSync?: { unregister: (tag: string) => Promise<void> };
+    };
+    await registration.periodicSync?.unregister(tag);
+    logger.info("Periodic sync unregistered", { tag });
     return true;
   } catch (error) {
-    console.error("Failed to unregister periodic sync:", error);
+    logger.error("Failed to unregister periodic sync", error);
     return false;
   }
 }

@@ -5,7 +5,7 @@
  * Initializes service worker, manages offline status, and handles push notifications
  */
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import {
   registerServiceWorker,
   subscribeToPushNotifications,
@@ -47,21 +47,7 @@ export default function PWAProvider({ children }: PWAProviderProps) {
   const [serviceWorkerRegistration, setServiceWorkerRegistration] =
     useState<ServiceWorkerRegistration | null>(null);
 
-  useEffect(() => {
-    // Initialize PWA features
-    initializePWA();
-
-    // Setup online/offline listeners
-    const cleanup = onOnlineStatusChange(setIsOnline);
-
-    // Check if installed
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-    setIsInstalled(isStandalone);
-
-    return cleanup;
-  }, []);
-
-  const initializePWA = async () => {
+  const initializePWA = useCallback(async () => {
     // Set initial online status
     setIsOnline(checkIsOnline());
 
@@ -70,39 +56,49 @@ export default function PWAProvider({ children }: PWAProviderProps) {
 
     if (registration) {
       setServiceWorkerRegistration(registration);
-      console.log("Service worker ready");
-
       // Check notification permission
       if ("Notification" in window) {
         setNotificationPermission(Notification.permission);
       }
     }
-  };
+  }, []);
 
-  const requestNotifications = async (): Promise<NotificationPermission> => {
+  useEffect(() => {
+    initializePWA();
+
+    const cleanup = onOnlineStatusChange(setIsOnline);
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    setIsInstalled(isStandalone);
+
+    return cleanup;
+  }, [initializePWA]);
+
+  const requestNotifications = useCallback(async (): Promise<NotificationPermission> => {
     const permission = await requestNotificationPermission();
     setNotificationPermission(permission);
     return permission;
-  };
+  }, []);
 
-  const subscribeToPush = async (): Promise<boolean> => {
+  const subscribeToPush = useCallback(async (): Promise<boolean> => {
     if (!serviceWorkerRegistration) {
-      console.error("Service worker not registered");
       return false;
     }
 
     const subscription = await subscribeToPushNotifications(serviceWorkerRegistration);
     return subscription !== null;
-  };
+  }, [serviceWorkerRegistration]);
 
-  const value: PWAContextType = {
-    isOnline,
-    isInstalled,
-    notificationPermission,
-    serviceWorkerRegistration,
-    requestNotifications,
-    subscribeToPush,
-  };
+  const value: PWAContextType = useMemo(
+    () => ({
+      isOnline,
+      isInstalled,
+      notificationPermission,
+      serviceWorkerRegistration,
+      requestNotifications,
+      subscribeToPush,
+    }),
+    [isInstalled, isOnline, notificationPermission, requestNotifications, serviceWorkerRegistration, subscribeToPush],
+  );
 
   return (
     <PWAContext.Provider value={value}>
@@ -111,7 +107,7 @@ export default function PWAProvider({ children }: PWAProviderProps) {
       {!isOnline && (
         <div className="fixed bottom-0 left-0 right-0 bg-yellow-500 text-white px-4 py-2 text-center text-sm font-medium z-50">
           <div className="flex items-center justify-center gap-2">
-            <div className="h-2 w-2 bg-white rounded-full animate-pulse"></div>
+            <div className="h-2 w-2 bg-white rounded-full animate-pulse" />
             You&apos;re offline. Some features may be unavailable.
           </div>
         </div>

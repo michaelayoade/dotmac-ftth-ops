@@ -20,16 +20,16 @@ import {
   AlertDialogTrigger,
 } from "@dotmac/ui";
 import {
-  CheckCircle2,
-  XCircle,
-  Settings,
-  Save,
-  RotateCcw,
-  TestTube,
   AlertCircle,
+  CheckCircle2,
   Eye,
   EyeOff,
   Info,
+  RotateCcw,
+  Save,
+  Settings,
+  TestTube,
+  XCircle,
 } from "lucide-react";
 import {
   useOSSConfiguration,
@@ -99,7 +99,9 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
     const updates: OSSServiceConfigUpdate = {};
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== undefined && value !== config?.config[key as keyof typeof config.config]) {
-        updates[key as keyof OSSServiceConfigUpdate] = value as any;
+        const typedKey = key as keyof OSSServiceConfigUpdate;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (updates as any)[typedKey] = value;
       }
     });
 

@@ -6,7 +6,6 @@
 
 import { CustomerDetailModal as SharedCustomerDetailModal } from "@dotmac/features/customers";
 import { Customer } from "@/types";
-import { useCustomer } from "@/hooks/useCustomersQuery";
 import { CustomerActivities } from "./CustomerActivities";
 import { CustomerNotes } from "./CustomerNotes";
 import { CustomerSubscriptions } from "./CustomerSubscriptions";
@@ -24,7 +23,7 @@ interface CustomerDetailModalProps {
 
 export function CustomerDetailModal(props: CustomerDetailModalProps) {
   // Create a wrapper function that matches the old API
-  const getCustomer = async (customerId: string, includeActivities?: boolean, includeNotes?: boolean) => {
+  const getCustomer = async () => {
     // The new hook is a query, so we'll use the customer from props
     // This is a compatibility shim - the modal should be refactored to use the query directly
     return props.customer;

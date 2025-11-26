@@ -42,37 +42,8 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("next-themes", () => {
-  const React = require("react");
-  const ThemeContext = React.createContext({
-    theme: "system",
-    setTheme: () => {},
-    resolvedTheme: "system",
-  });
-
-  const ThemeProvider = ({ children, defaultTheme = "system" }: any) => {
-    const [theme, setTheme] = React.useState(defaultTheme);
-
-    const value = React.useMemo(
-      () => ({
-        theme,
-        setTheme,
-        resolvedTheme: theme,
-      }),
-      [theme],
-    );
-
-    return React.createElement(ThemeContext.Provider, { value }, children);
-  };
-
-  const useTheme = () => React.useContext(ThemeContext);
-
-  return {
-    __esModule: true,
-    ThemeProvider,
-    useTheme,
-  };
-});
+// Note: next-themes mock removed to allow real implementation in tests
+// Individual tests can mock it if needed using jest.mock() in their test files
 
 // Mock ResizeObserver which might be used by components
 global.ResizeObserver = jest.fn().mockImplementation(() => ({

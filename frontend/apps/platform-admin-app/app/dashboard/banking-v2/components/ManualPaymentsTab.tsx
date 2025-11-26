@@ -15,16 +15,15 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
   Plus,
   Receipt,
-  CheckCircle,
-  XCircle,
-  Clock,
   Search,
-  FileText,
-  Download,
-  DollarSign,
-  Calendar,
+  XCircle,
 } from "lucide-react";
 import {
   Table,
@@ -35,10 +34,7 @@ import {
   TableRow,
 } from "@dotmac/ui";
 import { useManualPayments, useVerifyPayment } from "@/hooks/useBankAccounts";
-import type {
-  ManualPaymentResponse,
-  PaymentMethodType,
-} from "@/lib/services/bank-accounts-service";
+import type { PaymentMethodType } from "@/lib/services/bank-accounts-service";
 import { PaymentRecordDialog } from "./PaymentRecordDialog";
 import { format } from "date-fns";
 

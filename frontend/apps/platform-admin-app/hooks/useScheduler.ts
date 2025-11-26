@@ -59,11 +59,12 @@ export function useJobChains(
       try {
         const response = await apiClient.get<JobChain[]>("/jobs/scheduler/chains");
         return extractDataOrThrow(response);
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const error = err as { response?: { status?: number } };
         if (error?.response?.status === 404) {
           return [];
         }
-        throw error;
+        throw err;
       }
     },
     staleTime: 60_000,

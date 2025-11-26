@@ -23,7 +23,11 @@ import { Alert, AlertDescription } from "@dotmac/ui";
 import { RadioGroup, RadioGroupItem } from "@dotmac/ui";
 import { TenantSubscription, SubscriptionCancelRequest } from "@/hooks/useTenantSubscription";
 import { format } from "date-fns";
-import { AlertCircle, AlertTriangle, Info } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  Info,
+} from "lucide-react";
 import { logger } from "@/lib/logger";
 
 interface CancelSubscriptionModalProps {
@@ -46,6 +50,8 @@ const cancellationReasons = [
   { value: "other", label: "Other reason" },
 ];
 
+type CancelationType = "immediate" | "at_period_end";
+
 export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
   open,
   onOpenChange,
@@ -54,9 +60,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
   isCanceling = false,
   error = null,
 }) => {
-  const [cancelationType, setCancelationType] = useState<"immediate" | "at_period_end">(
-    "at_period_end",
-  );
+  const [cancelationType, setCancelationType] = useState<CancelationType>("at_period_end");
   const [reason, setReason] = useState<string>("");
   const [feedback, setFeedback] = useState<string>("");
   const [confirmationStep, setConfirmationStep] = useState<"details" | "confirm">("details");
@@ -159,7 +163,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
               <Label>When would you like to cancel?</Label>
               <RadioGroup
                 value={cancelationType}
-                onValueChange={(value: string) => setCancelationType(value as any)}
+                onValueChange={(value: string) => setCancelationType(value as CancelationType)}
               >
                 <div className="flex items-start space-x-3 rounded-md border p-4 hover:bg-muted/50 cursor-pointer">
                   <RadioGroupItem value="at_period_end" id="at_period_end" className="mt-1" />

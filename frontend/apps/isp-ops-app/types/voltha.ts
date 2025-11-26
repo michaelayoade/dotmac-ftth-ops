@@ -287,6 +287,7 @@ export interface VOLTHAHealthResponse {
   state: string;
   message: string;
   total_devices?: number;
+  alarm_actions_enabled?: boolean;
   total_logical_devices?: number;
 }
 

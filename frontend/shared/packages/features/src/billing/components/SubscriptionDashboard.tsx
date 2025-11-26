@@ -6,12 +6,12 @@
 
 "use client";
 
-import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
+import { format } from "date-fns";
 import {
   Calendar,
   CreditCard,
@@ -21,8 +21,9 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import React from "react";
+
 import { TenantSubscription, SubscriptionStatus } from "../types";
-import { format } from "date-fns";
 
 interface SubscriptionDashboardProps {
   subscription: TenantSubscription;

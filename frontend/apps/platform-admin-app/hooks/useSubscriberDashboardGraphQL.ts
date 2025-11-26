@@ -1,10 +1,8 @@
 /**
  * GraphQL-powered Subscriber Dashboard Hook
  *
- * This hook replaces 3 REST API calls with a single GraphQL query:
- * - useRadiusSubscribers()
- * - useRadiusSessions()
- * - useServiceInstances()
+ * This hook replaces multiple legacy REST API calls with a single GraphQL query
+ * to fetch subscribers, active sessions, and related metrics.
  *
  * Benefits:
  * - 66% fewer HTTP requests (3 → 1)
@@ -100,7 +98,7 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
  * Helper to get sessions for a specific subscriber
  */
 export function getSubscriberSessions(
-  subscribers: Array<{ username: string; sessions: any[] }>,
+  subscribers: Array<{ username: string; sessions: unknown[] }>,
   username: string,
 ) {
   const subscriber = subscribers.find((s) => s.username === username);

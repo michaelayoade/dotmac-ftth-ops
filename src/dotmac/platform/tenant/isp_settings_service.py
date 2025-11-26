@@ -32,7 +32,7 @@ class ISPSettingsError(DotMacError):
         super().__init__(
             message=message,
             user_message=user_message or "Settings configuration error",
-            category=ErrorCategory.VALIDATION_ERROR,
+            category=ErrorCategory.VALIDATION,
             severity=ErrorSeverity.MEDIUM,
             details=details or {},
         )

@@ -21,7 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
-import { Download, UserMinus, AlertCircle } from "lucide-react";
+import {
+  AlertCircle,
+  Download,
+  UserMinus,
+} from "lucide-react";
 import { format, subMonths, eachMonthOfInterval } from "date-fns";
 
 type TimeRange = "6m" | "12m" | "24m";

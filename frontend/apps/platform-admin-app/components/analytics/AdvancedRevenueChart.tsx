@@ -24,13 +24,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
-import { Download, TrendingUp, DollarSign } from "lucide-react";
+import {
+  DollarSign,
+  Download,
+  TrendingUp,
+} from "lucide-react";
 import {
   format,
   subDays,
   subMonths,
-  startOfMonth,
-  endOfMonth,
   eachDayOfInterval,
   eachMonthOfInterval,
 } from "date-fns";

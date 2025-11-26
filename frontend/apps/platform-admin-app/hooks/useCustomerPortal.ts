@@ -233,7 +233,7 @@ function createCustomerPortalApi(buildUrl: BuildApiUrl) {
     return response.json();
   },
 
-  fetchSettings: async (): Promise<any> => {
+  fetchSettings: async (): Promise<unknown> => {
     const response = await customerPortalFetch(buildUrl("/customer/settings"));
     if (!response.ok) {
       throw new Error("Failed to fetch settings");
@@ -241,7 +241,7 @@ function createCustomerPortalApi(buildUrl: BuildApiUrl) {
     return response.json();
   },
 
-  updateSettings: async (updates: any): Promise<any> => {
+  updateSettings: async (updates: unknown): Promise<unknown> => {
     const response = await customerPortalFetch(buildUrl("/customer/settings"), {
       method: "PUT",
       body: JSON.stringify(updates),
@@ -252,7 +252,7 @@ function createCustomerPortalApi(buildUrl: BuildApiUrl) {
     return response.json();
   },
 
-  changePassword: async (currentPassword: string, newPassword: string): Promise<any> => {
+  changePassword: async (currentPassword: string, newPassword: string): Promise<unknown> => {
     const response = await customerPortalFetch(
       buildUrl("/customer/change-password"),
       {
@@ -555,8 +555,8 @@ export function useCustomerSettings() {
       // Optimistically update
       if (previousSettings) {
         queryClient.setQueryData(customerPortalKeys.settings(), {
-          ...previousSettings,
-          ...updates,
+          ...(previousSettings as Record<string, unknown>),
+          ...(updates as Record<string, unknown>),
         });
       }
 

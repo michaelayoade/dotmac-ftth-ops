@@ -11,7 +11,12 @@ import {
 import { Badge } from "@dotmac/ui";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 import { Button } from "@dotmac/ui";
-import { AlertCircle, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
 import { useState } from "react";
 import { useDataImport } from "@/hooks/useDataImport";
 
@@ -57,7 +62,7 @@ export function FailureViewer({ jobId }: FailureViewerProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-12" />
               <TableHead className="w-20">Row</TableHead>
               <TableHead>Error Type</TableHead>
               <TableHead>Error Message</TableHead>

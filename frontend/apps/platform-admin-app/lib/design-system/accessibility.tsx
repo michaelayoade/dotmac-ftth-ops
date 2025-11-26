@@ -7,8 +7,7 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { usePortalTheme } from "@dotmac/ui";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 /**
  * Accessibility preferences
@@ -56,11 +55,10 @@ const AccessibilityContext = createContext<AccessibilityContextValue | null>(nul
  * Manages accessibility preferences and applies them to the document
  */
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
-  const { theme } = usePortalTheme();
   const [preferences, setPreferences] = useState<AccessibilityPreferences>(() => {
     // Load from localStorage if available
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("accessibility-preferences");
+      const stored = window.localStorage.getItem("accessibility-preferences");
       if (stored) {
         try {
           return { ...defaultPreferences, ...JSON.parse(stored) };
@@ -151,7 +149,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   // Save to localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("accessibility-preferences", JSON.stringify(preferences));
+      window.localStorage.setItem("accessibility-preferences", JSON.stringify(preferences));
     }
   }, [preferences]);
 
@@ -163,17 +161,16 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     setPreferences(defaultPreferences);
   };
 
-  return (
-    <AccessibilityContext.Provider
-      value={{
-        preferences,
-        updatePreferences,
-        resetPreferences,
-      }}
-    >
-      {children}
-    </AccessibilityContext.Provider>
+  const value = useMemo(
+    () => ({
+      preferences,
+      updatePreferences,
+      resetPreferences,
+    }),
+    [preferences],
   );
+
+  return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;
 }
 
 /**
@@ -207,10 +204,10 @@ export function LiveRegionAnnouncer() {
       setTimeout(() => setAnnouncement(""), 1000);
     };
 
-    window.addEventListener("announce" as any, handleAnnouncement);
+    window.addEventListener("announce", handleAnnouncement as EventListener);
 
     return () => {
-      window.removeEventListener("announce" as any, handleAnnouncement);
+      window.removeEventListener("announce", handleAnnouncement as EventListener);
     };
   }, [preferences.announcements]);
 
@@ -232,7 +229,7 @@ export function LiveRegionAnnouncer() {
 /**
  * Announce a message to screen readers
  */
-export function announce(message: string, priority: "polite" | "assertive" = "polite") {
+export function announce(message: string) {
   if (typeof window === "undefined") return;
 
   const event = new CustomEvent("announce", { detail: message });
@@ -258,7 +255,6 @@ export function SkipToMainContent() {
  */
 export function AccessibilitySettingsPanel({ className }: { className?: string }) {
   const { preferences, updatePreferences, resetPreferences } = useAccessibility();
-  const { theme } = usePortalTheme();
 
   return (
     <div className={className}>
@@ -340,6 +336,20 @@ export function AccessibilitySettingsPanel({ className }: { className?: string }
  */
 export function KeyboardShortcuts() {
   const [visible, setVisible] = useState(false);
+  const handleOverlayKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setVisible(false);
+    }
+  };
+  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      setVisible(false);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -364,11 +374,17 @@ export function KeyboardShortcuts() {
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-      onClick={() => setVisible(false)}
+      onClick={handleOverlayClick}
+      onKeyDown={handleOverlayKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label="Close keyboard shortcuts"
     >
       <div
         className="bg-background rounded-lg shadow-xl max-w-2xl w-full p-6"
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
       >
         <h2 className="text-2xl font-bold mb-4">Keyboard Shortcuts</h2>
 
@@ -425,6 +441,8 @@ export function checkColorContrast(
 ): { ratio: number; passesAA: boolean; passesAAA: boolean } {
   // This is a simplified version - in production, use a proper color contrast library
   // For now, we'll assume portal colors are already WCAG compliant
+  const _fg = foreground;
+  const _bg = background;
   return {
     ratio: 7.0, // Placeholder
     passesAA: true,

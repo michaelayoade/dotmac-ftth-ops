@@ -98,7 +98,7 @@ function PlatformAdminLayoutContent({ children }: PropsWithChildren) {
       }
     };
 
-    void loadHealth();
+    loadHealth().catch(() => {});
 
     return () => {
       mounted = false;

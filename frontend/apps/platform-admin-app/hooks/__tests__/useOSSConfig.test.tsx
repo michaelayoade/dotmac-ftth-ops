@@ -60,17 +60,17 @@ describe("Platform Admin useOSSConfig hooks", () => {
 
   it("fetches single and all OSS configurations", async () => {
     mockedService.getConfiguration.mockResolvedValue({
-      service: "voltha",
-      config: { url: "https://voltha", verify_ssl: true, timeout_seconds: 30, max_retries: 3 },
-      overrides: { url: "https://tenant-voltha" },
+      service: "genieacs",
+      config: { url: "https://genieacs", verify_ssl: true, timeout_seconds: 30, max_retries: 3 },
+      overrides: { url: "https://tenant-genieacs" },
     } as any);
-    mockedService.getAllConfigurations.mockResolvedValue([{ service: "voltha" }] as any);
+    mockedService.getAllConfigurations.mockResolvedValue([{ service: "genieacs" }] as any);
 
     const { wrapper } = createWrapper();
 
-    const singleHook = renderHook(() => useOSSConfiguration("voltha"), { wrapper });
+    const singleHook = renderHook(() => useOSSConfiguration("genieacs"), { wrapper });
     await waitFor(() => expect(singleHook.result.current.isSuccess).toBe(true));
-    expect(mockedService.getConfiguration).toHaveBeenCalledWith("voltha");
+    expect(mockedService.getConfiguration).toHaveBeenCalledWith("genieacs");
 
     const allHook = renderHook(() => useAllOSSConfigurations(), { wrapper });
     await waitFor(() => expect(allHook.result.current.isSuccess).toBe(true));
@@ -78,7 +78,7 @@ describe("Platform Admin useOSSConfig hooks", () => {
   });
 
   it("updates and resets configurations with cache invalidation", async () => {
-    mockedService.updateConfiguration.mockResolvedValue({ service: "voltha" } as any);
+    mockedService.updateConfiguration.mockResolvedValue({ service: "genieacs" } as any);
     mockedService.resetConfiguration.mockResolvedValue(undefined as any);
 
     const { wrapper, queryClient } = createWrapper();
@@ -88,22 +88,22 @@ describe("Platform Admin useOSSConfig hooks", () => {
 
     await act(async () => {
       await updateHook.result.current.mutateAsync({
-        service: "voltha",
+        service: "genieacs",
         updates: { url: "https://new" },
       });
     });
 
-    expect(mockedService.updateConfiguration).toHaveBeenCalledWith("voltha", { url: "https://new" });
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ossConfigKeys.detail("voltha") });
+    expect(mockedService.updateConfiguration).toHaveBeenCalledWith("genieacs", { url: "https://new" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ossConfigKeys.detail("genieacs") });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ossConfigKeys.allConfigurations() });
 
     const resetHook = renderHook(() => useResetOSSConfiguration(), { wrapper });
     await act(async () => {
-      await resetHook.result.current.mutateAsync("voltha");
+      await resetHook.result.current.mutateAsync("genieacs");
     });
 
-    expect(mockedService.resetConfiguration).toHaveBeenCalledWith("voltha");
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ossConfigKeys.detail("voltha") });
+    expect(mockedService.resetConfiguration).toHaveBeenCalledWith("genieacs");
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ossConfigKeys.detail("genieacs") });
   });
 
   it("tests OSS connection and forwards callbacks", async () => {
@@ -128,7 +128,7 @@ describe("Platform Admin useOSSConfig hooks", () => {
   });
 
   it("batch updates multiple configurations and invalidates root key", async () => {
-    mockedService.updateConfiguration.mockResolvedValue({ service: "voltha" } as any);
+    mockedService.updateConfiguration.mockResolvedValue({ service: "genieacs" } as any);
 
     const { wrapper, queryClient } = createWrapper();
     const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
@@ -137,7 +137,7 @@ describe("Platform Admin useOSSConfig hooks", () => {
 
     await act(async () => {
       await batchHook.result.current.mutateAsync([
-        { service: "voltha", updates: { verify_ssl: false } },
+        { service: "genieacs", updates: { verify_ssl: false } },
         { service: "ansible", updates: { timeout_seconds: 60 } },
       ]);
     });
@@ -169,9 +169,9 @@ describe("Platform Admin useOSSConfig hooks", () => {
   it("computes aggregated statistics for all services", async () => {
     mockedService.getAllConfigurations.mockResolvedValue([
       {
-        service: "voltha",
-        config: { url: "https://voltha" },
-        overrides: { url: "https://tenant-voltha" },
+        service: "genieacs",
+        config: { url: "https://genieacs" },
+        overrides: { url: "https://tenant-genieacs" },
       },
       {
         service: "netbox",

@@ -51,7 +51,7 @@ export interface UsageRecord {
   description?: string;
   device_id?: string;
   service_location?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -72,7 +72,7 @@ export interface UsageRecordCreate {
   description?: string;
   device_id?: string;
   service_location?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UsageRecordUpdate {
@@ -81,7 +81,7 @@ export interface UsageRecordUpdate {
   unit_price?: number;
   total_amount?: number;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UsageAggregate {
@@ -513,7 +513,7 @@ class UsageBillingService {
   formatCurrency(amount: number, currency: string = "USD"): string {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency,
     }).format(amount / 100);
   }
 

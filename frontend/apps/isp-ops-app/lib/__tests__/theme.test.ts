@@ -3,29 +3,9 @@
  * Tests theme configuration and application
  */
 
-import {
-  defaultTheme,
-  darkTheme,
-  getCurrentTheme,
-  type Theme,
-} from "../theme";
+import { defaultTheme, darkTheme, type Theme } from "../theme";
 
 describe("theme", () => {
-  let mockLocalStorage: { [key: string]: string };
-
-  beforeEach(() => {
-    // Mock localStorage
-    mockLocalStorage = {};
-    Storage.prototype.getItem = jest.fn((key) => mockLocalStorage[key] || null);
-    Storage.prototype.setItem = jest.fn((key, value) => {
-      mockLocalStorage[key] = value;
-    });
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe("Theme Constants", () => {
     it("should have default theme", () => {
       expect(defaultTheme).toBeDefined();
@@ -69,33 +49,6 @@ describe("theme", () => {
         expect(typeof color).toBe("string");
         expect(color).toContain("hsl");
       });
-    });
-  });
-
-  describe("getCurrentTheme", () => {
-    it("should return saved theme from localStorage", () => {
-      mockLocalStorage["theme"] = "dark";
-
-      expect(getCurrentTheme()).toBe("dark");
-    });
-
-    it("should return light as default", () => {
-      expect(getCurrentTheme()).toBe("light");
-    });
-
-    it("should return light when window is undefined", () => {
-      const originalWindow = global.window;
-      delete (global as any).window;
-
-      expect(getCurrentTheme()).toBe("light");
-
-      (global as any).window = originalWindow;
-    });
-
-    it("should handle null value in localStorage", () => {
-      mockLocalStorage["theme"] = null as any;
-
-      expect(getCurrentTheme()).toBe("light");
     });
   });
 

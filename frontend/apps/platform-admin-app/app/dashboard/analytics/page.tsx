@@ -8,7 +8,13 @@ import { BillingMetricsCard } from "./components/BillingMetricsCard";
 import { CustomerMetricsCard } from "./components/CustomerMetricsCard";
 import { MonitoringMetricsCard } from "./components/MonitoringMetricsCard";
 import { useDashboardOverview } from "@/lib/graphql/hooks";
-import { BarChart3, DollarSign, Users, Activity, RefreshCw } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  DollarSign,
+  RefreshCw,
+  Users,
+} from "lucide-react";
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState("30d");

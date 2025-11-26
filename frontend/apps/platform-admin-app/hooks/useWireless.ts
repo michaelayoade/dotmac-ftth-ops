@@ -111,11 +111,13 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
       logger.info("Creating access point", { data });
       await queryClient.cancelQueries({ queryKey: wirelessKeys.accessPoints(filters) });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to create access point", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create access point",
+        description: err.response?.data?.detail || "Failed to create access point",
         variant: "destructive",
       });
     },
@@ -153,14 +155,16 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.accessPoints(filters), context.previousData);
       }
       logger.error("Failed to update access point", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update access point",
+        description: err.response?.data?.detail || "Failed to update access point",
         variant: "destructive",
       });
     },
@@ -198,14 +202,16 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.accessPoints(filters), context.previousData);
       }
       logger.error("Failed to delete access point", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete access point",
+        description: err.response?.data?.detail || "Failed to delete access point",
         variant: "destructive",
       });
     },
@@ -229,11 +235,13 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
     onMutate: (id) => {
       logger.info("Rebooting access point", { id });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to reboot access point", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to reboot access point",
+        description: err.response?.data?.detail || "Failed to reboot access point",
         variant: "destructive",
       });
     },
@@ -317,14 +325,16 @@ export function useWirelessClients(options: UseWirelessClientsOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.clients(filters), context.previousData);
       }
       logger.error("Failed to disconnect client", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to disconnect client",
+        description: err.response?.data?.detail || "Failed to disconnect client",
         variant: "destructive",
       });
     },
@@ -396,11 +406,13 @@ export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
       logger.info("Creating coverage zone", { data });
       await queryClient.cancelQueries({ queryKey: wirelessKeys.coverageZones(filters) });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to create coverage zone", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create coverage zone",
+        description: err.response?.data?.detail || "Failed to create coverage zone",
         variant: "destructive",
       });
     },
@@ -438,14 +450,16 @@ export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.coverageZones(filters), context.previousData);
       }
       logger.error("Failed to update coverage zone", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update coverage zone",
+        description: err.response?.data?.detail || "Failed to update coverage zone",
         variant: "destructive",
       });
     },
@@ -483,14 +497,16 @@ export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.coverageZones(filters), context.previousData);
       }
       logger.error("Failed to delete coverage zone", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete coverage zone",
+        description: err.response?.data?.detail || "Failed to delete coverage zone",
         variant: "destructive",
       });
     },
@@ -564,11 +580,13 @@ export function useRFAnalytics(options: UseRFAnalyticsOptions = {}) {
     onMutate: (accessPointId) => {
       logger.info("Running spectrum analysis", { accessPointId });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to run spectrum analysis", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to run spectrum analysis",
+        description: err.response?.data?.detail || "Failed to run spectrum analysis",
         variant: "destructive",
       });
     },
@@ -638,11 +656,13 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
       logger.info("Creating site survey", { data });
       await queryClient.cancelQueries({ queryKey: wirelessKeys.siteSurveys(filters) });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to create site survey", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create site survey",
+        description: err.response?.data?.detail || "Failed to create site survey",
         variant: "destructive",
       });
     },
@@ -680,14 +700,16 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.siteSurveys(filters), context.previousData);
       }
       logger.error("Failed to update site survey", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update site survey",
+        description: err.response?.data?.detail || "Failed to update site survey",
         variant: "destructive",
       });
     },
@@ -725,14 +747,16 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.siteSurveys(filters), context.previousData);
       }
       logger.error("Failed to delete site survey", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete site survey",
+        description: err.response?.data?.detail || "Failed to delete site survey",
         variant: "destructive",
       });
     },
@@ -805,11 +829,13 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
       logger.info("Creating SSID", { data });
       await queryClient.cancelQueries({ queryKey: wirelessKeys.ssids(filters) });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error("Failed to create SSID", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to create SSID",
+        description: err.response?.data?.detail || "Failed to create SSID",
         variant: "destructive",
       });
     },
@@ -845,14 +871,16 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.ssids(filters), context.previousData);
       }
       logger.error("Failed to update SSID", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to update SSID",
+        description: err.response?.data?.detail || "Failed to update SSID",
         variant: "destructive",
       });
     },
@@ -888,14 +916,16 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
 
       return { previousData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(wirelessKeys.ssids(filters), context.previousData);
       }
       logger.error("Failed to delete SSID", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to delete SSID",
+        description: err.response?.data?.detail || "Failed to delete SSID",
         variant: "destructive",
       });
     },
@@ -940,11 +970,13 @@ export function useWirelessInfrastructureStats() {
     staleTime: 30000, // 30 seconds - stats change frequently
     retry: 2,
     meta: {
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         logger.error("Failed to fetch wireless statistics", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
         toast({
           title: "Error",
-          description: error.response?.data?.detail || "Failed to fetch wireless statistics",
+          description: err.response?.data?.detail || "Failed to fetch wireless statistics",
           variant: "destructive",
         });
       },

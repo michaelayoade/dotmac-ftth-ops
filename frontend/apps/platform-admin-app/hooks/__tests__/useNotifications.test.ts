@@ -785,7 +785,7 @@ describe("useNotificationTemplates", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      let preview: any;
+      let preview: unknown;
       await act(async () => {
         preview = await result.current.renderTemplatePreview("template-1", {
           company_name: "Acme Corp",
@@ -810,7 +810,7 @@ describe("useNotificationTemplates", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      let preview: any;
+      let preview: unknown;
       await act(async () => {
         preview = await result.current.renderTemplatePreview("template-1", {});
       });

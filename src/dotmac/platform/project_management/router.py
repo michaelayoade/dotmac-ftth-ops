@@ -18,7 +18,7 @@ from dotmac.platform.auth.rbac_dependencies import (
     require_field_service_team_manage,
     require_field_service_team_read,
 )
-from dotmac.platform.db import get_db
+from dotmac.platform.db import get_async_session
 from dotmac.platform.project_management.schemas import (
     ProjectCreate,
     ProjectListResponse,
@@ -35,6 +35,9 @@ from dotmac.platform.project_management.schemas import (
     TeamListResponse,
     TeamResponse,
     TeamUpdate,
+    DashboardMetrics,
+    TeamMembershipListResponse,
+    TechnicianTeamMembershipResponse,
 )
 from dotmac.platform.project_management.service import ProjectManagementService
 
@@ -57,11 +60,22 @@ def _require_tenant_id(user: UserInfo) -> str:
 # ============================================================================
 
 
+@router.get("/metrics", response_model=DashboardMetrics)
+async def get_project_metrics(
+    current_user: UserInfo = Depends(require_field_service_project_read),
+    session: AsyncSession = Depends(get_async_session),
+) -> DashboardMetrics:
+    """Return aggregate project/task metrics for dashboards."""
+    tenant_id = _require_tenant_id(current_user)
+    service = ProjectManagementService(session, tenant_id)
+    return await service.get_dashboard_metrics()
+
+
 @router.post("/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
     data: ProjectCreate,
     current_user: UserInfo = Depends(require_field_service_project_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectResponse:
     """
     Create a new project.
@@ -91,7 +105,7 @@ async def get_project(
     project_id: UUID,
     include_tasks: bool = Query(default=False, description="Include project tasks"),
     current_user: UserInfo = Depends(require_field_service_project_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectWithTasks:
     """Get project by ID with optional tasks"""
     tenant_id = _require_tenant_id(current_user)
@@ -118,7 +132,7 @@ async def list_projects(
     limit: int = Query(default=50, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: UserInfo = Depends(require_field_service_project_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectListResponse:
     """
     List projects with filtering and pagination.
@@ -158,7 +172,7 @@ async def update_project(
     project_id: UUID,
     data: ProjectUpdate,
     current_user: UserInfo = Depends(require_field_service_project_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ProjectResponse:
     """Update project"""
     tenant_id = _require_tenant_id(current_user)
@@ -178,7 +192,7 @@ async def update_project(
 async def delete_project(
     project_id: UUID,
     current_user: UserInfo = Depends(require_field_service_project_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete project (soft delete)"""
     tenant_id = _require_tenant_id(current_user)
@@ -203,7 +217,7 @@ async def delete_project(
 async def create_task(
     data: TaskCreate,
     current_user: UserInfo = Depends(require_field_service_task_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TaskResponse:
     """
     Create a new task within a project.
@@ -233,7 +247,7 @@ async def create_task(
 async def get_task(
     task_id: UUID,
     current_user: UserInfo = Depends(require_field_service_task_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TaskResponse:
     """Get task by ID"""
     tenant_id = _require_tenant_id(current_user)
@@ -260,7 +274,7 @@ async def list_tasks(
     limit: int = Query(default=100, le=200),
     offset: int = Query(default=0, ge=0),
     current_user: UserInfo = Depends(require_field_service_task_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TaskListResponse:
     """
     List tasks with filtering and pagination.
@@ -300,7 +314,7 @@ async def update_task(
     task_id: UUID,
     data: TaskUpdate,
     current_user: UserInfo = Depends(require_field_service_task_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TaskResponse:
     """Update task"""
     tenant_id = _require_tenant_id(current_user)
@@ -320,7 +334,7 @@ async def update_task(
 async def delete_task(
     task_id: UUID,
     current_user: UserInfo = Depends(require_field_service_task_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete task (soft delete)"""
     tenant_id = _require_tenant_id(current_user)
@@ -345,7 +359,7 @@ async def delete_task(
 async def create_team(
     data: TeamCreate,
     current_user: UserInfo = Depends(require_field_service_team_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TeamResponse:
     """
     Create a new team.
@@ -373,7 +387,7 @@ async def create_team(
 async def get_team(
     team_id: UUID,
     current_user: UserInfo = Depends(require_field_service_team_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TeamResponse:
     """Get team by ID"""
     tenant_id = _require_tenant_id(current_user)
@@ -396,7 +410,7 @@ async def list_teams(
     limit: int = Query(default=50, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: UserInfo = Depends(require_field_service_team_read),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TeamListResponse:
     """
     List teams with filtering.
@@ -417,12 +431,31 @@ async def list_teams(
     )
 
 
+@router.get("/teams/members", response_model=TeamMembershipListResponse)
+async def list_team_members(
+    limit: int = Query(default=50, le=200),
+    offset: int = Query(default=0, ge=0),
+    current_user: UserInfo = Depends(require_field_service_team_read),
+    session: AsyncSession = Depends(get_async_session),
+) -> TeamMembershipListResponse:
+    """List technician-to-team memberships"""
+    tenant_id = _require_tenant_id(current_user)
+    service = ProjectManagementService(session, tenant_id)
+    memberships, total = await service.list_team_memberships(limit=limit, offset=offset)
+    return TeamMembershipListResponse(
+        memberships=[TechnicianTeamMembershipResponse.model_validate(m) for m in memberships],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
 @router.patch("/teams/{team_id}", response_model=TeamResponse)
 async def update_team(
     team_id: UUID,
     data: TeamUpdate,
     current_user: UserInfo = Depends(require_field_service_team_manage),
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TeamResponse:
     """Update team"""
     tenant_id = _require_tenant_id(current_user)

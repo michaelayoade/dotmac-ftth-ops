@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -30,7 +30,7 @@ from .events import (
     emit_ticket_message_added,
     emit_ticket_status_changed,
 )
-from .models import Ticket, TicketActorType, TicketMessage, TicketStatus
+from .models import Ticket, TicketActorType, TicketMessage, TicketPriority, TicketStatus
 from .schemas import AgentPerformanceMetrics, TicketCreate, TicketMessageCreate, TicketUpdate
 
 logger = structlog.get_logger(__name__)
@@ -192,6 +192,8 @@ class TicketService:
         current_user: UserInfo,
         tenant_id: str | None,
         status: TicketStatus | None = None,
+        priority: TicketPriority | None = None,
+        search: str | None = None,
         include_messages: bool = False,
     ) -> list[Ticket]:
         """List tickets visible to the current actor."""
@@ -221,6 +223,18 @@ class TicketService:
 
         if status:
             query = query.where(Ticket.status == status)
+
+        if priority:
+            query = query.where(Ticket.priority == priority)
+
+        if search:
+            term = f"%{search.lower()}%"
+            query = query.where(
+                or_(
+                    func.lower(Ticket.subject).like(term),
+                    func.lower(Ticket.ticket_number).like(term),
+                )
+            )
 
         query = query.order_by(Ticket.created_at.desc())
 
@@ -324,6 +338,100 @@ class TicketService:
 
         # Reload with messages to ensure consistent ordering/state
         return await self.get_ticket(ticket.id, current_user, tenant_id, include_messages=True)
+
+    async def get_ticket_counts(
+        self,
+        current_user: UserInfo,
+        tenant_id: str | None,
+    ) -> dict[str, int]:
+        """Return ticket counts by status for the current actor/tenant."""
+        await self._resolve_actor_context(current_user, tenant_id)
+
+        stmt = select(
+            func.count(Ticket.id).label("total"),
+            func.sum(case((Ticket.status == TicketStatus.OPEN, 1), else_=0)).label("open"),
+            func.sum(case((Ticket.status == TicketStatus.IN_PROGRESS, 1), else_=0)).label(
+                "in_progress"
+            ),
+            func.sum(case((Ticket.status == TicketStatus.WAITING, 1), else_=0)).label("waiting"),
+            func.sum(case((Ticket.status == TicketStatus.RESOLVED, 1), else_=0)).label(
+                "resolved"
+            ),
+            func.sum(case((Ticket.status == TicketStatus.CLOSED, 1), else_=0)).label("closed"),
+        )
+
+        if tenant_id:
+            stmt = stmt.where(Ticket.tenant_id == tenant_id)
+
+        result = await self.session.execute(stmt)
+        row = result.one()
+        return {
+            "total_tickets": row.total or 0,
+            "open_tickets": row.open or 0,
+            "in_progress_tickets": row.in_progress or 0,
+            "waiting_tickets": row.waiting or 0,
+            "resolved_tickets": row.resolved or 0,
+            "closed_tickets": row.closed or 0,
+        }
+
+    async def get_ticket_metrics(
+        self,
+        current_user: UserInfo,
+        tenant_id: str | None,
+    ) -> dict[str, Any]:
+        """Return dashboard-friendly ticket metrics grouped by status, priority, and type."""
+        await self._resolve_actor_context(current_user, tenant_id)
+
+        # Status and priority counts in a single query
+        stmt = select(
+            func.count(Ticket.id).label("total"),
+            func.sum(case((Ticket.status == TicketStatus.OPEN, 1), else_=0)).label("open"),
+            func.sum(case((Ticket.status == TicketStatus.IN_PROGRESS, 1), else_=0)).label(
+                "in_progress"
+            ),
+            func.sum(case((Ticket.status == TicketStatus.WAITING, 1), else_=0)).label("waiting"),
+            func.sum(case((Ticket.status == TicketStatus.RESOLVED, 1), else_=0)).label("resolved"),
+            func.sum(case((Ticket.status == TicketStatus.CLOSED, 1), else_=0)).label("closed"),
+            func.sum(case((Ticket.priority == TicketPriority.LOW, 1), else_=0)).label("low"),
+            func.sum(case((Ticket.priority == TicketPriority.NORMAL, 1), else_=0)).label("normal"),
+            func.sum(case((Ticket.priority == TicketPriority.HIGH, 1), else_=0)).label("high"),
+            func.sum(case((Ticket.priority == TicketPriority.URGENT, 1), else_=0)).label("urgent"),
+            func.sum(case((Ticket.sla_breached.is_(True), 1), else_=0)).label("sla_breached"),
+        )
+
+        if tenant_id:
+            stmt = stmt.where(Ticket.tenant_id == tenant_id)
+
+        result = await self.session.execute(stmt)
+        row = result.one()
+
+        # Group counts by type separately (handle NULL ticket_type)
+        type_stmt = select(Ticket.ticket_type, func.count(Ticket.id)).group_by(Ticket.ticket_type)
+        if tenant_id:
+            type_stmt = type_stmt.where(Ticket.tenant_id == tenant_id)
+        type_rows = await self.session.execute(type_stmt)
+        by_type = {
+            ticket_type.value if ticket_type else "unspecified": count
+            for ticket_type, count in type_rows
+            if count
+        }
+
+        return {
+            "total": row.total or 0,
+            "open": row.open or 0,
+            "in_progress": row.in_progress or 0,
+            "waiting": row.waiting or 0,
+            "resolved": row.resolved or 0,
+            "closed": row.closed or 0,
+            "sla_breached": row.sla_breached or 0,
+            "by_priority": {
+                "low": row.low or 0,
+                "normal": row.normal or 0,
+                "high": row.high or 0,
+                "urgent": row.urgent or 0,
+            },
+            "by_type": by_type,
+        }
 
     async def update_ticket(
         self,
@@ -503,6 +611,15 @@ class TicketService:
                     partner_id=None,
                     customer_id=customer.id,
                 )
+            # Fall back to role-based customer context when no DB record is linked
+            if "customer" in (current_user.roles or []):
+                return TicketActorContext(
+                    actor_type=TicketActorType.CUSTOMER,
+                    user_uuid=user_uuid,
+                    tenant_id=tenant_scope,
+                    partner_id=None,
+                    customer_id=None,
+                )
 
         return TicketActorContext(
             actor_type=TicketActorType.TENANT,
@@ -543,10 +660,6 @@ class TicketService:
     async def _resolve_customer_id(self, context: TicketActorContext) -> UUID | None:
         """Determine associated customer if the actor is a customer."""
         if context.actor_type == TicketActorType.CUSTOMER:
-            if not context.customer_id:
-                raise TicketValidationError(
-                    "Customer context missing for customer-originated ticket."
-                )
             return context.customer_id
         return None
 

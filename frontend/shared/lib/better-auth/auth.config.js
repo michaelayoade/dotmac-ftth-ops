@@ -175,6 +175,34 @@ const createAuthInstance = () => {
       enabled: true,
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }) => {
+        const webhook = process.env.BETTER_AUTH_RESET_EMAIL_WEBHOOK;
+        const secret = process.env.BETTER_AUTH_WEBHOOK_SECRET;
+
+        if (webhook && typeof fetch === "function") {
+          const headers = {
+            "Content-Type": "application/json",
+            ...(secret ? { "X-Better-Auth-Webhook-Secret": secret } : {}),
+          };
+
+          try {
+            await fetch(webhook, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                email: user.email,
+                url,
+              }),
+            });
+            return;
+          } catch (err) {
+            console.error(
+              "[better-auth-config] Failed to send reset password email via webhook",
+              err,
+            );
+          }
+        }
+
+        // Fallback for development
         console.log(`Reset password URL for ${user.email}: ${url}`);
       },
     },
@@ -214,9 +242,61 @@ const createAuthInstance = () => {
           console.log(`User ${user.email} removed from ${organization.name}`);
         },
         onOrganizationCreated: async ({ organization }) => {
+          const webhook = process.env.BETTER_AUTH_ORG_WEBHOOK_URL;
+          const secret = process.env.BETTER_AUTH_WEBHOOK_SECRET;
+
+          if (webhook && typeof fetch === "function") {
+            const headers = {
+              "Content-Type": "application/json",
+              ...(secret ? { "X-Better-Auth-Webhook-Secret": secret } : {}),
+            };
+
+            try {
+              await fetch(webhook, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                  event: "organization.created",
+                  organization,
+                }),
+              });
+            } catch (err) {
+              console.error(
+                "[better-auth-config] Failed to send organization.created webhook",
+                err,
+              );
+            }
+          }
+
           console.log(`Organization created: ${organization.name}`);
         },
         onOrganizationDeleted: async ({ organization }) => {
+          const webhook = process.env.BETTER_AUTH_ORG_WEBHOOK_URL;
+          const secret = process.env.BETTER_AUTH_WEBHOOK_SECRET;
+
+          if (webhook && typeof fetch === "function") {
+            const headers = {
+              "Content-Type": "application/json",
+              ...(secret ? { "X-Better-Auth-Webhook-Secret": secret } : {}),
+            };
+
+            try {
+              await fetch(webhook, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                  event: "organization.deleted",
+                  organization,
+                }),
+              });
+            } catch (err) {
+              console.error(
+                "[better-auth-config] Failed to send organization.deleted webhook",
+                err,
+              );
+            }
+          }
+
           console.log(`Organization deleted: ${organization.name}`);
         },
       }),

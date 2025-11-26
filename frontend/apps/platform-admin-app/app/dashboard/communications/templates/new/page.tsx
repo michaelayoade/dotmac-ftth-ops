@@ -24,7 +24,13 @@ import {
 } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import { ArrowLeft, Save, Loader2, Plus, X, Eye } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  Plus,
+  X,
+} from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import {
   CommunicationChannel,
@@ -47,7 +53,7 @@ export default function CreateTemplatePage() {
 
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPreview, setShowPreview] = useState(false);
+  const [_showPreview, _setShowPreview] = useState(false);
   const [detectedVars, setDetectedVars] = useState<string[]>([]);
 
   const validate = (): boolean => {
@@ -99,7 +105,7 @@ export default function CreateTemplatePage() {
     setVariables((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateVariable = (index: number, field: keyof TemplateVariable, value: any) => {
+  const updateVariable = (index: number, field: keyof TemplateVariable, value: unknown) => {
     setVariables((prev) => prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)));
   };
 
@@ -128,17 +134,19 @@ export default function CreateTemplatePage() {
         });
         router.push(`/dashboard/communications/templates/${template.id}`);
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err = error as any;
         toast({
           title: "Creation Failed",
-          description: error.response?.data?.detail || "Failed to create template",
+          description: err.response?.data?.detail || "Failed to create template",
           variant: "destructive",
         });
       },
     });
   };
 
-  const handleChange = (field: keyof CreateTemplateRequest, value: any) => {
+  const handleChange = (field: keyof CreateTemplateRequest, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => {

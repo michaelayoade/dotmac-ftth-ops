@@ -142,14 +142,12 @@ export function exportFigmaTokens(): FigmaTokenSet {
       metadata: {
         name: {
           value: meta.name,
-          type: "string" as any,
           description: "Portal display name",
-        },
+        } as FigmaToken,
         userType: {
           value: meta.userType,
-          type: "string" as any,
           description: "Target user type",
-        },
+        } as FigmaToken,
       },
       colors: {
         primary: convertColorScaleToFigma(colorTokens[portal].primary, "Primary color scale"),
@@ -238,10 +236,10 @@ function convertColorScaleToFigma(
   return result;
 }
 
-function convertFontSizeToFigma(fontSizes: any): FigmaTokenSet {
+function convertFontSizeToFigma(fontSizes: unknown): FigmaTokenSet {
   const result: FigmaTokenSet = {};
 
-  Object.entries(fontSizes).forEach(([size, value]) => {
+  Object.entries(fontSizes as Record<string, unknown>).forEach(([size, value]) => {
     const [fontSize, config] = value as [string, { lineHeight: string }];
     result[size] = {
       fontSize: {

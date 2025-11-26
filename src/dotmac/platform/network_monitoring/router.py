@@ -14,6 +14,7 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import require_user
 from dotmac.platform.db import get_async_session
 from dotmac.platform.network_monitoring.schemas import (
+    AlertRuleResponse,
     AcknowledgeAlertRequest,
     AlertSeverity,
     CreateAlertRuleRequest,
@@ -138,7 +139,9 @@ async def get_device_health(
     device_id: str,
     current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
-    device_type: DeviceType = Query(..., description="Device type"),
+    device_type: DeviceType | None = Query(
+        None, description="Device type (optional for auto-detection)"
+    ),
 ) -> DeviceHealthResponse:
     """Get device health status."""
     try:
@@ -183,7 +186,9 @@ async def get_device_metrics(
     device_id: str,
     current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
-    device_type: DeviceType = Query(..., description="Device type"),
+    device_type: DeviceType | None = Query(
+        None, description="Device type (optional for auto-detection)"
+    ),
 ) -> DeviceMetricsResponse:
     """Get comprehensive device metrics."""
     try:
@@ -228,7 +233,9 @@ async def get_device_traffic(
     device_id: str,
     current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
-    device_type: DeviceType = Query(..., description="Device type"),
+    device_type: DeviceType | None = Query(
+        None, description="Device type (optional for auto-detection)"
+    ),
 ) -> TrafficStatsResponse:
     """Get device traffic statistics."""
     try:
@@ -361,7 +368,7 @@ async def acknowledge_alert(
 
 @router.post(
     "/network/alerts/rules",
-    response_model=dict,
+    response_model=AlertRuleResponse,
     summary="Create alert rule",
     description="Create a new alert rule for monitoring",
     status_code=status.HTTP_201_CREATED,
@@ -404,7 +411,7 @@ async def create_alert_rule(
 
 @router.get(
     "/network/alerts/rules",
-    response_model=list[dict],
+    response_model=list[AlertRuleResponse],
     summary="List alert rules",
     description="Get all alert rules for the tenant",
 )
@@ -430,3 +437,34 @@ async def list_alert_rules(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list alert rules: {str(e)}",
         ) from e
+
+
+# ---------------------------------------------------------------------------
+# Aliases for frontend compatibility (/network/alert-rules)
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/network/alert-rules",
+    response_model=list[AlertRuleResponse],
+    summary="List alert rules (frontend alias)",
+)
+async def list_alert_rules_alias(
+    current_user: Annotated[UserInfo, Depends(require_user)],
+    service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
+) -> list[dict]:
+    return await list_alert_rules(current_user=current_user, service=service)  # type: ignore[return-value]
+
+
+@router.post(
+    "/network/alert-rules",
+    response_model=AlertRuleResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create alert rule (frontend alias)",
+)
+async def create_alert_rule_alias(
+    request: CreateAlertRuleRequest,
+    current_user: Annotated[UserInfo, Depends(require_user)],
+    service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
+) -> dict:
+    return await create_alert_rule(request=request, current_user=current_user, service=service)  # type: ignore[return-value]

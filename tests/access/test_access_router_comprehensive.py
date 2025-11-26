@@ -397,21 +397,36 @@ class TestAlarms:
     def test_acknowledge_alarm_not_implemented(
         self,
         client: TestClient,
+        mock_access_service: AsyncMock,
     ):
-        """Test alarm acknowledgement (not yet implemented)."""
+        """Test alarm acknowledgement falls back gracefully."""
+        mock_access_service.acknowledge_alarm = AsyncMock(
+            return_value={"success": True, "driver_supported": False, "acknowledged_by": "tester"}
+        )
+
         response = client.post("/api/v1/access/alarms/alarm1/acknowledge")
 
-        assert response.status_code == 501
-        assert "not supported" in response.json()["detail"].lower()
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "acknowledged"
+        assert body["driver_supported"] is False
 
     def test_clear_alarm_not_implemented(
         self,
         client: TestClient,
+        mock_access_service: AsyncMock,
     ):
-        """Test alarm clearing (not yet implemented)."""
+        """Test alarm clearing falls back gracefully."""
+        mock_access_service.clear_alarm = AsyncMock(
+            return_value={"success": True, "driver_supported": False, "cleared_by": "tester"}
+        )
+
         response = client.post("/api/v1/access/alarms/alarm1/clear")
 
-        assert response.status_code == 501
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "cleared"
+        assert body["driver_supported"] is False
 
 
 class TestStatistics:

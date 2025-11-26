@@ -20,6 +20,7 @@ import {
   type WebSocketServerMessage,
 } from "../../types/realtime";
 import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 export class WebSocketClient {
   private ws: WebSocket | null = null;
@@ -75,7 +76,7 @@ export class WebSocketClient {
 
       this.ws.onerror = (error) => {
         this.status = ConnectionStatus.ERROR;
-        console.error("WebSocket error:", error);
+        logger.error("WebSocket error", error);
 
         if (this.config.onError) {
           this.config.onError(error);
@@ -100,7 +101,7 @@ export class WebSocketClient {
       };
     } catch (error) {
       this.status = ConnectionStatus.ERROR;
-      console.error("WebSocket connection error:", error);
+      logger.error("WebSocket connection error", error);
       if (this.config.onError) {
         this.config.onError(error as Event);
       }
@@ -112,7 +113,7 @@ export class WebSocketClient {
    */
   private buildWebSocketUrl(): string {
     // Convert HTTP(S) URL to WS(S)
-    let wsUrl = this.config.endpoint.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+    const wsUrl = this.config.endpoint.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
 
     // Add token as query parameter if provided (backward compatibility)
     // Cookies are NOT automatically sent by WebSocket API, so we need query param
@@ -146,7 +147,7 @@ export class WebSocketClient {
         this.config.onMessage(message);
       }
     } catch (error) {
-      console.error("Error parsing WebSocket message:", error);
+      logger.error("Error parsing WebSocket message", error);
     }
   }
 
@@ -159,10 +160,10 @@ export class WebSocketClient {
         this.lastPongTime = Date.now();
         break;
       case "subscribed":
-        console.log("Subscribed to channel:", message.channel);
+        logger.info("Subscribed to channel", { channel: message.channel });
         break;
       case "error":
-        console.error("WebSocket error message:", message.message);
+        logger.error("WebSocket error message", message.message);
         break;
       default:
         // Unknown system message
@@ -183,7 +184,7 @@ export class WebSocketClient {
         try {
           handler(event);
         } catch (error) {
-          console.error(`Error in event handler for ${eventType}:`, error);
+          logger.error(`Error in event handler for ${eventType}`, error);
         }
       });
     }
@@ -195,7 +196,7 @@ export class WebSocketClient {
         try {
           handler(event);
         } catch (error) {
-          console.error("Error in wildcard event handler:", error);
+          logger.error("Error in wildcard event handler", error);
         }
       });
     }
@@ -231,14 +232,14 @@ export class WebSocketClient {
    */
   send(message: WebSocketClientMessage): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.error("WebSocket is not connected");
+      logger.error("WebSocket is not connected");
       return;
     }
 
     try {
       this.ws.send(JSON.stringify(message));
     } catch (error) {
-      console.error("Error sending WebSocket message:", error);
+      logger.error("Error sending WebSocket message", error);
     }
   }
 
@@ -358,17 +359,6 @@ export class WebSocketEndpoints {
       return `${normalizedBase}${prefix}${path}`;
     }
     return platformConfig.api.buildUrl(path);
-  }
-
-  /**
-   * Create RADIUS sessions WebSocket client
-   */
-  sessions(config?: Partial<WebSocketConfig>): WebSocketClient {
-    return createWebSocketClient({
-      endpoint: this.buildEndpoint("/realtime/ws/sessions"),
-      token: this.token,
-      ...config,
-    });
   }
 
   /**

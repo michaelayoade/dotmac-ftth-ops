@@ -9,7 +9,7 @@
 import { useMemo, useState } from "react";
 import {
   LeadDetailModal as SharedLeadDetailModal,
-  type LeadDetailModalProps as SharedLeadDetailModalProps,
+  type Lead as SharedLead,
   type LeadUpdateRequest,
 } from "@dotmac/features/crm";
 import {
@@ -120,7 +120,7 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
     <SharedLeadDetailModal
       isOpen={isOpen}
       onClose={onClose}
-      lead={lead as any}
+      lead={lead as unknown as SharedLead}
       quotes={mapQuotesToShared(quotes)}
       surveys={sharedSurveys}
       onUpdate={onUpdate ?? (() => undefined)}

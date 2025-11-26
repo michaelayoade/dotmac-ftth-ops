@@ -26,28 +26,27 @@ import {
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import {
-  ToggleLeft,
-  Search,
-  RefreshCw,
-  Eye,
   CheckCircle,
-  XCircle,
-  Plus,
-  Trash2,
-  Edit,
   Clock,
+  Eye,
+  Plus,
+  RefreshCw,
+  Search,
+  ToggleLeft,
+  Trash2,
+  XCircle,
 } from "lucide-react";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useConfirmDialog } from "@dotmac/ui";
 import Link from "next/link";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
 interface FeatureFlag {
   name: string;
   enabled: boolean;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   description?: string;
   updated_at: number;
   created_at?: number;

@@ -53,7 +53,132 @@ class WebhookTestResponse(BaseModel):
     delivery_time_ms: int = 0
 
 
+# Compatibility models for simplified webhook management (UI aliases)
+
+
+class WebhookCompat(BaseModel):  # BaseModel resolves to Any in isolation
+    """Minimal webhook representation expected by the UI service."""
+
+    id: str
+    url: str
+    events: list[str]
+    active: bool
+    secret: str | None = None
+
+
+class WebhookCompatCreate(BaseModel):  # BaseModel resolves to Any in isolation
+    """Simplified payload for creating webhooks via /webhooks."""
+
+    url: str
+    events: list[str]
+    active: bool = True
+    description: str | None = None
+
+
 # Subscription endpoints
+# Backwards/compatibility endpoints
+
+
+@router.get("", response_model=list[WebhookCompat])
+async def list_webhooks(
+    current_user: UserInfo = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
+) -> list[WebhookCompat]:
+    """Compatibility alias that returns webhook subscriptions in a simplified shape."""
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required for webhook subscriptions",
+        )
+
+    service = WebhookSubscriptionService(db)
+    subs = await service.list_subscriptions(tenant_id=current_user.tenant_id, limit=500)
+    return [
+        WebhookCompat(
+            id=str(sub.id),
+            url=sub.url,
+            events=sub.events or [],
+            active=sub.is_active,
+            secret=sub.secret if hasattr(sub, "secret") else None,
+        )
+        for sub in subs
+    ]
+
+
+@router.post("", response_model=WebhookCompatCreate, status_code=status.HTTP_201_CREATED)
+async def create_webhook(
+    payload: WebhookCompatCreate,
+    current_user: UserInfo = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
+) -> WebhookCompatCreate:
+    """Compatibility alias to create a webhook subscription via /webhooks."""
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required for webhook subscriptions",
+        )
+
+    service = WebhookSubscriptionService(db)
+
+    subscription = await service.create_subscription(
+        tenant_id=current_user.tenant_id,
+        subscription_data=WebhookSubscriptionCreate(
+            url=payload.url,
+            description=payload.description,
+            events=payload.events,
+            headers={},
+            retry_enabled=True,
+            max_retries=3,
+            timeout_seconds=30,
+            custom_metadata={},
+        ),
+    )
+
+    # Apply active flag if requested false
+    if payload.active is False and subscription.is_active:
+        await service.update_subscription(
+            subscription_id=str(subscription.id),
+            tenant_id=current_user.tenant_id,
+            update_data=WebhookSubscriptionUpdate(is_active=False),
+        )
+
+    return WebhookCompatCreate(
+        url=str(subscription.url),
+        events=payload.events,
+        active=payload.active,
+        description=payload.description,
+    )
+
+
+@router.delete("/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_webhook(
+    subscription_id: str,
+    current_user: UserInfo = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
+) -> None:
+    """Compatibility alias to delete webhook via /webhooks/{id}."""
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required for webhook subscriptions",
+        )
+
+    service = WebhookSubscriptionService(db)
+    deleted = await service.delete_subscription(
+        subscription_id=subscription_id,
+        tenant_id=current_user.tenant_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Webhook subscription not found: {subscription_id}",
+        )
+
+    return None
 
 
 @router.post(

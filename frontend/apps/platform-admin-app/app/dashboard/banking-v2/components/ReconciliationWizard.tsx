@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { useBankAccounts, useManualPayments } from "@/hooks/useBankAccounts";
 import {
   useStartReconciliation,
@@ -99,7 +103,7 @@ export function ReconciliationWizard({
       const result = await startReconciliation.mutateAsync(data);
       setReconciliationId(result.id);
       setStep("matching");
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
@@ -119,7 +123,7 @@ export function ReconciliationWizard({
       }
 
       setStep("review");
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
@@ -140,7 +144,7 @@ export function ReconciliationWizard({
         handleClose();
         onComplete?.();
       }, 2000);
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
@@ -341,6 +345,14 @@ export function ReconciliationWizard({
                           key={payment.id}
                           className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer"
                           onClick={() => togglePaymentSelection(payment.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              togglePaymentSelection(payment.id);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                         >
                           <Checkbox
                             checked={isSelected}

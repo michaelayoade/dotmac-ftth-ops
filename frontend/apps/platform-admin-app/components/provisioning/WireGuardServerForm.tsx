@@ -22,7 +22,11 @@ import { Label } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { DualStackIPInput } from "@/components/forms/DualStackIPInput";
-import { Loader2, AlertCircle, Info } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  Info,
+} from "lucide-react";
 import { wireguardServerSchema, WireGuardServer } from "@/lib/validations/ip-address";
 
 type FormData = WireGuardServer;

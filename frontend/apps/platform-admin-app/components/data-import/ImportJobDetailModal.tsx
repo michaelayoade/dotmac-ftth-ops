@@ -20,15 +20,15 @@ import {
   CardTitle,
 } from "@dotmac/ui";
 import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  FileText,
   AlertTriangle,
+  CheckCircle2,
+  Clock,
   Download,
+  FileText,
+  XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
-import { useDataImport, type ImportJob } from "@/hooks/useDataImport";
+import { useDataImport } from "@/hooks/useDataImport";
 import { FailureViewer } from "./FailureViewer";
 
 interface ImportJobDetailModalProps {
@@ -43,7 +43,7 @@ export function ImportJobDetailModal({
   onOpenChange,
 }: ImportJobDetailModalProps) {
   const { useImportJob, useImportJobStatus, downloadFailures } = useDataImport();
-  const { data: job, isLoading } = useImportJob(jobId);
+  const { data: job } = useImportJob(jobId);
   const { data: status } = useImportJobStatus(jobId);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -159,7 +159,7 @@ export function ImportJobDetailModal({
 
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Batch Size</p>
-                    <p className="text-sm mt-1">{job.config?.["batch_size"] || 100}</p>
+                    <p className="text-sm mt-1">{String(job.config?.["batch_size"] ?? 100)}</p>
                   </div>
                 </div>
               </CardContent>

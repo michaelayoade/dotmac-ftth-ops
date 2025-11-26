@@ -13,9 +13,9 @@
  * </QuotaLimitGuard>
  */
 
-import React, { type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle, Button, Card, Progress } from "@dotmac/ui";
 import { AlertTriangle, TrendingUp, XCircle } from "lucide-react";
+import React, { type ReactNode } from "react";
 
 export interface QuotaLimitGuardProps {
   /**

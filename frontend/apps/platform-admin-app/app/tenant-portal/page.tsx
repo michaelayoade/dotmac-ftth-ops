@@ -9,7 +9,14 @@ import { useTenant } from "@/lib/contexts/tenant-context";
 import { tenantService, TenantStats } from "@/lib/services/tenant-service";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
-import { Users, CreditCard, Gauge, Plug, LifeBuoy, TrendingUp, AlertTriangle } from "lucide-react";
+import {
+  CreditCard,
+  Gauge,
+  Plug,
+  AlertTriangle,
+  Users,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { logger } from "@/lib/logger";

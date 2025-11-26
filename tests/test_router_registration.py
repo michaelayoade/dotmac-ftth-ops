@@ -218,10 +218,10 @@ class TestRouterRegistration:
         """
         router_count = len(ROUTER_CONFIGS)
 
-        # Expected range: 85-100 routers (current is 87)
+        # Expected range: 85-120 routers (current is 107)
         # Adjust these thresholds as the platform grows
-        assert 85 <= router_count <= 100, (
-            f"Unexpected router count: {router_count}. Expected 85-100. Verify no routers were accidentally removed or too many added."
+        assert 85 <= router_count <= 120, (
+            f"Unexpected router count: {router_count}. Expected 85-120. Verify no routers were accidentally removed or too many added."
         )
 
     def test_router_prefixes_have_consistent_api_version(self):

@@ -6,7 +6,12 @@ export const dynamicParams = true;
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import { Mail, MessageSquare, FileText, LifeBuoy } from "lucide-react";
+import {
+  Mail,
+  MessageSquare,
+  FileText,
+  LifeBuoy,
+} from "lucide-react";
 import { useBranding } from "@/hooks/useBranding";
 
 export default function TenantSupportPage() {

@@ -6,13 +6,6 @@
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
-interface LogEntry {
-  level: LogLevel;
-  message: string;
-  timestamp: string;
-  context?: Record<string, unknown>;
-}
-
 class Logger {
   private isDevelopment: boolean;
 
@@ -45,21 +38,16 @@ class Logger {
 
   private log(level: LogLevel, message: string, context?: Record<string, unknown>) {
     const sanitizedContext = this.sanitizeContext(context);
-
-    const entry: LogEntry = {
-      level,
-      message,
-      timestamp: new Date().toISOString(),
-      context: sanitizedContext,
-    };
+    const devConsole = globalThis.console;
 
     // In development, use console directly for better formatting
-    if (this.isDevelopment) {
+    if (this.isDevelopment && devConsole) {
       const consoleMethod = level === "error" || level === "warn" ? level : "log";
-      console[consoleMethod](`[${level.toUpperCase()}]`, message, sanitizedContext || "");
-    } else {
-      // In production, could send to logging service
-      console.log(JSON.stringify(entry));
+      devConsole[consoleMethod]?.(
+        `[${level.toUpperCase()}]`,
+        message,
+        sanitizedContext && Object.keys(sanitizedContext).length > 0 ? sanitizedContext : "",
+      );
     }
   }
 

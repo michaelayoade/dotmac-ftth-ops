@@ -149,6 +149,13 @@ class IPPool(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  #
         comment="Number of assigned addresses",
     )
 
+    available_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        comment="Number of available addresses (derived but persisted for UI)",
+    )
+
     # NetBox integration
     netbox_prefix_id: Mapped[int | None] = mapped_column(
         Integer,
@@ -234,10 +241,10 @@ class IPReservation(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
         comment="Associated IP pool",
     )
 
-    subscriber_id: Mapped[str] = mapped_column(
+    subscriber_id: Mapped[str | None] = mapped_column(
         String(255),
         ForeignKey("subscribers.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
         comment="Subscriber this IP is reserved for",
     )
@@ -252,6 +259,8 @@ class IPReservation(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
     ip_type: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
+        default="ipv4",
+        server_default="ipv4",
         comment="Type: ipv4, ipv6, or ipv6_prefix",
     )
 
@@ -376,3 +385,19 @@ class IPReservation(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
             f"subscriber={self.subscriber_id} status={self.status} "
             f"lifecycle_state={self.lifecycle_state}>"
         )
+
+    # Alias used by lifecycle flows/tests to stash NetBox ID without a dedicated column
+    @property
+    def lifecycle_netbox_ip_id(self) -> int | None:
+        """Expose NetBox IP ID stored in lifecycle metadata."""
+        if self.lifecycle_metadata and "netbox_ip_id" in self.lifecycle_metadata:
+            return self.lifecycle_metadata.get("netbox_ip_id")
+        return getattr(self, "netbox_ip_id", None)
+
+    @lifecycle_netbox_ip_id.setter
+    def lifecycle_netbox_ip_id(self, value: int | None) -> None:
+        if value is None:
+            return
+        if self.lifecycle_metadata is None:
+            self.lifecycle_metadata = {}
+        self.lifecycle_metadata["netbox_ip_id"] = value

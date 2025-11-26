@@ -36,6 +36,7 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAHealthResponse,
 )
 from dotmac.platform.voltha.service import VOLTHAService
+from dotmac.platform.settings import Settings, get_settings
 
 router = APIRouter(prefix="/voltha", tags=["VOLTHA"])
 
@@ -450,6 +451,7 @@ async def acknowledge_alarm(
     request: AlarmAcknowledgeRequest,
     service: VOLTHAService = Depends(get_voltha_service),
     _: UserInfo = Depends(require_permission("isp.network.pon.write")),
+    settings: Settings = Depends(get_settings),
 ) -> AlarmOperationResponse:
     """
     Acknowledge a VOLTHA alarm.
@@ -473,6 +475,11 @@ async def acknowledge_alarm(
 
     Required Permission: isp.network.pon.write
     """
+    if not settings.features.pon_alarm_actions_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Alarm acknowledgement is disabled by feature flag",
+        )
     return await service.acknowledge_alarm(alarm_id, request)
 
 
@@ -487,6 +494,7 @@ async def clear_alarm(
     request: AlarmClearRequest,
     service: VOLTHAService = Depends(get_voltha_service),
     _: UserInfo = Depends(require_permission("isp.network.pon.write")),
+    settings: Settings = Depends(get_settings),
 ) -> AlarmOperationResponse:
     """
     Clear a VOLTHA alarm.
@@ -510,4 +518,9 @@ async def clear_alarm(
 
     Required Permission: isp.network.pon.write
     """
+    if not settings.features.pon_alarm_actions_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Alarm clear is disabled by feature flag",
+        )
     return await service.clear_alarm(alarm_id, request)

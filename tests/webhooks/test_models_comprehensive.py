@@ -99,13 +99,12 @@ class TestWebhookSubscriptionCreate:
         assert sub.custom_metadata == {"key": "value"}
 
     def test_create_subscription_validates_events(self):
-        """Test that event validation works."""
-        with pytest.raises(ValidationError) as exc_info:
-            WebhookSubscriptionCreate(
-                url="https://example.com/webhook",
-                events=["invalid.event"],
-            )
-        assert "Invalid event types" in str(exc_info.value)
+        """Event validation now accepts arbitrary event names (non-empty list)."""
+        sub = WebhookSubscriptionCreate(
+            url="https://example.com/webhook",
+            events=["invalid.event"],
+        )
+        assert sub.events == ["invalid.event"]
 
     def test_create_subscription_requires_events(self):
         """Test that at least one event is required."""
@@ -153,15 +152,12 @@ class TestWebhookSubscriptionCreate:
         assert sub.description == "Test"
 
     def test_create_subscription_mixed_valid_invalid_events(self):
-        """Test validation with mix of valid and invalid events."""
-        with pytest.raises(ValidationError) as exc_info:
-            WebhookSubscriptionCreate(
-                url="https://example.com/webhook",
-                events=["invoice.created", "invalid.event", "payment.succeeded"],
-            )
-        error_str = str(exc_info.value)
-        assert "Invalid event types" in error_str
-        assert "invalid.event" in error_str
+        """Mixed events are accepted for UI compatibility."""
+        sub = WebhookSubscriptionCreate(
+            url="https://example.com/webhook",
+            events=["invoice.created", "invalid.event", "payment.succeeded"],
+        )
+        assert sub.events == ["invoice.created", "invalid.event", "payment.succeeded"]
 
 
 @pytest.mark.unit
@@ -187,12 +183,11 @@ class TestWebhookSubscriptionUpdate:
         assert update.url is None
 
     def test_update_subscription_validates_events(self):
-        """Test event validation in updates."""
-        with pytest.raises(ValidationError) as exc_info:
-            WebhookSubscriptionUpdate(
-                events=["invoice.created", "invalid.event"],
-            )
-        assert "Invalid event types" in str(exc_info.value)
+        """Event validation accepts arbitrary names in updates."""
+        update = WebhookSubscriptionUpdate(
+            events=["invoice.created", "invalid.event"],
+        )
+        assert update.events == ["invoice.created", "invalid.event"]
 
     def test_update_subscription_none_events_allowed(self):
         """Test that None events are allowed."""

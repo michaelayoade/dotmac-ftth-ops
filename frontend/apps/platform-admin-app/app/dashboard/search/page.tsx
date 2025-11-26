@@ -18,27 +18,27 @@ import { Button } from "@dotmac/ui";
 import { Card } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import {
-  Search,
-  Filter,
-  X,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
+  Clock,
   FileText,
-  User,
-  Users,
-  Ticket,
+  Filter,
   Receipt,
+  Search,
   Server,
   ShoppingCart,
-  Clock,
+  Sparkles,
+  Ticket,
+  User,
+  Users,
+  X,
 } from "lucide-react";
 import { useSearch } from "@/hooks/useSearch";
 import type { SearchResult } from "@/types/search";
 import { TYPE_COLORS, SEARCH_ENTITY_TYPES, formatEntityType, getEntityRoute } from "@/types/search";
 
 // Entity type icons
-const TYPE_ICONS: Record<string, any> = {
+const TYPE_ICONS: Record<string, React.ElementType> = {
   customer: Users,
   subscriber: User,
   invoice: Receipt,
@@ -148,7 +148,6 @@ export default function GlobalSearchPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10 pr-10 py-3 w-full border rounded-lg text-lg"
-                autoFocus
               />
               {searchInput && (
                 <button
@@ -170,7 +169,7 @@ export default function GlobalSearchPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground mr-2">Filter by type:</span>
-            {Object.entries(SEARCH_ENTITY_TYPES).map(([key, value]) => {
+            {Object.entries(SEARCH_ENTITY_TYPES).map(([_key, value]) => {
               const Icon = TYPE_ICONS[value] || FileText;
               const count = searchResults?.facets?.types?.[value] || 0;
 
@@ -222,7 +221,7 @@ export default function GlobalSearchPage() {
         </Card>
       ) : isLoading ? (
         <Card className="p-12 text-center">
-          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
           <p className="text-muted-foreground">Searching...</p>
         </Card>
       ) : error ? (

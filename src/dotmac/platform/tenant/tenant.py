@@ -88,6 +88,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
             exempt_paths
             or {
                 "/health",
+                "/health/live",
+                "/health/ready",
                 "/ready",
                 "/metrics",
                 "/docs",
@@ -101,6 +103,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
                 "/api/v1/secrets/health",  # Vault health check is public
                 "/api/v1/health",  # Health check endpoint (also available at /health)
+                "/api",
                 "/api/v1/platform/config",
                 "/api/v1/platform/health",
                 "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context

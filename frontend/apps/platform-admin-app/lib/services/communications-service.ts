@@ -20,7 +20,6 @@ import type {
   QueueEmailRequest,
   CreateTemplateRequest,
   UpdateTemplateRequest,
-  RenderTemplateRequest,
   QuickRenderRequest,
   QueueBulkRequest,
   ListCommunicationsParams,
@@ -41,8 +40,6 @@ import type {
   ActivityResponse,
   HealthResponse,
   MetricsResponse,
-  // Enums (only types)
-  CommunicationChannel,
 } from "@/types/communications";
 
 // ============================================
@@ -281,7 +278,7 @@ class CommunicationsService {
    */
   async renderTemplate(
     id: string,
-    variables: Record<string, any>,
+    variables: Record<string, unknown>,
   ): Promise<RenderTemplateResponse> {
     const response = await fetch(
       this.buildUrl(`/communications/templates/${id}/render`),

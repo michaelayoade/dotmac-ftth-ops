@@ -298,6 +298,22 @@ class CreateAlertRuleRequest(BaseModel):
     enabled: bool = True
 
 
+class AlertRuleResponse(BaseModel):
+    """Alert rule response."""
+
+    rule_id: str
+    tenant_id: str
+    name: str
+    description: str | None = None
+    device_type: DeviceType | None = None
+    metric_name: str
+    condition: str
+    threshold: float
+    severity: AlertSeverity
+    enabled: bool
+    created_at: datetime
+
+
 # ============================================================================
 # Overview/Dashboard Schemas
 # ============================================================================

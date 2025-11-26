@@ -6,13 +6,13 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import {
-  Plus,
-  CheckCircle2,
-  Clock,
   AlertCircle,
   Calendar,
+  CheckCircle2,
+  Clock,
   DollarSign,
   FileText,
+  Plus,
 } from "lucide-react";
 import {
   Table,
@@ -27,7 +27,7 @@ import { ReconciliationWizard } from "./ReconciliationWizard";
 
 export function ReconciliationTab() {
   const [showWizard, setShowWizard] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState({
+  const [selectedPeriod] = useState({
     start: new Date(new Date().setDate(1)).toISOString().slice(0, 10), // First day of month
     end: new Date().toISOString().slice(0, 10), // Today
   });
@@ -182,7 +182,7 @@ export function ReconciliationTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reconciliations.reconciliations.map((session: any) => (
+                  {reconciliations.reconciliations.map((session) => (
                     <TableRow key={session.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -200,30 +200,30 @@ export function ReconciliationTab() {
                       <TableCell>
                         <div>
                           <p className="text-sm font-medium">
-                            {session.bank_account.account_nickname ||
-                              session.bank_account.account_name}
+                            {session.bank_account?.account_nickname ||
+                              session.bank_account?.account_name || 'N/A'}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            ****{session.bank_account.account_number_last_four}
+                            ****{session.bank_account?.account_number_last_four || '****'}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(session.status)}</TableCell>
                       <TableCell>
                         <span className="text-sm font-medium">
-                          {session.payments_reconciled_count}
+                          {session.payments_reconciled_count ?? 0}
                         </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3 w-3 text-muted-foreground" />
                           <span className="text-sm font-semibold">
-                            {session.total_amount_reconciled.toFixed(2)}
+                            {(session.total_amount_reconciled ?? 0).toFixed(2)}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {session.discrepancies_count > 0 ? (
+                        {(session.discrepancies_count ?? 0) > 0 ? (
                           <Badge variant="destructive" className="gap-1">
                             <AlertCircle className="h-3 w-3" />
                             {session.discrepancies_count}

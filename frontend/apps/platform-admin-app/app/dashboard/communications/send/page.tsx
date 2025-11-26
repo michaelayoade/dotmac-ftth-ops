@@ -33,7 +33,12 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import { ArrowLeft, Send, Loader2, Eye } from "lucide-react";
+import {
+  ArrowLeft,
+  Send,
+  Loader2,
+  Eye,
+} from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import {
   parseEmails,
@@ -179,13 +184,15 @@ export default function SendEmailPage() {
         logger.info("Template preview rendered", { templateId: formData['template_id'] });
         setPreviewHtml(result.rendered_body_html || result.rendered_body_text || "");
         setShowPreview(true);
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error("Failed to render template preview", error, {
           templateId: formData['template_id'],
         });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err = error as any;
         toast({
           title: "Preview Failed",
-          description: error.response?.data?.detail || "Failed to render template",
+          description: err.response?.data?.detail || "Failed to render template",
           variant: "destructive",
         });
       }
@@ -246,14 +253,16 @@ export default function SendEmailPage() {
           });
           router.push("/dashboard/communications");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           logger.error("Failed to send email", error, {
             subject: formData['subject'],
             recipientCount: toRecipients.length,
           });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const err = error as any;
           toast({
             title: "Send Failed",
-            description: error.response?.data?.detail || "Failed to send email",
+            description: err.response?.data?.detail || "Failed to send email",
             variant: "destructive",
           });
         },
@@ -279,14 +288,16 @@ export default function SendEmailPage() {
           });
           router.push("/dashboard/communications");
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           logger.error("Failed to queue email", error, {
             subject: formData['subject'],
             priority: formData.priority,
           });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const err = error as any;
           toast({
             title: "Queue Failed",
-            description: error.response?.data?.detail || "Failed to queue email",
+            description: err.response?.data?.detail || "Failed to queue email",
             variant: "destructive",
           });
         },
@@ -294,7 +305,7 @@ export default function SendEmailPage() {
     }
   };
 
-  const handleChange = (field: keyof EmailForm, value: any) => {
+  const handleChange = (field: keyof EmailForm, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => {
@@ -620,6 +631,7 @@ export default function SendEmailPage() {
               <CardContent>
                 <div className="prose prose-sm max-w-none">
                   {previewHtml ? (
+                    // eslint-disable-next-line react/no-danger
                     <div dangerouslySetInnerHTML={{ __html: sanitizedPreviewHtml }} />
                   ) : (
                     <p className="text-muted-foreground">No preview available</p>

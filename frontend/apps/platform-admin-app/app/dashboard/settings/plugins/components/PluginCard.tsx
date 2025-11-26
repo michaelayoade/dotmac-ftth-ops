@@ -2,21 +2,17 @@
 
 import { useState } from "react";
 import {
-  Puzzle,
-  Plus,
-  Settings,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  ExternalLink,
-  Tag,
-  Users,
-  Clock,
   Activity,
-  Shield,
-  Zap,
+  Clock,
+  ExternalLink,
+  Plus,
+  Puzzle,
   Search,
+  Settings,
+  Shield,
   TrendingUp,
+  Users,
+  Zap,
 } from "lucide-react";
 
 import type { PluginConfig, PluginInstance, PluginStatus, PluginType } from "@/hooks/usePlugins";
@@ -172,13 +168,13 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
             <div className="flex items-center gap-2">
               {activeInstances.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                   <span className="text-emerald-400">{activeInstances.length}</span>
                 </div>
               )}
               {errorInstances.length > 0 && (
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-rose-500 rounded-full" />
                   <span className="text-rose-400">{errorInstances.length}</span>
                 </div>
               )}

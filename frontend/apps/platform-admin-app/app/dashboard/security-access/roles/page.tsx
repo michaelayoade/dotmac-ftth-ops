@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -31,22 +31,20 @@ import {
   DropdownMenuTrigger,
 } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
 import {
-  Shield,
-  Users,
-  MoreHorizontal,
-  Search,
-  Plus,
-  Edit,
-  Trash2,
+  AlertCircle,
   Copy,
+  Edit,
   Key,
   Lock,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Shield,
+  Trash2,
   UserPlus,
-  AlertCircle,
-  CheckCircle2,
+  Users,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import {
@@ -58,7 +56,6 @@ import {
 } from "@/contexts/RBACContext";
 import { LoadingState, LoadingTable, LoadingSpinner } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
-import { apiClient } from "@/lib/api/client";
 
 // Group permissions by category for display
 function groupPermissionsByCategory(permissions: Permission[]): Record<string, Permission[]> {

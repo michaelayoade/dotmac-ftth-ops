@@ -13,6 +13,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
+
+import type { InvoiceLineItem } from "../../billing/types";
+import { InvoiceStatus, PaymentStatus } from "../../billing/types";
 import {
   createMockInvoice,
   createOverdueInvoice,
@@ -20,8 +23,6 @@ import {
   createPartiallyPaidInvoice,
   resetBillingCounters,
 } from "../factories/billing";
-import type { InvoiceLineItem } from "../../billing/types";
-import { InvoiceStatus, PaymentStatus } from "../../billing/types";
 
 /**
  * Helper function to calculate proration

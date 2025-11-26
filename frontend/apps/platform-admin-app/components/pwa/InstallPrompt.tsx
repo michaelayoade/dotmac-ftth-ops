@@ -8,7 +8,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import { X, Download, Monitor } from "lucide-react";
+import {
+  Download,
+  Monitor,
+  X,
+} from "lucide-react";
 import { setupInstallPrompt, showInstallPrompt } from "@/lib/pwa";
 
 export default function InstallPrompt() {
@@ -17,6 +21,7 @@ export default function InstallPrompt() {
 
   useEffect(() => {
     // Check if already dismissed
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
     const dismissed = localStorage.getItem("pwa-install-dismissed");
     if (dismissed) {
       setDismissed(true);
@@ -45,6 +50,7 @@ export default function InstallPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false);
     setDismissed(true);
+    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
     localStorage.setItem("pwa-install-dismissed", "true");
   };
 

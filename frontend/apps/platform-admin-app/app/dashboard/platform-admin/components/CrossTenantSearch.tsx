@@ -7,7 +7,10 @@ import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
-import { Search, Filter } from "lucide-react";
+import {
+  Filter,
+  Search,
+} from "lucide-react";
 import { platformAdminService } from "@/lib/services/platform-admin-service";
 
 // Type definition for search results

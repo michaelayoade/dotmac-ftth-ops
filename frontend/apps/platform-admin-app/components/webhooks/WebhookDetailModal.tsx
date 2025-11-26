@@ -9,11 +9,11 @@ interface WebhookDetailModalProps {
 }
 
 export function WebhookDetailModal({
-  webhook,
-  onClose,
-  onEdit,
-  onDelete,
-  onTest,
+  webhook: _webhook,
+  onClose: _onClose,
+  onEdit: _onEdit,
+  onDelete: _onDelete,
+  onTest: _onTest,
 }: WebhookDetailModalProps) {
   return <div>WebhookDetailModal Placeholder</div>;
 }

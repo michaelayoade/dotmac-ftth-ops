@@ -4,6 +4,7 @@ Audit service for tracking and retrieving activities across the platform.
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
+import math
 
 import structlog
 from fastapi import Request
@@ -219,7 +220,7 @@ class AuditService:
             # Get total count
             count_query = select(func.count()).select_from(query.subquery())
             total_result = await session.execute(count_query)
-            total = total_result.scalar()
+            total = total_result.scalar() or 0
 
             # Apply pagination
             offset = (filters.page - 1) * filters.per_page
@@ -232,6 +233,7 @@ class AuditService:
             # Calculate pagination info
             has_next = offset + len(activities) < total
             has_prev = filters.page > 1
+            total_pages = math.ceil(total / filters.per_page) if filters.per_page else 0
 
             return AuditActivityList(
                 activities=[
@@ -240,6 +242,7 @@ class AuditService:
                 total=total,
                 page=filters.page,
                 per_page=filters.per_page,
+                total_pages=total_pages,
                 has_next=has_next,
                 has_prev=has_prev,
             )
@@ -277,51 +280,113 @@ class AuditService:
         async with self._get_session() as session:
             since_date = datetime.now(UTC) - timedelta(days=days)
 
-            # Build base query
-            query = select(AuditActivity).where(AuditActivity.timestamp >= since_date)
-
-            conditions = []
+            conditions = [AuditActivity.timestamp >= since_date]
             if user_id:
                 conditions.append(AuditActivity.user_id == user_id)
             if tenant_id:
                 conditions.append(AuditActivity.tenant_id == tenant_id)
 
-            if conditions:
-                query = query.where(and_(*conditions))
+            filter_clause = and_(*conditions)
 
             # Get total activities
-            count_result = await session.execute(select(func.count()).select_from(query.subquery()))
-            total_activities = count_result.scalar()
+            count_result = await session.execute(
+                select(func.count()).select_from(select(AuditActivity).where(filter_clause).subquery())
+            )
+            total_activities = count_result.scalar() or 0
 
             # Get activities by type
-            type_query = select(AuditActivity.activity_type, func.count()).where(
-                AuditActivity.timestamp >= since_date
+            type_query = (
+                select(AuditActivity.activity_type, func.count())
+                .where(filter_clause)
+                .group_by(AuditActivity.activity_type)
             )
-            if conditions:
-                type_query = type_query.where(and_(*conditions))
-            type_query = type_query.group_by(AuditActivity.activity_type)
-
             type_result = await session.execute(type_query)
-            activities_by_type = dict(type_result.all())
+            activities_by_type = {activity_type: count or 0 for activity_type, count in type_result.all()}
 
             # Get activities by severity
-            severity_query = select(AuditActivity.severity, func.count()).where(
-                AuditActivity.timestamp >= since_date
+            severity_query = (
+                select(AuditActivity.severity, func.count())
+                .where(filter_clause)
+                .group_by(AuditActivity.severity)
             )
-            if conditions:
-                severity_query = severity_query.where(and_(*conditions))
-            severity_query = severity_query.group_by(AuditActivity.severity)
-
             severity_result = await session.execute(severity_query)
-            activities_by_severity = dict(severity_result.all())
+            activities_by_severity = {
+                severity: count or 0 for severity, count in severity_result.all()
+            }
+
+            # Top actors by activity volume (non-null user_id)
+            user_query = (
+                select(AuditActivity.user_id, func.count())
+                .where(filter_clause, AuditActivity.user_id.is_not(None))
+                .group_by(AuditActivity.user_id)
+                .order_by(func.count().desc())
+                .limit(10)
+            )
+            user_result = await session.execute(user_query)
+            activities_by_user = [
+                {"user_id": user, "count": count or 0} for user, count in user_result if user
+            ]
+
+            # Recent critical events for callouts
+            critical_query = (
+                select(AuditActivity)
+                .where(filter_clause, AuditActivity.severity == ActivitySeverity.CRITICAL)
+                .order_by(desc(AuditActivity.timestamp))
+                .limit(20)
+            )
+            critical_result = await session.execute(critical_query)
+            recent_critical = [
+                AuditActivityResponse.model_validate(activity).model_dump()
+                for activity in critical_result.scalars().all()
+            ]
+
+            # Daily timeline for charts
+            timeline_query = (
+                select(func.date(AuditActivity.timestamp).label("day"), func.count())
+                .where(filter_clause)
+                .group_by("day")
+                .order_by("day")
+            )
+            timeline_result = await session.execute(timeline_query)
+            timeline = [
+                {"date": day.isoformat() if hasattr(day, "isoformat") else str(day), "count": count or 0}
+                for day, count in timeline_result
+            ]
 
             return {
                 "period_days": days,
+                "since_date": since_date.isoformat(),
                 "total_activities": total_activities,
+                # Legacy keys (used by tests and some callers)
                 "activities_by_type": activities_by_type,
                 "activities_by_severity": activities_by_severity,
-                "since_date": since_date.isoformat(),
+                # Frontend-friendly keys
+                "by_type": {str(k): v for k, v in activities_by_type.items()},
+                "by_severity": {str(k): v for k, v in activities_by_severity.items()},
+                "by_user": activities_by_user,
+                "recent_critical": recent_critical,
+                "timeline": timeline,
             }
+
+    async def list_activities_in_range(
+        self,
+        from_date: datetime,
+        to_date: datetime,
+        tenant_id: str | None = None,
+        user_id: str | None = None,
+    ) -> list[AuditActivity]:
+        """Return activities between from_date and to_date."""
+        async with self._get_session() as session:
+            query = select(AuditActivity).where(
+                and_(AuditActivity.timestamp >= from_date, AuditActivity.timestamp <= to_date)
+            )
+            if tenant_id:
+                query = query.where(AuditActivity.tenant_id == tenant_id)
+            if user_id:
+                query = query.where(AuditActivity.user_id == user_id)
+            query = query.order_by(desc(AuditActivity.timestamp))
+            result = await session.execute(query)
+            return list(result.scalars().all())
 
 
 # Helper functions for common audit scenarios

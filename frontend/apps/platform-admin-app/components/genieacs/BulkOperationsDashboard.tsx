@@ -1,23 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Layers,
-  Plus,
-  Play,
-  Pause,
-  XCircle,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Filter,
-  Calendar,
-  Download,
-  Upload,
-  Settings,
-  Zap,
-  RefreshCw,
-} from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Pause, Play, Plus, RefreshCw, Settings, Upload, XCircle } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
@@ -122,10 +106,11 @@ export function BulkOperationsDashboard() {
         devices_affected_today: devicesAffectedToday,
         success_rate: successRate,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       toast({
         title: "Failed to load operations",
-        description: err?.response?.data?.detail || "Could not fetch bulk operations",
+        description: error?.response?.data?.detail || "Could not fetch bulk operations",
         variant: "destructive",
       });
     } finally {
@@ -150,17 +135,19 @@ export function BulkOperationsDashboard() {
         description: "The bulk operation has been cancelled",
       });
       loadData();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
       toast({
         title: "Failed to cancel operation",
-        description: err?.response?.data?.detail || "Could not cancel operation",
+        description: error?.response?.data?.detail || "Could not cancel operation",
         variant: "destructive",
       });
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const styles: Record<string, { variant: any; icon: any; color: string }> = {
+    type BadgeVariant = "default" | "destructive" | "outline" | "secondary" | "warning" | "success" | "info";
+    const styles: Record<string, { variant: BadgeVariant; icon: React.ElementType; color: string }> = {
       pending: { variant: "secondary", icon: Clock, color: "text-blue-600" },
       running: { variant: "default", icon: Play, color: "text-green-600" },
       completed: {

@@ -2,39 +2,8 @@ import type { PaginatedResponse } from "./api";
 
 /**
  * ISP-focused domain models consumed by the frontend.
- * These mirror the backend schemas under dotmac.platform.radius,
- * dotmac.platform.services.lifecycle, and dotmac.platform.netbox.
+ * These mirror the backend schemas under dotmac.platform.services.lifecycle and dotmac.platform.netbox.
  */
-
-export interface RadiusSubscriber {
-  id: number;
-  tenant_id: string;
-  subscriber_id: string;
-  username: string;
-  bandwidth_profile_id?: string | null;
-  framed_ip_address?: string | null;
-  session_timeout?: number | null;
-  idle_timeout?: number | null;
-  enabled: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface RadiusSession {
-  radacctid: number;
-  tenant_id: string;
-  subscriber_id?: string | null;
-  username: string;
-  acctsessionid: string;
-  nasipaddress: string;
-  framedipaddress?: string | null;
-  acctstarttime?: string | null;
-  acctsessiontime?: number | null;
-  acctinputoctets?: number | null;
-  acctoutputoctets?: number | null;
-  total_bytes: number;
-  is_active: boolean;
-}
 
 export interface ServiceStatistics {
   total_services: number;

@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { logger } from "@/lib/logger";
 import {
-  X,
-  Key,
-  Calendar,
-  Shield,
-  Eye,
-  Copy,
-  Check,
-  Edit,
-  Trash2,
-  Clock,
   Activity,
   AlertTriangle,
+  Calendar,
+  Check,
   CheckCircle,
+  Clock,
+  Copy,
+  Edit,
+  Eye,
+  Key,
+  Shield,
+  Trash2,
+  X,
 } from "lucide-react";
 import { APIKey } from "@/hooks/useApiKeys";
 
@@ -105,10 +105,18 @@ export function ApiKeyDetailModal({ apiKey, onClose, onEdit, onRevoke }: ApiKeyD
     }
   };
 
+  const handleBackdropKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+      onClose();
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
+      onKeyDown={handleBackdropKeyDown}
+      role="presentation"
     >
       <div className="bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}

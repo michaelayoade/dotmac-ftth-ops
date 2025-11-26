@@ -22,16 +22,16 @@ import {
   SelectValue,
 } from "@dotmac/ui";
 import {
-  FileText,
-  Plus,
-  Search,
-  Loader2,
   AlertCircle,
+  Edit,
+  Eye,
+  FileText,
+  Loader2,
   Mail,
   MessageSquare,
-  Edit,
+  Plus,
+  Search,
   Trash2,
-  Eye,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
@@ -49,7 +49,7 @@ export default function TemplatesPage() {
 
   const { data, isLoading, error } = useTemplates(filters);
 
-  const handleFilterChange = (key: keyof ListTemplatesParams, value: any) => {
+  const handleFilterChange = (key: keyof ListTemplatesParams, value: unknown) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
@@ -71,10 +71,12 @@ export default function TemplatesPage() {
           description: `Template "${name}" has been deleted`,
         });
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err = error as any;
         toast({
           title: "Delete Failed",
-          description: error.response?.data?.detail || "Failed to delete template",
+          description: err.response?.data?.detail || "Failed to delete template",
           variant: "destructive",
         });
       },

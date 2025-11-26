@@ -3,16 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Shield,
-  Key,
-  Lock,
-  Users,
-  UserCheck,
   AlertTriangle,
   ArrowUpRight,
-  Activity,
   Eye,
-  FileWarning,
+  Key,
+  Lock,
+  Shield,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { metricsService, SecurityMetrics } from "@/lib/services/metrics-service";
 import { AlertBanner } from "@/components/alerts/AlertBanner";
@@ -215,7 +213,6 @@ export default function SecurityAccessPage() {
   const [metrics, setMetrics] = useState<SecurityMetrics | null>(null);
   const [accessControlData, setAccessControlData] = useState<AccessControlSummary | null>(null);
   const [recentEvents, setRecentEvents] = useState<SecurityEvent[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchSecurityData();
@@ -226,8 +223,6 @@ export default function SecurityAccessPage() {
 
   const fetchSecurityData = async () => {
     try {
-      setLoading(true);
-
       // Fetch security metrics from the metrics service
       const securityMetrics = await metricsService.getSecurityMetrics();
       setMetrics(securityMetrics);
@@ -235,7 +230,7 @@ export default function SecurityAccessPage() {
       // Calculate access control summary from metrics
       const totalUsers = securityMetrics.auth.activeSessions || 0;
       setAccessControlData({
-        totalUsers: totalUsers,
+        totalUsers,
         activeUsers: securityMetrics.auth.activeSessions || 0,
         totalRoles: 12, // This would come from a roles API
         apiKeys: securityMetrics.apiKeys.total || 0,
@@ -284,7 +279,7 @@ export default function SecurityAccessPage() {
           });
           setRecentEvents(events);
         }
-      } catch (err) {
+      } catch {
         // Fallback to showing metrics-based events
         const fallbackEvents: SecurityEvent[] = [];
 
@@ -322,8 +317,6 @@ export default function SecurityAccessPage() {
       }
     } catch (err) {
       console.error("Failed to fetch security metrics:", err);
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -8,7 +8,12 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import { WifiOff, RefreshCw, CheckCircle2, Server } from "lucide-react";
+import {
+  WifiOff,
+  RefreshCw,
+  CheckCircle2,
+  Server,
+} from "lucide-react";
 import { usePWA } from "@/components/pwa/PWAProvider";
 
 export default function OfflinePage() {

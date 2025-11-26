@@ -14,6 +14,11 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from dotmac.platform.celery_app import celery_app
 
+from sqlalchemy import select
+
+from dotmac.platform.db import get_async_session_context
+from dotmac.platform.communications.models import BulkJobMetadata, CommunicationType
+
 from .email_service import EmailMessage, EmailResponse, get_email_service
 
 logger = structlog.get_logger(__name__)
@@ -34,6 +39,8 @@ class BulkEmailJob(BaseModel):  # BaseModel resolves to Any in isolation
     id: str = Field(default_factory=lambda: f"bulk_{uuid4().hex[:8]}")
     name: str = Field(..., description="Job name")
     messages: list[EmailMessage] = Field(..., description="Email messages to send")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Job metadata")
+    tenant_id: str | None = Field(None, description="Tenant scope")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: str = Field(default="queued", description="Job status")
 
@@ -126,6 +133,28 @@ async def _process_bulk_email_job(
         progress_callback(0, total, sent_count, failed_count)
 
     for index, message in enumerate(job.messages, start=1):
+        # Log to database if available, capturing job_id
+        try:
+            async with get_async_session_context() as db:
+                from dotmac.platform.communications.metrics_service import get_metrics_service
+
+                metrics_service = get_metrics_service(db)
+                await metrics_service.log_communication(
+                    type=CommunicationType.EMAIL,
+                    recipient=",".join([str(a) for a in message.to]),
+                    subject=message.subject,
+                    sender=message.from_email,
+                    text_body=message.text_body,
+                    html_body=message.html_body,
+                    template_id=job.metadata.get("template_id") if job.metadata else None,
+                    user_id=None,
+                    job_id=job.id,
+                    tenant_id=job.tenant_id,
+                    metadata=job.metadata or {},
+                )
+        except Exception as exc:  # pragma: no cover - best effort logging
+            logger.warning("Bulk email log failed", error=str(exc), job_id=job.id)
+
         response = await _send_email_async(email_service, message)
         responses.append(response)
 
@@ -298,8 +327,31 @@ class TaskService:
         )
         return str(task.id)
 
-    def send_bulk_emails_async(self, job: BulkEmailJob) -> str:
+    def send_bulk_emails_async(self, job: BulkEmailJob, *, metadata: dict[str, Any] | None = None) -> str:
+        """Queue bulk emails and persist metadata for status lookups."""
         task = send_bulk_email_task.delay(job.model_dump())
+        try:
+            async def _persist() -> None:
+                async with get_async_session_context() as db:
+                    meta = BulkJobMetadata(
+                        job_id=job.id,
+                        task_id=str(task.id),
+                        template_id=(metadata or {}).get("template_id"),
+                        recipient_count=len(job.messages),
+                        status="queued",
+                        metadata_=metadata or {},
+                    )
+                    db.add(meta)
+                    await db.commit()
+
+            # Fire and forget persistence
+            try:
+                import asyncio
+                asyncio.get_event_loop().create_task(_persist())
+            except Exception:
+                _run_async(_persist())
+        except Exception as exc:  # pragma: no cover - best effort
+            logger.warning("Failed to persist bulk job metadata", error=str(exc))
         logger.info(
             "Bulk email job queued",
             task_id=task.id,
@@ -316,6 +368,22 @@ class TaskService:
             "result": result.result,
             "info": result.info,
         }
+
+    def get_bulk_metadata(self, job_id: str) -> dict[str, Any] | None:
+        try:
+            async def _fetch() -> dict[str, Any] | None:
+                async with get_async_session_context() as db:
+                    stmt = select(BulkJobMetadata).where(BulkJobMetadata.job_id == job_id)
+                    result = await db.execute(stmt)
+                    obj = result.scalar_one_or_none()
+                    if obj:
+                        return obj.to_dict()
+                    return None
+
+            return _run_async(_fetch())
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Failed to fetch bulk metadata", error=str(exc))
+            return None
 
     def cancel_task(self, task_id: str) -> bool:
         try:
@@ -382,6 +450,18 @@ def queue_email(
 
 
 def queue_bulk_emails(name: str, messages: list[EmailMessage]) -> str:
+    return queue_bulk_emails_with_meta(name, messages, metadata=None)
+
+
+def queue_bulk_emails_with_meta(
+    name: str, messages: list[EmailMessage], metadata: dict[str, Any] | None
+) -> tuple[str, str]:
     service = get_task_service()
-    job = BulkEmailJob(name=name, messages=messages)
-    return service.send_bulk_emails_async(job)
+    job = BulkEmailJob(
+        name=name,
+        messages=messages,
+        metadata=metadata or {},
+        tenant_id=(metadata or {}).get("tenant_id"),
+    )
+    task_id = service.send_bulk_emails_async(job, metadata=metadata)
+    return job.id, task_id

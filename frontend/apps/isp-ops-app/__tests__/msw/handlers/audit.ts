@@ -184,6 +184,51 @@ function applyFilters(
 // ============================================
 
 export const auditHandlers = [
+  // Export audit logs
+  http.post("*/api/v1/audit/export", async ({ request }) => {
+    const body = (await request.json()) as AuditExportRequest;
+    if (!body.format) {
+      return HttpResponse.json({ detail: "Invalid format" }, { status: 400 });
+    }
+    const exportId = `export-${Date.now()}`;
+    const fmt = body.format;
+    const response: AuditExportResponse = {
+      export_id: exportId,
+      status: "completed",
+      download_url: `/downloads/audit-export-${exportId}.${fmt}`,
+      expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+    };
+    exportRequests.set(exportId, response);
+    console.log("[MSW] POST /api/v1/audit/export", { format: fmt });
+    return HttpResponse.json(response);
+  }),
+  // Export audit logs
+  http.post("*/api/v1/audit/export", async ({ request }) => {
+    const body = (await request.json()) as AuditExportRequest;
+    const exportId = `export-${Date.now()}`;
+    const fmt = body.format || "csv";
+    const response: AuditExportResponse = {
+      export_id: exportId,
+      status: "completed",
+      download_url: `/downloads/audit-export-${exportId}.${fmt}`,
+      expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+    };
+    exportRequests.set(exportId, response);
+    console.log("[MSW] POST /api/v1/audit/export", { format: fmt });
+    return HttpResponse.json(response);
+  }),
+  // Compliance report
+  http.get("*/api/v1/audit/compliance", ({ request }) => {
+    const url = new URL(request.url);
+    const from_date = url.searchParams.get("from_date") || "";
+    const to_date = url.searchParams.get("to_date") || "";
+    const report = createMockComplianceReport({
+      period_start: from_date,
+      period_end: to_date,
+    });
+    console.log("[MSW] GET /api/v1/audit/compliance", { from_date, to_date });
+    return HttpResponse.json(report);
+  }),
   // Get activity summary - MUST come before /activities/:activityId
   http.get("*/api/v1/audit/activities/summary", ({ request, params }) => {
     const url = new URL(request.url);

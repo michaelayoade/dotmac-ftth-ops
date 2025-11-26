@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
-import { isAuthBypassEnabled } from "@dotmac/better-auth";
+import { isAuthBypassEnabled, useSession } from "@dotmac/better-auth";
 
 // Skip auth/session calls in bypass mode to avoid hangs during E2E tests
 const authBypassEnabled = isAuthBypassEnabled();
@@ -22,8 +22,23 @@ export interface TenantBrandingConfigDto {
   operations_email?: string | null;
   partner_support_email?: string | null;
   primary_color?: string | null;
+  primary_hover_color?: string | null;
+  primary_foreground_color?: string | null;
   secondary_color?: string | null;
+  secondary_hover_color?: string | null;
+  secondary_foreground_color?: string | null;
   accent_color?: string | null;
+  background_color?: string | null;
+  foreground_color?: string | null;
+  primary_color_dark?: string | null;
+  primary_hover_color_dark?: string | null;
+  primary_foreground_color_dark?: string | null;
+  secondary_color_dark?: string | null;
+  secondary_hover_color_dark?: string | null;
+  secondary_foreground_color_dark?: string | null;
+  accent_color_dark?: string | null;
+  background_color_dark?: string | null;
+  foreground_color_dark?: string | null;
   logo_light_url?: string | null;
   logo_dark_url?: string | null;
   favicon_url?: string | null;
@@ -47,6 +62,11 @@ type BrandingQueryOptions = Omit<
 >;
 
 export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
+  const { data: session } = useSession();
+  const user = session?.user as { tenant_id?: string; activeOrganization?: { id?: string } } | undefined;
+  const tenantId = user?.tenant_id || user?.activeOrganization?.id;
+  const hasTenant = Boolean(tenantId);
+
   // Skip query in bypass mode - no auth/session available
   return useQuery<TenantBrandingResponseDto, Error, TenantBrandingResponseDto, BrandingQueryKey>({
     queryKey: ["tenant-branding"],
@@ -54,7 +74,7 @@ export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
       const response = await apiClient.get<TenantBrandingResponseDto>("/branding");
       return extractDataOrThrow(response, "Failed to load branding configuration");
     },
-    enabled: !authBypassEnabled && (options?.enabled !== false),
+    enabled: !authBypassEnabled && hasTenant && (options?.enabled ?? true),
     staleTime: 5 * 60 * 1000,
     ...options,
   });

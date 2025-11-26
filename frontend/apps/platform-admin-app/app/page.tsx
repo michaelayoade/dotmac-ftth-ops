@@ -19,7 +19,7 @@ export default function HomePage() {
   if (authLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--brand-primary)]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--brand-primary)]" />
       </main>
     );
   }
@@ -127,14 +127,14 @@ export default function HomePage() {
 
       <div className="flex items-center gap-4 text-sm text-muted-foreground mt-8">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
           <span>
             API: <span className="text-emerald-400">{apiBaseUrl.replace(/^https?:\/\//, "")}</span>
           </span>
         </div>
-        <div className="w-px h-4 bg-muted"></div>
+        <div className="w-px h-4 bg-muted" />
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-[var(--brand-primary)] rounded-full animate-pulse"></div>
+          <div className="w-2 h-2 bg-[var(--brand-primary)] rounded-full animate-pulse" />
           <span>
             Frontend: <span className="text-brand">{typeof window !== 'undefined' ? window.location.host : 'localhost:3002'}</span>
           </span>
