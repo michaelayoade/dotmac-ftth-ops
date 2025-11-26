@@ -300,6 +300,96 @@ class PluginInterface(ABC):
         pass
 
 
+class AlertDeliveryProvider(PluginProvider):
+    """
+    Base class for network alert delivery providers.
+
+    Use this to implement custom alert delivery mechanisms such as:
+    - PagerDuty integration
+    - Custom ticketing systems
+    - SMS gateways
+    - Internal notification systems
+
+    Example implementation:
+
+        class PagerDutyAlertProvider(AlertDeliveryProvider):
+            async def deliver_alert(self, alert, recipients, metadata):
+                # Send to PagerDuty API
+                return True
+
+            async def deliver_alert_batch(self, alerts, recipients, metadata):
+                # Batch send to PagerDuty
+                return {"delivered": len(alerts), "failed": 0}
+    """
+
+    @abstractmethod
+    async def deliver_alert(
+        self,
+        alert: dict[str, Any],
+        recipients: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> bool:
+        """
+        Deliver a single network alert.
+
+        Args:
+            alert: Alert data with keys:
+                - alert_id: Unique identifier
+                - severity: critical, warning, info
+                - title: Alert title
+                - description: Alert description
+                - device_id: Affected device
+                - device_name: Device name
+                - triggered_at: Timestamp
+            recipients: Optional list of recipients (plugin-specific format)
+            metadata: Additional delivery metadata
+
+        Returns:
+            bool: True if delivered successfully
+        """
+        pass
+
+    async def deliver_alert_batch(
+        self,
+        alerts: list[dict[str, Any]],
+        recipients: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Deliver multiple alerts in batch.
+
+        Default implementation calls deliver_alert for each.
+        Override for efficient batch delivery.
+
+        Args:
+            alerts: List of alert data dictionaries
+            recipients: Optional list of recipients
+            metadata: Additional delivery metadata
+
+        Returns:
+            Dict with delivery results:
+                - delivered: Count of successful deliveries
+                - failed: Count of failed deliveries
+                - errors: List of error messages
+        """
+        delivered = 0
+        failed = 0
+        errors: list[str] = []
+
+        for alert in alerts:
+            try:
+                if await self.deliver_alert(alert, recipients, metadata):
+                    delivered += 1
+                else:
+                    failed += 1
+                    errors.append(f"Failed to deliver alert {alert.get('alert_id')}")
+            except Exception as e:
+                failed += 1
+                errors.append(f"Error delivering alert {alert.get('alert_id')}: {e}")
+
+        return {"delivered": delivered, "failed": failed, "errors": errors}
+
+
 # Provider type mapping
 PROVIDER_TYPE_MAP = {
     "notification": NotificationProvider,
@@ -310,4 +400,5 @@ PROVIDER_TYPE_MAP = {
     "integration": IntegrationProvider,
     "analytics": AnalyticsProvider,
     "workflow": WorkflowProvider,
+    "alert_delivery": AlertDeliveryProvider,
 }

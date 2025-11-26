@@ -8,6 +8,14 @@ GREEN := \033[0;32m
 YELLOW := \033[1;33m
 NC := \033[0m
 
+# Optional environment loading (prefers .env.local, then .env) for host-run targets.
+ENV_FILES := .env.local .env
+ENV_FILE := $(firstword $(foreach f,$(ENV_FILES),$(if $(wildcard $(f)),$(f),)))
+ifneq ($(ENV_FILE),)
+include $(ENV_FILE)
+export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' $(ENV_FILE))
+endif
+
 .DEFAULT_GOAL := help
 
 # Include platform/ISP target sets
@@ -77,4 +85,3 @@ build-all:
 	@echo "$(CYAN)Building all Docker images...$(NC)"
 	@docker compose -f docker-compose.base.yml build
 	@docker compose -f docker-compose.isp.yml build
-
