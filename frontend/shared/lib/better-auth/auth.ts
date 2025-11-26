@@ -363,7 +363,9 @@ const createAuthInstance = (): AuthInstance => {
         }
 
         // Fallback: log the reset URL for manual use in development
-        console.log(`Reset password URL for ${user.email}: ${url}`);
+        if (process.env["NODE_ENV"] !== "production") {
+          console.log(`Reset password URL for ${user.email}: ${url}`);
+        }
       },
     },
 
@@ -435,7 +437,9 @@ const createAuthInstance = (): AuthInstance => {
             }
           }
 
-          console.log(`New organization created: ${organization.name}`);
+          if (process.env["NODE_ENV"] !== "production") {
+            console.log(`New organization created: ${organization.name}`);
+          }
         },
 
         onDelete: async (organization: { id: string; name: string; slug?: string }) => {
@@ -467,7 +471,9 @@ const createAuthInstance = (): AuthInstance => {
             }
           }
 
-          console.log(`Organization deleted: ${organization.name}`);
+          if (process.env["NODE_ENV"] !== "production") {
+            console.log(`Organization deleted: ${organization.name}`);
+          }
         },
       }),
     ],

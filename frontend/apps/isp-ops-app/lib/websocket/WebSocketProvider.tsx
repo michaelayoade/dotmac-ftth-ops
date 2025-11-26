@@ -77,7 +77,9 @@ export function WebSocketProvider({
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log("WebSocket connected");
+        if (process.env["NODE_ENV"] !== "production") {
+          console.log("WebSocket connected");
+        }
         setIsConnected(true);
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
@@ -124,7 +126,9 @@ export function WebSocketProvider({
       };
 
       ws.onclose = () => {
-        console.log("WebSocket disconnected");
+        if (process.env["NODE_ENV"] !== "production") {
+          console.log("WebSocket disconnected");
+        }
         setIsConnected(false);
         setConnectionStatus("disconnected");
         wsRef.current = null;
@@ -135,7 +139,9 @@ export function WebSocketProvider({
             reconnectInterval * Math.pow(2, reconnectAttemptsRef.current),
             30000,
           );
-          console.log(`Reconnecting in ${delay}ms...`);
+          if (process.env["NODE_ENV"] !== "production") {
+            console.log(`Reconnecting in ${delay}ms...`);
+          }
 
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;

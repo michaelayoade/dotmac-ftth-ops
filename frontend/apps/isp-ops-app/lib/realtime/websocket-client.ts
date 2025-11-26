@@ -20,6 +20,8 @@ import {
   type WebSocketServerMessage,
 } from "../../types/realtime";
 
+const isDev = process.env["NODE_ENV"] !== "production";
+
 export class WebSocketClient {
   private ws: WebSocket | null = null;
   private config: WebSocketConfig;
@@ -158,7 +160,7 @@ export class WebSocketClient {
         this.lastPongTime = Date.now();
         break;
       case "subscribed":
-        console.log("Subscribed to channel:", message.channel);
+        if (isDev) console.log("Subscribed to channel:", message.channel);
         break;
       case "error":
         console.error("WebSocket error message:", message.message);
