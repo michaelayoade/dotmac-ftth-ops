@@ -52,9 +52,6 @@ export class SSEClient {
       if (this.config.token) {
         url.searchParams.set("token", this.config.token);
       }
-      if (this.config.token) {
-        url.searchParams.set("token", this.config.token);
-      }
 
       this.eventSource = new EventSource(url.toString(), {
         withCredentials: true, // Send cookies automatically

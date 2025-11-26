@@ -18,6 +18,8 @@ export {
   signIn,
   signUp,
   signOut,
+  forgetPassword,
+  resetPassword,
   useActiveOrganization,
   useListOrganizations,
   useHasPermission,

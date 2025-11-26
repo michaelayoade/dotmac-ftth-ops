@@ -40,12 +40,27 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true, // Include cookies for authentication
 });
 
-// Request interceptor to keep baseURL in sync with config
+// Request interceptor to keep baseURL in sync with config and add tenant headers
 apiClient.interceptors.request.use(
   (config) => {
     const resolvedBaseUrl = resolveBaseUrl();
     config.baseURL = resolvedBaseUrl;
     apiClient.defaults.baseURL = resolvedBaseUrl;
+
+    // Add tenant headers for multi-tenant support
+    if (typeof window !== "undefined") {
+      const tenantId = window.localStorage?.getItem("tenant_id");
+      if (tenantId && config.headers) {
+        config.headers["X-Tenant-ID"] = tenantId;
+      }
+
+      // Add X-Active-Tenant-Id header for partner multi-tenant access
+      const activeManagedTenantId = localStorage.getItem("active_managed_tenant_id");
+      if (activeManagedTenantId && config.headers) {
+        config.headers["X-Active-Tenant-Id"] = activeManagedTenantId;
+      }
+    }
+
     return config;
   },
   (error) => {
@@ -62,19 +77,13 @@ apiClient.interceptors.response.use(
       const { status, data } = error.response;
 
       if (status === 401) {
-        // DEBUG: Log 401 errors to understand what's failing
-        const debugContext: Record<string, unknown> = {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers,
-          responseData: data,
-        };
-
-        if (typeof document !== "undefined") {
-          debugContext['cookies'] = document.cookie;
+        // Log 401 errors in development only (avoid exposing sensitive info in production)
+        if (process.env["NODE_ENV"] !== "production") {
+          console.warn("[API Client] 401 Unauthorized", {
+            url: error.config?.url,
+            method: error.config?.method,
+          });
         }
-
-        console.error("[API Client] 401 Unauthorized:", debugContext);
 
         // Unauthorized - redirect to login (but not if already on login page or logging in)
         if (typeof window !== "undefined") {
@@ -83,7 +92,6 @@ apiClient.interceptors.response.use(
 
           // Only redirect if not already on login page and not a login request
           if (!isLoginPage && !isLoginRequest) {
-            console.error("[API Client] Redirecting to login due to 401");
             window.location.href = "/login";
           }
         }

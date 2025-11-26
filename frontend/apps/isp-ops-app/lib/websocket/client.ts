@@ -172,7 +172,9 @@ export class WebSocketClient {
   }
 
   private handleOpen(): void {
-    console.log("WebSocket connected");
+    if (process.env["NODE_ENV"] !== "production") {
+      console.log("WebSocket connected");
+    }
     this.reconnectAttempts = 0;
     this.reconnectDelay = 1000;
     this.updateState({ connected: true, reconnecting: false });
@@ -218,7 +220,9 @@ export class WebSocketClient {
   }
 
   private handleClose(event: CloseEvent): void {
-    console.log("WebSocket closed:", event.code, event.reason);
+    if (process.env["NODE_ENV"] !== "production") {
+      console.log("WebSocket closed:", event.code, event.reason);
+    }
     this.updateState({ connected: false, reconnecting: false });
 
     // Attempt to reconnect if it wasn't a clean closure
@@ -239,9 +243,11 @@ export class WebSocketClient {
       this.maxReconnectDelay,
     );
 
-    console.log(
-      `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`,
-    );
+    if (process.env["NODE_ENV"] !== "production") {
+      console.log(
+        `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`,
+      );
+    }
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;

@@ -56,7 +56,9 @@ const nextConfig = {
   },
   // Proxy API requests to backend for proper cookie handling
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    // Use INTERNAL_API_URL for server-side rewrites (container-to-container)
+    // Falls back to NEXT_PUBLIC_API_BASE_URL for local dev
+    const backendUrl = process.env['INTERNAL_API_URL'] || process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8001';
     return [
       {
         source: '/api/v1/:path*',
