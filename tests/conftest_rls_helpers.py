@@ -110,6 +110,13 @@ async def auto_bypass_rls_for_all_tests(request, db_session: AsyncSession):
         yield
         return
 
+    # Check if db_session is actually an async session by checking for sync_session attribute
+    # Sync sessions don't have async execute methods
+    if not hasattr(db_session, "sync_session"):
+        # This is a sync session, skip RLS bypass
+        yield
+        return
+
     if not await _supports_rls(db_session):
         yield
         return

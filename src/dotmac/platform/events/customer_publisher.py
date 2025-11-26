@@ -4,14 +4,18 @@ Customer Event Publisher for Real-Time Updates.
 Publishes customer-related events to Redis pub/sub for GraphQL subscriptions.
 """
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import structlog
-from redis.asyncio import Redis
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
 
 logger = structlog.get_logger(__name__)
 
@@ -24,7 +28,7 @@ class CustomerEventPublisher:
     subscribed to specific customer channels.
     """
 
-    def __init__(self, redis: Redis[Any]):
+    def __init__(self, redis: Redis):
         """
         Initialize the customer event publisher.
 
