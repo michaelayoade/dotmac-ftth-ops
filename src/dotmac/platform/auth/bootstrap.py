@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import cast
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from typing import cast
 
 from dotmac.platform.db import AsyncSessionLocal
 from dotmac.platform.settings import settings

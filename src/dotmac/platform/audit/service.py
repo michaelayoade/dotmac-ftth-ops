@@ -2,9 +2,9 @@
 Audit service for tracking and retrieving activities across the platform.
 """
 
+import math
 from datetime import UTC, datetime, timedelta
 from typing import Any
-import math
 
 import structlog
 from fastapi import Request

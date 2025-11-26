@@ -42,6 +42,7 @@ from dotmac.platform.auth.core import (
 from dotmac.platform.auth.email_service import get_auth_email_service
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
 from dotmac.platform.auth.mfa_service import mfa_service
+from dotmac.platform.communications.email_service import EmailMessage, get_email_service
 from dotmac.platform.communications.models import (
     CommunicationLog,
     CommunicationStatus,
@@ -51,13 +52,12 @@ from dotmac.platform.core.rate_limiting import rate_limit
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.integrations import IntegrationStatus, get_integration_async
 from dotmac.platform.settings import settings
-from dotmac.platform.communications.email_service import EmailMessage, get_email_service
+from dotmac.platform.tenant.schemas import TenantCreate
 from dotmac.platform.tenant.service import (
     TenantAlreadyExistsError,
     TenantNotFoundError,
     TenantService,
 )
-from dotmac.platform.tenant.schemas import TenantCreate
 from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 

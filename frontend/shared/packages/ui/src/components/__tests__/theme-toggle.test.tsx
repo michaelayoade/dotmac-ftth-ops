@@ -6,8 +6,8 @@
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ThemeProvider } from "next-themes";
 import { NextIntlClientProvider } from "next-intl";
+import { ThemeProvider } from "next-themes";
 import React from "react";
 
 import { ThemeToggle, ThemeToggleButton } from "../theme-toggle";

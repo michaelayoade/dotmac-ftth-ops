@@ -381,7 +381,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 if tenant_from_claims:
                     # Cache claims for downstream middleware if needed
                     try:
-                        setattr(request.state, "jwt_claims", claims)
+                        request.state.jwt_claims = claims
                     except Exception:
                         pass
                     return tenant_from_claims

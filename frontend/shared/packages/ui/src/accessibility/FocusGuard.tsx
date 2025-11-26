@@ -4,6 +4,8 @@
  * Guard elements to trap focus within a container
  */
 
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Focus guard intentionally uses tabIndex for focus trapping */
+
 'use client';
 
 interface FocusGuardProps {

@@ -8,10 +8,10 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
-from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from dotmac.platform.db import Base, GUID
+from dotmac.platform.db import GUID, Base
 
 
 class ChatRole(str, Enum):

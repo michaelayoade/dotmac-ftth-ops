@@ -6,9 +6,9 @@
 
 'use client';
 
-import * as React from 'react';
-import NextLink, { type LinkProps as NextLinkProps } from 'next/link';
 import { warnMissingLabel } from '@dotmac/utils/a11y-dev-warnings';
+import NextLink, { type LinkProps as NextLinkProps } from 'next/link';
+import * as React from 'react';
 
 export interface EnhancedLinkProps extends NextLinkProps {
   children: React.ReactNode;

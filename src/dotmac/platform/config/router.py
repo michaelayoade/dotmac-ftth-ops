@@ -4,7 +4,7 @@ Platform Configuration Router.
 Exposes public platform configuration for frontend consumption.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Response
@@ -154,7 +154,7 @@ async def get_runtime_frontend_config(
 
     runtime_payload = {
         "version": settings.app_version,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "cache_ttl_seconds": _RUNTIME_CONFIG_CACHE_SECONDS,
         "tenant": {
             "id": settings.TENANT_ID or settings.tenant.default_tenant_id,

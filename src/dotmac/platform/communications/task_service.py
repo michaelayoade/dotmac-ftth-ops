@@ -11,13 +11,11 @@ from uuid import uuid4
 import structlog
 from celery.exceptions import CeleryError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-
-from dotmac.platform.celery_app import celery_app
-
 from sqlalchemy import select
 
-from dotmac.platform.db import get_async_session_context
+from dotmac.platform.celery_app import celery_app
 from dotmac.platform.communications.models import BulkJobMetadata, CommunicationType
+from dotmac.platform.db import get_async_session_context
 
 from .email_service import EmailMessage, EmailResponse, get_email_service
 

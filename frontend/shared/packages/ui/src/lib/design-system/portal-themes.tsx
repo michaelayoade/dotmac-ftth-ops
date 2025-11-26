@@ -8,8 +8,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useTheme } from "next-themes";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import { portalAnimations } from "./tokens/animations";
 import { colorTokens, detectPortalFromRoute, type PortalType } from "./tokens/colors";

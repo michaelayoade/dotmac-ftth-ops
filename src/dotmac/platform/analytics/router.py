@@ -13,23 +13,23 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.auth.api_keys_metrics_router import _get_api_key_metrics_cached
 from dotmac.platform.auth.dependencies import (
     CurrentUser,
     get_current_user,
 )
+from dotmac.platform.auth.metrics_router import _get_auth_metrics_cached
 from dotmac.platform.auth.rbac_dependencies import require_any_permission
-from dotmac.platform.db import get_session_dependency
 from dotmac.platform.billing.metrics_router import (
     _get_billing_metrics_cached,
     _get_customer_metrics_cached,
 )
-from dotmac.platform.auth.metrics_router import _get_auth_metrics_cached
-from dotmac.platform.auth.api_keys_metrics_router import _get_api_key_metrics_cached
-from dotmac.platform.secrets.metrics_router import _get_secrets_metrics_cached
-from dotmac.platform.monitoring.metrics_router import _get_monitoring_metrics_cached
 from dotmac.platform.communications.metrics_router import _get_communication_stats_cached
+from dotmac.platform.db import get_session_dependency
 from dotmac.platform.file_storage.metrics_router import _get_file_stats_cached
 from dotmac.platform.file_storage.service import get_storage_service
+from dotmac.platform.monitoring.metrics_router import _get_monitoring_metrics_cached
+from dotmac.platform.secrets.metrics_router import _get_secrets_metrics_cached
 
 from .models import (
     AnalyticsQueryRequest,

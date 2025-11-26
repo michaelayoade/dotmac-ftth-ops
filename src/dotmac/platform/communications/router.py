@@ -5,9 +5,9 @@ FastAPI router for communications services.
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
 from smtplib import SMTPException
 from typing import Any
+from uuid import UUID
 
 import structlog
 from celery.exceptions import CeleryError
@@ -18,27 +18,24 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from dotmac.platform.auth.dependencies import UserInfo, get_current_user
-from dotmac.platform.auth.rbac_dependencies import require_admin
 from dotmac.platform.db import get_async_session_context
 
 from .email_service import EmailMessage, EmailResponse, get_email_service
 from .metrics_service import get_metrics_service
 from .models import (
-    CommunicationLog,
     BulkJobMetadata,
+    CommunicationLog,
     CommunicationStatus,
     CommunicationTemplate,
     CommunicationType,
 )
 from .task_service import (
     get_task_service,
-    queue_bulk_emails,
     queue_bulk_emails_with_meta,
     queue_email,
 )
 from .template_service import (
     RenderedTemplate,
-    TemplateData,
     create_template,
     get_template_service,
     quick_render,

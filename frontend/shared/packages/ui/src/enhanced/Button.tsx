@@ -6,9 +6,10 @@
 
 'use client';
 
-import * as React from 'react';
-import { Button as BaseButton, type ButtonProps } from '../button';
 import { warnMissingLabel, warnMissingButtonType } from '@dotmac/utils/a11y-dev-warnings';
+import * as React from 'react';
+
+import { Button as BaseButton, type ButtonProps } from '../button';
 
 export interface EnhancedButtonProps extends ButtonProps {
   /** Suppress accessibility warnings (not recommended) */

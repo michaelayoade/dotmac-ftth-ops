@@ -6,9 +6,10 @@
 
 'use client';
 
-import * as React from 'react';
-import { Input as BaseInput, type InputProps } from '../input';
 import { warnMissingFormLabel } from '@dotmac/utils/a11y-dev-warnings';
+import * as React from 'react';
+
+import { Input as BaseInput, type InputProps } from '../input';
 
 export interface EnhancedInputProps extends InputProps {
   /** Associated label element ID */

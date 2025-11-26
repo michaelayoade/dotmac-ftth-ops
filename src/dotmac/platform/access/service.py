@@ -25,6 +25,7 @@ from dotmac.platform.access.drivers import (
     ONUProvisionResult,
 )
 from dotmac.platform.access.registry import AccessDriverRegistry, DriverDescriptor
+from dotmac.platform.settings import get_settings
 from dotmac.platform.voltha.schemas import Device as VolthaDevice
 from dotmac.platform.voltha.schemas import (
     DeviceDetailResponse,
@@ -38,7 +39,6 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAAlarmListResponse,
     VOLTHAHealthResponse,
 )
-from dotmac.platform.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 

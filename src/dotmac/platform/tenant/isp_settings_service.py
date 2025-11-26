@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.core.exceptions import DotMacError, ErrorCategory, ErrorSeverity
 from dotmac.platform.tenant.isp_settings_models import ISPSettings
-from dotmac.platform.tenant.models import Tenant, TenantSetting
+from dotmac.platform.tenant.models import TenantSetting
 
 logger = structlog.get_logger(__name__)
 

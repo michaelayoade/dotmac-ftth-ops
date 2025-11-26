@@ -24,6 +24,8 @@ from dotmac.platform.access.drivers import (
 )
 from dotmac.platform.access.registry import AccessDriverRegistry
 from dotmac.platform.access.service import AccessNetworkService, OLTOverview
+from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.settings import Settings, get_settings
 from dotmac.platform.voltha.schemas import (
     DeviceDetailResponse,
     DeviceListResponse,
@@ -33,8 +35,6 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAAlarmListResponse,
     VOLTHAHealthResponse,
 )
-from dotmac.platform.auth.core import UserInfo, get_current_user
-from dotmac.platform.settings import Settings, get_settings
 
 router = APIRouter(prefix="/access", tags=["Access Network"])
 

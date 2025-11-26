@@ -4,8 +4,8 @@ Commission Rules Service - Business logic for partner commission rules managemen
 Provides CRUD operations and rule evaluation for partner commission configurations.
 """
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
 from uuid import UUID
 
 import structlog

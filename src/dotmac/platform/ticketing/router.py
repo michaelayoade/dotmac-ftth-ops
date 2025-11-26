@@ -24,15 +24,15 @@ from .dependencies import get_ticket_service
 from .models import TicketStatus
 from .schemas import (
     AgentPerformanceMetrics,
-    TicketPriority,
     TicketCountStats,
     TicketCreate,
     TicketDetail,
-    TicketMessageResponse,
     TicketMessageCreate,
+    TicketMessageResponse,
+    TicketPriority,
+    TicketStats,
     TicketSummary,
     TicketUpdate,
-    TicketStats,
 )
 from .service import (
     TicketAccessDeniedError,

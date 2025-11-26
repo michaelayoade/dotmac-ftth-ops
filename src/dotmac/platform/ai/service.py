@@ -6,7 +6,7 @@ Core service for AI-powered chat functionality.
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -23,7 +23,6 @@ from dotmac.platform.ai.models import (
     ChatSessionStatus,
     ChatSessionType,
 )
-from dotmac.platform.auth.models import User
 
 logger = logging.getLogger(__name__)
 

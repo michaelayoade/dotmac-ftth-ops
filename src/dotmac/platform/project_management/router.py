@@ -20,6 +20,7 @@ from dotmac.platform.auth.rbac_dependencies import (
 )
 from dotmac.platform.db import get_async_session
 from dotmac.platform.project_management.schemas import (
+    DashboardMetrics,
     ProjectCreate,
     ProjectListResponse,
     ProjectResponse,
@@ -33,10 +34,9 @@ from dotmac.platform.project_management.schemas import (
     TaskUpdate,
     TeamCreate,
     TeamListResponse,
+    TeamMembershipListResponse,
     TeamResponse,
     TeamUpdate,
-    DashboardMetrics,
-    TeamMembershipListResponse,
     TechnicianTeamMembershipResponse,
 )
 from dotmac.platform.project_management.service import ProjectManagementService

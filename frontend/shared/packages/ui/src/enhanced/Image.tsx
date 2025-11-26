@@ -6,9 +6,9 @@
 
 'use client';
 
-import * as React from 'react';
-import NextImage, { type ImageProps as NextImageProps } from 'next/image';
 import { warnMissingAlt } from '@dotmac/utils/a11y-dev-warnings';
+import NextImage, { type ImageProps as NextImageProps } from 'next/image';
+import * as React from 'react';
 
 export interface EnhancedImageProps extends NextImageProps {
   /**

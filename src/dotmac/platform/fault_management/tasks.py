@@ -4,8 +4,9 @@ Fault Management Celery Tasks
 Background tasks for alarm correlation, SLA monitoring, and maintenance.
 """
 
+from collections.abc import Coroutine
 from datetime import UTC, datetime, timedelta
-from typing import Any, Coroutine, TypeVar
+from typing import Any, TypeVar
 from uuid import UUID
 
 import structlog

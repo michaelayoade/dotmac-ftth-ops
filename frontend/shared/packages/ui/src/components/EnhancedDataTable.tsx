@@ -702,6 +702,8 @@ export function EnhancedDataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <div
                 key={row.id}
+                role={onRowClick ? "button" : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
                 className={cn(
                   "rounded-md border border-border bg-card p-4",
                   onRowClick && "cursor-pointer hover:bg-muted/50",
@@ -714,6 +716,12 @@ export function EnhancedDataTable<TData, TValue>({
                     return;
                   }
                   onRowClick?.(row.original);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onRowClick?.(row.original);
+                  }
                 }}
               >
                 {renderMobileCard?.(row)}

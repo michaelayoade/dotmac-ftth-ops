@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.db import get_session_dependency
+from dotmac.platform.settings import Settings, get_settings
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 from dotmac.platform.voltha.client import VOLTHAClient
@@ -36,7 +37,6 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAHealthResponse,
 )
 from dotmac.platform.voltha.service import VOLTHAService
-from dotmac.platform.settings import Settings, get_settings
 
 router = APIRouter(prefix="/voltha", tags=["VOLTHA"])
 

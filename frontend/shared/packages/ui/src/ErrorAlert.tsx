@@ -4,11 +4,13 @@
  * Standardized error display component with retry and dismiss actions
  */
 
-import * as React from 'react';
+import type { AppError, ErrorSeverity } from '@dotmac/types';
 import { AlertCircle, XCircle, RefreshCw, X } from 'lucide-react';
+import * as React from 'react';
+
 import { Alert, AlertDescription, AlertTitle } from './alert';
 import { Button } from './button';
-import type { AppError, ErrorSeverity } from '@dotmac/types';
+
 
 export interface ErrorAlertProps {
   /** Error to display */

@@ -132,7 +132,7 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
 class BetterAuthService:
     """Service for validating Better Auth sessions and extracting user data."""
 
-    def __init__(self, db: AsyncSession, rbac_service: "RBACService | None" = None):
+    def __init__(self, db: AsyncSession, rbac_service: RBACService | None = None):
         """Initialize with database session.
 
         Args:
@@ -346,7 +346,7 @@ async def get_better_auth_user(
     session_token: str,
     db: AsyncSession,
     tenant_id: str | None = None,
-    rbac_service: "RBACService | None" = None,
+    rbac_service: RBACService | None = None,
 ) -> UserInfo | None:
     """Get user info from Better Auth session token.
 

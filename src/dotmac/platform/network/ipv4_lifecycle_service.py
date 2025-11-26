@@ -16,8 +16,8 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.ip_management.models import IPReservation, IPReservationStatus
 from dotmac.platform.ip_management.ip_service import IPManagementService
+from dotmac.platform.ip_management.models import IPReservation, IPReservationStatus
 from dotmac.platform.network.lifecycle_protocol import (
     ActivationError,
     AllocationError,
