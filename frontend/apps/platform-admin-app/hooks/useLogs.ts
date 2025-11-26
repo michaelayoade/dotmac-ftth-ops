@@ -115,10 +115,9 @@ export function useLogs(filters: LogsFilter = {}) {
     queryKey: [...logsKeys.stats(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
-        const response = await axios.get<LogStats>(
-          `${apiBaseUrl}/api/v1/monitoring/logs/stats`,
-          { withCredentials: true },
-        );
+        const response = await axios.get<LogStats>(`${apiBaseUrl}/api/v1/monitoring/logs/stats`, {
+          withCredentials: true,
+        });
         return response.data;
       } catch (err: unknown) {
         logger.error(
@@ -158,7 +157,8 @@ export function useLogs(filters: LogsFilter = {}) {
     if (axios.isAxiosError(logsQuery.error)) {
       errorMessage = logsQuery.error.response?.data?.detail || "Failed to fetch logs";
     } else if (logsQuery.error instanceof Error) {
-      errorMessage = logsQuery.error.message === "Network error" ? "An error occurred" : logsQuery.error.message;
+      errorMessage =
+        logsQuery.error.message === "Network error" ? "An error occurred" : logsQuery.error.message;
     } else {
       errorMessage = "An error occurred";
     }

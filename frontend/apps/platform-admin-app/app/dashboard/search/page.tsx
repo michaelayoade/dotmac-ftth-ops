@@ -324,7 +324,7 @@ export default function GlobalSearchPage() {
 
 function SearchResultCard({ result }: { result: SearchResult }) {
   const Icon = TYPE_ICONS[result.type] || FileText;
-  const typeColor = TYPE_COLORS[result.type] || TYPE_COLORS['unknown'];
+  const typeColor = TYPE_COLORS[result.type] || TYPE_COLORS["unknown"];
   const detailRoute = getEntityRoute(result.type, result.id);
 
   return (

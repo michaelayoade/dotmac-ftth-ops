@@ -7,14 +7,7 @@ import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Checkbox } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -396,7 +389,7 @@ export default function RolesPage() {
                 id="role-description"
                 value={newRole.description}
                 onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-              placeholder="Describe the role&apos;s purpose and responsibilities"
+                placeholder="Describe the role's purpose and responsibilities"
                 rows={3}
               />
             </div>

@@ -2,10 +2,7 @@
 
 import React, { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 
-import {
-  VirtualizedDataTable,
-  type VirtualizedDataTableProps,
-} from "./VirtualizedDataTable";
+import { VirtualizedDataTable, type VirtualizedDataTableProps } from "./VirtualizedDataTable";
 
 export interface VirtualizedTableProps<T = Record<string, unknown>>
   extends Omit<VirtualizedDataTableProps<T>, "forwardedScrollRef"> {}
@@ -42,13 +39,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
       [rowHeight],
     );
 
-    return (
-      <VirtualizedDataTable
-        {...props}
-        rowHeight={rowHeight}
-        forwardedScrollRef={scrollRef}
-      />
-    );
+    return <VirtualizedDataTable {...props} rowHeight={rowHeight} forwardedScrollRef={scrollRef} />;
   },
 );
 

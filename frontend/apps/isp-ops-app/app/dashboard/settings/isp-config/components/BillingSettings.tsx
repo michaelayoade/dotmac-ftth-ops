@@ -8,7 +8,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,7 +54,11 @@ const INVOICE_FORMATS = [
   { value: "sequential", label: "Sequential", example: "1, 2, 3, ..." },
   { value: "prefix_sequential", label: "Prefix + Sequential", example: "INV-000001, INV-000002" },
   { value: "year_sequential", label: "Year + Sequential", example: "2025-000001, 2025-000002" },
-  { value: "custom_pattern", label: "Custom Pattern", example: "{prefix}-{year}-{month}-{sequence}" },
+  {
+    value: "custom_pattern",
+    label: "Custom Pattern",
+    example: "{prefix}-{year}-{month}-{sequence}",
+  },
 ];
 
 const PAYMENT_TERMS = [
@@ -83,7 +93,10 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
   const generateInvoiceExample = (): string => {
     const format = settings.invoice_numbering_format;
     const prefix = settings.invoice_prefix || "INV";
-    const sequence = String(settings.invoice_sequence_start || 1).padStart(settings.invoice_sequence_padding || 6, "0");
+    const sequence = String(settings.invoice_sequence_start || 1).padStart(
+      settings.invoice_sequence_padding || 6,
+      "0",
+    );
     const year = new Date().getFullYear();
     const month = String(new Date().getMonth() + 1).padStart(2, "0");
 
@@ -101,9 +114,13 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
     }
   };
 
-  const selectedPaymentTerms = PAYMENT_TERMS.find(t => t.value === settings.default_payment_terms);
-  const selectedDunningStrategy = DUNNING_STRATEGIES.find(s => s.value === settings.dunning_strategy);
-  const selectedLateFeeType = LATE_FEE_TYPES.find(t => t.value === settings.late_fee_type);
+  const selectedPaymentTerms = PAYMENT_TERMS.find(
+    (t) => t.value === settings.default_payment_terms,
+  );
+  const selectedDunningStrategy = DUNNING_STRATEGIES.find(
+    (s) => s.value === settings.dunning_strategy,
+  );
+  const selectedLateFeeType = LATE_FEE_TYPES.find((t) => t.value === settings.late_fee_type);
 
   return (
     <div className="space-y-6">
@@ -118,9 +135,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Invoice Numbering</CardTitle>
-          <CardDescription>
-            Configure how invoice numbers are generated
-          </CardDescription>
+          <CardDescription>Configure how invoice numbers are generated</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -144,7 +159,8 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              Example: {INVOICE_FORMATS.find(f => f.value === settings.invoice_numbering_format)?.example}
+              Example:{" "}
+              {INVOICE_FORMATS.find((f) => f.value === settings.invoice_numbering_format)?.example}
             </p>
           </div>
 
@@ -176,9 +192,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                 value={settings.invoice_sequence_start}
                 onChange={(e) => updateSetting("invoice_sequence_start", parseInt(e.target.value))}
               />
-              <p className="text-sm text-muted-foreground">
-                First invoice number
-              </p>
+              <p className="text-sm text-muted-foreground">First invoice number</p>
             </div>
 
             <div className="space-y-2">
@@ -189,11 +203,11 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                 min="1"
                 max="12"
                 value={settings.invoice_sequence_padding}
-                onChange={(e) => updateSetting("invoice_sequence_padding", parseInt(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("invoice_sequence_padding", parseInt(e.target.value))
+                }
               />
-              <p className="text-sm text-muted-foreground">
-                Zero-padding length (6 = 000001)
-              </p>
+              <p className="text-sm text-muted-foreground">Zero-padding length (6 = 000001)</p>
             </div>
           </div>
 
@@ -224,9 +238,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Payment Terms</CardTitle>
-          <CardDescription>
-            Configure default payment terms for invoices
-          </CardDescription>
+          <CardDescription>Configure default payment terms for invoices</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -249,8 +261,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
             <p className="text-sm text-muted-foreground">
               {selectedPaymentTerms?.days !== null
                 ? `Due ${selectedPaymentTerms?.days} days after invoice date`
-                : "Custom payment terms"
-              }
+                : "Custom payment terms"}
             </p>
           </div>
 
@@ -263,7 +274,9 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                 min="1"
                 max="365"
                 value={settings.custom_payment_terms_days || ""}
-                onChange={(e) => updateSetting("custom_payment_terms_days", parseInt(e.target.value) || null)}
+                onChange={(e) =>
+                  updateSetting("custom_payment_terms_days", parseInt(e.target.value) || null)
+                }
                 placeholder="Number of days"
               />
               <p className="text-sm text-muted-foreground">
@@ -277,17 +290,13 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Late Fees</CardTitle>
-          <CardDescription>
-            Configure late fees for overdue invoices
-          </CardDescription>
+          <CardDescription>Configure late fees for overdue invoices</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="late_fee_enabled">Enable Late Fees</Label>
-              <p className="text-sm text-muted-foreground">
-                Charge late fees on overdue invoices
-              </p>
+              <p className="text-sm text-muted-foreground">Charge late fees on overdue invoices</p>
             </div>
             <Switch
               id="late_fee_enabled"
@@ -315,9 +324,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-muted-foreground">
-                  {selectedLateFeeType?.example}
-                </p>
+                <p className="text-sm text-muted-foreground">{selectedLateFeeType?.example}</p>
               </div>
 
               <div className="space-y-2">
@@ -335,8 +342,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                 <p className="text-sm text-muted-foreground">
                   {settings.late_fee_type === "percentage"
                     ? `${settings.late_fee_amount}% of invoice amount`
-                    : `$${settings.late_fee_amount.toFixed(2)} per invoice`
-                  }
+                    : `$${settings.late_fee_amount.toFixed(2)} per invoice`}
                 </p>
               </div>
 
@@ -364,11 +370,15 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                     min="0"
                     step="0.01"
                     value={settings.late_fee_max_amount || ""}
-                    onChange={(e) => updateSetting("late_fee_max_amount", parseFloat(e.target.value) || null)}
+                    onChange={(e) =>
+                      updateSetting("late_fee_max_amount", parseFloat(e.target.value) || null)
+                    }
                     placeholder="No cap"
                   />
                   <p className="text-sm text-muted-foreground">
-                    {settings.late_fee_max_amount ? `Cap at $${settings.late_fee_max_amount}` : "No maximum"}
+                    {settings.late_fee_max_amount
+                      ? `Cap at $${settings.late_fee_max_amount}`
+                      : "No maximum"}
                   </p>
                 </div>
               </div>
@@ -380,9 +390,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Dunning Configuration</CardTitle>
-          <CardDescription>
-            Configure automated collection for overdue invoices
-          </CardDescription>
+          <CardDescription>Configure automated collection for overdue invoices</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
@@ -432,11 +440,11 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                     min="0"
                     max="30"
                     value={settings.dunning_first_notice_days}
-                    onChange={(e) => updateSetting("dunning_first_notice_days", parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateSetting("dunning_first_notice_days", parseInt(e.target.value))
+                    }
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Days after due date
-                  </p>
+                  <p className="text-sm text-muted-foreground">Days after due date</p>
                 </div>
 
                 <div className="space-y-2">
@@ -447,11 +455,11 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                     min="1"
                     max="30"
                     value={settings.dunning_escalation_days}
-                    onChange={(e) => updateSetting("dunning_escalation_days", parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateSetting("dunning_escalation_days", parseInt(e.target.value))
+                    }
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Days between notices
-                  </p>
+                  <p className="text-sm text-muted-foreground">Days between notices</p>
                 </div>
 
                 <div className="space-y-2">
@@ -464,9 +472,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                     value={settings.dunning_max_notices}
                     onChange={(e) => updateSetting("dunning_max_notices", parseInt(e.target.value))}
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Before suspension
-                  </p>
+                  <p className="text-sm text-muted-foreground">Before suspension</p>
                 </div>
               </div>
 
@@ -478,11 +484,16 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                   1st notice: {settings.dunning_first_notice_days} days after due date
                   <br />
                   {settings.dunning_max_notices > 1 && (
-                    <>2nd-{settings.dunning_max_notices}th notices: Every {settings.dunning_escalation_days} days</>
+                    <>
+                      2nd-{settings.dunning_max_notices}th notices: Every{" "}
+                      {settings.dunning_escalation_days} days
+                    </>
                   )}
                   <br />
                   Suspension: After {settings.dunning_max_notices} notices (~
-                  {settings.dunning_first_notice_days + (settings.dunning_max_notices - 1) * settings.dunning_escalation_days} days)
+                  {settings.dunning_first_notice_days +
+                    (settings.dunning_max_notices - 1) * settings.dunning_escalation_days}{" "}
+                  days)
                 </AlertDescription>
               </Alert>
             </>
@@ -493,9 +504,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Invoice Customization</CardTitle>
-          <CardDescription>
-            Customize invoice appearance and content
-          </CardDescription>
+          <CardDescription>Customize invoice appearance and content</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -546,9 +555,7 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Auto-Billing</CardTitle>
-          <CardDescription>
-            Configure automatic payment collection
-          </CardDescription>
+          <CardDescription>Configure automatic payment collection</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
@@ -577,7 +584,9 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                 <Switch
                   id="auto_retry"
                   checked={settings.auto_billing_retry_enabled}
-                  onCheckedChange={(checked) => updateSetting("auto_billing_retry_enabled", checked)}
+                  onCheckedChange={(checked) =>
+                    updateSetting("auto_billing_retry_enabled", checked)
+                  }
                 />
               </div>
 
@@ -600,8 +609,8 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Auto-billing requires customers to have a valid payment method on file.
-                  Failed payments trigger dunning if enabled.
+                  Auto-billing requires customers to have a valid payment method on file. Failed
+                  payments trigger dunning if enabled.
                 </AlertDescription>
               </Alert>
             </>
@@ -613,16 +622,20 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Billing Configuration Summary</CardTitle>
-          <CardDescription>
-            Overview of current billing settings
-          </CardDescription>
+          <CardDescription>Overview of current billing settings</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <h4 className="font-medium mb-2">Invoice Configuration:</h4>
               <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
-                <li>Format: {INVOICE_FORMATS.find(f => f.value === settings.invoice_numbering_format)?.label}</li>
+                <li>
+                  Format:{" "}
+                  {
+                    INVOICE_FORMATS.find((f) => f.value === settings.invoice_numbering_format)
+                      ?.label
+                  }
+                </li>
                 <li>Next number: {generateInvoiceExample()}</li>
                 <li>Payment terms: {selectedPaymentTerms?.label}</li>
               </ul>
@@ -633,9 +646,16 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                 <h4 className="font-medium mb-2">Late Fees:</h4>
                 <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                   <li>Type: {selectedLateFeeType?.label}</li>
-                  <li>Amount: {settings.late_fee_type === "percentage" ? `${settings.late_fee_amount}%` : `$${settings.late_fee_amount}`}</li>
+                  <li>
+                    Amount:{" "}
+                    {settings.late_fee_type === "percentage"
+                      ? `${settings.late_fee_amount}%`
+                      : `$${settings.late_fee_amount}`}
+                  </li>
                   <li>Grace period: {settings.late_fee_grace_days} days</li>
-                  {settings.late_fee_max_amount && <li>Maximum: ${settings.late_fee_max_amount}</li>}
+                  {settings.late_fee_max_amount && (
+                    <li>Maximum: ${settings.late_fee_max_amount}</li>
+                  )}
                 </ul>
               </div>
             )}
@@ -657,7 +677,12 @@ export function BillingSettings({ settings, onChange }: BillingSettingsProps) {
                 <h4 className="font-medium mb-2">Auto-Billing:</h4>
                 <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                   <li>Enabled: Yes</li>
-                  <li>Retries: {settings.auto_billing_retry_enabled ? `Yes (${settings.auto_billing_retry_days.join(", ")} days)` : "No"}</li>
+                  <li>
+                    Retries:{" "}
+                    {settings.auto_billing_retry_enabled
+                      ? `Yes (${settings.auto_billing_retry_days.join(", ")} days)`
+                      : "No"}
+                  </li>
                 </ul>
               </div>
             )}

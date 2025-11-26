@@ -32,7 +32,7 @@ const createMockRole = (overrides?: Partial<Role>): Role => ({
 const createMockPermission = (
   resource: string,
   action: string,
-  overrides?: Partial<Permission>
+  overrides?: Partial<Permission>,
 ): Permission => ({
   id: `perm_${resource}_${action}`,
   resource,
@@ -44,12 +44,12 @@ const createMockPermission = (
 const hasPermission = (user: User, permission: string): boolean => {
   const checkWildcard = (heldPermission: string, requiredPermission: string) => {
     if (heldPermission === requiredPermission) return true;
-    if (heldPermission === '*:*') return true;
+    if (heldPermission === "*:*") return true;
 
     // Handle "resource:*" matching "resource:action"
-    if (heldPermission.endsWith(':*')) {
+    if (heldPermission.endsWith(":*")) {
       const resourcePart = heldPermission.slice(0, -2);
-      if (requiredPermission.startsWith(`${resourcePart  }:`)) {
+      if (requiredPermission.startsWith(`${resourcePart}:`)) {
         return true;
       }
     }
@@ -57,15 +57,15 @@ const hasPermission = (user: User, permission: string): boolean => {
   };
 
   // Check direct permissions
-  const directPermission = user.permissions?.some(
-    (p) => checkWildcard(`${p.resource}:${p.action}`, permission)
+  const directPermission = user.permissions?.some((p) =>
+    checkWildcard(`${p.resource}:${p.action}`, permission),
   );
 
   if (directPermission) return true;
 
   // Check role-based permissions
   const rolePermission = user.roles.some((role) =>
-    role.permissions.some(heldPerm => checkWildcard(heldPerm, permission))
+    role.permissions.some((heldPerm) => checkWildcard(heldPerm, permission)),
   );
 
   return rolePermission;
@@ -168,7 +168,7 @@ describe("User Permissions & RBAC: Role Assignment", () => {
       // Act - Sort by hierarchy
       const hierarchy = ["Administrator", "Manager", "User"];
       const sortedRoles = roles.sort(
-        (a, b) => hierarchy.indexOf(a.name) - hierarchy.indexOf(b.name)
+        (a, b) => hierarchy.indexOf(a.name) - hierarchy.indexOf(b.name),
       );
 
       // Assert
@@ -478,7 +478,7 @@ describe("User Permissions & RBAC: Special Scenarios", () => {
 
     // Act - Check for explicit deny
     const hasExplicitDeny = conflictedUser.roles.some((role) =>
-      role.permissions.some((p) => p.startsWith("!"))
+      role.permissions.some((p) => p.startsWith("!")),
     );
 
     // Assert - Deny should win
@@ -542,10 +542,7 @@ describe("User Permissions & RBAC: Special Scenarios", () => {
     });
 
     const userWithBothRoles = createMockUser({
-      roles: [
-        createMockRole({ name: "Approver" }),
-        createMockRole({ name: "Manager" }),
-      ],
+      roles: [createMockRole({ name: "Approver" }), createMockRole({ name: "Manager" })],
     });
 
     // Act

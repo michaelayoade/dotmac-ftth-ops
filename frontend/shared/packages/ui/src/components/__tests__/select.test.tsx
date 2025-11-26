@@ -33,7 +33,7 @@ describe("Select", () => {
           <SelectItem value="option2">Option 2</SelectItem>
           <SelectItem value="option3">Option 3</SelectItem>
         </SelectContent>
-      </Select>
+      </Select>,
     );
   };
 
@@ -72,7 +72,7 @@ describe("Select", () => {
           <SelectTrigger data-testid="trigger">
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
 
       const trigger = screen.getByTestId("trigger");
@@ -88,7 +88,7 @@ describe("Select", () => {
         "bg-background",
         "px-3",
         "py-2",
-        "text-sm"
+        "text-sm",
       );
     });
 
@@ -98,7 +98,7 @@ describe("Select", () => {
           <SelectTrigger className="custom-trigger">
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
 
       const trigger = screen.getByRole("combobox");
@@ -118,7 +118,7 @@ describe("Select", () => {
           <SelectTrigger disabled>
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
 
       const trigger = screen.getByRole("combobox");
@@ -131,7 +131,7 @@ describe("Select", () => {
           <SelectTrigger disabled data-testid="trigger">
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
 
       const trigger = screen.getByTestId("trigger");
@@ -155,7 +155,7 @@ describe("Select", () => {
           <SelectContent>
             <SelectItem value="option1">First Option</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       expect(screen.getByText("First Option")).toBeInTheDocument();
@@ -238,7 +238,7 @@ describe("Select", () => {
               Test
             </SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -256,7 +256,7 @@ describe("Select", () => {
           "py-1.5",
           "pl-8",
           "pr-2",
-          "text-sm"
+          "text-sm",
         );
       });
     });
@@ -273,7 +273,7 @@ describe("Select", () => {
               Test
             </SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -296,7 +296,7 @@ describe("Select", () => {
               Disabled
             </SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -322,7 +322,7 @@ describe("Select", () => {
             <SelectItem value="option1">Option 1</SelectItem>
             <SelectItem value="option2">Option 2</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -347,7 +347,7 @@ describe("Select", () => {
           <SelectContent>
             <SelectItem value="option1">Selected Option</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -374,7 +374,7 @@ describe("Select", () => {
             <SelectItem value="option1">Option 1</SelectItem>
             <SelectItem value="option2">Option 2</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -401,7 +401,7 @@ describe("Select", () => {
             <SelectItem value="option1">Option 1</SelectItem>
             <SelectItem value="option2">Option 2</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       expect(screen.getByText("Option 1")).toBeInTheDocument();
@@ -423,7 +423,7 @@ describe("Select", () => {
             <SelectItem value="option1">Option 1</SelectItem>
             <SelectItem value="option2">Option 2</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       expect(screen.getByText("Option 2")).toBeInTheDocument();
@@ -441,7 +441,7 @@ describe("Select", () => {
             <SelectItem value="option1">Option 1</SelectItem>
             <SelectItem value="option2">Option 2</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       expect(screen.getByText("Option 2")).toBeInTheDocument();
@@ -468,7 +468,7 @@ describe("Select", () => {
               <SelectItem value="carrot">Carrot</SelectItem>
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -495,7 +495,7 @@ describe("Select", () => {
               <SelectItem value="item">Item</SelectItem>
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -521,7 +521,7 @@ describe("Select", () => {
             <SelectSeparator data-testid="separator" />
             <SelectItem value="item2">Item 2</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -586,7 +586,7 @@ describe("Select", () => {
           <SelectContent>
             <SelectItem value="test">Test</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       const trigger = screen.getByRole("combobox", { name: "Choose option" });
@@ -603,7 +603,7 @@ describe("Select", () => {
           <SelectTrigger ref={ref}>
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLButtonElement);
@@ -623,7 +623,7 @@ describe("Select", () => {
               Test
             </SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -677,7 +677,7 @@ describe("Select", () => {
               <SelectItem value="uk">United Kingdom</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Country")).toBeInTheDocument();
@@ -705,7 +705,7 @@ describe("Select", () => {
             </SelectContent>
           </Select>
           <button type="submit">Submit</button>
-        </form>
+        </form>,
       );
 
       await user.click(screen.getByRole("button", { name: "Submit" }));
@@ -733,7 +733,7 @@ describe("Select", () => {
               <SelectItem value="cet">CET</SelectItem>
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </Select>,
       );
 
       await user.click(screen.getByRole("combobox"));

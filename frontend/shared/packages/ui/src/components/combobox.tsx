@@ -11,7 +11,14 @@ import * as React from "react";
 import { cn } from "../lib/utils";
 
 import { Button } from "./button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "./command";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 export interface ComboboxOption {
@@ -45,10 +52,7 @@ export function Combobox({
 
   const selectedOption = options.find((option) => option.value === value);
   const displayText = selectedOption ? selectedOption.label : placeholder;
-  const triggerTextClass = cn(
-    "max-w-full truncate",
-    !selectedOption && "text-muted-foreground",
-  );
+  const triggerTextClass = cn("max-w-full truncate", !selectedOption && "text-muted-foreground");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

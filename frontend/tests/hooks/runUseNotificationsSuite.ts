@@ -29,10 +29,7 @@ type UseNotificationsHook = (options?: {
   deleteNotification: (notificationId: string) => Promise<boolean>;
 };
 
-export function runUseNotificationsSuite(
-  useNotifications: UseNotificationsHook,
-  apiClient: any,
-) {
+export function runUseNotificationsSuite(useNotifications: UseNotificationsHook, apiClient: any) {
   describe("useNotifications", () => {
     const waitForNotificationsData = async (
       hookResult: { current: ReturnType<UseNotificationsHook> },

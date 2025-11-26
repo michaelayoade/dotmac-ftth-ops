@@ -4,15 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import {
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Mail,
-  Send,
-  TrendingUp,
-  XCircle,
-} from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Mail, Send, TrendingUp, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useCommunicationStats, useCommunicationLogs } from "@/hooks/useCommunications";
 

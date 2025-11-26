@@ -15,11 +15,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "@dotmac/better-auth";
 import { logger } from "../lib/logger";
 import { SSEClient } from "../lib/realtime/sse-client";
-import {
-  WebSocketClient,
-  JobControl,
-  CampaignControl,
-} from "../lib/realtime/websocket-client";
+import { WebSocketClient, JobControl, CampaignControl } from "../lib/realtime/websocket-client";
 import {
   ConnectionStatus,
   type AlertEvent,
@@ -215,14 +211,17 @@ export function useWebSocket(endpoint: string, enabled = true) {
     [endpoint],
   );
 
-  const send = useCallback((message: unknown) => {
-    if (clientRef.current) {
-      logger.debug("Sending WebSocket message", { endpoint });
-      clientRef.current.send(message as WebSocketClientMessage);
-    } else {
-      logger.warn("Cannot send: WebSocket client not initialized", { endpoint });
-    }
-  }, [endpoint]);
+  const send = useCallback(
+    (message: unknown) => {
+      if (clientRef.current) {
+        logger.debug("Sending WebSocket message", { endpoint });
+        clientRef.current.send(message as WebSocketClientMessage);
+      } else {
+        logger.warn("Cannot send: WebSocket client not initialized", { endpoint });
+      }
+    },
+    [endpoint],
+  );
 
   const reconnect = useCallback(() => {
     if (clientRef.current) {

@@ -45,6 +45,7 @@ def _require_tenant_id(current_user: UserInfo) -> str:
 def get_ai_config() -> AIConfig:
     """Get AI configuration."""
     import os
+
     return AIConfig(
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
@@ -102,7 +103,7 @@ async def send_chat_message(
             metadata={
                 "tokens": message.tokens,
                 "cost_cents": message.cost,
-            }
+            },
         )
 
     except ValueError as e:

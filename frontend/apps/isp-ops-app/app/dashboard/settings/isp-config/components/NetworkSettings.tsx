@@ -8,7 +8,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Network, AlertTriangle } from "lucide-react";
@@ -57,17 +63,15 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
       <Alert>
         <Network className="h-4 w-4" />
         <AlertDescription>
-          These settings define default network provisioning behavior.
-          Changes affect <strong>new subscribers only</strong>.
+          These settings define default network provisioning behavior. Changes affect{" "}
+          <strong>new subscribers only</strong>.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>VLAN Configuration</CardTitle>
-          <CardDescription>
-            Define VLAN range for subscriber provisioning
-          </CardDescription>
+          <CardDescription>Define VLAN range for subscriber provisioning</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -82,9 +86,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
                 value={settings.vlan_range_start}
                 onChange={(e) => updateSetting("vlan_range_start", parseInt(e.target.value))}
               />
-              <p className="text-sm text-muted-foreground">
-                Minimum VLAN ID (1-4094)
-              </p>
+              <p className="text-sm text-muted-foreground">Minimum VLAN ID (1-4094)</p>
             </div>
 
             {/* VLAN End */}
@@ -98,9 +100,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
                 value={settings.vlan_range_end}
                 onChange={(e) => updateSetting("vlan_range_end", parseInt(e.target.value))}
               />
-              <p className="text-sm text-muted-foreground">
-                Maximum VLAN ID (1-4094)
-              </p>
+              <p className="text-sm text-muted-foreground">Maximum VLAN ID (1-4094)</p>
             </div>
           </div>
 
@@ -108,8 +108,8 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              VLAN Range: {settings.vlan_range_start} - {settings.vlan_range_end}
-              {" "}({vlanCount.toLocaleString()} VLANs available)
+              VLAN Range: {settings.vlan_range_start} - {settings.vlan_range_end} (
+              {vlanCount.toLocaleString()} VLANs available)
             </AlertDescription>
           </Alert>
 
@@ -117,9 +117,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
           {settings.vlan_range_start >= settings.vlan_range_end && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                VLAN range end must be greater than start
-              </AlertDescription>
+              <AlertDescription>VLAN range end must be greater than start</AlertDescription>
             </Alert>
           )}
         </CardContent>
@@ -128,9 +126,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>IPv4 Address Pool</CardTitle>
-          <CardDescription>
-            Configure IPv4 address pool for subscriber assignment
-          </CardDescription>
+          <CardDescription>Configure IPv4 address pool for subscriber assignment</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -159,8 +155,12 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Pool: {settings.ipv4_pool_prefix}
-                {" "}(~{Math.pow(2, 32 - parseInt(settings.ipv4_pool_prefix.split("/")[1] || "24")).toLocaleString()} addresses)
+                Pool: {settings.ipv4_pool_prefix} (~
+                {Math.pow(
+                  2,
+                  32 - parseInt(settings.ipv4_pool_prefix.split("/")[1] || "24"),
+                ).toLocaleString()}{" "}
+                addresses)
               </AlertDescription>
             </Alert>
           )}
@@ -170,9 +170,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>IPv6 Address Pool</CardTitle>
-          <CardDescription>
-            Configure IPv6 address pool for subscriber assignment
-          </CardDescription>
+          <CardDescription>Configure IPv6 address pool for subscriber assignment</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between mb-4">
@@ -243,9 +241,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>IP Assignment Policy</CardTitle>
-          <CardDescription>
-            Configure how IP addresses are assigned to subscribers
-          </CardDescription>
+          <CardDescription>Configure how IP addresses are assigned to subscribers</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
@@ -280,8 +276,8 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Static IP required but auto-assignment is disabled.
-                Subscribers will need manual IP configuration.
+                Static IP required but auto-assignment is disabled. Subscribers will need manual IP
+                configuration.
               </AlertDescription>
             </Alert>
           )}
@@ -328,8 +324,8 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              CPE templates are managed in the GenieACS integration.
-              This setting only applies when GenieACS is enabled.
+              CPE templates are managed in the GenieACS integration. This setting only applies when
+              GenieACS is enabled.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -338,9 +334,7 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>QoS Settings</CardTitle>
-          <CardDescription>
-            Configure default Quality of Service policies
-          </CardDescription>
+          <CardDescription>Configure default Quality of Service policies</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -359,8 +353,8 @@ export function NetworkSettings({ settings, onChange }: NetworkSettingsProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              QoS policies must be configured on your network equipment (routers, switches).
-              This setting only references the policy name.
+              QoS policies must be configured on your network equipment (routers, switches). This
+              setting only references the policy name.
             </AlertDescription>
           </Alert>
         </CardContent>

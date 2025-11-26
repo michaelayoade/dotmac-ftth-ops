@@ -4,14 +4,7 @@ import { useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
-import {
-  Shield,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  AlertCircle,
-} from "lucide-react";
+import { Shield, Clock, ChevronLeft, ChevronRight, ExternalLink, AlertCircle } from "lucide-react";
 import { Button } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { AuditLogFilters, type AuditFilters } from "./AuditLogFilters";

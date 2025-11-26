@@ -3,11 +3,7 @@
  * Tests service worker, push notifications, and offline functionality
  */
 
-import {
-  isOnline,
-  onOnlineStatusChange,
-  canShowInstallPrompt,
-} from "../pwa";
+import { isOnline, onOnlineStatusChange, canShowInstallPrompt } from "../pwa";
 
 describe("pwa", () => {
   let originalNavigator: any;

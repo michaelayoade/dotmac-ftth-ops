@@ -5,8 +5,8 @@
  * Matches the structure of data tables used throughout the platform.
  */
 
-import React from 'react';
-import { clsx } from 'clsx';
+import React from "react";
+import { clsx } from "clsx";
 
 export interface TableSkeletonProps {
   /**
@@ -61,7 +61,7 @@ export interface TableSkeletonProps {
    * Variant for different table styles
    * @default "default"
    */
-  variant?: 'default' | 'compact' | 'detailed';
+  variant?: "default" | "compact" | "detailed";
 
   /**
    * Custom className for container
@@ -72,16 +72,10 @@ export interface TableSkeletonProps {
 /**
  * Base skeleton box component
  */
-function SkeletonBox({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+function SkeletonBox({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={clsx(
-        'bg-gray-200 dark:bg-gray-700 rounded animate-pulse',
-        className
-      )}
+      className={clsx("bg-gray-200 dark:bg-gray-700 rounded animate-pulse", className)}
       {...props}
     />
   );
@@ -91,8 +85,8 @@ function SkeletonBox({
  * Table cell skeleton
  */
 function TableCellSkeleton({
-  width = 'w-full',
-  height = 'h-4',
+  width = "w-full",
+  height = "h-4",
 }: {
   width?: string;
   height?: string;
@@ -114,26 +108,23 @@ function TableRowSkeleton({
   showCheckbox: boolean;
   variant: string;
 }) {
-  const cellHeight = variant === 'compact' ? 'h-3' : 'h-4';
-  const padding = variant === 'compact' ? 'p-2' : 'p-4';
+  const cellHeight = variant === "compact" ? "h-3" : "h-4";
+  const padding = variant === "compact" ? "p-2" : "p-4";
 
   return (
     <tr className="border-b border-gray-200 dark:border-gray-700">
       {showCheckbox && (
-        <td className={clsx(padding, 'w-12')}>
+        <td className={clsx(padding, "w-12")}>
           <SkeletonBox className="h-4 w-4 rounded" />
         </td>
       )}
       {Array.from({ length: columns }).map((_, i) => (
         <td key={i} className={padding}>
-          <TableCellSkeleton
-            height={cellHeight}
-            width={i === 0 ? 'w-3/4' : 'w-full'}
-          />
+          <TableCellSkeleton height={cellHeight} width={i === 0 ? "w-3/4" : "w-full"} />
         </td>
       ))}
       {showActions && (
-        <td className={clsx(padding, 'w-24')}>
+        <td className={clsx(padding, "w-24")}>
           <div className="flex gap-2">
             <SkeletonBox className="h-8 w-8 rounded" />
             <SkeletonBox className="h-8 w-8 rounded" />
@@ -263,11 +254,11 @@ export function TableSkeleton({
   showPagination = true,
   showSearch = true,
   showFilters = false,
-  variant = 'default',
+  variant = "default",
   className,
 }: TableSkeletonProps) {
   return (
-    <div className={clsx('bg-white dark:bg-gray-800 rounded-lg shadow', className)}>
+    <div className={clsx("bg-white dark:bg-gray-800 rounded-lg shadow", className)}>
       {/* Controls */}
       <div className="p-4">
         <TableControlsSkeleton showSearch={showSearch} showFilters={showFilters} />
@@ -314,27 +305,13 @@ export const TableSkeletons = {
    * Customer/Subscriber list table
    */
   CustomerList: () => (
-    <TableSkeleton
-      columns={6}
-      rows={10}
-      showCheckbox
-      showActions
-      showSearch
-      showFilters
-    />
+    <TableSkeleton columns={6} rows={10} showCheckbox showActions showSearch showFilters />
   ),
 
   /**
    * Device list table
    */
-  DeviceList: () => (
-    <TableSkeleton
-      columns={5}
-      rows={15}
-      showActions
-      showSearch
-    />
-  ),
+  DeviceList: () => <TableSkeleton columns={5} rows={15} showActions showSearch />,
 
   /**
    * Compact list

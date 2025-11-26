@@ -145,7 +145,7 @@ describe("useJobs", () => {
 
       await waitFor(() => {
         expect(apiClient.get).toHaveBeenCalledWith(
-          "/jobs?job_type=field_installation&limit=50&offset=0"
+          "/jobs?job_type=field_installation&limit=50&offset=0",
         );
       });
     });
@@ -168,12 +168,12 @@ describe("useJobs", () => {
             limit: 25,
             offset: 10,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
         expect(apiClient.get).toHaveBeenCalledWith(
-          "/jobs?status=completed&job_type=bulk_suspend&limit=25&offset=10"
+          "/jobs?status=completed&job_type=bulk_suspend&limit=25&offset=10",
         );
       });
     });
@@ -318,9 +318,9 @@ describe("useJobs", () => {
                 resolve({
                   data: { jobs: [], total_count: 0, limit: 50, offset: 0 },
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useJobs(), {
@@ -455,7 +455,7 @@ describe("useJobs", () => {
       expect(result.current.data?.jobs[0].location_lat).toBe(40.7128);
       expect(result.current.data?.jobs[0].service_address).toBe("123 Main St, New York, NY");
       expect(apiClient.get).toHaveBeenCalledWith(
-        "/jobs?job_type=field_installation&limit=100&offset=0"
+        "/jobs?job_type=field_installation&limit=100&offset=0",
       );
     });
 
@@ -475,7 +475,7 @@ describe("useJobs", () => {
 
       await waitFor(() => {
         expect(apiClient.get).toHaveBeenCalledWith(
-          "/jobs?job_type=field_installation&status=assigned&limit=100&offset=0"
+          "/jobs?job_type=field_installation&status=assigned&limit=100&offset=0",
         );
       });
     });
@@ -838,13 +838,13 @@ describe("useJobs", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("job-1");
-        })
+        }),
       ).rejects.toThrow("Failed to cancel job");
     });
 
     it("should set isPending state correctly during mutation", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useCancelJob(), {
@@ -984,9 +984,12 @@ describe("useJobs", () => {
 
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockResponse });
 
-      const { result } = renderHook(() => useJobs({ status: "running", jobType: "bulk_provision" }), {
-        wrapper: createWrapper(),
-      });
+      const { result } = renderHook(
+        () => useJobs({ status: "running", jobType: "bulk_provision" }),
+        {
+          wrapper: createWrapper(),
+        },
+      );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 

@@ -17,10 +17,7 @@ interface BillingSummaryCardProps {
   customerId: string;
 }
 
-export function BillingSummaryCard({
-  billing,
-  customerId,
-}: BillingSummaryCardProps) {
+export function BillingSummaryCard({ billing, customerId }: BillingSummaryCardProps) {
   const balance = billing.summary?.balance ?? 0;
   const isOverdue = balance < 0;
 
@@ -38,11 +35,7 @@ export function BillingSummaryCard({
             <DollarSign className="h-3 w-3" />
             Balance
           </span>
-          <span
-            className={`text-2xl font-bold ${
-              isOverdue ? "text-red-600" : "text-foreground"
-            }`}
-          >
+          <span className={`text-2xl font-bold ${isOverdue ? "text-red-600" : "text-foreground"}`}>
             ${Math.abs(balance).toFixed(2)}
           </span>
         </div>

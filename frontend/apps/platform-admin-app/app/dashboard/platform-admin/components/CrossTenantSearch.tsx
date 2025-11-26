@@ -7,10 +7,7 @@ import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
-import {
-  Filter,
-  Search,
-} from "lucide-react";
+import { Filter, Search } from "lucide-react";
 import { platformAdminService } from "@/lib/services/platform-admin-service";
 
 // Type definition for search results
@@ -49,9 +46,9 @@ export function CrossTenantSearch() {
         limit: 50,
       });
       const mappedResults: CrossTenantSearchResultItem[] = (data.results ?? []).map((item) => ({
-        id: String(item['id'] ?? crypto.randomUUID()),
-        type: String(item['type'] ?? item['resource_type'] ?? "unknown"),
-        tenantId: String(item.tenant_id ?? item['tenantId'] ?? "n/a"),
+        id: String(item["id"] ?? crypto.randomUUID()),
+        type: String(item["type"] ?? item["resource_type"] ?? "unknown"),
+        tenantId: String(item.tenant_id ?? item["tenantId"] ?? "n/a"),
         ...(item.resource_id ? { resourceId: String(item.resource_id) } : {}),
         ...(typeof item.score === "number" ? { score: item.score } : {}),
         data:

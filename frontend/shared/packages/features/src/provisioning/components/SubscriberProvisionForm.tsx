@@ -233,7 +233,9 @@ export function SubscriberProvisionForm({
                     onChange={(value) => setValue("framed_ip_address", value || undefined)}
                     allowIPv4={true}
                     allowIPv6={false}
-                    {...(errors.framed_ip_address?.message && { error: errors.framed_ip_address.message })}
+                    {...(errors.framed_ip_address?.message && {
+                      error: errors.framed_ip_address.message,
+                    })}
                   />
                 )}
 
@@ -255,7 +257,9 @@ export function SubscriberProvisionForm({
                       allowIPv4={false}
                       allowIPv6={true}
                       placeholder="2001:db8::/64"
-                      {...(errors.framed_ipv6_prefix?.message && { error: errors.framed_ipv6_prefix.message })}
+                      {...(errors.framed_ipv6_prefix?.message && {
+                        error: errors.framed_ipv6_prefix.message,
+                      })}
                     />
 
                     <IPCIDRInput
@@ -265,7 +269,9 @@ export function SubscriberProvisionForm({
                       allowIPv4={false}
                       allowIPv6={true}
                       placeholder="2001:db8::1/128"
-                      {...(errors.framed_ipv6_address?.message && { error: errors.framed_ipv6_address.message })}
+                      {...(errors.framed_ipv6_address?.message && {
+                        error: errors.framed_ipv6_address.message,
+                      })}
                     />
                   </>
                 )}

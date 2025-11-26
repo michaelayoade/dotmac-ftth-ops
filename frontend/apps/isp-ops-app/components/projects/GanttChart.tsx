@@ -10,13 +10,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  ZoomIn,
-  ZoomOut,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ZoomIn, ZoomOut, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Task, Project, TaskPriority } from "@/types/project-management";
 import { useTasks } from "@/hooks/useProjects";
 
@@ -120,19 +114,19 @@ function GanttRow({ task, timeline, rowHeight }: GanttRowProps) {
           style={{
             left: `${leftPercent}%`,
             width: `${widthPercent}%`,
-            backgroundColor: task.priority === "CRITICAL" ? "#ef4444" :
-                           task.priority === "HIGH" ? "#f97316" :
-                           task.priority === "MEDIUM" ? "#3b82f6" : "#6b7280",
+            backgroundColor:
+              task.priority === "CRITICAL"
+                ? "#ef4444"
+                : task.priority === "HIGH"
+                  ? "#f97316"
+                  : task.priority === "MEDIUM"
+                    ? "#3b82f6"
+                    : "#6b7280",
             minWidth: "30px",
           }}
         >
-          <div
-            className="h-full bg-white/30 rounded"
-            style={{ width: `${task.progress}%` }}
-          />
-          <span className="text-xs text-white font-medium ml-2 truncate">
-            {task.progress}%
-          </span>
+          <div className="h-full bg-white/30 rounded" style={{ width: `${task.progress}%` }} />
+          <span className="text-xs text-white font-medium ml-2 truncate">{task.progress}%</span>
         </div>
       </div>
     </div>
@@ -171,15 +165,19 @@ function TimelineHeader({ timeline }: TimelineHeaderProps) {
             <div
               key={idx}
               className="border-r p-2 text-center"
-              style={{ minWidth: "60px", flex: timeline.viewMode === "day" ? 1 : undefined, width: timeline.viewMode === "week" ? width : undefined }}
+              style={{
+                minWidth: "60px",
+                flex: timeline.viewMode === "day" ? 1 : undefined,
+                width: timeline.viewMode === "week" ? width : undefined,
+              }}
             >
               <div className="text-xs font-medium">
-                {timeline.viewMode === "day" ? formatDate(date, "short") : `W${getWeekNumber(date)}`}
+                {timeline.viewMode === "day"
+                  ? formatDate(date, "short")
+                  : `W${getWeekNumber(date)}`}
               </div>
               {timeline.viewMode === "week" && (
-                <div className="text-xs text-muted-foreground">
-                  {formatDate(date, "short")}
-                </div>
+                <div className="text-xs text-muted-foreground">{formatDate(date, "short")}</div>
               )}
             </div>
           );
@@ -328,12 +326,7 @@ export function GanttChart({ projectId, project }: GanttChartProps) {
 
             {tasks.length > 0 ? (
               tasks.map((task) => (
-                <GanttRow
-                  key={task.id}
-                  task={task}
-                  timeline={timeline}
-                  rowHeight={60}
-                />
+                <GanttRow key={task.id} task={task} timeline={timeline} rowHeight={60} />
               ))
             ) : (
               <div className="p-12 text-center">

@@ -14,11 +14,7 @@ import { cn } from "../lib/utils";
 
 import { Button } from "./button";
 import { Calendar } from "./calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./popover";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 export interface DatePickerProps {
   date?: Date;
@@ -123,8 +119,7 @@ export function DateRangePicker({
           {dateRange?.from ? (
             dateRange.to ? (
               <>
-                {format(dateRange.from, "LLL dd, y")} -{" "}
-                {format(dateRange.to, "LLL dd, y")}
+                {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
               </>
             ) : (
               format(dateRange.from, "LLL dd, y")

@@ -274,9 +274,9 @@ describe("useSettings", () => {
           params: expect.objectContaining({
             offset: 0,
             limit: 100,
-            category: "database"
+            category: "database",
           }),
-        })
+        }),
       );
     });
 
@@ -309,9 +309,9 @@ describe("useSettings", () => {
           params: expect.objectContaining({
             offset: 0,
             limit: 100,
-            user_id: "user-123"
+            user_id: "user-123",
           }),
-        })
+        }),
       );
     });
   });

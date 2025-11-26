@@ -194,15 +194,21 @@ function createFetchAdapter(): AxiosAdapter {
     });
 
     let body = config.data;
-    if (body && typeof body === "object" && !(body instanceof FormData) && !(body instanceof Blob)) {
+    if (
+      body &&
+      typeof body === "object" &&
+      !(body instanceof FormData) &&
+      !(body instanceof Blob)
+    ) {
       body = JSON.stringify(body);
       if (!headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
       }
     }
 
-    const testNativeFetch =
-      (globalThis as typeof globalThis & { __JEST_NATIVE_FETCH__?: typeof fetch }).__JEST_NATIVE_FETCH__;
+    const testNativeFetch = (
+      globalThis as typeof globalThis & { __JEST_NATIVE_FETCH__?: typeof fetch }
+    ).__JEST_NATIVE_FETCH__;
     const fetchImpl = testNativeFetch || fetch;
     const requestBody =
       method === "GET" || method === "HEAD" ? null : ((body ?? null) as BodyInit | null);

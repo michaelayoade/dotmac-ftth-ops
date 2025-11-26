@@ -187,9 +187,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
     });
 
     it("should handle fetch error", async () => {
-      mockedDunningService.listCampaigns.mockRejectedValueOnce(
-        new Error("Internal server error")
-      );
+      mockedDunningService.listCampaigns.mockRejectedValueOnce(new Error("Internal server error"));
 
       const { result } = renderHook(() => useCampaigns(), {
         wrapper: createWrapper(),
@@ -222,9 +220,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
 
   describe("useCampaigns with active filter", () => {
     it("should filter active campaigns (active: true)", async () => {
-      const mockCampaigns = [
-        createMockDunningCampaign({ id: "campaign-1", is_active: true }),
-      ];
+      const mockCampaigns = [createMockDunningCampaign({ id: "campaign-1", is_active: true })];
 
       mockedDunningService.listCampaigns.mockResolvedValueOnce(mockCampaigns);
 
@@ -240,9 +236,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
     });
 
     it("should filter inactive campaigns (active: false)", async () => {
-      const mockCampaigns = [
-        createMockDunningCampaign({ id: "campaign-2", is_active: false }),
-      ];
+      const mockCampaigns = [createMockDunningCampaign({ id: "campaign-2", is_active: false })];
 
       mockedDunningService.listCampaigns.mockResolvedValueOnce(mockCampaigns);
 
@@ -313,8 +307,8 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
       const queryClient = (wrapper as any).queryClient;
       const cache = queryClient.getQueryCache();
       const queries = cache.getAll();
-      const campaignQuery = queries.find((q: any) =>
-        Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns"
+      const campaignQuery = queries.find(
+        (q: any) => Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns",
       );
 
       expect(campaignQuery).toBeDefined();
@@ -335,8 +329,8 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
       const queryClient = (wrapper as any).queryClient;
       const cache = queryClient.getQueryCache();
       const queries = cache.getAll();
-      const campaignQuery = queries.find((q: any) =>
-        Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns"
+      const campaignQuery = queries.find(
+        (q: any) => Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns",
       );
 
       expect(campaignQuery).toBeDefined();
@@ -357,8 +351,8 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
       const queryClient = (wrapper as any).queryClient;
       const cache = queryClient.getQueryCache();
       const queries = cache.getAll();
-      const campaignQuery = queries.find((q: any) =>
-        Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns"
+      const campaignQuery = queries.find(
+        (q: any) => Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns",
       );
 
       expect(campaignQuery).toBeDefined();
@@ -566,9 +560,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
     });
 
     it("should handle update error", async () => {
-      mockedDunningService.updateCampaign.mockRejectedValueOnce(
-        new Error("Campaign not found")
-      );
+      mockedDunningService.updateCampaign.mockRejectedValueOnce(new Error("Campaign not found"));
 
       const { result } = renderHook(() => useUpdateCampaign(), {
         wrapper: createWrapper(),
@@ -579,7 +571,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
           result.current.mutateAsync({
             campaignId: "non-existent",
             data: { is_active: false },
-          })
+          }),
         ).rejects.toThrow();
       });
     });
@@ -698,10 +690,9 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
       const queryClient = (wrapper as any).queryClient;
 
       // Fetch with active filter
-      const { result: activeResult } = renderHook(
-        () => useCampaigns({ active: true }),
-        { wrapper }
-      );
+      const { result: activeResult } = renderHook(() => useCampaigns({ active: true }), {
+        wrapper,
+      });
       await waitFor(() => expect(activeResult.current.isSuccess).toBe(true));
 
       // Fetch without filter
@@ -738,8 +729,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
           .find({ queryKey: ["campaigns", { active: null }] })?.state;
 
         return (
-          activeQueryNewState?.dataUpdatedAt !==
-            activeQueryInitialState?.dataUpdatedAt &&
+          activeQueryNewState?.dataUpdatedAt !== activeQueryInitialState?.dataUpdatedAt &&
           allQueryNewState?.dataUpdatedAt !== allQueryInitialState?.dataUpdatedAt
         );
       });
@@ -771,10 +761,9 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockedDunningService.updateCampaign).toHaveBeenCalledWith(
-        "test-campaign-123",
-        { is_active: true }
-      );
+      expect(mockedDunningService.updateCampaign).toHaveBeenCalledWith("test-campaign-123", {
+        is_active: true,
+      });
     });
 
     it("should handle special characters in campaignId", async () => {
@@ -797,10 +786,9 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockedDunningService.updateCampaign).toHaveBeenCalledWith(
-        "campaign-uuid-abc-123",
-        { priority: 2 }
-      );
+      expect(mockedDunningService.updateCampaign).toHaveBeenCalledWith("campaign-uuid-abc-123", {
+        priority: 2,
+      });
     });
   });
 
@@ -810,9 +798,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
 
   describe("mutation error handling", () => {
     it("should handle update error", async () => {
-      mockedDunningService.updateCampaign.mockRejectedValueOnce(
-        new Error("Campaign not found")
-      );
+      mockedDunningService.updateCampaign.mockRejectedValueOnce(new Error("Campaign not found"));
 
       const { result } = renderHook(() => useUpdateCampaign(), {
         wrapper: createWrapper(),
@@ -824,7 +810,7 @@ describe("useCampaigns hooks (Jest Mocks)", () => {
             campaignId: "non-existent",
             data: { is_active: false },
           });
-        })
+        }),
       ).rejects.toThrow();
 
       // Verify error state

@@ -1,4 +1,5 @@
 # Testing Quick Start Guide
+
 ## @dotmac/features Package
 
 > **TL;DR:** Run `pnpm test` to execute all tests. Read `src/test/README.md` for complete guide.
@@ -89,11 +90,7 @@ import {
   createMockPayment,
 } from "../../../test/factories/billing";
 
-import {
-  createMockLead,
-  createMockQuote,
-  createMockActivity,
-} from "../../../test/factories/crm";
+import { createMockLead, createMockQuote, createMockActivity } from "../../../test/factories/crm";
 
 import {
   createMockONU,
@@ -218,7 +215,7 @@ expect(deps.logger.error).toHaveBeenCalledWith(
 
 ```typescript
 // Billing
-const invoice = createMockInvoice({ total_amount: 150.00 });
+const invoice = createMockInvoice({ total_amount: 150.0 });
 const overdueInvoice = createOverdueInvoice();
 const paidInvoice = createPaidInvoice();
 const invoices = createMockInvoices(5); // Create 5 invoices
@@ -250,9 +247,12 @@ screen.logTestingPlaygroundURL();
 console.log(deps.apiClient.get.mock.calls);
 
 // 5. Increase timeout for slow operations
-await waitFor(() => {
-  expect(screen.getByText("Data")).toBeInTheDocument();
-}, { timeout: 5000 });
+await waitFor(
+  () => {
+    expect(screen.getByText("Data")).toBeInTheDocument();
+  },
+  { timeout: 5000 },
+);
 ```
 
 ## Common Query Methods

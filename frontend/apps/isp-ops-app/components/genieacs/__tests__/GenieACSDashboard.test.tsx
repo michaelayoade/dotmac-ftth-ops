@@ -60,12 +60,36 @@ jest.mock("@dotmac/ui", () => ({
 
 // Mock lucide icons
 jest.mock("lucide-react", () => ({
-  Server: ({ className }: any) => <div data-testid="icon-server" className={className}>Server</div>,
-  Settings: ({ className }: any) => <div data-testid="icon-settings" className={className}>Settings</div>,
-  Calendar: ({ className }: any) => <div data-testid="icon-calendar" className={className}>Calendar</div>,
-  FileText: ({ className }: any) => <div data-testid="icon-file-text" className={className}>FileText</div>,
-  Activity: ({ className }: any) => <div data-testid="icon-activity" className={className}>Activity</div>,
-  BarChart3: ({ className }: any) => <div data-testid="icon-bar-chart" className={className}>BarChart3</div>,
+  Server: ({ className }: any) => (
+    <div data-testid="icon-server" className={className}>
+      Server
+    </div>
+  ),
+  Settings: ({ className }: any) => (
+    <div data-testid="icon-settings" className={className}>
+      Settings
+    </div>
+  ),
+  Calendar: ({ className }: any) => (
+    <div data-testid="icon-calendar" className={className}>
+      Calendar
+    </div>
+  ),
+  FileText: ({ className }: any) => (
+    <div data-testid="icon-file-text" className={className}>
+      FileText
+    </div>
+  ),
+  Activity: ({ className }: any) => (
+    <div data-testid="icon-activity" className={className}>
+      Activity
+    </div>
+  ),
+  BarChart3: ({ className }: any) => (
+    <div data-testid="icon-bar-chart" className={className}>
+      BarChart3
+    </div>
+  ),
 }));
 
 describe("GenieACSDashboard", () => {
@@ -75,7 +99,9 @@ describe("GenieACSDashboard", () => {
 
       expect(screen.getByText("CPE Management")).toBeInTheDocument();
       expect(
-        screen.getByText("Manage customer premises equipment, configurations, and firmware upgrades"),
+        screen.getByText(
+          "Manage customer premises equipment, configurations, and firmware upgrades",
+        ),
       ).toBeInTheDocument();
     });
 

@@ -20,9 +20,6 @@ export function PreviewTemplateModal(props: PreviewTemplateModalProps) {
   const { renderTemplatePreview } = useNotificationTemplates();
 
   return (
-    <SharedPreviewTemplateModal
-      {...props}
-      renderTemplatePreview={renderTemplatePreview as any}
-    />
+    <SharedPreviewTemplateModal {...props} renderTemplatePreview={renderTemplatePreview as any} />
   );
 }

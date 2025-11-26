@@ -229,12 +229,14 @@ describe("ConfirmDialog", () => {
           cancelText="Cancel"
           onConfirm={onConfirm}
           variant="destructive"
-        />
+        />,
       );
 
       expect(screen.getByText("Delete User")).toBeInTheDocument();
       expect(
-        screen.getByText("Are you sure you want to delete this user? This action cannot be undone.")
+        screen.getByText(
+          "Are you sure you want to delete this user? This action cannot be undone.",
+        ),
       ).toBeInTheDocument();
 
       await user.click(screen.getByText("Delete"));
@@ -256,12 +258,12 @@ describe("ConfirmDialog", () => {
           cancelText="Stay"
           onConfirm={onConfirm}
           variant="warning"
-        />
+        />,
       );
 
       expect(screen.getByText("Unsaved Changes")).toBeInTheDocument();
       expect(
-        screen.getByText("You have unsaved changes. Are you sure you want to leave?")
+        screen.getByText("You have unsaved changes. Are you sure you want to leave?"),
       ).toBeInTheDocument();
 
       await user.click(screen.getByText("Leave"));

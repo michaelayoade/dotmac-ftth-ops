@@ -3,14 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import {
@@ -562,7 +555,10 @@ export default function PaymentsPage() {
           {paymentsLoading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 border rounded-lg animate-pulse">
+                <div
+                  key={i}
+                  className="flex items-center gap-4 p-4 border rounded-lg animate-pulse"
+                >
                   <div className="h-10 w-10 bg-muted rounded-full" />
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-muted rounded w-1/4" />
@@ -911,7 +907,8 @@ export default function PaymentsPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Retry Failed Payment</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to retry payment <span className="font-semibold">{selectedPayment.id}</span>?
+                Are you sure you want to retry payment{" "}
+                <span className="font-semibold">{selectedPayment.id}</span>?
                 <br />
                 <br />
                 This will attempt to process the payment again using the same payment method.

@@ -241,7 +241,7 @@ describe("useNotifications", () => {
 
       await waitFor(() => {
         expect(apiClient.get).toHaveBeenCalledWith(
-          "/notifications?notification_type=invoice_generated"
+          "/notifications?notification_type=invoice_generated",
         );
       });
     });
@@ -256,7 +256,7 @@ describe("useNotifications", () => {
           unreadOnly: true,
           priority: "urgent",
           notificationType: "payment_failed",
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -620,9 +620,7 @@ describe("useNotifications", () => {
       expect(result.current.notifications).toEqual([]);
       expect(result.current.unreadCount).toBe(0);
       expect(result.current.error).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("403")
-      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("403"));
     });
 
     it("should handle non-Error exceptions", async () => {
@@ -717,9 +715,7 @@ describe("useNotificationTemplates", () => {
       renderHook(() => useNotificationTemplates({ activeOnly: true }));
 
       await waitFor(() => {
-        expect(apiClient.get).toHaveBeenCalledWith(
-          "/communications/templates?active_only=true"
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/communications/templates?active_only=true");
       });
     });
 
@@ -789,7 +785,9 @@ describe("useNotificationTemplates", () => {
   describe("Actions - updateTemplate", () => {
     it("should update template successfully", async () => {
       const originalTemplate = createMockTemplate({ id: "tpl-1", name: "Original" });
-      (apiClient.get as jest.Mock).mockResolvedValueOnce({ data: { templates: [originalTemplate] } });
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { templates: [originalTemplate] },
+      });
 
       const updatedTemplate = { ...originalTemplate, name: "Updated" };
       (apiClient.patch as jest.Mock).mockResolvedValueOnce({ data: updatedTemplate });
@@ -848,7 +846,9 @@ describe("useNotificationTemplates", () => {
     });
 
     it("should handle deleteTemplate failure", async () => {
-      (apiClient.get as jest.Mock).mockResolvedValueOnce({ data: { templates: [createMockTemplate()] } });
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { templates: [createMockTemplate()] },
+      });
       (apiClient.delete as jest.Mock).mockRejectedValueOnce(new Error("API Error"));
 
       const { result } = renderHook(() => useNotificationTemplates());
@@ -1009,7 +1009,7 @@ describe("useCommunicationLogs", () => {
 
       await waitFor(() => {
         expect(apiClient.get).toHaveBeenCalledWith(
-          "/communications/logs?recipient=test%40example.com"
+          "/communications/logs?recipient=test%40example.com",
         );
       });
     });
@@ -1021,7 +1021,7 @@ describe("useCommunicationLogs", () => {
         useCommunicationLogs({
           startDate: "2025-01-01",
           endDate: "2025-01-31",
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -1055,7 +1055,7 @@ describe("useCommunicationLogs", () => {
           endDate: "2025-01-31",
           page: 1,
           pageSize: 50,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -1280,7 +1280,7 @@ describe("useBulkNotifications", () => {
         "/notifications/bulk",
         expect.objectContaining({
           schedule_at: "2025-01-20T10:00:00Z",
-        })
+        }),
       );
     });
   });
@@ -1311,7 +1311,11 @@ describe("useBulkNotifications", () => {
 
       const { result } = renderHook(() => useBulkNotifications());
 
-      let response: BulkNotificationResponse | null = { job_id: "test", total_recipients: 1, status: "queued" };
+      let response: BulkNotificationResponse | null = {
+        job_id: "test",
+        total_recipients: 1,
+        status: "queued",
+      };
       await act(async () => {
         response = await result.current.getBulkJobStatus("job-123");
       });
@@ -1485,9 +1489,7 @@ describe("useUnreadCount", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(result.current.unreadCount).toBe(0);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("403")
-      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("403"));
     });
 
     it("should handle network errors", async () => {

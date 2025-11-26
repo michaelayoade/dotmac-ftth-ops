@@ -10,14 +10,7 @@ import { Switch } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -122,9 +115,9 @@ export default function OrganizationSettingsPage() {
       setIsSaving(true);
 
       await tenantService.updateTenant(currentTenant.id, {
-        ...(formData['name'] && { name: formData['name'] }),
+        ...(formData["name"] && { name: formData["name"] }),
         ...(formData.slug && { slug: formData.slug }),
-        ...(formData['description'] && { description: formData['description'] }),
+        ...(formData["description"] && { description: formData["description"] }),
         ...(formData.website && { website: formData.website }),
         ...(formData.contact_email && { contact_email: formData.contact_email }),
         ...(formData.contact_phone && { contact_phone: formData.contact_phone }),
@@ -406,7 +399,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-name">Organization Name</Label>
                   <Input
                     id="org-name"
-                    value={formData['name'] || ""}
+                    value={formData["name"] || ""}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     disabled={!isEditing}
                   />
@@ -425,7 +418,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-description">Description</Label>
                   <Textarea
                     id="org-description"
-                    value={formData['description'] || ""}
+                    value={formData["description"] || ""}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     disabled={!isEditing}
                     rows={3}

@@ -27,7 +27,9 @@ function InventoryHostsPageContent() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold">Host Management</h1>
-          <p className="text-sm text-muted-foreground">Manage inventory hosts and their configurations</p>
+          <p className="text-sm text-muted-foreground">
+            Manage inventory hosts and their configurations
+          </p>
         </div>
       </div>
 
@@ -48,13 +50,15 @@ function InventoryHostsPageContent() {
           <div className="space-y-2">
             <p className="text-sm text-blue-800">
               Individual hosts and their configurations are managed through AWX. This provides
-              powerful features like dynamic inventory, host variables, and integration with
-              cloud providers.
+              powerful features like dynamic inventory, host variables, and integration with cloud
+              providers.
             </p>
           </div>
 
           <div className="pt-4 border-t border-blue-200">
-            <h3 className="text-sm font-semibold text-blue-900 mb-3">How to manage hosts in AWX:</h3>
+            <h3 className="text-sm font-semibold text-blue-900 mb-3">
+              How to manage hosts in AWX:
+            </h3>
             <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
               <li>Log in to your AWX interface</li>
               <li>Navigate to Resources → Inventories</li>
@@ -90,9 +94,7 @@ function InventoryHostsPageContent() {
       <Card>
         <CardHeader>
           <CardTitle>Host Management Features in AWX</CardTitle>
-          <CardDescription>
-            What you can do with hosts in AWX
-          </CardDescription>
+          <CardDescription>What you can do with hosts in AWX</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
@@ -147,9 +149,7 @@ function InventoryHostsPageContent() {
       <Card>
         <CardHeader>
           <CardTitle>Example Host Configuration</CardTitle>
-          <CardDescription>
-            Common patterns for configuring hosts in AWX
-          </CardDescription>
+          <CardDescription>Common patterns for configuring hosts in AWX</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -162,9 +162,15 @@ function InventoryHostsPageContent() {
               <div className="flex items-center justify-between p-2 bg-accent rounded">
                 <span className="text-muted-foreground">Groups:</span>
                 <div className="flex gap-1">
-                  <Badge variant="outline" className="text-xs">routers</Badge>
-                  <Badge variant="outline" className="text-xs">core-network</Badge>
-                  <Badge variant="outline" className="text-xs">production</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    routers
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    core-network
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    production
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -173,7 +179,7 @@ function InventoryHostsPageContent() {
           <div className="pt-4 border-t">
             <h3 className="text-sm font-semibold mb-2">Example Host Variables</h3>
             <pre className="p-3 bg-accent rounded-lg text-sm font-mono overflow-x-auto">
-{`ansible_host: 10.0.1.100
+              {`ansible_host: 10.0.1.100
 ansible_connection: network_cli
 ansible_network_os: ios
 ansible_user: admin
@@ -189,9 +195,7 @@ vlan_range: 100-200`}
       <Card>
         <CardHeader>
           <CardTitle>Best Practices</CardTitle>
-          <CardDescription>
-            Tips for organizing your inventory
-          </CardDescription>
+          <CardDescription>Tips for organizing your inventory</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
@@ -202,8 +206,8 @@ vlan_range: 100-200`}
               <div>
                 <p className="font-medium">Use Meaningful Names</p>
                 <p className="text-sm text-muted-foreground">
-                  Name hosts with descriptive patterns like device-type-location-number
-                  (e.g., router-dc1-core-01)
+                  Name hosts with descriptive patterns like device-type-location-number (e.g.,
+                  router-dc1-core-01)
                 </p>
               </div>
             </li>

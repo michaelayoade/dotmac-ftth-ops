@@ -33,7 +33,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <div data-testid="child">Content</div>
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       expect(screen.getByTestId("child")).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe("Toast Components", () => {
       };
 
       expect(() => render(<TestComponent />)).toThrow(
-        "useToast must be used within a ToastProvider"
+        "useToast must be used within a ToastProvider",
       );
 
       consoleSpy.mockRestore();
@@ -66,7 +66,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       expect(screen.getByTestId("toast-count")).toHaveTextContent("0");
@@ -87,7 +87,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -117,7 +117,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -133,17 +133,13 @@ describe("Toast Components", () => {
       const TestComponent = () => {
         const { addToast } = useToast();
 
-        return (
-          <button onClick={() => addToast({ title: "Auto Dismiss" })}>
-            Add Toast
-          </button>
-        );
+        return <button onClick={() => addToast({ title: "Auto Dismiss" })}>Add Toast</button>;
       };
 
       const { advanceTimers, cleanup } = renderWithTimers(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -173,7 +169,7 @@ describe("Toast Components", () => {
       const { advanceTimers, cleanup } = renderWithTimers(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -194,16 +190,14 @@ describe("Toast Components", () => {
         const { addToast } = useToast();
 
         return (
-          <button onClick={() => addToast({ title: "Permanent", duration: 0 })}>
-            Add Toast
-          </button>
+          <button onClick={() => addToast({ title: "Permanent", duration: 0 })}>Add Toast</button>
         );
       };
 
       const { advanceTimers, cleanup } = renderWithTimers(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -247,7 +241,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -280,7 +274,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Multiple"));
@@ -302,7 +296,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestToastAdder type="default" />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -315,7 +309,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestToastAdder type="success" />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -328,7 +322,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestToastAdder type="error" />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -341,7 +335,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestToastAdder type="warning" />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -354,7 +348,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestToastAdder type="info" />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -369,15 +363,13 @@ describe("Toast Components", () => {
       const TestComponent = () => {
         const { addToast } = useToast();
 
-        return (
-          <button onClick={() => addToast({ title: "Title Only" })}>Add Toast</button>
-        );
+        return <button onClick={() => addToast({ title: "Title Only" })}>Add Toast</button>;
       };
 
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -406,7 +398,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -436,7 +428,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -452,16 +444,14 @@ describe("Toast Components", () => {
         const { addToast } = useToast();
 
         return (
-          <button onClick={() => addToast({ title: "Closable", duration: 0 })}>
-            Add Toast
-          </button>
+          <button onClick={() => addToast({ title: "Closable", duration: 0 })}>Add Toast</button>
         );
       };
 
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -474,16 +464,14 @@ describe("Toast Components", () => {
         const { addToast } = useToast();
 
         return (
-          <button onClick={() => addToast({ title: "Closable", duration: 0 })}>
-            Add Toast
-          </button>
+          <button onClick={() => addToast({ title: "Closable", duration: 0 })}>Add Toast</button>
         );
       };
 
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -499,7 +487,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <div>Content</div>
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       const viewport = document.querySelector(".fixed");
@@ -526,7 +514,7 @@ describe("Toast Components", () => {
       render(
         <ToastProvider>
           <TestComponent />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Multiple"));
@@ -593,7 +581,7 @@ describe("Toast Components", () => {
       await renderA11y(
         <ToastProvider>
           <TestToastAdder type="success" />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -611,7 +599,7 @@ describe("Toast Components", () => {
       const { result, metrics } = await renderComprehensive(
         <ToastProvider>
           <TestToastAdder type="success" />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Toast"));
@@ -635,7 +623,7 @@ describe("Toast Components", () => {
       const { advanceTimers, cleanup } = renderWithTimers(
         <ToastProvider>
           <TestLifecycleAdder />
-        </ToastProvider>
+        </ToastProvider>,
       );
 
       // Add toast with default duration (5000ms)
@@ -659,8 +647,6 @@ function TestToastAdder({ type }: { type?: "default" | "success" | "error" | "wa
   const { addToast } = useToast();
 
   return (
-    <button onClick={() => addToast({ title: "Test Toast", type, duration: 0 })}>
-      Add Toast
-    </button>
+    <button onClick={() => addToast({ title: "Test Toast", type, duration: 0 })}>Add Toast</button>
   );
 }

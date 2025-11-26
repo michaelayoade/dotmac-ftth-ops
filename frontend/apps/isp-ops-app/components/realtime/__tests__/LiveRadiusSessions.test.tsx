@@ -22,10 +22,8 @@ const mockCompactConnectionStatus = jest.fn(() => (
 ));
 
 jest.mock("@/hooks/useRealtime", () => ({
-  useSessionsWebSocket: (
-    callback: (event: RADIUSSessionEvent) => void,
-    enabled?: boolean,
-  ) => mockUseSessionsWebSocket(callback, enabled),
+  useSessionsWebSocket: (callback: (event: RADIUSSessionEvent) => void, enabled?: boolean) =>
+    mockUseSessionsWebSocket(callback, enabled),
 }));
 
 jest.mock("@/hooks/useNetworkDiagnostics", () => ({
@@ -252,9 +250,7 @@ describe("LiveRadiusSessions", () => {
         });
       }
 
-      expect(
-        screen.getByText(/Showing most recent 2 sessions/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Showing most recent 2 sessions/i)).toBeInTheDocument();
     });
   });
 
@@ -292,9 +288,7 @@ describe("LiveRadiusSessions", () => {
       renderQuick(<LiveRadiusSessions />);
 
       expect(screen.getByText("Live RADIUS Sessions")).toBeInTheDocument();
-      expect(
-        screen.getByText("Real-time authentication session monitoring"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Real-time authentication session monitoring")).toBeInTheDocument();
     });
 
     it("shows connection status badge", () => {
@@ -534,28 +528,19 @@ describe("LiveRadiusSessions", () => {
     it("passes enabled prop to useSessionsWebSocket", () => {
       renderQuick(<LiveRadiusSessions enabled={true} />);
 
-      expect(mockUseSessionsWebSocket).toHaveBeenCalledWith(
-        expect.any(Function),
-        true,
-      );
+      expect(mockUseSessionsWebSocket).toHaveBeenCalledWith(expect.any(Function), true);
     });
 
     it("passes disabled state to useSessionsWebSocket", () => {
       renderQuick(<LiveRadiusSessions enabled={false} />);
 
-      expect(mockUseSessionsWebSocket).toHaveBeenCalledWith(
-        expect.any(Function),
-        false,
-      );
+      expect(mockUseSessionsWebSocket).toHaveBeenCalledWith(expect.any(Function), false);
     });
 
     it("defaults to enabled when not specified", () => {
       renderQuick(<LiveRadiusSessions />);
 
-      expect(mockUseSessionsWebSocket).toHaveBeenCalledWith(
-        expect.any(Function),
-        true,
-      );
+      expect(mockUseSessionsWebSocket).toHaveBeenCalledWith(expect.any(Function), true);
     });
   });
 
@@ -621,9 +606,7 @@ describe("LiveRadiusSessions", () => {
         });
       }
 
-      expect(
-        screen.getByText(/Showing most recent 100 sessions/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Showing most recent 100 sessions/i)).toBeInTheDocument();
     });
 
     it("uses compact=false by default", () => {

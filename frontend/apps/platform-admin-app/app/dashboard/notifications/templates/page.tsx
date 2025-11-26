@@ -8,24 +8,11 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import {
-  CheckCircle2,
-  Copy,
-  Edit,
-  Eye,
-  Plus,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, Copy, Edit, Eye, Plus, Trash2, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNotificationTemplates } from "@/hooks/useNotifications";
 import type { CommunicationTemplate, TemplateCreateRequest } from "@/hooks/useNotifications";
-import {
-  EnhancedDataTable,
-  type ColumnDef,
-  type BulkAction,
-  type QuickFilter,
-} from "@dotmac/ui";
+import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -108,7 +95,7 @@ export default function NotificationTemplatesPage() {
         refetch();
       } catch (err) {
         console.error("Failed to duplicate template:", err);
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Failed to duplicate template. Please try again.");
       }
     },
@@ -131,7 +118,7 @@ export default function NotificationTemplatesPage() {
         refetch();
       } catch (err) {
         console.error("Failed to delete template:", err);
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Failed to delete template. Please try again.");
       }
     },
@@ -358,7 +345,7 @@ export default function NotificationTemplatesPage() {
       refetch();
     } catch (err) {
       console.error("Failed to create template:", err);
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert("Failed to create template. Please try again.");
     }
   };
@@ -477,7 +464,14 @@ export default function NotificationTemplatesPage() {
               <p className="text-sm text-red-800 dark:text-red-200">
                 Failed to load templates. Please try again.
               </p>
-              <Button variant="link" size="sm" onClick={() => { refetch().catch(() => {}); }} className="mt-2">
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  refetch().catch(() => {});
+                }}
+                className="mt-2"
+              >
                 Retry
               </Button>
             </div>

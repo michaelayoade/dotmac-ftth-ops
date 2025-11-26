@@ -38,12 +38,7 @@ jest.mock("@/lib/services/alert-service", () => {
   };
 });
 
-import {
-  useAlerts,
-  useCriticalAlerts,
-  useSecurityAlerts,
-  useBillingAlerts,
-} from "../useAlerts";
+import { useAlerts, useCriticalAlerts, useSecurityAlerts, useBillingAlerts } from "../useAlerts";
 import { alertService } from "@/lib/services/alert-service";
 
 // Get the mocked service

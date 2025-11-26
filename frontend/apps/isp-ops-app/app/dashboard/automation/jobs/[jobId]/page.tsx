@@ -43,7 +43,7 @@ interface Job {
 function JobDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const jobId = params?.['jobId'] as string;
+  const jobId = params?.["jobId"] as string;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const confirmDialog = useConfirmDialog();
@@ -51,12 +51,9 @@ function JobDetailsPageContent() {
   const { data: job, isLoading } = useQuery<Job>({
     queryKey: ["ansible", "job", jobId],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/ansible/jobs/${jobId}`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/ansible/jobs/${jobId}`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error("Job not found");
@@ -77,7 +74,7 @@ function JobDetailsPageContent() {
         {
           method: "POST",
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to cancel job");
@@ -106,20 +103,17 @@ function JobDetailsPageContent() {
         throw new Error("No template ID available for relaunch");
       }
 
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/ansible/jobs/launch`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            template_id: job.template_id,
-            extra_vars: job.extra_vars,
-          }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/ansible/jobs/launch`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          template_id: job.template_id,
+          extra_vars: job.extra_vars,
+        }),
+      });
       if (!response.ok) {
         throw new Error("Failed to relaunch job");
       }
@@ -180,27 +174,27 @@ function JobDetailsPageContent() {
       successful: {
         variant: "outline" as const,
         color: "text-green-600 bg-green-50 border-green-200",
-        icon: CheckCircle
+        icon: CheckCircle,
       },
       failed: {
         variant: "destructive" as const,
         color: "text-red-600",
-        icon: XCircle
+        icon: XCircle,
       },
       running: {
         variant: "default" as const,
         color: "text-blue-600 bg-blue-50 border-blue-200",
-        icon: Loader2
+        icon: Loader2,
       },
       pending: {
         variant: "secondary" as const,
         color: "text-yellow-600 bg-yellow-50 border-yellow-200",
-        icon: Clock
+        icon: Clock,
       },
       canceled: {
         variant: "secondary" as const,
         color: "text-gray-600 bg-gray-50 border-gray-200",
-        icon: StopCircle
+        icon: StopCircle,
       },
     };
 
@@ -241,7 +235,9 @@ function JobDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <XCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Job Not Found</h2>
-        <p className="text-muted-foreground mb-4">The job you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The job you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/automation/jobs">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -270,9 +266,7 @@ function JobDetailsPageContent() {
             <p className="text-sm text-muted-foreground">{job.name}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {getStatusBadge(job.status)}
-        </div>
+        <div className="flex items-center gap-2">{getStatusBadge(job.status)}</div>
       </div>
 
       {/* Quick Actions */}
@@ -319,9 +313,7 @@ function JobDetailsPageContent() {
               <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
               <div>
                 <p className="font-medium text-blue-900">Job is currently running</p>
-                <p className="text-sm text-blue-700">
-                  This page will auto-refresh every 5 seconds
-                </p>
+                <p className="text-sm text-blue-700">This page will auto-refresh every 5 seconds</p>
               </div>
             </div>
           </CardContent>
@@ -365,9 +357,7 @@ function JobDetailsPageContent() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Created</span>
                   </div>
-                  <span className="text-sm">
-                    {format(new Date(job.created), "PPpp")}
-                  </span>
+                  <span className="text-sm">{format(new Date(job.created), "PPpp")}</span>
                 </div>
                 {job.started && (
                   <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
@@ -433,8 +423,8 @@ function JobDetailsPageContent() {
                 <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="font-medium mb-2">Real-time Logs Coming Soon</p>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  Job output and logs will be available in a future release. For now, please
-                  check the AWX interface for detailed job logs and output.
+                  Job output and logs will be available in a future release. For now, please check
+                  the AWX interface for detailed job logs and output.
                 </p>
               </div>
             </CardContent>

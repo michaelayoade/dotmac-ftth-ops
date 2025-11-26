@@ -84,7 +84,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertTitle>Alert Title</AlertTitle>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("Alert Title")).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertTitle>Title</AlertTitle>
-        </Alert>
+        </Alert>,
       );
 
       const title = screen.getByText("Title");
@@ -105,7 +105,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertTitle>Title</AlertTitle>
-        </Alert>
+        </Alert>,
       );
 
       const title = screen.getByText("Title");
@@ -116,7 +116,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertTitle className="custom-title">Title</AlertTitle>
-        </Alert>
+        </Alert>,
       );
 
       const title = screen.getByText("Title");
@@ -129,7 +129,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertDescription>This is the alert description</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("This is the alert description")).toBeInTheDocument();
@@ -139,7 +139,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertDescription>Description</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const description = screen.getByText("Description");
@@ -150,7 +150,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertDescription>Description</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const description = screen.getByText("Description");
@@ -161,7 +161,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertDescription className="custom-desc">Description</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const description = screen.getByText("Description");
@@ -175,7 +175,7 @@ describe("Alert", () => {
         <Alert>
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>Your changes have been saved successfully.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("Success")).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("Alert", () => {
           <CheckCircle className="h-4 w-4" />
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>Operation completed.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("Success")).toBeInTheDocument();
@@ -201,7 +201,7 @@ describe("Alert", () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>Something went wrong.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const alert = screen.getByRole("alert");
@@ -216,7 +216,7 @@ describe("Alert", () => {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Warning</AlertTitle>
           <AlertDescription>Please review your input.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const alert = screen.getByRole("alert");
@@ -230,7 +230,7 @@ describe("Alert", () => {
           <Info className="h-4 w-4" />
           <AlertTitle>Information</AlertTitle>
           <AlertDescription>Here&apos;s some helpful information.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const alert = screen.getByRole("alert");
@@ -251,7 +251,7 @@ describe("Alert", () => {
         <Alert>
           <AlertTitle>Important Notice</AlertTitle>
           <AlertDescription>This is an important message for users.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const alert = screen.getByRole("alert");
@@ -277,7 +277,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertTitle ref={ref}>Title</AlertTitle>
-        </Alert>
+        </Alert>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLHeadingElement);
@@ -290,7 +290,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertDescription ref={ref}>Description</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -302,7 +302,7 @@ describe("Alert", () => {
       render(
         <Alert data-testid="custom-alert" data-custom="value">
           Content
-        </Alert>
+        </Alert>,
       );
 
       const alert = screen.getByTestId("custom-alert");
@@ -315,7 +315,7 @@ describe("Alert", () => {
           <AlertTitle data-testid="custom-title" data-custom="value">
             Title
           </AlertTitle>
-        </Alert>
+        </Alert>,
       );
 
       const title = screen.getByTestId("custom-title");
@@ -328,7 +328,7 @@ describe("Alert", () => {
           <AlertDescription data-testid="custom-desc" data-custom="value">
             Description
           </AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const description = screen.getByTestId("custom-desc");
@@ -370,7 +370,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertTitle>Title Only</AlertTitle>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("Title Only")).toBeInTheDocument();
@@ -381,7 +381,7 @@ describe("Alert", () => {
       render(
         <Alert>
           <AlertDescription>Description Only</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("Description Only")).toBeInTheDocument();
@@ -393,7 +393,7 @@ describe("Alert", () => {
           <AlertTitle>Title</AlertTitle>
           <AlertDescription>First paragraph</AlertDescription>
           <AlertDescription>Second paragraph</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("First paragraph")).toBeInTheDocument();
@@ -407,7 +407,7 @@ describe("Alert", () => {
             <p>Paragraph 1</p>
             <p>Paragraph 2</p>
           </AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("Paragraph 1")).toBeInTheDocument();
@@ -420,7 +420,7 @@ describe("Alert", () => {
           <AlertDescription>
             <p>Relaxed paragraph</p>
           </AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const description = screen.getByText("Relaxed paragraph").parentElement;
@@ -435,7 +435,7 @@ describe("Alert", () => {
           <CheckCircle className="h-4 w-4" />
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>Your profile has been updated.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const alert = screen.getByRole("alert");
@@ -450,7 +450,7 @@ describe("Alert", () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>Failed to save changes. Please try again.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       const alert = screen.getByRole("alert");
@@ -467,12 +467,12 @@ describe("Alert", () => {
           <AlertDescription>
             You&apos;ve used 95% of your storage. Consider upgrading your plan.
           </AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("Storage Almost Full")).toBeInTheDocument();
       expect(
-        screen.getByText("You've used 95% of your storage. Consider upgrading your plan.")
+        screen.getByText("You've used 95% of your storage. Consider upgrading your plan."),
       ).toBeInTheDocument();
     });
 
@@ -482,11 +482,13 @@ describe("Alert", () => {
           <Info className="h-4 w-4" />
           <AlertTitle>New Features Available</AlertTitle>
           <AlertDescription>Check out the latest updates in your dashboard.</AlertDescription>
-        </Alert>
+        </Alert>,
       );
 
       expect(screen.getByText("New Features Available")).toBeInTheDocument();
-      expect(screen.getByText("Check out the latest updates in your dashboard.")).toBeInTheDocument();
+      expect(
+        screen.getByText("Check out the latest updates in your dashboard."),
+      ).toBeInTheDocument();
     });
   });
 });

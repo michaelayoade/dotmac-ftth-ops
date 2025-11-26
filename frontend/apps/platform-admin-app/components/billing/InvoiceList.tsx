@@ -19,10 +19,7 @@ interface InvoiceListWrapperProps {
   onInvoiceSelect?: (invoice: Invoice) => void;
 }
 
-export default function InvoiceListWrapper({
-  tenantId,
-  onInvoiceSelect,
-}: InvoiceListWrapperProps) {
+export default function InvoiceListWrapper({ tenantId, onInvoiceSelect }: InvoiceListWrapperProps) {
   const router = useRouter();
 
   // Map shared Invoice callback to app-specific Invoice type

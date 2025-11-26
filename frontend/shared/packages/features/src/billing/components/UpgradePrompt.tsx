@@ -135,7 +135,7 @@ function getReasonContent(
   reason: UpgradeReason,
   quotaType?: string,
   feature?: string,
-  currentPlan?: string
+  currentPlan?: string,
 ) {
   switch (reason) {
     case "quota_exceeded":
@@ -151,12 +151,14 @@ function getReasonContent(
     case "trial_expiring":
       return {
         title: "Trial Ending Soon",
-        message: "Your trial period is ending soon. Upgrade now to continue using all features without interruption.",
+        message:
+          "Your trial period is ending soon. Upgrade now to continue using all features without interruption.",
       };
     case "trial_expired":
       return {
         title: "Trial Expired",
-        message: "Your trial period has ended. Upgrade to a paid plan to restore access to your account.",
+        message:
+          "Your trial period has ended. Upgrade to a paid plan to restore access to your account.",
       };
     case "plan_limitation":
       return {
@@ -166,7 +168,8 @@ function getReasonContent(
     case "better_value":
       return {
         title: "Get More Value",
-        message: "Based on your usage, upgrading to a higher plan would provide better value and more features.",
+        message:
+          "Based on your usage, upgrading to a higher plan would provide better value and more features.",
       };
     default:
       return {
@@ -180,12 +183,7 @@ function getReasonContent(
  * Plan comparison features
  */
 const PLAN_FEATURES: Record<string, string[]> = {
-  STARTER: [
-    "100 customers",
-    "5 staff users",
-    "Basic billing",
-    "Email support",
-  ],
+  STARTER: ["100 customers", "5 staff users", "Basic billing", "Email support"],
   PROFESSIONAL: [
     "1,000 customers",
     "20 staff users",
@@ -266,9 +264,7 @@ function UpgradePromptCard({
               <CardDescription className="mt-1">{message}</CardDescription>
             </div>
           </div>
-          {currentPlan && (
-            <Badge variant="outline">Current: {currentPlan}</Badge>
-          )}
+          {currentPlan && <Badge variant="outline">Current: {currentPlan}</Badge>}
         </div>
       </CardHeader>
 

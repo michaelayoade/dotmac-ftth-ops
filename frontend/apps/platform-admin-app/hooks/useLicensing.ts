@@ -7,4 +7,4 @@
  * All logic now in shared/hooks/useLicensing.ts
  */
 
-export * from '../../../shared/hooks/useLicensing';
+export * from "../../../shared/hooks/useLicensing";

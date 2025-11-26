@@ -69,7 +69,7 @@ export function QuoteDetailModal({
     try {
       await acceptQuoteMutation.mutateAsync({
         id: quoteId,
-        signatureData: signatureData as Record<string, unknown> | undefined
+        signatureData: signatureData as Record<string, unknown> | undefined,
       });
       toast({
         title: "Quote Accepted",

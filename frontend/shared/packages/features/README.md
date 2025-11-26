@@ -5,10 +5,12 @@ Shared feature components, types, and utilities for DotMac platform applications
 ## Purpose
 
 This package contains business logic, components, and utilities that are shared between:
+
 - Platform Admin App
 - ISP Ops App
 
 By centralizing these features, we:
+
 - ✅ Eliminate code duplication (~77,000 lines)
 - ✅ Ensure consistent behavior across apps
 - ✅ Simplify maintenance (one fix applies to both apps)
@@ -21,6 +23,7 @@ By centralizing these features, we:
 Shared billing components, types, and utilities.
 
 **Types:**
+
 ```typescript
 import {
   Invoice,
@@ -32,6 +35,7 @@ import {
 ```
 
 **Utilities:**
+
 ```typescript
 import {
   formatCurrency,
@@ -52,6 +56,7 @@ isInvoiceOverdue(invoice); // true/false
 ```
 
 **Components:**
+
 ```typescript
 import { InvoiceStatusBadge } from "@dotmac/features/billing";
 
@@ -86,6 +91,7 @@ import { formatCurrency, InvoiceStatusBadge } from "@dotmac/features/billing";
 ## Migration Strategy
 
 ### Phase 1: Foundation (COMPLETE)
+
 - ✅ Create package structure
 - ✅ Extract types
 - ✅ Extract utilities
@@ -116,6 +122,7 @@ import { InvoiceStatusBadge } from "@dotmac/features/billing";
 ### Phase 3: Complete Extraction (Future)
 
 Target components to migrate:
+
 - [ ] InvoiceList
 - [ ] InvoiceDetailModal
 - [ ] RecordPaymentModal
@@ -130,11 +137,13 @@ Estimated effort: 2-4 weeks
 ### 1. App-Agnostic
 
 Components should not depend on app-specific:
+
 - API clients (pass as props or context)
 - Routing (use callbacks for navigation)
 - Auth (use props for user data)
 
 **Good:**
+
 ```typescript
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -143,6 +152,7 @@ interface InvoiceListProps {
 ```
 
 **Bad:**
+
 ```typescript
 // ❌ App-specific dependency
 import { apiClient } from "@/lib/api/client";
@@ -154,6 +164,7 @@ import { useRouter } from "next/navigation";
 Prefer composition patterns that allow apps to customize behavior.
 
 **Good:**
+
 ```typescript
 <InvoiceList
   invoices={invoices}
@@ -169,6 +180,7 @@ All exports should be fully typed with TypeScript.
 ### 4. Minimal Dependencies
 
 Only depend on:
+
 - ✅ `@dotmac/ui` (shared component library)
 - ✅ React
 - ✅ TypeScript
@@ -230,6 +242,7 @@ When adding shared features:
 ## Questions?
 
 See main architecture documentation:
+
 - `PHASE1_API_SEPARATION_COMPLETE.md`
 - `PHASE2A_SHARED_FEATURES_STARTED.md`
 - `APP_SEPARATION_ARCHITECTURE_REVIEW.md`

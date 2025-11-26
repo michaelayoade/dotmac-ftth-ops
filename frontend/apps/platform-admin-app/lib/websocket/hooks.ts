@@ -28,8 +28,8 @@ export function useWebSocket(authToken?: string) {
     const token =
       authToken ||
       (typeof window !== "undefined"
-    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
-        ? localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
+        ? // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
+          localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
         : null);
 
     const client = getWebSocketClient(token);

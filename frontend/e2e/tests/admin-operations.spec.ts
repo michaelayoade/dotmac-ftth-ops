@@ -13,7 +13,6 @@
 
 import { test, expect } from "#e2e/fixtures";
 
-
 test.describe("Admin Operations Monitoring Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/admin/operations");

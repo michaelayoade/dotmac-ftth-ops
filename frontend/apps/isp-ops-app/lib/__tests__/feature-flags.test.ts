@@ -101,7 +101,7 @@ describe("feature-flags", () => {
       expect(eventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "featureFlagChange",
-        })
+        }),
       );
 
       eventSpy.mockRestore();
@@ -137,36 +137,28 @@ describe("feature-flags", () => {
 
   describe("useFeatureFlag", () => {
     it("should return feature flag state as object with enabled property", () => {
-      const { result } = renderHook(() =>
-        useFeatureFlag("radius-sessions")
-      );
+      const { result } = renderHook(() => useFeatureFlag("radius-sessions"));
 
       expect(result.current).toHaveProperty("enabled");
       expect(typeof result.current.enabled).toBe("boolean");
     });
 
     it("should return correct state for enabled flags", () => {
-      const { result } = renderHook(() =>
-        useFeatureFlag("network-monitoring-v2")
-      );
+      const { result } = renderHook(() => useFeatureFlag("network-monitoring-v2"));
 
       // network-monitoring-v2 defaults to true
       expect(result.current.enabled).toBe(true);
     });
 
     it("should return correct state for disabled flags", () => {
-      const { result } = renderHook(() =>
-        useFeatureFlag("radius-sessions")
-      );
+      const { result } = renderHook(() => useFeatureFlag("radius-sessions"));
 
       // radius-sessions defaults to false
       expect(result.current.enabled).toBe(false);
     });
 
     it("should listen for feature flag change events", () => {
-      const { result } = renderHook(() =>
-        useFeatureFlag("radius-sessions")
-      );
+      const { result } = renderHook(() => useFeatureFlag("radius-sessions"));
 
       // Initial state
       expect(result.current.enabled).toBe(false);
@@ -220,9 +212,7 @@ describe("feature-flags", () => {
     });
 
     it("should return undefined for invalid feature flag", () => {
-      const config = getFeatureFlagConfig(
-        "non-existent-flag" as FeatureFlag
-      );
+      const config = getFeatureFlagConfig("non-existent-flag" as FeatureFlag);
 
       expect(config).toBeUndefined();
     });
@@ -272,9 +262,7 @@ describe("feature-flags", () => {
 
     it("should handle checking non-existent flags gracefully", () => {
       // Should log warning but not throw
-      expect(() =>
-        isFeatureEnabled("non-existent" as FeatureFlag)
-      ).not.toThrow();
+      expect(() => isFeatureEnabled("non-existent" as FeatureFlag)).not.toThrow();
     });
 
     it("should handle flags without env vars", () => {

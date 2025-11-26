@@ -407,7 +407,7 @@ describe("DateRangePicker", () => {
         <DateRangePicker
           dateRange={{ from: fromDate, to: toDate }}
           placeholder="Select stay dates"
-        />
+        />,
       );
 
       expect(screen.getByText(/Jan.*10.*2024.*Jan.*20.*2024/i)).toBeInTheDocument();
@@ -442,7 +442,7 @@ describe("DateRangePicker", () => {
         <DateRangePicker
           placeholder="Select analysis period"
           onDateRangeChange={onDateRangeChange}
-        />
+        />,
       );
 
       await user.click(screen.getByRole("button"));

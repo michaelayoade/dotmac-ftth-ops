@@ -157,7 +157,7 @@ describe("useInvoiceActions", () => {
 
     it("should set isSending state correctly", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {
@@ -269,7 +269,7 @@ describe("useInvoiceActions", () => {
 
     it("should set isVoiding state correctly", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {
@@ -401,7 +401,7 @@ describe("useInvoiceActions", () => {
 
     it("should set isSendingReminder state correctly", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {
@@ -602,9 +602,9 @@ describe("useInvoiceActions", () => {
                     updated_at: "2024-01-01T00:00:00Z",
                   },
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {
@@ -629,7 +629,7 @@ describe("useInvoiceActions", () => {
   describe("combined loading state", () => {
     it("should show isLoading when sendInvoiceEmail is pending", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {
@@ -650,7 +650,7 @@ describe("useInvoiceActions", () => {
 
     it("should show isLoading when voidInvoice is pending", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {
@@ -672,7 +672,7 @@ describe("useInvoiceActions", () => {
 
     it("should show isLoading when sendPaymentReminder is pending", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {
@@ -709,9 +709,9 @@ describe("useInvoiceActions", () => {
                     updated_at: "2024-01-01T00:00:00Z",
                   },
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useInvoiceActions(), {

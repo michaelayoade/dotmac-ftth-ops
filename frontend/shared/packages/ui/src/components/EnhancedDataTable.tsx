@@ -60,14 +60,7 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { Input } from "./input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 
 const DEFAULT_PAGE_SIZE_OPTIONS: number[] = [10, 20, 30, 50, 100];
 const EMPTY_FILTERS: FilterConfig[] = [];
@@ -592,7 +585,7 @@ export function EnhancedDataTable<TData, TValue>({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-card">
-                  <DropdownMenuLabel>{copy.bulkActionsLabel}</DropdownMenuLabel>
+                    <DropdownMenuLabel>{copy.bulkActionsLabel}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {bulkActions.map((action, index) => {
                       const Icon = action.icon;
@@ -735,7 +728,9 @@ export function EnhancedDataTable<TData, TValue>({
         </div>
       )}
 
-      <div className={cn("rounded-md border border-border bg-card", showCardView && "hidden md:block")}>
+      <div
+        className={cn("rounded-md border border-border bg-card", showCardView && "hidden md:block")}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

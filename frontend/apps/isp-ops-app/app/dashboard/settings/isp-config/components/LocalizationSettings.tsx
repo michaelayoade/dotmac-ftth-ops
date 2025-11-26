@@ -7,7 +7,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, AlertCircle } from "lucide-react";
@@ -92,7 +98,7 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
 
     updateSetting(
       "supported_currencies",
-      settings.supported_currencies.filter((c) => c !== currencyCode)
+      settings.supported_currencies.filter((c) => c !== currencyCode),
     );
   };
 
@@ -108,7 +114,7 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
 
     updateSetting(
       "supported_languages",
-      settings.supported_languages.filter((l) => l !== languageCode)
+      settings.supported_languages.filter((l) => l !== languageCode),
     );
   };
 
@@ -117,8 +123,9 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
       <Alert>
         <Lock className="h-4 w-4" />
         <AlertDescription>
-          <strong>Note:</strong> Default currency and timezone are typically set during initial setup
-          and may require data migration to change. Contact support if you need to modify these settings.
+          <strong>Note:</strong> Default currency and timezone are typically set during initial
+          setup and may require data migration to change. Contact support if you need to modify
+          these settings.
         </AlertDescription>
       </Alert>
 
@@ -189,7 +196,7 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
               </SelectTrigger>
               <SelectContent>
                 {COMMON_CURRENCIES.filter(
-                  (c) => !settings.supported_currencies.includes(c.code)
+                  (c) => !settings.supported_currencies.includes(c.code),
                 ).map((currency) => (
                   <SelectItem key={currency.code} value={currency.code}>
                     {currency.code} - {currency.name} ({currency.symbol})
@@ -212,12 +219,21 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
               placeholder="{symbol}{amount:,.2f}"
             />
             <div className="text-sm text-muted-foreground">
-              <p>Variables: <code>{"{symbol}"}</code>, <code>{"{amount}"}</code>, <code>{"{code}"}</code></p>
+              <p>
+                Variables: <code>{"{symbol}"}</code>, <code>{"{amount}"}</code>,{" "}
+                <code>{"{code}"}</code>
+              </p>
               <p className="mt-1">Examples:</p>
               <ul className="list-disc list-inside ml-2">
-                <li><code>{"{symbol}{amount:,.2f}"}</code> → $1,234.56</li>
-                <li><code>{"{amount:,.2f} {code}"}</code> → 1,234.56 USD</li>
-                <li><code>{"{symbol} {amount:,.2f}"}</code> → $ 1,234.56</li>
+                <li>
+                  <code>{"{symbol}{amount:,.2f}"}</code> → $1,234.56
+                </li>
+                <li>
+                  <code>{"{amount:,.2f} {code}"}</code> → 1,234.56 USD
+                </li>
+                <li>
+                  <code>{"{symbol} {amount:,.2f}"}</code> → $ 1,234.56
+                </li>
               </ul>
             </div>
           </div>
@@ -227,9 +243,7 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
       <Card>
         <CardHeader>
           <CardTitle>Language Settings</CardTitle>
-          <CardDescription>
-            Configure default language and supported languages
-          </CardDescription>
+          <CardDescription>Configure default language and supported languages</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Default Language */}
@@ -284,13 +298,13 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
                 <SelectValue placeholder="Add language..." />
               </SelectTrigger>
               <SelectContent>
-                {COMMON_LANGUAGES.filter(
-                  (l) => !settings.supported_languages.includes(l.code)
-                ).map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    {lang.name} ({lang.code})
-                  </SelectItem>
-                ))}
+                {COMMON_LANGUAGES.filter((l) => !settings.supported_languages.includes(l.code)).map(
+                  (lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      {lang.name} ({lang.code})
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -300,9 +314,7 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
       <Card>
         <CardHeader>
           <CardTitle>Regional Settings</CardTitle>
-          <CardDescription>
-            Configure timezone and date/time formatting
-          </CardDescription>
+          <CardDescription>Configure timezone and date/time formatting</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Timezone */}
@@ -326,9 +338,7 @@ export function LocalizationSettings({ settings, onChange }: LocalizationSetting
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground">
-              Default timezone for dates and times
-            </p>
+            <p className="text-sm text-muted-foreground">Default timezone for dates and times</p>
           </div>
 
           {/* Date and Time Formats */}

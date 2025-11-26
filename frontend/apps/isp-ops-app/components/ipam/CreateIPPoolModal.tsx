@@ -4,13 +4,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { Button } from "@dotmac/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
@@ -42,7 +36,10 @@ export function CreateIPPoolModal({ isOpen, onClose, onSuccess }: CreateIPPoolMo
         network_cidr: data.network_cidr,
         gateway: data.gateway || null,
         dns_servers: data.dns_servers
-          ? data.dns_servers.split(",").map((s) => s.trim()).filter(Boolean)
+          ? data.dns_servers
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : null,
         vlan_id: data.vlan_id ? parseInt(data.vlan_id) : null,
         description: data.description || null,
@@ -173,9 +170,7 @@ export function CreateIPPoolModal({ isOpen, onClose, onSuccess }: CreateIPPoolMo
               id="auto_assign_enabled"
               type="checkbox"
               checked={formData.auto_assign_enabled}
-              onChange={(e) =>
-                setFormData({ ...formData, auto_assign_enabled: e.target.checked })
-              }
+              onChange={(e) => setFormData({ ...formData, auto_assign_enabled: e.target.checked })}
               className="h-4 w-4 rounded border-gray-300"
             />
             <Label htmlFor="auto_assign_enabled" className="cursor-pointer">

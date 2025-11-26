@@ -12,10 +12,7 @@ import {
 } from "../utils/enhancedErrorHandling";
 import { errorLogger } from "../services/ErrorLoggingService";
 
-const mergeErrorContext = (
-  base: ErrorContext,
-  updates?: Partial<ErrorContext>,
-): ErrorContext => {
+const mergeErrorContext = (base: ErrorContext, updates?: Partial<ErrorContext>): ErrorContext => {
   if (!updates) {
     return base;
   }
@@ -225,10 +222,7 @@ export function useEnhancedErrorHandler(
         enhancedError = new EnhancedISPError({
           code: ErrorCode.UNKNOWN_ERROR,
           message: String(error),
-          context: mergeErrorContext(
-            createErrorContext(context?.operation || "unknown"),
-            context,
-          ),
+          context: mergeErrorContext(createErrorContext(context?.operation || "unknown"), context),
         });
       }
 
@@ -253,18 +247,18 @@ export function useEnhancedErrorHandler(
   // Specialized API error handler
   const handleApiError = useCallback(
     (error: any, operation: string, resource?: string): EnhancedISPError => {
-          const context: Partial<ErrorContext> = {
-            operation: `api_${operation}`,
-            metadata: {
-              endpoint: error.config?.url,
-              method: error.config?.method,
-              status: error.response?.status,
-            },
-          };
+      const context: Partial<ErrorContext> = {
+        operation: `api_${operation}`,
+        metadata: {
+          endpoint: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,
+        },
+      };
 
-          if (resource) {
-            context.resource = resource;
-          }
+      if (resource) {
+        context.resource = resource;
+      }
 
       const enhancedError = handleError(error, context);
 

@@ -36,7 +36,8 @@ const handleAuthFailure = (error: unknown) => {
 
   return NextResponse.json(
     {
-      error: "Better Auth is not configured. Set DATABASE_URL/BETTER_AUTH_SECRET or disable auth for local development.",
+      error:
+        "Better Auth is not configured. Set DATABASE_URL/BETTER_AUTH_SECRET or disable auth for local development.",
     },
     { status: 503 },
   );

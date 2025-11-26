@@ -45,11 +45,7 @@ export const createMockRouter = () => ({
  * Mock toast notification function
  */
 export const createMockToast = () =>
-  vi.fn((options: {
-    title: string;
-    description: string;
-    variant?: "default" | "destructive";
-  }) => {
+  vi.fn((options: { title: string; description: string; variant?: "default" | "destructive" }) => {
     // Can be extended to track toast calls if needed
   });
 
@@ -63,7 +59,7 @@ export const createMockConfirmDialog = () =>
       description: string;
       confirmText?: string;
       variant?: "destructive" | "default";
-    }) => Promise.resolve(true)
+    }) => Promise.resolve(true),
   );
 
 /**

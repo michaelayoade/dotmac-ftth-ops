@@ -33,8 +33,7 @@ export interface FlagStatus {
 // Query key factory for feature flags
 export const featureFlagsKeys = {
   all: ["feature-flags"] as const,
-  flags: (enabledOnly?: boolean) =>
-    [...featureFlagsKeys.all, "flags", { enabledOnly }] as const,
+  flags: (enabledOnly?: boolean) => [...featureFlagsKeys.all, "flags", { enabledOnly }] as const,
   status: () => [...featureFlagsKeys.all, "status"] as const,
 };
 
@@ -54,7 +53,7 @@ function normalizeFlagsResponse(response: unknown): FeatureFlag[] {
  */
 function normalizeStatusResponse(response: unknown): FlagStatus | null {
   const resp = response as { data?: unknown };
-  return resp?.data as FlagStatus | null ?? null;
+  return (resp?.data as FlagStatus | null) ?? null;
 }
 
 /**
@@ -103,9 +102,8 @@ export const useFeatureFlags = (enabledOnly = false) => {
     },
     onSuccess: ({ flagName, enabled }) => {
       // Optimistically update the cache
-      queryClient.setQueryData<FeatureFlag[]>(
-        featureFlagsKeys.flags(enabledOnly),
-        (old) => old?.map((flag) => (flag.name === flagName ? { ...flag, enabled } : flag)),
+      queryClient.setQueryData<FeatureFlag[]>(featureFlagsKeys.flags(enabledOnly), (old) =>
+        old?.map((flag) => (flag.name === flagName ? { ...flag, enabled } : flag)),
       );
       // Invalidate to refetch
       queryClient.invalidateQueries({ queryKey: featureFlagsKeys.flags() });
@@ -118,13 +116,7 @@ export const useFeatureFlags = (enabledOnly = false) => {
 
   // Create flag mutation
   const createMutation = useMutation({
-    mutationFn: async ({
-      flagName,
-      data,
-    }: {
-      flagName: string;
-      data: Partial<FeatureFlag>;
-    }) => {
+    mutationFn: async ({ flagName, data }: { flagName: string; data: Partial<FeatureFlag> }) => {
       const response = await apiClient.post(`/feature-flags/flags/${flagName}`, data);
       return response.data ?? null;
     },
@@ -148,9 +140,8 @@ export const useFeatureFlags = (enabledOnly = false) => {
     },
     onSuccess: (flagName) => {
       // Optimistically update the cache
-      queryClient.setQueryData<FeatureFlag[]>(
-        featureFlagsKeys.flags(enabledOnly),
-        (old) => old?.filter((flag) => flag.name !== flagName),
+      queryClient.setQueryData<FeatureFlag[]>(featureFlagsKeys.flags(enabledOnly), (old) =>
+        old?.filter((flag) => flag.name !== flagName),
       );
       // Invalidate to refetch
       queryClient.invalidateQueries({ queryKey: featureFlagsKeys.flags() });
@@ -163,10 +154,14 @@ export const useFeatureFlags = (enabledOnly = false) => {
 
   // Extract error message from query errors
   const errorMessage = flagsQuery.error
-    ? (flagsQuery.error instanceof Error ? flagsQuery.error.message : "Failed to fetch feature flags")
+    ? flagsQuery.error instanceof Error
+      ? flagsQuery.error.message
+      : "Failed to fetch feature flags"
     : statusQuery.error
-    ? (statusQuery.error instanceof Error ? statusQuery.error.message : "Failed to fetch flag status")
-    : null;
+      ? statusQuery.error instanceof Error
+        ? statusQuery.error.message
+        : "Failed to fetch flag status"
+      : null;
 
   return {
     flags: flagsQuery.data ?? [],

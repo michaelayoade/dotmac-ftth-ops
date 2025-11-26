@@ -7,14 +7,7 @@ import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { CreateAlertChannelModal } from "@/components/alerts/CreateAlertChannelModal";
 import { EditAlertChannelModal } from "@/components/alerts/EditAlertChannelModal";
@@ -39,7 +32,13 @@ export default function AlertChannelsPage() {
   const [testChannel, setTestChannel] = useState<AlertChannel | null>(null);
 
   // Fetch alert channels
-  const { data: channels, isLoading, error, refetch, isFetching } = useQuery({
+  const {
+    data: channels,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["alert-channels"],
     queryFn: async () => {
       const response = await apiClient.get("/alerts/channels");
@@ -116,11 +115,7 @@ export default function AlertChannelsPage() {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            disabled={isLoading || isFetching}
-          >
+          <Button variant="outline" onClick={() => refetch()} disabled={isLoading || isFetching}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -194,7 +189,8 @@ export default function AlertChannelsPage() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Failed to load alert channels: {error instanceof Error ? error.message : "Unknown error"}
+                Failed to load alert channels:{" "}
+                {error instanceof Error ? error.message : "Unknown error"}
               </AlertDescription>
             </Alert>
           ) : isLoading ? (
@@ -257,11 +253,7 @@ export default function AlertChannelsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setTestChannel(channel)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setTestChannel(channel)}>
                           <TestTube className="h-4 w-4" />
                         </Button>
                         <Button

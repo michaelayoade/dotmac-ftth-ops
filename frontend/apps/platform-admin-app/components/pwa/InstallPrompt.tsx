@@ -8,11 +8,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Download,
-  Monitor,
-  X,
-} from "lucide-react";
+import { Download, Monitor, X } from "lucide-react";
 import { setupInstallPrompt, showInstallPrompt } from "@/lib/pwa";
 
 export default function InstallPrompt() {
@@ -68,27 +64,17 @@ export default function InstallPrompt() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base mb-1">
-                Install Admin Panel
-              </h3>
+              <h3 className="font-semibold text-base mb-1">Install Admin Panel</h3>
               <p className="text-sm text-muted-foreground mb-3">
                 Install for quick access to platform administration.
               </p>
 
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleInstall}
-                  className="flex-1"
-                >
+                <Button size="sm" onClick={handleInstall} className="flex-1">
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleDismiss}
-                >
+                <Button size="sm" variant="outline" onClick={handleDismiss}>
                   Later
                 </Button>
               </div>

@@ -4,13 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Activity,
   AlertTriangle,
@@ -223,7 +217,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (criticalCount / totalActivities) * 100 : 0}%`,
                     }}
-                   />
+                  />
                 </div>
               </div>
 
@@ -239,7 +233,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (highCount / totalActivities) * 100 : 0}%`,
                     }}
-                   />
+                  />
                 </div>
               </div>
 
@@ -255,7 +249,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (mediumCount / totalActivities) * 100 : 0}%`,
                     }}
-                   />
+                  />
                 </div>
               </div>
 
@@ -271,7 +265,7 @@ export function AuditSummaryDashboard() {
                     style={{
                       width: `${totalActivities > 0 ? (lowCount / totalActivities) * 100 : 0}%`,
                     }}
-                   />
+                  />
                 </div>
               </div>
             </div>

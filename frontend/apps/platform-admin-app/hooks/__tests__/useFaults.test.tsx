@@ -1068,7 +1068,7 @@ describe("useFaults", () => {
 
     it("should set isLoading correctly during mutations", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({}), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({}), 100)),
       );
 
       const { result } = renderHook(() => useAlarmOperations(), {

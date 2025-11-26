@@ -39,7 +39,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       // Wait for mount
@@ -53,7 +53,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       // Initially shows skeleton
@@ -65,7 +65,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -79,7 +79,7 @@ describe("ThemeToggle", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -92,7 +92,7 @@ describe("ThemeToggle", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggle className="custom-toggle" />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -109,7 +109,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -129,7 +129,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -149,7 +149,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -169,7 +169,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -183,7 +183,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -197,7 +197,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -215,7 +215,7 @@ describe("ThemeToggle", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -228,7 +228,7 @@ describe("ThemeToggle", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -241,7 +241,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -258,7 +258,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -272,7 +272,7 @@ describe("ThemeToggle", () => {
       render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -285,7 +285,7 @@ describe("ThemeToggle", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggle />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -303,7 +303,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -315,7 +315,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       const skeleton = document.querySelector(".animate-pulse");
@@ -326,7 +326,7 @@ describe("ThemeToggleButton", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -339,7 +339,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton className="custom-button" />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -356,7 +356,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -374,7 +374,7 @@ describe("ThemeToggleButton", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -389,7 +389,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -402,7 +402,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -415,7 +415,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -428,7 +428,7 @@ describe("ThemeToggleButton", () => {
       const { container } = render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -443,7 +443,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -458,7 +458,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -485,7 +485,7 @@ describe("ThemeToggleButton", () => {
             <div>Logo</div>
             <ThemeToggleButton />
           </nav>
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -504,7 +504,7 @@ describe("ThemeToggleButton", () => {
               <ThemeToggle />
             </div>
           </div>
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -524,7 +524,7 @@ describe("ThemeToggleButton", () => {
               <ThemeToggleButton />
             </div>
           </div>
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -541,7 +541,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {
@@ -563,7 +563,7 @@ describe("ThemeToggleButton", () => {
       render(
         <ThemeWrapper>
           <ThemeToggleButton className={undefined} />
-        </ThemeWrapper>
+        </ThemeWrapper>,
       );
 
       await waitFor(() => {

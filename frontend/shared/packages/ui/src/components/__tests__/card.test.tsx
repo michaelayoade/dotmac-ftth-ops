@@ -7,14 +7,7 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "../card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../card";
 
 describe("Card", () => {
   describe("Basic Rendering", () => {
@@ -88,7 +81,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardHeader>Header content</CardHeader>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Header content")).toBeInTheDocument();
@@ -98,7 +91,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardHeader data-testid="header">Content</CardHeader>
-        </Card>
+        </Card>,
       );
 
       const header = screen.getByTestId("header");
@@ -109,7 +102,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardHeader className="custom-header">Content</CardHeader>
-        </Card>
+        </Card>,
       );
 
       const header = screen.getByText("Content");
@@ -122,7 +115,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardTitle>Card Title</CardTitle>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Card Title")).toBeInTheDocument();
@@ -132,7 +125,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardTitle>Title</CardTitle>
-        </Card>
+        </Card>,
       );
 
       const title = screen.getByText("Title");
@@ -143,7 +136,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardTitle>Title</CardTitle>
-        </Card>
+        </Card>,
       );
 
       const title = screen.getByText("Title");
@@ -154,7 +147,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardTitle className="custom-title">Title</CardTitle>
-        </Card>
+        </Card>,
       );
 
       const title = screen.getByText("Title");
@@ -167,7 +160,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardDescription>Card description text</CardDescription>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Card description text")).toBeInTheDocument();
@@ -177,7 +170,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardDescription>Description</CardDescription>
-        </Card>
+        </Card>,
       );
 
       const description = screen.getByText("Description");
@@ -188,7 +181,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardDescription>Description</CardDescription>
-        </Card>
+        </Card>,
       );
 
       const description = screen.getByText("Description");
@@ -199,7 +192,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardDescription className="custom-desc">Description</CardDescription>
-        </Card>
+        </Card>,
       );
 
       const description = screen.getByText("Description");
@@ -212,7 +205,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardContent>Main content</CardContent>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Main content")).toBeInTheDocument();
@@ -222,7 +215,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardContent data-testid="content">Content</CardContent>
-        </Card>
+        </Card>,
       );
 
       const content = screen.getByTestId("content");
@@ -233,7 +226,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardContent className="custom-content">Content</CardContent>
-        </Card>
+        </Card>,
       );
 
       const content = screen.getByText("Content");
@@ -246,7 +239,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardFooter>Footer content</CardFooter>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Footer content")).toBeInTheDocument();
@@ -256,7 +249,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardFooter data-testid="footer">Content</CardFooter>
-        </Card>
+        </Card>,
       );
 
       const footer = screen.getByTestId("footer");
@@ -267,7 +260,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardFooter className="custom-footer">Content</CardFooter>
-        </Card>
+        </Card>,
       );
 
       const footer = screen.getByText("Content");
@@ -285,7 +278,7 @@ describe("Card", () => {
           </CardHeader>
           <CardContent>Content</CardContent>
           <CardFooter>Footer</CardFooter>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Title")).toBeInTheDocument();
@@ -302,7 +295,7 @@ describe("Card", () => {
             <CardDescription>Description</CardDescription>
           </CardHeader>
           <CardContent>Content</CardContent>
-        </Card>
+        </Card>,
       );
 
       const title = screen.getByText("Title");
@@ -329,7 +322,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardHeader ref={ref}>Content</CardHeader>
-        </Card>
+        </Card>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -341,7 +334,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardTitle ref={ref}>Title</CardTitle>
-        </Card>
+        </Card>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLHeadingElement);
@@ -353,7 +346,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardDescription ref={ref}>Description</CardDescription>
-        </Card>
+        </Card>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLParagraphElement);
@@ -365,7 +358,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardContent ref={ref}>Content</CardContent>
-        </Card>
+        </Card>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -377,7 +370,7 @@ describe("Card", () => {
       render(
         <Card>
           <CardFooter ref={ref}>Footer</CardFooter>
-        </Card>
+        </Card>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -389,7 +382,7 @@ describe("Card", () => {
       render(
         <Card data-testid="custom-card" data-custom="value">
           Content
-        </Card>
+        </Card>,
       );
 
       const card = screen.getByTestId("custom-card");
@@ -452,7 +445,7 @@ describe("Card", () => {
           <CardContent>
             <div className="text-3xl font-bold">$45,231.89</div>
           </CardContent>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Total Revenue")).toBeInTheDocument();
@@ -475,7 +468,7 @@ describe("Card", () => {
             <button>Cancel</button>
             <button>Submit</button>
           </CardFooter>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Create Account")).toBeInTheDocument();
@@ -489,7 +482,7 @@ describe("Card", () => {
             <CardTitle>Notification</CardTitle>
           </CardHeader>
           <CardContent>You have a new message</CardContent>
-        </Card>
+        </Card>,
       );
 
       expect(screen.getByText("Notification")).toBeInTheDocument();
@@ -502,7 +495,7 @@ describe("Card", () => {
             <CardTitle>Featured</CardTitle>
           </CardHeader>
           <CardContent>Premium content</CardContent>
-        </Card>
+        </Card>,
       );
 
       const card = container.firstChild as HTMLElement;

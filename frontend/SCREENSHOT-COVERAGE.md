@@ -2,17 +2,18 @@
 
 ## 📊 Coverage Summary
 
-| Application | Port | Pages | Auth Pages | Public Pages |
-|-------------|------|-------|------------|--------------|
-| **ISP Ops App** | 3001 | 49 | 40 | 9 |
-| **Platform Admin App** | 3002 | 27 | 25 | 2 |
-| **TOTAL** | - | **76** | **65** | **11** |
+| Application            | Port | Pages  | Auth Pages | Public Pages |
+| ---------------------- | ---- | ------ | ---------- | ------------ |
+| **ISP Ops App**        | 3001 | 49     | 40         | 9            |
+| **Platform Admin App** | 3002 | 27     | 25         | 2            |
+| **TOTAL**              | -    | **76** | **65**     | **11**       |
 
 ---
 
 ## 🎯 ISP Ops App (Port 3001)
 
 ### Authenticated Pages (40)
+
 1. **Dashboard** (`/dashboard`)
 2. **Subscribers** (`/dashboard/subscribers`)
 3. **Network** (`/dashboard/network`)
@@ -55,6 +56,7 @@
 40. **Workflows** (`/dashboard/workflows`)
 
 ### Unauthenticated Pages (9)
+
 1. **Homepage** (`/`)
 2. **Login** (`/login`)
 3. **Customer Portal** (`/customer-portal`)
@@ -70,6 +72,7 @@
 ## 🏢 Platform Admin App (Port 3002)
 
 ### Authenticated Pages (25)
+
 1. **Dashboard** (`/dashboard`) - Main overview
 2. **Platform Admin** (`/dashboard/platform-admin`) - Admin home
 3. **Tenants** (`/dashboard/platform-admin/tenants`) - Tenant management
@@ -96,6 +99,7 @@
 24. **Webhooks** (`/dashboard/webhooks`) - Event hooks
 
 ### Unauthenticated Pages (2)
+
 1. **Homepage** (`/`) - Landing page
 2. **Login** (`/login`) - Authentication
 

@@ -4,10 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import {
-  createPortalAuthFetch,
-  DEFAULT_PORTAL_TOKEN_KEY,
-} from "../utils/portalAuth";
+import { createPortalAuthFetch, DEFAULT_PORTAL_TOKEN_KEY } from "../utils/portalAuth";
 import type {
   PortalLoginCredentials,
   PortalAuthResponse,
@@ -45,10 +42,7 @@ interface UsePortalIdAuthActions {
 }
 
 export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions {
-  const portalAuthFetch = useMemo(
-    () => createPortalAuthFetch(DEFAULT_PORTAL_TOKEN_KEY),
-    [],
-  );
+  const portalAuthFetch = useMemo(() => createPortalAuthFetch(DEFAULT_PORTAL_TOKEN_KEY), []);
   const [state, setState] = useState<UsePortalIdAuthState>({
     isAuthenticated: false,
     isLoading: false,

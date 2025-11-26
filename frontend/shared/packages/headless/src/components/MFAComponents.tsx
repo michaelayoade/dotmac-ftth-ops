@@ -88,11 +88,7 @@ export interface MFAVerificationProps {
   onCancel: () => void;
 }
 
-export function MFAVerification({
-  method = "totp",
-  onSuccess,
-  onCancel,
-}: MFAVerificationProps) {
+export function MFAVerification({ method = "totp", onSuccess, onCancel }: MFAVerificationProps) {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 

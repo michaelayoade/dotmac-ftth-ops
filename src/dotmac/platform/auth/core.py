@@ -1047,9 +1047,13 @@ async def get_current_user(
 
     # Try Better Auth session first (cookie-based authentication)
     # Better Auth uses cookies like 'better-auth.session_token' or 'session_token'
-    better_auth_session = request.cookies.get("better-auth.session_token") or request.cookies.get("session_token")
+    better_auth_session = request.cookies.get("better-auth.session_token") or request.cookies.get(
+        "session_token"
+    )
     if better_auth_session:
-        active_tenant_id = request.headers.get("X-Active-Tenant-Id") or request.headers.get("X-Tenant-Id")
+        active_tenant_id = request.headers.get("X-Active-Tenant-Id") or request.headers.get(
+            "X-Tenant-Id"
+        )
         try:
             from dotmac.platform.auth.better_auth_service import get_better_auth_user
             from dotmac.platform.auth.rbac_service import RBACService

@@ -1,7 +1,4 @@
-import {
-  CUSTOMER_PORTAL_TOKEN_KEY,
-  setPortalAuthToken,
-} from "./operatorAuth";
+import { CUSTOMER_PORTAL_TOKEN_KEY, setPortalAuthToken } from "./operatorAuth";
 
 interface ImpersonationOptions {
   customerId: string;

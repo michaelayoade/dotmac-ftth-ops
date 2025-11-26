@@ -7,11 +7,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import {
-  useSubscription,
-  useBillingMetrics,
-  useActiveSubscriptions,
-} from "../useBillingGraphQL";
+import { useSubscription, useBillingMetrics, useActiveSubscriptions } from "../useBillingGraphQL";
 import { graphqlClient } from "@/lib/graphql-client";
 
 jest.unmock("@tanstack/react-query");

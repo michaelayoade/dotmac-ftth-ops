@@ -24,12 +24,14 @@ hooks/
 ## Unit Tests (`useLicensing.test.tsx`)
 
 ### Purpose
+
 - **Fast execution** (~4.5s for 45 tests)
 - **Isolated testing** - Mocks API client directly
 - **Test hook logic** - Focus on business logic, not API integration
 - **Run frequently** - In watch mode during development
 
 ### What It Tests
+
 ✅ Query key factory correctness
 ✅ Data fetching and transformation
 ✅ Loading states
@@ -39,6 +41,7 @@ hooks/
 ✅ Hook return values
 
 ### Key Features
+
 ```typescript
 // Mock the API client directly
 jest.mock("../../lib/api/client", () => ({
@@ -55,6 +58,7 @@ const mockAllQueries = (overrides?: {...}) => {...};
 ```
 
 ### When to Run
+
 ```bash
 # Watch mode during development
 pnpm test --watch hooks/__tests__/useLicensing.test.tsx
@@ -64,6 +68,7 @@ pnpm test hooks/__tests__/useLicensing.test.tsx
 ```
 
 ### Test Coverage
+
 - **45 tests** covering all hook functionality
 - **100% passing** rate
 - **~4.5 seconds** execution time
@@ -73,12 +78,14 @@ pnpm test hooks/__tests__/useLicensing.test.tsx
 ## Integration Tests (`useLicensing.msw.test.tsx`)
 
 ### Purpose
+
 - **Realistic API mocking** - Uses MSW to mock HTTP requests
 - **End-to-end behavior** - Tests full request/response cycle
 - **API contract validation** - Ensures hook works with real API responses
 - **Run before deployment** - Catch integration issues
 
 ### What It Tests
+
 ✅ Real API request/response flow
 ✅ HTTP error handling (404, 500, etc.)
 ✅ Data serialization/deserialization
@@ -88,6 +95,7 @@ pnpm test hooks/__tests__/useLicensing.test.tsx
 ✅ Edge cases with actual API responses
 
 ### Key Features
+
 ```typescript
 // MSW handlers for realistic API mocking
 import { setupServer } from 'msw/node';
@@ -98,6 +106,7 @@ seedQuotas([...]);
 ```
 
 ### When to Run
+
 ```bash
 # Full integration test suite
 pnpm test hooks/__tests__/useLicensing.msw.test.tsx
@@ -107,6 +116,7 @@ pnpm test:integration
 ```
 
 ### Test Coverage
+
 - **70 tests** covering all integration scenarios
 - **Real-world workflows** tested
 - **~17 seconds** execution time
@@ -138,11 +148,13 @@ pnpm test:integration
 ### ✅ DO
 
 1. **Use unit tests for fast feedback**
+
    ```bash
    pnpm test --watch useLicensing.test.tsx
    ```
 
 2. **Use integration tests before commits**
+
    ```bash
    pnpm test useLicensing.msw.test.tsx
    ```
@@ -152,6 +164,7 @@ pnpm test:integration
    - Integration tests: Mock HTTP with MSW
 
 4. **Test behavior, not implementation**
+
    ```typescript
    // Good
    expect(result.current.modules).toHaveLength(1);
@@ -169,12 +182,14 @@ pnpm test:integration
 ### ❌ DON'T
 
 1. **Don't mix testing levels**
+
    ```typescript
    // Bad - Using MSW in unit tests
    // Use Jest mocks instead
    ```
 
 2. **Don't test TanStack Query internals**
+
    ```typescript
    // Bad
    expect(queryClient.getQueryState(...).fetchStatus).toBe('idle');
@@ -184,6 +199,7 @@ pnpm test:integration
    ```
 
 3. **Don't write brittle tests**
+
    ```typescript
    // Bad - Order dependent
    expect(mockApiClient.get).toHaveBeenNthCalledWith(1, ...);
@@ -224,13 +240,13 @@ pnpm test hooks/__tests__/useLicensing
 
 ## Test Metrics
 
-| Metric | Unit Tests | Integration Tests |
-|--------|------------|-------------------|
-| **Test Count** | 45 | 70 |
-| **Execution Time** | ~4.5s | ~17s |
-| **Pass Rate** | 100% | 100% |
-| **Coverage** | Hook logic | API integration |
-| **When to Run** | Always | Before commit |
+| Metric             | Unit Tests | Integration Tests |
+| ------------------ | ---------- | ----------------- |
+| **Test Count**     | 45         | 70                |
+| **Execution Time** | ~4.5s      | ~17s              |
+| **Pass Rate**      | 100%       | 100%              |
+| **Coverage**       | Hook logic | API integration   |
+| **When to Run**    | Always     | Before commit     |
 
 ---
 
@@ -239,6 +255,7 @@ pnpm test hooks/__tests__/useLicensing
 ### Unit Test Failures
 
 1. **Check mock setup**
+
    ```typescript
    // Ensure all queries are mocked
    mockAllQueries({ modules: [...], quotas: [...] });
@@ -253,6 +270,7 @@ pnpm test hooks/__tests__/useLicensing
 ### Integration Test Failures
 
 1. **Check MSW handlers**
+
    ```typescript
    // Verify data is seeded
    seedModules([...]);
@@ -270,12 +288,14 @@ pnpm test hooks/__tests__/useLicensing
 ## Summary
 
 **Use Unit Tests (`useLicensing.test.tsx`) for:**
+
 - ✅ Fast development feedback
 - ✅ Testing hook logic
 - ✅ Quick iterations
 - ✅ TDD workflow
 
 **Use Integration Tests (`useLicensing.msw.test.tsx`) for:**
+
 - ✅ API contract validation
 - ✅ Real-world scenarios
 - ✅ Pre-deployment verification

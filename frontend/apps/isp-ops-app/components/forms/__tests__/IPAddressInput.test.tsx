@@ -22,13 +22,13 @@ jest.mock("@dotmac/ui", () => {
         {children}
       </label>
     ),
-    Badge: ({ children }: any) => (
-      <span data-testid="family-badge">{children}</span>
-    ),
+    Badge: ({ children }: any) => <span data-testid="family-badge">{children}</span>,
   };
 });
 
-const renderControlledInput = (props: Partial<React.ComponentProps<typeof IPAddressInput>> = {}) => {
+const renderControlledInput = (
+  props: Partial<React.ComponentProps<typeof IPAddressInput>> = {},
+) => {
   const Wrapper = () => {
     const [value, setValue] = React.useState(props.value ?? "");
     return (
@@ -51,12 +51,7 @@ describe("IPAddressInput", () => {
 
   it("renders label, placeholder and associates them correctly", () => {
     render(
-      <IPAddressInput
-        label="Gateway"
-        placeholder="192.168.0.1"
-        value=""
-        onChange={jest.fn()}
-      />,
+      <IPAddressInput label="Gateway" placeholder="192.168.0.1" value="" onChange={jest.fn()} />,
     );
 
     const input = screen.getByLabelText("Gateway") as HTMLInputElement;
@@ -68,13 +63,7 @@ describe("IPAddressInput", () => {
     const typedValue = "10.0.0.1";
 
     const user = userEvent.setup();
-    render(
-      <IPAddressInput
-        label="Gateway"
-        value=""
-        onChange={(value) => handleChange(value)}
-      />,
-    );
+    render(<IPAddressInput label="Gateway" value="" onChange={(value) => handleChange(value)} />);
 
     const input = screen.getByLabelText("Gateway");
     await user.type(input, typedValue);
@@ -84,46 +73,22 @@ describe("IPAddressInput", () => {
 
   it("shows IPv4 and IPv6 badges when showFamily is enabled", () => {
     const { rerender } = render(
-      <IPAddressInput
-        label="Address"
-        value="192.168.0.1"
-        onChange={jest.fn()}
-      />,
+      <IPAddressInput label="Address" value="192.168.0.1" onChange={jest.fn()} />,
     );
     expect(screen.getByTestId("family-badge")).toHaveTextContent("IPv4");
 
-    rerender(
-      <IPAddressInput
-        label="Address"
-        value="2001:db8::1"
-        onChange={jest.fn()}
-      />,
-    );
+    rerender(<IPAddressInput label="Address" value="2001:db8::1" onChange={jest.fn()} />);
     expect(screen.getByTestId("family-badge")).toHaveTextContent("IPv6");
   });
 
   it("displays helper text when provided", () => {
-    render(
-      <IPAddressInput
-        label="Address"
-        helpText="Optional"
-        value=""
-        onChange={jest.fn()}
-      />,
-    );
+    render(<IPAddressInput label="Address" helpText="Optional" value="" onChange={jest.fn()} />);
 
     expect(screen.getByText("Optional")).toBeInTheDocument();
   });
 
   it("shows provided error message and aria wiring", () => {
-    render(
-      <IPAddressInput
-        label="Address"
-        error="Invalid IP"
-        value=""
-        onChange={jest.fn()}
-      />,
-    );
+    render(<IPAddressInput label="Address" error="Invalid IP" value="" onChange={jest.fn()} />);
 
     const input = screen.getByLabelText("Address");
     expect(input).toHaveAttribute("aria-invalid", "true");
@@ -131,14 +96,7 @@ describe("IPAddressInput", () => {
   });
 
   it("sets disabled attribute when disabled", () => {
-    render(
-      <IPAddressInput
-        label="Address"
-        disabled
-        value=""
-        onChange={jest.fn()}
-      />,
-    );
+    render(<IPAddressInput label="Address" disabled value="" onChange={jest.fn()} />);
 
     expect(screen.getByLabelText("Address")).toBeDisabled();
   });
@@ -159,9 +117,7 @@ describe("IPAddressInput", () => {
     fireEvent.blur(input);
 
     expect(handleBlur).toHaveBeenCalled();
-    expect(
-      screen.getByText("IPv4 addresses are not allowed"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("IPv4 addresses are not allowed")).toBeInTheDocument();
   });
 
   it("displays validation error when IPv6 is disallowed", async () => {
@@ -177,9 +133,7 @@ describe("IPAddressInput", () => {
     });
     fireEvent.blur(input);
 
-    expect(
-      screen.getByText("IPv6 addresses are not allowed"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("IPv6 addresses are not allowed")).toBeInTheDocument();
   });
 
   it("handles multiline keyboard input", async () => {

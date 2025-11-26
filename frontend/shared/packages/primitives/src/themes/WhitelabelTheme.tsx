@@ -258,11 +258,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     );
   }
 
-  return (
-    <WhitelabelContext.Provider value={contextValue}>
-      {children}
-    </WhitelabelContext.Provider>
-  );
+  return <WhitelabelContext.Provider value={contextValue}>{children}</WhitelabelContext.Provider>;
 };
 
 // Hook for using whitelabel context

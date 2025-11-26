@@ -110,7 +110,9 @@ export function getPaymentStatusLabel(status: PaymentStatus): string {
  */
 export function calculateInvoiceTotals(invoice: Invoice) {
   return {
-    subtotal: invoice.amount_due - (invoice.line_items?.reduce((sum, item) => sum + (item.tax_amount || 0), 0) || 0),
+    subtotal:
+      invoice.amount_due -
+      (invoice.line_items?.reduce((sum, item) => sum + (item.tax_amount || 0), 0) || 0),
     tax: invoice.line_items?.reduce((sum, item) => sum + (item.tax_amount || 0), 0) || 0,
     total: invoice.amount_due,
     paid: invoice.amount_paid,

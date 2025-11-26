@@ -10,12 +10,7 @@ import { useTenant } from "@/lib/contexts/tenant-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  CreditCard,
-  FileText,
-  Wallet,
-  TrendingUp,
-} from "lucide-react";
+import { CreditCard, FileText, Wallet, TrendingUp } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import type { Invoice, Payment } from "@/types/billing";
 import InvoiceList from "@/components/billing/InvoiceList";

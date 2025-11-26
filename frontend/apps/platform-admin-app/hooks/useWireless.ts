@@ -86,9 +86,7 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
       if (filters.limit) params.append("limit", filters.limit.toString());
 
       logger.debug("Fetching access points", { filters });
-      const response = await apiClient.get<AccessPoint[]>(
-        `/wireless/devices?${params.toString()}`,
-      );
+      const response = await apiClient.get<AccessPoint[]>(`/wireless/devices?${params.toString()}`);
       logger.info("Access points fetched successfully", { count: response.data.length });
       return response.data;
     },
@@ -309,7 +307,9 @@ export function useWirelessClients(options: UseWirelessClientsOptions = {}) {
       logger.info("Disconnecting wireless client", { id });
       await queryClient.cancelQueries({ queryKey: wirelessKeys.clients(filters) });
 
-      const previousData = queryClient.getQueryData<WirelessClient[]>(wirelessKeys.clients(filters));
+      const previousData = queryClient.getQueryData<WirelessClient[]>(
+        wirelessKeys.clients(filters),
+      );
 
       if (previousData) {
         queryClient.setQueryData<WirelessClient[]>(
@@ -606,7 +606,6 @@ export function useRFAnalytics(options: UseRFAnalyticsOptions = {}) {
   };
 }
 
-
 interface UseSSIDsOptions {
   access_point_id?: string;
   enabled?: boolean;
@@ -791,8 +790,8 @@ export function useWirelessInfrastructureStats() {
     meta: {
       onError: (error: unknown) => {
         logger.error("Failed to fetch wireless statistics", error);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const err = error as any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err = error as any;
         toast({
           title: "Error",
           description: err.response?.data?.detail || "Failed to fetch wireless statistics",

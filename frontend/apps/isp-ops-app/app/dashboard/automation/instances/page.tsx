@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Server,
   Search,
@@ -67,13 +61,16 @@ function InstancesPageContent() {
   const confirmDialog = useConfirmDialog();
 
   // Fetch instances
-  const { data: instances = [], isLoading, refetch } = useQuery<DeploymentInstance[]>({
+  const {
+    data: instances = [],
+    isLoading,
+    refetch,
+  } = useQuery<DeploymentInstance[]>({
     queryKey: ["deployment-instances"],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/instances`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/instances`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch instances");
       return response.json();
     },
@@ -83,15 +80,12 @@ function InstancesPageContent() {
   // Suspend instance
   const suspendMutation = useMutation({
     mutationFn: async (instanceId: number) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/suspend`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: instanceId }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/suspend`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: instanceId }),
+      });
       if (!response.ok) throw new Error("Failed to suspend instance");
     },
     onSuccess: () => {
@@ -110,15 +104,12 @@ function InstancesPageContent() {
   // Resume instance
   const resumeMutation = useMutation({
     mutationFn: async (instanceId: number) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/resume`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: instanceId }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/resume`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: instanceId }),
+      });
       if (!response.ok) throw new Error("Failed to resume instance");
     },
     onSuccess: () => {
@@ -137,15 +128,12 @@ function InstancesPageContent() {
   // Delete instance
   const deleteMutation = useMutation({
     mutationFn: async (instanceId: number) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/destroy`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: instanceId }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/destroy`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: instanceId }),
+      });
       if (!response.ok) throw new Error("Failed to destroy instance");
     },
     onSuccess: () => {
@@ -169,14 +157,11 @@ function InstancesPageContent() {
       instance.template_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       instance.environment.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesState =
-      stateFilter === "all" || instance.state === stateFilter;
+    const matchesState = stateFilter === "all" || instance.state === stateFilter;
 
-    const matchesHealth =
-      healthFilter === "all" || instance.health_status === healthFilter;
+    const matchesHealth = healthFilter === "all" || instance.health_status === healthFilter;
 
-    const matchesEnv =
-      envFilter === "all" || instance.environment === envFilter;
+    const matchesEnv = envFilter === "all" || instance.environment === envFilter;
 
     return matchesSearch && matchesState && matchesHealth && matchesEnv;
   });
@@ -186,10 +171,13 @@ function InstancesPageContent() {
     running: instances.filter((i) => i.state === "RUNNING").length,
     stopped: instances.filter((i) => i.state === "STOPPED").length,
     failed: instances.filter((i) => i.health_status === "UNHEALTHY").length,
-    byEnv: instances.reduce((acc, i) => {
-      acc[i.environment] = (acc[i.environment] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>),
+    byEnv: instances.reduce(
+      (acc, i) => {
+        acc[i.environment] = (acc[i.environment] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
   };
 
   const getStateBadge = (state: string) => {
@@ -203,7 +191,7 @@ function InstancesPageContent() {
     const config = badges[state as keyof typeof badges] || {
       icon: XCircle,
       color: "bg-gray-100 text-gray-800",
-      label: state
+      label: state,
     };
     const Icon = config.icon;
     return (
@@ -233,7 +221,7 @@ function InstancesPageContent() {
     };
     const config = badges[backend as keyof typeof badges] || {
       label: backend,
-      color: "bg-gray-100 text-gray-800"
+      color: "bg-gray-100 text-gray-800",
     };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
@@ -246,7 +234,7 @@ function InstancesPageContent() {
       testing: { color: "bg-amber-100 text-amber-800" },
     };
     const config = badges[env.toLowerCase() as keyof typeof badges] || {
-      color: "bg-gray-100 text-gray-800"
+      color: "bg-gray-100 text-gray-800",
     };
     return <Badge className={config.color}>{env}</Badge>;
   };
@@ -267,9 +255,7 @@ function InstancesPageContent() {
             Refresh
           </Button>
           <Button asChild>
-            <Link href="/dashboard/automation/deploy">
-              Deploy New Instance
-            </Link>
+            <Link href="/dashboard/automation/deploy">Deploy New Instance</Link>
           </Button>
         </div>
       </div>
@@ -475,11 +461,7 @@ function InstancesPageContent() {
                       Busy
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
+                  <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/automation/instances/${instance.id}`}>
                       <Activity className="h-3 w-3" />
                     </Link>

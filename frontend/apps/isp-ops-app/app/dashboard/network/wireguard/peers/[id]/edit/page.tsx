@@ -25,13 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { ArrowLeft, Loader2, Save, AlertCircle, Info } from "lucide-react";
@@ -58,12 +52,12 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
   useEffect(() => {
     if (peer) {
       setFormData({
-        peer_name: peer['peer_name'],
-        status: peer['status'],
-        allowed_ips: peer['allowed_ips'],
-        persistent_keepalive: peer['persistent_keepalive'],
-        expiration_date: peer['expiration_date'],
-        notes: peer['notes'] || "",
+        peer_name: peer["peer_name"],
+        status: peer["status"],
+        allowed_ips: peer["allowed_ips"],
+        persistent_keepalive: peer["persistent_keepalive"],
+        expiration_date: peer["expiration_date"],
+        notes: peer["notes"] || "",
       });
     }
   }, [peer]);
@@ -72,39 +66,43 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (formData['peer_name'] !== undefined) {
-      if (!formData['peer_name'] || formData['peer_name'].trim().length === 0) {
-        newErrors['peer_name'] = "Peer name is required";
-      } else if (formData['peer_name'].length > 100) {
-        newErrors['peer_name'] = "Peer name must be 100 characters or less";
+    if (formData["peer_name"] !== undefined) {
+      if (!formData["peer_name"] || formData["peer_name"].trim().length === 0) {
+        newErrors["peer_name"] = "Peer name is required";
+      } else if (formData["peer_name"].length > 100) {
+        newErrors["peer_name"] = "Peer name must be 100 characters or less";
       }
     }
 
-    if (formData['allowed_ips'] !== undefined) {
+    if (formData["allowed_ips"] !== undefined) {
       const ips =
-        typeof formData['allowed_ips'] === "string"
-          ? formData['allowed_ips'].split(",").map((ip: string) => ip.trim())
-          : formData['allowed_ips'];
+        typeof formData["allowed_ips"] === "string"
+          ? formData["allowed_ips"].split(",").map((ip: string) => ip.trim())
+          : formData["allowed_ips"];
       for (const ip of ips) {
         if (!ip) continue;
         if (!/^[\d\.:a-fA-F]+\/\d+$/.test(ip)) {
-          newErrors['allowed_ips'] = `Invalid IP range: ${ip}`;
+          newErrors["allowed_ips"] = `Invalid IP range: ${ip}`;
           break;
         }
       }
     }
 
-    if (formData['persistent_keepalive'] !== undefined && formData['persistent_keepalive'] !== null) {
-      if (formData['persistent_keepalive'] < 0 || formData['persistent_keepalive'] > 3600) {
-        newErrors['persistent_keepalive'] = "Persistent keepalive must be between 0 and 3600 seconds";
+    if (
+      formData["persistent_keepalive"] !== undefined &&
+      formData["persistent_keepalive"] !== null
+    ) {
+      if (formData["persistent_keepalive"] < 0 || formData["persistent_keepalive"] > 3600) {
+        newErrors["persistent_keepalive"] =
+          "Persistent keepalive must be between 0 and 3600 seconds";
       }
     }
 
-    if (formData['expiration_date']) {
-      const expirationDate = new Date(formData['expiration_date']);
+    if (formData["expiration_date"]) {
+      const expirationDate = new Date(formData["expiration_date"]);
       const now = new Date();
       if (expirationDate < now) {
-        newErrors['expiration_date'] = "Expiration date must be in the future";
+        newErrors["expiration_date"] = "Expiration date must be in the future";
       }
     }
 
@@ -126,23 +124,23 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
 
     // Only send changed fields
     const updates: UpdateWireGuardPeerRequest = {};
-    if (formData['peer_name'] !== peer?.['peer_name']) {
-      updates.peer_name = formData['peer_name'];
+    if (formData["peer_name"] !== peer?.["peer_name"]) {
+      updates.peer_name = formData["peer_name"];
     }
-    if (formData['status'] !== peer?.['status']) {
-      updates.status = formData['status'];
+    if (formData["status"] !== peer?.["status"]) {
+      updates.status = formData["status"];
     }
-    if (formData['allowed_ips'] !== peer?.['allowed_ips']) {
-      updates.allowed_ips = formData['allowed_ips'];
+    if (formData["allowed_ips"] !== peer?.["allowed_ips"]) {
+      updates.allowed_ips = formData["allowed_ips"];
     }
-    if (formData['persistent_keepalive'] !== peer?.['persistent_keepalive']) {
-      updates.persistent_keepalive = formData['persistent_keepalive'];
+    if (formData["persistent_keepalive"] !== peer?.["persistent_keepalive"]) {
+      updates.persistent_keepalive = formData["persistent_keepalive"];
     }
-    if (formData['expiration_date'] !== peer?.['expiration_date']) {
-      updates.expiration_date = formData['expiration_date'];
+    if (formData["expiration_date"] !== peer?.["expiration_date"]) {
+      updates.expiration_date = formData["expiration_date"];
     }
-    if (formData['notes'] !== peer?.['notes']) {
-      updates.notes = formData['notes'];
+    if (formData["notes"] !== peer?.["notes"]) {
+      updates.notes = formData["notes"];
     }
 
     if (Object.keys(updates).length === 0) {
@@ -159,14 +157,14 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
         onSuccess: (data) => {
           toast({
             title: "Peer Updated",
-            description: `Peer "${data['peer_name']}" has been updated successfully`,
+            description: `Peer "${data["peer_name"]}" has been updated successfully`,
           });
           router.push(`/dashboard/network/wireguard/peers/${id}`);
         },
         onError: (error: any) => {
           toast({
             title: "Error Updating Peer",
-            description: error['response']?.['data']?.detail || "Failed to update peer",
+            description: error["response"]?.["data"]?.detail || "Failed to update peer",
             variant: "destructive",
           });
         },
@@ -210,7 +208,7 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
     );
   }
 
-  const server = servers?.find((s) => s.id === peer['server_id']);
+  const server = servers?.find((s) => s.id === peer["server_id"]);
 
   return (
     <div className="space-y-6">
@@ -227,7 +225,7 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
           </div>
           <h1 className="text-3xl font-bold">Edit WireGuard Peer</h1>
           <p className="text-muted-foreground mt-1">
-            Update configuration for peer: {peer['peer_name']}
+            Update configuration for peer: {peer["peer_name"]}
           </p>
         </div>
       </div>
@@ -253,8 +251,8 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
             <div className="space-y-2">
               <Label>WireGuard Server (Read-Only)</Label>
               <div className="flex items-center gap-2">
-                <Input value={server?.['name'] || "Unknown Server"} disabled />
-                <Badge variant="outline">{server?.['status'] || "unknown"}</Badge>
+                <Input value={server?.["name"] || "Unknown Server"} disabled />
+                <Badge variant="outline">{server?.["status"] || "unknown"}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">Server assignment cannot be changed</p>
             </div>
@@ -262,7 +260,7 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
             {/* Read-Only: Peer IP */}
             <div className="space-y-2">
               <Label>Peer IP Address (Read-Only)</Label>
-              <Input value={peer['peer_ip'] || "Not assigned"} disabled />
+              <Input value={peer["peer_ip"] || "Not assigned"} disabled />
               <p className="text-sm text-muted-foreground">
                 IP address is assigned automatically and cannot be changed
               </p>
@@ -271,7 +269,7 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
             {/* Read-Only: Public Key */}
             <div className="space-y-2">
               <Label>Public Key (Read-Only)</Label>
-              <Input value={peer['public_key'] || "N/A"} disabled className="font-mono text-xs" />
+              <Input value={peer["public_key"] || "N/A"} disabled className="font-mono text-xs" />
               <p className="text-sm text-muted-foreground">
                 To change keys, use the &quot;Regenerate Configuration&quot; feature
               </p>
@@ -284,19 +282,19 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
               </Label>
               <Input
                 id="peer_name"
-                value={formData['peer_name'] || ""}
+                value={formData["peer_name"] || ""}
                 onChange={(e) => handleChange("peer_name", e.target.value)}
                 placeholder="e.g., john-laptop"
                 maxLength={100}
               />
-              {errors['peer_name'] && <p className="text-sm text-red-500">{errors['peer_name']}</p>}
+              {errors["peer_name"] && <p className="text-sm text-red-500">{errors["peer_name"]}</p>}
             </div>
 
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                value={formData['status'] || peer['status']}
+                value={formData["status"] || peer["status"]}
                 onValueChange={(value) => handleChange("status", value as WireGuardPeerStatus)}
               >
                 <SelectTrigger id="status">
@@ -317,14 +315,16 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
               <Label htmlFor="allowed_ips">Allowed IPs</Label>
               <Input
                 id="allowed_ips"
-                value={formData['allowed_ips'] || ""}
+                value={formData["allowed_ips"] || ""}
                 onChange={(e) => handleChange("allowed_ips", e.target.value)}
                 placeholder="0.0.0.0/0, ::/0"
               />
               <p className="text-sm text-muted-foreground">
                 Comma-separated list of IP ranges this peer can route
               </p>
-              {errors['allowed_ips'] && <p className="text-sm text-red-500">{errors['allowed_ips']}</p>}
+              {errors["allowed_ips"] && (
+                <p className="text-sm text-red-500">{errors["allowed_ips"]}</p>
+              )}
             </div>
 
             {/* Persistent Keepalive */}
@@ -335,14 +335,14 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
                 type="number"
                 min={0}
                 max={3600}
-                value={formData['persistent_keepalive'] ?? 25}
+                value={formData["persistent_keepalive"] ?? 25}
                 onChange={(e) => handleChange("persistent_keepalive", parseInt(e.target.value, 10))}
               />
               <p className="text-sm text-muted-foreground">
                 How often to send keepalive packets (0 = disabled)
               </p>
-              {errors['persistent_keepalive'] && (
-                <p className="text-sm text-red-500">{errors['persistent_keepalive']}</p>
+              {errors["persistent_keepalive"] && (
+                <p className="text-sm text-red-500">{errors["persistent_keepalive"]}</p>
               )}
             </div>
 
@@ -353,8 +353,8 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
                 id="expiration_date"
                 type="datetime-local"
                 value={
-                  formData['expiration_date']
-                    ? new Date(formData['expiration_date']).toISOString().slice(0, 16)
+                  formData["expiration_date"]
+                    ? new Date(formData["expiration_date"]).toISOString().slice(0, 16)
                     : ""
                 }
                 onChange={(e) => handleChange("expiration_date", e.target.value)}
@@ -362,8 +362,8 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
               <p className="text-sm text-muted-foreground">
                 When this peer&apos;s access should expire
               </p>
-              {errors['expiration_date'] && (
-                <p className="text-sm text-red-500">{errors['expiration_date']}</p>
+              {errors["expiration_date"] && (
+                <p className="text-sm text-red-500">{errors["expiration_date"]}</p>
               )}
             </div>
 
@@ -372,7 +372,7 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
-                value={formData['notes'] || ""}
+                value={formData["notes"] || ""}
                 onChange={(e) => handleChange("notes", e.target.value)}
                 placeholder="Additional information about this peer..."
                 rows={4}
@@ -380,10 +380,10 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
             </div>
 
             {/* Read-Only: Customer ID */}
-            {peer['customer_id'] && (
+            {peer["customer_id"] && (
               <div className="space-y-2">
                 <Label>Customer ID (Read-Only)</Label>
-                <Input value={peer['customer_id']} disabled />
+                <Input value={peer["customer_id"]} disabled />
                 <p className="text-sm text-muted-foreground">
                   Customer association cannot be changed
                 </p>
@@ -425,13 +425,13 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
             <div>
               <p className="text-muted-foreground">Created</p>
               <p className="font-medium">
-                {peer['created_at']? new Date(peer['created_at']).toLocaleString() : "N/A"}
+                {peer["created_at"] ? new Date(peer["created_at"]).toLocaleString() : "N/A"}
               </p>
             </div>
             <div>
               <p className="text-muted-foreground">Last Updated</p>
               <p className="font-medium">
-                {peer['updated_at']? new Date(peer['updated_at']).toLocaleString() : "N/A"}
+                {peer["updated_at"] ? new Date(peer["updated_at"]).toLocaleString() : "N/A"}
               </p>
             </div>
           </div>

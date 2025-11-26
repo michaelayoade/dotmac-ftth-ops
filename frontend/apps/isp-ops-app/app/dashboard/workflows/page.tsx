@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   GitBranch,
   Search,
@@ -67,17 +61,20 @@ function WorkflowsPageContent() {
   const apiBaseUrl = api.baseUrl || "";
 
   // Fetch workflows
-  const { data: workflows = [], isLoading, refetch } = useQuery<Workflow[]>({
+  const {
+    data: workflows = [],
+    isLoading,
+    refetch,
+  } = useQuery<Workflow[]>({
     queryKey: ["workflows", activeFilter, apiBaseUrl],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (activeFilter === "active") params.append("is_active", "true");
       if (activeFilter === "inactive") params.append("is_active", "false");
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/workflows?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/workflows?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch workflows");
       const data = await response.json();
       return data.workflows || [];
@@ -88,10 +85,9 @@ function WorkflowsPageContent() {
   const { data: stats } = useQuery<WorkflowStats>({
     queryKey: ["workflow-stats", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/workflows/stats`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/workflows/stats`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
     },
@@ -100,13 +96,10 @@ function WorkflowsPageContent() {
   // Delete workflow mutation
   const deleteMutation = useMutation({
     mutationFn: async (workflowId: number) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/workflows/${workflowId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/workflows/${workflowId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to delete workflow");
     },
     onSuccess: () => {
@@ -127,8 +120,10 @@ function WorkflowsPageContent() {
     const matchesSearch =
       !searchQuery ||
       workflow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (workflow.description && workflow.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (workflow.tags && workflow.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
+      (workflow.description &&
+        workflow.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (workflow.tags &&
+        workflow.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())));
 
     return matchesSearch;
   });
@@ -272,10 +267,7 @@ function WorkflowsPageContent() {
                   </div>
                 </div>
                 <CardTitle className="mt-2">
-                  <Link
-                    href={`/dashboard/workflows/${workflow.id}`}
-                    className="hover:underline"
-                  >
+                  <Link href={`/dashboard/workflows/${workflow.id}`} className="hover:underline">
                     {workflow.name}
                   </Link>
                 </CardTitle>
@@ -292,7 +284,9 @@ function WorkflowsPageContent() {
                   {workflow.execution_count !== undefined && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Executions:</span>
-                      <span className="font-medium">{workflow.execution_count.toLocaleString()}</span>
+                      <span className="font-medium">
+                        {workflow.execution_count.toLocaleString()}
+                      </span>
                     </div>
                   )}
                   {workflow.success_rate !== undefined && (

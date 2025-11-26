@@ -3,7 +3,7 @@
  * Mocks global search functionality, index management, and search statistics
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // In-memory storage
 let searchIndex: any[] = [];
@@ -176,12 +176,7 @@ function updateStatistics(): void {
 /**
  * Perform search with filters
  */
-function performSearch(
-  query: string,
-  type?: string,
-  limit: number = 10,
-  page: number = 1
-): any {
+function performSearch(query: string, type?: string, limit: number = 10, page: number = 1): any {
   let results = [...searchIndex];
 
   // Filter by query
@@ -190,7 +185,7 @@ function performSearch(
     results = results.filter(
       (item) =>
         item.title.toLowerCase().includes(lowerQuery) ||
-        item.content.toLowerCase().includes(lowerQuery)
+        item.content.toLowerCase().includes(lowerQuery),
     );
   }
 
@@ -239,12 +234,12 @@ export const searchHandlers = [
     // Return empty results if query is empty
     if (!query || query.trim().length === 0) {
       return HttpResponse.json({
-          query: "",
-          results: [],
-          total: 0,
-          page: 1,
-          facets: { types: {} },
-        });
+        query: "",
+        results: [],
+        total: 0,
+        page: 1,
+        facets: { types: {} },
+      });
     }
 
     const searchResults = performSearch(query, type, limit, page);
@@ -282,10 +277,10 @@ export const searchHandlers = [
     updateStatistics();
 
     return HttpResponse.json({
-        message: "Content indexed successfully",
-        id: content.id,
-        indexed: true,
-      });
+      message: "Content indexed successfully",
+      id: content.id,
+      indexed: true,
+    });
   }),
 
   // DELETE /api/v1/search/index/:contentId - Remove content from index
@@ -302,7 +297,7 @@ export const searchHandlers = [
 
       // Remove from search index
       searchIndex = searchIndex.filter(
-        (item) => item.id !== contentId && item.id !== content.entity_id
+        (item) => item.id !== contentId && item.id !== content.entity_id,
       );
     } else {
       // Still try to remove from index even if not in content storage
@@ -315,10 +310,10 @@ export const searchHandlers = [
     updateStatistics();
 
     return HttpResponse.json({
-        message: removed ? "Content removed from index successfully" : "Content not found",
-        id: contentId,
-        removed,
-      });
+      message: removed ? "Content removed from index successfully" : "Content not found",
+      id: contentId,
+      removed,
+    });
   }),
 
   // POST /api/v1/search/reindex - Reindex entity

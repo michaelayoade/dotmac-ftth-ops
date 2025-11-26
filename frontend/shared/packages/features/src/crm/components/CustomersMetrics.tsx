@@ -174,9 +174,7 @@ export default function CustomersMetrics({ metrics, loading }: CustomersMetricsP
               return (
                 <div key={status} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`w-3 h-3 rounded-full ${statusColors[status] || "bg-muted"}`}
-                     />
+                    <div className={`w-3 h-3 rounded-full ${statusColors[status] || "bg-muted"}`} />
                     <span className="text-foreground capitalize">{status}</span>
                   </div>
                   <div className="flex items-center gap-2">

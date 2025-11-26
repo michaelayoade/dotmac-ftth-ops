@@ -34,16 +34,10 @@ export function BandwidthProfileDialog({
       profileId?: string | undefined;
     }) => {
       if (isEdit && profileId) {
-        const response = await apiClient.patch(
-          `/radius/bandwidth-profiles/${profileId}`,
-          data
-        );
+        const response = await apiClient.patch(`/radius/bandwidth-profiles/${profileId}`, data);
         return response.data;
       } else {
-        const response = await apiClient.post(
-          "/radius/bandwidth-profiles",
-          data
-        );
+        const response = await apiClient.post("/radius/bandwidth-profiles", data);
         return response.data;
       }
     },
@@ -59,18 +53,13 @@ export function BandwidthProfileDialog({
       logger.error("Failed to save bandwidth profile", { error });
       toast({
         title: "Error",
-        description:
-          error.response?.data?.detail || "Failed to save bandwidth profile",
+        description: error.response?.data?.detail || "Failed to save bandwidth profile",
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = async (
-    data: any,
-    isEdit: boolean,
-    profileId?: string | undefined
-  ) => {
+  const handleSubmit = async (data: any, isEdit: boolean, profileId?: string | undefined) => {
     await mutation.mutateAsync({ data, isEdit, profileId: profileId ?? undefined });
   };
 

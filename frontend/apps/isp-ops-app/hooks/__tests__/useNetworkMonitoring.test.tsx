@@ -372,10 +372,9 @@ describe("useNetworkMonitoring", () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        "/network/alerts/alert-1/acknowledge",
-        { note: "Acknowledged" }
-      );
+      expect(mockApiClient.post).toHaveBeenCalledWith("/network/alerts/alert-1/acknowledge", {
+        note: "Acknowledged",
+      });
       expect(result.current.data?.is_acknowledged).toBe(true);
     });
 

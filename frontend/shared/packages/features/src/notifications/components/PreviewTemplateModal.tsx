@@ -6,13 +6,7 @@
 
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
@@ -36,7 +30,7 @@ export interface PreviewTemplateModalProps<TTemplate = any> {
   template: TTemplate;
   renderTemplatePreview: (
     templateId: string,
-    data: Record<string, string>
+    data: Record<string, string>,
   ) => Promise<RenderedTemplateContent>;
 }
 
@@ -141,7 +135,9 @@ export function PreviewTemplateModal<TTemplate = any>({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Usage Count</p>
-              <p className="mt-1 text-lg font-semibold">{templateData.usage_count.toLocaleString()}</p>
+              <p className="mt-1 text-lg font-semibold">
+                {templateData.usage_count.toLocaleString()}
+              </p>
             </div>
           </div>
 

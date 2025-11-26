@@ -9,13 +9,7 @@ import { Card, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -24,13 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@dotmac/ui";
-import {
-  AlertCircle,
-  Package,
-  Search,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { AlertCircle, Package, Search, TrendingUp, Zap } from "lucide-react";
 import { toast } from "@dotmac/ui";
 
 export default function AddonsPage() {
@@ -95,7 +83,7 @@ export default function AddonsPage() {
       filtered = filtered.filter(
         (addon) =>
           addon.name.toLowerCase().includes(query) ||
-          (addon['description']?.toLowerCase() ?? "").includes(query),
+          (addon["description"]?.toLowerCase() ?? "").includes(query),
       );
     }
 

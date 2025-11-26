@@ -58,7 +58,9 @@ class MockWebSocket {
 global.WebSocket = MockWebSocket as any;
 
 // Mock browser Notification API
-const mockNotificationPermission = jest.fn(() => Promise.resolve("granted" as NotificationPermission));
+const mockNotificationPermission = jest.fn(() =>
+  Promise.resolve("granted" as NotificationPermission),
+);
 global.Notification = {
   permission: "granted" as NotificationPermission,
   requestPermission: mockNotificationPermission,
@@ -79,7 +81,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <div data-testid="child">Content</div>
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       expect(screen.getByTestId("child")).toBeInTheDocument();
@@ -94,7 +96,7 @@ describe("NotificationSystem", () => {
       };
 
       expect(() => render(<TestComponent />)).toThrow(
-        "useNotifications must be used within a NotificationProvider"
+        "useNotifications must be used within a NotificationProvider",
       );
 
       consoleSpy.mockRestore();
@@ -115,7 +117,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       expect(screen.getByTestId("count")).toHaveTextContent("0");
@@ -153,7 +155,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Notification"));
@@ -189,7 +191,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -229,7 +231,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       expect(screen.getByTestId("unread")).toHaveTextContent("0");
@@ -281,7 +283,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -335,7 +337,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -396,7 +398,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Multiple"));
@@ -450,7 +452,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Multiple"));
@@ -497,7 +499,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Success"));
@@ -535,7 +537,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Error"));
@@ -573,7 +575,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Warning"));
@@ -611,7 +613,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Info"));
@@ -649,7 +651,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add System"));
@@ -689,7 +691,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -727,7 +729,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -765,7 +767,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -803,7 +805,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -845,7 +847,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider maxNotifications={10}>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Many"));
@@ -899,7 +901,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider maxNotifications={2}>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Three"));
@@ -918,9 +920,7 @@ describe("NotificationSystem", () => {
 
         return (
           <div>
-            <button onClick={() => updateSettings({ soundEnabled: false })}>
-              Disable Sound
-            </button>
+            <button onClick={() => updateSettings({ soundEnabled: false })}>Disable Sound</button>
             <div data-testid="sound-enabled">{state.settings.soundEnabled ? "yes" : "no"}</div>
           </div>
         );
@@ -929,7 +929,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       expect(screen.getByTestId("sound-enabled")).toHaveTextContent("yes");
@@ -949,7 +949,9 @@ describe("NotificationSystem", () => {
           <div>
             <button
               onClick={() =>
-                updateSettings({ priorities: { low: false, medium: true, high: true, critical: true } })
+                updateSettings({
+                  priorities: { low: false, medium: true, high: true, critical: true },
+                })
               }
             >
               Disable Low Priority
@@ -976,7 +978,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Disable Low Priority"));
@@ -1011,7 +1013,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       await waitFor(() => {
@@ -1043,7 +1045,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       await waitFor(() => {
@@ -1061,7 +1063,7 @@ describe("NotificationSystem", () => {
       const { container } = render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       const list = container.querySelector(".fixed");
@@ -1078,7 +1080,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       expect(screen.queryByTestId("badge")).not.toBeInTheDocument();
@@ -1105,7 +1107,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       await waitFor(() => {
@@ -1136,7 +1138,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider maxNotifications={150}>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       await waitFor(() => {
@@ -1162,7 +1164,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Toast"));
@@ -1188,7 +1190,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Success"));
@@ -1214,7 +1216,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Error"));
@@ -1240,7 +1242,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Warning"));
@@ -1266,7 +1268,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Info"));
@@ -1300,7 +1302,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add"));
@@ -1341,7 +1343,7 @@ describe("NotificationSystem", () => {
       render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       fireEvent.click(screen.getByText("Add Multiple"));
@@ -1376,7 +1378,7 @@ describe("NotificationSystem", () => {
       const { container } = render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       // Simple check that the component renders
@@ -1419,7 +1421,7 @@ describe("NotificationSystem", () => {
       const { container } = render(
         <NotificationProvider>
           <TestComponent />
-        </NotificationProvider>
+        </NotificationProvider>,
       );
 
       // Basic checks without heavy async validation

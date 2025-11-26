@@ -5,11 +5,7 @@
  * for server-side validation, uniqueness checks, etc.
  */
 
-import {
-  ValidationError,
-  ValidationResult,
-  FieldValidationConfig,
-} from "./formValidation";
+import { ValidationError, ValidationResult, FieldValidationConfig } from "./formValidation";
 import { parseBackendError, type StandardErrorResponse } from "../types/error-contract";
 
 export interface AsyncValidationRule {
@@ -210,7 +206,9 @@ export const asyncValidationRules = {
       if (typeof value !== "string") return false;
 
       try {
-        const response = await apiClient.get(`/api/v1/auth/check-email?email=${encodeURIComponent(value)}`);
+        const response = await apiClient.get(
+          `/api/v1/auth/check-email?email=${encodeURIComponent(value)}`,
+        );
         return !response.data.exists; // Returns true if email is available
       } catch (error) {
         console.error("Email uniqueness check failed:", error);
@@ -229,7 +227,9 @@ export const asyncValidationRules = {
       if (typeof value !== "string") return false;
 
       try {
-        const response = await apiClient.get(`/api/v1/auth/check-username?username=${encodeURIComponent(value)}`);
+        const response = await apiClient.get(
+          `/api/v1/auth/check-username?username=${encodeURIComponent(value)}`,
+        );
         return !response.data.exists;
       } catch (error) {
         console.error("Username uniqueness check failed:", error);
@@ -331,7 +331,9 @@ export const asyncValidationRules = {
       if (typeof value !== "string") return false;
 
       try {
-        const response = await apiClient.get(`/api/v1/tenants/check-subdomain?subdomain=${encodeURIComponent(value)}`);
+        const response = await apiClient.get(
+          `/api/v1/tenants/check-subdomain?subdomain=${encodeURIComponent(value)}`,
+        );
         return response.data.available;
       } catch (error) {
         console.error("Subdomain check failed:", error);
@@ -375,7 +377,10 @@ export const asyncValidationRules = {
       const data = encoder.encode(value);
       const hashBuffer = await crypto.subtle.digest("SHA-1", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+      const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
 
       // Use k-anonymity model (only send first 5 chars)
       const prefix = hashHex.substring(0, 5);

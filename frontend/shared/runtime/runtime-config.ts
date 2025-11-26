@@ -105,8 +105,7 @@ declare global {
   }
 }
 
-const runtimeConfigDisabled =
-  process.env["NEXT_PUBLIC_RUNTIME_CONFIG_DISABLED"] === "true";
+const runtimeConfigDisabled = process.env["NEXT_PUBLIC_RUNTIME_CONFIG_DISABLED"] === "true";
 
 export const isRuntimeConfigDisabled = () => runtimeConfigDisabled;
 
@@ -212,14 +211,9 @@ function normalizeRuntimePayload(payload: BackendRuntimeConfig): RuntimeConfig {
       websocketUrl: payload.api.websocket_url || joinUrl(restUrl, "/realtime/ws"),
     },
     realtime: {
-      wsUrl:
-        realtimeSource.ws_url ||
-        payload.api.websocket_url ||
-        joinUrl(baseUrl, "/realtime/ws"),
+      wsUrl: realtimeSource.ws_url || payload.api.websocket_url || joinUrl(baseUrl, "/realtime/ws"),
       sseUrl: realtimeSource.sse_url || joinUrl(restUrl, "/realtime/events"),
-      alertsChannel:
-        realtimeSource.alerts_channel ||
-        `tenant-${payload.tenant.slug ?? "global"}`,
+      alertsChannel: realtimeSource.alerts_channel || `tenant-${payload.tenant.slug ?? "global"}`,
     },
     deployment: {
       mode: payload.deployment?.mode || "multi_tenant",

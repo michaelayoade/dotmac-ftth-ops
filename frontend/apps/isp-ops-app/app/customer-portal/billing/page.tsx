@@ -4,23 +4,10 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState, useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   CreditCard,
@@ -90,7 +77,8 @@ export default function CustomerBillingPage() {
 
   const defaultMethodId =
     defaultPaymentMethod?.payment_method_id ||
-    paymentMethods.find((method: { is_default: boolean }) => method.is_default)?.payment_method_id ||
+    paymentMethods.find((method: { is_default: boolean }) => method.is_default)
+      ?.payment_method_id ||
     paymentMethods[0]?.payment_method_id ||
     null;
 
@@ -128,7 +116,7 @@ export default function CustomerBillingPage() {
       await makePayment({
         invoiceId: outstandingInvoice.invoice_id,
         amount: outstandingInvoice.amount_due,
-        paymentMethodId: defaultMethodId
+        paymentMethodId: defaultMethodId,
       });
       toast({
         title: "Payment Successful",
@@ -538,7 +526,10 @@ export default function CustomerBillingPage() {
                     variant={autoPayPaymentMethod ? "destructive" : "outline"}
                     onClick={async () => {
                       try {
-                        await toggleAutoPay(defaultPaymentMethod.payment_method_id, !autoPayPaymentMethod);
+                        await toggleAutoPay(
+                          defaultPaymentMethod.payment_method_id,
+                          !autoPayPaymentMethod,
+                        );
                         toast({
                           title: autoPayPaymentMethod ? "AutoPay Disabled" : "AutoPay Enabled",
                           description: autoPayPaymentMethod

@@ -46,7 +46,7 @@ describe("Label", () => {
         <div>
           <Label htmlFor="input-id">Label</Label>
           <input id="input-id" />
-        </div>
+        </div>,
       );
 
       const label = screen.getByText("Label");
@@ -64,7 +64,7 @@ describe("Label", () => {
       render(
         <Label data-testid="custom-label" data-custom="value">
           Label
-        </Label>
+        </Label>,
       );
 
       const label = screen.getByTestId("custom-label");
@@ -112,7 +112,7 @@ describe("Label", () => {
         <Label>
           <span>Icon</span>
           <span>Text</span>
-        </Label>
+        </Label>,
       );
 
       expect(screen.getByText("Icon")).toBeInTheDocument();
@@ -133,7 +133,7 @@ describe("Label", () => {
         <div>
           <Label htmlFor="name">Full Name</Label>
           <input id="name" type="text" />
-        </div>
+        </div>,
       );
 
       const label = screen.getByText("Full Name");
@@ -144,10 +144,9 @@ describe("Label", () => {
       render(
         <div>
           <Label htmlFor="terms">
-            <input id="terms" type="checkbox" />
-            I agree to the terms and conditions
+            <input id="terms" type="checkbox" />I agree to the terms and conditions
           </Label>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText(/I agree to the terms/)).toBeInTheDocument();
@@ -157,7 +156,7 @@ describe("Label", () => {
       render(
         <Label htmlFor="email">
           Email <span className="text-destructive">*</span>
-        </Label>
+        </Label>,
       );
 
       expect(screen.getByText("Email")).toBeInTheDocument();
@@ -169,7 +168,7 @@ describe("Label", () => {
         <Label htmlFor="password">
           Password
           <span aria-label="Help">ℹ️</span>
-        </Label>
+        </Label>,
       );
 
       expect(screen.getByText("Password")).toBeInTheDocument();
@@ -180,7 +179,7 @@ describe("Label", () => {
       render(
         <Label htmlFor="disabled-input" className="opacity-50 cursor-not-allowed">
           Disabled Field
-        </Label>
+        </Label>,
       );
 
       const label = screen.getByText("Disabled Field");
@@ -194,7 +193,7 @@ describe("Label", () => {
         <div>
           <Label htmlFor="email-input">Email Address</Label>
           <input id="email-input" type="email" />
-        </div>
+        </div>,
       );
 
       const label = screen.getByText("Email Address");
@@ -210,7 +209,7 @@ describe("Label", () => {
         <div>
           <Label htmlFor="clickable-input">Click me</Label>
           <input id="clickable-input" type="text" />
-        </div>
+        </div>,
       );
 
       const label = screen.getByText("Click me");

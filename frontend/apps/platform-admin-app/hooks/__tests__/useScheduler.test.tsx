@@ -209,7 +209,9 @@ describe("Platform Admin useScheduler hooks", () => {
       });
 
       expect(apiClient.post).toHaveBeenCalledWith("/jobs/scheduler/scheduled-jobs/sched-1/toggle");
-      expect(invalidateSpy).toHaveBeenNthCalledWith(1, { queryKey: ["scheduler", "scheduled-jobs"] });
+      expect(invalidateSpy).toHaveBeenNthCalledWith(1, {
+        queryKey: ["scheduler", "scheduled-jobs"],
+      });
       expect(invalidateSpy).toHaveBeenNthCalledWith(2, {
         queryKey: ["scheduler", "scheduled-job", "sched-1"],
       });

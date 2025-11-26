@@ -23,7 +23,7 @@ interface JWTPayload {
 export function decodeJWT(token: string): JWTPayload | null {
   try {
     // JWT structure: header.payload.signature
-    const parts = token.split('.');
+    const parts = token.split(".");
 
     if (parts.length !== 3) {
       return null;
@@ -33,17 +33,17 @@ export function decodeJWT(token: string): JWTPayload | null {
     const payload = parts[1]!;
 
     // Base64URL decode
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
     );
 
     return JSON.parse(jsonPayload) as JWTPayload;
   } catch (error) {
-    console.error('[JWT] Failed to decode token:', error);
+    console.error("[JWT] Failed to decode token:", error);
     return null;
   }
 }
@@ -99,9 +99,9 @@ export function resolveTenantId(accessToken: string | null): string | null {
   }
 
   // Priority 2 & 3: Fallback to storage (development only)
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
-      return localStorage.getItem('tenant_id') || sessionStorage.getItem('tenant_id');
+      return localStorage.getItem("tenant_id") || sessionStorage.getItem("tenant_id");
     } catch {
       return null;
     }

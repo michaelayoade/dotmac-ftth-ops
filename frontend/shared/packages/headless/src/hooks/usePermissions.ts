@@ -154,8 +154,7 @@ export function usePermissions() {
 
     // Combine direct permissions and role-based permissions
     const directPermissions = ((user.permissions || []) as Permission[]).filter(Boolean);
-    const rolePermissions =
-      user.roles?.flatMap((role: Role) => role.permissions || []) ?? [];
+    const rolePermissions = user.roles?.flatMap((role: Role) => role.permissions || []) ?? [];
 
     // Merge and deduplicate
     const allPermissions: Permission[] = [...directPermissions, ...rolePermissions];

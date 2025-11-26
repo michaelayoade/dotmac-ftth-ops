@@ -116,8 +116,8 @@ test.describe("User Journey: Error Handling", () => {
 
     // Check for 404 indicators or redirect
     const url = page.url();
-    const has404 = bodyText?.toLowerCase().includes("404") ||
-                   bodyText?.toLowerCase().includes("not found");
+    const has404 =
+      bodyText?.toLowerCase().includes("404") || bodyText?.toLowerCase().includes("not found");
     const wasRedirected = !url.includes("non-existent-page-xyz");
 
     // Should either show 404 or redirect somewhere

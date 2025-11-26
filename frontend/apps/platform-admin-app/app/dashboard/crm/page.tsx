@@ -314,7 +314,6 @@ export default function CRMOverviewPage() {
           </CardContent>
         </Card>
       </div>
-
     </div>
   );
 }

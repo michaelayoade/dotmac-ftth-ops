@@ -7,14 +7,7 @@
  */
 
 import React, { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
@@ -29,11 +22,7 @@ import {
 } from "@dotmac/ui";
 import { Prefix } from "@/types/netbox";
 import { detectIPFamily, IPFamily, getIPv4UsableHosts, parseCIDR } from "@/lib/utils/ip-address";
-import {
-  MoreHorizontal,
-  Plus,
-  Search,
-} from "lucide-react";
+import { MoreHorizontal, Plus, Search } from "lucide-react";
 
 export interface PrefixListProps {
   prefixes: Prefix[];

@@ -228,12 +228,9 @@ class BankAccountsService {
     const params = new URLSearchParams();
     if (includeInactive) params.append("include_inactive", "true");
 
-    const response = await fetch(
-      this.buildUrl(`/billing/bank-accounts?${params.toString()}`),
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+    const response = await fetch(this.buildUrl(`/billing/bank-accounts?${params.toString()}`), {
+      headers: this.getAuthHeaders(),
+    });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -257,12 +254,9 @@ class BankAccountsService {
   }
 
   async getBankAccountSummary(accountId: number): Promise<BankAccountSummary> {
-    const response = await fetch(
-      this.buildUrl(`/billing/bank-accounts/${accountId}/summary`),
-      {
-        headers: this.getAuthHeaders(),
-      },
-    );
+    const response = await fetch(this.buildUrl(`/billing/bank-accounts/${accountId}/summary`), {
+      headers: this.getAuthHeaders(),
+    });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));

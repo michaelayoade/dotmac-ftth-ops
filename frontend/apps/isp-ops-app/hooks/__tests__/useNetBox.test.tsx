@@ -37,10 +37,9 @@ describe("useNetBox query params", () => {
   });
 
   it("uses backend vrf param when listing IP addresses", async () => {
-    const { result } = renderHook(
-      () => useIPAddresses({ vrf: "core", limit: 10, offset: 5 }),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderHook(() => useIPAddresses({ vrf: "core", limit: 10, offset: 5 }), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -64,10 +63,9 @@ describe("useNetBox query params", () => {
   });
 
   it("uses backend vrf param when listing prefixes", async () => {
-    const { result } = renderHook(
-      () => usePrefixes({ vrf: "blue", limit: 25, offset: 10 }),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderHook(() => usePrefixes({ vrf: "blue", limit: 25, offset: 10 }), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 

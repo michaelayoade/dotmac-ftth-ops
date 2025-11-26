@@ -122,9 +122,7 @@ describe("Textarea", () => {
       const textarea = screen.getByTestId("textarea");
       fireEvent.keyDown(textarea, { key: "Escape" });
 
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({ key: "Escape" })
-      );
+      expect(onKeyDown).toHaveBeenCalledWith(expect.objectContaining({ key: "Escape" }));
     });
   });
 
@@ -262,7 +260,9 @@ describe("Textarea", () => {
     });
 
     it("prevents uncontrolled updates when value prop is provided", async () => {
-      const { user } = render(<Textarea value="Fixed" onChange={() => {}} data-testid="textarea" />);
+      const { user } = render(
+        <Textarea value="Fixed" onChange={() => {}} data-testid="textarea" />,
+      );
 
       const textarea = screen.getByTestId("textarea");
       await user.type(textarea, "Test");
@@ -309,7 +309,7 @@ describe("Textarea", () => {
         <>
           <Textarea aria-describedby="help-text" data-testid="textarea" />
           <p id="help-text">Helper text</p>
-        </>
+        </>,
       );
 
       expect(screen.getByTestId("textarea")).toHaveAttribute("aria-describedby", "help-text");
@@ -342,7 +342,7 @@ describe("Textarea", () => {
       const maliciousValue = '<script>alert("XSS")</script>';
 
       const result = await renderSecurity(
-        <Textarea defaultValue={maliciousValue} data-testid="textarea" />
+        <Textarea defaultValue={maliciousValue} data-testid="textarea" />,
       );
 
       const textarea = screen.getByTestId("textarea") as HTMLTextAreaElement;
@@ -356,7 +356,7 @@ describe("Textarea", () => {
       const maliciousPlaceholder = '<img src=x onerror="alert(1)">';
 
       const result = await renderSecurity(
-        <Textarea placeholder={maliciousPlaceholder} data-testid="textarea" />
+        <Textarea placeholder={maliciousPlaceholder} data-testid="textarea" />,
       );
 
       expect(result.container).toHaveNoSecurityViolations();
@@ -375,7 +375,7 @@ describe("Textarea", () => {
       const largeContent = "A".repeat(10000);
 
       const result = renderPerformance(
-        <Textarea defaultValue={largeContent} data-testid="textarea" />
+        <Textarea defaultValue={largeContent} data-testid="textarea" />,
       );
 
       const metrics = result.measurePerformance();
@@ -391,7 +391,7 @@ describe("Textarea", () => {
           aria-label="Message input"
           maxLength={500}
           rows={4}
-        />
+        />,
       );
 
       await expect(result.container).toBeAccessible();

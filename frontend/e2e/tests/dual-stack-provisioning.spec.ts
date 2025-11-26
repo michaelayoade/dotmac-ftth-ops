@@ -7,7 +7,6 @@
 import { test, expect } from "#e2e/fixtures";
 import type { Page } from "@playwright/test";
 
-
 test.describe("Dual-Stack Subscriber Provisioning", () => {
   test.beforeEach(async ({ page, login }) => {
     await login(page);
@@ -411,7 +410,7 @@ test.describe("Device Monitoring", () => {
 
 test.describe("IP Address Calculator", () => {
   test.skip("should calculate subnet information", async ({ page }) => {
-        await page.goto("/tools/ip-calculator");
+    await page.goto("/tools/ip-calculator");
 
     await page.fill('input[name="cidr"]', "192.168.1.0/24");
 
@@ -433,7 +432,7 @@ test.describe("IP Address Calculator", () => {
   });
 
   test.skip("should show binary representation", async ({ page }) => {
-        await page.goto("/tools/ip-calculator");
+    await page.goto("/tools/ip-calculator");
 
     await page.fill('input[name="cidr"]', "10.0.0.0/8");
 

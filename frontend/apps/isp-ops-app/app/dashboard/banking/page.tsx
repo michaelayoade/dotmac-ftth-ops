@@ -162,30 +162,33 @@ export default function BankingPage() {
     }
   }, [apiBaseUrl, toast]);
 
-  const loadAccountSummary = useCallback(async (accountId: number) => {
-    try {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`,
-        {
-          credentials: "include",
-        },
-      );
+  const loadAccountSummary = useCallback(
+    async (accountId: number) => {
+      try {
+        const response = await fetch(
+          `${apiBaseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`,
+          {
+            credentials: "include",
+          },
+        );
 
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedAccount(data);
-      } else if (response.status === 401) {
-        window.location.href = "/login";
+        if (response.ok) {
+          const data = await response.json();
+          setSelectedAccount(data);
+        } else if (response.status === 401) {
+          window.location.href = "/login";
+        }
+      } catch (error) {
+        logger.error("Failed to load account summary", error);
+        toast({
+          title: "Error",
+          description: "Failed to load account summary",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      logger.error("Failed to load account summary", error);
-      toast({
-        title: "Error",
-        description: "Failed to load account summary",
-        variant: "destructive",
-      });
-    }
-  }, [apiBaseUrl, toast]);
+    },
+    [apiBaseUrl, toast],
+  );
 
   const loadManualPayments = useCallback(async () => {
     setLoading(true);
@@ -335,16 +338,13 @@ export default function BankingPage() {
 
   const handleVerifyPayment = async (paymentId: number) => {
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/payments/${paymentId}/verify`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/payments/${paymentId}/verify`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (response.ok) {
         logger.info("Payment verified", { paymentId });
@@ -483,7 +483,7 @@ export default function BankingPage() {
                     <div>
                       <div className="text-muted-foreground">Account</div>
                       <div className="text-muted-foreground font-mono flex items-center gap-2">
-                        {showAccountNumber === account['id']? (
+                        {showAccountNumber === account["id"] ? (
                           <>
                             ****{account.account_number_last_four}
                             <button onClick={() => setShowAccountNumber(null)}>
@@ -762,7 +762,8 @@ export default function BankingPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-3 px-1 border-b-2 transition-colors text-sm font-medium ${
-                  activeTab === tab['id']? "border-sky-500 text-sky-400"
+                  activeTab === tab["id"]
+                    ? "border-sky-500 text-sky-400"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 }`}
               >

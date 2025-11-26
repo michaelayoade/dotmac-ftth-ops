@@ -35,6 +35,7 @@ frontend/shared/packages/features/src/test/
 ### Test Coverage
 
 #### Lead Management (8 tests)
+
 - ✅ Lead creation with valid contact information
 - ✅ Lead status transitions (new → contacted → qualified)
 - ✅ Serviceability checking and qualification
@@ -42,6 +43,7 @@ frontend/shared/packages/features/src/test/
 - ✅ Required field validation
 
 #### Quote Management (8 tests)
+
 - ✅ Quote generation for qualified leads
 - ✅ Total cost calculations (installation + equipment + activation)
 - ✅ Promotional discount application
@@ -50,18 +52,21 @@ frontend/shared/packages/features/src/test/
 - ✅ Quote expiration handling
 
 #### Site Survey (4 tests)
+
 - ✅ Survey scheduling and completion
 - ✅ Serviceability assessment
 - ✅ Fiber extension requirement identification
 - ✅ Survey photo attachment
 
 #### Customer Conversion (4 tests)
+
 - ✅ Lead to customer conversion
 - ✅ Service activation
 - ✅ Customer number generation
 - ✅ Initial account balance setup
 
 #### Service Management (6 tests)
+
 - ✅ Service upgrade to higher tier
 - ✅ Service downgrade to lower tier
 - ✅ Service suspension for non-payment
@@ -85,6 +90,7 @@ pnpm --filter @dotmac/features test customer-lifecycle.functional.test.ts
 ### Test Coverage
 
 #### Proration Calculations (5 tests)
+
 - ✅ Mid-month activation proration
 - ✅ Service upgrade mid-cycle proration
 - ✅ Service downgrade mid-cycle proration
@@ -92,12 +98,14 @@ pnpm --filter @dotmac/features test customer-lifecycle.functional.test.ts
 - ✅ Mid-month termination proration
 
 #### Tax Calculations (4 tests)
+
 - ✅ Sales tax calculation
 - ✅ VAT (Value Added Tax) calculation
 - ✅ Per-line-item tax application
 - ✅ Tax-inclusive pricing
 
 #### Discount Application (6 tests)
+
 - ✅ Percentage discount
 - ✅ Fixed amount discount
 - ✅ Discount floor (prevent negative amounts)
@@ -106,6 +114,7 @@ pnpm --filter @dotmac/features test customer-lifecycle.functional.test.ts
 - ✅ Referral discount calculation
 
 #### Credits & Adjustments (5 tests)
+
 - ✅ Account credit application to invoice
 - ✅ Credit exceeding invoice amount
 - ✅ Service outage compensation credits
@@ -113,24 +122,28 @@ pnpm --filter @dotmac/features test customer-lifecycle.functional.test.ts
 - ✅ Manual credit adjustments
 
 #### Refund Calculations (4 tests)
+
 - ✅ Full refund calculation
 - ✅ Partial refund calculation
 - ✅ Service usage deduction from refund
 - ✅ Processing fee deduction
 
 #### Late Fees (4 tests)
+
 - ✅ Percentage-based late fee
 - ✅ Fixed late fee
 - ✅ Maximum late fee cap
 - ✅ Grace period handling
 
 #### Early Termination Fees (4 tests)
+
 - ✅ ETF based on remaining contract months
 - ✅ ETF reduction based on time served
 - ✅ No ETF after contract fulfillment
 - ✅ Multiple service ETF calculation
 
 #### Complex Scenarios (2 tests)
+
 - ✅ Mid-cycle upgrade with proration, tax, and discount
 - ✅ Multi-line invoice with discounts and mixed taxation
 
@@ -138,16 +151,16 @@ pnpm --filter @dotmac/features test customer-lifecycle.functional.test.ts
 
 ```typescript
 // Proration
-proration = (monthly_amount / days_in_month) * days_used
+proration = (monthly_amount / days_in_month) * days_used;
 
 // Tax
-tax_amount = subtotal * (tax_rate / 100)
+tax_amount = subtotal * (tax_rate / 100);
 
 // Discount
-discounted = amount * (1 - discount_percent / 100)
+discounted = amount * (1 - discount_percent / 100);
 
 // ETF
-etf = remaining_months * monthly_charge
+etf = remaining_months * monthly_charge;
 ```
 
 ### Running the Tests
@@ -166,12 +179,14 @@ pnpm --filter @dotmac/features test billing-calculations.functional.test.ts
 ### Test Coverage
 
 #### RADIUS Authentication (4 tests)
+
 - ✅ NAS device creation with required fields
 - ✅ IP address format validation
 - ✅ Multiple NAS device types (OLT, Router, AP)
 - ✅ Shared secret masking
 
 #### Bandwidth Profiles (5 tests)
+
 - ✅ Profile creation with download/upload rates
 - ✅ Burst rate support for traffic shaping
 - ✅ Tiered bandwidth profiles (basic vs premium)
@@ -179,6 +194,7 @@ pnpm --filter @dotmac/features test billing-calculations.functional.test.ts
 - ✅ Symmetric bandwidth for business plans
 
 #### RADIUS Session Management (6 tests)
+
 - ✅ Active session creation
 - ✅ Session duration tracking
 - ✅ Data usage tracking (upload/download)
@@ -187,6 +203,7 @@ pnpm --filter @dotmac/features test billing-calculations.functional.test.ts
 - ✅ Unique session ID assignment
 
 #### ONU/ONT Management (5 tests)
+
 - ✅ ONU provisioning
 - ✅ Signal level validation
 - ✅ Offline ONU detection
@@ -194,21 +211,25 @@ pnpm --filter @dotmac/features test billing-calculations.functional.test.ts
 - ✅ ONU to subscriber mapping
 
 #### OLT Management (3 tests)
+
 - ✅ OLT capacity information tracking
 - ✅ PON port status monitoring
 - ✅ Port capacity alerts
 
 #### Service Activation (3 tests)
+
 - ✅ Customer service activation
 - ✅ Service suspension for non-payment
 - ✅ RADIUS session termination on deactivation
 
 #### Bandwidth & QoS (3 tests)
+
 - ✅ Bandwidth limit enforcement
 - ✅ Burst traffic allowance
 - ✅ Traffic throttling on excess
 
 #### Network Monitoring (3 tests)
+
 - ✅ High session count detection
 - ✅ Total bandwidth usage calculation
 - ✅ Long-running session identification
@@ -229,36 +250,43 @@ pnpm --filter @dotmac/features test network-operations.functional.test.ts
 ### Test Coverage
 
 #### Role Management (3 tests)
+
 - ✅ Single role assignment
 - ✅ Multiple role assignment
 - ✅ Role removal
 
 #### Role Hierarchy (2 tests)
+
 - ✅ Role hierarchy ordering (Admin > Manager > User)
 - ✅ Permission inheritance from parent roles
 
 #### Permission Checking (4 tests)
+
 - ✅ Resource:action permission validation
-- ✅ Wildcard permissions (resource:*)
-- ✅ Super admin wildcard (*:*)
+- ✅ Wildcard permissions (resource:\*)
+- ✅ Super admin wildcard (_:_)
 - ✅ Multiple permission validation
 
 #### CRUD Permissions (4 tests)
+
 - ✅ Create permission enforcement
 - ✅ Read permission enforcement
 - ✅ Update permission enforcement
 - ✅ Delete permission restriction
 
 #### Multi-Tenant Isolation (3 tests)
+
 - ✅ Tenant-scoped permissions
 - ✅ Cross-tenant access prevention
 - ✅ Platform admin cross-tenant access
 
 #### Feature Flags (2 tests)
+
 - ✅ Beta feature access control
 - ✅ Subscription tier-based features
 
 #### Special Scenarios (7 tests)
+
 - ✅ Permission conflict handling (deny wins)
 - ✅ Time-based permissions
 - ✅ Resource ownership-based permissions
@@ -291,48 +319,58 @@ pnpm --filter @dotmac/features test user-permissions.functional.test.ts
 ### Test Coverage
 
 #### CSV Import (4 tests)
+
 - ✅ Valid CSV data import
 - ✅ Record validation during import
 - ✅ Duplicate record detection
 - ✅ Import progress tracking
 
 #### Field Mapping (3 tests)
+
 - ✅ Source to target field mapping
 - ✅ Data type transformation
 - ✅ Missing optional field handling
 
 #### Bulk Operations (3 tests)
+
 - ✅ Batch processing
 - ✅ Partial batch failure handling
 - ✅ Failed record retry logic
 
 #### CSV Export (2 tests)
+
 - ✅ Data export to CSV
 - ✅ Special character escaping
 
 #### JSON Export (2 tests)
+
 - ✅ Data export to JSON
 - ✅ Selective field export
 
 #### Export Statistics (2 tests)
+
 - ✅ Export progress tracking
 - ✅ File size estimation
 
 #### Validation Rules (4 tests)
+
 - ✅ Required field validation
 - ✅ Email format validation
 - ✅ Phone number format validation
 - ✅ Data range and constraint validation
 
 #### Referential Integrity (2 tests)
+
 - ✅ Foreign key reference validation
 - ✅ Orphaned record prevention
 
 #### Data Consistency (2 tests)
+
 - ✅ Transaction consistency maintenance
 - ✅ Data checksum verification
 
 #### Error Recovery (3 tests)
+
 - ✅ Error collection and reporting
 - ✅ Partial success mode support
 - ✅ Rollback on critical errors
@@ -353,6 +391,7 @@ pnpm --filter @dotmac/features test data-migration.functional.test.ts
 ### Test Coverage
 
 #### Tenant Lifecycle (17 tests)
+
 - ✅ Tenant creation and onboarding
 - ✅ Subscription plan assignment
 - ✅ Trial period management
@@ -362,6 +401,7 @@ pnpm --filter @dotmac/features test data-migration.functional.test.ts
 - ✅ Tenant deletion workflow
 
 #### Licensing Enforcement (17 tests)
+
 - ✅ Module access control (core vs premium)
 - ✅ Subscription-based feature availability
 - ✅ Module dependencies validation
@@ -371,6 +411,7 @@ pnpm --filter @dotmac/features test data-migration.functional.test.ts
 - ✅ License validation and period checks
 
 #### Quota Enforcement (22 tests)
+
 - ✅ Quota allocation per plan
 - ✅ Hard limits (no overage) enforcement
 - ✅ Soft limits (overage allowed) with charges
@@ -380,6 +421,7 @@ pnpm --filter @dotmac/features test data-migration.functional.test.ts
 - ✅ Quota upgrade workflows
 
 #### Multi-Tenant Isolation (18 tests)
+
 - ✅ Data isolation by tenant_id
 - ✅ Cross-tenant access prevention
 - ✅ Tenant context validation
@@ -421,6 +463,7 @@ pnpm --filter @dotmac/features test --watch workflows/
 ## Test Data Factories
 
 ### Billing Factories (`test/factories/billing.ts`)
+
 - `createMockInvoice()` - Generate test invoices
 - `createOverdueInvoice()` - Overdue invoice
 - `createPaidInvoice()` - Fully paid invoice
@@ -429,6 +472,7 @@ pnpm --filter @dotmac/features test --watch workflows/
 - `createMockPayment()` - Payment record
 
 ### Customer Factories (`test/factories/customer.ts`)
+
 - `createMockCustomer()` - Basic customer
 - `createActiveCustomer()` - Active customer
 - `createSuspendedCustomer()` - Suspended customer
@@ -441,6 +485,7 @@ pnpm --filter @dotmac/features test --watch workflows/
 - `createCompletedSiteSurvey()` - Completed survey
 
 ### Network Factories (`test/factories/network.ts`)
+
 - `createMockNASDevice()` - RADIUS NAS device
 - `createMockBandwidthProfile()` - Bandwidth profile
 - `createMockRADIUSSession()` - Active RADIUS session
@@ -451,6 +496,7 @@ pnpm --filter @dotmac/features test --watch workflows/
 - `createBasicProfile()` - 50Mbps profile
 
 ### Platform Factories (`test/factories/platform.ts`)
+
 - `createMockTenant()` - Basic tenant
 - `createTrialTenant()` - Tenant in trial period
 - `createSuspendedTenant()` - Suspended tenant
@@ -474,21 +520,25 @@ pnpm --filter @dotmac/features test --watch workflows/
 ## Benefits of Functional Tests
 
 ### 1. **Business Logic Validation**
+
 - Ensures complex calculations are correct
 - Validates business rules and workflows
 - Prevents regression in critical features
 
 ### 2. **Documentation**
+
 - Tests serve as living documentation
 - Clear examples of how business logic works
 - Easy onboarding for new developers
 
 ### 3. **Confidence in Changes**
+
 - Safe refactoring of business logic
 - Quick feedback on breaking changes
 - Reduced manual testing burden
 
 ### 4. **Edge Case Coverage**
+
 - Tests boundary conditions
 - Validates error handling
 - Ensures data integrity
@@ -496,7 +546,9 @@ pnpm --filter @dotmac/features test --watch workflows/
 ## Best Practices
 
 ### 1. **Test Naming**
+
 Use descriptive test names that explain the business rule:
+
 ```typescript
 it("should calculate mid-month activation proration correctly", () => {
   // Test implementation
@@ -504,6 +556,7 @@ it("should calculate mid-month activation proration correctly", () => {
 ```
 
 ### 2. **Arrange-Act-Assert Pattern**
+
 ```typescript
 it("should apply promotional discount", () => {
   // Arrange - Set up test data
@@ -519,13 +572,17 @@ it("should apply promotional discount", () => {
 ```
 
 ### 3. **Use Factories**
+
 Always use test data factories for consistency:
+
 ```typescript
 const invoice = createMockInvoice({ total_amount: 150.0 });
 ```
 
 ### 4. **Test Business Rules, Not Implementation**
+
 Focus on what the system should do, not how it does it:
+
 ```typescript
 // Good - Tests business rule
 it("should not allow discount below zero", () => {
@@ -555,7 +612,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install dependencies
         run: cd frontend && pnpm install
@@ -570,29 +627,32 @@ jobs:
 
 Functional tests provide targeted coverage of business-critical logic:
 
-| Domain | Tests | Coverage |
-|--------|-------|----------|
-| Customer Lifecycle | 30 | 95% |
-| Billing Calculations | 45 | 98% |
-| Network Operations | 40 | 92% |
-| User Permissions | 25 | 90% |
-| Data Migration | 35 | 88% |
-| Platform-ISP Integration | 74 | 96% |
-| **Total** | **249** | **94%** |
+| Domain                   | Tests   | Coverage |
+| ------------------------ | ------- | -------- |
+| Customer Lifecycle       | 30      | 95%      |
+| Billing Calculations     | 45      | 98%      |
+| Network Operations       | 40      | 92%      |
+| User Permissions         | 25      | 90%      |
+| Data Migration           | 35      | 88%      |
+| Platform-ISP Integration | 74      | 96%      |
+| **Total**                | **249** | **94%**  |
 
 ## Next Steps
 
 ### Short Term
+
 - [ ] Add authenticated workflow tests
 - [ ] Add visual regression tests
 - [ ] Increase E2E coverage with business flows
 
 ### Medium Term
+
 - [ ] Add contract testing for APIs
 - [ ] Add property-based testing for calculations
 - [ ] Add mutation testing
 
 ### Long Term
+
 - [ ] Add performance testing for bulk operations
 - [ ] Add load testing for critical paths
 - [ ] Add chaos testing for resilience

@@ -53,7 +53,6 @@ const createWrapper = () => {
   );
 };
 
-
 describe("useProfile", () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -578,7 +577,10 @@ describe("useProfile", () => {
 
       // Mock createElement to only intercept 'a' elements, use real implementation for others
       const realCreateElement = document.createElement.bind(document);
-      createElementSpy = jest.spyOn(document, "createElement").mockImplementation(((tagName: string, options?: any) => {
+      createElementSpy = jest.spyOn(document, "createElement").mockImplementation(((
+        tagName: string,
+        options?: any,
+      ) => {
         if (tagName === "a") {
           return mockLink as any;
         }
@@ -588,22 +590,18 @@ describe("useProfile", () => {
 
       const realAppendChild = document.body.appendChild.bind(document.body);
       const realRemoveChild = document.body.removeChild.bind(document.body);
-      appendChildSpy = jest
-        .spyOn(document.body, "appendChild")
-        .mockImplementation(((node: any) => {
-          if (node === mockLink) {
-            return mockLink as any;
-          }
-          return realAppendChild(node);
-        }) as any);
-      removeChildSpy = jest
-        .spyOn(document.body, "removeChild")
-        .mockImplementation(((node: any) => {
-          if (node === mockLink) {
-            return mockLink as any;
-          }
-          return realRemoveChild(node);
-        }) as any);
+      appendChildSpy = jest.spyOn(document.body, "appendChild").mockImplementation(((node: any) => {
+        if (node === mockLink) {
+          return mockLink as any;
+        }
+        return realAppendChild(node);
+      }) as any);
+      removeChildSpy = jest.spyOn(document.body, "removeChild").mockImplementation(((node: any) => {
+        if (node === mockLink) {
+          return mockLink as any;
+        }
+        return realRemoveChild(node);
+      }) as any);
 
       // Mock URL.createObjectURL and URL.revokeObjectURL
       createObjectURLSpy = jest.spyOn(URL, "createObjectURL").mockReturnValue("blob:url");

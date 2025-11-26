@@ -6,17 +6,12 @@
  */
 
 import { http, HttpResponse } from "msw";
-import type {
-  LogEntry,
-  LogsResponse,
-  LogStats,
-  LogMetadata,
-} from '../../../hooks/useLogs';
+import type { LogEntry, LogsResponse, LogStats, LogMetadata } from "../../../hooks/useLogs";
 // Import operations helpers to handle operations-style log stats
 import {
   createMockLogStats as createMockOperationsLogStats,
-  getStoredLogStats as getStoredOperationsLogStats
-} from './operations';
+  getStoredLogStats as getStoredOperationsLogStats,
+} from "./operations";
 
 // In-memory storage for test data
 let logs: LogEntry[] = [];
@@ -38,12 +33,12 @@ export function createMockLogEntry(overrides?: Partial<LogEntry>): LogEntry {
   return {
     id,
     timestamp,
-    level: 'INFO',
-    service: 'api-gateway',
+    level: "INFO",
+    service: "api-gateway",
     message: `Log message ${id}`,
     metadata: {
       request_id: `req-${id}`,
-      tenant_id: 'tenant-1',
+      tenant_id: "tenant-1",
     },
     ...overrides,
   };
@@ -92,9 +87,9 @@ export const logsHandlers = [
   // NOTE: This handler serves two different APIs:
   // 1. Without 'period' param: Returns log stats for useLogs (by_level, by_service, time_range)
   // 2. With 'period' param: Returns operations log stats for useLogStats (critical_logs, auth_logs, etc.)
-  http.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
+  http.get("*/api/v1/monitoring/logs/stats", (req, res, ctx) => {
     const url = new URL(req.url);
-    const period = url.searchParams.get('period') as '1h' | '24h' | '7d' | null;
+    const period = url.searchParams.get("period") as "1h" | "24h" | "7d" | null;
 
     // If period parameter is present, return operations-style log stats
     if (period) {
@@ -111,23 +106,23 @@ export const logsHandlers = [
 
   // GET /api/v1/monitoring/logs/services - Get list of services
   // NOTE: This MUST come before /api/v1/monitoring/logs to avoid matching "/services" as a query param
-  http.get('*/api/v1/monitoring/logs/services', (req, res, ctx) => {
+  http.get("*/api/v1/monitoring/logs/services", (req, res, ctx) => {
     const services = getUniqueServices();
     return HttpResponse.json(services);
   }),
 
   // GET /api/v1/monitoring/logs - List logs
-  http.get('*/api/v1/monitoring/logs', (req, res, ctx) => {
+  http.get("*/api/v1/monitoring/logs", (req, res, ctx) => {
     const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const pageSize = parseInt(url.searchParams.get('page_size') || '100');
-    const level = url.searchParams.get('level');
-    const service = url.searchParams.get('service');
-    const search = url.searchParams.get('search');
-    const startTime = url.searchParams.get('start_time');
-    const endTime = url.searchParams.get('end_time');
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("page_size") || "100");
+    const level = url.searchParams.get("level");
+    const service = url.searchParams.get("service");
+    const search = url.searchParams.get("search");
+    const startTime = url.searchParams.get("start_time");
+    const endTime = url.searchParams.get("end_time");
 
-    console.log('[MSW] GET /api/v1/monitoring/logs', {
+    console.log("[MSW] GET /api/v1/monitoring/logs", {
       page,
       pageSize,
       level,
@@ -179,7 +174,7 @@ export const logsHandlers = [
     const paginated = filtered.slice(offset, offset + pageSize);
     const hasMore = offset + pageSize < filtered.length;
 
-    console.log('[MSW] Returning', paginated.length, 'logs');
+    console.log("[MSW] Returning", paginated.length, "logs");
 
     const response: LogsResponse = {
       logs: paginated,

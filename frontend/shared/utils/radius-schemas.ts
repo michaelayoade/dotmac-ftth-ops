@@ -2,7 +2,7 @@
  * Zod schemas for RADIUS data validation
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * RADIUS Subscriber schema

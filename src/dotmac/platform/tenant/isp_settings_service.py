@@ -83,7 +83,9 @@ class ISPSettingsService:
         if setting and setting.value:
             try:
                 # Parse JSON and validate
-                data = json.loads(setting.value) if isinstance(setting.value, str) else setting.value
+                data = (
+                    json.loads(setting.value) if isinstance(setting.value, str) else setting.value
+                )
                 settings = ISPSettings.model_validate(data)
                 logger.info("Loaded ISP settings from database", tenant_id=tenant_id)
                 return settings
@@ -370,7 +372,9 @@ class ISPSettingsService:
 
         await self.session.commit()
 
-    async def validate_settings_schema(self, settings_dict: dict[str, Any]) -> tuple[bool, list[str]]:
+    async def validate_settings_schema(
+        self, settings_dict: dict[str, Any]
+    ) -> tuple[bool, list[str]]:
         """
         Validate settings against schema without saving.
 

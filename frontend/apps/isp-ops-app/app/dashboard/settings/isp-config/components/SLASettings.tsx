@@ -8,7 +8,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Clock, Calendar, Info, AlertTriangle } from "lucide-react";
@@ -55,7 +61,10 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
   const toggleBusinessDay = (day: string) => {
     const currentDays = settings.business_days || [];
     if (currentDays.includes(day)) {
-      updateSetting("business_days", currentDays.filter(d => d !== day));
+      updateSetting(
+        "business_days",
+        currentDays.filter((d) => d !== day),
+      );
     } else {
       updateSetting("business_days", [...currentDays, day]);
     }
@@ -101,8 +110,8 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
       <Alert>
         <Clock className="h-4 w-4" />
         <AlertDescription>
-          SLA settings define response and resolution time commitments for support tickets.
-          Times are calculated based on business hours only.
+          SLA settings define response and resolution time commitments for support tickets. Times
+          are calculated based on business hours only.
         </AlertDescription>
       </Alert>
 
@@ -119,7 +128,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="response_urgent">Urgent Priority</Label>
-                <Badge variant="destructive" className="text-xs">Critical</Badge>
+                <Badge variant="destructive" className="text-xs">
+                  Critical
+                </Badge>
               </div>
               <Input
                 id="response_urgent"
@@ -128,7 +139,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="24"
                 step="0.25"
                 value={settings.priority_urgent_response_hours}
-                onChange={(e) => updateSetting("priority_urgent_response_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_urgent_response_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_urgent_response_hours)}
@@ -139,7 +152,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="response_high">High Priority</Label>
-                <Badge variant="default" className="text-xs">Important</Badge>
+                <Badge variant="default" className="text-xs">
+                  Important
+                </Badge>
               </div>
               <Input
                 id="response_high"
@@ -148,7 +163,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="48"
                 step="0.25"
                 value={settings.priority_high_response_hours}
-                onChange={(e) => updateSetting("priority_high_response_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_high_response_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_high_response_hours)}
@@ -159,7 +176,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="response_medium">Medium Priority</Label>
-                <Badge variant="secondary" className="text-xs">Normal</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  Normal
+                </Badge>
               </div>
               <Input
                 id="response_medium"
@@ -168,7 +187,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="72"
                 step="0.25"
                 value={settings.priority_medium_response_hours}
-                onChange={(e) => updateSetting("priority_medium_response_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_medium_response_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_medium_response_hours)}
@@ -179,7 +200,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="response_low">Low Priority</Label>
-                <Badge variant="outline" className="text-xs">Minor</Badge>
+                <Badge variant="outline" className="text-xs">
+                  Minor
+                </Badge>
               </div>
               <Input
                 id="response_low"
@@ -188,7 +211,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="168"
                 step="1"
                 value={settings.priority_low_response_hours}
-                onChange={(e) => updateSetting("priority_low_response_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_low_response_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_low_response_hours)}
@@ -201,9 +226,7 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Resolution Time SLAs</CardTitle>
-          <CardDescription>
-            How quickly tickets should be fully resolved (in hours)
-          </CardDescription>
+          <CardDescription>How quickly tickets should be fully resolved (in hours)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -217,7 +240,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="48"
                 step="0.5"
                 value={settings.priority_urgent_resolution_hours}
-                onChange={(e) => updateSetting("priority_urgent_resolution_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_urgent_resolution_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_urgent_resolution_hours)}
@@ -234,7 +259,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="168"
                 step="1"
                 value={settings.priority_high_resolution_hours}
-                onChange={(e) => updateSetting("priority_high_resolution_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_high_resolution_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_high_resolution_hours)}
@@ -251,7 +278,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="336"
                 step="1"
                 value={settings.priority_medium_resolution_hours}
-                onChange={(e) => updateSetting("priority_medium_resolution_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_medium_resolution_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_medium_resolution_hours)}
@@ -268,7 +297,9 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                 max="720"
                 step="1"
                 value={settings.priority_low_resolution_hours}
-                onChange={(e) => updateSetting("priority_low_resolution_hours", parseFloat(e.target.value))}
+                onChange={(e) =>
+                  updateSetting("priority_low_resolution_hours", parseFloat(e.target.value))
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {formatHours(settings.priority_low_resolution_hours)}
@@ -289,9 +320,7 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Business Hours</CardTitle>
-          <CardDescription>
-            Define when SLA timers are active
-          </CardDescription>
+          <CardDescription>Define when SLA timers are active</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -324,7 +353,8 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
             </div>
           </div>
 
-          {!isValidTime(settings.business_hours_start) || !isValidTime(settings.business_hours_end) ? (
+          {!isValidTime(settings.business_hours_start) ||
+          !isValidTime(settings.business_hours_end) ? (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
@@ -334,16 +364,14 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
           ) : businessHoursPerDay <= 0 ? (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Business hours end must be after start time
-              </AlertDescription>
+              <AlertDescription>Business hours end must be after start time</AlertDescription>
             </Alert>
           ) : (
             <Alert>
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Business hours: {settings.business_hours_start} - {settings.business_hours_end}
-                {" "}({businessHoursPerDay.toFixed(1)} hours per day)
+                Business hours: {settings.business_hours_start} - {settings.business_hours_end} (
+                {businessHoursPerDay.toFixed(1)} hours per day)
               </AlertDescription>
             </Alert>
           )}
@@ -374,9 +402,7 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
           {businessDaysCount === 0 && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                At least one business day must be selected
-              </AlertDescription>
+              <AlertDescription>At least one business day must be selected</AlertDescription>
             </Alert>
           )}
 
@@ -399,8 +425,8 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Weekend coverage enabled: SLA timers will continue running on weekends.
-                Ensure adequate staff coverage for 24/7 support.
+                Weekend coverage enabled: SLA timers will continue running on weekends. Ensure
+                adequate staff coverage for 24/7 support.
               </AlertDescription>
             </Alert>
           )}
@@ -410,9 +436,7 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Auto-Escalation</CardTitle>
-          <CardDescription>
-            Automatically escalate tickets approaching SLA breach
-          </CardDescription>
+          <CardDescription>Automatically escalate tickets approaching SLA breach</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
@@ -440,14 +464,22 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
                   max="95"
                   step="5"
                   value={settings.escalation_threshold_percent}
-                  onChange={(e) => updateSetting("escalation_threshold_percent", parseInt(e.target.value))}
+                  onChange={(e) =>
+                    updateSetting("escalation_threshold_percent", parseInt(e.target.value))
+                  }
                   className="w-32"
                 />
                 <span className="text-sm text-muted-foreground">% of SLA time elapsed</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Escalate when {settings.escalation_threshold_percent}% of SLA time has passed
-                (e.g., at {formatHours((settings.priority_urgent_response_hours * settings.escalation_threshold_percent) / 100)} for urgent response)
+                Escalate when {settings.escalation_threshold_percent}% of SLA time has passed (e.g.,
+                at{" "}
+                {formatHours(
+                  (settings.priority_urgent_response_hours *
+                    settings.escalation_threshold_percent) /
+                    100,
+                )}{" "}
+                for urgent response)
               </p>
             </div>
           )}
@@ -466,9 +498,7 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>SLA Summary</CardTitle>
-          <CardDescription>
-            Overview of current SLA configuration
-          </CardDescription>
+          <CardDescription>Overview of current SLA configuration</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -493,8 +523,8 @@ export function SLASettings({ settings, onChange }: SLASettingsProps) {
             <div>
               <h4 className="font-medium mb-2">Business Hours:</h4>
               <p className="text-sm text-muted-foreground">
-                {settings.business_hours_start} - {settings.business_hours_end}
-                {" "}({businessHoursPerDay.toFixed(1)} hours/day)
+                {settings.business_hours_start} - {settings.business_hours_end} (
+                {businessHoursPerDay.toFixed(1)} hours/day)
               </p>
               <p className="text-sm text-muted-foreground">
                 Business days: {businessDaysCount} days/week

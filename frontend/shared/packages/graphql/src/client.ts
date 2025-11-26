@@ -8,7 +8,7 @@
  * - Retry logic for transient failures
  */
 
-import { HttpClient } from '@dotmac/http-client';
+import { HttpClient } from "@dotmac/http-client";
 
 export interface GraphQLRequest {
   query: string;
@@ -61,10 +61,12 @@ export class GraphQLClient {
     this.headers = config.headers || {};
 
     // Use provided client or create default with auth + tenant resolution
-    this.httpClient = config.httpClient || HttpClient.createFromHostname({
-      timeout: 30000,
-      retries: 3,
-    }).enableAuth();
+    this.httpClient =
+      config.httpClient ||
+      HttpClient.createFromHostname({
+        timeout: 30000,
+        retries: 3,
+      }).enableAuth();
   }
 
   /**
@@ -76,14 +78,15 @@ export class GraphQLClient {
     // Check for NEXT_PUBLIC_API_BASE_URL in both browser and server contexts
     // Next.js inlines NEXT_PUBLIC_* vars at build time for browser bundles
     // Server-side code has direct access to process.env
-    const apiUrl = typeof process !== 'undefined' ? process.env["NEXT_PUBLIC_API_BASE_URL"] : undefined;
+    const apiUrl =
+      typeof process !== "undefined" ? process.env["NEXT_PUBLIC_API_BASE_URL"] : undefined;
 
     if (apiUrl) {
       return `${apiUrl}/api/v1/graphql`;
     }
 
     // Default to relative path (works with Next.js rewrites)
-    return '/api/v1/graphql';
+    return "/api/v1/graphql";
   }
 
   /**
@@ -101,25 +104,18 @@ export class GraphQLClient {
     };
 
     try {
-      const response = await this.httpClient.post(
-        this.endpoint,
-        body,
-        {
-          headers: this.headers,
-        },
-      );
+      const response = await this.httpClient.post(this.endpoint, body, {
+        headers: this.headers,
+      });
 
       // Check for GraphQL errors
       if (response.data.errors && response.data.errors.length > 0) {
         const error = response.data.errors[0];
-        throw new GraphQLError(
-          error.message,
-          response.data.errors,
-        );
+        throw new GraphQLError(error.message, response.data.errors);
       }
 
       if (!response.data.data) {
-        throw new Error('GraphQL response missing data field');
+        throw new Error("GraphQL response missing data field");
       }
 
       return response.data.data;
@@ -155,10 +151,10 @@ export class GraphQLClient {
 export class GraphQLError extends Error {
   constructor(
     message: string,
-    public errors: GraphQLResponse['errors'],
+    public errors: GraphQLResponse["errors"],
   ) {
     super(message);
-    this.name = 'GraphQLError';
+    this.name = "GraphQLError";
   }
 }
 
@@ -182,7 +178,7 @@ export function createGraphQLClient(config?: GraphQLClientConfig): GraphQLClient
 export function graphqlFetcher<TData, TVariables>(
   query: string,
   variables?: TVariables,
-  headers?: RequestInit['headers'],
+  headers?: RequestInit["headers"],
 ): () => Promise<TData> {
   return () => {
     return graphqlClient.request<TData, TVariables>(query, variables);

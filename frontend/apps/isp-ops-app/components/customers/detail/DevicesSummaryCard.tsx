@@ -13,10 +13,7 @@ interface DevicesSummaryCardProps {
   customerId: string;
 }
 
-export function DevicesSummaryCard({
-  devices,
-  customerId,
-}: DevicesSummaryCardProps) {
+export function DevicesSummaryCard({ devices, customerId }: DevicesSummaryCardProps) {
   return (
     <Card>
       <CardHeader>

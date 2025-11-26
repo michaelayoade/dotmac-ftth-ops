@@ -15,13 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -129,9 +123,7 @@ export default function NetworkMonitoringPage() {
           [AlertSeverityEnum.Warning]: 1,
           [AlertSeverityEnum.Info]: 2,
         };
-        return (
-          (severityOrder[a.severity] || 99) - (severityOrder[b.severity] || 99)
-        );
+        return (severityOrder[a.severity] || 99) - (severityOrder[b.severity] || 99);
       }
       // Sort by time (newest first)
       return new Date(b.triggeredAt).getTime() - new Date(a.triggeredAt).getTime();
@@ -253,9 +245,7 @@ export default function NetworkMonitoringPage() {
       toast({
         title: "Error",
         description:
-          error instanceof Error
-            ? error.message
-            : "Failed to acknowledge alert. Please try again.",
+          error instanceof Error ? error.message : "Failed to acknowledge alert. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -551,7 +541,10 @@ export default function NetworkMonitoringPage() {
                     <SelectItem value={AlertSeverityEnum.Info}>Info</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={alertSortBy} onValueChange={(value: "time" | "severity") => setAlertSortBy(value)}>
+                <Select
+                  value={alertSortBy}
+                  onValueChange={(value: "time" | "severity") => setAlertSortBy(value)}
+                >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -714,9 +707,7 @@ export default function NetworkMonitoringPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">IP Address</Label>
-                  <div className="mt-1 font-mono text-sm">
-                    {selectedDevice.ip_address || "N/A"}
-                  </div>
+                  <div className="mt-1 font-mono text-sm">{selectedDevice.ip_address || "N/A"}</div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Location</Label>
@@ -759,7 +750,9 @@ export default function NetworkMonitoringPage() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Memory Usage</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Memory Usage
+                    </Label>
                     <div className="mt-1">
                       {selectedDevice.memoryUsagePercent !== undefined &&
                       selectedDevice.memoryUsagePercent !== null ? (

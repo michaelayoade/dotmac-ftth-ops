@@ -24,7 +24,11 @@ describe("Calendar", () => {
       render(<Calendar defaultMonth={today} />);
 
       // Should render current month name
-      expect(screen.getByText(/January|February|March|April|May|June|July|August|September|October|November|December/)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /January|February|March|April|May|June|July|August|September|October|November|December/,
+        ),
+      ).toBeInTheDocument();
     });
 
     it("renders day headers", () => {
@@ -32,7 +36,7 @@ describe("Calendar", () => {
 
       // Common day abbreviations
       const dayHeaders = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-      const foundHeader = dayHeaders.some(day => {
+      const foundHeader = dayHeaders.some((day) => {
         try {
           screen.getByText(day);
           return true;
@@ -175,7 +179,12 @@ describe("Calendar", () => {
       const minDate = new Date(2024, 0, 10);
 
       render(
-        <Calendar mode="single" onSelect={onSelect} disabled={{ before: minDate }} defaultMonth={today} />
+        <Calendar
+          mode="single"
+          onSelect={onSelect}
+          disabled={{ before: minDate }}
+          defaultMonth={today}
+        />,
       );
 
       const disabledDay = screen.getByText("5");
@@ -282,7 +291,7 @@ describe("Calendar", () => {
             caption: "custom-caption",
           }}
           defaultMonth={today}
-        />
+        />,
       );
 
       expect(container.querySelector(".custom-months")).toBeInTheDocument();
@@ -310,11 +319,7 @@ describe("Calendar", () => {
     });
 
     it("renders booking calendar with disabled dates", () => {
-      const bookedDates = [
-        new Date(2024, 0, 10),
-        new Date(2024, 0, 11),
-        new Date(2024, 0, 12),
-      ];
+      const bookedDates = [new Date(2024, 0, 10), new Date(2024, 0, 11), new Date(2024, 0, 12)];
 
       render(<Calendar mode="single" disabled={bookedDates} defaultMonth={today} />);
 

@@ -11,8 +11,8 @@
  * { data, isLoading, error }
  */
 
-import type { NormalizedQueryResult } from './query-helpers';
-import { hasQueryData as hasQueryDataFromHelpers } from './query-helpers';
+import type { NormalizedQueryResult } from "./query-helpers";
+import { hasQueryData as hasQueryDataFromHelpers } from "./query-helpers";
 
 /**
  * Common shape of custom dashboard hooks
@@ -128,7 +128,10 @@ export function normalizeDetailQuery<TQuery extends DashboardHookResult, TDetail
  * );
  * ```
  */
-export function extractDashboardData<TQuery, TExtractors extends Record<string, (q: TQuery) => any>>(
+export function extractDashboardData<
+  TQuery,
+  TExtractors extends Record<string, (q: TQuery) => any>,
+>(
   extractors: TExtractors,
 ): (query: TQuery) => { [K in keyof TExtractors]: ReturnType<TExtractors[K]> } {
   return (query: TQuery) => {

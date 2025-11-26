@@ -7,15 +7,7 @@ import {
   type QuickFilter,
   type Row,
 } from "@dotmac/ui";
-import {
-  Calendar,
-  CreditCard,
-  Download,
-  FileText,
-  Mail,
-  RefreshCw,
-  XCircle,
-} from "lucide-react";
+import { Calendar, CreditCard, Download, FileText, Mail, RefreshCw, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
@@ -104,9 +96,13 @@ export default function InvoiceList({
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch invoices";
-      logger.error("Failed to fetch invoices", err instanceof Error ? err : new Error(String(err)), {
-        tenantId,
-      });
+      logger.error(
+        "Failed to fetch invoices",
+        err instanceof Error ? err : new Error(String(err)),
+        {
+          tenantId,
+        },
+      );
       setError(errorMessage);
     } finally {
       setLoading(false);

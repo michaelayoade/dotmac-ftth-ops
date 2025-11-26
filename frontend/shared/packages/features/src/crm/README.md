@@ -9,9 +9,11 @@ The CRM module provides components for managing the sales pipeline, from lead ca
 ## Components
 
 ### CustomersMetrics
+
 **Purpose**: Display customer KPIs and distribution analytics
 
 **Props**:
+
 ```typescript
 interface CustomersMetricsProps {
   metrics: CustomerMetrics | null;
@@ -37,6 +39,7 @@ interface CustomerMetrics {
 ```
 
 **Features**:
+
 - Primary metric cards (total, active, revenue, LTV)
 - Churn rate tracking
 - Customer status distribution
@@ -49,6 +52,7 @@ interface CustomerMetrics {
 **Dependencies**: None (display-only component)
 
 **Usage**:
+
 ```typescript
 import { CustomersMetrics } from "@dotmac/features/crm";
 import { useCustomerMetrics } from "@/hooks/useCustomerMetrics";
@@ -63,9 +67,11 @@ function DashboardPage() {
 ---
 
 ### CustomerSubscriptions
+
 **Purpose**: Display customer's active subscriptions
 
 **Props**:
+
 ```typescript
 interface CustomerSubscriptionsProps {
   subscriptions: Subscription[];
@@ -83,6 +89,7 @@ interface Subscription {
 ```
 
 **Features**:
+
 - Subscription list
 - Status badges
 - Renewal dates
@@ -95,9 +102,11 @@ interface Subscription {
 ---
 
 ### CustomerActivities
+
 **Purpose**: Activity timeline for customer interactions
 
 **Props**:
+
 ```typescript
 interface CustomerActivitiesProps {
   customerId: string;
@@ -107,6 +116,7 @@ interface CustomerActivitiesProps {
 ```
 
 **Features**:
+
 - Chronological activity feed
 - Activity type icons
 - User attribution
@@ -117,6 +127,7 @@ interface CustomerActivitiesProps {
 **Dependencies**: apiClient, useToast
 
 **Usage**:
+
 ```typescript
 import { CustomerActivities } from "@/components/crm/CustomerActivities";
 
@@ -126,9 +137,11 @@ import { CustomerActivities } from "@/components/crm/CustomerActivities";
 ---
 
 ### CreateLeadModal
+
 **Purpose**: Capture new sales leads
 
 **Props**:
+
 ```typescript
 interface CreateLeadModalProps {
   open: boolean;
@@ -140,6 +153,7 @@ interface CreateLeadModalProps {
 ```
 
 **Features**:
+
 - Contact information form
 - Source tracking (referral, web, cold call, etc.)
 - Priority assignment (high, medium, low)
@@ -150,6 +164,7 @@ interface CreateLeadModalProps {
 **Dependencies**: apiClient, useToast
 
 **Workflow**:
+
 1. User fills in lead information
 2. Selects source and priority
 3. Assigns to owner
@@ -160,9 +175,11 @@ interface CreateLeadModalProps {
 ---
 
 ### LeadDetailModal
+
 **Purpose**: View and manage lead details
 
 **Props**:
+
 ```typescript
 interface LeadDetailModalProps {
   open: boolean;
@@ -175,6 +192,7 @@ interface LeadDetailModalProps {
 ```
 
 **Features**:
+
 - Lead information display
 - Status updates (new, contacted, qualified, lost)
 - Convert to customer action
@@ -186,6 +204,7 @@ interface LeadDetailModalProps {
 **Dependencies**: apiClient, useToast
 
 **Workflow**:
+
 1. View lead details
 2. Update status as lead progresses
 3. Add notes and activities
@@ -195,9 +214,11 @@ interface LeadDetailModalProps {
 ---
 
 ### CreateQuoteModal
+
 **Purpose**: Generate sales quotes
 
 **Props**:
+
 ```typescript
 interface CreateQuoteModalProps {
   open: boolean;
@@ -211,6 +232,7 @@ interface CreateQuoteModalProps {
 ```
 
 **Features**:
+
 - Line item builder with add/remove
 - Product/service selection
 - Quantity and unit price entry
@@ -224,6 +246,7 @@ interface CreateQuoteModalProps {
 **Dependencies**: apiClient, useToast
 
 **Workflow**:
+
 1. Select customer or lead
 2. Add line items (products/services)
 3. Apply discounts if needed
@@ -235,9 +258,11 @@ interface CreateQuoteModalProps {
 ---
 
 ### QuoteDetailModal
+
 **Purpose**: View and manage quotes
 
 **Props**:
+
 ```typescript
 interface QuoteDetailModalProps {
   open: boolean;
@@ -249,6 +274,7 @@ interface QuoteDetailModalProps {
 ```
 
 **Features**:
+
 - Quote header (number, date, status, expiry)
 - Line items table
 - Pricing breakdown
@@ -264,9 +290,11 @@ interface QuoteDetailModalProps {
 ---
 
 ### CompleteSurveyModal
+
 **Purpose**: Complete site surveys for installations
 
 **Props**:
+
 ```typescript
 interface CompleteSurveyModalProps {
   open: boolean;
@@ -279,6 +307,7 @@ interface CompleteSurveyModalProps {
 ```
 
 **Features**:
+
 - Dynamic form with multiple field types
 - Photo upload for site pictures
 - GPS coordinates capture
@@ -292,6 +321,7 @@ interface CompleteSurveyModalProps {
 **Dependencies**: apiClient, useToast
 
 **Workflow**:
+
 1. Load survey template
 2. Complete all fields
 3. Upload site photos
@@ -303,9 +333,11 @@ interface CompleteSurveyModalProps {
 ---
 
 ### CustomerViewModal
+
 **Purpose**: Comprehensive customer overview
 
 **Props**:
+
 ```typescript
 interface CustomerViewModalProps {
   open: boolean;
@@ -317,6 +349,7 @@ interface CustomerViewModalProps {
 ```
 
 **Features**:
+
 - Customer details section
 - Active subscriptions list
 - Billing summary
@@ -330,9 +363,11 @@ interface CustomerViewModalProps {
 ---
 
 ### Badges
+
 **Purpose**: Status and type badges for CRM entities
 
 **Exports**:
+
 ```typescript
 export function LeadStatusBadge({ status }: { status: string }): JSX.Element;
 export function QuoteStatusBadge({ status }: { status: string }): JSX.Element;
@@ -340,6 +375,7 @@ export function SurveyStatusBadge({ status }: { status: string }): JSX.Element;
 ```
 
 **Features**:
+
 - Color-coded status badges
 - Icon indicators
 - Consistent styling
@@ -347,6 +383,7 @@ export function SurveyStatusBadge({ status }: { status: string }): JSX.Element;
 **Dependencies**: None
 
 **Usage**:
+
 ```typescript
 import { LeadStatusBadge, QuoteStatusBadge } from "@dotmac/features/crm";
 
@@ -357,6 +394,7 @@ import { LeadStatusBadge, QuoteStatusBadge } from "@dotmac/features/crm";
 ## Types
 
 ### Lead
+
 ```typescript
 interface Lead {
   id: string;
@@ -375,6 +413,7 @@ interface Lead {
 ```
 
 ### Quote
+
 ```typescript
 interface Quote {
   id: string;
@@ -403,6 +442,7 @@ interface QuoteLineItem {
 ```
 
 ### Survey
+
 ```typescript
 interface Survey {
   id: string;
@@ -422,6 +462,7 @@ interface Survey {
 ```
 
 ### Activity
+
 ```typescript
 interface Activity {
   id: string;
@@ -437,6 +478,7 @@ interface Activity {
 ## API Endpoints
 
 ### Leads
+
 - `GET /api/v1/leads` - List leads
 - `POST /api/v1/leads` - Create lead
 - `GET /api/v1/leads/{id}` - Get lead details
@@ -444,6 +486,7 @@ interface Activity {
 - `POST /api/v1/leads/{id}/convert` - Convert to customer
 
 ### Quotes
+
 - `GET /api/v1/quotes` - List quotes
 - `POST /api/v1/quotes` - Create quote
 - `GET /api/v1/quotes/{id}` - Get quote details
@@ -454,6 +497,7 @@ interface Activity {
 - `GET /api/v1/quotes/{id}/download` - Download PDF
 
 ### Surveys
+
 - `GET /api/v1/surveys` - List surveys
 - `POST /api/v1/surveys` - Create survey
 - `GET /api/v1/surveys/{id}` - Get survey details
@@ -461,10 +505,12 @@ interface Activity {
 - `POST /api/v1/surveys/{id}/complete` - Complete survey
 
 ### Activities
+
 - `GET /api/v1/customers/{id}/activities` - Get customer activities
 - `POST /api/v1/customers/{id}/activities` - Add activity
 
 ### Metrics
+
 - `GET /api/v1/metrics/customers` - Get customer metrics
 
 ## Common Workflows

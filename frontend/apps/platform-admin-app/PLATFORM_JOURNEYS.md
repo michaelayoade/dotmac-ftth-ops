@@ -10,4 +10,4 @@ Use this as a QA/UX guide for the control-plane experience. All flows are platfo
 - **Communications & Support**: Communications (campaigns/templates), Ticketing (for tenant/partner incidents).
 - **Tenant Self-Service**: Tenant Portal (billing/subscription/usage/users/support/integrations/licenses).
 
-Out-of-scope journeys (removed/blocked): ISP network/infra, subscriber/device ops, ISP billing/revenue/banking/sales, diagnostics, orchestration/workflows, partner revenue.***
+Out-of-scope journeys (removed/blocked): ISP network/infra, subscriber/device ops, ISP billing/revenue/banking/sales, diagnostics, orchestration/workflows, partner revenue.\*\*\*

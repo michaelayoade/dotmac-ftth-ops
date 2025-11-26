@@ -138,8 +138,6 @@ describe("useBrowserNotifications", () => {
     });
 
     it("should return granted if already granted", async () => {
-      
-
       const { result } = renderHook(() => useBrowserNotifications());
 
       let permission: NotificationPermission;
@@ -356,7 +354,7 @@ describe("useBrowserNotifications", () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "[Notifications] Failed to show:",
-        expect.any(Error)
+        expect.any(Error),
       );
 
       (global as any).Notification = OriginalMockNotification;
@@ -407,8 +405,6 @@ describe("useBrowserNotifications", () => {
     });
 
     it("should not show when disabled", async () => {
-      
-
       const { result } = renderHook(() => useGeofenceNotifications(false));
 
       await act(async () => {
@@ -465,8 +461,6 @@ describe("useBrowserNotifications", () => {
     });
 
     it("should use correct emojis for different statuses", async () => {
-      
-
       const statuses = [
         { status: "pending", emoji: "⏳" },
         { status: "assigned", emoji: "👤" },
@@ -496,8 +490,6 @@ describe("useBrowserNotifications", () => {
     });
 
     it("should not show when disabled", async () => {
-      
-
       const { result } = renderHook(() => useJobNotifications(false));
 
       await act(async () => {
@@ -535,8 +527,6 @@ describe("useBrowserNotifications", () => {
     });
 
     it("should use correct emojis for technician statuses", async () => {
-      
-
       const statuses = [
         { status: "available", emoji: "✅" },
         { status: "on_job", emoji: "🔧" },
@@ -565,8 +555,6 @@ describe("useBrowserNotifications", () => {
     });
 
     it("should not show when disabled", async () => {
-      
-
       const { result } = renderHook(() => useTechnicianNotifications(false));
 
       await act(async () => {

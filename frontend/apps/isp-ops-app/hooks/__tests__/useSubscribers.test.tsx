@@ -161,11 +161,7 @@ describe("useSubscribers - Unit Tests", () => {
     });
 
     it("should generate correct services key", () => {
-      expect(subscribersKeys.services("sub-1")).toEqual([
-        "subscribers",
-        "services",
-        "sub-1",
-      ]);
+      expect(subscribersKeys.services("sub-1")).toEqual(["subscribers", "services", "sub-1"]);
     });
   });
 
@@ -231,9 +227,7 @@ describe("useSubscribers - Unit Tests", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("status=active")
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("status=active"));
       expect(result.current.data?.subscribers).toHaveLength(1);
     });
 
@@ -247,15 +241,14 @@ describe("useSubscribers - Unit Tests", () => {
         },
       });
 
-      const { result } = renderHook(
-        () => useSubscribers({ connection_type: ["ftth"] }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useSubscribers({ connection_type: ["ftth"] }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("connection_type=ftth")
+        expect.stringContaining("connection_type=ftth"),
       );
       expect(result.current.data?.subscribers).toHaveLength(1);
     });
@@ -296,9 +289,7 @@ describe("useSubscribers - Unit Tests", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("search=john")
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("search=john"));
       expect(result.current.data?.subscribers).toHaveLength(1);
     });
 
@@ -312,19 +303,14 @@ describe("useSubscribers - Unit Tests", () => {
         },
       });
 
-      const { result } = renderHook(
-        () => useSubscribers({ limit: 10, offset: 20 }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useSubscribers({ limit: 10, offset: 20 }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("limit=10")
-      );
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("offset=20")
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("limit=10"));
+      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("offset=20"));
     });
 
     it("should handle fetch error", async () => {
@@ -439,10 +425,7 @@ describe("useSubscribers - Unit Tests", () => {
 
   describe("useSubscriberServices", () => {
     it("should fetch services for a subscriber", async () => {
-      const mockServices = [
-        createMockService({ id: "svc-1" }),
-        createMockService({ id: "svc-2" }),
-      ];
+      const mockServices = [createMockService({ id: "svc-1" }), createMockService({ id: "svc-2" })];
 
       mockApiClient.get.mockResolvedValue({
         data: mockServices,
@@ -583,10 +566,7 @@ describe("useSubscribers - Unit Tests", () => {
           await result.current.updateSubscriber("sub-1", updateData);
         });
 
-        expect(mockApiClient.patch).toHaveBeenCalledWith(
-          "/subscribers/sub-1",
-          updateData
-        );
+        expect(mockApiClient.patch).toHaveBeenCalledWith("/subscribers/sub-1", updateData);
         expect(result.current.isLoading).toBe(false);
       });
 
@@ -601,9 +581,7 @@ describe("useSubscribers - Unit Tests", () => {
           wrapper: createWrapper(),
         });
 
-        await expect(
-          result.current.updateSubscriber("sub-1", updateData)
-        ).rejects.toThrow();
+        await expect(result.current.updateSubscriber("sub-1", updateData)).rejects.toThrow();
       });
     });
 
@@ -716,10 +694,7 @@ describe("useSubscribers - Unit Tests", () => {
         });
 
         await act(async () => {
-          const success = await result.current.terminateSubscriber(
-            "sub-1",
-            "Customer request"
-          );
+          const success = await result.current.terminateSubscriber("sub-1", "Customer request");
           expect(success).toBe(true);
         });
 
@@ -757,7 +732,10 @@ describe("useSubscribers - Unit Tests", () => {
     describe("loading states", () => {
       it("should show loading state during create", async () => {
         mockApiClient.post.mockImplementation(
-          () => new Promise((resolve) => setTimeout(() => resolve({ data: createMockSubscriber() }), 100))
+          () =>
+            new Promise((resolve) =>
+              setTimeout(() => resolve({ data: createMockSubscriber() }), 100),
+            ),
         );
 
         const { result } = renderHook(() => useSubscriberOperations(), {
@@ -811,17 +789,15 @@ describe("useSubscribers - Unit Tests", () => {
             search: "john",
             limit: 10,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(result.current.data?.subscribers).toHaveLength(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("status=active"));
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("status=active")
-      );
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("connection_type=ftth")
+        expect.stringContaining("connection_type=ftth"),
       );
     });
 
@@ -836,15 +812,13 @@ describe("useSubscribers - Unit Tests", () => {
         return Promise.resolve({ data: mockSubscriber });
       });
 
-      const { result: subscriberResult } = renderHook(
-        () => useSubscriber("sub-1"),
-        { wrapper: createWrapper() }
-      );
+      const { result: subscriberResult } = renderHook(() => useSubscriber("sub-1"), {
+        wrapper: createWrapper(),
+      });
 
-      const { result: servicesResult } = renderHook(
-        () => useSubscriberServices("sub-1"),
-        { wrapper: createWrapper() }
-      );
+      const { result: servicesResult } = renderHook(() => useSubscriberServices("sub-1"), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(subscriberResult.current.isLoading).toBe(false);

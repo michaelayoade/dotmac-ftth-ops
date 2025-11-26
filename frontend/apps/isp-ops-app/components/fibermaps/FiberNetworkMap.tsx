@@ -124,8 +124,18 @@ export const FiberNetworkMap: React.FC<FiberNetworkMapProps> = ({
       id: cable.id,
       name: cable.cable_name,
       waypoints: cable.path.coordinates,
-      type: cable.status === "under_construction" ? "installation" : cable.status === "maintenance" ? "maintenance" : "installation",
-      status: cable.status === "active" ? "completed" : cable.status === "under_construction" ? "in_progress" : "planned",
+      type:
+        cable.status === "under_construction"
+          ? "installation"
+          : cable.status === "maintenance"
+            ? "maintenance"
+            : "installation",
+      status:
+        cable.status === "active"
+          ? "completed"
+          : cable.status === "under_construction"
+            ? "in_progress"
+            : "planned",
     }));
   }, [cables, showCables]);
 
@@ -137,7 +147,12 @@ export const FiberNetworkMap: React.FC<FiberNetworkMapProps> = ({
       id: point.id,
       position: point.coordinates,
       type: "fiber" as const,
-      status: point.status === "operational" ? "active" : point.status === "fault" ? "error" : "maintenance",
+      status:
+        point.status === "operational"
+          ? "active"
+          : point.status === "fault"
+            ? "error"
+            : "maintenance",
       title: point.name,
       description: `${point.type} • ${point.splice_count}/${point.capacity} splices`,
       metadata: point,
@@ -168,9 +183,13 @@ export const FiberNetworkMap: React.FC<FiberNetworkMapProps> = ({
     return jobs.map((job) => {
       // Map job status to marker status
       const markerStatus: "active" | "inactive" | "maintenance" | "error" =
-        job.status === "completed" ? "active" :
-        job.status === "running" ? "maintenance" :
-        job.status === "failed" ? "error" : "inactive";
+        job.status === "completed"
+          ? "active"
+          : job.status === "running"
+            ? "maintenance"
+            : job.status === "failed"
+              ? "error"
+              : "inactive";
 
       // Build description with key details
       const priority = job.parameters?.priority || "normal";
@@ -195,13 +214,17 @@ export const FiberNetworkMap: React.FC<FiberNetworkMapProps> = ({
     if (!showTechnicians) return [];
 
     return technicians
-      .filter(tech => tech.latitude !== null && tech.longitude !== null)
+      .filter((tech) => tech.latitude !== null && tech.longitude !== null)
       .map((tech) => {
         // Map technician status to marker status
         const markerStatus: "active" | "inactive" | "maintenance" | "error" =
-          tech.status === "available" ? "active" :
-          tech.status === "on_job" ? "maintenance" :
-          tech.status === "on_break" ? "inactive" : "inactive";
+          tech.status === "available"
+            ? "active"
+            : tech.status === "on_job"
+              ? "maintenance"
+              : tech.status === "on_break"
+                ? "inactive"
+                : "inactive";
 
         // Build description
         const statusText = tech.status.replace("_", " ").toUpperCase();
@@ -233,12 +256,17 @@ export const FiberNetworkMap: React.FC<FiberNetworkMapProps> = ({
 
     return (serviceAreas ?? []).map((area) => {
       // Map fiber_availability to service type
-      const serviceType: "fiber" | "wireless" | "hybrid" = area.fiber_availability ? "fiber" : "wireless";
+      const serviceType: "fiber" | "wireless" | "hybrid" = area.fiber_availability
+        ? "fiber"
+        : "wireless";
 
       // Map coverage_status to service level
       const serviceLevel: "full" | "limited" | "planned" =
-        area.coverage_status === "covered" ? "full" :
-        area.coverage_status === "partial" ? "limited" : "planned";
+        area.coverage_status === "covered"
+          ? "full"
+          : area.coverage_status === "partial"
+            ? "limited"
+            : "planned";
 
       const mappedArea: ServiceArea = {
         id: area.id,
@@ -247,7 +275,8 @@ export const FiberNetworkMap: React.FC<FiberNetworkMapProps> = ({
         polygon: area.boundary.coordinates,
         serviceLevel,
         maxSpeed: 1000, // Default max speed
-        coverage: area.coverage_status === "covered" ? 100 : area.coverage_status === "partial" ? 50 : 0,
+        coverage:
+          area.coverage_status === "covered" ? 100 : area.coverage_status === "partial" ? 50 : 0,
         color: serviceType === "fiber" ? "#3B82F6" : "#8B5CF6",
       };
       if (typeof area.active_customers === "number") {

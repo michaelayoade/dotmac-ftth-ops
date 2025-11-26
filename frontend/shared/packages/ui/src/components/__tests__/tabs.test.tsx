@@ -18,7 +18,7 @@ describe("Tabs", () => {
           <TabsList>
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(container.firstChild).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
             <TabsTrigger value="tab3">Tab 3</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByRole("tab", { name: "Tab 1" })).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Content 1")).toBeInTheDocument();
@@ -61,7 +61,7 @@ describe("Tabs", () => {
           <TabsList>
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByRole("tablist")).toBeInTheDocument();
@@ -73,7 +73,7 @@ describe("Tabs", () => {
           <TabsList data-testid="tabs-list">
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const tabsList = screen.getByTestId("tabs-list");
@@ -85,7 +85,7 @@ describe("Tabs", () => {
         "rounded-md",
         "bg-muted",
         "p-1",
-        "text-muted-foreground"
+        "text-muted-foreground",
       );
     });
 
@@ -95,7 +95,7 @@ describe("Tabs", () => {
           <TabsList className="custom-tabs-list">
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const tabsList = screen.getByRole("tablist");
@@ -110,7 +110,7 @@ describe("Tabs", () => {
           <TabsList>
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByRole("tab", { name: "Tab 1" })).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe("Tabs", () => {
           <TabsList>
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const trigger = screen.getByRole("tab", { name: "Tab 1" });
@@ -135,7 +135,7 @@ describe("Tabs", () => {
         "px-3",
         "py-1.5",
         "text-sm",
-        "font-medium"
+        "font-medium",
       );
     });
 
@@ -146,7 +146,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const activeTab = screen.getByRole("tab", { name: "Tab 1" });
@@ -160,7 +160,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const inactiveTab = screen.getByRole("tab", { name: "Tab 2" });
@@ -175,7 +175,7 @@ describe("Tabs", () => {
               Tab 1
             </TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const trigger = screen.getByRole("tab", { name: "Tab 1" });
@@ -191,7 +191,7 @@ describe("Tabs", () => {
               Tab 2
             </TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const disabledTab = screen.getByRole("tab", { name: "Tab 2" });
@@ -207,7 +207,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByRole("tabpanel")).toBeInTheDocument();
@@ -222,7 +222,7 @@ describe("Tabs", () => {
           <TabsContent value="tab1" data-testid="content">
             Content 1
           </TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const content = screen.getByTestId("content");
@@ -232,7 +232,7 @@ describe("Tabs", () => {
         "focus-visible:outline-none",
         "focus-visible:ring-2",
         "focus-visible:ring-ring",
-        "focus-visible:ring-offset-2"
+        "focus-visible:ring-offset-2",
       );
     });
 
@@ -243,7 +243,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Content 1")).toBeVisible();
@@ -258,7 +258,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.queryByText("Content 2")).not.toBeInTheDocument();
@@ -273,7 +273,7 @@ describe("Tabs", () => {
           <TabsContent value="tab1" className="custom-content">
             Content 1
           </TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const content = screen.getByRole("tabpanel");
@@ -293,7 +293,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Content 1")).toBeVisible();
@@ -314,7 +314,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab1 = screen.getByRole("tab", { name: "Tab 1" });
@@ -338,7 +338,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab1 = screen.getByRole("tab", { name: "Tab 1" });
@@ -366,7 +366,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       await user.click(screen.getByRole("tab", { name: "Tab 2" }));
@@ -389,7 +389,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Content 1")).toBeVisible();
@@ -406,7 +406,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Content 2")).toBeVisible();
@@ -422,7 +422,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       await user.click(screen.getByRole("tab", { name: "Tab 2" }));
@@ -442,7 +442,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Content 2")).toBeVisible();
@@ -460,7 +460,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       await user.click(screen.getByRole("tab", { name: "Tab 2" }));
@@ -479,7 +479,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       await user.tab();
@@ -497,7 +497,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
             <TabsTrigger value="tab3">Tab 3</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab1 = screen.getByRole("tab", { name: "Tab 1" });
@@ -525,7 +525,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
             <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab1 = screen.getByRole("tab", { name: "Tab 1" });
@@ -548,7 +548,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab2 = screen.getByRole("tab", { name: "Tab 2" });
@@ -570,7 +570,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab2 = screen.getByRole("tab", { name: "Tab 2" });
@@ -590,7 +590,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const tabList = screen.getByRole("tablist");
@@ -609,7 +609,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab = screen.getByRole("tab", { name: "Tab 1" });
@@ -626,7 +626,7 @@ describe("Tabs", () => {
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const tab = screen.getByRole("tab", { name: "Tab 1" });
@@ -642,7 +642,7 @@ describe("Tabs", () => {
           <TabsList>
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const tabList = screen.getByRole("tablist");
@@ -659,7 +659,7 @@ describe("Tabs", () => {
           <TabsList>
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -673,7 +673,7 @@ describe("Tabs", () => {
           <TabsList ref={ref}>
             <TabsTrigger value="tab1">Tab 1</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -689,7 +689,7 @@ describe("Tabs", () => {
               Tab 1
             </TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLButtonElement);
@@ -706,7 +706,7 @@ describe("Tabs", () => {
           <TabsContent ref={ref} value="tab1">
             Content 1
           </TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -749,7 +749,7 @@ describe("Tabs", () => {
           <TabsContent value="notifications">
             <h2>Notification Settings</h2>
           </TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("General Settings")).toBeVisible();
@@ -772,7 +772,7 @@ describe("Tabs", () => {
           <TabsContent value="reports">
             <div>Reports Dashboard</div>
           </TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Overview Dashboard")).toBeVisible();
@@ -791,7 +791,7 @@ describe("Tabs", () => {
           <TabsContent value="code">
             <pre>Code content</pre>
           </TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       expect(screen.getByText("Preview content")).toBeVisible();
@@ -806,7 +806,7 @@ describe("Tabs", () => {
               Coming Soon
             </TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs>,
       );
 
       const disabledTab = screen.getByRole("tab", { name: "Coming Soon" });
@@ -822,7 +822,7 @@ describe("Tabs", () => {
           </TabsList>
           <TabsContent value="tab1">Content 1</TabsContent>
           <TabsContent value="tab2">Content 2</TabsContent>
-        </Tabs>
+        </Tabs>,
       );
 
       const tabList = screen.getByRole("tablist");
@@ -853,7 +853,7 @@ describe("Tabs", () => {
             <TabsContent value="tab1-b">Content 1B</TabsContent>
             <TabsContent value="tab2-b">Content 2B</TabsContent>
           </Tabs>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Content 1A")).toBeVisible();

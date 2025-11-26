@@ -45,11 +45,11 @@ export const platformConfig = {
    * Feature flags
    */
   features: {
-    enableGraphQL: process.env['NEXT_PUBLIC_ENABLE_GRAPHQL'] === "true",
-    enableAnalytics: process.env['NEXT_PUBLIC_ENABLE_ANALYTICS'] === "true",
-    enableBanking: process.env['NEXT_PUBLIC_ENABLE_BANKING'] === "true",
-    enablePayments: process.env['NEXT_PUBLIC_ENABLE_PAYMENTS'] === "true",
-    enableNetwork: process.env['NEXT_PUBLIC_ENABLE_NETWORK'] !== "false",
+    enableGraphQL: process.env["NEXT_PUBLIC_ENABLE_GRAPHQL"] === "true",
+    enableAnalytics: process.env["NEXT_PUBLIC_ENABLE_ANALYTICS"] === "true",
+    enableBanking: process.env["NEXT_PUBLIC_ENABLE_BANKING"] === "true",
+    enablePayments: process.env["NEXT_PUBLIC_ENABLE_PAYMENTS"] === "true",
+    enableNetwork: process.env["NEXT_PUBLIC_ENABLE_NETWORK"] !== "false",
     enableAutomation: process.env["NEXT_PUBLIC_ENABLE_AUTOMATION"] !== "false",
   },
 
@@ -75,8 +75,8 @@ export const platformConfig = {
    * Banking configuration
    */
   banking: {
-    enabled: process.env['NEXT_PUBLIC_ENABLE_BANKING'] === "true",
-    providers: (process.env['NEXT_PUBLIC_BANKING_PROVIDERS'] || "stripe,paypal").split(","),
+    enabled: process.env["NEXT_PUBLIC_ENABLE_BANKING"] === "true",
+    providers: (process.env["NEXT_PUBLIC_BANKING_PROVIDERS"] || "stripe,paypal").split(","),
   },
 
   /**
@@ -169,7 +169,8 @@ export function applyPlatformRuntimeConfig(runtimeConfig: RuntimeConfig | null |
     platformConfig.deployment.tenantId =
       runtimeConfig.deployment.tenantId ?? platformConfig.deployment.tenantId;
     platformConfig.deployment.platformRoutesEnabled =
-      runtimeConfig.deployment.platformRoutesEnabled ?? platformConfig.deployment.platformRoutesEnabled;
+      runtimeConfig.deployment.platformRoutesEnabled ??
+      platformConfig.deployment.platformRoutesEnabled;
   }
 
   if (runtimeConfig.license) {
@@ -234,56 +235,58 @@ function hydrateBranding(branding?: RuntimeConfig["branding"]) {
  * Build branding configuration including theme tokens.
  */
 function buildBrandingConfig() {
-  const primary = process.env['NEXT_PUBLIC_PRIMARY_COLOR'] || "#0ea5e9";
-  const primaryHover = process.env['NEXT_PUBLIC_PRIMARY_HOVER_COLOR'] || shadeColor(primary, -12);
-  const primaryForeground = process.env['NEXT_PUBLIC_PRIMARY_FOREGROUND_COLOR'] || "#ffffff";
+  const primary = process.env["NEXT_PUBLIC_PRIMARY_COLOR"] || "#0ea5e9";
+  const primaryHover = process.env["NEXT_PUBLIC_PRIMARY_HOVER_COLOR"] || shadeColor(primary, -12);
+  const primaryForeground = process.env["NEXT_PUBLIC_PRIMARY_FOREGROUND_COLOR"] || "#ffffff";
 
-  const secondary = process.env['NEXT_PUBLIC_SECONDARY_COLOR'] || "#8b5cf6";
+  const secondary = process.env["NEXT_PUBLIC_SECONDARY_COLOR"] || "#8b5cf6";
   const secondaryHover =
-    process.env['NEXT_PUBLIC_SECONDARY_HOVER_COLOR'] || shadeColor(secondary, -12);
-  const secondaryForeground = process.env['NEXT_PUBLIC_SECONDARY_FOREGROUND_COLOR'] || "#ffffff";
+    process.env["NEXT_PUBLIC_SECONDARY_HOVER_COLOR"] || shadeColor(secondary, -12);
+  const secondaryForeground = process.env["NEXT_PUBLIC_SECONDARY_FOREGROUND_COLOR"] || "#ffffff";
 
-  const accent = process.env['NEXT_PUBLIC_ACCENT_COLOR'];
-  const background = process.env['NEXT_PUBLIC_BACKGROUND_COLOR'];
-  const foreground = process.env['NEXT_PUBLIC_FOREGROUND_COLOR'];
+  const accent = process.env["NEXT_PUBLIC_ACCENT_COLOR"];
+  const background = process.env["NEXT_PUBLIC_BACKGROUND_COLOR"];
+  const foreground = process.env["NEXT_PUBLIC_FOREGROUND_COLOR"];
 
-  const darkPrimary = process.env['NEXT_PUBLIC_PRIMARY_COLOR_DARK'] || primary;
+  const darkPrimary = process.env["NEXT_PUBLIC_PRIMARY_COLOR_DARK"] || primary;
   const darkPrimaryHover =
-    process.env['NEXT_PUBLIC_PRIMARY_HOVER_COLOR_DARK'] || shadeColor(darkPrimary, 8);
+    process.env["NEXT_PUBLIC_PRIMARY_HOVER_COLOR_DARK"] || shadeColor(darkPrimary, 8);
   const darkPrimaryForeground =
-    process.env['NEXT_PUBLIC_PRIMARY_FOREGROUND_COLOR_DARK'] || "#020617";
+    process.env["NEXT_PUBLIC_PRIMARY_FOREGROUND_COLOR_DARK"] || "#020617";
 
-  const darkSecondary = process.env['NEXT_PUBLIC_SECONDARY_COLOR_DARK'] || secondary;
+  const darkSecondary = process.env["NEXT_PUBLIC_SECONDARY_COLOR_DARK"] || secondary;
   const darkSecondaryHover =
-    process.env['NEXT_PUBLIC_SECONDARY_HOVER_COLOR_DARK'] || shadeColor(darkSecondary, 8);
+    process.env["NEXT_PUBLIC_SECONDARY_HOVER_COLOR_DARK"] || shadeColor(darkSecondary, 8);
   const darkSecondaryForeground =
-    process.env['NEXT_PUBLIC_SECONDARY_FOREGROUND_COLOR_DARK'] || "#020617";
+    process.env["NEXT_PUBLIC_SECONDARY_FOREGROUND_COLOR_DARK"] || "#020617";
 
-  const darkAccent = process.env['NEXT_PUBLIC_ACCENT_COLOR_DARK'] || accent;
-  const darkBackground = process.env['NEXT_PUBLIC_BACKGROUND_COLOR_DARK'] || "#0b1220";
-  const darkForeground = process.env['NEXT_PUBLIC_FOREGROUND_COLOR_DARK'] || "#e2e8f0";
+  const darkAccent = process.env["NEXT_PUBLIC_ACCENT_COLOR_DARK"] || accent;
+  const darkBackground = process.env["NEXT_PUBLIC_BACKGROUND_COLOR_DARK"] || "#0b1220";
+  const darkForeground = process.env["NEXT_PUBLIC_FOREGROUND_COLOR_DARK"] || "#e2e8f0";
 
-  const supportEmail = process.env['NEXT_PUBLIC_SUPPORT_EMAIL'] || "support@example.com";
-  const successEmail = process.env['NEXT_PUBLIC_SUCCESS_EMAIL'] || supportEmail;
+  const supportEmail = process.env["NEXT_PUBLIC_SUPPORT_EMAIL"] || "support@example.com";
+  const successEmail = process.env["NEXT_PUBLIC_SUCCESS_EMAIL"] || supportEmail;
   const partnerSupportEmail =
-    process.env['NEXT_PUBLIC_PARTNER_SUPPORT_EMAIL'] ||
-    process.env['NEXT_PUBLIC_PARTNER_EMAIL'] ||
+    process.env["NEXT_PUBLIC_PARTNER_SUPPORT_EMAIL"] ||
+    process.env["NEXT_PUBLIC_PARTNER_EMAIL"] ||
     supportEmail;
-  const docsUrl = process.env['NEXT_PUBLIC_DOCS_URL'] || "https://docs.example.com";
-  const supportPortalUrl = process.env['NEXT_PUBLIC_SUPPORT_PORTAL_URL'] || "/support";
-  const statusPageUrl = process.env['NEXT_PUBLIC_STATUS_PAGE_URL'] || "";
-  const termsUrl = process.env['NEXT_PUBLIC_TERMS_URL'] || "/terms";
-  const privacyUrl = process.env['NEXT_PUBLIC_PRIVACY_URL'] || "/privacy";
-  const faviconUrl = process.env['NEXT_PUBLIC_FAVICON'] || "/favicon.ico";
+  const docsUrl = process.env["NEXT_PUBLIC_DOCS_URL"] || "https://docs.example.com";
+  const supportPortalUrl = process.env["NEXT_PUBLIC_SUPPORT_PORTAL_URL"] || "/support";
+  const statusPageUrl = process.env["NEXT_PUBLIC_STATUS_PAGE_URL"] || "";
+  const termsUrl = process.env["NEXT_PUBLIC_TERMS_URL"] || "/terms";
+  const privacyUrl = process.env["NEXT_PUBLIC_PRIVACY_URL"] || "/privacy";
+  const faviconUrl = process.env["NEXT_PUBLIC_FAVICON"] || "/favicon.ico";
 
   return {
-    companyName: process.env['NEXT_PUBLIC_COMPANY_NAME'] || "DotMac",
-    productName: process.env['NEXT_PUBLIC_PRODUCT_NAME'] || "DotMac Platform",
-    productTagline: process.env['NEXT_PUBLIC_PRODUCT_TAGLINE'] || "Ready to Deploy",
-    logoUrl: process.env['NEXT_PUBLIC_LOGO_URL'] || "/logo.svg",
+    companyName: process.env["NEXT_PUBLIC_COMPANY_NAME"] || "DotMac",
+    productName: process.env["NEXT_PUBLIC_PRODUCT_NAME"] || "DotMac Platform",
+    productTagline: process.env["NEXT_PUBLIC_PRODUCT_TAGLINE"] || "Ready to Deploy",
+    logoUrl: process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
     logo: {
-      light: process.env['NEXT_PUBLIC_LOGO_LIGHT'] || process.env['NEXT_PUBLIC_LOGO_URL'] || "/logo.svg",
-      dark: process.env['NEXT_PUBLIC_LOGO_DARK'] || process.env['NEXT_PUBLIC_LOGO_URL'] || "/logo.svg",
+      light:
+        process.env["NEXT_PUBLIC_LOGO_LIGHT"] || process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
+      dark:
+        process.env["NEXT_PUBLIC_LOGO_DARK"] || process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
     },
     supportEmail,
     successEmail,
@@ -429,16 +432,13 @@ function combineApiUrl(
   options: BuildApiUrlOptions = {},
 ): string {
   const normalizedPath = ensureLeadingSlash(path);
-  const normalizedPrefix = prefix
-    ? ensureLeadingSlash(prefix).replace(/\/+$/, "")
-    : "";
+  const normalizedPrefix = prefix ? ensureLeadingSlash(prefix).replace(/\/+$/, "") : "";
 
   const shouldApplyPrefix = !options.skipPrefix && Boolean(normalizedPrefix);
   const hasPrefix =
     normalizedPath &&
     normalizedPrefix &&
-    (normalizedPath === normalizedPrefix ||
-      normalizedPath.startsWith(`${normalizedPrefix}/`));
+    (normalizedPath === normalizedPrefix || normalizedPath.startsWith(`${normalizedPrefix}/`));
 
   let pathWithPrefix: string;
 
@@ -446,9 +446,7 @@ function combineApiUrl(
     pathWithPrefix = shouldApplyPrefix ? normalizedPrefix : "/";
   } else if (shouldApplyPrefix && !hasPrefix) {
     pathWithPrefix =
-      normalizedPath === "/"
-        ? normalizedPrefix || "/"
-        : `${normalizedPrefix}${normalizedPath}`;
+      normalizedPath === "/" ? normalizedPrefix || "/" : `${normalizedPrefix}${normalizedPath}`;
   } else {
     pathWithPrefix = normalizedPath;
   }

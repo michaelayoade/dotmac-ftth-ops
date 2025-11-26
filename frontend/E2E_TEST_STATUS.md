@@ -3,6 +3,7 @@
 ## Current Status
 
 ### ✅ **Working**
+
 - E2E test infrastructure is functional
 - Playwright is properly installed and configured
 - MSW compatibility issues have been resolved
@@ -34,6 +35,7 @@
 ### Short Term (Quick Wins)
 
 1. **Skip Non-Essential Tests**
+
    ```bash
    # Run only the comprehensive page tests
    E2E_USE_DEV_SERVER=true pnpm e2e e2e/tests/comprehensive-page-tests.spec.ts
@@ -89,14 +91,14 @@ E2E_USE_DEV_SERVER=true pnpm e2e e2e/tests/comprehensive-page-tests.spec.ts --gr
 
 ## Test Files Status
 
-| File | Status | Notes |
-|------|--------|-------|
-| `comprehensive-page-tests.spec.ts` | ✅ Mostly Working | 11/36 tests passing |
-| `accessibility.spec.ts` | ❌ Failing | Requires component demo pages |
-| `api-keys.spec.ts` | ⚠️ Unknown | Requires backend |
-| `admin-*.spec.ts` | ⚠️ Unknown | Requires backend + auth |
-| `customer-portal.spec.ts` | ⚠️ Unknown | Requires backend + auth |
-| `msw-contract-validation.spec.ts` | ⏭️ Skipped | MSW compatibility issues |
+| File                               | Status            | Notes                         |
+| ---------------------------------- | ----------------- | ----------------------------- |
+| `comprehensive-page-tests.spec.ts` | ✅ Mostly Working | 11/36 tests passing           |
+| `accessibility.spec.ts`            | ❌ Failing        | Requires component demo pages |
+| `api-keys.spec.ts`                 | ⚠️ Unknown        | Requires backend              |
+| `admin-*.spec.ts`                  | ⚠️ Unknown        | Requires backend + auth       |
+| `customer-portal.spec.ts`          | ⚠️ Unknown        | Requires backend + auth       |
+| `msw-contract-validation.spec.ts`  | ⏭️ Skipped        | MSW compatibility issues      |
 
 ## Next Steps
 
@@ -110,6 +112,7 @@ E2E_USE_DEV_SERVER=true pnpm e2e e2e/tests/comprehensive-page-tests.spec.ts --gr
 ## Conclusion
 
 The E2E test infrastructure is functional, but the tests need to be updated to match the actual application structure. The main issues are:
+
 - Long-running tests (likely due to timeouts waiting for non-existent elements)
 - Tests expecting pages that don't exist
 - Tests requiring authentication that isn't set up

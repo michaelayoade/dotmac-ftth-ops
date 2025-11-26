@@ -7,13 +7,7 @@
 
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
@@ -128,7 +122,8 @@ export function CommunicationDetailModal<TLog = any>({
       },
     };
 
-    const config = statusConfig[logData.status as keyof typeof statusConfig] || statusConfig.pending;
+    const config =
+      statusConfig[logData.status as keyof typeof statusConfig] || statusConfig.pending;
     const Icon = config.icon;
 
     return (
@@ -400,7 +395,9 @@ export function CommunicationDetailModal<TLog = any>({
                   </div>
                   <div className="grid grid-cols-3 gap-2 rounded-lg border p-3">
                     <p className="text-sm font-semibold">Template</p>
-                    <p className="col-span-2 text-sm">{logData.template_name || "Custom Message"}</p>
+                    <p className="col-span-2 text-sm">
+                      {logData.template_name || "Custom Message"}
+                    </p>
                   </div>
                   <div className="grid grid-cols-3 gap-2 rounded-lg border p-3">
                     <p className="text-sm font-semibold">User ID</p>

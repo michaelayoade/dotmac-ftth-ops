@@ -13,13 +13,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
 import { Loader2 } from "lucide-react";
 import { useCreateBankAccount, useUpdateBankAccount } from "@/hooks/useBankAccounts";

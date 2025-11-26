@@ -20,15 +20,8 @@ import {
   auditKeys,
 } from "../useAudit";
 import { auditService } from "@/lib/services/audit-service";
-import type {
-  AuditActivity,
-  AuditActivityList,
-  ActivitySummary,
-} from "@/types/audit";
-import type {
-  AuditExportResponse,
-  ComplianceReport,
-} from "@/lib/services/audit-service";
+import type { AuditActivity, AuditActivityList, ActivitySummary } from "@/types/audit";
+import type { AuditExportResponse, ComplianceReport } from "@/lib/services/audit-service";
 import { ActivitySeverity, ActivityType } from "@/types/audit";
 
 // Mock dependencies
@@ -67,13 +60,7 @@ describe("useAudit", () => {
         "list",
         { page: 1 },
       ]);
-      expect(auditKeys.activities.recent(20, 7)).toEqual([
-        "audit",
-        "activities",
-        "recent",
-        20,
-        7,
-      ]);
+      expect(auditKeys.activities.recent(20, 7)).toEqual(["audit", "activities", "recent", 20, 7]);
       expect(auditKeys.activities.user("user-1", 50, 30)).toEqual([
         "audit",
         "activities",
@@ -164,7 +151,7 @@ describe("useAudit", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
@@ -236,14 +223,12 @@ describe("useAudit", () => {
         () => useAuditActivities({ activity_type: ActivityType.ROLE_CREATED }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(result.current.data?.activities[0].activity_type).toBe(
-        ActivityType.ROLE_CREATED
-      );
+      expect(result.current.data?.activities[0].activity_type).toBe(ActivityType.ROLE_CREATED);
     });
   });
 
@@ -670,12 +655,9 @@ describe("useAudit", () => {
     });
 
     it("should support enabled parameter", async () => {
-      const { result } = renderHook(
-        () => useResourceHistory("subscriber", "sub-1", false),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useResourceHistory("subscriber", "sub-1", false), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -820,20 +802,14 @@ describe("useAudit", () => {
 
       (auditService.getComplianceReport as jest.Mock).mockResolvedValue(mockReport);
 
-      const { result } = renderHook(
-        () => useComplianceReport("2024-01-01", "2024-01-31"),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useComplianceReport("2024-01-01", "2024-01-31"), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(result.current.data).toEqual(mockReport);
-      expect(auditService.getComplianceReport).toHaveBeenCalledWith(
-        "2024-01-01",
-        "2024-01-31"
-      );
+      expect(auditService.getComplianceReport).toHaveBeenCalledWith("2024-01-01", "2024-01-31");
     });
 
     it("should not fetch when dates are empty", async () => {
@@ -858,12 +834,9 @@ describe("useAudit", () => {
       const error = new Error("Failed to generate report");
       (auditService.getComplianceReport as jest.Mock).mockRejectedValue(error);
 
-      const { result } = renderHook(
-        () => useComplianceReport("2024-01-01", "2024-01-31"),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useComplianceReport("2024-01-01", "2024-01-31"), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -871,12 +844,9 @@ describe("useAudit", () => {
     });
 
     it("should support enabled parameter", async () => {
-      const { result } = renderHook(
-        () => useComplianceReport("2024-01-01", "2024-01-31", false),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useComplianceReport("2024-01-01", "2024-01-31", false), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -964,7 +934,7 @@ describe("useAudit", () => {
 
     it("should handle loading state", async () => {
       (auditService.getRecentActivities as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve([]), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve([]), 100)),
       );
       (auditService.getActivitySummary as jest.Mock).mockResolvedValue({
         total_activities: 0,
@@ -1208,12 +1178,9 @@ describe("useAudit", () => {
 
         (auditService.listActivities as jest.Mock).mockResolvedValue(mockActivities);
 
-        const { result } = renderHook(
-          () => useAuditActivities({ activity_type: activityType }),
-          {
-            wrapper: createWrapper(),
-          }
-        );
+        const { result } = renderHook(() => useAuditActivities({ activity_type: activityType }), {
+          wrapper: createWrapper(),
+        });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 

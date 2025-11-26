@@ -2,48 +2,48 @@
  * Zod schemas for licensing framework validation
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // ============================================================================
 // Enums
 // ============================================================================
 
 export const ModuleCategorySchema = z.enum([
-  'NETWORK',
-  'OSS_INTEGRATION',
-  'BILLING',
-  'ANALYTICS',
-  'AUTOMATION',
-  'COMMUNICATIONS',
-  'SECURITY',
-  'REPORTING',
-  'API_MANAGEMENT',
-  'OTHER',
+  "NETWORK",
+  "OSS_INTEGRATION",
+  "BILLING",
+  "ANALYTICS",
+  "AUTOMATION",
+  "COMMUNICATIONS",
+  "SECURITY",
+  "REPORTING",
+  "API_MANAGEMENT",
+  "OTHER",
 ]);
 export type ModuleCategory = z.infer<typeof ModuleCategorySchema>;
 
 export const PricingModelSchema = z.enum([
-  'FLAT_FEE',
-  'PER_UNIT',
-  'TIERED',
-  'USAGE_BASED',
-  'CUSTOM',
-  'FREE',
-  'BUNDLED',
+  "FLAT_FEE",
+  "PER_UNIT",
+  "TIERED",
+  "USAGE_BASED",
+  "CUSTOM",
+  "FREE",
+  "BUNDLED",
 ]);
 export type PricingModel = z.infer<typeof PricingModelSchema>;
 
 export const SubscriptionStatusSchema = z.enum([
-  'TRIAL',
-  'ACTIVE',
-  'PAST_DUE',
-  'CANCELED',
-  'EXPIRED',
-  'SUSPENDED',
+  "TRIAL",
+  "ACTIVE",
+  "PAST_DUE",
+  "CANCELED",
+  "EXPIRED",
+  "SUSPENDED",
 ]);
 export type SubscriptionStatus = z.infer<typeof SubscriptionStatusSchema>;
 
-export const BillingCycleSchema = z.enum(['MONTHLY', 'ANNUAL']);
+export const BillingCycleSchema = z.enum(["MONTHLY", "ANNUAL"]);
 export type BillingCycle = z.infer<typeof BillingCycleSchema>;
 
 // ============================================================================
@@ -179,7 +179,7 @@ export const SubscriptionModuleSchema = z.object({
   subscription_id: z.string(),
   module_id: z.string(),
   is_enabled: z.boolean(),
-  source: z.enum(['PLAN', 'ADDON', 'TRIAL', 'PROMOTIONAL']),
+  source: z.enum(["PLAN", "ADDON", "TRIAL", "PROMOTIONAL"]),
   addon_price: z.number().optional(),
   expires_at: z.string().optional(),
   config: z.record(z.any()),

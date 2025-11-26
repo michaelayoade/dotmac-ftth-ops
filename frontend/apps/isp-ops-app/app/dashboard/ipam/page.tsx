@@ -13,13 +13,7 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -125,7 +119,7 @@ export default function IPAMDashboardPage() {
     (ip) =>
       ip.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ip.dns_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ip['description']?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ip["description"]?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Calculate statistics
@@ -755,7 +749,8 @@ export default function IPAMDashboardPage() {
                       <div
                         key={prefix.id}
                         className={`rounded-lg border p-4 cursor-pointer transition-colors ${
-                          selectedPrefix === prefix['id']? "border-primary bg-primary/5"
+                          selectedPrefix === prefix["id"]
+                            ? "border-primary bg-primary/5"
                             : "hover:bg-muted/50"
                         }`}
                         onClick={() => setSelectedPrefix(prefix.id)}

@@ -60,7 +60,11 @@ describe("Badge", () => {
       const { container } = render(<Badge variant="destructive">Error</Badge>);
 
       const badge = container.firstChild as HTMLElement;
-      expect(badge).toHaveClass("border-transparent", "bg-destructive", "text-destructive-foreground");
+      expect(badge).toHaveClass(
+        "border-transparent",
+        "bg-destructive",
+        "text-destructive-foreground",
+      );
     });
 
     it("renders outline variant", () => {
@@ -134,7 +138,7 @@ describe("Badge", () => {
       render(
         <Badge data-testid="custom-badge" data-custom="value">
           Badge
-        </Badge>
+        </Badge>,
       );
 
       const badge = screen.getByTestId("custom-badge");
@@ -184,7 +188,7 @@ describe("Badge", () => {
         <Badge>
           <span>Icon</span>
           <span>Label</span>
-        </Badge>
+        </Badge>,
       );
 
       expect(screen.getByText("Icon")).toBeInTheDocument();
@@ -263,7 +267,7 @@ describe("Badge", () => {
       render(
         <Badge variant="destructive" aria-label="5 unread notifications">
           5
-        </Badge>
+        </Badge>,
       );
 
       expect(screen.getByText("5")).toBeInTheDocument();
@@ -275,7 +279,7 @@ describe("Badge", () => {
       render(
         <Badge variant="success" role="status">
           Active
-        </Badge>
+        </Badge>,
       );
 
       const badge = screen.getByRole("status");
@@ -293,7 +297,7 @@ describe("Badge", () => {
       render(
         <Badge variant="warning" title="High priority">
           High
-        </Badge>
+        </Badge>,
       );
 
       const badge = screen.getByTitle("High priority");
@@ -312,7 +316,7 @@ describe("Badge", () => {
         <Badge variant="success">
           <span aria-hidden>✓</span>
           <span>Verified</span>
-        </Badge>
+        </Badge>,
       );
 
       expect(screen.getByText("Verified")).toBeInTheDocument();
@@ -322,7 +326,7 @@ describe("Badge", () => {
       render(
         <Badge variant="default" aria-label="99 items">
           99+
-        </Badge>
+        </Badge>,
       );
 
       expect(screen.getByText("99+")).toBeInTheDocument();
@@ -334,7 +338,7 @@ describe("Badge", () => {
       const { container } = render(
         <Badge variant="secondary" onClick={handleDismiss}>
           Dismissible
-        </Badge>
+        </Badge>,
       );
 
       const badge = container.firstChild as HTMLElement;
@@ -395,7 +399,7 @@ describe("Badge", () => {
           <Badge variant="default">Default</Badge>
           <Badge variant="success">Success</Badge>
           <Badge variant="warning">Warning</Badge>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Default")).toBeInTheDocument();
@@ -408,7 +412,7 @@ describe("Badge", () => {
         <div>
           <Badge variant="success">Success</Badge>
           <Badge variant="destructive">Error</Badge>
-        </div>
+        </div>,
       );
 
       const successBadge = screen.getByText("Success");

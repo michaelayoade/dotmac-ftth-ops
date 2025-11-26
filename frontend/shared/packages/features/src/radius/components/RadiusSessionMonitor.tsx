@@ -3,24 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Activity,
-  Search,
-  RefreshCw,
-  XCircle,
-  Download,
-  Upload,
-  Clock,
-} from "lucide-react";
+import { Activity, Search, RefreshCw, XCircle, Download, Upload, Clock } from "lucide-react";
 import React, { useState } from "react";
 
 import type { RADIUSSession } from "../types";
@@ -38,7 +23,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))  } ${  sizes[i]}`;
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 function formatDuration(seconds: number): string {
@@ -82,14 +67,12 @@ export function RadiusSessionMonitor({
     (session) =>
       session.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       session.nasipaddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (session.framedipaddress ?? "").toLowerCase().includes(searchQuery.toLowerCase())
+      (session.framedipaddress ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // Calculate total bandwidth
-  const totalDownload =
-    sessions?.reduce((sum, s) => sum + (s.acctinputoctets ?? 0), 0) ?? 0;
-  const totalUpload =
-    sessions?.reduce((sum, s) => sum + (s.acctoutputoctets ?? 0), 0) ?? 0;
+  const totalDownload = sessions?.reduce((sum, s) => sum + (s.acctinputoctets ?? 0), 0) ?? 0;
+  const totalUpload = sessions?.reduce((sum, s) => sum + (s.acctoutputoctets ?? 0), 0) ?? 0;
 
   return (
     <div className="space-y-6">
@@ -97,9 +80,7 @@ export function RadiusSessionMonitor({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Active RADIUS Sessions</h1>
-          <p className="text-muted-foreground">
-            View and manage active RADIUS sessions
-          </p>
+          <p className="text-muted-foreground">View and manage active RADIUS sessions</p>
         </div>
         <Button onClick={onRefresh} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
@@ -167,9 +148,7 @@ export function RadiusSessionMonitor({
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              Loading sessions...
-            </div>
+            <div className="p-8 text-center text-muted-foreground">Loading sessions...</div>
           ) : filteredSessions && filteredSessions.length > 0 ? (
             <Table>
               <TableHeader>
@@ -188,9 +167,7 @@ export function RadiusSessionMonitor({
               <TableBody>
                 {filteredSessions.map((session) => (
                   <TableRow key={session.radacctid}>
-                    <TableCell className="font-medium">
-                      {session.username}
-                    </TableCell>
+                    <TableCell className="font-medium">{session.username}</TableCell>
                     <TableCell>{session.nasipaddress}</TableCell>
                     <TableCell>
                       <div className="space-y-1">
@@ -199,9 +176,7 @@ export function RadiusSessionMonitor({
                             <Badge variant="outline" className="text-xs">
                               IPv4
                             </Badge>
-                            <span className="text-sm">
-                              {session.framedipaddress}
-                            </span>
+                            <span className="text-sm">{session.framedipaddress}</span>
                           </div>
                         )}
                         {session.framedipv6address && (
@@ -209,9 +184,7 @@ export function RadiusSessionMonitor({
                             <Badge variant="outline" className="text-xs">
                               IPv6
                             </Badge>
-                            <span className="text-sm">
-                              {session.framedipv6address}
-                            </span>
+                            <span className="text-sm">{session.framedipv6address}</span>
                           </div>
                         )}
                         {!session.framedipaddress && !session.framedipv6address && (

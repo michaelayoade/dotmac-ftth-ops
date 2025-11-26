@@ -63,7 +63,9 @@ type BrandingQueryOptions = Omit<
 
 export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
   const { data: session } = useSession();
-  const user = session?.user as { tenant_id?: string; activeOrganization?: { id?: string } } | undefined;
+  const user = session?.user as
+    | { tenant_id?: string; activeOrganization?: { id?: string } }
+    | undefined;
   const tenantId = user?.tenant_id || user?.activeOrganization?.id;
   const hasTenant = Boolean(tenantId);
 
@@ -81,12 +83,7 @@ export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
 }
 
 export function useUpdateTenantBranding(
-  options?: MutationOptions<
-    TenantBrandingResponseDto,
-    Error,
-    TenantBrandingConfigDto,
-    unknown
-  >,
+  options?: MutationOptions<TenantBrandingResponseDto, Error, TenantBrandingConfigDto, unknown>,
 ) {
   const queryClient = useQueryClient();
 

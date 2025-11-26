@@ -4,7 +4,7 @@
  * React hooks for implementing accessible UI patterns
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from "react";
 
 /**
  * useKeyboardNavigation
@@ -22,17 +22,11 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 export function useKeyboardNavigation(options: {
   itemCount: number;
   onSelect?: (index: number) => void;
-  orientation?: 'vertical' | 'horizontal' | 'grid';
+  orientation?: "vertical" | "horizontal" | "grid";
   loop?: boolean;
   gridColumns?: number;
 }) {
-  const {
-    itemCount,
-    onSelect,
-    orientation = 'vertical',
-    loop = true,
-    gridColumns = 1,
-  } = options;
+  const { itemCount, onSelect, orientation = "vertical", loop = true, gridColumns = 1 } = options;
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -41,52 +35,46 @@ export function useKeyboardNavigation(options: {
       let newIndex = activeIndex;
 
       switch (event.key) {
-        case 'ArrowDown':
-          if (orientation === 'vertical' || orientation === 'grid') {
+        case "ArrowDown":
+          if (orientation === "vertical" || orientation === "grid") {
             event.preventDefault();
-            newIndex =
-              orientation === 'grid'
-                ? activeIndex + gridColumns
-                : activeIndex + 1;
+            newIndex = orientation === "grid" ? activeIndex + gridColumns : activeIndex + 1;
           }
           break;
 
-        case 'ArrowUp':
-          if (orientation === 'vertical' || orientation === 'grid') {
+        case "ArrowUp":
+          if (orientation === "vertical" || orientation === "grid") {
             event.preventDefault();
-            newIndex =
-              orientation === 'grid'
-                ? activeIndex - gridColumns
-                : activeIndex - 1;
+            newIndex = orientation === "grid" ? activeIndex - gridColumns : activeIndex - 1;
           }
           break;
 
-        case 'ArrowRight':
-          if (orientation === 'horizontal' || orientation === 'grid') {
+        case "ArrowRight":
+          if (orientation === "horizontal" || orientation === "grid") {
             event.preventDefault();
             newIndex = activeIndex + 1;
           }
           break;
 
-        case 'ArrowLeft':
-          if (orientation === 'horizontal' || orientation === 'grid') {
+        case "ArrowLeft":
+          if (orientation === "horizontal" || orientation === "grid") {
             event.preventDefault();
             newIndex = activeIndex - 1;
           }
           break;
 
-        case 'Home':
+        case "Home":
           event.preventDefault();
           newIndex = 0;
           break;
 
-        case 'End':
+        case "End":
           event.preventDefault();
           newIndex = itemCount - 1;
           break;
 
-        case 'Enter':
-        case ' ':
+        case "Enter":
+        case " ":
           event.preventDefault();
           onSelect?.(activeIndex);
           return;
@@ -104,7 +92,7 @@ export function useKeyboardNavigation(options: {
 
       setActiveIndex(newIndex);
     },
-    [activeIndex, itemCount, onSelect, orientation, loop, gridColumns]
+    [activeIndex, itemCount, onSelect, orientation, loop, gridColumns],
   );
 
   return {
@@ -136,7 +124,7 @@ export function useFocusTrap<T extends HTMLElement>(
   options?: {
     initialFocus?: boolean;
     returnFocus?: boolean;
-  }
+  },
 ) {
   const containerRef = useRef<T>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
@@ -155,13 +143,11 @@ export function useFocusTrap<T extends HTMLElement>(
     const getFocusableElements = () => {
       const selector =
         'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-      return Array.from(
-        container.querySelectorAll<HTMLElement>(selector)
-      ).filter((el) => {
+      return Array.from(container.querySelectorAll<HTMLElement>(selector)).filter((el) => {
         return (
           el.offsetParent !== null &&
-          !el.hasAttribute('disabled') &&
-          !el.getAttribute('aria-hidden')
+          !el.hasAttribute("disabled") &&
+          !el.getAttribute("aria-hidden")
         );
       });
     };
@@ -176,7 +162,7 @@ export function useFocusTrap<T extends HTMLElement>(
 
     // Handle tab key
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
+      if (event.key !== "Tab") return;
 
       const focusableElements = getFocusableElements();
       if (focusableElements.length === 0) return;
@@ -199,11 +185,11 @@ export function useFocusTrap<T extends HTMLElement>(
       }
     };
 
-    container.addEventListener('keydown', handleKeyDown);
+    container.addEventListener("keydown", handleKeyDown);
 
     // Cleanup
     return () => {
-      container.removeEventListener('keydown', handleKeyDown);
+      container.removeEventListener("keydown", handleKeyDown);
 
       // Return focus to previously focused element
       if (options?.returnFocus !== false && previouslyFocusedElement.current) {
@@ -236,15 +222,15 @@ export function useReducedMotion(): boolean {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReducedMotion(mediaQuery.matches);
 
     const handleChange = (event: MediaQueryListEvent) => {
       setPrefersReducedMotion(event.matches);
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   return prefersReducedMotion;
@@ -271,13 +257,13 @@ export function useAriaLive() {
   useEffect(() => {
     // Create hidden live region if it doesn't exist
     if (!liveRegionRef.current) {
-      const liveRegion = document.createElement('div');
-      liveRegion.setAttribute('role', 'status');
-      liveRegion.setAttribute('aria-live', 'polite');
-      liveRegion.setAttribute('aria-atomic', 'true');
-      liveRegion.className = 'sr-only';
+      const liveRegion = document.createElement("div");
+      liveRegion.setAttribute("role", "status");
+      liveRegion.setAttribute("aria-live", "polite");
+      liveRegion.setAttribute("aria-atomic", "true");
+      liveRegion.className = "sr-only";
       liveRegion.style.cssText =
-        'position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;';
+        "position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;";
       document.body.appendChild(liveRegion);
       liveRegionRef.current = liveRegion;
     }
@@ -290,22 +276,19 @@ export function useAriaLive() {
     };
   }, []);
 
-  const announce = useCallback(
-    (message: string, priority: 'polite' | 'assertive' = 'polite') => {
-      if (liveRegionRef.current) {
-        liveRegionRef.current.setAttribute('aria-live', priority);
-        liveRegionRef.current.textContent = message;
+  const announce = useCallback((message: string, priority: "polite" | "assertive" = "polite") => {
+    if (liveRegionRef.current) {
+      liveRegionRef.current.setAttribute("aria-live", priority);
+      liveRegionRef.current.textContent = message;
 
-        // Clear after announcement
-        setTimeout(() => {
-          if (liveRegionRef.current) {
-            liveRegionRef.current.textContent = '';
-          }
-        }, 1000);
-      }
-    },
-    []
-  );
+      // Clear after announcement
+      setTimeout(() => {
+        if (liveRegionRef.current) {
+          liveRegionRef.current.textContent = "";
+        }
+      }, 1000);
+    }
+  }, []);
 
   return announce;
 }
@@ -332,8 +315,8 @@ export function useMediaQuery(query: string): boolean {
       setMatches(event.matches);
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, [query]);
 
   return matches;
@@ -349,21 +332,18 @@ export function useMediaQuery(query: string): boolean {
  * useEscapeKey(() => setIsOpen(false), isOpen);
  * ```
  */
-export function useEscapeKey(
-  onEscape: () => void,
-  isActive: boolean = true
-) {
+export function useEscapeKey(onEscape: () => void, isActive: boolean = true) {
   useEffect(() => {
     if (!isActive) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onEscape();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onEscape, isActive]);
 }
 
@@ -387,7 +367,7 @@ export function useEscapeKey(
  */
 let idCounter = 0;
 
-export function useId(prefix: string = 'id'): string {
+export function useId(prefix: string = "id"): string {
   const [id] = useState(() => `${prefix}-${++idCounter}`);
   return id;
 }
@@ -413,9 +393,9 @@ export function useAnnouncer() {
     (message: string) => {
       // Small delay to ensure screen reader picks it up
       setTimeout(() => {
-        announce(message, 'assertive');
+        announce(message, "assertive");
       }, 100);
     },
-    [announce]
+    [announce],
   );
 }

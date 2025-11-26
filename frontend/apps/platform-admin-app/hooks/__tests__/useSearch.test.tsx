@@ -69,9 +69,7 @@ describe("useSearch", () => {
   describe("useSearch", () => {
     it("should search successfully", async () => {
       const mockResults = {
-        results: [
-          { id: "1", type: "subscriber", title: "Test User", content: "test@example.com" },
-        ],
+        results: [{ id: "1", type: "subscriber", title: "Test User", content: "test@example.com" }],
         total: 1,
         facets: {},
       };
@@ -239,7 +237,7 @@ describe("useSearch", () => {
         {
           wrapper: createWrapper(),
           initialProps: { query: "t" },
-        }
+        },
       );
 
       // Initially it might trigger for "t"
@@ -269,13 +267,10 @@ describe("useSearch", () => {
     it("should use custom debounce time", async () => {
       (searchService.search as jest.Mock).mockResolvedValue({ results: [], total: 0 });
 
-      const { rerender } = renderHook(
-        ({ query }) => useDebouncedSearch(query, undefined, 500),
-        {
-          wrapper: createWrapper(),
-          initialProps: { query: "" },
-        }
-      );
+      const { rerender } = renderHook(({ query }) => useDebouncedSearch(query, undefined, 500), {
+        wrapper: createWrapper(),
+        initialProps: { query: "" },
+      });
 
       rerender({ query: "test" });
 
@@ -659,7 +654,7 @@ describe("useSearch", () => {
         () => {
           expect(result.current.isLoading).toBe(false);
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
 
       // The composite hook returns the first error it encounters
@@ -680,7 +675,7 @@ describe("useSearch", () => {
         () => {
           expect(result.current.isLoading).toBe(false);
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
 
       // The composite hook returns the first error it encounters

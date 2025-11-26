@@ -101,7 +101,7 @@ describe("useSettings", () => {
       expect(apiClient.get).toHaveBeenCalledWith("/admin/settings/categories");
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockCategories },
-        "Failed to load settings categories"
+        "Failed to load settings categories",
       );
     });
 
@@ -144,13 +144,11 @@ describe("useSettings", () => {
                 resolve({
                   data: [],
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const { result } = renderHook(() => useSettingsCategories(), {
         wrapper: createWrapper(),
@@ -169,12 +167,9 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockCategories });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockCategories);
 
-      const { result } = renderHook(
-        () => useSettingsCategories({ enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useSettingsCategories({ enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
 
@@ -228,7 +223,7 @@ describe("useSettings", () => {
       });
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockSettings },
-        "Failed to load category settings"
+        "Failed to load category settings",
       );
     });
 
@@ -325,12 +320,9 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockSettings });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockSettings);
 
-      const { result } = renderHook(
-        () => useCategorySettings("redis", false, { enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useCategorySettings("redis", false, { enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
 
@@ -391,7 +383,7 @@ describe("useSettings", () => {
       });
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockLogs },
-        "Failed to load audit logs"
+        "Failed to load audit logs",
       );
     });
 
@@ -515,7 +507,7 @@ describe("useSettings", () => {
         () => useAuditLogs(0, 100, undefined, undefined, { enabled: false }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
@@ -569,7 +561,7 @@ describe("useSettings", () => {
       });
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockUpdatedSettings },
-        "Failed to update settings"
+        "Failed to update settings",
       );
     });
 
@@ -589,19 +581,11 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: [],
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const wrapper = createWrapper();
-      const { result: categoriesResult } = renderHook(
-        () => useSettingsCategories(),
-        { wrapper }
-      );
-      const { result: updateResult } = renderHook(
-        () => useUpdateCategorySettings(),
-        { wrapper }
-      );
+      const { result: categoriesResult } = renderHook(() => useSettingsCategories(), { wrapper });
+      const { result: updateResult } = renderHook(() => useUpdateCategorySettings(), { wrapper });
 
       await waitFor(() => expect(categoriesResult.current.isLoading).toBe(false));
 
@@ -618,9 +602,7 @@ describe("useSettings", () => {
 
       // Wait for invalidation to trigger refetch
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
 
@@ -645,7 +627,7 @@ describe("useSettings", () => {
             category: "database",
             data: { updates: {} },
           });
-        })
+        }),
       ).rejects.toEqual(error);
     });
 
@@ -807,11 +789,11 @@ describe("useSettings", () => {
       expect(apiClient.post).toHaveBeenCalledWith(
         "/admin/settings/validate",
         { DATABASE_HOST: "localhost" },
-        { params: { category: "database" } }
+        { params: { category: "database" } },
       );
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockValidation },
-        "Failed to validate settings"
+        "Failed to validate settings",
       );
     });
 
@@ -884,7 +866,7 @@ describe("useSettings", () => {
             category: "database",
             updates: {},
           });
-        })
+        }),
       ).rejects.toThrow("Validation service unavailable");
     });
   });
@@ -1059,12 +1041,9 @@ describe("useSettings", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockCategories });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockCategories);
 
-      const { result } = renderHook(
-        () => useSettingsCategories({ enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useSettingsCategories({ enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
 
@@ -1088,7 +1067,7 @@ describe("useSettings", () => {
         () => useCategorySettings("database", false, { enabled: false }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
@@ -1107,7 +1086,7 @@ describe("useSettings", () => {
         () => useAuditLogs(0, 100, undefined, undefined, { enabled: false }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));

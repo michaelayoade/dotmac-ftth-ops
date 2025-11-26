@@ -62,27 +62,17 @@ export default function InstallPrompt() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base mb-1">
-                Install dotmac Ops
-              </h3>
+              <h3 className="font-semibold text-base mb-1">Install dotmac Ops</h3>
               <p className="text-sm text-gray-600 mb-3">
                 Install our app for faster access, offline support, and notifications.
               </p>
 
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleInstall}
-                  className="flex-1"
-                >
+                <Button size="sm" onClick={handleInstall} className="flex-1">
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleDismiss}
-                >
+                <Button size="sm" variant="outline" onClick={handleDismiss}>
                   Later
                 </Button>
               </div>

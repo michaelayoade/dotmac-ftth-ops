@@ -211,7 +211,7 @@ test.describe("Accessibility - Keyboard Navigation", () => {
   });
 
   test.skip("Can submit form with Enter key", async ({ page }) => {
-        await page.goto("/components/ip-input-demo");
+    await page.goto("/components/ip-input-demo");
 
     const input = page.locator('input[name="ip"]');
     await input.fill("192.168.1.1");
@@ -345,7 +345,7 @@ test.describe("Accessibility - Color Contrast", () => {
   });
 
   test.skip("Error messages have sufficient contrast", async ({ page }) => {
-        await page.goto("/components/ip-input-demo");
+    await page.goto("/components/ip-input-demo");
 
     await page.fill('input[name="ip"]', "invalid");
 
@@ -402,7 +402,7 @@ test.describe("Accessibility - ARIA Attributes", () => {
   });
 
   test.skip("Tooltips have proper ARIA attributes", async ({ page }) => {
-        await page.goto("/components/ip-input-demo");
+    await page.goto("/components/ip-input-demo");
 
     // Trigger tooltip
     await page.hover('[data-tooltip="IPv4 address format"]');

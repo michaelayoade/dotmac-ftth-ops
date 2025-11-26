@@ -4,11 +4,11 @@
  * Wrapper for Next.js Image with accessibility warnings
  */
 
-'use client';
+"use client";
 
-import { warnMissingAlt } from '@dotmac/utils/a11y-dev-warnings';
-import NextImage, { type ImageProps as NextImageProps } from 'next/image';
-import * as React from 'react';
+import { warnMissingAlt } from "@dotmac/utils/a11y-dev-warnings";
+import NextImage, { type ImageProps as NextImageProps } from "next/image";
+import * as React from "react";
 
 export interface EnhancedImageProps extends NextImageProps {
   /**
@@ -52,22 +52,22 @@ export const Image = React.forwardRef<HTMLImageElement, EnhancedImageProps>(
       warnMissingAlt(props.src?.toString(), alt, decorative);
 
       // Warn if empty alt without decorative flag
-      if (alt === '' && !decorative) {
+      if (alt === "" && !decorative) {
         console.warn(
-          '[a11y] Image has empty alt text without decorative flag. ' +
-            'If image is decorative, use decorative prop. ' +
-            'Otherwise, provide descriptive alt text.',
-          '\nImage src:',
-          props.src
+          "[a11y] Image has empty alt text without decorative flag. " +
+            "If image is decorative, use decorative prop. " +
+            "Otherwise, provide descriptive alt text.",
+          "\nImage src:",
+          props.src,
         );
       }
     }, [alt, decorative, props.src, suppressA11yWarnings]);
 
     // Use empty alt for decorative images
-    const altText = decorative ? '' : alt;
+    const altText = decorative ? "" : alt;
 
-    return <NextImage ref={ref} alt={altText || ''} {...props} />;
-  }
+    return <NextImage ref={ref} alt={altText || ""} {...props} />;
+  },
 );
 
-Image.displayName = 'EnhancedImage';
+Image.displayName = "EnhancedImage";

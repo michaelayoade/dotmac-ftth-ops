@@ -81,11 +81,11 @@ export function FirmwareManagement() {
       ]);
 
       setFirmwareFiles(filesRes.data);
-      setSchedules(schedulesRes.data['schedules']);
+      setSchedules(schedulesRes.data["schedules"]);
     } catch (err: any) {
       toast({
         title: "Failed to load data",
-        description: err?.response?.['data']?.detail || "Could not fetch firmware data",
+        description: err?.response?.["data"]?.detail || "Could not fetch firmware data",
         variant: "destructive",
       });
     } finally {
@@ -105,11 +105,11 @@ export function FirmwareManagement() {
       const response = await apiClient.get<FirmwareUpgradeScheduleResponse>(
         `/genieacs/firmware-upgrades/schedules/${scheduleId}`,
       );
-      setScheduleDetails(response['data']);
+      setScheduleDetails(response["data"]);
     } catch (err: any) {
       toast({
         title: "Failed to load schedule details",
-        description: err?.response?.['data']?.detail || "Could not fetch schedule details",
+        description: err?.response?.["data"]?.detail || "Could not fetch schedule details",
         variant: "destructive",
       });
     }
@@ -152,7 +152,7 @@ export function FirmwareManagement() {
 
       toast({
         title: "Schedule Created",
-        description: `Firmware upgrade scheduled for ${response['data'].total_devices} devices`,
+        description: `Firmware upgrade scheduled for ${response["data"].total_devices} devices`,
       });
 
       setShowCreateModal(false);
@@ -172,7 +172,8 @@ export function FirmwareManagement() {
     } catch (err: any) {
       toast({
         title: "Failed to create schedule",
-        description: err?.response?.['data']?.detail || "Could not create firmware upgrade schedule",
+        description:
+          err?.response?.["data"]?.detail || "Could not create firmware upgrade schedule",
         variant: "destructive",
       });
     } finally {
@@ -198,7 +199,7 @@ export function FirmwareManagement() {
     } catch (err: any) {
       toast({
         title: "Failed to execute schedule",
-        description: err?.response?.['data']?.detail || "Could not execute firmware upgrade",
+        description: err?.response?.["data"]?.detail || "Could not execute firmware upgrade",
         variant: "destructive",
       });
     }
@@ -222,7 +223,7 @@ export function FirmwareManagement() {
     } catch (err: any) {
       toast({
         title: "Failed to cancel schedule",
-        description: err?.response?.['data']?.detail || "Could not cancel firmware upgrade",
+        description: err?.response?.["data"]?.detail || "Could not cancel firmware upgrade",
         variant: "destructive",
       });
     }
@@ -250,7 +251,7 @@ export function FirmwareManagement() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord = (styles[normalizedStatus] ?? styles['pending'])!;
+    const styleRecord = (styles[normalizedStatus] ?? styles["pending"])!;
     const Icon = styleRecord.icon;
 
     return (
@@ -278,7 +279,7 @@ export function FirmwareManagement() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord = (styles[normalizedStatus] ?? styles['pending'])!;
+    const styleRecord = (styles[normalizedStatus] ?? styles["pending"])!;
     const Icon = styleRecord.icon;
 
     return (
@@ -729,24 +730,24 @@ export function FirmwareManagement() {
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                       {scheduleDetails.results.map((result) => (
                         <div
-                          key={result['device_id']}
+                          key={result["device_id"]}
                           className="flex items-center justify-between p-3 border rounded-lg"
                         >
                           <div className="flex items-center gap-3">
                             <Server className="w-4 h-4 text-muted-foreground" />
                             <div>
-                              <p className="font-medium text-sm">{result['device_id']}</p>
-                              {result['error_message'] && (
-                                <p className="text-xs text-red-600">{result['error_message']}</p>
+                              <p className="font-medium text-sm">{result["device_id"]}</p>
+                              {result["error_message"] && (
+                                <p className="text-xs text-red-600">{result["error_message"]}</p>
                               )}
-                              {result['started_at'] && (
+                              {result["started_at"] && (
                                 <p className="text-xs text-muted-foreground">
-                                  Started: {new Date(result['started_at']).toLocaleString()}
+                                  Started: {new Date(result["started_at"]).toLocaleString()}
                                 </p>
                               )}
                             </div>
                           </div>
-                          {getDeviceResultBadge(result['status'])}
+                          {getDeviceResultBadge(result["status"])}
                         </div>
                       ))}
                     </div>

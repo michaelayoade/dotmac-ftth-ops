@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   AlertCircle,
   CheckCircle,
@@ -40,7 +34,11 @@ function TicketingPageContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
 
-  const { tickets, loading: ticketsLoading, refetch } = useTickets({
+  const {
+    tickets,
+    loading: ticketsLoading,
+    refetch,
+  } = useTickets({
     status: statusFilter !== "all" ? (statusFilter as TicketStatus) : undefined,
     priority: priorityFilter !== "all" ? (priorityFilter as TicketPriority) : undefined,
     search: searchQuery || undefined,
@@ -63,7 +61,10 @@ function TicketingPageContent() {
   const filteredTickets: TicketSummary[] = tickets;
 
   const getStatusBadge = (status: TicketStatus) => {
-    const statusConfig: Record<TicketStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      TicketStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       open: { icon: AlertCircle, color: "bg-blue-100 text-blue-800", label: "Open" },
       in_progress: { icon: Loader, color: "bg-yellow-100 text-yellow-800", label: "In Progress" },
       waiting: { icon: Clock, color: "bg-orange-100 text-orange-800", label: "Waiting" },
@@ -262,9 +263,7 @@ function TicketingPageContent() {
                           {ticket.ticket_number}
                         </Link>
                       </CardTitle>
-                      <CardDescription className="mt-1">
-                        {ticket.subject}
-                      </CardDescription>
+                      <CardDescription className="mt-1">{ticket.subject}</CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

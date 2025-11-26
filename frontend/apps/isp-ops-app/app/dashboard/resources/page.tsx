@@ -53,7 +53,10 @@ interface EquipmentListProps {
 
 function EquipmentList({ equipment, onAssign }: EquipmentListProps) {
   const getStatusBadge = (status: EquipmentStatus) => {
-    const config: Record<EquipmentStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
+    const config: Record<
+      EquipmentStatus,
+      { variant: "default" | "secondary" | "outline" | "destructive"; className: string }
+    > = {
       available: { variant: "default", className: "bg-green-100 text-green-800" },
       in_use: { variant: "secondary", className: "bg-blue-100 text-blue-800" },
       maintenance: { variant: "outline", className: "bg-yellow-100 text-yellow-800" },
@@ -74,7 +77,11 @@ function EquipmentList({ equipment, onAssign }: EquipmentListProps) {
     if (item.nextMaintenanceDue && isPast(parseISO(item.nextMaintenanceDue))) {
       return true;
     }
-    if (item.requiresCalibration && item.nextCalibrationDue && isPast(parseISO(item.nextCalibrationDue))) {
+    if (
+      item.requiresCalibration &&
+      item.nextCalibrationDue &&
+      isPast(parseISO(item.nextCalibrationDue))
+    ) {
       return true;
     }
     return false;
@@ -164,7 +171,10 @@ interface VehicleListProps {
 
 function VehicleList({ vehicles, onAssign }: VehicleListProps) {
   const getStatusBadge = (status: VehicleStatus) => {
-    const config: Record<VehicleStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
+    const config: Record<
+      VehicleStatus,
+      { variant: "default" | "secondary" | "outline" | "destructive"; className: string }
+    > = {
       available: { variant: "default", className: "bg-green-100 text-green-800" },
       in_use: { variant: "secondary", className: "bg-blue-100 text-blue-800" },
       maintenance: { variant: "outline", className: "bg-yellow-100 text-yellow-800" },
@@ -221,11 +231,13 @@ function VehicleList({ vehicles, onAssign }: VehicleListProps) {
                     <span className="font-medium">Type:</span> {vehicle.vehicleType}
                   </div>
                   <div>
-                    <span className="font-medium">Make/Model:</span> {vehicle.make} {vehicle.model} ({vehicle.year})
+                    <span className="font-medium">Make/Model:</span> {vehicle.make} {vehicle.model}{" "}
+                    ({vehicle.year})
                   </div>
                   {vehicle.odometerReading && (
                     <div>
-                      <span className="font-medium">Odometer:</span> {vehicle.odometerReading.toLocaleString()} km
+                      <span className="font-medium">Odometer:</span>{" "}
+                      {vehicle.odometerReading.toLocaleString()} km
                     </div>
                   )}
                 </div>
@@ -241,7 +253,8 @@ function VehicleList({ vehicles, onAssign }: VehicleListProps) {
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <MapPin className="h-4 w-4" />
                     <span>
-                      Last location: {vehicle.currentLat.toFixed(4)}, {vehicle.currentLng.toFixed(4)} -{" "}
+                      Last location: {vehicle.currentLat.toFixed(4)},{" "}
+                      {vehicle.currentLng.toFixed(4)} -{" "}
                       {format(parseISO(vehicle.lastLocationUpdate), "MMM d, h:mm a")}
                     </span>
                   </div>
@@ -379,7 +392,10 @@ export default function ResourcesPage() {
   const [activeTab, setActiveTab] = useState<"equipment" | "vehicles">("equipment");
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<ResourceFilter>({});
-  const [assigningResource, setAssigningResource] = useState<{ type: "equipment" | "vehicle"; id: string } | null>(null);
+  const [assigningResource, setAssigningResource] = useState<{
+    type: "equipment" | "vehicle";
+    id: string;
+  } | null>(null);
 
   const { data: equipmentData, isLoading: loadingEquipment } = useEquipment(filter);
   const { data: vehiclesData, isLoading: loadingVehicles } = useVehicles(filter);
@@ -391,7 +407,8 @@ export default function ResourcesPage() {
     total: equipment.length,
     available: equipment.filter((e) => e.status === "available").length,
     inUse: equipment.filter((e) => e.status === "in_use").length,
-    maintenance: equipment.filter((e) => e.status === "maintenance" || e.status === "repair").length,
+    maintenance: equipment.filter((e) => e.status === "maintenance" || e.status === "repair")
+      .length,
   };
 
   const vehicleStats = {
@@ -498,7 +515,9 @@ export default function ResourcesPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Maintenance</p>
                 <p className="text-2xl font-bold">
-                  {activeTab === "equipment" ? equipmentStats.maintenance : vehicleStats.maintenance}
+                  {activeTab === "equipment"
+                    ? equipmentStats.maintenance
+                    : vehicleStats.maintenance}
                 </p>
               </div>
               <Wrench className="h-8 w-8 text-yellow-500" />

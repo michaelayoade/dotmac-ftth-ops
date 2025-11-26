@@ -89,9 +89,7 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
               <AlertCircle className="h-5 w-5" />
               Error Loading Tenant
             </CardTitle>
-            <CardDescription>
-              {error?.message || "Failed to load tenant details"}
-            </CardDescription>
+            <CardDescription>{error?.message || "Failed to load tenant details"}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="outline" onClick={() => router.back()}>
@@ -214,13 +212,9 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Access Role
-                  </label>
+                  <label className="text-sm font-medium text-muted-foreground">Access Role</label>
                   <p className="text-sm">
-                    {tenant.access_role
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    {tenant.access_role.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -234,9 +228,7 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Start Date
-                  </label>
+                  <label className="text-sm font-medium text-muted-foreground">Start Date</label>
                   <p className="text-sm flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     {formatDate(tenant.start_date)}
@@ -244,9 +236,7 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
                 </div>
                 {tenant.end_date && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">
-                      End Date
-                    </label>
+                    <label className="text-sm font-medium text-muted-foreground">End Date</label>
                     <p className="text-sm flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       {formatDate(tenant.end_date)}
@@ -269,9 +259,7 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Access Permissions</CardTitle>
-              <CardDescription>
-                Custom permissions for this tenant relationship
-              </CardDescription>
+              <CardDescription>Custom permissions for this tenant relationship</CardDescription>
             </CardHeader>
             <CardContent>
               {Object.keys(tenant.custom_permissions).length > 0 ? (
@@ -300,9 +288,7 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
           <Card>
             <CardHeader>
               <CardTitle>SLA Configuration</CardTitle>
-              <CardDescription>
-                Service level agreement targets and monitoring
-              </CardDescription>
+              <CardDescription>Service level agreement targets and monitoring</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -315,9 +301,7 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Uptime Target
-                  </label>
+                  <label className="text-sm font-medium text-muted-foreground">Uptime Target</label>
                   <p className="text-sm">
                     {tenant.sla_uptime_target
                       ? `${parseFloat(tenant.sla_uptime_target).toFixed(2)}%`
@@ -333,9 +317,7 @@ export default function ManagedTenantDetailPage({ params }: PageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Alert Configuration</CardTitle>
-              <CardDescription>
-                Notification settings for this tenant relationship
-              </CardDescription>
+              <CardDescription>Notification settings for this tenant relationship</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between py-3 border-b">

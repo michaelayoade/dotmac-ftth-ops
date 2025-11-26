@@ -12,22 +12,8 @@ import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
-import {
-  Plus,
-  Trash2,
-  Save,
-  Eye,
-  Copy,
-  Settings,
-  GripVertical,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { Plus, Trash2, Save, Eye, Copy, Settings, GripVertical } from "lucide-react";
 import type {
   ProjectTemplate,
   TaskTemplate,
@@ -321,11 +307,7 @@ function ColumnForm({ column, onUpdate, onDelete }: ColumnFormProps) {
 // Template Builder Component
 // ============================================================================
 
-export function TemplateBuilder({
-  initialTemplate,
-  onSave,
-  onCancel,
-}: TemplateBuilderProps) {
+export function TemplateBuilder({ initialTemplate, onSave, onCancel }: TemplateBuilderProps) {
   const [template, setTemplate] = useState<Partial<ProjectTemplate>>({
     name: initialTemplate?.name || "",
     description: initialTemplate?.description || "",
@@ -692,7 +674,10 @@ export function TemplateBuilder({
                 <h4 className="font-semibold mb-2">Tasks Breakdown</h4>
                 <div className="space-y-2">
                   {template.taskTemplates?.map((task) => (
-                    <div key={task.id} className="flex items-center justify-between p-2 border rounded">
+                    <div
+                      key={task.id}
+                      className="flex items-center justify-between p-2 border rounded"
+                    >
                       <div>
                         <p className="font-medium">{task.title}</p>
                         <p className="text-sm text-muted-foreground">{task.description}</p>

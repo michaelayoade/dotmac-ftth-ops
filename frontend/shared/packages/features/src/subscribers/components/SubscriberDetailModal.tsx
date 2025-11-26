@@ -142,9 +142,7 @@ export function SubscriberDetailModal<TSubscriber = any, TService = any>({
                     <Badge variant="outline" className="font-mono text-xs">
                       {sub.subscriber_id}
                     </Badge>
-                    <Badge className={getStatusColor(sub.status)}>
-                      {sub.status.toUpperCase()}
-                    </Badge>
+                    <Badge className={getStatusColor(sub.status)}>{sub.status.toUpperCase()}</Badge>
                     <Badge className={getConnectionTypeColor(sub.connection_type)}>
                       {sub.connection_type.toUpperCase()}
                     </Badge>

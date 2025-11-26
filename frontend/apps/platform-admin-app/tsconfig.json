@@ -40,7 +40,9 @@
       "@dotmac/ui/*": ["../../shared/packages/ui/src/*"],
       "@dotmac/graphql/generated/*": ["../../shared/packages/graphql/generated/*"],
       "@dotmac/graphql/generated": ["../../shared/packages/graphql/generated/index"],
-      "@dotmac/graphql/generated/react-query": ["../../shared/packages/graphql/generated/react-query"],
+      "@dotmac/graphql/generated/react-query": [
+        "../../shared/packages/graphql/generated/react-query"
+      ],
       "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
       "@dotmac/primitives/*": ["../../shared/packages/primitives/src/*"],
       "zod": ["./node_modules/zod"],

@@ -25,9 +25,7 @@ export default function EnhancedProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Project Management</h1>
-          <p className="text-muted-foreground">
-            Track tasks, timelines, and team collaboration
-          </p>
+          <p className="text-muted-foreground">Track tasks, timelines, and team collaboration</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
@@ -56,9 +54,7 @@ export default function EnhancedProjectsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Open Tasks
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Open Tasks</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">48</div>
@@ -126,9 +122,7 @@ export default function EnhancedProjectsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Project Timeline</CardTitle>
-              <CardDescription>
-                View project schedule and task dependencies
-              </CardDescription>
+              <CardDescription>View project schedule and task dependencies</CardDescription>
             </CardHeader>
             <CardContent>
               <GanttChart projectId={projectId} project={undefined as any} />
@@ -141,9 +135,7 @@ export default function EnhancedProjectsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Team Calendar</CardTitle>
-              <CardDescription>
-                View team schedules, deadlines, and events
-              </CardDescription>
+              <CardDescription>View team schedules, deadlines, and events</CardDescription>
             </CardHeader>
             <CardContent>
               <TeamCalendar projectId={projectId} />
@@ -164,8 +156,8 @@ export default function EnhancedProjectsPage() {
                 Project Management Features
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                Switch between Kanban board for task management, Gantt chart for timeline visualization,
-                and Calendar for scheduling. All views are synchronized in real-time.
+                Switch between Kanban board for task management, Gantt chart for timeline
+                visualization, and Calendar for scheduling. All views are synchronized in real-time.
               </p>
             </div>
           </div>

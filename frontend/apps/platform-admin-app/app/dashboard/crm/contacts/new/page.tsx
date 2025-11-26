@@ -3,25 +3,14 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  Save,
-  Plus,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Save, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 interface ContactMethod {
@@ -184,9 +173,7 @@ export default function NewContactPage() {
                   <Label htmlFor="prefix">Prefix</Label>
                   <Select
                     value={formData.prefix}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, prefix: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, prefix: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select" />
@@ -207,9 +194,7 @@ export default function NewContactPage() {
                   <Input
                     id="first_name"
                     value={formData.first_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, first_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                     placeholder="John"
                   />
                 </div>
@@ -219,9 +204,7 @@ export default function NewContactPage() {
                   <Input
                     id="middle_name"
                     value={formData.middle_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, middle_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })}
                     placeholder="M"
                   />
                 </div>
@@ -231,9 +214,7 @@ export default function NewContactPage() {
                   <Input
                     id="last_name"
                     value={formData.last_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, last_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                     placeholder="Doe"
                   />
                 </div>
@@ -245,9 +226,7 @@ export default function NewContactPage() {
                   <Input
                     id="display_name"
                     value={formData.display_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, display_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                     placeholder="Auto-generated if empty"
                   />
                 </div>
@@ -257,9 +236,7 @@ export default function NewContactPage() {
                   <Input
                     id="suffix"
                     value={formData.suffix}
-                    onChange={(e) =>
-                      setFormData({ ...formData, suffix: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, suffix: e.target.value })}
                     placeholder="Jr, Sr, III"
                   />
                 </div>
@@ -279,9 +256,7 @@ export default function NewContactPage() {
                   <Input
                     id="company"
                     value={formData.company}
-                    onChange={(e) =>
-                      setFormData({ ...formData, company: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                     placeholder="Acme Corp"
                   />
                 </div>
@@ -291,9 +266,7 @@ export default function NewContactPage() {
                   <Input
                     id="job_title"
                     value={formData.job_title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, job_title: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
                     placeholder="CEO"
                   />
                 </div>
@@ -303,9 +276,7 @@ export default function NewContactPage() {
                   <Input
                     id="department"
                     value={formData.department}
-                    onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                     placeholder="Sales"
                   />
                 </div>
@@ -317,12 +288,7 @@ export default function NewContactPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Contact Methods</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addContactMethod}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={addContactMethod}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Method
               </Button>
@@ -335,9 +301,7 @@ export default function NewContactPage() {
                       <Label>Type</Label>
                       <Select
                         value={method.type}
-                        onValueChange={(value) =>
-                          updateContactMethod(index, "type", value)
-                        }
+                        onValueChange={(value) => updateContactMethod(index, "type", value)}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -357,15 +321,13 @@ export default function NewContactPage() {
                       <Label>Value</Label>
                       <Input
                         value={method.value}
-                        onChange={(e) =>
-                          updateContactMethod(index, "value", e.target.value)
-                        }
+                        onChange={(e) => updateContactMethod(index, "value", e.target.value)}
                         placeholder={
                           method.type === "email"
                             ? "john@example.com"
                             : method.type === "phone"
-                            ? "+1234567890"
-                            : "Value"
+                              ? "+1234567890"
+                              : "Value"
                         }
                       />
                     </div>
@@ -374,9 +336,7 @@ export default function NewContactPage() {
                       <Label>Label</Label>
                       <Input
                         value={method.label}
-                        onChange={(e) =>
-                          updateContactMethod(index, "label", e.target.value)
-                        }
+                        onChange={(e) => updateContactMethod(index, "label", e.target.value)}
                         placeholder="Work, Home, etc."
                       />
                     </div>
@@ -407,10 +367,8 @@ export default function NewContactPage() {
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select
-                    value={formData['status']}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value })
-                    }
+                    value={formData["status"]}
+                    onValueChange={(value) => setFormData({ ...formData, status: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -428,9 +386,7 @@ export default function NewContactPage() {
                   <Label htmlFor="stage">Stage</Label>
                   <Select
                     value={formData.stage}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, stage: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, stage: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />

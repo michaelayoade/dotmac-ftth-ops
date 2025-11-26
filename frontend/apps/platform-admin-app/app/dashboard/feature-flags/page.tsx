@@ -7,13 +7,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -72,13 +66,16 @@ function FeatureFlagsPageContent() {
   const apiBaseUrl = api.baseUrl || "";
 
   // Fetch feature flags
-  const { data: flags = [], isLoading, refetch } = useQuery<FeatureFlag[]>({
+  const {
+    data: flags = [],
+    isLoading,
+    refetch,
+  } = useQuery<FeatureFlag[]>({
     queryKey: ["feature-flags", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/feature-flags/flags`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch feature flags");
       return response.json();
     },
@@ -87,8 +84,8 @@ function FeatureFlagsPageContent() {
   // Calculate statistics
   const stats: FlagStats = {
     total_flags: flags.length,
-    enabled_flags: flags.filter(f => f.enabled).length,
-    disabled_flags: flags.filter(f => !f.enabled).length,
+    enabled_flags: flags.filter((f) => f.enabled).length,
+    disabled_flags: flags.filter((f) => !f.enabled).length,
   };
 
   const filteredFlags = flags.filter((flag) => {
@@ -108,19 +105,16 @@ function FeatureFlagsPageContent() {
   // Create flag mutation
   const createFlagMutation = useMutation({
     mutationFn: async (data: { name: string; enabled: boolean; description?: string }) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags/${data.name}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            enabled: data.enabled,
-            description: data.description,
-            context: {},
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/feature-flags/flags/${data.name}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          enabled: data.enabled,
+          description: data.description,
+          context: {},
+        }),
+      });
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || "Failed to create flag");
@@ -150,19 +144,16 @@ function FeatureFlagsPageContent() {
   // Toggle flag mutation
   const toggleFlagMutation = useMutation({
     mutationFn: async (data: { name: string; enabled: boolean; description?: string }) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags/${data.name}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            enabled: data.enabled,
-            description: data.description,
-            context: {},
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/feature-flags/flags/${data.name}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          enabled: data.enabled,
+          description: data.description,
+          context: {},
+        }),
+      });
       if (!response.ok) throw new Error("Failed to toggle flag");
       return response.json();
     },
@@ -185,13 +176,10 @@ function FeatureFlagsPageContent() {
   // Delete flag mutation
   const deleteFlagMutation = useMutation({
     mutationFn: async (flagName: string) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags/${flagName}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/feature-flags/flags/${flagName}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to delete flag");
       return response.json();
     },
@@ -313,10 +301,7 @@ function FeatureFlagsPageContent() {
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button
-                  onClick={handleCreateFlag}
-                  disabled={createFlagMutation.isPending}
-                >
+                <Button onClick={handleCreateFlag} disabled={createFlagMutation.isPending}>
                   {createFlagMutation.isPending ? "Creating..." : "Create Flag"}
                 </Button>
               </DialogFooter>
@@ -422,9 +407,7 @@ function FeatureFlagsPageContent() {
                         {flag.enabled ? "Enabled" : "Disabled"}
                       </Badge>
                     </div>
-                    {flag.description && (
-                      <CardDescription>{flag.description}</CardDescription>
-                    )}
+                    {flag.description && <CardDescription>{flag.description}</CardDescription>}
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -440,7 +423,8 @@ function FeatureFlagsPageContent() {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     <span>
-                      Updated {formatDistanceToNow(new Date(flag.updated_at * 1000), { addSuffix: true })}
+                      Updated{" "}
+                      {formatDistanceToNow(new Date(flag.updated_at * 1000), { addSuffix: true })}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

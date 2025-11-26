@@ -7,14 +7,7 @@ import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 
@@ -47,7 +40,11 @@ export default function OnCallSchedulePage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Fetch on-call schedules
-  const { data: schedules, isLoading: schedulesLoading, refetch: refetchSchedules } = useQuery({
+  const {
+    data: schedules,
+    isLoading: schedulesLoading,
+    refetch: refetchSchedules,
+  } = useQuery({
     queryKey: ["oncall-schedules"],
     queryFn: async () => {
       const response = await apiClient.get("/oncall/schedules");
@@ -57,7 +54,11 @@ export default function OnCallSchedulePage() {
   });
 
   // Fetch current on-call
-  const { data: currentOnCall, isLoading: currentLoading, refetch: refetchCurrent } = useQuery({
+  const {
+    data: currentOnCall,
+    isLoading: currentLoading,
+    refetch: refetchCurrent,
+  } = useQuery({
     queryKey: ["oncall-current"],
     queryFn: async () => {
       const response = await apiClient.get("/oncall/current");
@@ -81,7 +82,13 @@ export default function OnCallSchedulePage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => {refetchSchedules(); refetchCurrent()}}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              refetchSchedules();
+              refetchCurrent();
+            }}
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -114,9 +121,7 @@ export default function OnCallSchedulePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {currentOnCall?.length || 0}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{currentOnCall?.length || 0}</div>
           </CardContent>
         </Card>
 
@@ -180,7 +185,9 @@ export default function OnCallSchedulePage() {
                     <TableCell>
                       <div className="text-sm">
                         <div>{formatDate(oncall.start_time)}</div>
-                        <div className="text-muted-foreground">to {formatDate(oncall.end_time)}</div>
+                        <div className="text-muted-foreground">
+                          to {formatDate(oncall.end_time)}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>

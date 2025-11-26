@@ -92,18 +92,38 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
 
   const getHealthBadge = (score: number) => {
     if (score >= HEALTH_SCORE_THRESHOLDS.HEALTHY)
-      return <Badge variant="outline" className="bg-green-500">Healthy</Badge>;
+      return (
+        <Badge variant="outline" className="bg-green-500">
+          Healthy
+        </Badge>
+      );
     if (score >= HEALTH_SCORE_THRESHOLDS.FAIR)
-      return <Badge variant="outline" className="bg-yellow-500">Fair</Badge>;
+      return (
+        <Badge variant="outline" className="bg-yellow-500">
+          Fair
+        </Badge>
+      );
     if (score >= HEALTH_SCORE_THRESHOLDS.DEGRADED)
-      return <Badge variant="outline" className="bg-orange-500">Degraded</Badge>;
-    return <Badge variant="destructive" className="">Critical</Badge>;
+      return (
+        <Badge variant="outline" className="bg-orange-500">
+          Degraded
+        </Badge>
+      );
+    return (
+      <Badge variant="destructive" className="">
+        Critical
+      </Badge>
+    );
   };
 
   return (
     <div className="space-y-6">
       {/* PON Port Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" role="list" aria-label="PON ports list">
+      <div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+        role="list"
+        aria-label="PON ports list"
+      >
         {ponPorts.map((port) => {
           const healthScore = getHealthScore(port);
           const opticalStatus = port.avg_rx_power ? getOpticalPowerStatus(port.avg_rx_power) : null;
@@ -201,7 +221,10 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                 <div className="pt-2 border-t">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Operational Status</span>
-                    <Badge variant={port.oper_status === "ACTIVE" ? "outline" : "secondary"} className="">
+                    <Badge
+                      variant={port.oper_status === "ACTIVE" ? "outline" : "secondary"}
+                      className=""
+                    >
                       {port.oper_status}
                     </Badge>
                   </div>
@@ -408,7 +431,10 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
             <div className="p-4 rounded-lg border bg-green-50 border-green-200">
               <div className="text-sm text-green-700 mb-1">Healthy Ports</div>
               <div className="text-2xl font-bold text-green-900">
-                {ponPorts.filter((p) => getHealthScore(p) >= HEALTH_SCORE_THRESHOLDS.HEALTHY).length}
+                {
+                  ponPorts.filter((p) => getHealthScore(p) >= HEALTH_SCORE_THRESHOLDS.HEALTHY)
+                    .length
+                }
               </div>
             </div>
             <div className="p-4 rounded-lg border bg-yellow-50 border-yellow-200">
@@ -438,7 +464,10 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
             <div className="p-4 rounded-lg border bg-red-50 border-red-200">
               <div className="text-sm text-red-700 mb-1">Critical Ports</div>
               <div className="text-2xl font-bold text-red-900">
-                {ponPorts.filter((p) => getHealthScore(p) < HEALTH_SCORE_THRESHOLDS.DEGRADED).length}
+                {
+                  ponPorts.filter((p) => getHealthScore(p) < HEALTH_SCORE_THRESHOLDS.DEGRADED)
+                    .length
+                }
               </div>
             </div>
           </div>

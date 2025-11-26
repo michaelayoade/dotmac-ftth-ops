@@ -30,19 +30,21 @@ export interface TenantInvitation {
 }
 
 export interface TenantOnboardingRequest {
-  tenant: {
-    name: string;
-    slug: string;
-    plan: string;
-    contact_email: string | undefined;
-    contact_phone: string | undefined;
-    billing_email: string | undefined;
-    address: string | undefined;
-    city: string | undefined;
-    state: string | undefined;
-    postal_code: string | undefined;
-    country: string | undefined;
-  } | undefined;
+  tenant:
+    | {
+        name: string;
+        slug: string;
+        plan: string;
+        contact_email: string | undefined;
+        contact_phone: string | undefined;
+        billing_email: string | undefined;
+        address: string | undefined;
+        city: string | undefined;
+        state: string | undefined;
+        postal_code: string | undefined;
+        country: string | undefined;
+      }
+    | undefined;
   tenant_id: string | undefined;
   options: OnboardingOptions;
   admin_user: OnboardingAdminUser | undefined;

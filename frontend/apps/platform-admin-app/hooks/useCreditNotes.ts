@@ -19,7 +19,10 @@ export interface CreditNoteSummary {
 
 type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
 
-async function fetchCreditNotes(limit: number, buildUrl: BuildApiUrl): Promise<CreditNoteSummary[]> {
+async function fetchCreditNotes(
+  limit: number,
+  buildUrl: BuildApiUrl,
+): Promise<CreditNoteSummary[]> {
   const params = new URLSearchParams({ limit: String(limit) });
   const endpoint = buildUrl(`/billing/credit-notes?${params.toString()}`);
 

@@ -19,14 +19,7 @@ import {
   Badge,
   Skeleton,
 } from "@dotmac/ui";
-import {
-  Building2,
-  Flag,
-  ShieldCheck,
-  Server,
-  BarChart3,
-  Compass,
-} from "lucide-react";
+import { Building2, Flag, ShieldCheck, Server, BarChart3, Compass } from "lucide-react";
 
 import { PlatformStatsOverview } from "./platform-admin/components/PlatformStatsOverview";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
@@ -216,18 +209,17 @@ function TopTenantsCard({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`border ${TENANT_STATUS_CLASSES[tenant.status]}`} variant="outline">
+                    <Badge
+                      className={`border ${TENANT_STATUS_CLASSES[tenant.status]}`}
+                      variant="outline"
+                    >
                       {TENANT_STATUS_LABELS[tenant.status]}
                     </Badge>
                   </TableCell>
                   <TableCell className="capitalize">
-                    {tenant.subscription?.plan
-                      ? tenant.subscription.plan.replace(/_/g, " ")
-                      : "—"}
+                    {tenant.subscription?.plan ? tenant.subscription.plan.replace(/_/g, " ") : "—"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {tenant.usage?.users ?? "—"}
-                  </TableCell>
+                  <TableCell className="text-right">{tenant.usage?.users ?? "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

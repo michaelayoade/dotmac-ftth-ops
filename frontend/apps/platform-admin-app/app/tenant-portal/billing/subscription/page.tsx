@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTenantSubscription, AvailablePlan, type SubscriptionCancelRequest } from "@/hooks/useTenantSubscription";
+import {
+  useTenantSubscription,
+  AvailablePlan,
+  type SubscriptionCancelRequest,
+} from "@/hooks/useTenantSubscription";
 import { SubscriptionCard } from "@/components/tenant/billing/SubscriptionCard";
 import { PlanComparison } from "@/components/tenant/billing/PlanComparison";
 import { UpgradeModal } from "@/components/tenant/billing/UpgradeModal";
@@ -10,12 +14,7 @@ import { SubscriptionPageSkeleton } from "@/components/tenant/billing/SkeletonLo
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
-import {
-  AlertCircle,
-  CreditCard,
-  Receipt,
-  TrendingUp,
-} from "lucide-react";
+import { AlertCircle, CreditCard, Receipt, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 export default function SubscriptionPage() {

@@ -810,7 +810,7 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
 
       it("should reflect loading state from all queries", async () => {
         apiClient.get.mockImplementation(
-          () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 100))
+          () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 100)),
         );
 
         const wrapper = createQueryWrapper();
@@ -818,9 +818,12 @@ export function runUseScheduledDeploymentsSuite(config: TestSuiteConfig) {
 
         expect(result.current.isLoading).toBe(true);
 
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        }, { timeout: 200 });
+        await waitFor(
+          () => {
+            expect(result.current.isLoading).toBe(false);
+          },
+          { timeout: 200 },
+        );
       });
 
       it("should reflect error state from queries", async () => {

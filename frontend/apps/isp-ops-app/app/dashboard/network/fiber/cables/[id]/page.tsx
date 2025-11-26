@@ -8,14 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useFiberCableDetailsAggregated } from "@/hooks/useFiberGraphQL";
 import { useAppConfig } from "@/providers/AppConfigContext";
@@ -650,7 +643,11 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                     Interactive fiber map visualization
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Visit the <a href="/dashboard/network/fiber/map" className="text-primary hover:underline">Fiber Map page</a> for full network visualization
+                    Visit the{" "}
+                    <a href="/dashboard/network/fiber/map" className="text-primary hover:underline">
+                      Fiber Map page
+                    </a>{" "}
+                    for full network visualization
                   </p>
                 </div>
               </div>

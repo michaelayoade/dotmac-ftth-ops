@@ -69,11 +69,7 @@ export function ClientProviders({ children }: { children: ReactNode }) {
             <QueryClientProvider client={queryClient}>
               <ApolloProvider>
                 <TenantProvider>
-                  {shouldWrapWithRBAC ? (
-                    <RBACProvider>{appProviders}</RBACProvider>
-                  ) : (
-                    appProviders
-                  )}
+                  {shouldWrapWithRBAC ? <RBACProvider>{appProviders}</RBACProvider> : appProviders}
                 </TenantProvider>
               </ApolloProvider>
             </QueryClientProvider>

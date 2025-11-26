@@ -132,7 +132,12 @@ export function useAccessPointDetailGraphQL(options: UseAccessPointDetailOptions
   });
 
   const accessPoint = data?.accessPoint ?? null;
-  const normalizedLoading = normalizeLoadingState(loading, enabled && Boolean(id), hasDefinedData(data), error);
+  const normalizedLoading = normalizeLoadingState(
+    loading,
+    enabled && Boolean(id),
+    hasDefinedData(data),
+    error,
+  );
 
   return {
     accessPoint,

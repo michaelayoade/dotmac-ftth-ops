@@ -100,8 +100,8 @@ export const PluginHealthDashboard = ({
   );
 
   const totalInstances = instances.length;
-  const healthyCount = healthStats['healthy'] || 0;
-  const unhealthyCount = (healthStats['unhealthy'] || 0) + (healthStats['error'] || 0);
+  const healthyCount = healthStats["healthy"] || 0;
+  const unhealthyCount = (healthStats["unhealthy"] || 0) + (healthStats["error"] || 0);
 
   const healthPercentage =
     totalInstances > 0 ? Math.round((healthyCount / totalInstances) * 100) : 0;

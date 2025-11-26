@@ -65,7 +65,7 @@ interface Activation {
 
 function LicenseDetailsPageContent() {
   const params = useParams();
-  const licenseId = params?.['licenseId'] as string;
+  const licenseId = params?.["licenseId"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { api } = useAppConfig();
@@ -130,15 +130,12 @@ function LicenseDetailsPageContent() {
   // Renew license mutation
   const renewMutation = useMutation({
     mutationFn: async (duration: number) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/licensing/licenses/${licenseId}/renew`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ duration_days: duration }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/licensing/licenses/${licenseId}/renew`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ duration_days: duration }),
+      });
       if (!response.ok) throw new Error("Failed to renew license");
       return response.json();
     },
@@ -156,7 +153,10 @@ function LicenseDetailsPageContent() {
   });
 
   const getStatusBadge = (status: LicenseStatus) => {
-    const statusConfig: Record<LicenseStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      LicenseStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       ACTIVE: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       EXPIRED: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Expired" },
       SUSPENDED: { icon: Ban, color: "bg-orange-100 text-orange-800", label: "Suspended" },
@@ -184,11 +184,7 @@ function LicenseDetailsPageContent() {
       FLOATING: "bg-indigo-100 text-indigo-800",
     };
 
-    return (
-      <Badge className={typeColors[type] || "bg-gray-100 text-gray-800"}>
-        {type}
-      </Badge>
-    );
+    return <Badge className={typeColors[type] || "bg-gray-100 text-gray-800"}>{type}</Badge>;
   };
 
   if (isLoading) {
@@ -204,7 +200,9 @@ function LicenseDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">License Not Found</h2>
-        <p className="text-muted-foreground mb-4">The license you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The license you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/licensing">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -237,7 +235,7 @@ function LicenseDetailsPageContent() {
             <Button
               variant="outline"
               onClick={() => {
-    // eslint-disable-next-line no-alert
+                // eslint-disable-next-line no-alert
                 const reason = prompt("Reason for suspension:");
                 if (reason) {
                   suspendMutation.mutate(reason);
@@ -252,7 +250,7 @@ function LicenseDetailsPageContent() {
           {(license.status === "EXPIRED" || license.status === "SUSPENDED") && (
             <Button
               onClick={() => {
-    // eslint-disable-next-line no-alert
+                // eslint-disable-next-line no-alert
                 const days = prompt("Renewal duration (days):", "365");
                 if (days) {
                   renewMutation.mutate(parseInt(days));
@@ -310,7 +308,7 @@ function LicenseDetailsPageContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {activations.filter(a => !a.deactivated_at).length}
+              {activations.filter((a) => !a.deactivated_at).length}
             </div>
             <p className="text-xs text-muted-foreground">Currently active</p>
           </CardContent>
@@ -322,9 +320,7 @@ function LicenseDetailsPageContent() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold">
-              {format(new Date(license.issued_at), "PP")}
-            </div>
+            <div className="text-lg font-bold">{format(new Date(license.issued_at), "PP")}</div>
             <p className="text-xs text-muted-foreground">Issue date</p>
           </CardContent>
         </Card>
@@ -378,29 +374,26 @@ function LicenseDetailsPageContent() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Created At</p>
                   </div>
-                  <p className="font-medium">
-                    {format(new Date(license.created_at), "PPpp")}
-                  </p>
+                  <p className="font-medium">{format(new Date(license.created_at), "PPpp")}</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Last Updated</p>
                   </div>
-                  <p className="font-medium">
-                    {format(new Date(license.updated_at), "PPpp")}
-                  </p>
+                  <p className="font-medium">{format(new Date(license.updated_at), "PPpp")}</p>
                 </div>
               </div>
 
-              {!!license.metadata && Object.keys(license.metadata as Record<string, unknown>).length > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Metadata</p>
-                  <pre className="p-3 bg-accent rounded-lg overflow-x-auto text-xs">
-                    {JSON.stringify(license.metadata, null, 2)}
-                  </pre>
-                </div>
-              )}
+              {!!license.metadata &&
+                Object.keys(license.metadata as Record<string, unknown>).length > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Metadata</p>
+                    <pre className="p-3 bg-accent rounded-lg overflow-x-auto text-xs">
+                      {JSON.stringify(license.metadata, null, 2)}
+                    </pre>
+                  </div>
+                )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -444,9 +437,7 @@ function LicenseDetailsPageContent() {
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">IP Address</p>
-                        <p className="font-medium font-mono">
-                          {activation.ip_address || "N/A"}
-                        </p>
+                        <p className="font-medium font-mono">{activation.ip_address || "N/A"}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Activated</p>

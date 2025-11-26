@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Ticket,
   Search,
@@ -87,10 +81,9 @@ function TicketingPageContent() {
       if (priorityFilter !== "all") params.append("priority", priorityFilter);
       if (searchQuery) params.append("search", searchQuery);
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/tickets?${params.toString()}`,
-        { credentials: "include" },
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/tickets?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch tickets");
       return response.json();
     },
@@ -113,11 +106,11 @@ function TicketingPageContent() {
 
   const stats: TicketStats = statsData || {
     total_tickets: tickets.length,
-    open_tickets: tickets.filter(t => t.status === "open").length,
-    in_progress_tickets: tickets.filter(t => t.status === "in_progress").length,
-    waiting_tickets: tickets.filter(t => t.status === "waiting").length,
-    resolved_tickets: tickets.filter(t => t.status === "resolved").length,
-    closed_tickets: tickets.filter(t => t.status === "closed").length,
+    open_tickets: tickets.filter((t) => t.status === "open").length,
+    in_progress_tickets: tickets.filter((t) => t.status === "in_progress").length,
+    waiting_tickets: tickets.filter((t) => t.status === "waiting").length,
+    resolved_tickets: tickets.filter((t) => t.status === "resolved").length,
+    closed_tickets: tickets.filter((t) => t.status === "closed").length,
   };
 
   const filteredTickets = tickets.filter((ticket) => {
@@ -125,8 +118,10 @@ function TicketingPageContent() {
       !searchQuery ||
       ticket.ticket_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (ticket.customer_email && ticket.customer_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (ticket.customer_name && ticket.customer_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      (ticket.customer_email &&
+        ticket.customer_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (ticket.customer_name &&
+        ticket.customer_name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return matchesSearch;
   });
@@ -331,9 +326,7 @@ function TicketingPageContent() {
                           {ticket.ticket_number}
                         </Link>
                       </CardTitle>
-                      <CardDescription className="mt-1">
-                        {ticket.subject}
-                      </CardDescription>
+                      <CardDescription className="mt-1">{ticket.subject}</CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

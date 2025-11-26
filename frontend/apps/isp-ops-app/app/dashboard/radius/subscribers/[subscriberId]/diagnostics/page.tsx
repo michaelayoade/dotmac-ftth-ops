@@ -49,7 +49,7 @@ interface DiagnosticRun {
 
 function DiagnosticsPageContent() {
   const params = useParams();
-  const subscriberId = params['subscriberId'] as string;
+  const subscriberId = params["subscriberId"] as string;
   const [activeTab, setActiveTab] = useState<"checks" | "history">("checks");
   const [runningChecks, setRunningChecks] = useState<Set<string>>(new Set());
 
@@ -63,7 +63,7 @@ function DiagnosticsPageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/diagnostics/runs?subscriber_id=${subscriberId}&limit=10`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) return [];
       const data = await response.json();
@@ -79,7 +79,7 @@ function DiagnosticsPageContent() {
         {
           method: "GET",
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) throw new Error("Health check failed");
       return response.json();
@@ -108,7 +108,7 @@ function DiagnosticsPageContent() {
           {
             method,
             credentials: "include",
-          }
+          },
         );
         if (!response.ok) throw new Error(`${checkName} failed`);
         return response.json();
@@ -217,13 +217,16 @@ function DiagnosticsPageContent() {
     },
   ];
 
-  const latestByType = diagnosticChecks.reduce((acc, check) => {
-    const run = latestRuns.find((r) =>
-      r.diagnostic_type.toLowerCase().includes(check.id.replace("-", "_"))
-    );
-    if (run) acc[check.id] = run;
-    return acc;
-  }, {} as Record<string, DiagnosticRun>);
+  const latestByType = diagnosticChecks.reduce(
+    (acc, check) => {
+      const run = latestRuns.find((r) =>
+        r.diagnostic_type.toLowerCase().includes(check.id.replace("-", "_")),
+      );
+      if (run) acc[check.id] = run;
+      return acc;
+    },
+    {} as Record<string, DiagnosticRun>,
+  );
 
   return (
     <div className="space-y-6">
@@ -247,7 +250,9 @@ function DiagnosticsPageContent() {
           disabled={healthCheckMutation.isPending}
           size="lg"
         >
-          <Activity className={`h-4 w-4 mr-2 ${healthCheckMutation.isPending ? "animate-pulse" : ""}`} />
+          <Activity
+            className={`h-4 w-4 mr-2 ${healthCheckMutation.isPending ? "animate-pulse" : ""}`}
+          />
           Run Health Check
         </Button>
       </div>
@@ -275,7 +280,9 @@ function DiagnosticsPageContent() {
                 disabled={cpeRestartCheck.isPending || runningChecks.has("CPE Restart")}
                 className="w-full justify-start"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${cpeRestartCheck.isPending ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${cpeRestartCheck.isPending ? "animate-spin" : ""}`}
+                />
                 Restart CPE Device
               </Button>
               <p className="text-xs text-muted-foreground">
@@ -367,7 +374,9 @@ function DiagnosticsPageContent() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium">
-                              {run.diagnostic_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                              {run.diagnostic_type
+                                .replace(/_/g, " ")
+                                .replace(/\b\w/g, (l) => l.toUpperCase())}
                             </h4>
                             {getStatusBadge(run.status)}
                             {getSeverityBadge(run.severity)}
@@ -379,9 +388,7 @@ function DiagnosticsPageContent() {
                         </div>
                       </div>
 
-                      {run.summary && (
-                        <p className="text-sm">{run.summary}</p>
-                      )}
+                      {run.summary && <p className="text-sm">{run.summary}</p>}
 
                       {run.error_message && (
                         <p className="text-sm text-destructive">{run.error_message}</p>
@@ -391,7 +398,10 @@ function DiagnosticsPageContent() {
                         <div className="mt-2 space-y-1">
                           <p className="text-xs font-medium">Recommendations:</p>
                           {run.recommendations.map((rec, i) => (
-                            <div key={i} className="text-xs p-2 bg-blue-50 dark:bg-blue-950/20 rounded">
+                            <div
+                              key={i}
+                              className="text-xs p-2 bg-blue-50 dark:bg-blue-950/20 rounded"
+                            >
                               <p className="font-medium">{rec.title}</p>
                               <p className="text-muted-foreground">{rec.description}</p>
                             </div>

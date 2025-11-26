@@ -115,14 +115,14 @@ describe("useProfile", () => {
     cleanup();
   });
 
-describe("useUpdateProfile", () => {
-  it("should update profile successfully", async () => {
-    const mockUser = createMockUser();
-    mockedApiClient.patch.mockResolvedValue({ data: mockUser });
+  describe("useUpdateProfile", () => {
+    it("should update profile successfully", async () => {
+      const mockUser = createMockUser();
+      mockedApiClient.patch.mockResolvedValue({ data: mockUser });
 
-    const { result } = renderHook(() => useUpdateProfile(), {
-      wrapper: createQueryWrapper(),
-    });
+      const { result } = renderHook(() => useUpdateProfile(), {
+        wrapper: createQueryWrapper(),
+      });
 
       await act(async () => {
         await result.current.mutateAsync({
@@ -131,16 +131,14 @@ describe("useUpdateProfile", () => {
         });
       });
 
-    expect(mockedApiClient.patch).toHaveBeenCalledWith("/auth/profile", {
-      first_name: "Updated",
-      last_name: "Name",
+      expect(mockedApiClient.patch).toHaveBeenCalledWith("/auth/profile", {
+        first_name: "Updated",
+        last_name: "Name",
+      });
     });
-  });
 
-  it("should handle update profile error", async () => {
-    mockedApiClient.patch.mockRejectedValue(
-      new Error("Update failed")
-    );
+    it("should handle update profile error", async () => {
+      mockedApiClient.patch.mockRejectedValue(new Error("Update failed"));
 
       const { result } = renderHook(() => useUpdateProfile(), {
         wrapper: createQueryWrapper(),

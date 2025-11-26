@@ -14,6 +14,7 @@ Complete reference of all components in the `@dotmac/features` package.
 This catalog provides a comprehensive reference of all 57 shared components in the `@dotmac/features` package, organized by functional module. Each component is documented with its purpose, props, dependencies, and usage examples.
 
 **Quick Stats**:
+
 - **Total Components**: 57
 - **Total LOC**: 27,704
 - **Modules**: 21
@@ -21,74 +22,76 @@ This catalog provides a comprehensive reference of all 57 shared components in t
 
 ## Component Summary Table
 
-| Component | Module | LOC | Purpose | DI Required | Apps Using |
-|-----------|--------|-----|---------|-------------|------------|
-| AddPaymentMethodModal | billing | 460 | Add credit card/bank account | ✅ Yes | Both |
-| AddSubscriberModal | subscribers | 436 | Create new subscriber | ✅ Yes | Both |
-| AlarmDetailModal | faults | 732 | View/manage network alarms | ✅ Yes | ISP Ops |
-| AssignRoleModal | rbac | 392 | Assign roles to users | ✅ Yes | Platform Admin |
-| AutomatedRemediationPanel | remediation | 418 | Automated network fixes | ✅ Yes | ISP Ops |
-| Badges | crm | 157 | CRM status badges | ❌ No | Both |
-| BandwidthProfileDialog | radius | 381 | Create bandwidth profiles | ✅ Yes | ISP Ops |
-| CampaignControlDialog | campaigns | 237 | Start/pause campaigns | ✅ Yes | Both |
-| CompleteSurveyModal | crm | 671 | Complete site surveys | ✅ Yes | ISP Ops |
-| CPEConfigTemplates | cpe | 833 | Mass device configuration | ✅ Yes | ISP Ops |
-| CreateApiKeyModal | api-keys | 469 | Generate API keys | ✅ Yes | Platform Admin |
-| CreateCreditNoteModal | billing | 232 | Issue refunds | ✅ Yes | Both |
-| CreateCustomerModal | customers | 604 | Onboard new customers | ✅ Yes | Both |
-| CreateLeadModal | crm | 533 | Capture new leads | ✅ Yes | ISP Ops |
-| CreateQuoteModal | crm | 859 | Generate sales quotes | ✅ Yes | ISP Ops |
-| CreateRoleModal | rbac | 420 | Create RBAC roles | ✅ Yes | Platform Admin |
-| CustomReportBuilder | analytics | 410 | Build custom reports | ✅ Yes | Platform Admin |
-| CustomerActivities | crm | 411 | Activity timeline | ✅ Yes | Both |
-| CustomerBilling | billing | 386 | Billing overview | ✅ Yes | Both |
-| CustomerDetailModal | customers | 524 | Customer details view | ✅ Yes | Both |
-| CustomerEditModal | customers | 480 | Edit customer info | ✅ Yes | Both |
-| CustomerNetwork | customers | 479 | Network service details | ✅ Yes | ISP Ops |
-| CustomerNotes | customers | 537 | Notes and history | ✅ Yes | Both |
-| CustomersList | customers | 727 | Customer table | ✅ Yes | Both |
-| CustomerSubscriptions | crm | 300 | Subscription overview | ❌ No | Both |
-| CustomersMetrics | crm | 287 | Customer KPIs | ❌ No | Both |
-| CustomerViewModal | crm | 317 | Comprehensive customer view | ✅ Yes | ISP Ops |
-| DeviceManagement | cpe | 462 | CPE device management | ✅ Yes | ISP Ops |
-| DiagnosticsDashboard | diagnostics | 412 | Network diagnostics | ✅ Yes | ISP Ops |
-| DualStackMetricsDashboard | monitoring | 550 | IPv4/IPv6 monitoring | ✅ Yes | ISP Ops |
-| ErrorBoundary | error-handling | 295 | Error handling | ❌ No | Both |
-| InvoiceDetailModal | billing | 550 | Invoice details | ✅ Yes | Both |
-| InvoiceList | billing | 527 | Invoice table | ✅ Yes | Both |
-| InvoiceStatusBadge | billing | 25 | Invoice status badge | ❌ No | Both |
-| IPAddressList | ipam | 454 | IP address management | ✅ Yes | ISP Ops |
-| LeadDetailModal | crm | 845 | Lead details/conversion | ✅ Yes | ISP Ops |
-| NASDeviceDialog | radius | 392 | Manage NAS devices | ✅ Yes | ISP Ops |
-| NetworkMonitoringDashboard | monitoring | 552 | Network metrics | ✅ Yes | ISP Ops |
-| NotificationCenter | notifications | 421 | Notification inbox | ✅ Yes | Both |
-| OLTManagement | network | 322 | OLT management | ✅ Yes | ISP Ops |
-| ONUDetailView | network | 385 | ONU details | ✅ Yes | ISP Ops |
-| ONUListView | network | 447 | ONU inventory | ✅ Yes | ISP Ops |
-| PaymentStatusBadge | billing | 25 | Payment status badge | ❌ No | Both |
-| PermissionGuard | rbac | 407 | Permission checks | ✅ Yes | Both |
-| PreviewTemplateModal | notifications | 375 | Preview email templates | ✅ Yes | Both |
-| QuoteDetailModal | crm | 596 | Quote review | ✅ Yes | ISP Ops |
-| RadiusSessionMonitor | radius | 283 | Active sessions | ✅ Yes | ISP Ops |
-| ReceiptDetailModal | billing | 254 | Receipt details | ✅ Yes | Both |
-| ReceiptList | billing | 543 | Receipt table | ✅ Yes | Both |
-| RecordPaymentModal | billing | 564 | Manual payment entry | ✅ Yes | Both |
-| ReportingDashboard | analytics | 446 | Report viewer | ✅ Yes | Platform Admin |
-| RoleDetailsModal | rbac | 391 | View role details | ✅ Yes | Platform Admin |
-| SkeletonLoaders | billing | 373 | Billing loading states | ❌ No | Both |
-| SubscriberDetailModal | subscribers | 570 | Subscriber details | ✅ Yes | Both |
-| SubscriberProvisionForm | provisioning | 390 | Provision subscribers | ✅ Yes | ISP Ops |
-| AddressAutocomplete | forms | 384 | Address autocomplete | ✅ Yes | Both |
-| CommunicationDetailModal | notifications | 487 | View communications | ✅ Yes | Both |
+| Component                  | Module         | LOC | Purpose                      | DI Required | Apps Using     |
+| -------------------------- | -------------- | --- | ---------------------------- | ----------- | -------------- |
+| AddPaymentMethodModal      | billing        | 460 | Add credit card/bank account | ✅ Yes      | Both           |
+| AddSubscriberModal         | subscribers    | 436 | Create new subscriber        | ✅ Yes      | Both           |
+| AlarmDetailModal           | faults         | 732 | View/manage network alarms   | ✅ Yes      | ISP Ops        |
+| AssignRoleModal            | rbac           | 392 | Assign roles to users        | ✅ Yes      | Platform Admin |
+| AutomatedRemediationPanel  | remediation    | 418 | Automated network fixes      | ✅ Yes      | ISP Ops        |
+| Badges                     | crm            | 157 | CRM status badges            | ❌ No       | Both           |
+| BandwidthProfileDialog     | radius         | 381 | Create bandwidth profiles    | ✅ Yes      | ISP Ops        |
+| CampaignControlDialog      | campaigns      | 237 | Start/pause campaigns        | ✅ Yes      | Both           |
+| CompleteSurveyModal        | crm            | 671 | Complete site surveys        | ✅ Yes      | ISP Ops        |
+| CPEConfigTemplates         | cpe            | 833 | Mass device configuration    | ✅ Yes      | ISP Ops        |
+| CreateApiKeyModal          | api-keys       | 469 | Generate API keys            | ✅ Yes      | Platform Admin |
+| CreateCreditNoteModal      | billing        | 232 | Issue refunds                | ✅ Yes      | Both           |
+| CreateCustomerModal        | customers      | 604 | Onboard new customers        | ✅ Yes      | Both           |
+| CreateLeadModal            | crm            | 533 | Capture new leads            | ✅ Yes      | ISP Ops        |
+| CreateQuoteModal           | crm            | 859 | Generate sales quotes        | ✅ Yes      | ISP Ops        |
+| CreateRoleModal            | rbac           | 420 | Create RBAC roles            | ✅ Yes      | Platform Admin |
+| CustomReportBuilder        | analytics      | 410 | Build custom reports         | ✅ Yes      | Platform Admin |
+| CustomerActivities         | crm            | 411 | Activity timeline            | ✅ Yes      | Both           |
+| CustomerBilling            | billing        | 386 | Billing overview             | ✅ Yes      | Both           |
+| CustomerDetailModal        | customers      | 524 | Customer details view        | ✅ Yes      | Both           |
+| CustomerEditModal          | customers      | 480 | Edit customer info           | ✅ Yes      | Both           |
+| CustomerNetwork            | customers      | 479 | Network service details      | ✅ Yes      | ISP Ops        |
+| CustomerNotes              | customers      | 537 | Notes and history            | ✅ Yes      | Both           |
+| CustomersList              | customers      | 727 | Customer table               | ✅ Yes      | Both           |
+| CustomerSubscriptions      | crm            | 300 | Subscription overview        | ❌ No       | Both           |
+| CustomersMetrics           | crm            | 287 | Customer KPIs                | ❌ No       | Both           |
+| CustomerViewModal          | crm            | 317 | Comprehensive customer view  | ✅ Yes      | ISP Ops        |
+| DeviceManagement           | cpe            | 462 | CPE device management        | ✅ Yes      | ISP Ops        |
+| DiagnosticsDashboard       | diagnostics    | 412 | Network diagnostics          | ✅ Yes      | ISP Ops        |
+| DualStackMetricsDashboard  | monitoring     | 550 | IPv4/IPv6 monitoring         | ✅ Yes      | ISP Ops        |
+| ErrorBoundary              | error-handling | 295 | Error handling               | ❌ No       | Both           |
+| InvoiceDetailModal         | billing        | 550 | Invoice details              | ✅ Yes      | Both           |
+| InvoiceList                | billing        | 527 | Invoice table                | ✅ Yes      | Both           |
+| InvoiceStatusBadge         | billing        | 25  | Invoice status badge         | ❌ No       | Both           |
+| IPAddressList              | ipam           | 454 | IP address management        | ✅ Yes      | ISP Ops        |
+| LeadDetailModal            | crm            | 845 | Lead details/conversion      | ✅ Yes      | ISP Ops        |
+| NASDeviceDialog            | radius         | 392 | Manage NAS devices           | ✅ Yes      | ISP Ops        |
+| NetworkMonitoringDashboard | monitoring     | 552 | Network metrics              | ✅ Yes      | ISP Ops        |
+| NotificationCenter         | notifications  | 421 | Notification inbox           | ✅ Yes      | Both           |
+| OLTManagement              | network        | 322 | OLT management               | ✅ Yes      | ISP Ops        |
+| ONUDetailView              | network        | 385 | ONU details                  | ✅ Yes      | ISP Ops        |
+| ONUListView                | network        | 447 | ONU inventory                | ✅ Yes      | ISP Ops        |
+| PaymentStatusBadge         | billing        | 25  | Payment status badge         | ❌ No       | Both           |
+| PermissionGuard            | rbac           | 407 | Permission checks            | ✅ Yes      | Both           |
+| PreviewTemplateModal       | notifications  | 375 | Preview email templates      | ✅ Yes      | Both           |
+| QuoteDetailModal           | crm            | 596 | Quote review                 | ✅ Yes      | ISP Ops        |
+| RadiusSessionMonitor       | radius         | 283 | Active sessions              | ✅ Yes      | ISP Ops        |
+| ReceiptDetailModal         | billing        | 254 | Receipt details              | ✅ Yes      | Both           |
+| ReceiptList                | billing        | 543 | Receipt table                | ✅ Yes      | Both           |
+| RecordPaymentModal         | billing        | 564 | Manual payment entry         | ✅ Yes      | Both           |
+| ReportingDashboard         | analytics      | 446 | Report viewer                | ✅ Yes      | Platform Admin |
+| RoleDetailsModal           | rbac           | 391 | View role details            | ✅ Yes      | Platform Admin |
+| SkeletonLoaders            | billing        | 373 | Billing loading states       | ❌ No       | Both           |
+| SubscriberDetailModal      | subscribers    | 570 | Subscriber details           | ✅ Yes      | Both           |
+| SubscriberProvisionForm    | provisioning   | 390 | Provision subscribers        | ✅ Yes      | ISP Ops        |
+| AddressAutocomplete        | forms          | 384 | Address autocomplete         | ✅ Yes      | Both           |
+| CommunicationDetailModal   | notifications  | 487 | View communications          | ✅ Yes      | Both           |
 
 ## Components by Module
 
 ### Analytics Module
 
 #### CustomReportBuilder
+
 **Purpose**: Build custom reports with filters, grouping, and aggregations
 
 **Props**:
+
 ```typescript
 interface CustomReportBuilderProps {
   apiClient: CustomReportBuilderApiClient;
@@ -98,6 +101,7 @@ interface CustomReportBuilderProps {
 ```
 
 **Features**:
+
 - Multiple data sources (customers, invoices, subscribers)
 - Filter builder with AND/OR logic
 - Column selection and ordering
@@ -108,6 +112,7 @@ interface CustomReportBuilderProps {
 **Dependencies**: apiClient, useToast
 
 **Example**:
+
 ```typescript
 import { CustomReportBuilder } from "@/components/analytics/CustomReportBuilder";
 
@@ -119,9 +124,11 @@ import { CustomReportBuilder } from "@/components/analytics/CustomReportBuilder"
 ---
 
 #### ReportingDashboard
+
 **Purpose**: View, manage, and run saved reports
 
 **Props**:
+
 ```typescript
 interface ReportingDashboardProps {
   apiClient: ReportingDashboardApiClient;
@@ -130,6 +137,7 @@ interface ReportingDashboardProps {
 ```
 
 **Features**:
+
 - List all saved reports
 - Run reports on-demand
 - View report results
@@ -143,9 +151,11 @@ interface ReportingDashboardProps {
 ### API Keys Module
 
 #### CreateApiKeyModal
+
 **Purpose**: Generate API keys with scoped permissions
 
 **Props**:
+
 ```typescript
 interface CreateApiKeyModalProps {
   open: boolean;
@@ -157,6 +167,7 @@ interface CreateApiKeyModalProps {
 ```
 
 **Features**:
+
 - Set key name and description
 - Configure permissions (read, write, admin)
 - Set expiration date
@@ -166,6 +177,7 @@ interface CreateApiKeyModalProps {
 **Dependencies**: apiClient, useToast
 
 **Example**:
+
 ```typescript
 import { CreateApiKeyModal } from "@/components/api-keys/CreateApiKeyModal";
 
@@ -183,9 +195,11 @@ import { CreateApiKeyModal } from "@/components/api-keys/CreateApiKeyModal";
 ### Billing Module
 
 #### CustomerBilling
+
 **Purpose**: Comprehensive billing overview for a customer
 
 **Props**:
+
 ```typescript
 interface CustomerBillingProps {
   customerId: string;
@@ -196,6 +210,7 @@ interface CustomerBillingProps {
 ```
 
 **Features**:
+
 - Billing summary metrics (revenue, outstanding, overdue)
 - Invoice list with status
 - Payment history
@@ -205,6 +220,7 @@ interface CustomerBillingProps {
 **Dependencies**: apiClient, useToast, invoiceViewUrlPrefix
 
 **Example**:
+
 ```typescript
 import { CustomerBilling } from "@/components/customers/CustomerBilling";
 
@@ -214,9 +230,11 @@ import { CustomerBilling } from "@/components/customers/CustomerBilling";
 ---
 
 #### InvoiceList
+
 **Purpose**: Tabular display of invoices with filtering and sorting
 
 **Props**:
+
 ```typescript
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -228,6 +246,7 @@ interface InvoiceListProps {
 ```
 
 **Features**:
+
 - Sortable columns
 - Status filtering
 - Date range filtering
@@ -239,9 +258,11 @@ interface InvoiceListProps {
 ---
 
 #### InvoiceDetailModal
+
 **Purpose**: Detailed invoice view with line items
 
 **Props**:
+
 ```typescript
 interface InvoiceDetailModalProps {
   open: boolean;
@@ -253,6 +274,7 @@ interface InvoiceDetailModalProps {
 ```
 
 **Features**:
+
 - Invoice header (number, date, status)
 - Line items table
 - Subtotal/tax/total breakdown
@@ -265,9 +287,11 @@ interface InvoiceDetailModalProps {
 ---
 
 #### AddPaymentMethodModal
+
 **Purpose**: Add credit card or bank account for payments
 
 **Props**:
+
 ```typescript
 interface AddPaymentMethodModalProps {
   open: boolean;
@@ -280,6 +304,7 @@ interface AddPaymentMethodModalProps {
 ```
 
 **Features**:
+
 - Credit card entry (Stripe integration)
 - Bank account (ACH) setup
 - Set as default payment method
@@ -291,9 +316,11 @@ interface AddPaymentMethodModalProps {
 ---
 
 #### RecordPaymentModal
+
 **Purpose**: Manually record payments (cash, check, wire transfer)
 
 **Props**:
+
 ```typescript
 interface RecordPaymentModalProps {
   open: boolean;
@@ -307,6 +334,7 @@ interface RecordPaymentModalProps {
 ```
 
 **Features**:
+
 - Payment method selection
 - Amount entry
 - Invoice association
@@ -319,9 +347,11 @@ interface RecordPaymentModalProps {
 ---
 
 #### CreateCreditNoteModal
+
 **Purpose**: Issue refunds and credits
 
 **Props**:
+
 ```typescript
 interface CreateCreditNoteModalProps {
   open: boolean;
@@ -334,6 +364,7 @@ interface CreateCreditNoteModalProps {
 ```
 
 **Features**:
+
 - Partial or full refund
 - Reason for credit
 - Item-level credits
@@ -344,9 +375,11 @@ interface CreateCreditNoteModalProps {
 ---
 
 #### ReceiptList
+
 **Purpose**: Display payment receipts
 
 **Props**:
+
 ```typescript
 interface ReceiptListProps {
   receipts: Receipt[];
@@ -357,6 +390,7 @@ interface ReceiptListProps {
 ```
 
 **Features**:
+
 - Payment method display
 - Status indicators
 - Amount formatting
@@ -367,9 +401,11 @@ interface ReceiptListProps {
 ---
 
 #### ReceiptDetailModal
+
 **Purpose**: Detailed receipt view
 
 **Props**:
+
 ```typescript
 interface ReceiptDetailModalProps {
   open: boolean;
@@ -381,6 +417,7 @@ interface ReceiptDetailModalProps {
 ```
 
 **Features**:
+
 - Receipt information
 - Associated invoice
 - Payment method
@@ -391,9 +428,11 @@ interface ReceiptDetailModalProps {
 ---
 
 #### InvoiceStatusBadge
+
 **Purpose**: Visual status indicator for invoices
 
 **Props**:
+
 ```typescript
 interface InvoiceStatusBadgeProps {
   status: "paid" | "pending" | "overdue" | "cancelled";
@@ -407,9 +446,11 @@ interface InvoiceStatusBadgeProps {
 ---
 
 #### PaymentStatusBadge
+
 **Purpose**: Visual status indicator for payments
 
 **Props**:
+
 ```typescript
 interface PaymentStatusBadgeProps {
   status: "succeeded" | "failed" | "pending";
@@ -423,6 +464,7 @@ interface PaymentStatusBadgeProps {
 ---
 
 #### SkeletonLoaders
+
 **Purpose**: Loading states for billing components
 
 **Exports**: `InvoiceListSkeleton`, `ReceiptListSkeleton`, `BillingSummarySkeleton`
@@ -434,9 +476,11 @@ interface PaymentStatusBadgeProps {
 ### CRM Module
 
 #### CustomersMetrics
+
 **Purpose**: Customer KPIs and analytics
 
 **Props**:
+
 ```typescript
 interface CustomersMetricsProps {
   metrics: CustomerMetrics | null;
@@ -456,6 +500,7 @@ interface CustomerMetrics {
 ```
 
 **Features**:
+
 - Metric cards (total, active, revenue, LTV)
 - Distribution charts (status, tier, type)
 - Top segments
@@ -466,9 +511,11 @@ interface CustomerMetrics {
 ---
 
 #### CustomerSubscriptions
+
 **Purpose**: Display customer's active subscriptions
 
 **Props**:
+
 ```typescript
 interface CustomerSubscriptionsProps {
   subscriptions: Subscription[];
@@ -477,6 +524,7 @@ interface CustomerSubscriptionsProps {
 ```
 
 **Features**:
+
 - Subscription list
 - Status badges
 - Renewal dates
@@ -487,9 +535,11 @@ interface CustomerSubscriptionsProps {
 ---
 
 #### CustomerActivities
+
 **Purpose**: Activity timeline for customer
 
 **Props**:
+
 ```typescript
 interface CustomerActivitiesProps {
   customerId: string;
@@ -499,6 +549,7 @@ interface CustomerActivitiesProps {
 ```
 
 **Features**:
+
 - Chronological activity feed
 - Activity type icons
 - User attribution
@@ -509,9 +560,11 @@ interface CustomerActivitiesProps {
 ---
 
 #### CreateLeadModal
+
 **Purpose**: Capture new sales leads
 
 **Props**:
+
 ```typescript
 interface CreateLeadModalProps {
   open: boolean;
@@ -523,6 +576,7 @@ interface CreateLeadModalProps {
 ```
 
 **Features**:
+
 - Lead information form
 - Source tracking
 - Priority assignment
@@ -533,9 +587,11 @@ interface CreateLeadModalProps {
 ---
 
 #### LeadDetailModal
+
 **Purpose**: View and manage lead details
 
 **Props**:
+
 ```typescript
 interface LeadDetailModalProps {
   open: boolean;
@@ -548,6 +604,7 @@ interface LeadDetailModalProps {
 ```
 
 **Features**:
+
 - Lead information display
 - Status updates
 - Convert to customer
@@ -559,9 +616,11 @@ interface LeadDetailModalProps {
 ---
 
 #### CreateQuoteModal
+
 **Purpose**: Generate sales quotes
 
 **Props**:
+
 ```typescript
 interface CreateQuoteModalProps {
   open: boolean;
@@ -575,6 +634,7 @@ interface CreateQuoteModalProps {
 ```
 
 **Features**:
+
 - Line item builder
 - Discount application
 - Tax calculation
@@ -586,9 +646,11 @@ interface CreateQuoteModalProps {
 ---
 
 #### QuoteDetailModal
+
 **Purpose**: View and manage quotes
 
 **Props**:
+
 ```typescript
 interface QuoteDetailModalProps {
   open: boolean;
@@ -600,6 +662,7 @@ interface QuoteDetailModalProps {
 ```
 
 **Features**:
+
 - Quote details
 - Approve/reject
 - Convert to order
@@ -611,9 +674,11 @@ interface QuoteDetailModalProps {
 ---
 
 #### CompleteSurveyModal
+
 **Purpose**: Complete site surveys
 
 **Props**:
+
 ```typescript
 interface CompleteSurveyModalProps {
   open: boolean;
@@ -626,6 +691,7 @@ interface CompleteSurveyModalProps {
 ```
 
 **Features**:
+
 - Survey form with multiple field types
 - Photo upload
 - GPS coordinates
@@ -637,9 +703,11 @@ interface CompleteSurveyModalProps {
 ---
 
 #### CustomerViewModal
+
 **Purpose**: Comprehensive customer overview
 
 **Props**:
+
 ```typescript
 interface CustomerViewModalProps {
   open: boolean;
@@ -651,6 +719,7 @@ interface CustomerViewModalProps {
 ```
 
 **Features**:
+
 - Customer details
 - Subscriptions
 - Billing summary
@@ -662,6 +731,7 @@ interface CustomerViewModalProps {
 ---
 
 #### Badges
+
 **Purpose**: Status and type badges for CRM entities
 
 **Exports**: `LeadStatusBadge`, `QuoteStatusBadge`, `SurveyStatusBadge`
@@ -673,9 +743,11 @@ interface CustomerViewModalProps {
 ### Customers Module
 
 #### CustomersList
+
 **Purpose**: Searchable, filterable customer table
 
 **Props**:
+
 ```typescript
 interface CustomersListProps {
   apiClient: CustomersListApiClient;
@@ -685,6 +757,7 @@ interface CustomersListProps {
 ```
 
 **Features**:
+
 - Search by name/email
 - Filter by status/tier
 - Sortable columns
@@ -696,9 +769,11 @@ interface CustomersListProps {
 ---
 
 #### CreateCustomerModal
+
 **Purpose**: Onboard new customers
 
 **Props**:
+
 ```typescript
 interface CreateCustomerModalProps {
   open: boolean;
@@ -710,6 +785,7 @@ interface CreateCustomerModalProps {
 ```
 
 **Features**:
+
 - Customer information form
 - Address autocomplete
 - Contact details
@@ -721,9 +797,11 @@ interface CreateCustomerModalProps {
 ---
 
 #### CustomerDetailModal
+
 **Purpose**: View customer details
 
 **Props**:
+
 ```typescript
 interface CustomerDetailModalProps {
   open: boolean;
@@ -735,6 +813,7 @@ interface CustomerDetailModalProps {
 ```
 
 **Features**:
+
 - Customer information
 - Contact details
 - Service address
@@ -746,9 +825,11 @@ interface CustomerDetailModalProps {
 ---
 
 #### CustomerEditModal
+
 **Purpose**: Edit customer information
 
 **Props**:
+
 ```typescript
 interface CustomerEditModalProps {
   open: boolean;
@@ -761,6 +842,7 @@ interface CustomerEditModalProps {
 ```
 
 **Features**:
+
 - Edit form with validation
 - Update contact details
 - Change account status
@@ -771,9 +853,11 @@ interface CustomerEditModalProps {
 ---
 
 #### CustomerNotes
+
 **Purpose**: Notes and communication history
 
 **Props**:
+
 ```typescript
 interface CustomerNotesProps {
   customerId: string;
@@ -783,6 +867,7 @@ interface CustomerNotesProps {
 ```
 
 **Features**:
+
 - Add new notes
 - View note history
 - Filter by type
@@ -794,9 +879,11 @@ interface CustomerNotesProps {
 ---
 
 #### CustomerNetwork
+
 **Purpose**: Network service details for customer
 
 **Props**:
+
 ```typescript
 interface CustomerNetworkProps {
   customerId: string;
@@ -806,6 +893,7 @@ interface CustomerNetworkProps {
 ```
 
 **Features**:
+
 - Service plan details
 - Bandwidth usage
 - IP addresses
@@ -819,9 +907,11 @@ interface CustomerNetworkProps {
 ### Network Module (VOLTHA)
 
 #### ONUListView
+
 **Purpose**: ONU inventory and status
 
 **Props**:
+
 ```typescript
 interface ONUListViewProps {
   apiClient: ONUListViewApiClient;
@@ -831,6 +921,7 @@ interface ONUListViewProps {
 ```
 
 **Features**:
+
 - ONU list with status
 - Filter by OLT/PON
 - Search by serial number
@@ -842,9 +933,11 @@ interface ONUListViewProps {
 ---
 
 #### ONUDetailView
+
 **Purpose**: Detailed ONU information
 
 **Props**:
+
 ```typescript
 interface ONUDetailViewProps {
   onuId: string;
@@ -854,6 +947,7 @@ interface ONUDetailViewProps {
 ```
 
 **Features**:
+
 - ONU details
 - Signal levels
 - Port status
@@ -865,9 +959,11 @@ interface ONUDetailViewProps {
 ---
 
 #### OLTManagement
+
 **Purpose**: OLT configuration and monitoring
 
 **Props**:
+
 ```typescript
 interface OLTManagementProps {
   apiClient: OLTManagementApiClient;
@@ -876,6 +972,7 @@ interface OLTManagementProps {
 ```
 
 **Features**:
+
 - OLT list
 - PON port status
 - ONU count per PON
@@ -889,9 +986,11 @@ interface OLTManagementProps {
 ### RADIUS Module
 
 #### RadiusSessionMonitor
+
 **Purpose**: Monitor active RADIUS sessions
 
 **Props**:
+
 ```typescript
 interface RadiusSessionMonitorProps {
   apiClient: RadiusSessionMonitorApiClient;
@@ -901,6 +1000,7 @@ interface RadiusSessionMonitorProps {
 ```
 
 **Features**:
+
 - Active sessions list
 - Real-time updates
 - Bandwidth usage
@@ -912,9 +1012,11 @@ interface RadiusSessionMonitorProps {
 ---
 
 #### BandwidthProfileDialog
+
 **Purpose**: Create/edit bandwidth profiles
 
 **Props**:
+
 ```typescript
 interface BandwidthProfileDialogProps {
   open: boolean;
@@ -927,6 +1029,7 @@ interface BandwidthProfileDialogProps {
 ```
 
 **Features**:
+
 - Upload/download limits
 - Burst settings
 - Priority/QoS
@@ -937,9 +1040,11 @@ interface BandwidthProfileDialogProps {
 ---
 
 #### NASDeviceDialog
+
 **Purpose**: Manage NAS devices
 
 **Props**:
+
 ```typescript
 interface NASDeviceDialogProps {
   open: boolean;
@@ -952,6 +1057,7 @@ interface NASDeviceDialogProps {
 ```
 
 **Features**:
+
 - NAS configuration
 - Shared secret
 - IP address
@@ -965,9 +1071,11 @@ interface NASDeviceDialogProps {
 ### RBAC Module
 
 #### CreateRoleModal
+
 **Purpose**: Create RBAC roles with permissions
 
 **Props**:
+
 ```typescript
 interface CreateRoleModalProps {
   open: boolean;
@@ -979,6 +1087,7 @@ interface CreateRoleModalProps {
 ```
 
 **Features**:
+
 - Role name and description
 - Permission selection (hierarchical)
 - Permission categories
@@ -989,9 +1098,11 @@ interface CreateRoleModalProps {
 ---
 
 #### RoleDetailsModal
+
 **Purpose**: View role details and permissions
 
 **Props**:
+
 ```typescript
 interface RoleDetailsModalProps {
   open: boolean;
@@ -1003,6 +1114,7 @@ interface RoleDetailsModalProps {
 ```
 
 **Features**:
+
 - Role information
 - Permission list
 - User count
@@ -1014,9 +1126,11 @@ interface RoleDetailsModalProps {
 ---
 
 #### AssignRoleModal
+
 **Purpose**: Assign roles to users
 
 **Props**:
+
 ```typescript
 interface AssignRoleModalProps {
   open: boolean;
@@ -1029,6 +1143,7 @@ interface AssignRoleModalProps {
 ```
 
 **Features**:
+
 - User selection
 - Role selection (multi-select)
 - Tenant scope
@@ -1039,9 +1154,11 @@ interface AssignRoleModalProps {
 ---
 
 #### PermissionGuard
+
 **Purpose**: HOC for permission-based rendering
 
 **Usage**:
+
 ```typescript
 import { createPermissionGuard } from "@dotmac/features/rbac";
 
@@ -1063,6 +1180,7 @@ const PermissionGuard = createPermissionGuard({
 ### Other Modules
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for complete documentation of remaining modules:
+
 - CPE (Device Management, Config Templates)
 - Diagnostics (Diagnostics Dashboard)
 - Monitoring (Network Monitoring, Dual Stack Metrics)
@@ -1160,6 +1278,7 @@ export const PermissionGuard = createPermissionGuard({
 ## Finding Components
 
 **By Feature**:
+
 - Billing/Payments → `@dotmac/features/billing`
 - Customer Management → `@dotmac/features/customers`
 - CRM/Sales → `@dotmac/features/crm`
@@ -1168,6 +1287,7 @@ export const PermissionGuard = createPermissionGuard({
 - Access Control → `@dotmac/features/rbac`
 
 **By Import**:
+
 ```typescript
 // Module-specific (recommended)
 import { Component } from "@dotmac/features/module-name";

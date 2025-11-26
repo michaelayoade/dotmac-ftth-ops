@@ -6,19 +6,62 @@
 import DOMPurify from "dompurify";
 
 const RICH_TEXT_ALLOWED_TAGS = [
-  "a", "abbr", "b", "blockquote", "br", "code", "div", "em", "figure",
-  "figcaption", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "img", "li",
-  "ol", "p", "pre", "section", "small", "span", "strong", "sub", "sup",
-  "table", "tbody", "td", "th", "thead", "tr", "u", "ul",
+  "a",
+  "abbr",
+  "b",
+  "blockquote",
+  "br",
+  "code",
+  "div",
+  "em",
+  "figure",
+  "figcaption",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "img",
+  "li",
+  "ol",
+  "p",
+  "pre",
+  "section",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "th",
+  "thead",
+  "tr",
+  "u",
+  "ul",
 ];
 
 const RICH_TEXT_ALLOWED_ATTR = [
-  "href", "target", "rel", "title", "alt", "src", "width", "height",
-  "class", "style", "colspan", "rowspan", "aria-label", "aria-hidden",
+  "href",
+  "target",
+  "rel",
+  "title",
+  "alt",
+  "src",
+  "width",
+  "height",
+  "class",
+  "style",
+  "colspan",
+  "rowspan",
+  "aria-label",
+  "aria-hidden",
 ];
 
-const SAFE_URI_PATTERN =
-  /^(?:(?:https?|mailto|tel):|(?:data:image\/(?:png|gif|jpeg|webp);)|#)/i;
+const SAFE_URI_PATTERN = /^(?:(?:https?|mailto|tel):|(?:data:image\/(?:png|gif|jpeg|webp);)|#)/i;
 
 /**
  * Sanitize rich HTML content (emails, receipts, etc.) while preserving

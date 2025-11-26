@@ -174,10 +174,9 @@ describe("Platform Admin usePlugins hooks", () => {
         });
       });
 
-      expect(apiClient.put).toHaveBeenCalledWith(
-        "/plugins/instances/inst-5/configuration",
-        { configuration: { apiKey: "secret" } },
-      );
+      expect(apiClient.put).toHaveBeenCalledWith("/plugins/instances/inst-5/configuration", {
+        configuration: { apiKey: "secret" },
+      });
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["plugins", "instances"] });
       expect(invalidateSpy).toHaveBeenCalledWith({
         queryKey: ["plugins", "instances", "inst-5"],

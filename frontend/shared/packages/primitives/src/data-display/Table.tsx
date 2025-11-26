@@ -233,7 +233,9 @@ export function DataTable<T = any>({
     }
 
     if (checked) {
-      const allKeys = data.map((item) => selection.getRowKey?.(item)).filter((key): key is string => key !== undefined);
+      const allKeys = data
+        .map((item) => selection.getRowKey?.(item))
+        .filter((key): key is string => key !== undefined);
       selection.onChange(allKeys);
     } else {
       selection.onChange([]);

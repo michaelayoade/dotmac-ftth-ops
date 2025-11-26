@@ -21,11 +21,7 @@ import {
 } from "../useAudit";
 import type { AuditActivity } from "@/types/audit";
 import { ActivitySeverity, ActivityType } from "@/types/audit";
-import {
-  seedAuditData,
-  clearAuditData,
-  createMockActivity,
-} from "@/__tests__/msw/handlers/audit";
+import { seedAuditData, clearAuditData, createMockActivity } from "@/__tests__/msw/handlers/audit";
 
 const waitForAuditLoading = async (getLoading: () => boolean) => {
   await waitFor(() => expect(getLoading()).toBe(false), { timeout: 5000 });
@@ -70,13 +66,7 @@ describe("useAudit (MSW)", () => {
         "list",
         { page: 1 },
       ]);
-      expect(auditKeys.activities.recent(20, 7)).toEqual([
-        "audit",
-        "activities",
-        "recent",
-        20,
-        7,
-      ]);
+      expect(auditKeys.activities.recent(20, 7)).toEqual(["audit", "activities", "recent", 20, 7]);
       expect(auditKeys.activities.user("user-1", 50, 30)).toEqual([
         "audit",
         "activities",
@@ -165,7 +155,7 @@ describe("useAudit (MSW)", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitForAuditLoading(() => result.current.isLoading);
@@ -198,7 +188,7 @@ describe("useAudit (MSW)", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitForAuditLoading(() => result.current.isLoading);
@@ -211,16 +201,13 @@ describe("useAudit (MSW)", () => {
       const mockActivities = Array.from({ length: 25 }, (_, i) =>
         createMockActivity({
           id: `activity-${i + 1}`,
-        })
+        }),
       );
       seedAuditData(mockActivities);
 
-      const { result } = renderHook(
-        () => useAuditActivities({ page: 2, per_page: 10 }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useAuditActivities({ page: 2, per_page: 10 }), {
+        wrapper: createWrapper(),
+      });
 
       await waitForAuditLoading(() => result.current.isLoading);
 
@@ -257,14 +244,12 @@ describe("useAudit (MSW)", () => {
         () => useAuditActivities({ activity_type: ActivityType.ROLE_CREATED }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitForAuditLoading(() => result.current.isLoading);
 
-      expect(result.current.data?.activities[0].activity_type).toBe(
-        ActivityType.ROLE_CREATED
-      );
+      expect(result.current.data?.activities[0].activity_type).toBe(ActivityType.ROLE_CREATED);
     });
 
     it("should handle severity filter", async () => {
@@ -284,7 +269,7 @@ describe("useAudit (MSW)", () => {
         () => useAuditActivities({ severity: ActivitySeverity.CRITICAL }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitForAuditLoading(() => result.current.isLoading);
@@ -324,7 +309,7 @@ describe("useAudit (MSW)", () => {
         createMockActivity({
           id: `activity-${i + 1}`,
           timestamp: new Date(Date.now() - i * 3600000).toISOString(),
-        })
+        }),
       );
       seedAuditData(mockActivities);
 
@@ -404,7 +389,7 @@ describe("useAudit (MSW)", () => {
           id: `activity-${i + 1}`,
           user_id: "user-1",
           timestamp: new Date(Date.now() - i * 3600000).toISOString(),
-        })
+        }),
       );
       seedAuditData(mockActivities);
 
@@ -717,12 +702,9 @@ describe("useAudit (MSW)", () => {
       ];
       seedAuditData(mockActivities);
 
-      const { result } = renderHook(
-        () => useResourceHistory("subscriber", "sub-1", false),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useResourceHistory("subscriber", "sub-1", false), {
+        wrapper: createWrapper(),
+      });
 
       await waitForAuditLoading(() => result.current.isLoading);
 
@@ -870,12 +852,9 @@ describe("useAudit (MSW)", () => {
       ];
       seedAuditData(mockActivities);
 
-      const { result } = renderHook(
-        () => useComplianceReport("2024-01-01", "2024-01-31"),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useComplianceReport("2024-01-01", "2024-01-31"), {
+        wrapper: createWrapper(),
+      });
 
       await waitForAuditLoading(() => result.current.isLoading);
 
@@ -899,12 +878,9 @@ describe("useAudit (MSW)", () => {
     it("should include compliance metrics", async () => {
       seedAuditData([]);
 
-      const { result } = renderHook(
-        () => useComplianceReport("2024-01-01", "2024-01-31"),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useComplianceReport("2024-01-01", "2024-01-31"), {
+        wrapper: createWrapper(),
+      });
 
       await waitForAuditLoading(() => result.current.isLoading);
 
@@ -914,12 +890,9 @@ describe("useAudit (MSW)", () => {
     });
 
     it("should support enabled parameter", async () => {
-      const { result } = renderHook(
-        () => useComplianceReport("2024-01-01", "2024-01-31", false),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useComplianceReport("2024-01-01", "2024-01-31", false), {
+        wrapper: createWrapper(),
+      });
 
       await waitForAuditLoading(() => result.current.isLoading);
 

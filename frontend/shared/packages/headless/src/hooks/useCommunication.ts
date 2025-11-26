@@ -429,13 +429,9 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           isLoading: false,
         }));
 
-        notify.success(
-          "Bulk Messages Sent",
-          `${newMessages.length} messages queued for delivery`,
-          {
-            metadata: { priority: "medium", channel: ["browser"] },
-          },
-        );
+        notify.success("Bulk Messages Sent", `${newMessages.length} messages queued for delivery`, {
+          metadata: { priority: "medium", channel: ["browser"] },
+        });
 
         return newMessages;
       } catch (error) {

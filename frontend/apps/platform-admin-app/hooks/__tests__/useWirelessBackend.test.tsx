@@ -104,9 +104,7 @@ describe("Platform Admin useWirelessBackend hooks", () => {
     });
     expect(mockedApi.post).toHaveBeenCalledWith("/wireless/devices", { name: "AP-2" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["wireless", "devices"] });
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Device Created" }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Device Created" }));
 
     const updateHook = renderHook(() => useUpdateDevice(), { wrapper });
     await act(async () => {
@@ -124,9 +122,7 @@ describe("Platform Admin useWirelessBackend hooks", () => {
       await deleteHook.result.current.mutateAsync("dev-2");
     });
     expect(mockedApi.delete).toHaveBeenCalledWith("/wireless/devices/dev-2");
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Device Deleted" }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Device Deleted" }));
   });
 
   it("fetches radios and manages radio mutations", async () => {

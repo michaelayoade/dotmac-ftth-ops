@@ -121,8 +121,7 @@ export class AuthInterceptor {
 
       const { access_token, refresh_token } = data as RefreshResponse;
       const newToken = typeof access_token === "string" ? access_token : null;
-      const newRefreshToken =
-        typeof refresh_token === "string" ? refresh_token : null;
+      const newRefreshToken = typeof refresh_token === "string" ? refresh_token : null;
 
       if (newToken) {
         this.setToken(newToken);

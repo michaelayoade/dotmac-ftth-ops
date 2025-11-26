@@ -10,13 +10,7 @@ import {
   CardTitle,
   Separator,
 } from "@dotmac/ui";
-import {
-  AlertCircle,
-  Edit,
-  Network,
-  Shield,
-  Wifi,
-} from "lucide-react";
+import { AlertCircle, Edit, Network, Shield, Wifi } from "lucide-react";
 import { useState } from "react";
 import { NetworkProfileEditDialog } from "./NetworkProfileEditDialog";
 
@@ -97,16 +91,10 @@ export function NetworkProfileCard({
             <Network className="h-5 w-5" />
             Network Profile
           </CardTitle>
-          <CardDescription>
-            No network profile configured for this subscriber
-          </CardDescription>
+          <CardDescription>No network profile configured for this subscriber</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button
-            onClick={() => setIsEditDialogOpen(true)}
-            variant="outline"
-            className="w-full"
-          >
+          <Button onClick={() => setIsEditDialogOpen(true)} variant="outline" className="w-full">
             <Network className="mr-2 h-4 w-4" />
             Configure Network Profile
           </Button>
@@ -127,14 +115,17 @@ export function NetworkProfileCard({
   }
 
   const getOption82PolicyBadge = (policy: string) => {
-    const variants: Record<string, { variant: "default" | "destructive" | "secondary"; icon?: typeof Shield }> = {
+    const variants: Record<
+      string,
+      { variant: "default" | "destructive" | "secondary"; icon?: typeof Shield }
+    > = {
       enforce: { variant: "destructive", icon: Shield },
       log: { variant: "secondary", icon: AlertCircle },
       ignore: { variant: "default", icon: AlertCircle },
     };
-    const config = variants[policy] ?? variants['ignore'];
-    const Icon = config?.['icon'] ?? AlertCircle;
-    const variant = config?.['variant'] ?? "default";
+    const config = variants[policy] ?? variants["ignore"];
+    const Icon = config?.["icon"] ?? AlertCircle;
+    const variant = config?.["variant"] ?? "default";
 
     return (
       <Badge variant={variant} className="gap-1">
@@ -164,15 +155,9 @@ export function NetworkProfileCard({
                 <Network className="h-5 w-5" />
                 Network Profile
               </CardTitle>
-              <CardDescription>
-                Subscriber network configuration and policies
-              </CardDescription>
+              <CardDescription>Subscriber network configuration and policies</CardDescription>
             </div>
-            <Button
-              onClick={() => setIsEditDialogOpen(true)}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={() => setIsEditDialogOpen(true)} variant="outline" size="sm">
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>

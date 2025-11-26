@@ -8,11 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { AlarmDetailModal as SharedAlarmDetailModal } from "@dotmac/features/faults";
-import type {
-  AlarmHistory,
-  AlarmNote,
-  RelatedTicket,
-} from "@dotmac/features/faults";
+import type { AlarmHistory, AlarmNote, RelatedTicket } from "@dotmac/features/faults";
 import type { Alarm } from "@/hooks/useFaults";
 import { apiClient } from "@/lib/api/client";
 
@@ -38,9 +34,7 @@ export function AlarmDetailModal(props: AlarmDetailModalProps) {
       setIsLoading(true);
       try {
         // Fetch history
-        const historyResponse = await apiClient.get(
-          `/api/v1/faults/alarms/${alarmId}/history`
-        );
+        const historyResponse = await apiClient.get(`/api/v1/faults/alarms/${alarmId}/history`);
         setHistory(historyResponse.data || []);
 
         // Fetch notes
@@ -58,7 +52,7 @@ export function AlarmDetailModal(props: AlarmDetailModalProps) {
         setIsLoading(false);
       }
     },
-    [alarm]
+    [alarm],
   );
 
   const handleAcknowledge = async (alarmId: string) => {

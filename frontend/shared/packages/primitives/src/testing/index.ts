@@ -36,9 +36,7 @@ const renderSecurity = (ui: React.ReactElement, options?: RenderOptions) => {
   const result = render(ui, options);
   const issues = detectSecurityViolations(result.container);
   if (issues.length > 0) {
-    throw new Error(
-      `Security violations detected:\n- ${issues.join("\n- ")}`,
-    );
+    throw new Error(`Security violations detected:\n- ${issues.join("\n- ")}`);
   }
   return result;
 };

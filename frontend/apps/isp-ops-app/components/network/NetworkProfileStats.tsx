@@ -58,7 +58,11 @@ interface IPv6LifecycleStats {
 }
 
 export function NetworkProfileStats() {
-  const { data: stats, isLoading: isProfileStatsLoading, error: profileError } = useQuery<NetworkProfileStats>({
+  const {
+    data: stats,
+    isLoading: isProfileStatsLoading,
+    error: profileError,
+  } = useQuery<NetworkProfileStats>({
     queryKey: ["networkProfileStats"],
     queryFn: async () => {
       const response = await fetchWithTimeout(
@@ -69,7 +73,7 @@ export function NetworkProfileStats() {
         8000,
       );
 
-      if (!response['ok']) {
+      if (!response["ok"]) {
         throw new Error("Failed to fetch network profile stats");
       }
 
@@ -79,7 +83,11 @@ export function NetworkProfileStats() {
     staleTime: 60000, // Cache for 1 minute
   });
 
-  const { data: ipv6Stats, isLoading: isIpv6StatsLoading, error: ipv6Error } = useQuery<IPv6LifecycleStats>({
+  const {
+    data: ipv6Stats,
+    isLoading: isIpv6StatsLoading,
+    error: ipv6Error,
+  } = useQuery<IPv6LifecycleStats>({
     queryKey: ["ipv6LifecycleStats"],
     queryFn: async () => {
       const response = await fetchWithTimeout(
@@ -90,16 +98,16 @@ export function NetworkProfileStats() {
         8000,
       );
 
-      if (!response['ok']) {
+      if (!response["ok"]) {
         throw new Error("Failed to fetch IPv6 lifecycle stats");
       }
 
       const payload = await response.json();
-      const utilization = payload['utilization'] ?? {};
-      const netboxIntegration = payload['netboxIntegration'] ?? payload['netbox_integration'] ?? {};
+      const utilization = payload["utilization"] ?? {};
+      const netboxIntegration = payload["netboxIntegration"] ?? payload["netbox_integration"] ?? {};
 
       return {
-        stateCounts: payload['stateCounts'] ?? payload['state_counts'] ?? {},
+        stateCounts: payload["stateCounts"] ?? payload["state_counts"] ?? {},
         utilization: {
           totalProfiles: utilization.totalProfiles ?? utilization.total_profiles ?? 0,
           totalWithIpv6: utilization.totalWithIpv6 ?? utilization.total_with_ipv6 ?? 0,
@@ -111,7 +119,9 @@ export function NetworkProfileStats() {
         },
         netboxIntegration: {
           prefixesWithNetboxId:
-            netboxIntegration.prefixesWithNetboxId ?? netboxIntegration.prefixes_with_netbox_id ?? 0,
+            netboxIntegration.prefixesWithNetboxId ??
+            netboxIntegration.prefixes_with_netbox_id ??
+            0,
           prefixesWithoutNetboxId:
             netboxIntegration.prefixesWithoutNetboxId ??
             netboxIntegration.prefixes_without_netbox_id ??
@@ -130,10 +140,10 @@ export function NetworkProfileStats() {
   const isLoading = isProfileStatsLoading || isIpv6StatsLoading;
   const stateCounts = ipv6Stats?.stateCounts ?? {};
   const lifecycleCardStates = {
-    allocated: stateCounts['allocated'] ?? stateCounts['ALLOCATED'] ?? 0,
-    active: stateCounts['active'] ?? stateCounts['ACTIVE'] ?? 0,
-    suspended: stateCounts['suspended'] ?? stateCounts['SUSPENDED'] ?? 0,
-    revoked: stateCounts['revoked'] ?? stateCounts['REVOKED'] ?? 0,
+    allocated: stateCounts["allocated"] ?? stateCounts["ALLOCATED"] ?? 0,
+    active: stateCounts["active"] ?? stateCounts["ACTIVE"] ?? 0,
+    suspended: stateCounts["suspended"] ?? stateCounts["SUSPENDED"] ?? 0,
+    revoked: stateCounts["revoked"] ?? stateCounts["REVOKED"] ?? 0,
   };
 
   const utilizationRate = ipv6Stats?.utilization?.utilizationRate ?? 0;
@@ -146,49 +156,49 @@ export function NetworkProfileStats() {
   const statCards = [
     {
       title: "Total Profiles",
-      value: stats?.['totalProfiles'] ?? 0,
+      value: stats?.["totalProfiles"] ?? 0,
       icon: Network,
       description: "Configured network profiles",
     },
     {
       title: "With Static IPv4",
-      value: stats?.['profilesWithStaticIpv4'] ?? 0,
+      value: stats?.["profilesWithStaticIpv4"] ?? 0,
       icon: Globe,
       description: "Subscribers with static IPv4 addresses",
     },
     {
       title: "With Static IPv6",
-      value: stats?.['profilesWithStaticIpv6'] ?? 0,
+      value: stats?.["profilesWithStaticIpv6"] ?? 0,
       icon: Globe,
       description: "Subscribers with IPv6 configuration",
     },
     {
       title: "Dual Stack",
-      value: stats?.['dualStackProfiles'] ?? 0,
+      value: stats?.["dualStackProfiles"] ?? 0,
       icon: Globe,
       description: "Profiles with both IPv4 and IPv6",
     },
     {
       title: "With VLANs",
-      value: stats?.['profilesWithVlans'] ?? 0,
+      value: stats?.["profilesWithVlans"] ?? 0,
       icon: Wifi,
       description: "Profiles with VLAN configuration",
     },
     {
       title: "QinQ Enabled",
-      value: stats?.['profilesWithQinq'] ?? 0,
+      value: stats?.["profilesWithQinq"] ?? 0,
       icon: Wifi,
       description: "Profiles using 802.1ad QinQ",
     },
     {
       title: "Option 82 Bindings",
-      value: stats?.['profilesWithOption82'] ?? 0,
+      value: stats?.["profilesWithOption82"] ?? 0,
       icon: Shield,
       description: "Profiles with DHCP Option 82",
     },
     {
       title: "NetBox Tracked",
-      value: stats?.['netboxTrackedProfiles'] ?? 0,
+      value: stats?.["netboxTrackedProfiles"] ?? 0,
       icon: Network,
       description: "Profiles tracked in NetBox IPAM",
     },
@@ -251,21 +261,21 @@ export function NetworkProfileStats() {
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Enforce</span>
               <span className="text-2xl font-bold">
-                {isLoading ? "..." : stats?.['option82EnforceCount'] ?? 0}
+                {isLoading ? "..." : (stats?.["option82EnforceCount"] ?? 0)}
               </span>
               <span className="text-xs text-muted-foreground">Block on mismatch</span>
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Log</span>
               <span className="text-2xl font-bold">
-                {isLoading ? "..." : stats?.['option82LogCount'] ?? 0}
+                {isLoading ? "..." : (stats?.["option82LogCount"] ?? 0)}
               </span>
               <span className="text-xs text-muted-foreground">Log but allow</span>
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Ignore</span>
               <span className="text-2xl font-bold">
-                {isLoading ? "..." : stats?.['option82IgnoreCount'] ?? 0}
+                {isLoading ? "..." : (stats?.["option82IgnoreCount"] ?? 0)}
               </span>
               <span className="text-xs text-muted-foreground">No validation</span>
             </div>

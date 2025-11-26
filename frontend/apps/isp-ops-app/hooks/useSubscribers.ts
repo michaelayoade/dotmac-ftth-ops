@@ -245,7 +245,10 @@ export function useSubscribers(params?: SubscriberQueryParams) {
         }
         return { subscribers: [], total: 0 };
       } catch (err) {
-        logger.error("Failed to fetch subscribers", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch subscribers",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -268,7 +271,10 @@ export function useSubscriber(subscriberId: string | null) {
         const response = await apiClient.get(`/subscribers/${subscriberId}`);
         return response.data as Subscriber;
       } catch (err) {
-        logger.error("Failed to fetch subscriber", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch subscriber",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -348,7 +354,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to create subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to create subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -372,7 +381,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to update subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to update subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -388,13 +400,22 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to delete subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to delete subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
   // Suspend subscriber mutation
   const suspendMutation = useMutation({
-    mutationFn: async ({ subscriberId, reason }: { subscriberId: string; reason?: string }): Promise<void> => {
+    mutationFn: async ({
+      subscriberId,
+      reason,
+    }: {
+      subscriberId: string;
+      reason?: string;
+    }): Promise<void> => {
       const payload = reason ? { reason } : {};
       await apiClient.post(`/subscribers/${subscriberId}/suspend`, payload);
     },
@@ -404,7 +425,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to suspend subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to suspend subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -419,7 +443,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to activate subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to activate subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -441,7 +468,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to terminate subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to terminate subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 

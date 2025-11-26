@@ -1,10 +1,6 @@
 {
-  "extends": [
-    "plugin:jsx-a11y/recommended"
-  ],
-  "plugins": [
-    "jsx-a11y"
-  ],
+  "extends": ["plugin:jsx-a11y/recommended"],
+  "plugins": ["jsx-a11y"],
   "rules": {
     // Enforce alt text on images
     "jsx-a11y/alt-text": [

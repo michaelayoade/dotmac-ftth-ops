@@ -32,7 +32,7 @@ export interface CustomerNotesProps {
   loading: boolean;
   error: Error | null;
   addNote: (
-    note: Omit<CustomerNote, "id" | "customer_id" | "created_at" | "updated_at" | "created_by">
+    note: Omit<CustomerNote, "id" | "customer_id" | "created_at" | "updated_at" | "created_by">,
   ) => Promise<void>;
 }
 
@@ -77,7 +77,9 @@ interface AddNoteModalProps {
 
 function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
   const [formData, setFormData] = useState<
-    Omit<CustomerNote, "id" | "customer_id" | "created_at" | "updated_at" | "created_by"> & { tags: string[] }
+    Omit<CustomerNote, "id" | "customer_id" | "created_at" | "updated_at" | "created_by"> & {
+      tags: string[];
+    }
   >({
     note_type: "general",
     content: "",
@@ -107,7 +109,10 @@ function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
       await onAdd(formData);
       onClose();
     } catch (error) {
-      console.error("Failed to add note", error instanceof Error ? error : new Error(String(error)));
+      console.error(
+        "Failed to add note",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     } finally {
       setLoading(false);
     }
@@ -365,13 +370,7 @@ function LoadingSkeleton() {
   );
 }
 
-export function CustomerNotes({
-  customerId,
-  notes,
-  loading,
-  error,
-  addNote,
-}: CustomerNotesProps) {
+export function CustomerNotes({ customerId, notes, loading, error, addNote }: CustomerNotesProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [filter, setFilter] = useState<"all" | "internal" | "external">("all");
   const [searchQuery, setSearchQuery] = useState("");

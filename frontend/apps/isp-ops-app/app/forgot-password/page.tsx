@@ -143,10 +143,7 @@ export default function ForgotPasswordPage() {
           </button>
 
           <div className="text-center">
-            <Link
-              href="/login"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
+            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
               Remember your password? Sign in
             </Link>
           </div>

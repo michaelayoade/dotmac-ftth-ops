@@ -44,13 +44,17 @@ interface Integration {
 
 function IntegrationDetailsPageContent() {
   const params = useParams();
-  const integrationName = decodeURIComponent(params?.['integrationName'] as string);
+  const integrationName = decodeURIComponent(params?.["integrationName"] as string);
   const { toast: _toast } = useToast();
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl;
 
   // Fetch integration details
-  const { data: integration, isLoading, refetch } = useQuery<Integration>({
+  const {
+    data: integration,
+    isLoading,
+    refetch,
+  } = useQuery<Integration>({
     queryKey: ["integration", integrationName],
     queryFn: async () => {
       const response = await fetch(
@@ -69,7 +73,10 @@ function IntegrationDetailsPageContent() {
   });
 
   const getStatusBadge = (status: IntegrationStatus) => {
-    const statusConfig: Record<IntegrationStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      IntegrationStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       healthy: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Healthy" },
       degraded: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Degraded" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
@@ -100,7 +107,9 @@ function IntegrationDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Integration Not Found</h2>
-        <p className="text-muted-foreground mb-4">The integration you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The integration you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/integrations">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -140,32 +149,38 @@ function IntegrationDetailsPageContent() {
 
       {/* Status Message */}
       {!!integration.message && (
-        <Card className={
-          integration.status === "healthy"
-            ? "border-green-200 bg-green-50"
-            : integration.status === "degraded"
-            ? "border-yellow-200 bg-yellow-50"
-            : "border-red-200 bg-red-50"
-        }>
+        <Card
+          className={
+            integration.status === "healthy"
+              ? "border-green-200 bg-green-50"
+              : integration.status === "degraded"
+                ? "border-yellow-200 bg-yellow-50"
+                : "border-red-200 bg-red-50"
+          }
+        >
           <CardHeader>
-            <CardTitle className={`text-lg ${
-              integration.status === "healthy"
-                ? "text-green-800"
-                : integration.status === "degraded"
-                ? "text-yellow-800"
-                : "text-red-800"
-            }`}>
+            <CardTitle
+              className={`text-lg ${
+                integration.status === "healthy"
+                  ? "text-green-800"
+                  : integration.status === "degraded"
+                    ? "text-yellow-800"
+                    : "text-red-800"
+              }`}
+            >
               Status Message
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={
-              integration.status === "healthy"
-                ? "text-green-700"
-                : integration.status === "degraded"
-                ? "text-yellow-700"
-                : "text-red-700"
-            }>
+            <p
+              className={
+                integration.status === "healthy"
+                  ? "text-green-700"
+                  : integration.status === "degraded"
+                    ? "text-yellow-700"
+                    : "text-red-700"
+              }
+            >
               {integration.message}
             </p>
           </CardContent>
@@ -273,7 +288,9 @@ function IntegrationDetailsPageContent() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Last Health Check</p>
                   </div>
-                  <p className="font-medium">{format(new Date(integration.last_check as string), "PPpp")}</p>
+                  <p className="font-medium">
+                    {format(new Date(integration.last_check as string), "PPpp")}
+                  </p>
                 </div>
               )}
 
@@ -318,7 +335,10 @@ function IntegrationDetailsPageContent() {
               ) : (
                 <div className="space-y-2">
                   {integration.required_packages.map((pkg, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-accent rounded-lg"
+                    >
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-muted-foreground" />
                         <span className="font-mono text-sm">{pkg}</span>

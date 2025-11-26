@@ -100,13 +100,7 @@ describe("useAudit (Jest Mocks)", () => {
         "list",
         { page: 1 },
       ]);
-      expect(auditKeys.activities.recent(20, 7)).toEqual([
-        "audit",
-        "activities",
-        "recent",
-        20,
-        7,
-      ]);
+      expect(auditKeys.activities.recent(20, 7)).toEqual(["audit", "activities", "recent", 20, 7]);
       expect(auditKeys.activities.user("user-1", 50, 30)).toEqual([
         "audit",
         "activities",
@@ -208,7 +202,7 @@ describe("useAudit (Jest Mocks)", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -225,7 +219,7 @@ describe("useAudit (Jest Mocks)", () => {
       const mockActivities = Array.from({ length: 10 }, (_, i) =>
         createMockActivity({
           id: `activity-${i + 11}`,
-        })
+        }),
       );
 
       mockAuditService.listActivities.mockResolvedValueOnce({
@@ -236,12 +230,9 @@ describe("useAudit (Jest Mocks)", () => {
         total_pages: 3,
       });
 
-      const { result } = renderHook(
-        () => useAuditActivities({ page: 2, per_page: 10 }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useAuditActivities({ page: 2, per_page: 10 }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -262,9 +253,7 @@ describe("useAudit (Jest Mocks)", () => {
     });
 
     it("should handle fetch error", async () => {
-      mockAuditService.listActivities.mockRejectedValueOnce(
-        new Error("Server error")
-      );
+      mockAuditService.listActivities.mockRejectedValueOnce(new Error("Server error"));
 
       const { result } = renderHook(() => useAuditActivities(), {
         wrapper: createWrapper(),
@@ -376,9 +365,7 @@ describe("useAudit (Jest Mocks)", () => {
     });
 
     it("should handle activity not found", async () => {
-      mockAuditService.getActivity.mockRejectedValueOnce(
-        new Error("Activity not found")
-      );
+      mockAuditService.getActivity.mockRejectedValueOnce(new Error("Activity not found"));
 
       const { result } = renderHook(() => useActivityDetails("non-existent"), {
         wrapper: createWrapper(),
@@ -500,12 +487,9 @@ describe("useAudit (Jest Mocks)", () => {
     });
 
     it("should support enabled parameter", async () => {
-      const { result } = renderHook(
-        () => useResourceHistory("subscriber", "sub-1", false),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useResourceHistory("subscriber", "sub-1", false), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -568,9 +552,7 @@ describe("useAudit (Jest Mocks)", () => {
     });
 
     it("should handle export error", async () => {
-      mockAuditService.exportLogs.mockRejectedValueOnce(
-        new Error("Export failed")
-      );
+      mockAuditService.exportLogs.mockRejectedValueOnce(new Error("Export failed"));
 
       const { result } = renderHook(() => useExportAuditLogs(), {
         wrapper: createWrapper(),
@@ -605,12 +587,9 @@ describe("useAudit (Jest Mocks)", () => {
 
       mockAuditService.getComplianceReport.mockResolvedValueOnce(mockReport);
 
-      const { result } = renderHook(
-        () => useComplianceReport("2024-01-01", "2024-01-31"),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useComplianceReport("2024-01-01", "2024-01-31"), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 

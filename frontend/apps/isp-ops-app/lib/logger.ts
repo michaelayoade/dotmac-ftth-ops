@@ -29,14 +29,24 @@ class Logger {
 
     const sanitized = { ...context };
     const sensitiveKeys = [
-      'password', 'token', 'secret', 'apiKey', 'apikey',
-      'cookie', 'cookies', 'authorization', 'auth',
-      'accessToken', 'refreshToken', 'sessionId', 'sessionid'
+      "password",
+      "token",
+      "secret",
+      "apiKey",
+      "apikey",
+      "cookie",
+      "cookies",
+      "authorization",
+      "auth",
+      "accessToken",
+      "refreshToken",
+      "sessionId",
+      "sessionid",
     ];
 
     Object.keys(sanitized).forEach((key) => {
       if (sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive))) {
-        sanitized[key] = '[REDACTED]';
+        sanitized[key] = "[REDACTED]";
       }
     });
 
@@ -64,10 +74,12 @@ class Logger {
         console.log(JSON.stringify(entry));
       } catch (error) {
         // Fallback for circular references
-        console.log(JSON.stringify({
-          ...entry,
-          context: "[Circular Reference]",
-        }));
+        console.log(
+          JSON.stringify({
+            ...entry,
+            context: "[Circular Reference]",
+          }),
+        );
       }
     }
   }

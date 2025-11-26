@@ -289,15 +289,13 @@ describe("LiveIndicator", () => {
     });
 
     it("displays refreshing state", () => {
-      render(
-        <LiveIndicator lastUpdated={new Date()} onRefresh={jest.fn()} isRefreshing={true} />
-      );
+      render(<LiveIndicator lastUpdated={new Date()} onRefresh={jest.fn()} isRefreshing={true} />);
 
       const button = screen.getByLabelText("Refresh");
       expect(button).toBeDisabled();
 
       const { container } = render(
-        <LiveIndicator lastUpdated={new Date()} onRefresh={jest.fn()} isRefreshing={true} />
+        <LiveIndicator lastUpdated={new Date()} onRefresh={jest.fn()} isRefreshing={true} />,
       );
       expect(container.querySelector(".animate-spin")).toBeInTheDocument();
     });

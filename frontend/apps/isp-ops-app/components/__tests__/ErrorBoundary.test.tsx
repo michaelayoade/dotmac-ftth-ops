@@ -55,7 +55,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText("Test content")).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Should render without errors
@@ -80,7 +80,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary fallback={customFallback}>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Should render children normally
@@ -95,7 +95,7 @@ describe("ErrorBoundary", () => {
       const { container } = render(
         <ErrorBoundary fallback={customFallback}>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(container).toBeDefined();
@@ -109,7 +109,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary onError={onError}>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Should render without calling onError
@@ -122,7 +122,7 @@ describe("ErrorBoundary", () => {
       const { container } = render(
         <ErrorBoundary onError={onError}>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(container).toBeDefined();
@@ -134,7 +134,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Logger should be available to SharedErrorBoundary
@@ -146,7 +146,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Should use the imported logger from @/lib/logger
@@ -159,7 +159,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText("Test content")).toBeInTheDocument();
@@ -171,7 +171,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary fallback={fallback}>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText("Test content")).toBeInTheDocument();
@@ -183,7 +183,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary onError={onError}>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText("Test content")).toBeInTheDocument();
@@ -196,7 +196,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary fallback={fallback} onError={onError}>
           <div>Test content</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText("Test content")).toBeInTheDocument();
@@ -209,7 +209,7 @@ describe("ErrorBoundary", () => {
         <ErrorBoundary>
           <div>First child</div>
           <div>Second child</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText("First child")).toBeInTheDocument();
@@ -226,7 +226,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary>
           <NestedComponent />
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(screen.getByText("Nested content")).toBeInTheDocument();
@@ -238,7 +238,7 @@ describe("ErrorBoundary", () => {
       const { container } = render(
         <ErrorBoundary>
           <div>Test</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Should render successfully
@@ -252,7 +252,7 @@ describe("ErrorBoundary", () => {
       const { container } = render(
         <ErrorBoundary fallback={fallback} onError={onError}>
           <div>Test</div>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       expect(container.firstChild).toBeTruthy();
@@ -278,7 +278,7 @@ describe("ErrorBoundary", () => {
       render(
         <ErrorBoundary>
           <></>
-        </ErrorBoundary>
+        </ErrorBoundary>,
       );
 
       // Should not crash

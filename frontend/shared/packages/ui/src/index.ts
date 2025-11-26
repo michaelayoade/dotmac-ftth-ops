@@ -72,29 +72,16 @@ export {
   usePortalTheme,
   portalMetadata,
 } from "./lib/design-system/portal-themes";
-export type {
-  PortalTheme,
-  PortalThemeContextValue,
-} from "./lib/design-system/portal-themes";
+export type { PortalTheme, PortalThemeContextValue } from "./lib/design-system/portal-themes";
 export {
   colorTokens,
   detectPortalFromRoute,
   getPortalColors,
   portalRoutes,
 } from "./lib/design-system/tokens/colors";
-export type {
-  PortalType as PortalDesignType,
-} from "./lib/design-system/tokens/colors";
-export {
-  fontFamily,
-  fontWeight,
-  portalFontSizes,
-} from "./lib/design-system/tokens/typography";
-export {
-  spacing,
-  portalSpacing,
-  touchTargets,
-} from "./lib/design-system/tokens/spacing";
+export type { PortalType as PortalDesignType } from "./lib/design-system/tokens/colors";
+export { fontFamily, fontWeight, portalFontSizes } from "./lib/design-system/tokens/typography";
+export { spacing, portalSpacing, touchTargets } from "./lib/design-system/tokens/spacing";
 export {
   duration,
   easing,

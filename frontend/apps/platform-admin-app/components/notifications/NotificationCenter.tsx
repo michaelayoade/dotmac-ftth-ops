@@ -22,10 +22,9 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter(props: NotificationCenterProps) {
-  const useSharedNotifications: Parameters<typeof SharedNotificationCenter>[0]["useNotifications"] = ({
-    autoRefresh,
-    refreshInterval,
-  }) => {
+  const useSharedNotifications: Parameters<
+    typeof SharedNotificationCenter
+  >[0]["useNotifications"] = ({ autoRefresh, refreshInterval }) => {
     const hook = useNotificationQuery({
       autoRefresh,
       refreshInterval,

@@ -56,7 +56,13 @@ import { logger } from "@/lib/logger";
 
 type DisplayUser = Pick<
   ExtendedUser,
-  "id" | "email" | "username" | "first_name" | "last_name" | "mfa_enabled" | "mfa_backup_codes_remaining"
+  | "id"
+  | "email"
+  | "username"
+  | "first_name"
+  | "last_name"
+  | "mfa_enabled"
+  | "mfa_backup_codes_remaining"
 >;
 
 // Migrated from sonner to useToast hook
@@ -171,7 +177,7 @@ export default function ProfileSettingsPage() {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file",
         description: "Please select an image file (JPG, PNG, or GIF)",
@@ -211,7 +217,10 @@ export default function ProfileSettingsPage() {
           await uploadAvatar.mutateAsync(avatarFile);
           logger.info("Avatar uploaded successfully");
         } catch (avatarError) {
-          logger.error("Failed to upload avatar", avatarError instanceof Error ? avatarError : new Error(String(avatarError)));
+          logger.error(
+            "Failed to upload avatar",
+            avatarError instanceof Error ? avatarError : new Error(String(avatarError)),
+          );
           toast({
             title: "Avatar upload failed",
             description: "Your profile was updated but the avatar upload failed. Please try again.",
@@ -455,8 +464,8 @@ export default function ProfileSettingsPage() {
 
   const handleVerifyPhone = async () => {
     try {
-      logger.info("Verifying phone number", { phone: formData['phone'] });
-      await verifyPhone.mutateAsync(formData['phone']);
+      logger.info("Verifying phone number", { phone: formData["phone"] });
+      await verifyPhone.mutateAsync(formData["phone"]);
       await refreshSession();
       toast({
         title: "Success",
@@ -610,11 +619,11 @@ export default function ProfileSettingsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                      onClick={() => document.getElementById("avatar-upload")?.click()}
                       type="button"
                     >
                       <Camera className="h-4 w-4 mr-2" />
-                      {avatarPreview ? 'Change Photo' : 'Upload Photo'}
+                      {avatarPreview ? "Change Photo" : "Upload Photo"}
                     </Button>
                     <p className="text-xs text-muted-foreground">JPG, PNG or GIF, max 2MB</p>
                   </div>
@@ -657,7 +666,7 @@ export default function ProfileSettingsPage() {
                   <Input
                     id="email"
                     type="email"
-                    value={formData['email']}
+                    value={formData["email"]}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     disabled={!isEditing}
                   />
@@ -674,12 +683,12 @@ export default function ProfileSettingsPage() {
                       <Input
                         id="phone"
                         type="tel"
-                        value={formData['phone']}
+                        value={formData["phone"]}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         disabled={!isEditing}
                         placeholder="Enter phone number"
                       />
-                      {isEditing && formData['phone'] && (
+                      {isEditing && formData["phone"] && (
                         <Button size="sm" variant="outline" onClick={handleVerifyPhone}>
                           Verify
                         </Button>

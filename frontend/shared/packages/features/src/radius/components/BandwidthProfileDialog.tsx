@@ -11,13 +11,7 @@ import {
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Save, X } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
@@ -58,9 +52,7 @@ export function BandwidthProfileDialog({
         name: profile.name,
         download_rate: String(profile.download_rate),
         upload_rate: String(profile.upload_rate),
-        download_burst: profile.download_burst
-          ? String(profile.download_burst)
-          : "",
+        download_burst: profile.download_burst ? String(profile.download_burst) : "",
         upload_burst: profile.upload_burst ? String(profile.upload_burst) : "",
         rateUnit: "Kbps",
       });
@@ -93,22 +85,13 @@ export function BandwidthProfileDialog({
     setValidationError("");
 
     // Validate required fields
-    if (
-      !formData.name ||
-      !formData.download_rate ||
-      !formData.upload_rate
-    ) {
-      setValidationError(
-        "Profile name, download rate, and upload rate are required."
-      );
+    if (!formData.name || !formData.download_rate || !formData.upload_rate) {
+      setValidationError("Profile name, download rate, and upload rate are required.");
       return;
     }
 
     // Validate rates are positive
-    if (
-      parseFloat(formData.download_rate) <= 0 ||
-      parseFloat(formData.upload_rate) <= 0
-    ) {
+    if (parseFloat(formData.download_rate) <= 0 || parseFloat(formData.upload_rate) <= 0) {
       setValidationError("Rates must be positive numbers.");
       return;
     }
@@ -122,17 +105,11 @@ export function BandwidthProfileDialog({
 
     // Add burst rates if provided
     if (formData.download_burst) {
-      apiData.download_burst = convertToKbps(
-        formData.download_burst,
-        formData.rateUnit
-      );
+      apiData.download_burst = convertToKbps(formData.download_burst, formData.rateUnit);
     }
 
     if (formData.upload_burst) {
-      apiData.upload_burst = convertToKbps(
-        formData.upload_burst,
-        formData.rateUnit
-      );
+      apiData.upload_burst = convertToKbps(formData.upload_burst, formData.rateUnit);
     }
 
     try {
@@ -173,9 +150,7 @@ export function BandwidthProfileDialog({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Premium 100Mbps, Business 500Mbps"
                 required
               />
@@ -189,9 +164,7 @@ export function BandwidthProfileDialog({
               <Label htmlFor="rateUnit">Rate Unit</Label>
               <Select
                 value={formData.rateUnit}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, rateUnit: value as any })
-                }
+                onValueChange={(value) => setFormData({ ...formData, rateUnit: value as any })}
                 disabled={isEdit}
               >
                 <SelectTrigger id="rateUnit">
@@ -248,9 +221,7 @@ export function BandwidthProfileDialog({
                     type="number"
                     step="0.01"
                     value={formData.upload_rate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, upload_rate: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, upload_rate: e.target.value })}
                     placeholder="e.g., 50"
                     required
                     min="0.01"
@@ -265,9 +236,7 @@ export function BandwidthProfileDialog({
             {/* Burst Rates (Optional) */}
             <div className="space-y-4">
               <div className="space-y-1">
-                <h3 className="text-sm font-medium">
-                  Burst Rates (Optional)
-                </h3>
+                <h3 className="text-sm font-medium">Burst Rates (Optional)</h3>
                 <p className="text-xs text-muted-foreground">
                   Allow temporary speed bursts above the normal rate limits
                 </p>
@@ -330,10 +299,7 @@ export function BandwidthProfileDialog({
                   <div>
                     <p className="text-muted-foreground">Download</p>
                     <p className="font-mono font-medium">
-                      {convertToKbps(
-                        formData.download_rate,
-                        formData.rateUnit
-                      ).toLocaleString()}{" "}
+                      {convertToKbps(formData.download_rate, formData.rateUnit).toLocaleString()}{" "}
                       Kbps
                       {formData.download_burst &&
                         ` (burst: ${convertToKbps(formData.download_burst, formData.rateUnit).toLocaleString()} Kbps)`}
@@ -342,11 +308,7 @@ export function BandwidthProfileDialog({
                   <div>
                     <p className="text-muted-foreground">Upload</p>
                     <p className="font-mono font-medium">
-                      {convertToKbps(
-                        formData.upload_rate,
-                        formData.rateUnit
-                      ).toLocaleString()}{" "}
-                      Kbps
+                      {convertToKbps(formData.upload_rate, formData.rateUnit).toLocaleString()} Kbps
                       {formData.upload_burst &&
                         ` (burst: ${convertToKbps(formData.upload_burst, formData.rateUnit).toLocaleString()} Kbps)`}
                     </p>
@@ -368,11 +330,7 @@ export function BandwidthProfileDialog({
             </Button>
             <Button type="submit" disabled={isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {isPending
-                ? "Saving..."
-                : isEdit
-                  ? "Update Profile"
-                  : "Create Profile"}
+              {isPending ? "Saving..." : isEdit ? "Update Profile" : "Create Profile"}
             </Button>
           </DialogFooter>
         </form>

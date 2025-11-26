@@ -16,7 +16,7 @@ import { CheckCircle } from "lucide-react";
 export default function EditPlanPage() {
   const params = useParams();
   const router = useRouter();
-  const planId = params['planId'] as string;
+  const planId = params["planId"] as string;
 
   const { data: plan, isLoading, isError, error } = useInternetPlan(planId);
   const { mutate: updatePlan, isPending, isSuccess, error: updateError } = useUpdateInternetPlan();
@@ -31,7 +31,7 @@ export default function EditPlanPage() {
             router.push(`/dashboard/services/internet-plans/${planId}`);
           }, 1500);
         },
-      }
+      },
     );
   };
 
@@ -81,7 +81,12 @@ export default function EditPlanPage() {
         </div>
       )}
 
-      <InternetPlanForm plan={plan} onSubmit={handleSubmit} onCancel={handleCancel} isSubmitting={isPending} />
+      <InternetPlanForm
+        plan={plan}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isSubmitting={isPending}
+      />
     </div>
   );
 }

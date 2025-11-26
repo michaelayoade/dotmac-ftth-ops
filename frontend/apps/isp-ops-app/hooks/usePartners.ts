@@ -340,12 +340,15 @@ async function checkLicenseQuota(
     params.append("tenant_id", tenantId);
   }
 
-  const response = await fetch(buildUrl(`/partners/${partnerId}/quota/check?${params.toString()}`), {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    buildUrl(`/partners/${partnerId}/quota/check?${params.toString()}`),
+    {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     const error = await response.json();
@@ -606,8 +609,7 @@ export function useAllocateLicenses() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: LicenseAllocationInput) =>
-      allocateLicensesFromPartner(api.buildUrl, data),
+    mutationFn: (data: LicenseAllocationInput) => allocateLicensesFromPartner(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner_id] });
@@ -624,8 +626,7 @@ export function useProvisionPartnerTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TenantProvisioningInput) =>
-      provisionPartnerTenant(api.buildUrl, data),
+    mutationFn: (data: TenantProvisioningInput) => provisionPartnerTenant(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner_id] });
@@ -640,8 +641,7 @@ export function useRecordCommission() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CommissionRecordInput) =>
-      recordPartnerCommission(api.buildUrl, data),
+    mutationFn: (data: CommissionRecordInput) => recordPartnerCommission(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner_id] });
@@ -655,8 +655,7 @@ export function useCompletePartnerOnboarding() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: PartnerOnboardingInput) =>
-      completePartnerOnboarding(api.buildUrl, data),
+    mutationFn: (data: PartnerOnboardingInput) => completePartnerOnboarding(api.buildUrl, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner.id] });

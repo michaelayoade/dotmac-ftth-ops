@@ -1,6 +1,5 @@
 "use client";
 
-
 import { Badge } from "@dotmac/ui";
 import { cn } from "@dotmac/ui";
 import { ChevronDown, Building2, Check, Loader2 } from "lucide-react";
@@ -25,7 +24,7 @@ export function TenantSelector({
   currentTenant,
   availableTenants,
   setTenant,
-  isLoading
+  isLoading,
 }: TenantSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -132,11 +131,7 @@ export function TenantSelector({
   );
 }
 
-export function TenantBadge({
-  currentTenant
-}: {
-  currentTenant: Tenant | null
-}) {
+export function TenantBadge({ currentTenant }: { currentTenant: Tenant | null }) {
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
       <Building2 className="h-3 w-3" />

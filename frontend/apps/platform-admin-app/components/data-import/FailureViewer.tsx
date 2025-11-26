@@ -1,22 +1,10 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 import { Button } from "@dotmac/ui";
-import {
-  AlertCircle,
-  ChevronDown,
-  ChevronRight,
-  Loader2,
-} from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useDataImport } from "@/hooks/useDataImport";
 
@@ -95,9 +83,7 @@ export function FailureViewer({ jobId }: FailureViewerProps) {
                         </CollapsiblePrimitive.Trigger>
                       </TableCell>
 
-                      <TableCell className="font-mono text-sm">
-                        {failure.row_number}
-                      </TableCell>
+                      <TableCell className="font-mono text-sm">{failure.row_number}</TableCell>
 
                       <TableCell>
                         <Badge variant="outline">{failure.error_type}</Badge>
@@ -109,7 +95,9 @@ export function FailureViewer({ jobId }: FailureViewerProps) {
 
                       <TableCell>
                         {fieldErrorCount > 0 && (
-                          <Badge variant="secondary">{fieldErrorCount} field{fieldErrorCount !== 1 ? 's' : ''}</Badge>
+                          <Badge variant="secondary">
+                            {fieldErrorCount} field{fieldErrorCount !== 1 ? "s" : ""}
+                          </Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -165,7 +153,7 @@ export function FailureViewer({ jobId }: FailureViewerProps) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Showing {failures.length} failed record{failures.length !== 1 ? 's' : ''}
+        Showing {failures.length} failed record{failures.length !== 1 ? "s" : ""}
       </p>
     </div>
   );

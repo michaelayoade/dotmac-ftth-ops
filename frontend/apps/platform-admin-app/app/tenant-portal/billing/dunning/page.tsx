@@ -299,7 +299,7 @@ export default function DunningDashboardPage() {
         label: "Cancel Executions",
         icon: CancelIcon,
         action: async (selected) => {
-    // eslint-disable-next-line no-alert
+          // eslint-disable-next-line no-alert
           const reason = prompt("Enter cancellation reason:");
           if (!reason) return;
 

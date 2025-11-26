@@ -3,16 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@dotmac/ui";
-import {
-  User,
-  Package,
-  Network,
-  Cpu,
-  Receipt,
-  Ticket,
-  FileText,
-  Activity,
-} from "lucide-react";
+import { User, Package, Network, Cpu, Receipt, Ticket, FileText, Activity } from "lucide-react";
 
 const tabs = [
   { name: "Overview", href: "", icon: User },
@@ -34,7 +25,7 @@ export default function CustomerDetailLayout({
   params: { id: string };
 }) {
   const pathname = usePathname();
-  const basePath = `/dashboard/operations/customers/${params['id']}`;
+  const basePath = `/dashboard/operations/customers/${params["id"]}`;
 
   return (
     <div className="space-y-6">
@@ -54,7 +45,7 @@ export default function CustomerDetailLayout({
                   "flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors whitespace-nowrap",
                   isActive
                     ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground",
                 )}
               >
                 <Icon className="h-4 w-4" />

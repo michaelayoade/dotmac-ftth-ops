@@ -97,7 +97,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
           <button onClick={() => onEdit?.(customer)}>Edit</button>
           <button onClick={() => onDelete?.(customer)}>Delete</button>
         </div>
-      )
+      ),
     );
   });
 
@@ -108,7 +108,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-customer")).toHaveTextContent("yes");
@@ -123,7 +123,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={onClose}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-close")).toHaveTextContent("yes");
@@ -142,7 +142,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={onEdit}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-edit")).toHaveTextContent("yes");
@@ -161,7 +161,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={onDelete}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-delete")).toHaveTextContent("yes");
@@ -178,7 +178,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-get-customer")).toHaveTextContent("yes");
@@ -188,7 +188,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
       expect.objectContaining({
         getCustomer: mockGetCustomer,
       }),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -199,7 +199,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-activities")).toHaveTextContent("yes");
@@ -212,7 +212,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-notes")).toHaveTextContent("yes");
@@ -225,7 +225,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-subscriptions")).toHaveTextContent("yes");
@@ -238,7 +238,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-network")).toHaveTextContent("yes");
@@ -251,7 +251,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-devices")).toHaveTextContent("yes");
@@ -264,7 +264,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-tickets")).toHaveTextContent("yes");
@@ -277,7 +277,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onEdit={jest.fn()}
         onDelete={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-billing")).toHaveTextContent("yes");
@@ -294,7 +294,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onClose={onClose}
         onEdit={onEdit}
         onDelete={onDelete}
-      />
+      />,
     );
 
     expect(mockSharedModal).toHaveBeenCalledWith(
@@ -305,7 +305,7 @@ describe("CustomerDetailModal (App Wrapper)", () => {
         onDelete,
         getCustomer: mockGetCustomer,
       }),
-      expect.anything()
+      expect.anything(),
     );
 
     // Verify all child components are injected

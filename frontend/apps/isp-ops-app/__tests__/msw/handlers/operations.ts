@@ -3,7 +3,12 @@
  */
 
 import { http, HttpResponse } from "msw";
-import type { MonitoringMetrics, LogStats, SystemHealth, ServiceHealth } from '../../../hooks/useOperations';
+import type {
+  MonitoringMetrics,
+  LogStats,
+  SystemHealth,
+  ServiceHealth,
+} from "../../../hooks/useOperations";
 
 // In-memory storage for test data
 let metrics: Record<string, MonitoringMetrics> = {};
@@ -18,7 +23,10 @@ export function resetOperationsStorage() {
 }
 
 // Helper to create mock metrics
-export function createMockMetrics(period: '1h' | '24h' | '7d' = '24h', overrides?: Partial<MonitoringMetrics>): MonitoringMetrics {
+export function createMockMetrics(
+  period: "1h" | "24h" | "7d" = "24h",
+  overrides?: Partial<MonitoringMetrics>,
+): MonitoringMetrics {
   return {
     error_rate: 2.5,
     critical_errors: 3,
@@ -36,12 +44,12 @@ export function createMockMetrics(period: '1h' | '24h' | '7d' = '24h', overrides
     timeout_count: 5,
     top_errors: [
       {
-        error_type: 'DATABASE_TIMEOUT',
+        error_type: "DATABASE_TIMEOUT",
         count: 12,
         last_seen: new Date().toISOString(),
       },
       {
-        error_type: 'VALIDATION_ERROR',
+        error_type: "VALIDATION_ERROR",
         count: 8,
         last_seen: new Date().toISOString(),
       },
@@ -53,7 +61,10 @@ export function createMockMetrics(period: '1h' | '24h' | '7d' = '24h', overrides
 }
 
 // Helper to create mock log stats
-export function createMockLogStats(period: '1h' | '24h' | '7d' = '24h', overrides?: Partial<LogStats>): LogStats {
+export function createMockLogStats(
+  period: "1h" | "24h" | "7d" = "24h",
+  overrides?: Partial<LogStats>,
+): LogStats {
   return {
     total_logs: 5000,
     critical_logs: 5,
@@ -69,14 +80,14 @@ export function createMockLogStats(period: '1h' | '24h' | '7d' = '24h', override
     unique_error_types: 12,
     most_common_errors: [
       {
-        error_type: 'AUTH_FAILED',
+        error_type: "AUTH_FAILED",
         count: 25,
-        severity: 'medium',
+        severity: "medium",
       },
       {
-        error_type: 'RATE_LIMIT',
+        error_type: "RATE_LIMIT",
         count: 18,
-        severity: 'low',
+        severity: "low",
       },
     ],
     unique_users: 45,
@@ -88,11 +99,13 @@ export function createMockLogStats(period: '1h' | '24h' | '7d' = '24h', override
 }
 
 // Helper to create mock service health
-export function createMockOperationsServiceHealth(overrides?: Partial<ServiceHealth>): ServiceHealth {
+export function createMockOperationsServiceHealth(
+  overrides?: Partial<ServiceHealth>,
+): ServiceHealth {
   return {
-    name: 'database',
-    status: 'healthy',
-    message: 'All systems operational',
+    name: "database",
+    status: "healthy",
+    message: "All systems operational",
     required: true,
     ...overrides,
   };
@@ -101,12 +114,12 @@ export function createMockOperationsServiceHealth(overrides?: Partial<ServiceHea
 // Helper to create mock system health
 export function createMockSystemHealth(overrides?: Partial<SystemHealth>): SystemHealth {
   return {
-    status: 'healthy',
+    status: "healthy",
     checks: {
-      database: createMockOperationsServiceHealth({ name: 'database' }),
-      redis: createMockOperationsServiceHealth({ name: 'redis' }),
-      vault: createMockOperationsServiceHealth({ name: 'vault', required: false }),
-      storage: createMockOperationsServiceHealth({ name: 'storage', required: false }),
+      database: createMockOperationsServiceHealth({ name: "database" }),
+      redis: createMockOperationsServiceHealth({ name: "redis" }),
+      vault: createMockOperationsServiceHealth({ name: "vault", required: false }),
+      storage: createMockOperationsServiceHealth({ name: "storage", required: false }),
     },
     timestamp: new Date().toISOString(),
     ...overrides,
@@ -117,7 +130,7 @@ export function createMockSystemHealth(overrides?: Partial<SystemHealth>): Syste
 export function seedOperationsData(
   metricsData?: Record<string, MonitoringMetrics>,
   logStatsData?: Record<string, LogStats>,
-  healthData?: SystemHealth
+  healthData?: SystemHealth,
 ) {
   if (metricsData) {
     metrics = { ...metricsData };
@@ -137,9 +150,9 @@ export function getStoredLogStats(period: string): LogStats | undefined {
 
 export const operationsHandlers = [
   // GET /api/v1/monitoring/metrics - Get monitoring metrics
-  http.get('*/api/v1/monitoring/metrics', (req, res, ctx) => {
+  http.get("*/api/v1/monitoring/metrics", (req, res, ctx) => {
     const url = new URL(req.url);
-    const period = (url.searchParams.get('period') || '24h') as '1h' | '24h' | '7d';
+    const period = (url.searchParams.get("period") || "24h") as "1h" | "24h" | "7d";
 
     // Return stored metrics or create default
     const metricsData = metrics[period] || createMockMetrics(period);
@@ -148,9 +161,9 @@ export const operationsHandlers = [
   }),
 
   // GET /api/v1/monitoring/logs/stats - Get log statistics
-  http.get('*/api/v1/monitoring/logs/stats', (req, res, ctx) => {
+  http.get("*/api/v1/monitoring/logs/stats", (req, res, ctx) => {
     const url = new URL(req.url);
-    const period = (url.searchParams.get('period') || '24h') as '1h' | '24h' | '7d';
+    const period = (url.searchParams.get("period") || "24h") as "1h" | "24h" | "7d";
 
     // Return stored log stats or create default
     const statsData = logStats[period] || createMockLogStats(period);
@@ -159,7 +172,7 @@ export const operationsHandlers = [
   }),
 
   // GET /health - Get system health status
-  http.get('*/health', (req, res, ctx) => {
+  http.get("*/health", (req, res, ctx) => {
     // Return stored health or create default
     const healthData = systemHealth || createMockSystemHealth();
 

@@ -4,7 +4,6 @@
 
 import { test, expect } from "#e2e/fixtures";
 
-
 test.describe("GraphQL Integration", () => {
   const GRAPHQL_ENDPOINT = "http://localhost:8000/graphql";
 

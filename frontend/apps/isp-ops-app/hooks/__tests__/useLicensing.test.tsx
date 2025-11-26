@@ -7,12 +7,7 @@
 
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  useLicensing,
-  useFeatureEntitlement,
-  useQuotaCheck,
-  licensingKeys,
-} from "../useLicensing";
+import { useLicensing, useFeatureEntitlement, useQuotaCheck, licensingKeys } from "../useLicensing";
 import { apiClient } from "../../lib/api/client";
 import type {
   FeatureModule,
@@ -45,12 +40,14 @@ jest.mock("../../lib/logger", () => ({
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
 // Helper to mock all GET requests that useLicensing makes on mount
-const mockAllQueries = (overrides: {
-  modules?: any;
-  quotas?: any;
-  plans?: any;
-  subscription?: any;
-} = {}) => {
+const mockAllQueries = (
+  overrides: {
+    modules?: any;
+    quotas?: any;
+    plans?: any;
+    subscription?: any;
+  } = {},
+) => {
   mockApiClient.get.mockImplementation((url: string) => {
     if (url.includes("/licensing/modules")) {
       return Promise.resolve({ data: overrides.modules ?? [] });
@@ -211,9 +208,7 @@ describe("useLicensing - Unit Tests", () => {
 
     it("should show loading state during fetch", async () => {
       mockApiClient.get.mockImplementation((url: string) => {
-        return new Promise((resolve) =>
-          setTimeout(() => resolve({ data: [] }), 100)
-        );
+        return new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 100));
       });
 
       const { result } = renderHook(() => useLicensing(), {
@@ -458,7 +453,7 @@ describe("useLicensing - Unit Tests", () => {
       expect(updated).toEqual(updatedModule);
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         "/licensing/modules/mod-1",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -480,7 +475,7 @@ describe("useLicensing - Unit Tests", () => {
           category: "BILLING",
           pricing_model: "FLAT_FEE",
           base_price: -100,
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -552,7 +547,7 @@ describe("useLicensing - Unit Tests", () => {
       expect(updated).toEqual(updatedQuota);
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         "/licensing/quotas/quota-1",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -622,7 +617,7 @@ describe("useLicensing - Unit Tests", () => {
       expect(updated).toEqual(updatedPlan);
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         "/licensing/plans/plan-1",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -684,7 +679,7 @@ describe("useLicensing - Unit Tests", () => {
       expect(created).toEqual(newSubscription);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         "/licensing/subscriptions",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -707,7 +702,7 @@ describe("useLicensing - Unit Tests", () => {
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         "/licensing/subscriptions/current/addons",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -729,7 +724,7 @@ describe("useLicensing - Unit Tests", () => {
 
       expect(mockApiClient.delete).toHaveBeenCalledWith(
         "/licensing/subscriptions/current/addons",
-        expect.objectContaining({ data: expect.any(Object) })
+        expect.objectContaining({ data: expect.any(Object) }),
       );
     });
   });
@@ -824,7 +819,7 @@ describe("useLicensing - Unit Tests", () => {
       expect(pricing).toEqual(mockPricing);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         "/licensing/plans/plan-1/pricing",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -853,7 +848,7 @@ describe("useLicensing - Unit Tests", () => {
       expect(response).toEqual(mockResponse);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         "/licensing/entitlements/check",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -882,7 +877,10 @@ describe("useLicensing - Unit Tests", () => {
       });
 
       expect(response).toEqual(mockResponse);
-      expect(mockApiClient.post).toHaveBeenCalledWith("/licensing/quotas/check", expect.any(Object));
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        "/licensing/quotas/check",
+        expect.any(Object),
+      );
     });
 
     it("should consume quota", async () => {
@@ -904,7 +902,7 @@ describe("useLicensing - Unit Tests", () => {
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         "/licensing/quotas/consume",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -927,7 +925,7 @@ describe("useLicensing - Unit Tests", () => {
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         "/licensing/quotas/release",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

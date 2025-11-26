@@ -82,10 +82,10 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
     error,
     refetch,
   } = useQuery({
-    queryKey: ["pricing-rule", apiBaseUrl, params['id']],
+    queryKey: ["pricing-rule", apiBaseUrl, params["id"]],
     queryFn: async () => {
       const response = await apiClient.get<PricingRule>(
-        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params['id']}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params["id"]}`,
       );
       return response.data;
     },
@@ -96,7 +96,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
     mutationFn: async (activate: boolean) => {
       const endpoint = activate ? "activate" : "deactivate";
       const response = await apiClient.post(
-        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params['id']}/${endpoint}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params["id"]}/${endpoint}`,
       );
       return response.data;
     },
@@ -105,7 +105,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
         title: "Success",
         description: `Pricing rule ${activate ? "activated" : "deactivated"} successfully`,
       });
-      queryClient.invalidateQueries({ queryKey: ["pricing-rule", apiBaseUrl, params['id']] });
+      queryClient.invalidateQueries({ queryKey: ["pricing-rule", apiBaseUrl, params["id"]] });
       queryClient.invalidateQueries({ queryKey: ["pricing-rules"] });
     },
     onError: (error: any) => {
@@ -120,9 +120,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
   // Delete rule mutation
   const deleteRuleMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.delete(
-        `${apiBaseUrl}/api/v1/billing/pricing/rules/${params['id']}`
-      );
+      await apiClient.delete(`${apiBaseUrl}/api/v1/billing/pricing/rules/${params["id"]}`);
     },
     onSuccess: () => {
       toast({
@@ -151,12 +149,9 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
   };
 
   const getPriorityBadge = (priority: number) => {
-    if (priority >= 500)
-      return <Badge className="bg-red-500">Critical ({priority})</Badge>;
-    if (priority >= 300)
-      return <Badge className="bg-orange-500">High ({priority})</Badge>;
-    if (priority >= 100)
-      return <Badge className="bg-yellow-500">Medium ({priority})</Badge>;
+    if (priority >= 500) return <Badge className="bg-red-500">Critical ({priority})</Badge>;
+    if (priority >= 300) return <Badge className="bg-orange-500">High ({priority})</Badge>;
+    if (priority >= 100) return <Badge className="bg-yellow-500">Medium ({priority})</Badge>;
     return <Badge className="bg-gray-500">Low ({priority})</Badge>;
   };
 
@@ -189,7 +184,8 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-destructive">
-              Failed to load pricing rule. The rule may not exist or you may not have permission to view it.
+              Failed to load pricing rule. The rule may not exist or you may not have permission to
+              view it.
             </div>
             <div className="text-center mt-4">
               <Button onClick={() => router.push("/dashboard/billing-revenue/pricing")}>
@@ -221,9 +217,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
               </Badge>
               {getPriorityBadge(rule.priority)}
             </div>
-            {rule.description && (
-              <p className="text-muted-foreground mt-1">{rule.description}</p>
-            )}
+            {rule.description && <p className="text-muted-foreground mt-1">{rule.description}</p>}
           </div>
         </div>
       </div>
@@ -237,9 +231,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() =>
-                router.push(`/dashboard/billing-revenue/pricing?edit=${params['id']}`)
-              }
+              onClick={() => router.push(`/dashboard/billing-revenue/pricing?edit=${params["id"]}`)}
             >
               <Edit className="mr-2 h-4 w-4" />
               Edit Rule
@@ -508,7 +500,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
                       Valid for{" "}
                       {Math.ceil(
                         (new Date(rule.ends_at).getTime() - new Date(rule.starts_at).getTime()) /
-                          (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24),
                       )}{" "}
                       days
                     </div>
@@ -696,9 +688,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">
-                  {rule.max_uses
-                    ? (rule.max_uses - rule.current_uses).toLocaleString()
-                    : "∞"}
+                  {rule.max_uses ? (rule.max_uses - rule.current_uses).toLocaleString() : "∞"}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Applications left</p>
               </CardContent>
@@ -755,8 +745,8 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
             <CardContent>
               <div className="p-8 bg-accent rounded-lg text-center">
                 <p className="text-muted-foreground">
-                  Usage history chart would appear here. This feature requires additional data tracking
-                  and visualization implementation.
+                  Usage history chart would appear here. This feature requires additional data
+                  tracking and visualization implementation.
                 </p>
               </div>
             </CardContent>
@@ -770,8 +760,8 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Pricing Rule</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the rule &quot;{rule.name}&quot;? This action cannot be undone and
-              will remove the rule permanently.
+              Are you sure you want to delete the rule &quot;{rule.name}&quot;? This action cannot
+              be undone and will remove the rule permanently.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

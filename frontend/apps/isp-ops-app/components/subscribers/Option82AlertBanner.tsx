@@ -68,11 +68,7 @@ export function Option82AlertBanner({
   return (
     <div className="space-y-2">
       {activeAlerts.map((alert) => (
-        <Alert
-          key={alert.id}
-          variant={getSeverityVariant(alert.severity)}
-          className="border-l-4"
-        >
+        <Alert key={alert.id} variant={getSeverityVariant(alert.severity)} className="border-l-4">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-2 flex-1">
               {getSeverityIcon(alert.severity)}
@@ -90,15 +86,11 @@ export function Option82AlertBanner({
                     <div className="grid grid-cols-2 gap-2 text-sm bg-muted/50 p-2 rounded">
                       <div>
                         <p className="font-semibold">Expected Circuit ID:</p>
-                        <p className="font-mono">
-                          {alert.expectedCircuitId || "N/A"}
-                        </p>
+                        <p className="font-mono">{alert.expectedCircuitId || "N/A"}</p>
                       </div>
                       <div>
                         <p className="font-semibold">Actual Circuit ID:</p>
-                        <p className="font-mono">
-                          {alert.actualCircuitId || "N/A"}
-                        </p>
+                        <p className="font-mono">{alert.actualCircuitId || "N/A"}</p>
                       </div>
                     </div>
                   )}
@@ -107,22 +99,17 @@ export function Option82AlertBanner({
                     <div className="grid grid-cols-2 gap-2 text-sm bg-muted/50 p-2 rounded">
                       <div>
                         <p className="font-semibold">Expected Remote ID:</p>
-                        <p className="font-mono">
-                          {alert.expectedRemoteId || "N/A"}
-                        </p>
+                        <p className="font-mono">{alert.expectedRemoteId || "N/A"}</p>
                       </div>
                       <div>
                         <p className="font-semibold">Actual Remote ID:</p>
-                        <p className="font-mono">
-                          {alert.actualRemoteId || "N/A"}
-                        </p>
+                        <p className="font-mono">{alert.actualRemoteId || "N/A"}</p>
                       </div>
                     </div>
                   )}
 
                   <p className="text-xs text-muted-foreground">
-                    Triggered at:{" "}
-                    {new Date(alert.triggeredAt).toLocaleString()}
+                    Triggered at: {new Date(alert.triggeredAt).toLocaleString()}
                   </p>
                 </AlertDescription>
               </div>
@@ -130,20 +117,12 @@ export function Option82AlertBanner({
 
             <div className="flex gap-2 ml-4">
               {!alert.acknowledgedAt && onAcknowledge && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onAcknowledge(alert.id)}
-                >
+                <Button size="sm" variant="outline" onClick={() => onAcknowledge(alert.id)}>
                   Acknowledge
                 </Button>
               )}
               {onResolve && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onResolve(alert.id)}
-                >
+                <Button size="sm" variant="outline" onClick={() => onResolve(alert.id)}>
                   Resolve
                 </Button>
               )}

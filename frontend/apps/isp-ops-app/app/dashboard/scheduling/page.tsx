@@ -164,7 +164,10 @@ interface AssignmentListProps {
 
 function AssignmentList({ assignments, onCancel }: AssignmentListProps) {
   const getStatusBadge = (status: AssignmentStatus) => {
-    const config: Record<AssignmentStatus, { variant: "default" | "secondary" | "outline" | "destructive"; className: string }> = {
+    const config: Record<
+      AssignmentStatus,
+      { variant: "default" | "secondary" | "outline" | "destructive"; className: string }
+    > = {
       scheduled: { variant: "secondary", className: "bg-blue-100 text-blue-800" },
       confirmed: { variant: "default", className: "bg-green-100 text-green-800" },
       in_progress: { variant: "default", className: "bg-yellow-100 text-yellow-800" },
@@ -238,11 +241,7 @@ function AssignmentList({ assignments, onCancel }: AssignmentListProps) {
               </div>
 
               {onCancel && assignment.status === "scheduled" && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onCancel(assignment.id)}
-                >
+                <Button size="sm" variant="ghost" onClick={() => onCancel(assignment.id)}>
                   <XCircle className="h-4 w-4" />
                 </Button>
               )}
@@ -295,11 +294,7 @@ function WeekCalendar() {
             >
               Previous
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setCurrentWeek(new Date())}
-            >
+            <Button size="sm" variant="outline" onClick={() => setCurrentWeek(new Date())}>
               Today
             </Button>
             <Button
@@ -341,9 +336,7 @@ function WeekCalendar() {
                     </div>
                   ))}
                   {dayAssignments.length > 3 && (
-                    <div className="text-xs text-gray-500">
-                      +{dayAssignments.length - 3} more
-                    </div>
+                    <div className="text-xs text-gray-500">+{dayAssignments.length - 3} more</div>
                   )}
                 </div>
               </div>

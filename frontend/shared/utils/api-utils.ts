@@ -2,7 +2,7 @@
  * Shared API utilities for building URLs and handling responses
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 export interface ApiConfig {
   baseUrl?: string;
@@ -18,14 +18,14 @@ export interface ApiConfig {
  */
 export function buildApiUrl(path: string, api: ApiConfig): string {
   // If api.buildUrl function exists, use it
-  if (typeof api.buildUrl === 'function') {
+  if (typeof api.buildUrl === "function") {
     return api.buildUrl(path);
   }
 
   // Otherwise, construct URL manually
-  const base = api.baseUrl || '';
-  const prefix = api.prefix || '';
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const base = api.baseUrl || "";
+  const prefix = api.prefix || "";
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${base}${prefix}${normalizedPath}`;
 }
 
@@ -44,7 +44,7 @@ export interface ListResponse<T> {
  */
 export async function parseListResponse<T>(
   response: Response,
-  schema?: z.ZodSchema<T>
+  schema?: z.ZodSchema<T>,
 ): Promise<ListResponse<T>> {
   const payload = await response.json();
   let items: T[] = [];
@@ -69,7 +69,7 @@ export async function parseListResponse<T>(
       items = items.map((item) => schema.parse(item));
     } catch (error) {
       throw new Error(
-        `API response validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `API response validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -77,9 +77,9 @@ export async function parseListResponse<T>(
   // Try to get total from response headers if not valid
   if (!Number.isFinite(total) || total <= 0) {
     const headerTotal =
-      response.headers.get('x-total-count') ||
-      response.headers.get('x-total') ||
-      response.headers.get('x-total-results');
+      response.headers.get("x-total-count") ||
+      response.headers.get("x-total") ||
+      response.headers.get("x-total-results");
     if (headerTotal) {
       const parsed = Number.parseInt(headerTotal, 10);
       if (Number.isFinite(parsed)) {
@@ -104,10 +104,7 @@ export async function parseListResponse<T>(
  * @param defaultMessage - Default error message
  * @returns Promise that rejects with a detailed error
  */
-export async function handleApiError(
-  response: Response,
-  defaultMessage: string
-): Promise<never> {
+export async function handleApiError(response: Response, defaultMessage: string): Promise<never> {
   let errorDetails = response.statusText;
 
   try {
@@ -115,9 +112,8 @@ export async function handleApiError(
     if (errorBody?.message) {
       errorDetails = errorBody.message;
     } else if (errorBody?.error) {
-      errorDetails = typeof errorBody.error === 'string'
-        ? errorBody.error
-        : JSON.stringify(errorBody.error);
+      errorDetails =
+        typeof errorBody.error === "string" ? errorBody.error : JSON.stringify(errorBody.error);
     } else if (errorBody?.detail) {
       errorDetails = errorBody.detail;
     }

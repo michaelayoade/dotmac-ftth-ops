@@ -141,10 +141,7 @@ function TabsNavigation({
       >
         {Icon ? (
           <Icon
-            className={clsx(
-              "h-4 w-4 flex-shrink-0",
-              isActive ? "text-blue-500" : "text-gray-400",
-            )}
+            className={clsx("h-4 w-4 flex-shrink-0", isActive ? "text-blue-500" : "text-gray-400")}
           />
         ) : null}
         <span>{item.label}</span>
@@ -175,7 +172,9 @@ function TabsNavigation({
               aria-expanded={showMore}
               aria-label="More navigation"
             >
-              <ChevronDown className={clsx("h-4 w-4 transition-transform", showMore && "rotate-180")} />
+              <ChevronDown
+                className={clsx("h-4 w-4 transition-transform", showMore && "rotate-180")}
+              />
               <span className="sr-only">More navigation</span>
             </button>
 

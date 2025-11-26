@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   AlertTriangle,
   Ban,
@@ -90,15 +84,12 @@ function LicensingPageContent() {
   // Suspend license mutation
   const suspendMutation = useMutation({
     mutationFn: async ({ licenseId, reason }: { licenseId: string; reason: string }) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/licensing/licenses/${licenseId}/suspend`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ reason }),
-        },
-      );
+      const response = await fetch(`${apiBaseUrl}/api/licensing/licenses/${licenseId}/suspend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reason }),
+      });
       if (!response.ok) throw new Error("Failed to suspend license");
       return response.json();
     },
@@ -127,14 +118,17 @@ function LicensingPageContent() {
 
   const stats: LicenseStats = {
     total_licenses: licenses.length,
-    active_licenses: licenses.filter(l => l.status === "ACTIVE").length,
-    expired_licenses: licenses.filter(l => l.status === "EXPIRED").length,
-    suspended_licenses: licenses.filter(l => l.status === "SUSPENDED").length,
-    trial_licenses: licenses.filter(l => l.status === "TRIAL").length,
+    active_licenses: licenses.filter((l) => l.status === "ACTIVE").length,
+    expired_licenses: licenses.filter((l) => l.status === "EXPIRED").length,
+    suspended_licenses: licenses.filter((l) => l.status === "SUSPENDED").length,
+    trial_licenses: licenses.filter((l) => l.status === "TRIAL").length,
   };
 
   const getStatusBadge = (status: LicenseStatus) => {
-    const statusConfig: Record<LicenseStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      LicenseStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       ACTIVE: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       EXPIRED: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Expired" },
       SUSPENDED: { icon: Ban, color: "bg-orange-100 text-orange-800", label: "Suspended" },
@@ -162,11 +156,7 @@ function LicensingPageContent() {
       FLOATING: "bg-indigo-100 text-indigo-800",
     };
 
-    return (
-      <Badge className={typeColors[type] || "bg-gray-100 text-gray-800"}>
-        {type}
-      </Badge>
-    );
+    return <Badge className={typeColors[type] || "bg-gray-100 text-gray-800"}>{type}</Badge>;
   };
 
   return (
@@ -175,9 +165,7 @@ function LicensingPageContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">License Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage software licenses and activations
-          </p>
+          <p className="text-sm text-muted-foreground">Manage software licenses and activations</p>
         </div>
         <Button variant="outline" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -318,9 +306,7 @@ function LicensingPageContent() {
                           {license.license_key}
                         </Link>
                       </CardTitle>
-                      <CardDescription>
-                        Product: {license.product_id}
-                      </CardDescription>
+                      <CardDescription>Product: {license.product_id}</CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -376,7 +362,7 @@ function LicensingPageContent() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-    // eslint-disable-next-line no-alert
+                        // eslint-disable-next-line no-alert
                         const reason = prompt("Reason for suspension:");
                         if (reason) {
                           suspendMutation.mutate({ licenseId: license.id, reason });

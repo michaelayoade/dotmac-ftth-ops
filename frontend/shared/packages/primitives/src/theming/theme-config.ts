@@ -424,7 +424,9 @@ export class ThemeConfigLoader {
       ...(process.env["REACT_APP_FONT_FAMILY"]
         ? { fontFamily: process.env["REACT_APP_FONT_FAMILY"] }
         : {}),
-      ...(process.env["REACT_APP_CUSTOM_CSS"] ? { customCss: process.env["REACT_APP_CUSTOM_CSS"] } : {}),
+      ...(process.env["REACT_APP_CUSTOM_CSS"]
+        ? { customCss: process.env["REACT_APP_CUSTOM_CSS"] }
+        : {}),
     };
 
     return generateThemeFromConfig(config);

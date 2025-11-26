@@ -4,12 +4,12 @@
  * Extends base Input with accessibility warnings
  */
 
-'use client';
+"use client";
 
-import { warnMissingFormLabel } from '@dotmac/utils/a11y-dev-warnings';
-import * as React from 'react';
+import { warnMissingFormLabel } from "@dotmac/utils/a11y-dev-warnings";
+import * as React from "react";
 
-import { Input as BaseInput, type InputProps } from '../input';
+import { Input as BaseInput, type InputProps } from "../input";
 
 export interface EnhancedInputProps extends InputProps {
   /** Associated label element ID */
@@ -42,13 +42,13 @@ export const Input = React.forwardRef<HTMLInputElement, EnhancedInputProps>(
   (
     {
       id,
-      'aria-label': ariaLabel,
-      'aria-labelledby': ariaLabelledby,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledby,
       labelId,
       suppressA11yWarnings,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Development-time accessibility checks
     React.useEffect(() => {
@@ -56,8 +56,8 @@ export const Input = React.forwardRef<HTMLInputElement, EnhancedInputProps>(
 
       // Check for missing label
       warnMissingFormLabel(id, {
-        'aria-label': ariaLabel,
-        'aria-labelledby': ariaLabelledby || labelId,
+        "aria-label": ariaLabel,
+        "aria-labelledby": ariaLabelledby || labelId,
         htmlFor: labelId,
       });
     }, [id, ariaLabel, ariaLabelledby, labelId, suppressA11yWarnings]);
@@ -71,7 +71,7 @@ export const Input = React.forwardRef<HTMLInputElement, EnhancedInputProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
-Input.displayName = 'EnhancedInput';
+Input.displayName = "EnhancedInput";

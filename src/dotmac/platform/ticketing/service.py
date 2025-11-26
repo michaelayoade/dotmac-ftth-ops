@@ -355,9 +355,7 @@ class TicketService:
                 "in_progress"
             ),
             func.sum(case((Ticket.status == TicketStatus.WAITING, 1), else_=0)).label("waiting"),
-            func.sum(case((Ticket.status == TicketStatus.RESOLVED, 1), else_=0)).label(
-                "resolved"
-            ),
+            func.sum(case((Ticket.status == TicketStatus.RESOLVED, 1), else_=0)).label("resolved"),
             func.sum(case((Ticket.status == TicketStatus.CLOSED, 1), else_=0)).label("closed"),
         )
 

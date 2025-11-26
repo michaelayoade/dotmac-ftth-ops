@@ -55,8 +55,18 @@ type ViewMode = "month" | "week" | "day";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const isSameDay = (date1: Date, date2: Date): boolean => {
@@ -146,9 +156,7 @@ function DayCell({ day, onDayClick }: DayCellProps) {
         >
           {day.date.getDate()}
         </span>
-        {hasEvents && (
-          <div className="h-2 w-2 rounded-full bg-blue-600" />
-        )}
+        {hasEvents && <div className="h-2 w-2 rounded-full bg-blue-600" />}
       </div>
 
       <div className="space-y-1">
@@ -171,9 +179,7 @@ function DayCell({ day, onDayClick }: DayCellProps) {
         })}
 
         {day.tasks.length > 2 && (
-          <p className="text-xs text-muted-foreground">
-            +{day.tasks.length - 2} more
-          </p>
+          <p className="text-xs text-muted-foreground">+{day.tasks.length - 2} more</p>
         )}
       </div>
     </div>
@@ -226,9 +232,7 @@ function DayDetail({ selectedDate, tasks, onClose, teamNameById }: DayDetailProp
                   </Badge>
                 </div>
                 {task.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {task.description}
-                  </p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
                 )}
                 {task.assignee && (
                   <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
@@ -245,7 +249,8 @@ function DayDetail({ selectedDate, tasks, onClose, teamNameById }: DayDetailProp
                 {task.dueDate && (
                   <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
-                    Due: {new Date(task.dueDate).toLocaleTimeString("en-US", {
+                    Due:{" "}
+                    {new Date(task.dueDate).toLocaleTimeString("en-US", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -275,7 +280,7 @@ export function TeamCalendar({ projectId }: TeamCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const { data: tasksData, isLoading } = useTasks(
-    projectId ? { projectId: [projectId] } : undefined
+    projectId ? { projectId: [projectId] } : undefined,
   );
   const { data: teams } = useTeams();
   const [selectedTeam, setSelectedTeam] = useState<string>("");
@@ -334,7 +339,7 @@ export function TeamCalendar({ projectId }: TeamCalendarProps) {
       .filter(
         (task) =>
           (task.dueDate && isSameDay(new Date(task.dueDate), selectedDate)) ||
-          (task.startDate && isSameDay(new Date(task.startDate), selectedDate))
+          (task.startDate && isSameDay(new Date(task.startDate), selectedDate)),
       )
       .filter((task) => (selectedTeam ? task.reporterId === selectedTeam : true));
   }, [selectedDate, tasksData, selectedTeam]);
@@ -442,13 +447,16 @@ export function TeamCalendar({ projectId }: TeamCalendarProps) {
             <div>
               <p className="text-sm text-muted-foreground">This Month</p>
               <p className="text-2xl font-bold">
-                {calendarDays.filter((d) => d.isCurrentMonth).reduce((sum, day) => sum + day.tasks.length, 0)}
+                {calendarDays
+                  .filter((d) => d.isCurrentMonth)
+                  .reduce((sum, day) => sum + day.tasks.length, 0)}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Upcoming Deadlines</p>
               <p className="text-2xl font-bold">
-                {tasksData?.tasks.filter((t) => t.dueDate && new Date(t.dueDate) > new Date()).length || 0}
+                {tasksData?.tasks.filter((t) => t.dueDate && new Date(t.dueDate) > new Date())
+                  .length || 0}
               </p>
             </div>
           </div>

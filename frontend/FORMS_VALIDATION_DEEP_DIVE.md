@@ -13,6 +13,7 @@
 The forms and validation implementation demonstrates **enterprise-grade quality** with a well-architected dual-pattern approach using react-hook-form + Zod for type-safe validation. The system includes comprehensive custom input components, excellent accessibility, and robust error handling. Minor improvements recommended around i18n integration and testing coverage.
 
 **Key Strengths:**
+
 - ✅ Industry-standard libraries (react-hook-form + Zod)
 - ✅ Comprehensive validation schemas with complex business rules
 - ✅ Excellent accessibility (ARIA, error announcements, keyboard navigation)
@@ -21,6 +22,7 @@ The forms and validation implementation demonstrates **enterprise-grade quality*
 - ✅ Two flexible patterns: Compound components and render props
 
 **Minor Weaknesses:**
+
 - ⚠️ No i18n integration for validation messages (Priority 1)
 - ⚠️ Inconsistent form pattern usage across codebase (Priority 2)
 - ⚠️ Missing form-level unit tests (Priority 3)
@@ -37,6 +39,7 @@ The forms and validation implementation demonstrates **enterprise-grade quality*
 **Location:** `shared/packages/ui/src/components/form.tsx` (216 lines)
 
 **Pattern:**
+
 ```tsx
 const Form = <TFieldValues extends FieldValues>({
   children,
@@ -44,9 +47,7 @@ const Form = <TFieldValues extends FieldValues>({
 }: FormProviderProps<TFieldValues>) => {
   return (
     <FormContext.Provider value={true}>
-      <FormProvider<TFieldValues> {...props}>
-        {enhanceFormChildren(children)}
-      </FormProvider>
+      <FormProvider<TFieldValues> {...props}>{enhanceFormChildren(children)}</FormProvider>
     </FormContext.Provider>
   );
 };
@@ -63,6 +64,7 @@ const form = useForm({
 ```
 
 **Components:**
+
 - `Form` - FormProvider wrapper
 - `FormField` - Field controller with render prop
 - `FormItem` - Field container with context
@@ -72,6 +74,7 @@ const form = useForm({
 - `FormMessage` - Error display with role="alert"
 
 **Pros:**
+
 - Declarative API
 - Automatic ARIA integration
 - Type-safe field names
@@ -79,6 +82,7 @@ const form = useForm({
 - Composable components
 
 **Cons:**
+
 - More verbose than raw react-hook-form
 - Learning curve for pattern
 
@@ -87,6 +91,7 @@ const form = useForm({
 **Location:** `shared/packages/headless/src/components/ValidatedForm.tsx` (370 lines)
 
 **Pattern:**
+
 ```tsx
 <ValidatedForm
   initialData={{ email: "" }}
@@ -95,25 +100,25 @@ const form = useForm({
 >
   {({ data, errors, handleChange, handleSubmit, isSubmitting }) => (
     <form onSubmit={handleSubmit}>
-      <input
-        name="email"
-        value={data.email}
-        onChange={handleChange}
-      />
+      <input name="email" value={data.email} onChange={handleChange} />
       {errors.email && <span>{errors.email}</span>}
-      <button type="submit" disabled={isSubmitting}>Submit</button>
+      <button type="submit" disabled={isSubmitting}>
+        Submit
+      </button>
     </form>
   )}
 </ValidatedForm>
 ```
 
 **Pros:**
+
 - Maximum flexibility
 - No dependency on react-hook-form
 - Simple mental model
 - Easy to understand
 
 **Cons:**
+
 - Manual ARIA implementation needed
 - Less type safety
 - No built-in Zod integration
@@ -143,7 +148,7 @@ export const registerSchema = z
       .max(50, "Username must be less than 50 characters")
       .regex(
         /^[a-zA-Z0-9_-]+$/,
-        "Username can only contain letters, numbers, hyphens and underscores"
+        "Username can only contain letters, numbers, hyphens and underscores",
       ),
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
@@ -161,6 +166,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 ```
 
 **Grade: A (95/100)**
+
 - ✅ Clear error messages
 - ✅ Type inference
 - ✅ Cross-field validation with `.refine()`
@@ -169,6 +175,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 #### 2. IP Address Validations (`lib/validations/ip-address.ts` - 243 lines)
 
 **Comprehensive schemas for networking:**
+
 - IPv4/IPv6 address validation
 - CIDR notation validation
 - Subnet mask validation
@@ -180,6 +187,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 - Device monitoring schemas
 
 **Example - Dual-Stack Validation:**
+
 ```typescript
 export const dualStackIPSchema = z
   .object({
@@ -193,6 +201,7 @@ export const dualStackIPSchema = z
 ```
 
 **Grade: A+ (98/100)**
+
 - ✅ Domain-specific validation logic
 - ✅ Complex business rules
 - ✅ Reusable optional schemas
@@ -242,6 +251,7 @@ export function validateSerialNumber(serialNumber: string): ValidationError | nu
 ```
 
 **Grade: B+ (85/100)**
+
 - ✅ Good for incremental validation
 - ✅ Clear error structure
 - ✅ Integration with constants
@@ -250,6 +260,7 @@ export function validateSerialNumber(serialNumber: string): ValidationError | nu
 - ⚠️ No type inference
 
 **Recommendation:** Migrate to Zod for consistency:
+
 ```typescript
 // Equivalent Zod schema (more concise)
 const serialNumberSchema = z
@@ -257,7 +268,10 @@ const serialNumberSchema = z
   .trim()
   .min(VALIDATION.MIN_SERIAL_LENGTH)
   .max(VALIDATION.MAX_SERIAL_LENGTH)
-  .regex(VALIDATION.SERIAL_PATTERN, "Serial number must contain only uppercase letters and numbers");
+  .regex(
+    VALIDATION.SERIAL_PATTERN,
+    "Serial number must contain only uppercase letters and numbers",
+  );
 ```
 
 ---
@@ -271,6 +285,7 @@ const serialNumberSchema = z
 **Grade: A- (92/100)**
 
 **Strengths:**
+
 ```typescript
 const {
   register,
@@ -296,6 +311,7 @@ const {
 ```
 
 **✅ Excellent:**
+
 - Zod validation integration
 - Proper autocomplete attributes
 - Error state styling
@@ -304,6 +320,7 @@ const {
 - Accessibility labels
 
 **⚠️ Issues:**
+
 - No ARIA error announcements (should use `aria-describedby`)
 - No field-level validation on blur
 - Error messages hardcoded (no i18n)
@@ -315,6 +332,7 @@ const {
 **Grade: A (95/100)**
 
 **Strengths:**
+
 ```typescript
 const formSchema = z
   .object({
@@ -346,6 +364,7 @@ const {
 ```
 
 **✅ Excellent:**
+
 - Cross-field validation (at least one IP)
 - Custom input components (DualStackIPInput)
 - Form reset on close
@@ -355,6 +374,7 @@ const {
 - Required field indicators
 
 **⚠️ Minor Issues:**
+
 - Error display uses inline error prop instead of FormMessage component
 - Could use Form compound components for consistency
 
@@ -365,6 +385,7 @@ const {
 **Grade: A (94/100)**
 
 **Uses imported schema:**
+
 ```typescript
 import { wireguardServerSchema } from "@/lib/validations/ip-address";
 
@@ -388,6 +409,7 @@ const {
 ```
 
 **✅ Excellent:**
+
 - Reusable validation schemas
 - Smart defaults
 - Complex nested data (arrays)
@@ -401,6 +423,7 @@ const {
 **Grade: B (80/100)**
 
 **Pattern:**
+
 ```typescript
 const [formData, setFormData] = useState<InternetServicePlanCreate>({
   plan_code: plan?.plan_code || "",
@@ -416,6 +439,7 @@ const handleSubmit = (e: React.FormEvent) => {
 ```
 
 **⚠️ Issues:**
+
 - No validation library (manual validation needed)
 - Large form state (40+ fields)
 - No Zod schema
@@ -424,6 +448,7 @@ const handleSubmit = (e: React.FormEvent) => {
 - Should use react-hook-form for consistency
 
 **Recommendation:** Migrate to react-hook-form:
+
 ```typescript
 const planSchema = z.object({
   plan_code: z.string().min(1),
@@ -434,7 +459,11 @@ const planSchema = z.object({
 
 const form = useForm({
   resolver: zodResolver(planSchema),
-  defaultValues: plan || { /* defaults */ },
+  defaultValues:
+    plan ||
+    {
+      /* defaults */
+    },
 });
 ```
 
@@ -448,6 +477,7 @@ const form = useForm({
 **Grade: A (95/100)**
 
 **Features:**
+
 - Real-time IP validation (IPv4/IPv6)
 - IP family badge display
 - Touch-based validation (only after blur)
@@ -456,6 +486,7 @@ const form = useForm({
 - Help text support
 
 **Example:**
+
 ```tsx
 <IPAddressInput
   label="Management IP"
@@ -469,25 +500,30 @@ const form = useForm({
 ```
 
 **Accessibility:**
+
 ```tsx
 <Input
   aria-invalid={!!displayError}
   aria-describedby={displayError ? `${label}-error` : undefined}
-/>
-{displayError && (
-  <p id={`${label}-error`} className="text-sm text-red-500" role="alert">
-    {displayError}
-  </p>
-)}
+/>;
+{
+  displayError && (
+    <p id={`${label}-error`} className="text-sm text-red-500" role="alert">
+      {displayError}
+    </p>
+  );
+}
 ```
 
 **✅ Strengths:**
+
 - Excellent accessibility
 - Touch-based validation prevents annoying real-time errors
 - Visual feedback with badge
 - Reusable across forms
 
 **⚠️ Minor Issue:**
+
 - Error messages hardcoded (no i18n)
 
 ### 2. DualStackIPInput
@@ -496,6 +532,7 @@ const form = useForm({
 **Grade: A (96/100)**
 
 **Features:**
+
 - Dual IPv4/IPv6 input
 - "At least one required" validation
 - Support for both IP addresses and CIDR notation
@@ -504,6 +541,7 @@ const form = useForm({
 - Help text for each field
 
 **Example:**
+
 ```tsx
 <DualStackIPInput
   label="Device IP Addresses"
@@ -519,12 +557,14 @@ const form = useForm({
 ```
 
 **✅ Strengths:**
+
 - Complex validation logic (at least one)
 - Excellent UX (clear which is optional)
 - Composable (uses IPAddressInput internally)
 - Flexible (CIDR mode toggle)
 
 **Component Composition:**
+
 ```tsx
 const InputComponent = useCIDR ? IPCIDRInput : IPAddressInput;
 
@@ -535,7 +575,7 @@ const InputComponent = useCIDR ? IPCIDRInput : IPAddressInput;
   allowIPv4={true}
   allowIPv6={false}
   helpText="Optional - Leave empty for IPv6-only"
-/>
+/>;
 ```
 
 ---
@@ -547,6 +587,7 @@ const InputComponent = useCIDR ? IPCIDRInput : IPAddressInput;
 ### 1. Form Component Accessibility
 
 **FormControl (form.tsx:140-152):**
+
 ```typescript
 const FormControl = React.forwardRef<...>(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
@@ -568,6 +609,7 @@ const FormControl = React.forwardRef<...>(({ ...props }, ref) => {
 ```
 
 **✅ Perfect Implementation:**
+
 - Automatic ID generation
 - Proper `aria-describedby` linking
 - `aria-invalid` for error states
@@ -575,6 +617,7 @@ const FormControl = React.forwardRef<...>(({ ...props }, ref) => {
 - No manual ID management needed
 
 **FormMessage (form.tsx:154-169):**
+
 ```typescript
 const FormMessage = React.forwardRef<...>(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
@@ -600,12 +643,13 @@ const FormMessage = React.forwardRef<...>(({ className, children, ...props }, re
 **⚠️ Missing:** `role="alert"` for screen reader announcements
 
 **Recommendation:**
+
 ```tsx
 <p
   ref={ref}
   id={formMessageId}
-  role="alert"  // ✅ Add this
-  aria-live="polite"  // ✅ Add this
+  role="alert" // ✅ Add this
+  aria-live="polite" // ✅ Add this
   className={cn("text-sm font-medium text-destructive", className)}
   {...props}
 >
@@ -637,6 +681,7 @@ export function FormError({ id, error, className = "" }: FormErrorProps) {
 ```
 
 **✅ Perfect:**
+
 - `role="alert"` for immediate announcement
 - `aria-live="polite"` for non-intrusive updates
 - `aria-hidden="true"` on decorative icon
@@ -645,6 +690,7 @@ export function FormError({ id, error, className = "" }: FormErrorProps) {
 ### 3. Real-World Form Accessibility
 
 **Login Form - Good:**
+
 ```tsx
 <label htmlFor="email" className="block text-sm font-medium text-muted-foreground mb-2">
   Username or Email
@@ -659,15 +705,18 @@ export function FormError({ id, error, className = "" }: FormErrorProps) {
 ```
 
 **✅ Strengths:**
+
 - Proper `htmlFor` and `id` matching
 - Autocomplete for password managers
 - Test IDs for E2E
 
 **⚠️ Missing:**
+
 - No `aria-describedby` for error messages
 - No `aria-invalid` on error state
 
 **Device Form - Excellent:**
+
 ```tsx
 <Label htmlFor="name">
   Device Name <span className="text-red-500">*</span>
@@ -677,11 +726,13 @@ export function FormError({ id, error, className = "" }: FormErrorProps) {
 ```
 
 **✅ Strengths:**
+
 - Visual required indicator
 - Clear labels
 - Error messages displayed
 
 **⚠️ Should Add:**
+
 ```tsx
 <Input
   id="name"
@@ -689,12 +740,14 @@ export function FormError({ id, error, className = "" }: FormErrorProps) {
   aria-required="true"
   aria-invalid={!!errors.name}
   aria-describedby={errors.name ? "name-error" : undefined}
-/>
-{errors.name && (
-  <p id="name-error" className="text-sm text-red-500" role="alert">
-    {errors.name.message}
-  </p>
-)}
+/>;
+{
+  errors.name && (
+    <p id="name-error" className="text-sm text-red-500" role="alert">
+      {errors.name.message}
+    </p>
+  );
+}
 ```
 
 ---
@@ -706,6 +759,7 @@ export function FormError({ id, error, className = "" }: FormErrorProps) {
 ### 1. Form-Level Error Handling
 
 **Pattern (DeviceForm.tsx:92-104):**
+
 ```typescript
 const [error, setError] = useState<string | null>(null);
 
@@ -725,56 +779,70 @@ const handleFormSubmit = async (data: FormData) => {
 ```
 
 **Display:**
+
 ```tsx
-{error && (
-  <Alert variant="destructive">
-    <AlertCircle className="h-4 w-4" />
-    <AlertDescription>{error}</AlertDescription>
-  </Alert>
-)}
+{
+  error && (
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
+  );
+}
 ```
 
 **✅ Strengths:**
+
 - Clear error state management
 - Visual error display
 - Icon for visual recognition
 - Error cleared on retry
 
 **⚠️ Improvements:**
+
 - Add `role="alert"` to Alert component
 - Could add error recovery suggestions
 
 ### 2. Field-Level Error Handling
 
 **Pattern (react-hook-form):**
-```tsx
-const { formState: { errors } } = useForm();
 
-{errors.email && <p className="text-sm text-red-400">{errors.email.message}</p>}
+```tsx
+const {
+  formState: { errors },
+} = useForm();
+
+{
+  errors.email && <p className="text-sm text-red-400">{errors.email.message}</p>;
+}
 ```
 
 **✅ Good:**
+
 - Automatic validation on submit
 - Clear error messages from Zod
 - Conditional rendering
 
 **⚠️ Missing:**
+
 - Touch-based validation (only validates on submit)
 - No blur validation by default
 - Could add field-level validation modes
 
 **Recommendation:**
+
 ```tsx
 const form = useForm({
   resolver: zodResolver(schema),
-  mode: "onBlur",  // ✅ Validate on blur
-  reValidateMode: "onChange",  // ✅ Re-validate on change after error
+  mode: "onBlur", // ✅ Validate on blur
+  reValidateMode: "onChange", // ✅ Re-validate on change after error
 });
 ```
 
 ### 3. Validation Error Messages
 
 **Current (English only):**
+
 ```typescript
 email: z.string().min(1, "Username or email is required"),
 password: z.string().min(1, "Password is required"),
@@ -783,14 +851,15 @@ password: z.string().min(1, "Password is required"),
 **⚠️ Issue:** No i18n support
 
 **Recommendation (i18n integration):**
+
 ```typescript
 // In lib/validations/auth.ts
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 export function createLoginSchema(t: (key: string) => string) {
   return z.object({
-    email: z.string().min(1, t('auth.errors.emailRequired')),
-    password: z.string().min(1, t('auth.errors.passwordRequired')),
+    email: z.string().min(1, t("auth.errors.emailRequired")),
+    password: z.string().min(1, t("auth.errors.passwordRequired")),
   });
 }
 
@@ -807,16 +876,16 @@ const form = useForm({
 
 ## 📊 Component Comparison
 
-| Feature | Form (Compound) | ValidatedForm (Headless) | Raw useForm |
-|---------|----------------|--------------------------|-------------|
-| **Type Safety** | ✅ Excellent | ⚠️ Manual | ✅ Excellent |
-| **Accessibility** | ✅ Built-in | ⚠️ Manual | ⚠️ Manual |
-| **Validation** | ✅ Zod integration | ⚠️ Custom function | ✅ Zod integration |
-| **Error Handling** | ✅ Automatic | ✅ Built-in | ⚠️ Manual |
-| **Code Verbosity** | ⚠️ More verbose | ✅ Concise | ✅ Concise |
-| **Learning Curve** | ⚠️ Moderate | ✅ Low | ✅ Low |
-| **Flexibility** | ⚠️ Limited | ✅ Maximum | ✅ High |
-| **Best For** | Standard forms | Custom UIs | Complex forms |
+| Feature            | Form (Compound)    | ValidatedForm (Headless) | Raw useForm        |
+| ------------------ | ------------------ | ------------------------ | ------------------ |
+| **Type Safety**    | ✅ Excellent       | ⚠️ Manual                | ✅ Excellent       |
+| **Accessibility**  | ✅ Built-in        | ⚠️ Manual                | ⚠️ Manual          |
+| **Validation**     | ✅ Zod integration | ⚠️ Custom function       | ✅ Zod integration |
+| **Error Handling** | ✅ Automatic       | ✅ Built-in              | ⚠️ Manual          |
+| **Code Verbosity** | ⚠️ More verbose    | ✅ Concise               | ✅ Concise         |
+| **Learning Curve** | ⚠️ Moderate        | ✅ Low                   | ✅ Low             |
+| **Flexibility**    | ⚠️ Limited         | ✅ Maximum               | ✅ High            |
+| **Best For**       | Standard forms     | Custom UIs               | Complex forms      |
 
 ---
 
@@ -827,11 +896,13 @@ const form = useForm({
 **Issue:** All validation error messages are hardcoded in English
 
 **Impact:**
+
 - Cannot support multi-language applications
 - Poor UX for non-English users
 - Inconsistent with i18n infrastructure already in place
 
 **Current:**
+
 ```typescript
 const loginSchema = z.object({
   email: z.string().min(1, "Username or email is required"),
@@ -840,12 +911,13 @@ const loginSchema = z.object({
 ```
 
 **Solution:**
+
 ```typescript
 // Create schema factory function
 export function createLoginSchema(t: (key: string) => string) {
   return z.object({
-    email: z.string().min(1, t('auth.validation.emailRequired')),
-    password: z.string().min(1, t('auth.validation.passwordRequired')),
+    email: z.string().min(1, t("auth.validation.emailRequired")),
+    password: z.string().min(1, t("auth.validation.passwordRequired")),
   });
 }
 
@@ -859,6 +931,7 @@ const form = useForm({
 ```
 
 **Add to messages/en.json:**
+
 ```json
 {
   "auth": {
@@ -873,11 +946,13 @@ const form = useForm({
 ```
 
 **Files to Update:**
+
 - `lib/validations/auth.ts`
 - `lib/validations/ip-address.ts`
 - All form components using validation
 
 **Estimated Time:** 4 hours
+
 - 1 hour: Update validation schema factories
 - 2 hours: Add translation keys to all locales
 - 1 hour: Update form components to use factories
@@ -889,11 +964,13 @@ const form = useForm({
 **Issue:** Codebase uses three different form patterns
 
 **Patterns Found:**
+
 1. **Form compound components** (recommended) - DeviceForm, WireGuardServerForm
 2. **ValidatedForm headless** (alternative) - Not used in reviewed files
 3. **Plain useState** (legacy) - InternetPlanForm
 
 **Impact:**
+
 - Inconsistent developer experience
 - Higher maintenance burden
 - Mixed accessibility quality
@@ -904,6 +981,7 @@ const form = useForm({
 **Choose Form Compound Components as Standard:**
 
 ✅ **Reasons:**
+
 - Best accessibility out of the box
 - Type-safe with Zod
 - Consistent ARIA implementation
@@ -920,6 +998,7 @@ const form = useForm({
 **Example Migration - InternetPlanForm:**
 
 **Before (useState pattern - 150+ lines):**
+
 ```typescript
 const [formData, setFormData] = useState({
   plan_code: "",
@@ -929,11 +1008,12 @@ const [formData, setFormData] = useState({
 
 const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault();
-  onSubmit(formData);  // No validation!
+  onSubmit(formData); // No validation!
 };
 ```
 
 **After (Form pattern with validation):**
+
 ```typescript
 const planSchema = z.object({
   plan_code: z.string().min(1, "Plan code is required"),
@@ -970,6 +1050,7 @@ return (
 ```
 
 **Estimated Time:** 8 hours
+
 - 2 hours: Create FORMS_GUIDE.md documentation
 - 2 hours: Create form templates
 - 3 hours: Migrate InternetPlanForm
@@ -982,6 +1063,7 @@ return (
 **Issue:** No unit tests found for form components
 
 **Missing Test Coverage:**
+
 - Form validation logic
 - Error handling
 - Field interactions
@@ -991,6 +1073,7 @@ return (
 **Recommendation:**
 
 **Create test files:**
+
 ```
 components/forms/__tests__/
 ├── IPAddressInput.test.tsx
@@ -1000,45 +1083,40 @@ components/forms/__tests__/
 ```
 
 **Example Test - IPAddressInput:**
+
 ```tsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import { IPAddressInput } from '../IPAddressInput';
+import { render, screen, fireEvent } from "@testing-library/react";
+import { IPAddressInput } from "../IPAddressInput";
 
-describe('IPAddressInput', () => {
-  it('validates IPv4 addresses correctly', () => {
+describe("IPAddressInput", () => {
+  it("validates IPv4 addresses correctly", () => {
     const onChange = jest.fn();
-    render(
-      <IPAddressInput
-        label="IP Address"
-        value=""
-        onChange={onChange}
-      />
-    );
+    render(<IPAddressInput label="IP Address" value="" onChange={onChange} />);
 
-    const input = screen.getByLabelText('IP Address');
+    const input = screen.getByLabelText("IP Address");
 
     // Valid IPv4
-    fireEvent.change(input, { target: { value: '192.168.1.1' } });
+    fireEvent.change(input, { target: { value: "192.168.1.1" } });
     fireEvent.blur(input);
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 
     // Invalid IPv4
-    fireEvent.change(input, { target: { value: '999.999.999.999' } });
+    fireEvent.change(input, { target: { value: "999.999.999.999" } });
     fireEvent.blur(input);
-    expect(screen.getByRole('alert')).toHaveTextContent('Invalid IP address format');
+    expect(screen.getByRole("alert")).toHaveTextContent("Invalid IP address format");
   });
 
-  it('displays IP family badge for valid addresses', () => {
+  it("displays IP family badge for valid addresses", () => {
     const { rerender } = render(
       <IPAddressInput
         label="IP Address"
         value="192.168.1.1"
         onChange={() => {}}
         showFamily={true}
-      />
+      />,
     );
 
-    expect(screen.getByText('IPv4')).toBeInTheDocument();
+    expect(screen.getByText("IPv4")).toBeInTheDocument();
 
     rerender(
       <IPAddressInput
@@ -1046,13 +1124,13 @@ describe('IPAddressInput', () => {
         value="2001:db8::1"
         onChange={() => {}}
         showFamily={true}
-      />
+      />,
     );
 
-    expect(screen.getByText('IPv6')).toBeInTheDocument();
+    expect(screen.getByText("IPv6")).toBeInTheDocument();
   });
 
-  it('has proper ARIA attributes', () => {
+  it("has proper ARIA attributes", () => {
     render(
       <IPAddressInput
         label="IP Address"
@@ -1060,77 +1138,81 @@ describe('IPAddressInput', () => {
         onChange={() => {}}
         required={true}
         error="Invalid IP"
-      />
+      />,
     );
 
-    const input = screen.getByRole('textbox');
-    expect(input).toHaveAttribute('aria-invalid', 'true');
-    expect(input).toHaveAttribute('aria-describedby', 'IP Address-error');
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAttribute("aria-describedby", "IP Address-error");
 
-    const error = screen.getByRole('alert');
-    expect(error).toHaveTextContent('Invalid IP');
-    expect(error).toHaveAttribute('id', 'IP Address-error');
+    const error = screen.getByRole("alert");
+    expect(error).toHaveTextContent("Invalid IP");
+    expect(error).toHaveAttribute("id", "IP Address-error");
   });
 });
 ```
 
 **Example Test - Zod Schemas:**
-```typescript
-import { loginSchema, registerSchema } from '../auth';
 
-describe('Auth Validation Schemas', () => {
-  describe('loginSchema', () => {
-    it('accepts valid email and password', () => {
+```typescript
+import { loginSchema, registerSchema } from "../auth";
+
+describe("Auth Validation Schemas", () => {
+  describe("loginSchema", () => {
+    it("accepts valid email and password", () => {
       const result = loginSchema.safeParse({
-        email: 'user@example.com',
-        password: 'password123',
+        email: "user@example.com",
+        password: "password123",
       });
 
       expect(result.success).toBe(true);
     });
 
-    it('rejects empty email', () => {
+    it("rejects empty email", () => {
       const result = loginSchema.safeParse({
-        email: '',
-        password: 'password123',
+        email: "",
+        password: "password123",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.issues[0]?.message).toBe('Username or email is required');
+      expect(result.error?.issues[0]?.message).toBe("Username or email is required");
     });
   });
 
-  describe('registerSchema', () => {
-    it('validates password confirmation', () => {
+  describe("registerSchema", () => {
+    it("validates password confirmation", () => {
       const result = registerSchema.safeParse({
-        username: 'testuser',
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'password123',
-        confirmPassword: 'different',
+        username: "testuser",
+        name: "Test User",
+        email: "test@example.com",
+        password: "password123",
+        confirmPassword: "different",
       });
 
       expect(result.success).toBe(false);
       expect(result.error?.issues[0]?.message).toBe("Passwords don't match");
     });
 
-    it('validates username format', () => {
+    it("validates username format", () => {
       const result = registerSchema.safeParse({
-        username: 'invalid username!',
-        name: 'Test',
-        email: 'test@example.com',
-        password: 'password123',
-        confirmPassword: 'password123',
+        username: "invalid username!",
+        name: "Test",
+        email: "test@example.com",
+        password: "password123",
+        confirmPassword: "password123",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.issues[0]?.message).toContain('letters, numbers, hyphens and underscores');
+      expect(result.error?.issues[0]?.message).toContain(
+        "letters, numbers, hyphens and underscores",
+      );
     });
   });
 });
 ```
 
 **Estimated Time:** 6 hours
+
 - 2 hours: IPAddressInput tests
 - 1 hour: DualStackIPInput tests
 - 2 hours: Validation schema tests
@@ -1143,6 +1225,7 @@ describe('Auth Validation Schemas', () => {
 **Issue:** No form state recovery on page refresh or navigation errors
 
 **Impact:**
+
 - Poor UX if user refreshes during form entry
 - Lost data on accidental navigation
 - No "save draft" functionality
@@ -1153,8 +1236,8 @@ describe('Auth Validation Schemas', () => {
 
 ```typescript
 // hooks/useFormPersistence.ts
-import { useEffect } from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { useEffect } from "react";
+import { UseFormReturn } from "react-hook-form";
 
 interface UseFormPersistenceOptions {
   key: string;
@@ -1164,7 +1247,7 @@ interface UseFormPersistenceOptions {
 
 export function useFormPersistence<T extends Record<string, any>>(
   form: UseFormReturn<T>,
-  { key, enabled = true, exclude = [] }: UseFormPersistenceOptions
+  { key, enabled = true, exclude = [] }: UseFormPersistenceOptions,
 ) {
   const storageKey = `form-persist-${key}`;
 
@@ -1182,7 +1265,7 @@ export function useFormPersistence<T extends Record<string, any>>(
           }
         });
       } catch (error) {
-        console.error('Failed to restore form data', error);
+        console.error("Failed to restore form data", error);
       }
     }
   }, []);
@@ -1193,7 +1276,7 @@ export function useFormPersistence<T extends Record<string, any>>(
 
     const subscription = form.watch((data) => {
       const filtered = { ...data };
-      exclude.forEach(field => delete filtered[field]);
+      exclude.forEach((field) => delete filtered[field]);
 
       localStorage.setItem(storageKey, JSON.stringify(filtered));
     });
@@ -1211,23 +1294,25 @@ export function useFormPersistence<T extends Record<string, any>>(
 ```
 
 **Usage:**
+
 ```typescript
 const form = useForm({
   resolver: zodResolver(planSchema),
 });
 
 const { clearPersistedData } = useFormPersistence(form, {
-  key: 'internet-plan-form',
-  exclude: ['password'],  // Don't persist sensitive fields
+  key: "internet-plan-form",
+  exclude: ["password"], // Don't persist sensitive fields
 });
 
 const handleSubmit = async (data) => {
   await onSubmit(data);
-  clearPersistedData();  // Clear after successful submit
+  clearPersistedData(); // Clear after successful submit
 };
 ```
 
 **Estimated Time:** 3 hours
+
 - 1.5 hours: Implement useFormPersistence hook
 - 1 hour: Add to key forms
 - 0.5 hours: Testing
@@ -1239,21 +1324,19 @@ const handleSubmit = async (data) => {
 **Issue:** FormMessage component missing `role="alert"` for errors
 
 **Current:**
+
 ```tsx
-<p
-  id={formMessageId}
-  className={cn("text-sm font-medium text-destructive", className)}
-  {...props}
->
+<p id={formMessageId} className={cn("text-sm font-medium text-destructive", className)} {...props}>
   {body}
 </p>
 ```
 
 **Fix:**
+
 ```tsx
 <p
   id={formMessageId}
-  role={error ? "alert" : undefined}  // Only alert for errors
+  role={error ? "alert" : undefined} // Only alert for errors
   aria-live={error ? "polite" : undefined}
   className={cn("text-sm font-medium text-destructive", className)}
   {...props}
@@ -1273,6 +1356,7 @@ const handleSubmit = async (data) => {
 **Issue:** Forms only validate on submit by default
 
 **Current:**
+
 ```typescript
 const form = useForm({
   resolver: zodResolver(schema),
@@ -1281,15 +1365,17 @@ const form = useForm({
 ```
 
 **Recommendation:**
+
 ```typescript
 const form = useForm({
   resolver: zodResolver(schema),
-  mode: "onBlur",  // Validate when user leaves field
-  reValidateMode: "onChange",  // Re-validate on change after first error
+  mode: "onBlur", // Validate when user leaves field
+  reValidateMode: "onChange", // Re-validate on change after first error
 });
 ```
 
 **Benefits:**
+
 - Earlier feedback for users
 - Better UX (errors show when user moves to next field)
 - Maintains good UX (doesn't show errors while typing)
@@ -1363,6 +1449,7 @@ const [checkingUsername, setCheckingUsername] = useState(false);
 **Create:** `frontend/FORMS_GUIDE.md`
 
 **Contents:**
+
 1. **Form Pattern Standard**
    - When to use Form compound components
    - When to use ValidatedForm
@@ -1404,16 +1491,16 @@ const [checkingUsername, setCheckingUsername] = useState(false);
 
 ## 📈 Summary of Recommendations
 
-| Priority | Issue | Impact | Effort | ROI |
-|----------|-------|--------|--------|-----|
-| **P1** | Add i18n integration | High | 4h | High |
-| **P2** | Standardize form pattern | High | 8h | High |
-| **P3** | Add unit tests | Medium | 6h | High |
-| **P4** | Form state persistence | Medium | 3h | Medium |
-| **P5** | Screen reader announcements | Low | 15min | High |
-| **P6** | Blur validation mode | Low | 1h | Medium |
-| **P7** | Field loading states | Low | 2h | Low |
-| **P8** | Documentation | Medium | 4h | High |
+| Priority | Issue                       | Impact | Effort | ROI    |
+| -------- | --------------------------- | ------ | ------ | ------ |
+| **P1**   | Add i18n integration        | High   | 4h     | High   |
+| **P2**   | Standardize form pattern    | High   | 8h     | High   |
+| **P3**   | Add unit tests              | Medium | 6h     | High   |
+| **P4**   | Form state persistence      | Medium | 3h     | Medium |
+| **P5**   | Screen reader announcements | Low    | 15min  | High   |
+| **P6**   | Blur validation mode        | Low    | 1h     | Medium |
+| **P7**   | Field loading states        | Low    | 2h     | Low    |
+| **P8**   | Documentation               | Medium | 4h     | High   |
 
 **Total Estimated Time:** 28.25 hours (~3.5 days)
 
@@ -1422,30 +1509,35 @@ const [checkingUsername, setCheckingUsername] = useState(false);
 ## ✅ What's Working Excellently
 
 ### 1. Type Safety (A+)
+
 - ✅ Zod schema inference
 - ✅ TypeScript types from schemas
 - ✅ Type-safe form data
 - ✅ Autocomplete for field names
 
 ### 2. Validation Architecture (A)
+
 - ✅ Comprehensive Zod schemas
 - ✅ Complex business rules
 - ✅ Reusable validation schemas
 - ✅ Domain-specific validators
 
 ### 3. Custom Input Components (A)
+
 - ✅ IPAddressInput with validation
 - ✅ DualStackIPInput for IPv4/IPv6
 - ✅ CIDR input support
 - ✅ Real-time validation feedback
 
 ### 4. Accessibility (A)
+
 - ✅ FormControl with ARIA
 - ✅ Error messages with role="alert"
 - ✅ Proper label associations
 - ✅ Required field indicators
 
 ### 5. Error Handling (A-)
+
 - ✅ Form-level errors
 - ✅ Field-level errors
 - ✅ Clear error messages
@@ -1456,6 +1548,7 @@ const [checkingUsername, setCheckingUsername] = useState(false);
 ## 🎯 Best Practices Observed
 
 1. **Zod + react-hook-form Integration**
+
    ```typescript
    const form = useForm({
      resolver: zodResolver(schema),
@@ -1463,11 +1556,13 @@ const [checkingUsername, setCheckingUsername] = useState(false);
    ```
 
 2. **Type Inference**
+
    ```typescript
    export type LoginInput = z.infer<typeof loginSchema>;
    ```
 
 3. **Cross-Field Validation**
+
    ```typescript
    .refine((data) => data.password === data.confirmPassword, {
      message: "Passwords don't match",
@@ -1476,11 +1571,12 @@ const [checkingUsername, setCheckingUsername] = useState(false);
    ```
 
 4. **Default Values**
+
    ```typescript
    defaultValues: initialData || {
      snmp_version: "v2c",
      listen_port: 51820,
-   }
+   };
    ```
 
 5. **Controlled Custom Inputs**
@@ -1586,15 +1682,17 @@ export function ProfileForm() {
 import { IPAddressInput } from "@/components/forms/IPAddressInput";
 import { DualStackIPInput } from "@/components/forms/DualStackIPInput";
 
-const serverSchema = z.object({
-  name: z.string().min(1, "Server name is required"),
-  management_ip: z.string().min(1, "Management IP is required"),
-  ipv4_address: z.string().optional(),
-  ipv6_address: z.string().optional(),
-}).refine((data) => data.ipv4_address || data.ipv6_address, {
-  message: "At least one IP address is required",
-  path: ["ipv4_address"],
-});
+const serverSchema = z
+  .object({
+    name: z.string().min(1, "Server name is required"),
+    management_ip: z.string().min(1, "Management IP is required"),
+    ipv4_address: z.string().optional(),
+    ipv6_address: z.string().optional(),
+  })
+  .refine((data) => data.ipv4_address || data.ipv6_address, {
+    message: "At least one IP address is required",
+    path: ["ipv4_address"],
+  });
 
 export function ServerForm() {
   const form = useForm({
@@ -1657,6 +1755,7 @@ export function ServerForm() {
 The forms and validation implementation is **excellent and production-ready**, demonstrating enterprise-grade quality with modern best practices. The combination of react-hook-form, Zod validation, and thoughtful custom input components provides a robust foundation for form handling across the application.
 
 ### Strengths Summary:
+
 1. ✅ **Type-safe validation** with Zod and TypeScript
 2. ✅ **Excellent accessibility** with ARIA integration
 3. ✅ **Comprehensive validation schemas** for complex business logic
@@ -1665,12 +1764,14 @@ The forms and validation implementation is **excellent and production-ready**, d
 6. ✅ **Reusable patterns** across the codebase
 
 ### Improvement Areas:
+
 1. ⚠️ **i18n integration** for validation messages (Priority 1)
 2. ⚠️ **Pattern consistency** across all forms (Priority 2)
 3. ⚠️ **Test coverage** for validation and components (Priority 3)
 4. ⚠️ **Form state persistence** for better UX (Priority 4)
 
 ### Critical Actions:
+
 1. Add i18n support to validation schemas (4 hours)
 2. Standardize on Form compound component pattern (8 hours)
 3. Add comprehensive unit tests (6 hours)

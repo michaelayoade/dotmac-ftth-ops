@@ -32,7 +32,9 @@ export function MonitoringMetricsCard({ period: _period = "24h" }: { period?: st
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-destructive">Failed to load monitoring metrics: {(error as Error).message}</p>
+          <p className="text-destructive">
+            Failed to load monitoring metrics: {(error as Error).message}
+          </p>
         </CardContent>
       </Card>
     );

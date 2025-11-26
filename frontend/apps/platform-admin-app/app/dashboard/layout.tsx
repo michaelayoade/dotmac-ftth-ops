@@ -132,9 +132,7 @@ const allSections: NavSection[] = [
     label: "Automation",
     icon: Activity,
     href: "/dashboard/jobs",
-    items: [
-      { name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity },
-    ],
+    items: [{ name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity }],
   },
   {
     id: "communications",
@@ -143,7 +141,11 @@ const allSections: NavSection[] = [
     href: "/dashboard/communications",
     items: [
       { name: "Campaigns", href: "/dashboard/communications", icon: Mail },
-      { name: "Notification Templates", href: "/dashboard/notifications/templates", icon: FileText },
+      {
+        name: "Notification Templates",
+        href: "/dashboard/notifications/templates",
+        icon: FileText,
+      },
       { name: "Support", href: "/dashboard/ticketing", icon: LifeBuoy },
     ],
   },
@@ -385,9 +387,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-background">
-        <SkipLink />
-        {/* Top Navigation Bar */}
-        <nav
+      <SkipLink />
+      {/* Top Navigation Bar */}
+      <nav
         className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border"
         aria-label="Main navigation"
       >
@@ -422,7 +424,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       alt={`${branding.productName} logo`}
                       width={160}
                       height={32}
-                      className={branding.logo.light ? "hidden h-6 w-auto dark:block" : "h-6 w-auto"}
+                      className={
+                        branding.logo.light ? "hidden h-6 w-auto dark:block" : "h-6 w-auto"
+                      }
                       priority
                       unoptimized
                     />
@@ -662,7 +666,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="min-h-screen p-4 sm:p-6 lg:p-8 bg-background"
           aria-label="Main content"
         >
-          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
+          <div
+            className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+            aria-label="Breadcrumb"
+          >
             <Link href="/dashboard" className="hover:text-foreground">
               Home
             </Link>
@@ -691,7 +698,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div
           className="fixed inset-0 z-30 bg-black/50 dark:bg-black/70 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.currentTarget.click(); } }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.currentTarget.click();
+            }
+          }}
           role="button"
           tabIndex={0}
         />

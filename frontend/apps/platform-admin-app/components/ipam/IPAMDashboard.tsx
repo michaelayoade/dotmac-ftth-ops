@@ -10,11 +10,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Network,
-  Globe,
-  Server,
-} from "lucide-react";
+import { Network, Globe, Server } from "lucide-react";
 
 export interface IPAMStats {
   totalPrefixes: number;

@@ -418,8 +418,8 @@ export const PerformanceBudgets = {
   },
 
   // Check if budgets are exceeded
-    checkBudgets: (actualSizes: any, actualMetrics: any) => {
-      const violations: string[] = [];
+  checkBudgets: (actualSizes: any, actualMetrics: any) => {
+    const violations: string[] = [];
 
     // Check size budgets
     Object.entries(PerformanceBudgets.sizes).forEach(([key, budget]) => {

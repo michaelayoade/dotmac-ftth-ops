@@ -246,7 +246,7 @@ describe("useNetboxHealth", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
@@ -260,10 +260,9 @@ describe("useNetboxHealth", () => {
       const networkError = new Error("Network Error");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(networkError);
 
-      const { result } = renderHook(
-        () => useNetboxHealth({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxHealth({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -275,10 +274,9 @@ describe("useNetboxHealth", () => {
       const timeoutError = new Error("timeout of 8000ms exceeded");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(timeoutError);
 
-      const { result } = renderHook(
-        () => useNetboxHealth({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxHealth({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -290,10 +288,9 @@ describe("useNetboxHealth", () => {
       const notFoundError = new Error("Request failed with status code 404");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(notFoundError);
 
-      const { result } = renderHook(
-        () => useNetboxHealth({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxHealth({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -305,10 +302,9 @@ describe("useNetboxHealth", () => {
       const serverError = new Error("Request failed with status code 500");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(serverError);
 
-      const { result } = renderHook(
-        () => useNetboxHealth({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxHealth({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -323,10 +319,9 @@ describe("useNetboxHealth", () => {
         throw new Error("Invalid response structure");
       });
 
-      const { result } = renderHook(
-        () => useNetboxHealth({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxHealth({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -441,7 +436,7 @@ describe("useNetboxSites", () => {
         facility: "DC-PROD-01",
         description: "Primary production data center",
         latitude: 40.7128,
-        longitude: -74.0060,
+        longitude: -74.006,
       });
       const mockResponse = { data: [site] };
       (apiClient.get as jest.Mock).mockResolvedValueOnce(mockResponse);
@@ -460,7 +455,7 @@ describe("useNetboxSites", () => {
       expect(resultSite?.slug).toBe("prod-dc");
       expect(resultSite?.facility).toBe("DC-PROD-01");
       expect(resultSite?.latitude).toBe(40.7128);
-      expect(resultSite?.longitude).toBe(-74.0060);
+      expect(resultSite?.longitude).toBe(-74.006);
     });
   });
 
@@ -478,7 +473,7 @@ describe("useNetboxSites", () => {
           "/netbox/dcim/sites",
           expect.objectContaining({
             params: { limit: 20, offset: 0 },
-          })
+          }),
         );
       });
     });
@@ -496,7 +491,7 @@ describe("useNetboxSites", () => {
           "/netbox/dcim/sites",
           expect.objectContaining({
             params: { limit: 50, offset: 0 },
-          })
+          }),
         );
       });
     });
@@ -514,7 +509,7 @@ describe("useNetboxSites", () => {
           "/netbox/dcim/sites",
           expect.objectContaining({
             params: { limit: 20, offset: 10 },
-          })
+          }),
         );
       });
     });
@@ -532,7 +527,7 @@ describe("useNetboxSites", () => {
           "/netbox/dcim/sites",
           expect.objectContaining({
             params: { limit: 100, offset: 50 },
-          })
+          }),
         );
       });
     });
@@ -620,7 +615,7 @@ describe("useNetboxSites", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
@@ -634,10 +629,9 @@ describe("useNetboxSites", () => {
       const networkError = new Error("Network Error");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(networkError);
 
-      const { result } = renderHook(
-        () => useNetboxSites({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxSites({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -649,10 +643,9 @@ describe("useNetboxSites", () => {
       const timeoutError = new Error("timeout of 8000ms exceeded");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(timeoutError);
 
-      const { result } = renderHook(
-        () => useNetboxSites({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxSites({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -664,10 +657,9 @@ describe("useNetboxSites", () => {
       const notFoundError = new Error("Request failed with status code 404");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(notFoundError);
 
-      const { result } = renderHook(
-        () => useNetboxSites({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxSites({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -679,10 +671,9 @@ describe("useNetboxSites", () => {
       const serverError = new Error("Request failed with status code 500");
       (apiClient.get as jest.Mock).mockRejectedValueOnce(serverError);
 
-      const { result } = renderHook(
-        () => useNetboxSites({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxSites({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -697,10 +688,9 @@ describe("useNetboxSites", () => {
         throw new Error("Invalid response structure");
       });
 
-      const { result } = renderHook(
-        () => useNetboxSites({ queryOptions: { retry: false } }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useNetboxSites({ queryOptions: { retry: false } }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -752,7 +742,7 @@ describe("useNetboxSites", () => {
           "/netbox/dcim/sites",
           expect.objectContaining({
             params: { limit: 1, offset: 0 },
-          })
+          }),
         );
       });
     });
@@ -770,7 +760,7 @@ describe("useNetboxSites", () => {
           "/netbox/dcim/sites",
           expect.objectContaining({
             params: { limit: 20, offset: 1000 },
-          })
+          }),
         );
       });
     });
@@ -788,7 +778,7 @@ describe("useNetboxSites", () => {
           "/netbox/dcim/sites",
           expect.objectContaining({
             params: { limit: 1000, offset: 0 },
-          })
+          }),
         );
       });
     });
@@ -797,7 +787,7 @@ describe("useNetboxSites", () => {
   describe("Real-world Scenarios", () => {
     it("should handle paginated site retrieval", async () => {
       const page1Sites = Array.from({ length: 20 }, (_, i) =>
-        createMockSite({ id: i + 1, name: `Site ${i + 1}` })
+        createMockSite({ id: i + 1, name: `Site ${i + 1}` }),
       );
       const mockResponse = { data: page1Sites };
       (apiClient.get as jest.Mock).mockResolvedValueOnce(mockResponse);

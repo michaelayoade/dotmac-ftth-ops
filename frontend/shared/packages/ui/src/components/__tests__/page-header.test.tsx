@@ -73,7 +73,7 @@ describe("PageHeader", () => {
               Add User
             </Button>
           }
-        />
+        />,
       );
 
       expect(screen.getByText("Add User")).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe("PageHeader", () => {
               <Button>Add User</Button>
             </>
           }
-        />
+        />,
       );
 
       expect(screen.getByText("Export")).toBeInTheDocument();
@@ -100,9 +100,7 @@ describe("PageHeader", () => {
       const user = userEvent.setup();
       const onClick = jest.fn();
 
-      render(
-        <PageHeader title="Users" actions={<Button onClick={onClick}>Add User</Button>} />
-      );
+      render(<PageHeader title="Users" actions={<Button onClick={onClick}>Add User</Button>} />);
 
       await user.click(screen.getByText("Add User"));
 
@@ -121,7 +119,7 @@ describe("PageHeader", () => {
       render(
         <PageHeader title="Dashboard">
           <div>Custom content below header</div>
-        </PageHeader>
+        </PageHeader>,
       );
 
       expect(screen.getByText("Custom content below header")).toBeInTheDocument();
@@ -131,7 +129,7 @@ describe("PageHeader", () => {
       render(
         <PageHeader title="Dashboard" description="Overview">
           <div>Additional content</div>
-        </PageHeader>
+        </PageHeader>,
       );
 
       const content = screen.getByText("Additional content");
@@ -223,10 +221,7 @@ describe("PageHeader", () => {
 
     it("actions are aligned to right on large screens", () => {
       const { container } = render(
-        <PageHeader
-          title="Users"
-          actions={<Button>Add User</Button>}
-        />
+        <PageHeader title="Users" actions={<Button>Add User</Button>} />,
       );
 
       const layout = container.querySelector(".sm\\:justify-between");
@@ -242,7 +237,7 @@ describe("PageHeader.Actions", () => {
         <PageHeader.Actions>
           <Button>Action 1</Button>
           <Button>Action 2</Button>
-        </PageHeader.Actions>
+        </PageHeader.Actions>,
       );
 
       expect(screen.getByText("Action 1")).toBeInTheDocument();
@@ -253,7 +248,7 @@ describe("PageHeader.Actions", () => {
       const { container } = render(
         <PageHeader.Actions>
           <Button>Action</Button>
-        </PageHeader.Actions>
+        </PageHeader.Actions>,
       );
 
       const wrapper = container.firstChild;
@@ -264,7 +259,7 @@ describe("PageHeader.Actions", () => {
       const { container } = render(
         <PageHeader.Actions>
           <Button>Action</Button>
-        </PageHeader.Actions>
+        </PageHeader.Actions>,
       );
 
       const wrapper = container.firstChild;
@@ -275,7 +270,7 @@ describe("PageHeader.Actions", () => {
       const { container } = render(
         <PageHeader.Actions className="custom-actions">
           <Button>Action</Button>
-        </PageHeader.Actions>
+        </PageHeader.Actions>,
       );
 
       const wrapper = container.firstChild;
@@ -294,7 +289,7 @@ describe("PageHeader.Actions", () => {
               <Button>Add User</Button>
             </PageHeader.Actions>
           }
-        />
+        />,
       );
 
       expect(screen.getByText("Export")).toBeInTheDocument();
@@ -350,7 +345,7 @@ describe("PageHeader.Stat", () => {
   describe("Styling", () => {
     it("applies custom className", () => {
       const { container } = render(
-        <PageHeader.Stat label="Users" value={42} className="custom-stat" />
+        <PageHeader.Stat label="Users" value={42} className="custom-stat" />,
       );
 
       const stat = container.firstChild;
@@ -387,7 +382,7 @@ describe("PageHeader.Stat", () => {
             <PageHeader.Stat label="Total Users" value={150} icon={Users} />
             <PageHeader.Stat label="Active" value={120} icon={Activity} />
           </div>
-        </PageHeader>
+        </PageHeader>,
       );
 
       expect(screen.getByText("Total Users")).toBeInTheDocument();
@@ -446,7 +441,7 @@ describe("PageHeader.Breadcrumb", () => {
 
       const separators = container.querySelectorAll('[aria-hidden="true"]');
       // Should have 2 separators for 3 items (between items)
-      const slashSeparators = Array.from(separators).filter(el => el.textContent === '/');
+      const slashSeparators = Array.from(separators).filter((el) => el.textContent === "/");
       expect(slashSeparators.length).toBeGreaterThan(0);
     });
 
@@ -461,7 +456,7 @@ describe("PageHeader.Breadcrumb", () => {
   describe("Styling", () => {
     it("applies custom className", () => {
       const { container } = render(
-        <PageHeader.Breadcrumb items={breadcrumbItems} className="custom-breadcrumb" />
+        <PageHeader.Breadcrumb items={breadcrumbItems} className="custom-breadcrumb" />,
       );
 
       const nav = container.querySelector("nav");
@@ -495,7 +490,7 @@ describe("PageHeader.Breadcrumb", () => {
       render(
         <PageHeader title="User Profile">
           <PageHeader.Breadcrumb items={breadcrumbItems} />
-        </PageHeader>
+        </PageHeader>,
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
@@ -533,7 +528,7 @@ describe("Real-World Usage Patterns", () => {
           <PageHeader.Stat label="Total Users" value={1250} icon={Users} />
           <PageHeader.Stat label="Active Sessions" value={42} icon={Activity} />
         </div>
-      </PageHeader>
+      </PageHeader>,
     );
 
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
@@ -560,7 +555,7 @@ describe("Real-World Usage Patterns", () => {
             </Button>
           </PageHeader.Actions>
         }
-      />
+      />,
     );
 
     expect(screen.getByText("Users")).toBeInTheDocument();
@@ -589,7 +584,7 @@ describe("Real-World Usage Patterns", () => {
         }
       >
         <PageHeader.Breadcrumb items={breadcrumbs} />
-      </PageHeader>
+      </PageHeader>,
     );
 
     expect(screen.getByText("Profile Settings")).toBeInTheDocument();

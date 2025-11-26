@@ -63,7 +63,7 @@ function ActiveTimeEntry({ entry, onClockIn, onClockOut }: ActiveTimeEntryProps)
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
       setElapsedTime(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
       );
     }, 1000);
 
@@ -160,7 +160,10 @@ function TodaysSchedule({ assignments, onStartTask, onCompleteTask }: TodaysSche
     if (lat && lng) {
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
     } else if (address) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, "_blank");
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
+        "_blank",
+      );
     }
   };
 
@@ -171,15 +174,16 @@ function TodaysSchedule({ assignments, onStartTask, onCompleteTask }: TodaysSche
       </CardHeader>
       <CardContent>
         {assignments.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No tasks scheduled for today
-          </div>
+          <div className="text-center py-8 text-gray-500">No tasks scheduled for today</div>
         ) : (
           <div className="space-y-3">
             {assignments.map((assignment) => {
               const status = getTaskStatus(assignment);
               return (
-                <Card key={assignment.id} className={status === "current" ? "border-2 border-blue-500" : ""}>
+                <Card
+                  key={assignment.id}
+                  className={status === "current" ? "border-2 border-blue-500" : ""}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-2 flex-1">
@@ -223,7 +227,7 @@ function TodaysSchedule({ assignments, onStartTask, onCompleteTask }: TodaysSche
                               openInMaps(
                                 assignment.taskLocationLat,
                                 assignment.taskLocationLng,
-                                assignment.taskLocationAddress
+                                assignment.taskLocationAddress,
                               )
                             }
                           >
@@ -413,9 +417,8 @@ export default function TechnicianDashboard() {
     totalTasks: todaysAssignments.length,
     completed: todaysAssignments.filter((a) => a.status === "completed").length,
     inProgress: todaysAssignments.filter((a) => a.status === "in_progress").length,
-    upcoming: todaysAssignments.filter(
-      (a) => a.status === "scheduled" || a.status === "confirmed"
-    ).length,
+    upcoming: todaysAssignments.filter((a) => a.status === "scheduled" || a.status === "confirmed")
+      .length,
   };
 
   const handleClockIn = async () => {

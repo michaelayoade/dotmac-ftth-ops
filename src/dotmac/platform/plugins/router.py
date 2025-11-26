@@ -350,7 +350,9 @@ async def test_plugin_connection(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/instances/{instance_id}/refresh", response_model=dict, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/instances/{instance_id}/refresh", response_model=dict, status_code=status.HTTP_202_ACCEPTED
+)
 async def refresh_plugin_instance(
     instance_id: UUID,
     registry: PluginRegistry = Depends(get_registry),

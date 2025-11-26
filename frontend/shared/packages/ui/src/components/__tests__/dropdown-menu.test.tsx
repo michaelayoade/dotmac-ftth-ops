@@ -34,7 +34,7 @@ describe("DropdownMenu", () => {
           <DropdownMenuItem>Item 2</DropdownMenuItem>
           <DropdownMenuItem>Item 3</DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu>,
     );
   };
 
@@ -144,7 +144,7 @@ describe("DropdownMenu", () => {
           <DropdownMenuContent>
             <DropdownMenuItem onSelect={handleSelect}>Item</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -169,7 +169,7 @@ describe("DropdownMenu", () => {
               Disabled
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -195,7 +195,7 @@ describe("DropdownMenu", () => {
               Inset Item
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -217,7 +217,7 @@ describe("DropdownMenu", () => {
             <DropdownMenuCheckboxItem checked={false}>Option 1</DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem checked={true}>Option 2</DropdownMenuCheckboxItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -240,7 +240,7 @@ describe("DropdownMenu", () => {
               Option
             </DropdownMenuCheckboxItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -262,7 +262,7 @@ describe("DropdownMenu", () => {
           <DropdownMenuContent>
             <DropdownMenuCheckboxItem checked={true}>Checked</DropdownMenuCheckboxItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -287,7 +287,7 @@ describe("DropdownMenu", () => {
               <DropdownMenuRadioItem value="option2">Option 2</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -311,7 +311,7 @@ describe("DropdownMenu", () => {
               <DropdownMenuRadioItem value="option2">Option 2</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -335,7 +335,7 @@ describe("DropdownMenu", () => {
               <DropdownMenuRadioItem value="option1">Selected</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -358,7 +358,7 @@ describe("DropdownMenu", () => {
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>Edit</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -379,7 +379,7 @@ describe("DropdownMenu", () => {
               Label
             </DropdownMenuLabel>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -403,7 +403,7 @@ describe("DropdownMenu", () => {
             <DropdownMenuSeparator data-testid="separator" />
             <DropdownMenuItem>Item 2</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -429,7 +429,7 @@ describe("DropdownMenu", () => {
               <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -451,7 +451,7 @@ describe("DropdownMenu", () => {
               <DropdownMenuShortcut data-testid="shortcut">⌘C</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -479,7 +479,7 @@ describe("DropdownMenu", () => {
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -503,7 +503,7 @@ describe("DropdownMenu", () => {
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -632,7 +632,7 @@ describe("DropdownMenu", () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem>Logout</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Account"));
@@ -661,7 +661,7 @@ describe("DropdownMenu", () => {
               <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Actions"));
@@ -682,7 +682,7 @@ describe("DropdownMenu", () => {
             <DropdownMenuCheckboxItem checked={true}>Show Sidebar</DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem checked={false}>Show Toolbar</DropdownMenuCheckboxItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("View"));
@@ -706,7 +706,7 @@ describe("DropdownMenu", () => {
               <DropdownMenuRadioItem value="size">Size</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>,
       );
 
       await user.click(screen.getByText("Sort"));

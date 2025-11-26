@@ -96,7 +96,7 @@ describe("useApiKeys - Unit Tests", () => {
       const mockKeys = [createMockApiKey()];
       // Mock both parallel calls: keys and scopes
       mockApiClient.get.mockImplementation((url: string) => {
-        if (url.includes('/scopes/available')) {
+        if (url.includes("/scopes/available")) {
           return Promise.resolve({ data: {} });
         }
         return Promise.resolve({
@@ -133,7 +133,7 @@ describe("useApiKeys - Unit Tests", () => {
     it("should fetch API keys with custom pagination", async () => {
       // Mock both parallel calls: keys and scopes
       mockApiClient.get.mockImplementation((url: string) => {
-        if (url.includes('/scopes/available')) {
+        if (url.includes("/scopes/available")) {
           return Promise.resolve({ data: {} });
         }
         return Promise.resolve({
@@ -454,7 +454,7 @@ describe("useApiKeys - Unit Tests", () => {
       await expect(
         act(async () => {
           await result.current.createApiKey({ name: "Test", scopes: ["invalid"] });
-        })
+        }),
       ).rejects.toThrow("Invalid scopes");
     });
   });
@@ -537,7 +537,7 @@ describe("useApiKeys - Unit Tests", () => {
       await expect(
         act(async () => {
           await result.current.updateApiKey("key-1", { name: "New" });
-        })
+        }),
       ).rejects.toThrow("Key not found");
     });
   });
@@ -634,7 +634,7 @@ describe("useApiKeys - Unit Tests", () => {
       await expect(
         act(async () => {
           await result.current.revokeApiKey("key-1");
-        })
+        }),
       ).rejects.toThrow("Permission denied");
     });
   });
@@ -719,9 +719,7 @@ describe("useApiKeys - Unit Tests", () => {
 
       mockApiClient.post.mockImplementation(
         () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: createMockApiKey() }), 100)
-          )
+          new Promise((resolve) => setTimeout(() => resolve({ data: createMockApiKey() }), 100)),
       );
 
       const { result } = renderHook(() => useApiKeys(), {
@@ -842,7 +840,7 @@ describe("useApiKeys - Unit Tests", () => {
 
       // Mock both API calls (keys and scopes are fetched in parallel)
       mockApiClient.get.mockImplementation((url: string) => {
-        if (url.includes('/auth/api-keys/scopes/available')) {
+        if (url.includes("/auth/api-keys/scopes/available")) {
           return Promise.resolve({ data: {} });
         }
         return Promise.resolve({

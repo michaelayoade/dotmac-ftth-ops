@@ -6,21 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import {
@@ -105,17 +92,35 @@ interface DiagnosticStats {
 
 const getStatusBadge = (status: DiagnosticStatus) => {
   const badges = {
-    [DiagnosticStatus.PENDING]: { icon: Clock, color: "bg-yellow-100 text-yellow-800", label: "Pending" },
-    [DiagnosticStatus.RUNNING]: { icon: Loader2, color: "bg-blue-100 text-blue-800", label: "Running" },
-    [DiagnosticStatus.COMPLETED]: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Completed" },
+    [DiagnosticStatus.PENDING]: {
+      icon: Clock,
+      color: "bg-yellow-100 text-yellow-800",
+      label: "Pending",
+    },
+    [DiagnosticStatus.RUNNING]: {
+      icon: Loader2,
+      color: "bg-blue-100 text-blue-800",
+      label: "Running",
+    },
+    [DiagnosticStatus.COMPLETED]: {
+      icon: CheckCircle,
+      color: "bg-green-100 text-green-800",
+      label: "Completed",
+    },
     [DiagnosticStatus.FAILED]: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Failed" },
-    [DiagnosticStatus.TIMEOUT]: { icon: AlertCircle, color: "bg-orange-100 text-orange-800", label: "Timeout" },
+    [DiagnosticStatus.TIMEOUT]: {
+      icon: AlertCircle,
+      color: "bg-orange-100 text-orange-800",
+      label: "Timeout",
+    },
   };
   const config = badges[status] || badges[DiagnosticStatus.PENDING];
   const Icon = config.icon;
   return (
     <Badge className={config.color}>
-      <Icon className={`h-3 w-3 mr-1 ${status === DiagnosticStatus.RUNNING ? "animate-spin" : ""}`} />
+      <Icon
+        className={`h-3 w-3 mr-1 ${status === DiagnosticStatus.RUNNING ? "animate-spin" : ""}`}
+      />
       {config.label}
     </Badge>
   );
@@ -125,9 +130,17 @@ const getSeverityBadge = (severity: DiagnosticSeverity | null) => {
   if (!severity) return null;
   const badges = {
     [DiagnosticSeverity.INFO]: { icon: Info, color: "bg-blue-100 text-blue-800", label: "Info" },
-    [DiagnosticSeverity.WARNING]: { icon: AlertTriangle, color: "bg-yellow-100 text-yellow-800", label: "Warning" },
+    [DiagnosticSeverity.WARNING]: {
+      icon: AlertTriangle,
+      color: "bg-yellow-100 text-yellow-800",
+      label: "Warning",
+    },
     [DiagnosticSeverity.ERROR]: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
-    [DiagnosticSeverity.CRITICAL]: { icon: AlertOctagon, color: "bg-red-600 text-white", label: "Critical" },
+    [DiagnosticSeverity.CRITICAL]: {
+      icon: AlertOctagon,
+      color: "bg-red-600 text-white",
+      label: "Critical",
+    },
   };
   const config = badges[severity];
   if (!config) return null;
@@ -159,7 +172,14 @@ function DiagnosticHistoryContent() {
   const apiBaseUrl = api.baseUrl;
 
   const { data: runsData, isLoading } = useQuery<{ total: number; items: DiagnosticRun[] }>({
-    queryKey: ["diagnostics-history", apiBaseUrl, subscriberIdFilter, typeFilter, statusFilter, offset],
+    queryKey: [
+      "diagnostics-history",
+      apiBaseUrl,
+      subscriberIdFilter,
+      typeFilter,
+      statusFilter,
+      offset,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (subscriberIdFilter) params.append("subscriber_id", subscriberIdFilter);
@@ -168,10 +188,9 @@ function DiagnosticHistoryContent() {
       params.append("limit", limit.toString());
       params.append("offset", offset.toString());
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch diagnostic runs");
       return response.json();
     },
@@ -185,8 +204,11 @@ function DiagnosticHistoryContent() {
   // Calculate statistics
   const stats: DiagnosticStats = {
     total: runs.length,
-    running: runs.filter((r) => r.status === DiagnosticStatus.RUNNING || r.status === DiagnosticStatus.PENDING).length,
-    successRate: runs.length > 0 ? Math.round((runs.filter((r) => r.success).length / runs.length) * 100) : 0,
+    running: runs.filter(
+      (r) => r.status === DiagnosticStatus.RUNNING || r.status === DiagnosticStatus.PENDING,
+    ).length,
+    successRate:
+      runs.length > 0 ? Math.round((runs.filter((r) => r.success).length / runs.length) * 100) : 0,
     avgDuration:
       runs.length > 0
         ? Math.round(runs.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / runs.length)
@@ -295,7 +317,9 @@ function DiagnosticHistoryContent() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value={DiagnosticType.CONNECTIVITY_CHECK}>Connectivity Check</SelectItem>
+                <SelectItem value={DiagnosticType.CONNECTIVITY_CHECK}>
+                  Connectivity Check
+                </SelectItem>
                 <SelectItem value={DiagnosticType.RADIUS_SESSION}>RADIUS Session</SelectItem>
                 <SelectItem value={DiagnosticType.ONU_STATUS}>ONU Status</SelectItem>
                 <SelectItem value={DiagnosticType.CPE_STATUS}>CPE Status</SelectItem>
@@ -356,9 +380,7 @@ function DiagnosticHistoryContent() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : runs.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No diagnostic runs found
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No diagnostic runs found</div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -398,13 +420,9 @@ function DiagnosticHistoryContent() {
                         </TableCell>
                         <TableCell>{getStatusBadge(run.status)}</TableCell>
                         <TableCell>{getSeverityBadge(run.severity)}</TableCell>
+                        <TableCell>{run.duration_ms ? `${run.duration_ms}ms` : "N/A"}</TableCell>
                         <TableCell>
-                          {run.duration_ms ? `${run.duration_ms}ms` : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {format(new Date(run.created_at), "PPp")}
-                          </div>
+                          <div className="text-sm">{format(new Date(run.created_at), "PPp")}</div>
                         </TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm" asChild>

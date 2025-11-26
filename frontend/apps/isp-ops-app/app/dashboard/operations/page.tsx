@@ -125,7 +125,9 @@ function RecentActivity({ items }: { items: RecentActivityItem[] }) {
                   <p className="font-medium text-foreground truncate">{item.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground truncate">{item.description}</p>
                 </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">{item.timestamp}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {item.timestamp}
+                </span>
               </div>
             </div>
           ))

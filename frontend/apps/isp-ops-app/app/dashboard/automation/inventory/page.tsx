@@ -4,15 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import {
-  Server,
-  Package,
-  AlertCircle,
-  ExternalLink,
-  Users,
-  Layers,
-  Database,
-} from "lucide-react";
+import { Server, Package, AlertCircle, ExternalLink, Users, Layers, Database } from "lucide-react";
 import Link from "next/link";
 
 function InventoryDashboardContent() {
@@ -22,14 +14,10 @@ function InventoryDashboardContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
-          <p className="text-muted-foreground">
-            Manage Ansible inventory, hosts, and groups
-          </p>
+          <p className="text-muted-foreground">Manage Ansible inventory, hosts, and groups</p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/automation/inventory/hosts">
-            View Hosts
-          </Link>
+          <Link href="/dashboard/automation/inventory/hosts">View Hosts</Link>
         </Button>
       </div>
 
@@ -37,61 +25,45 @@ function InventoryDashboardContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Hosts
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Hosts</CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Managed via AWX
-            </p>
+            <p className="text-xs text-muted-foreground">Managed via AWX</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Inventory Groups
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Inventory Groups</CardTitle>
             <Layers className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Managed via AWX
-            </p>
+            <p className="text-xs text-muted-foreground">Managed via AWX</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Inventories
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Inventories</CardTitle>
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Managed via AWX
-            </p>
+            <p className="text-xs text-muted-foreground">Managed via AWX</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Variables
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Variables</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Managed via AWX
-            </p>
+            <p className="text-xs text-muted-foreground">Managed via AWX</p>
           </CardContent>
         </Card>
       </div>
@@ -113,13 +85,15 @@ function InventoryDashboardContent() {
           <div className="space-y-2">
             <p className="text-sm text-blue-800">
               All inventory management, including hosts, groups, and variables, is handled through
-              the AWX/Ansible Tower interface. This ensures consistency and leverages AWX&apos;s powerful
-              inventory features like dynamic inventory sources.
+              the AWX/Ansible Tower interface. This ensures consistency and leverages AWX&apos;s
+              powerful inventory features like dynamic inventory sources.
             </p>
           </div>
 
           <div className="pt-4 border-t border-blue-200">
-            <h3 className="text-sm font-semibold text-blue-900 mb-3">What you can manage in AWX:</h3>
+            <h3 className="text-sm font-semibold text-blue-900 mb-3">
+              What you can manage in AWX:
+            </h3>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="flex items-start gap-2">
                 <Server className="h-4 w-4 text-blue-600 mt-0.5" />
@@ -164,9 +138,7 @@ function InventoryDashboardContent() {
               </a>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/dashboard/automation/playbooks">
-                View Playbooks
-              </Link>
+              <Link href="/dashboard/automation/playbooks">View Playbooks</Link>
             </Button>
           </div>
         </CardContent>
@@ -176,9 +148,7 @@ function InventoryDashboardContent() {
       <Card>
         <CardHeader>
           <CardTitle>Using Inventory in Playbooks</CardTitle>
-          <CardDescription>
-            How inventory integrates with your automation workflows
-          </CardDescription>
+          <CardDescription>How inventory integrates with your automation workflows</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
@@ -223,19 +193,15 @@ function InventoryDashboardContent() {
       <Card>
         <CardHeader>
           <CardTitle>Job Templates Using Inventory</CardTitle>
-          <CardDescription>
-            Playbooks that depend on inventory configuration
-          </CardDescription>
+          <CardDescription>Playbooks that depend on inventory configuration</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            View job templates to see which playbooks use specific inventories.
-            You can launch these playbooks from the Playbooks page.
+            View job templates to see which playbooks use specific inventories. You can launch these
+            playbooks from the Playbooks page.
           </p>
           <Button asChild>
-            <Link href="/dashboard/automation/playbooks">
-              View All Playbooks
-            </Link>
+            <Link href="/dashboard/automation/playbooks">View All Playbooks</Link>
           </Button>
         </CardContent>
       </Card>

@@ -55,13 +55,17 @@ describe("Platform Admin useFeatureFlags hook", () => {
     mockedApi.get
       .mockResolvedValueOnce({
         success: true,
-        data: [
-          { name: "new-dashboard", enabled: true, context: {}, updated_at: Date.now() },
-        ],
+        data: [{ name: "new-dashboard", enabled: true, context: {}, updated_at: Date.now() }],
       })
       .mockResolvedValueOnce({
         success: true,
-        data: { total_flags: 1, enabled_flags: 1, disabled_flags: 0, cache_hits: 5, cache_misses: 0 },
+        data: {
+          total_flags: 1,
+          enabled_flags: 1,
+          disabled_flags: 0,
+          cache_hits: 5,
+          cache_misses: 0,
+        },
       });
 
     const { wrapper } = createWrapper();

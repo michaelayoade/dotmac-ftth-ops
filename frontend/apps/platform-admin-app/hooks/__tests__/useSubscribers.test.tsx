@@ -521,7 +521,7 @@ describe("useSubscribers", () => {
 
     it("should set isLoading correctly during mutation", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useSubscriberOperations(), {

@@ -317,7 +317,7 @@ describe("usePlugins", () => {
       expect(result.current.data?.plugin_instance_id).toBe("inst-config-1");
       expect(result.current.data?.schema).toBeDefined();
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        "/plugins/instances/inst-config-1/configuration"
+        "/plugins/instances/inst-config-1/configuration",
       );
     });
   });
@@ -368,7 +368,7 @@ describe("usePlugins", () => {
           plugin_name: "nonexistent",
           instance_name: "Test",
           configuration: {},
-        })
+        }),
       ).rejects.toThrow();
 
       await waitFor(() => expect(result.current.isError).toBe(true));
@@ -413,7 +413,7 @@ describe("usePlugins", () => {
         result.current.mutateAsync({
           instanceId: "nonexistent",
           data: { configuration: {} },
-        })
+        }),
       ).rejects.toThrow();
 
       await waitFor(() => expect(result.current.isError).toBe(true));
@@ -813,10 +813,9 @@ describe("usePlugins", () => {
       mockApiClient.get.mockResolvedValue({ data: mockSchema });
 
       // Step 1: Get schema
-      const { result: schemaResult } = renderHook(
-        () => usePluginSchema("email-notification"),
-        { wrapper: createWrapper() }
-      );
+      const { result: schemaResult } = renderHook(() => usePluginSchema("email-notification"), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(schemaResult.current.isSuccess).toBe(true));
       expect(schemaResult.current.data?.schema.name).toBe("email-notification");

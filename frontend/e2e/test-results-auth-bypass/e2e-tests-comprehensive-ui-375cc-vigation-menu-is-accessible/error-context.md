@@ -2,89 +2,89 @@
 
 ```yaml
 - generic [ref=e2]:
-  - link "Skip to main content" [ref=e3] [cursor=pointer]:
-    - /url: "#main-content"
-  - generic [ref=e4]:
-    - link "Skip to main content" [ref=e5] [cursor=pointer]:
-      - /url: "#main-content"
-    - navigation "Main navigation" [ref=e6]:
-      - generic [ref=e7]:
-        - img "DotMac ISP Operations logo" [ref=e11]
-        - generic [ref=e12]:
-          - button "Notifications" [ref=e13] [cursor=pointer]:
-            - img [ref=e14]
-          - button "User menu" [ref=e19] [cursor=pointer]:
-            - img [ref=e20]
-            - generic [ref=e23]: User
-            - img [ref=e24]
-    - generic [ref=e26]:
-      - navigation [ref=e27]:
-        - list [ref=e28]:
-          - listitem [ref=e29]:
-            - generic [ref=e31]:
-              - link "Overview" [ref=e32] [cursor=pointer]:
-                - /url: /dashboard
-                - img [ref=e33]
-                - generic [ref=e38]: Overview
-              - button [ref=e39] [cursor=pointer]:
-                - img [ref=e40]
-          - listitem [ref=e42]:
-            - generic [ref=e44]:
-              - link "Customer Lifecycle" [ref=e45] [cursor=pointer]:
-                - /url: /dashboard/crm
-                - img [ref=e46]
-                - generic [ref=e51]: Customer Lifecycle
-              - button [ref=e52] [cursor=pointer]:
-                - img [ref=e53]
-          - listitem [ref=e55]:
-            - generic [ref=e57]:
-              - link "Network & Infrastructure" [ref=e58] [cursor=pointer]:
-                - /url: /dashboard/network
-                - img [ref=e59]
-                - generic [ref=e62]: Network & Infrastructure
-              - button [ref=e63] [cursor=pointer]:
-                - img [ref=e64]
-          - listitem [ref=e66]:
-            - generic [ref=e68]:
-              - link "Business & Finance" [ref=e69] [cursor=pointer]:
-                - /url: /dashboard/billing-revenue
-                - img [ref=e70]
-                - generic [ref=e72]: Business & Finance
-              - button [ref=e73] [cursor=pointer]:
-                - img [ref=e74]
-          - listitem [ref=e76]:
-            - generic [ref=e78]:
-              - link "Support & Communications" [ref=e79] [cursor=pointer]:
-                - /url: /dashboard/ticketing
-                - img [ref=e80]
-                - generic [ref=e87]: Support & Communications
-              - button [ref=e88] [cursor=pointer]:
-                - img [ref=e89]
-          - listitem [ref=e91]:
-            - generic [ref=e93]:
-              - link "Integrations & Marketplace" [ref=e94] [cursor=pointer]:
-                - /url: /dashboard/integrations
-                - img [ref=e95]
-                - generic [ref=e97]: Integrations & Marketplace
-              - button [ref=e98] [cursor=pointer]:
-                - img [ref=e99]
-          - listitem [ref=e101]:
-            - generic [ref=e103]:
-              - link "Security & Admin" [ref=e104] [cursor=pointer]:
-                - /url: /dashboard/security-access
-                - img [ref=e105]
-                - generic [ref=e107]: Security & Admin
-              - button [ref=e108] [cursor=pointer]:
-                - img [ref=e109]
-      - generic [ref=e112]:
-        - generic [ref=e113]: "Platform Version: 1.0.0"
-        - generic [ref=e114]: "Environment: Development"
-    - main "Main content" [ref=e116]:
-      - generic [ref=e118]: Loading network operations center…
-    - button "Disconnected" [ref=e120] [cursor=pointer]:
-      - generic [ref=e123]:
-        - img [ref=e124]
-        - generic [ref=e131]: Disconnected
-  - status [ref=e132]
-  - alert [ref=e133]
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+        - /url: "#main-content"
+    - generic [ref=e4]:
+        - link "Skip to main content" [ref=e5] [cursor=pointer]:
+            - /url: "#main-content"
+        - navigation "Main navigation" [ref=e6]:
+            - generic [ref=e7]:
+                - img "DotMac ISP Operations logo" [ref=e11]
+                - generic [ref=e12]:
+                    - button "Notifications" [ref=e13] [cursor=pointer]:
+                        - img [ref=e14]
+                    - button "User menu" [ref=e19] [cursor=pointer]:
+                        - img [ref=e20]
+                        - generic [ref=e23]: User
+                        - img [ref=e24]
+        - generic [ref=e26]:
+            - navigation [ref=e27]:
+                - list [ref=e28]:
+                    - listitem [ref=e29]:
+                        - generic [ref=e31]:
+                            - link "Overview" [ref=e32] [cursor=pointer]:
+                                - /url: /dashboard
+                                - img [ref=e33]
+                                - generic [ref=e38]: Overview
+                            - button [ref=e39] [cursor=pointer]:
+                                - img [ref=e40]
+                    - listitem [ref=e42]:
+                        - generic [ref=e44]:
+                            - link "Customer Lifecycle" [ref=e45] [cursor=pointer]:
+                                - /url: /dashboard/crm
+                                - img [ref=e46]
+                                - generic [ref=e51]: Customer Lifecycle
+                            - button [ref=e52] [cursor=pointer]:
+                                - img [ref=e53]
+                    - listitem [ref=e55]:
+                        - generic [ref=e57]:
+                            - link "Network & Infrastructure" [ref=e58] [cursor=pointer]:
+                                - /url: /dashboard/network
+                                - img [ref=e59]
+                                - generic [ref=e62]: Network & Infrastructure
+                            - button [ref=e63] [cursor=pointer]:
+                                - img [ref=e64]
+                    - listitem [ref=e66]:
+                        - generic [ref=e68]:
+                            - link "Business & Finance" [ref=e69] [cursor=pointer]:
+                                - /url: /dashboard/billing-revenue
+                                - img [ref=e70]
+                                - generic [ref=e72]: Business & Finance
+                            - button [ref=e73] [cursor=pointer]:
+                                - img [ref=e74]
+                    - listitem [ref=e76]:
+                        - generic [ref=e78]:
+                            - link "Support & Communications" [ref=e79] [cursor=pointer]:
+                                - /url: /dashboard/ticketing
+                                - img [ref=e80]
+                                - generic [ref=e87]: Support & Communications
+                            - button [ref=e88] [cursor=pointer]:
+                                - img [ref=e89]
+                    - listitem [ref=e91]:
+                        - generic [ref=e93]:
+                            - link "Integrations & Marketplace" [ref=e94] [cursor=pointer]:
+                                - /url: /dashboard/integrations
+                                - img [ref=e95]
+                                - generic [ref=e97]: Integrations & Marketplace
+                            - button [ref=e98] [cursor=pointer]:
+                                - img [ref=e99]
+                    - listitem [ref=e101]:
+                        - generic [ref=e103]:
+                            - link "Security & Admin" [ref=e104] [cursor=pointer]:
+                                - /url: /dashboard/security-access
+                                - img [ref=e105]
+                                - generic [ref=e107]: Security & Admin
+                            - button [ref=e108] [cursor=pointer]:
+                                - img [ref=e109]
+            - generic [ref=e112]:
+                - generic [ref=e113]: "Platform Version: 1.0.0"
+                - generic [ref=e114]: "Environment: Development"
+        - main "Main content" [ref=e116]:
+            - generic [ref=e118]: Loading network operations center…
+        - button "Disconnected" [ref=e120] [cursor=pointer]:
+            - generic [ref=e123]:
+                - img [ref=e124]
+                - generic [ref=e131]: Disconnected
+    - status [ref=e132]
+    - alert [ref=e133]
 ```

@@ -200,12 +200,12 @@ describe("ErrorState", () => {
           message="Unable to connect to the server. Please check your internet connection."
           onRetry={onRetry}
           variant="card"
-        />
+        />,
       );
 
       expect(screen.getByText("Network Error")).toBeInTheDocument();
       expect(
-        screen.getByText("Unable to connect to the server. Please check your internet connection.")
+        screen.getByText("Unable to connect to the server. Please check your internet connection."),
       ).toBeInTheDocument();
       expect(screen.getByRole("button")).toBeInTheDocument();
     });
@@ -217,12 +217,12 @@ describe("ErrorState", () => {
           message="You do not have permission to view this resource."
           icon={AlertTriangle}
           variant="full"
-        />
+        />,
       );
 
       expect(screen.getByText("Access Denied")).toBeInTheDocument();
       expect(
-        screen.getByText("You do not have permission to view this resource.")
+        screen.getByText("You do not have permission to view this resource."),
       ).toBeInTheDocument();
     });
 
@@ -231,11 +231,11 @@ describe("ErrorState", () => {
         <ErrorState
           message="Please fix the errors in the form before submitting."
           variant="inline"
-        />
+        />,
       );
 
       expect(
-        screen.getByText("Please fix the errors in the form before submitting.")
+        screen.getByText("Please fix the errors in the form before submitting."),
       ).toBeInTheDocument();
     });
 
@@ -249,12 +249,12 @@ describe("ErrorState", () => {
           message="An error occurred while fetching data from the server."
           onRetry={onRetry}
           retryLabel="Retry request"
-        />
+        />,
       );
 
       expect(screen.getByText("Failed to load data")).toBeInTheDocument();
       expect(
-        screen.getByText("An error occurred while fetching data from the server.")
+        screen.getByText("An error occurred while fetching data from the server."),
       ).toBeInTheDocument();
 
       await user.click(screen.getByText("Retry request"));
@@ -267,7 +267,7 @@ describe("ErrorState", () => {
           title="404 - Not Found"
           message="The page you are looking for does not exist."
           variant="full"
-        />
+        />,
       );
 
       expect(screen.getByText("404 - Not Found")).toBeInTheDocument();
@@ -329,7 +329,7 @@ describe("ErrorBoundaryFallback", () => {
 
       expect(screen.getByText("Unexpected Error")).toBeInTheDocument();
       expect(
-        screen.getByText("An unexpected error occurred while loading this component.")
+        screen.getByText("An unexpected error occurred while loading this component."),
       ).toBeInTheDocument();
     });
 
@@ -337,7 +337,7 @@ describe("ErrorBoundaryFallback", () => {
       const error = new Error("Test error");
       const resetErrorBoundary = jest.fn();
       const { container } = render(
-        <ErrorBoundaryFallback error={error} resetErrorBoundary={resetErrorBoundary} />
+        <ErrorBoundaryFallback error={error} resetErrorBoundary={resetErrorBoundary} />,
       );
 
       const errorState = container.firstChild as HTMLElement;
@@ -442,11 +442,11 @@ describe("Integration Tests", () => {
     const onRetry = jest.fn();
 
     const { container: boundaryContainer } = render(
-      <ErrorBoundaryFallback error={error} resetErrorBoundary={resetErrorBoundary} />
+      <ErrorBoundaryFallback error={error} resetErrorBoundary={resetErrorBoundary} />,
     );
 
     const { container: stateContainer } = render(
-      <ErrorState title="Unexpected Error" message="Test error" onRetry={onRetry} variant="full" />
+      <ErrorState title="Unexpected Error" message="Test error" onRetry={onRetry} variant="full" />,
     );
 
     // Both should have similar structure

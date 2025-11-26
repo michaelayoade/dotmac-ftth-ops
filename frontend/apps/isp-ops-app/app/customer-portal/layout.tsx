@@ -115,8 +115,8 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
                 <Avatar>
                   <AvatarImage src="" alt={`${user.first_name} ${user.last_name}`} />
                   <AvatarFallback>
-                    {(user.first_name?.[0] || user['email']?.[0] || "U").toUpperCase()}
-                    {(user.last_name?.[0] || user['email']?.[1] || "").toUpperCase()}
+                    {(user.first_name?.[0] || user["email"]?.[0] || "U").toUpperCase()}
+                    {(user.last_name?.[0] || user["email"]?.[1] || "").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>

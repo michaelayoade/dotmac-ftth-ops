@@ -31,13 +31,9 @@ jest.mock("@/components/charts/LineChart", () => ({
 // Mock UI components
 jest.mock("@dotmac/ui", () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
-  CardContent: ({ children, className }: any) => (
-    <div className={className}>{children}</div>
-  ),
+  CardContent: ({ children, className }: any) => <div className={className}>{children}</div>,
   CardDescription: ({ children }: any) => <div>{children}</div>,
-  CardHeader: ({ children, className }: any) => (
-    <div className={className}>{children}</div>
-  ),
+  CardHeader: ({ children, className }: any) => <div className={className}>{children}</div>,
   CardTitle: ({ children, className }: any) => <div className={className}>{children}</div>,
   Skeleton: ({ className }: any) => (
     <div className={className} data-testid="skeleton">
@@ -137,7 +133,7 @@ describe("MonitoringMetricsCard", () => {
       render(<MonitoringMetricsCard />);
 
       expect(
-        screen.getByText(/Failed to load monitoring metrics: Network error/i)
+        screen.getByText(/Failed to load monitoring metrics: Network error/i),
       ).toBeInTheDocument();
     });
 

@@ -220,7 +220,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ className, level = 3, children, asChild = false, ...props }, ref) => {
     const headingLevel = Math.min(Math.max(level, 1), 6);
     type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-    const Tag = (`h${headingLevel}` as HeadingTag);
+    const Tag = `h${headingLevel}` as HeadingTag;
 
     if (asChild) {
       return (

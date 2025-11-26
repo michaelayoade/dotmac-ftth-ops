@@ -11,12 +11,14 @@ Complete internationalization (i18n) infrastructure has been implemented for the
 ### 1. Core Infrastructure
 
 **i18n Configuration** (`frontend/apps/isp-ops-app/i18n.ts`)
+
 - ✅ Set up next-intl with 5 locale support
 - ✅ Configured default locale (English)
 - ✅ Added locale names and flag emojis
 - ✅ Type-safe locale definitions
 
 **Supported Languages:**
+
 - 🇺🇸 English (en) - Default
 - 🇪🇸 Spanish (es)
 - 🇫🇷 French (fr)
@@ -28,6 +30,7 @@ Complete internationalization (i18n) infrastructure has been implemented for the
 All 5 locale files created with comprehensive translations covering:
 
 **Common UI Elements:**
+
 - Loading states, errors, success messages
 - Action buttons (save, delete, edit, create, etc.)
 - Navigation labels
@@ -35,6 +38,7 @@ All 5 locale files created with comprehensive translations covering:
 - Form controls
 
 **Domain-Specific Content:**
+
 - **Authentication**: Login, logout, 2FA, password reset
 - **Customers**: CRUD operations, statuses, customer types
 - **Jobs**: Status labels, job types, priorities
@@ -45,11 +49,13 @@ All 5 locale files created with comprehensive translations covering:
 - **Time**: Relative time formatting (e.g., "2 hours ago")
 
 **Translation Statistics:**
+
 - **Total keys per locale**: ~360 translation keys
 - **Namespaces**: 10 (common, errors, navigation, auth, customers, jobs, billing, tickets, forms, pagination, time)
 - **Coverage**: All 5 locales have identical key structure
 
 **Files Created:**
+
 ```
 frontend/apps/isp-ops-app/messages/
 ├── en.json (11 KB) ✅ Complete
@@ -62,6 +68,7 @@ frontend/apps/isp-ops-app/messages/
 ### 3. Type-Safe Utilities
 
 **Translation Utilities** (`frontend/apps/isp-ops-app/lib/i18n/utils.ts`)
+
 - ✅ `getStatusLabel()` - Type-safe status translations for Jobs, Tickets, Customers, etc.
 - ✅ `formatCurrency()` - Locale-aware currency formatting
 - ✅ `formatDate()` - Locale-aware date formatting
@@ -71,6 +78,7 @@ frontend/apps/isp-ops-app/messages/
 
 **Integration with Shared Constants:**
 All utilities integrate with the type-safe enums from `@dotmac/types`:
+
 - `JobStatus`, `JobStatusVariants`
 - `TicketStatus`, `TicketStatusVariants`
 - `CustomerStatus`, `CustomerStatusVariants`
@@ -79,6 +87,7 @@ All utilities integrate with the type-safe enums from `@dotmac/types`:
 ### 4. LanguageSwitcher Component
 
 **Component Created** (`frontend/apps/isp-ops-app/components/LanguageSwitcher.tsx`)
+
 - ✅ Dropdown menu with all 5 locales
 - ✅ Shows current locale with flag and name
 - ✅ Updates URL to reflect selected locale
@@ -87,8 +96,9 @@ All utilities integrate with the type-safe enums from `@dotmac/types`:
 - ✅ Visual indicator for current locale (✓)
 
 **Usage Example:**
+
 ```tsx
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function Header() {
   return (
@@ -130,12 +140,14 @@ export function Header() {
 ## 🎯 Key Features
 
 ### 1. Type Safety
+
 - All translation keys are type-checked
 - Status enums prevent magic strings
 - Autocomplete support in IDEs
 - Compile-time error detection
 
 ### 2. ICU MessageFormat Support
+
 ```json
 {
   "time": {
@@ -148,21 +160,23 @@ export function Header() {
 ```
 
 ### 3. Locale-Aware Formatting
+
 ```typescript
 // Currency
-formatCurrency(1234.56, 'USD', 'en') // "$1,234.56"
-formatCurrency(1234.56, 'EUR', 'es') // "1.234,56 €"
+formatCurrency(1234.56, "USD", "en"); // "$1,234.56"
+formatCurrency(1234.56, "EUR", "es"); // "1.234,56 €"
 
 // Dates
-formatDate(new Date(), 'en') // "January 25, 2025"
-formatDate(new Date(), 'es') // "25 de enero de 2025"
+formatDate(new Date(), "en"); // "January 25, 2025"
+formatDate(new Date(), "es"); // "25 de enero de 2025"
 
 // Relative time
-getRelativeTime(t, new Date(Date.now() - 3600000)) // "1 hour ago" (en)
-                                                     // "hace 1 hora" (es)
+getRelativeTime(t, new Date(Date.now() - 3600000)); // "1 hour ago" (en)
+// "hace 1 hora" (es)
 ```
 
 ### 4. Standardized Error Handling
+
 - Integration with `useErrorHandler` hook
 - Translated error messages
 - Field-level validation errors
@@ -174,36 +188,37 @@ getRelativeTime(t, new Date(Date.now() - 3600000)) // "1 hour ago" (en)
 
 ### By Category
 
-| Category | Keys | Status |
-|----------|------|--------|
-| Common UI | 50 | ✅ Complete |
-| Errors | 13 | ✅ Complete |
-| Navigation | 10 | ✅ Complete |
-| Authentication | 18 | ✅ Complete |
-| Customers | 42 | ✅ Complete |
-| Jobs | 34 | ✅ Complete |
-| Billing | 30 | ✅ Complete |
-| Tickets | 38 | ✅ Complete |
-| Forms | 14 | ✅ Complete |
-| Pagination | 7 | ✅ Complete |
-| Time | 7 | ✅ Complete |
-| **Total** | **~360** | **100%** |
+| Category       | Keys     | Status      |
+| -------------- | -------- | ----------- |
+| Common UI      | 50       | ✅ Complete |
+| Errors         | 13       | ✅ Complete |
+| Navigation     | 10       | ✅ Complete |
+| Authentication | 18       | ✅ Complete |
+| Customers      | 42       | ✅ Complete |
+| Jobs           | 34       | ✅ Complete |
+| Billing        | 30       | ✅ Complete |
+| Tickets        | 38       | ✅ Complete |
+| Forms          | 14       | ✅ Complete |
+| Pagination     | 7        | ✅ Complete |
+| Time           | 7        | ✅ Complete |
+| **Total**      | **~360** | **100%**    |
 
 ### By Locale
 
-| Locale | Translation | Status |
-|--------|-------------|--------|
-| 🇺🇸 English (en) | 360 keys | ✅ Complete |
-| 🇪🇸 Spanish (es) | 360 keys | ✅ Complete |
-| 🇫🇷 French (fr) | 360 keys | ✅ Complete |
-| 🇩🇪 German (de) | 360 keys | ✅ Complete |
-| 🇧🇷 Portuguese (pt) | 360 keys | ✅ Complete |
+| Locale             | Translation | Status      |
+| ------------------ | ----------- | ----------- |
+| 🇺🇸 English (en)    | 360 keys    | ✅ Complete |
+| 🇪🇸 Spanish (es)    | 360 keys    | ✅ Complete |
+| 🇫🇷 French (fr)     | 360 keys    | ✅ Complete |
+| 🇩🇪 German (de)     | 360 keys    | ✅ Complete |
+| 🇧🇷 Portuguese (pt) | 360 keys    | ✅ Complete |
 
 ---
 
 ## 🚀 Usage Examples
 
 ### Client Component
+
 ```typescript
 'use client';
 
@@ -232,6 +247,7 @@ export function JobCard({ job }) {
 ```
 
 ### Server Component
+
 ```typescript
 import { getTranslations } from 'next-intl/server';
 
@@ -248,6 +264,7 @@ export default async function DashboardPage() {
 ```
 
 ### Form Validation
+
 ```typescript
 import { useTranslations } from 'next-intl';
 import { getValidationError } from '@/lib/i18n/utils';
@@ -308,6 +325,7 @@ frontend/
 ## 🔄 Migration Benefits
 
 ### Before i18n
+
 ```typescript
 // ❌ Hardcoded strings
 <button>Save Changes</button>
@@ -316,6 +334,7 @@ frontend/
 ```
 
 ### After i18n
+
 ```typescript
 // ✅ Translated, type-safe
 <button>{t('common.save')}</button>
@@ -324,6 +343,7 @@ frontend/
 ```
 
 ### Benefits
+
 - **Maintainability**: Change text in one place (JSON file)
 - **Consistency**: Same labels across the application
 - **Localization**: Support multiple languages instantly
@@ -335,22 +355,26 @@ frontend/
 ## 📝 Next Steps (Optional)
 
 ### Phase 1: Component Migration
+
 - [ ] Migrate existing components to use i18n
 - [ ] Replace hardcoded strings with translation keys
 - [ ] Update forms with translated validation
 
 ### Phase 2: App Structure
+
 - [ ] Move pages to `app/[locale]/` directory
 - [ ] Update routing to support locale parameter
 - [ ] Test locale switching on all pages
 
 ### Phase 3: Tooling
+
 - [ ] Create script to detect hardcoded strings
 - [ ] Add ESLint rule to prevent hardcoded text
 - [ ] Create translation key validator
 - [ ] Add pre-commit hook for i18n checks
 
 ### Phase 4: Testing
+
 - [ ] Test all 5 locales across major workflows
 - [ ] Verify currency/date formatting
 - [ ] Check RTL support (if needed for Arabic/Hebrew)

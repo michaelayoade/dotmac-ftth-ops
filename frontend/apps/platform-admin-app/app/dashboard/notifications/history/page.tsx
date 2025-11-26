@@ -28,25 +28,14 @@ import {
   type CommunicationType,
   type CommunicationStatus,
 } from "@/hooks/useNotifications";
-import {
-  EnhancedDataTable,
-  type ColumnDef,
-  type BulkAction,
-  type QuickFilter,
-} from "@dotmac/ui";
+import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { formatDistanceToNow, format } from "date-fns";
@@ -130,11 +119,11 @@ export default function NotificationHistoryPage() {
 
       const success = await retryFailedCommunication(log.id);
       if (success) {
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Communication queued for retry");
         refetch();
       } else {
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Failed to retry communication");
       }
     },
@@ -323,7 +312,7 @@ export default function NotificationHistoryPage() {
           );
 
           if (failedLogs.length === 0) {
-    // eslint-disable-next-line no-alert
+            // eslint-disable-next-line no-alert
             alert("No failed communications to retry");
             return;
           }
@@ -538,7 +527,10 @@ export default function NotificationHistoryPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="type-filter">Type</Label>
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as "" | CommunicationType)}>
+              <Select
+                value={typeFilter}
+                onValueChange={(v) => setTypeFilter(v as "" | CommunicationType)}
+              >
                 <SelectTrigger id="type-filter">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
@@ -554,7 +546,10 @@ export default function NotificationHistoryPage() {
 
             <div className="space-y-2">
               <Label htmlFor="status-filter">Status</Label>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "" | CommunicationStatus)}>
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as "" | CommunicationStatus)}
+              >
                 <SelectTrigger id="status-filter">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
@@ -617,7 +612,14 @@ export default function NotificationHistoryPage() {
               <p className="text-sm text-red-800 dark:text-red-200">
                 Failed to load logs. Please try again.
               </p>
-              <Button variant="link" size="sm" onClick={() => { refetch().catch(() => {}); }} className="mt-2">
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  refetch().catch(() => {});
+                }}
+                className="mt-2"
+              >
                 Retry
               </Button>
             </div>

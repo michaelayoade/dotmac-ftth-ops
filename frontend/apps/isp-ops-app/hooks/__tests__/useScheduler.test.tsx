@@ -47,12 +47,14 @@ jest.mock("@/lib/logger", () => ({
 describe("useScheduler (Jest)", () => {
   // Helper to create wrapper with QueryClient
   const createWrapper = (queryClient?: QueryClient) => {
-    const client = queryClient || new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    const client =
+      queryClient ||
+      new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+          mutations: { retry: false },
+        },
+      });
     return ({ children }: { children: React.ReactNode }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     );

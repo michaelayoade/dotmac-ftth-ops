@@ -1,23 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@dotmac/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Addon } from "@/hooks/useTenantAddons";
-import {
-  Check,
-  Star,
-} from "lucide-react";
+import { Check, Star } from "lucide-react";
 
 interface AddonCardProps {
   addon: Addon;
@@ -92,7 +82,7 @@ export const AddonCard: React.FC<AddonCardProps> = ({
           </div>
 
           {/* Type Badge */}
-          <Badge className={addonTypeColors[addon.addon_type] || addonTypeColors['feature']}>
+          <Badge className={addonTypeColors[addon.addon_type] || addonTypeColors["feature"]}>
             {addon.addon_type.replace("_", " ")}
           </Badge>
         </div>

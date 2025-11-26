@@ -378,7 +378,9 @@ class IPv4LifecycleService:
 
         except InvalidTransitionError as exc:
             raise InvalidTransitionError(
-                current_state, LifecycleState.ACTIVE, message=f"Cannot activate from state: {current_state.value}"
+                current_state,
+                LifecycleState.ACTIVE,
+                message=f"Cannot activate from state: {current_state.value}",
             ) from exc
         except Exception as e:
             logger.error(

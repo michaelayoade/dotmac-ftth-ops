@@ -173,7 +173,7 @@ export async function getDashboardMetrics(timeRange: string = "30d"): Promise<Da
   const response = await apiClient.get<DashboardMetrics>(
     `/metrics/dashboard?timeRange=${timeRange}`,
   );
-  return response['data'];
+  return response["data"];
 }
 
 /**
@@ -183,7 +183,7 @@ export async function getBillingMetrics(timeRange: string = "30d"): Promise<Bill
   const response = await apiClient.get<BillingMetrics>(
     `/analytics/billing/metrics?timeRange=${timeRange}`,
   );
-  return response['data'];
+  return response["data"];
 }
 
 /**
@@ -191,7 +191,7 @@ export async function getBillingMetrics(timeRange: string = "30d"): Promise<Bill
  */
 export async function getInfrastructureMetrics(): Promise<InfrastructureMetrics> {
   const response = await apiClient.get<InfrastructureMetrics>("/monitoring/infrastructure/metrics");
-  return response['data'];
+  return response["data"];
 }
 
 /**
@@ -199,7 +199,7 @@ export async function getInfrastructureMetrics(): Promise<InfrastructureMetrics>
  */
 export async function getSecurityMetrics(): Promise<SecurityMetrics> {
   const response = await apiClient.get<SecurityMetrics>("/analytics/security/metrics");
-  return response['data'];
+  return response["data"];
 }
 
 /**
@@ -209,29 +209,29 @@ export async function getOperationsMetrics(): Promise<OperationsMetrics> {
   const response = await apiClient.get<Partial<OperationsMetrics> & Record<string, any>>(
     "/analytics/operations/metrics",
   );
-  const raw = response['data'] ?? {};
+  const raw = response["data"] ?? {};
 
   return {
     customers: {
-      total: raw.customers?.total ?? raw['totalCustomers'] ?? 0,
-      newThisMonth: raw.customers?.newThisMonth ?? raw['newCustomersThisMonth'] ?? 0,
-      growthRate: raw.customers?.growthRate ?? raw['customerGrowthRate'] ?? 0,
-      churnRisk: raw.customers?.churnRisk ?? raw['customersAtRisk'] ?? 0,
+      total: raw.customers?.total ?? raw["totalCustomers"] ?? 0,
+      newThisMonth: raw.customers?.newThisMonth ?? raw["newCustomersThisMonth"] ?? 0,
+      growthRate: raw.customers?.growthRate ?? raw["customerGrowthRate"] ?? 0,
+      churnRisk: raw.customers?.churnRisk ?? raw["customersAtRisk"] ?? 0,
     },
     communications: {
-      totalSent: raw.communications?.totalSent ?? raw['totalCommunications'] ?? 0,
-      sentToday: raw.communications?.sentToday ?? raw['communicationsSentToday'] ?? 0,
-      deliveryRate: raw.communications?.deliveryRate ?? raw['communicationDeliveryRate'] ?? 0,
+      totalSent: raw.communications?.totalSent ?? raw["totalCommunications"] ?? 0,
+      sentToday: raw.communications?.sentToday ?? raw["communicationsSentToday"] ?? 0,
+      deliveryRate: raw.communications?.deliveryRate ?? raw["communicationDeliveryRate"] ?? 0,
     },
     files: {
-      totalFiles: raw.files?.['totalFiles'] ?? raw['totalFiles'] ?? 0,
-      totalSize: raw.files?.totalSize ?? raw['totalFileSize'] ?? 0,
-      uploadsToday: raw.files?.uploadsToday ?? raw['filesUploadedToday'] ?? 0,
-      downloadsToday: raw.files?.downloadsToday ?? raw['fileDownloadsToday'] ?? 0,
+      totalFiles: raw.files?.["totalFiles"] ?? raw["totalFiles"] ?? 0,
+      totalSize: raw.files?.totalSize ?? raw["totalFileSize"] ?? 0,
+      uploadsToday: raw.files?.uploadsToday ?? raw["filesUploadedToday"] ?? 0,
+      downloadsToday: raw.files?.downloadsToday ?? raw["fileDownloadsToday"] ?? 0,
     },
     activity: {
-      eventsPerHour: raw.activity?.['eventsPerHour'] ?? raw['eventsPerHour'] ?? 0,
-      activeUsers: raw.activity?.['activeUsers'] ?? raw['activeUsers'] ?? 0,
+      eventsPerHour: raw.activity?.["eventsPerHour"] ?? raw["eventsPerHour"] ?? 0,
+      activeUsers: raw.activity?.["activeUsers"] ?? raw["activeUsers"] ?? 0,
     },
   };
 }
@@ -247,7 +247,7 @@ export async function getMetric(
   const response = await apiClient.get<Metric>(
     `/metrics/${name}?timeRange=${timeRange}&interval=${interval}`,
   );
-  return response['data'];
+  return response["data"];
 }
 
 /**
@@ -261,7 +261,7 @@ export async function getMetrics(
     metrics: names,
     timeRange,
   });
-  return response['data'];
+  return response["data"];
 }
 
 /**
@@ -275,7 +275,7 @@ export async function getTimeSeriesData(
   const response = await apiClient.get<MetricValue[]>(
     `/metrics/${metric}/timeseries?timeRange=${timeRange}&interval=${interval}`,
   );
-  return response['data'];
+  return response["data"];
 }
 
 /**

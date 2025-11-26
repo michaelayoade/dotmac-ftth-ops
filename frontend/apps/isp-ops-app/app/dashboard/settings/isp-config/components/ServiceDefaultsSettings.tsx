@@ -8,7 +8,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Package, DollarSign, AlertTriangle } from "lucide-react";
@@ -57,32 +63,36 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
     return `${(gb / 1024).toFixed(2)} TB`;
   };
 
-  const formatCurrency = (amount: number, currency: string = settings.credit_limit_currency): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+  const formatCurrency = (
+    amount: number,
+    currency: string = settings.credit_limit_currency,
+  ): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
     }).format(amount);
   };
 
-  const selectedThrottlePolicy = THROTTLE_POLICIES.find(p => p.value === settings.throttle_policy);
-  const requiresThrottleSpeed = settings.throttle_policy === "soft_throttle" || settings.throttle_policy === "hard_throttle";
+  const selectedThrottlePolicy = THROTTLE_POLICIES.find(
+    (p) => p.value === settings.throttle_policy,
+  );
+  const requiresThrottleSpeed =
+    settings.throttle_policy === "soft_throttle" || settings.throttle_policy === "hard_throttle";
 
   return (
     <div className="space-y-6">
       <Alert>
         <Package className="h-4 w-4" />
         <AlertDescription>
-          Service defaults apply to <strong>new subscribers only</strong>.
-          Existing subscribers retain their current settings unless manually updated.
+          Service defaults apply to <strong>new subscribers only</strong>. Existing subscribers
+          retain their current settings unless manually updated.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>Trial Period Settings</CardTitle>
-          <CardDescription>
-            Configure free trial period for new subscribers
-          </CardDescription>
+          <CardDescription>Configure free trial period for new subscribers</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -102,8 +112,7 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
             <p className="text-sm text-muted-foreground">
               {settings.default_trial_days === 0
                 ? "No trial period - subscribers billed immediately"
-                : `${settings.default_trial_days} day${settings.default_trial_days > 1 ? 's' : ''} free trial for new subscribers`
-              }
+                : `${settings.default_trial_days} day${settings.default_trial_days > 1 ? "s" : ""} free trial for new subscribers`}
             </p>
           </div>
 
@@ -119,7 +128,9 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                 <Switch
                   id="trial_payment"
                   checked={settings.trial_requires_payment_method}
-                  onCheckedChange={(checked) => updateSetting("trial_requires_payment_method", checked)}
+                  onCheckedChange={(checked) =>
+                    updateSetting("trial_requires_payment_method", checked)
+                  }
                 />
               </div>
 
@@ -141,8 +152,8 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    Auto-convert is enabled but payment method is not required.
-                    Subscribers may not be able to pay after trial ends.
+                    Auto-convert is enabled but payment method is not required. Subscribers may not
+                    be able to pay after trial ends.
                   </AlertDescription>
                 </Alert>
               )}
@@ -154,9 +165,7 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
       <Card>
         <CardHeader>
           <CardTitle>Data Cap Settings</CardTitle>
-          <CardDescription>
-            Configure default bandwidth usage limits
-          </CardDescription>
+          <CardDescription>Configure default bandwidth usage limits</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -169,7 +178,9 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                 max="10000"
                 step="10"
                 value={settings.default_data_cap_gb || 0}
-                onChange={(e) => updateSetting("default_data_cap_gb", parseInt(e.target.value) || null)}
+                onChange={(e) =>
+                  updateSetting("default_data_cap_gb", parseInt(e.target.value) || null)
+                }
                 className="w-40"
               />
               <span className="text-sm text-muted-foreground">GB (0 = unlimited)</span>
@@ -191,14 +202,20 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                     max="95"
                     step="5"
                     value={settings.data_cap_warning_threshold_percent}
-                    onChange={(e) => updateSetting("data_cap_warning_threshold_percent", parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateSetting("data_cap_warning_threshold_percent", parseInt(e.target.value))
+                    }
                     className="w-32"
                   />
                   <span className="text-sm text-muted-foreground">% of cap</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Send warning at {formatDataSize((settings.default_data_cap_gb * settings.data_cap_warning_threshold_percent) / 100)}
-                  {" "}({settings.data_cap_warning_threshold_percent}% of cap)
+                  Send warning at{" "}
+                  {formatDataSize(
+                    (settings.default_data_cap_gb * settings.data_cap_warning_threshold_percent) /
+                      100,
+                  )}{" "}
+                  ({settings.data_cap_warning_threshold_percent}% of cap)
                 </p>
               </div>
 
@@ -231,12 +248,12 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                     <Input
                       id="throttled_download"
                       value={settings.throttled_download_speed || ""}
-                      onChange={(e) => updateSetting("throttled_download_speed", e.target.value || null)}
+                      onChange={(e) =>
+                        updateSetting("throttled_download_speed", e.target.value || null)
+                      }
                       placeholder="e.g., 5M, 1G"
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Speed after cap exceeded
-                    </p>
+                    <p className="text-sm text-muted-foreground">Speed after cap exceeded</p>
                   </div>
 
                   <div className="space-y-2">
@@ -244,12 +261,12 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                     <Input
                       id="throttled_upload"
                       value={settings.throttled_upload_speed || ""}
-                      onChange={(e) => updateSetting("throttled_upload_speed", e.target.value || null)}
+                      onChange={(e) =>
+                        updateSetting("throttled_upload_speed", e.target.value || null)
+                      }
                       placeholder="e.g., 1M, 500K"
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Speed after cap exceeded
-                    </p>
+                    <p className="text-sm text-muted-foreground">Speed after cap exceeded</p>
                   </div>
                 </div>
               )}
@@ -257,8 +274,8 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Data usage is tracked via RADIUS accounting.
-                  Policy: <strong>{selectedThrottlePolicy?.label}</strong>
+                  Data usage is tracked via RADIUS accounting. Policy:{" "}
+                  <strong>{selectedThrottlePolicy?.label}</strong>
                 </AlertDescription>
               </Alert>
             </>
@@ -269,9 +286,7 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
       <Card>
         <CardHeader>
           <CardTitle>Credit & Billing Limits</CardTitle>
-          <CardDescription>
-            Configure default credit limits and billing thresholds
-          </CardDescription>
+          <CardDescription>Configure default credit limits and billing thresholds</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -287,7 +302,9 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                 onChange={(e) => updateSetting("default_credit_limit", parseFloat(e.target.value))}
                 className="w-40"
               />
-              <span className="text-sm text-muted-foreground">{settings.credit_limit_currency || 'USD'}</span>
+              <span className="text-sm text-muted-foreground">
+                {settings.credit_limit_currency || "USD"}
+              </span>
             </div>
             <p className="text-sm text-muted-foreground">
               Maximum outstanding balance: {formatCurrency(settings.default_credit_limit)}
@@ -312,8 +329,8 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Auto-suspend disabled: Subscribers can exceed credit limit.
-                Manual intervention required to suspend delinquent accounts.
+                Auto-suspend disabled: Subscribers can exceed credit limit. Manual intervention
+                required to suspend delinquent accounts.
               </AlertDescription>
             </Alert>
           )}
@@ -335,8 +352,7 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
             <p className="text-sm text-muted-foreground">
               {settings.grace_period_days === 0
                 ? "No grace period - immediate suspension after credit limit"
-                : `${settings.grace_period_days} day${settings.grace_period_days > 1 ? 's' : ''} to pay before suspension`
-              }
+                : `${settings.grace_period_days} day${settings.grace_period_days > 1 ? "s" : ""} to pay before suspension`}
             </p>
           </div>
         </CardContent>
@@ -363,7 +379,9 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
                 onChange={(e) => updateSetting("auto_reconnection_fee", parseFloat(e.target.value))}
                 className="w-40"
               />
-              <span className="text-sm text-muted-foreground">{settings.credit_limit_currency || 'USD'}</span>
+              <span className="text-sm text-muted-foreground">
+                {settings.credit_limit_currency || "USD"}
+              </span>
             </div>
             <p className="text-sm text-muted-foreground">
               Fee charged for reconnection: {formatCurrency(settings.auto_reconnection_fee)}
@@ -388,16 +406,16 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Manual reconnection enabled: Subscribers must contact support to reconnect.
-                Payment alone will not restore service.
+                Manual reconnection enabled: Subscribers must contact support to reconnect. Payment
+                alone will not restore service.
               </AlertDescription>
             </Alert>
           ) : (
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Auto-reconnection enabled: Service automatically restores after payment
-                (plus {formatCurrency(settings.auto_reconnection_fee)} reconnection fee).
+                Auto-reconnection enabled: Service automatically restores after payment (plus{" "}
+                {formatCurrency(settings.auto_reconnection_fee)} reconnection fee).
               </AlertDescription>
             </Alert>
           )}
@@ -408,9 +426,7 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
       <Card>
         <CardHeader>
           <CardTitle>Service Defaults Summary</CardTitle>
-          <CardDescription>
-            Overview of default service configuration
-          </CardDescription>
+          <CardDescription>Overview of default service configuration</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -419,7 +435,10 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
               {settings.default_trial_days > 0 ? (
                 <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                   <li>{settings.default_trial_days} days free trial</li>
-                  <li>Payment method: {settings.trial_requires_payment_method ? "Required" : "Not required"}</li>
+                  <li>
+                    Payment method:{" "}
+                    {settings.trial_requires_payment_method ? "Required" : "Not required"}
+                  </li>
                   <li>Auto-convert: {settings.trial_auto_convert ? "Yes" : "No"}</li>
                 </ul>
               ) : (
@@ -432,10 +451,20 @@ export function ServiceDefaultsSettings({ settings, onChange }: ServiceDefaultsS
               {settings.default_data_cap_gb && settings.default_data_cap_gb > 0 ? (
                 <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                   <li>Monthly cap: {formatDataSize(settings.default_data_cap_gb)}</li>
-                  <li>Warning at: {settings.data_cap_warning_threshold_percent}% ({formatDataSize((settings.default_data_cap_gb * settings.data_cap_warning_threshold_percent) / 100)})</li>
+                  <li>
+                    Warning at: {settings.data_cap_warning_threshold_percent}% (
+                    {formatDataSize(
+                      (settings.default_data_cap_gb * settings.data_cap_warning_threshold_percent) /
+                        100,
+                    )}
+                    )
+                  </li>
                   <li>Policy: {selectedThrottlePolicy?.label}</li>
                   {requiresThrottleSpeed && settings.throttled_download_speed && (
-                    <li>Throttled speed: {settings.throttled_download_speed} / {settings.throttled_upload_speed}</li>
+                    <li>
+                      Throttled speed: {settings.throttled_download_speed} /{" "}
+                      {settings.throttled_upload_speed}
+                    </li>
                   )}
                 </ul>
               ) : (

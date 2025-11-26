@@ -6,14 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Dialog,
@@ -23,14 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@dotmac/ui";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@dotmac/ui";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -127,7 +113,7 @@ const formatMoney = (amountInCents: number): string => {
 };
 
 const getStatusBadgeVariant = (
-  status: DunningExecutionStatus | string
+  status: DunningExecutionStatus | string,
 ): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case "pending":
@@ -190,7 +176,7 @@ function ExecutionDetailsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const executionId = params['id'] as string;
+  const executionId = params["id"] as string;
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl || "";
 
@@ -211,7 +197,7 @@ function ExecutionDetailsContent() {
         `${apiBaseUrl}/api/v1/billing/dunning/executions/${executionId}`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to fetch execution");
@@ -221,7 +207,9 @@ function ExecutionDetailsContent() {
     // Refetch every 10 seconds if status is pending or in_progress
     refetchInterval: (query) => {
       if (!query?.state?.data) return false;
-      return query.state.data.status === "pending" || query.state.data.status === "in_progress" ? 10000 : false;
+      return query.state.data.status === "pending" || query.state.data.status === "in_progress"
+        ? 10000
+        : false;
     },
   });
 
@@ -233,7 +221,7 @@ function ExecutionDetailsContent() {
         `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${execution?.campaign_id}`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to fetch campaign");
@@ -251,7 +239,7 @@ function ExecutionDetailsContent() {
         `${apiBaseUrl}/api/v1/billing/dunning/executions/${executionId}/logs`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to fetch action logs");
@@ -260,9 +248,7 @@ function ExecutionDetailsContent() {
     },
     refetchInterval: (query) => {
       if (!execution) return false;
-      return execution.status === "pending" || execution.status === "in_progress"
-        ? 10000
-        : false;
+      return execution.status === "pending" || execution.status === "in_progress" ? 10000 : false;
     },
   });
 
@@ -278,7 +264,7 @@ function ExecutionDetailsContent() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(data),
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to cancel execution");
@@ -315,8 +301,7 @@ function ExecutionDetailsContent() {
     cancelExecutionMutation.mutate(data);
   };
 
-  const canCancel =
-    execution?.status === "pending" || execution?.status === "in_progress";
+  const canCancel = execution?.status === "pending" || execution?.status === "in_progress";
 
   if (executionLoading) {
     return (
@@ -380,9 +365,7 @@ function ExecutionDetailsContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold capitalize">{execution.status}</div>
-            <p className="text-xs text-muted-foreground">
-              Retry {execution.retry_count}
-            </p>
+            <p className="text-xs text-muted-foreground">Retry {execution.retry_count}</p>
           </CardContent>
         </Card>
 
@@ -410,9 +393,7 @@ function ExecutionDetailsContent() {
             <DollarSign className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatMoney(execution.outstanding_amount)}
-            </div>
+            <div className="text-2xl font-bold">{formatMoney(execution.outstanding_amount)}</div>
             <p className="text-xs text-muted-foreground">Remaining balance</p>
           </CardContent>
         </Card>
@@ -423,9 +404,7 @@ function ExecutionDetailsContent() {
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatMoney(execution.recovered_amount)}
-            </div>
+            <div className="text-2xl font-bold">{formatMoney(execution.recovered_amount)}</div>
             <p className="text-xs text-muted-foreground">Payment received</p>
           </CardContent>
         </Card>
@@ -438,10 +417,7 @@ function ExecutionDetailsContent() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="destructive"
-              onClick={() => setIsCancelDialogOpen(true)}
-            >
+            <Button variant="destructive" onClick={() => setIsCancelDialogOpen(true)}>
               <Ban className="h-4 w-4 mr-2" />
               Cancel Execution
             </Button>
@@ -524,18 +500,14 @@ function ExecutionDetailsContent() {
                     <User className="h-4 w-4" />
                     Customer ID
                   </div>
-                  <div className="font-mono font-medium">
-                    {execution.customer_id}
-                  </div>
+                  <div className="font-mono font-medium">{execution.customer_id}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
                     Subscription ID
                   </div>
-                  <div className="font-mono font-medium">
-                    {execution.subscription_id}
-                  </div>
+                  <div className="font-mono font-medium">{execution.subscription_id}</div>
                 </div>
                 {execution.invoice_id && (
                   <div>
@@ -543,9 +515,7 @@ function ExecutionDetailsContent() {
                       <FileText className="h-4 w-4" />
                       Invoice ID
                     </div>
-                    <div className="font-mono font-medium">
-                      {execution.invoice_id}
-                    </div>
+                    <div className="font-mono font-medium">{execution.invoice_id}</div>
                   </div>
                 )}
               </CardContent>
@@ -560,31 +530,24 @@ function ExecutionDetailsContent() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">
-                    Outstanding Amount
-                  </div>
+                  <div className="text-sm text-muted-foreground">Outstanding Amount</div>
                   <div className="text-2xl font-bold text-orange-600">
                     {formatMoney(execution.outstanding_amount)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">
-                    Recovered Amount
-                  </div>
+                  <div className="text-sm text-muted-foreground">Recovered Amount</div>
                   <div className="text-2xl font-bold text-green-600">
                     {formatMoney(execution.recovered_amount)}
                   </div>
                 </div>
                 {execution.outstanding_amount > 0 && (
                   <div>
-                    <div className="text-sm text-muted-foreground">
-                      Recovery Rate
-                    </div>
+                    <div className="text-sm text-muted-foreground">Recovery Rate</div>
                     <div className="text-2xl font-bold">
                       {(
                         (execution.recovered_amount /
-                          (execution.outstanding_amount +
-                            execution.recovered_amount)) *
+                          (execution.outstanding_amount + execution.recovered_amount)) *
                         100
                       ).toFixed(1)}
                       %
@@ -604,9 +567,7 @@ function ExecutionDetailsContent() {
                     <Calendar className="h-4 w-4" />
                     Started
                   </div>
-                  <div className="font-medium">
-                    {format(new Date(execution.started_at), "PPp")}
-                  </div>
+                  <div className="font-medium">{format(new Date(execution.started_at), "PPp")}</div>
                   <div className="text-sm text-muted-foreground">
                     {formatDistanceToNow(new Date(execution.started_at), {
                       addSuffix: true,
@@ -662,12 +623,8 @@ function ExecutionDetailsContent() {
                 </div>
                 {execution.canceled_by_user_id && (
                   <div>
-                    <div className="text-sm text-muted-foreground">
-                      Canceled By
-                    </div>
-                    <div className="font-mono font-medium">
-                      {execution.canceled_by_user_id}
-                    </div>
+                    <div className="text-sm text-muted-foreground">Canceled By</div>
+                    <div className="font-mono font-medium">{execution.canceled_by_user_id}</div>
                   </div>
                 )}
               </CardContent>
@@ -689,9 +646,7 @@ function ExecutionDetailsContent() {
               ) : actionLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No action logs recorded yet
-                  </p>
+                  <p className="text-muted-foreground">No action logs recorded yet</p>
                 </div>
               ) : (
                 <Table>
@@ -714,9 +669,7 @@ function ExecutionDetailsContent() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getActionIcon(log.action_type)}
-                            <span className="capitalize">
-                              {log.action_type.replace(/_/g, " ")}
-                            </span>
+                            <span className="capitalize">{log.action_type.replace(/_/g, " ")}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -728,9 +681,7 @@ function ExecutionDetailsContent() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">
-                            {format(new Date(log.executed_at), "PPp")}
-                          </div>
+                          <div className="text-sm">{format(new Date(log.executed_at), "PPp")}</div>
                           <div className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(log.executed_at), {
                               addSuffix: true,
@@ -739,23 +690,18 @@ function ExecutionDetailsContent() {
                         </TableCell>
                         <TableCell>
                           {log.error_message ? (
-                            <div className="text-sm text-red-600">
-                              {log.error_message}
-                            </div>
+                            <div className="text-sm text-red-600">{log.error_message}</div>
                           ) : (
                             <div className="text-sm text-muted-foreground">
                               {Object.keys(log.result).length > 0
-                                ? JSON.stringify(log.result).substring(0, 50) +
-                                  "..."
+                                ? JSON.stringify(log.result).substring(0, 50) + "..."
                                 : "Success"}
                             </div>
                           )}
                         </TableCell>
                         <TableCell>
                           {log.external_id && (
-                            <div className="font-mono text-sm">
-                              {log.external_id}
-                            </div>
+                            <div className="font-mono text-sm">{log.external_id}</div>
                           )}
                         </TableCell>
                       </TableRow>
@@ -813,8 +759,8 @@ function ExecutionDetailsContent() {
                             log.status === "success"
                               ? "bg-green-100"
                               : log.status === "error" || log.status === "failed"
-                              ? "bg-red-100"
-                              : "bg-gray-100"
+                                ? "bg-red-100"
+                                : "bg-gray-100"
                           }`}
                         >
                           {getActionIcon(log.action_type)}
@@ -825,8 +771,7 @@ function ExecutionDetailsContent() {
                       </div>
                       <div className="flex-1 pb-8">
                         <div className="font-medium capitalize">
-                          {log.action_type.replace(/_/g, " ")} - Step{" "}
-                          {log.step_number}
+                          {log.action_type.replace(/_/g, " ")} - Step {log.step_number}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {format(new Date(log.executed_at), "PPp")}
@@ -838,9 +783,7 @@ function ExecutionDetailsContent() {
                           {log.status}
                         </Badge>
                         {log.error_message && (
-                          <div className="text-sm text-red-600 mt-2">
-                            {log.error_message}
-                          </div>
+                          <div className="text-sm text-red-600 mt-2">{log.error_message}</div>
                         )}
                       </div>
                     </div>
@@ -857,8 +800,8 @@ function ExecutionDetailsContent() {
                             execution.status === "completed"
                               ? "bg-green-100"
                               : execution.status === "failed"
-                              ? "bg-red-100"
-                              : "bg-gray-100"
+                                ? "bg-red-100"
+                                : "bg-gray-100"
                           }`}
                         >
                           {execution.status === "completed" ? (
@@ -871,20 +814,17 @@ function ExecutionDetailsContent() {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium capitalize">
-                          Execution {execution.status}
-                        </div>
+                        <div className="font-medium capitalize">Execution {execution.status}</div>
                         {execution.completed_at && (
                           <div className="text-sm text-muted-foreground">
                             {format(new Date(execution.completed_at), "PPp")}
                           </div>
                         )}
-                        {execution.status === "canceled" &&
-                          execution.canceled_reason && (
-                            <div className="text-sm text-muted-foreground mt-1">
-                              Reason: {execution.canceled_reason}
-                            </div>
-                          )}
+                        {execution.status === "canceled" && execution.canceled_reason && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            Reason: {execution.canceled_reason}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -913,10 +853,7 @@ function ExecutionDetailsContent() {
                   <FormItem>
                     <FormLabel>Cancellation Reason</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Enter reason for cancellation..."
-                        {...field}
-                      />
+                      <Textarea placeholder="Enter reason for cancellation..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -935,9 +872,7 @@ function ExecutionDetailsContent() {
                   variant="destructive"
                   disabled={cancelExecutionMutation.isPending}
                 >
-                  {cancelExecutionMutation.isPending
-                    ? "Canceling..."
-                    : "Cancel Execution"}
+                  {cancelExecutionMutation.isPending ? "Canceling..." : "Cancel Execution"}
                 </Button>
               </DialogFooter>
             </form>

@@ -278,7 +278,8 @@ export class TerritoryValidator {
       if (
         current.lng > point.lng !== previous.lng > point.lng &&
         point.lat <
-          ((previous.lat - current.lat) * (point.lng - current.lng)) / (previous.lng - current.lng) +
+          ((previous.lat - current.lat) * (point.lng - current.lng)) /
+            (previous.lng - current.lng) +
             current.lat
       ) {
         inside = !inside;

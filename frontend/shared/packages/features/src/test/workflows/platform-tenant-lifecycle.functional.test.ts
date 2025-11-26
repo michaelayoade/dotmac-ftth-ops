@@ -200,7 +200,7 @@ describe("Platform-ISP: Tenant Lifecycle", () => {
 
       // Simulate database query with tenant filter
       const getTenantData = (tenantId: string, allTenants: Tenant[]) => {
-        return allTenants.filter(t => t.tenant_id === tenantId);
+        return allTenants.filter((t) => t.tenant_id === tenantId);
       };
 
       const allTenants = [tenant1, tenant2];

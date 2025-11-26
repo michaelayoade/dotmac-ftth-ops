@@ -6,8 +6,7 @@ import { useBranding } from "@/hooks/useBranding";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useSession } from "@dotmac/better-auth";
 
-const showTestCredentials =
-  process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] === "true";
+const showTestCredentials = process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] === "true";
 
 export default function HomePage() {
   const { branding } = useBranding();
@@ -31,7 +30,7 @@ export default function HomePage() {
           {branding.logo?.light || branding.logo?.dark ? (
             <div className="relative h-12 w-48">
               <Image
-                src={branding.logo.light || branding.logo.dark || ''}
+                src={branding.logo.light || branding.logo.dark || ""}
                 alt={branding.productName}
                 fill
                 className="object-contain dark:hidden"
@@ -134,7 +133,10 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-[var(--brand-primary)] rounded-full animate-pulse"></div>
           <span>
-            Frontend: <span className="text-brand">{typeof window !== 'undefined' ? window.location.host : 'localhost:3001'}</span>
+            Frontend:{" "}
+            <span className="text-brand">
+              {typeof window !== "undefined" ? window.location.host : "localhost:3001"}
+            </span>
           </span>
         </div>
       </div>

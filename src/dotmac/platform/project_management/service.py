@@ -417,19 +417,23 @@ class ProjectManagementService:
 
         total = (await self.session.execute(count_query)).scalar() or 0
         memberships = (
-            await self.session.execute(query.limit(limit).offset(offset))
-        ).scalars().all()
+            (await self.session.execute(query.limit(limit).offset(offset))).scalars().all()
+        )
 
         return list(memberships), total
 
     async def get_dashboard_metrics(self) -> DashboardMetrics:
         """Aggregate high-level project and task metrics for dashboards."""
-        base_project_filter = and_(Project.tenant_id == self.tenant_id, Project.deleted_at.is_(None))
+        base_project_filter = and_(
+            Project.tenant_id == self.tenant_id, Project.deleted_at.is_(None)
+        )
         base_task_filter = and_(Task.tenant_id == self.tenant_id, Task.deleted_at.is_(None))
         now = datetime.now(UTC)
 
         total_projects = (
-            await self.session.execute(select(func.count()).select_from(Project).where(base_project_filter))
+            await self.session.execute(
+                select(func.count()).select_from(Project).where(base_project_filter)
+            )
         ).scalar() or 0
 
         active_statuses = [
@@ -441,13 +445,17 @@ class ProjectManagementService:
         ]
         active_projects = (
             await self.session.execute(
-                select(func.count()).where(and_(base_project_filter, Project.status.in_(active_statuses)))
+                select(func.count()).where(
+                    and_(base_project_filter, Project.status.in_(active_statuses))
+                )
             )
         ).scalar() or 0
 
         completed_projects = (
             await self.session.execute(
-                select(func.count()).where(and_(base_project_filter, Project.status == ProjectStatus.COMPLETED))
+                select(func.count()).where(
+                    and_(base_project_filter, Project.status == ProjectStatus.COMPLETED)
+                )
             )
         ).scalar() or 0
 
@@ -467,18 +475,24 @@ class ProjectManagementService:
         ).scalar() or 0
 
         total_tasks = (
-            await self.session.execute(select(func.count()).select_from(Task).where(base_task_filter))
+            await self.session.execute(
+                select(func.count()).select_from(Task).where(base_task_filter)
+            )
         ).scalar() or 0
 
         completed_tasks = (
             await self.session.execute(
-                select(func.count()).where(and_(base_task_filter, Task.status == TaskStatus.COMPLETED))
+                select(func.count()).where(
+                    and_(base_task_filter, Task.status == TaskStatus.COMPLETED)
+                )
             )
         ).scalar() or 0
 
         in_progress_tasks = (
             await self.session.execute(
-                select(func.count()).where(and_(base_task_filter, Task.status == TaskStatus.IN_PROGRESS))
+                select(func.count()).where(
+                    and_(base_task_filter, Task.status == TaskStatus.IN_PROGRESS)
+                )
             )
         ).scalar() or 0
 

@@ -300,7 +300,13 @@ const leadApi = {
     return response.data!;
   },
 
-  updateLead: async ({ id, data }: { id: string; data: Partial<LeadUpdateRequest> }): Promise<Lead> => {
+  updateLead: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Partial<LeadUpdateRequest>;
+  }): Promise<Lead> => {
     const response = await apiClient.patch<Lead>(`/crm/leads/${id}`, data);
     return response.data!;
   },
@@ -433,7 +439,9 @@ export function useCreateLead() {
           data,
         );
       } else {
-        optimisticHelpers.addToList(queryClient, crmKeys.leads.lists(), data, { position: "start" });
+        optimisticHelpers.addToList(queryClient, crmKeys.leads.lists(), data, {
+          position: "start",
+        });
       }
     },
     onSettled: () => {
@@ -646,7 +654,9 @@ export function useCreateQuote() {
           data,
         );
       } else {
-        optimisticHelpers.addToList(queryClient, crmKeys.quotes.lists(), data, { position: "start" });
+        optimisticHelpers.addToList(queryClient, crmKeys.quotes.lists(), data, {
+          position: "start",
+        });
       }
     },
     onSettled: () => {

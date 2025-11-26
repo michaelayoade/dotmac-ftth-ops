@@ -22,7 +22,7 @@ function isBypassFlagEnabled(): boolean {
 
   if (typeof window !== "undefined") {
     const win = window as unknown as Record<string, unknown>;
-    return Boolean(win['__SKIP_BETTER_AUTH__'] || win['__E2E_AUTH_BYPASS__']);
+    return Boolean(win["__SKIP_BETTER_AUTH__"] || win["__E2E_AUTH_BYPASS__"]);
   }
 
   return false;
@@ -36,7 +36,7 @@ const getAuthURL = () => {
   }
 
   // Server-side: use environment variable
-  return process.env['NEXT_PUBLIC_API_URL'] || "http://localhost:3000";
+  return process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3000";
 };
 
 /**
@@ -255,7 +255,7 @@ export const PORTAL_CONFIG = {
  * Type exports
  */
 export type PortalType = keyof typeof PORTAL_CONFIG;
-export type PortalConfig = typeof PORTAL_CONFIG[PortalType];
+export type PortalConfig = (typeof PORTAL_CONFIG)[PortalType];
 
 /**
  * Get portal configuration by type

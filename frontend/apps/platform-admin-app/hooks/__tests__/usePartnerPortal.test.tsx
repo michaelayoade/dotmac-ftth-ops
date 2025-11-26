@@ -7,7 +7,11 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { usePartnerDashboard, useUpdatePartnerProfile, usePartnerProfile } from "../usePartnerPortal";
+import {
+  usePartnerDashboard,
+  useUpdatePartnerProfile,
+  usePartnerProfile,
+} from "../usePartnerPortal";
 import { useToast } from "@dotmac/ui";
 
 jest.unmock("@tanstack/react-query");

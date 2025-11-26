@@ -12,10 +12,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 
-import {
-  createMockCustomer,
-  createActiveCustomer,
-} from "../factories/customer";
+import { createMockCustomer, createActiveCustomer } from "../factories/customer";
 import { createMockONU } from "../factories/network";
 import {
   createMockTenant,
@@ -57,7 +54,7 @@ describe("Platform: Multi-Tenant Isolation", () => {
 
       // Simulate tenant-scoped query
       const getCustomersForTenant = (tenantId: string, allCustomers: any[]) => {
-        return allCustomers.filter(c => c.tenant_id === tenantId);
+        return allCustomers.filter((c) => c.tenant_id === tenantId);
       };
 
       const allCustomers = [customer1, customer2];
@@ -84,7 +81,7 @@ describe("Platform: Multi-Tenant Isolation", () => {
 
       // Tenant 1 should only see their own ONUs
       const getONUsForTenant = (tenantId: string, allONUs: any[]) => {
-        return allONUs.filter(o => o.tenant_id === tenantId);
+        return allONUs.filter((o) => o.tenant_id === tenantId);
       };
 
       const allONUs = [onu1, onu2];
@@ -107,7 +104,7 @@ describe("Platform: Multi-Tenant Isolation", () => {
       ];
 
       const getTenantCustomerCount = (tenantId: string, allCustomers: any[]) => {
-        return allCustomers.filter(c => c.tenant_id === tenantId).length;
+        return allCustomers.filter((c) => c.tenant_id === tenantId).length;
       };
 
       expect(getTenantCustomerCount(tenant1.tenant_id, customers)).toBe(2);
@@ -133,9 +130,9 @@ describe("Platform: Multi-Tenant Isolation", () => {
       const getCustomerById = (
         customerId: string,
         requestingTenantId: string,
-        allCustomers: any[]
+        allCustomers: any[],
       ) => {
-        const customer = allCustomers.find(c => c.customer_id === customerId);
+        const customer = allCustomers.find((c) => c.customer_id === customerId);
         if (!customer) return null;
         // Enforce tenant isolation
         if (customer.tenant_id !== requestingTenantId) return null;
@@ -163,21 +160,18 @@ describe("Platform: Multi-Tenant Isolation", () => {
         customerId: string,
         requestingTenantId: string,
         updates: any,
-        allCustomers: any[]
+        allCustomers: any[],
       ) => {
-        const customer = allCustomers.find(c => c.customer_id === customerId);
+        const customer = allCustomers.find((c) => c.customer_id === customerId);
         if (!customer || customer.tenant_id !== requestingTenantId) {
           return { success: false, error: "Customer not found or access denied" };
         }
         return { success: true, data: { ...customer, ...updates } };
       };
 
-      const result = updateCustomer(
-        "cust_456",
-        tenant1.tenant_id,
-        { first_name: "Hacked" },
-        [customer]
-      );
+      const result = updateCustomer("cust_456", tenant1.tenant_id, { first_name: "Hacked" }, [
+        customer,
+      ]);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain("access denied");
@@ -196,9 +190,9 @@ describe("Platform: Multi-Tenant Isolation", () => {
       const deleteCustomer = (
         customerId: string,
         requestingTenantId: string,
-        allCustomers: any[]
+        allCustomers: any[],
       ) => {
-        const customer = allCustomers.find(c => c.customer_id === customerId);
+        const customer = allCustomers.find((c) => c.customer_id === customerId);
         if (!customer || customer.tenant_id !== requestingTenantId) {
           return { success: false, error: "Unauthorized" };
         }
@@ -277,12 +271,12 @@ describe("Platform: Multi-Tenant Isolation", () => {
 
       // Simulate RLS policy: WHERE tenant_id = current_tenant_id()
       const queryWithRLS = (currentTenantId: string, data: any[]) => {
-        return data.filter(row => row.tenant_id === currentTenantId);
+        return data.filter((row) => row.tenant_id === currentTenantId);
       };
 
       const result = queryWithRLS(tenant1.tenant_id, allCustomers);
       expect(result.length).toBe(2);
-      expect(result.every(r => r.tenant_id === tenant1.tenant_id)).toBe(true);
+      expect(result.every((r) => r.tenant_id === tenant1.tenant_id)).toBe(true);
     });
 
     it("should enforce tenant isolation in JOIN operations", () => {
@@ -301,12 +295,12 @@ describe("Platform: Multi-Tenant Isolation", () => {
 
       // Simulate JOIN with RLS
       const getCustomerOrders = (tenantId: string) => {
-        const tenantCustomers = customers.filter(c => c.tenant_id === tenantId);
-        const tenantOrders = orders.filter(o => o.tenant_id === tenantId);
+        const tenantCustomers = customers.filter((c) => c.tenant_id === tenantId);
+        const tenantOrders = orders.filter((o) => o.tenant_id === tenantId);
 
-        return tenantCustomers.map(customer => ({
+        return tenantCustomers.map((customer) => ({
           ...customer,
-          orders: tenantOrders.filter(o => o.customer_id === customer.id),
+          orders: tenantOrders.filter((o) => o.customer_id === customer.id),
         }));
       };
 
@@ -328,7 +322,7 @@ describe("Platform: Multi-Tenant Isolation", () => {
 
       const getTotalRevenue = (tenantId: string, allInvoices: any[]) => {
         return allInvoices
-          .filter(inv => inv.tenant_id === tenantId)
+          .filter((inv) => inv.tenant_id === tenantId)
           .reduce((sum, inv) => sum + inv.amount, 0);
       };
 
@@ -376,27 +370,22 @@ describe("Platform: Multi-Tenant Isolation", () => {
         customerId: string,
         isPlatformAdmin: boolean,
         targetTenantId: string | null,
-        allCustomers: any[]
+        allCustomers: any[],
       ) => {
         if (isPlatformAdmin) {
           // Platform admin can specify which tenant to query
           if (targetTenantId) {
             return allCustomers.find(
-              c => c.customer_id === customerId && c.tenant_id === targetTenantId
+              (c) => c.customer_id === customerId && c.tenant_id === targetTenantId,
             );
           }
           // Or search across all tenants
-          return allCustomers.find(c => c.customer_id === customerId);
+          return allCustomers.find((c) => c.customer_id === customerId);
         }
         return null;
       };
 
-      const result = getCustomerForSupport(
-        "cust_support",
-        true,
-        tenant1.tenant_id,
-        [customer]
-      );
+      const result = getCustomerForSupport("cust_support", true, tenant1.tenant_id, [customer]);
 
       expect(result).not.toBeNull();
       expect(result?.customer_id).toBe("cust_support");
@@ -452,9 +441,7 @@ describe("Platform: Multi-Tenant Isolation", () => {
       ];
 
       const searchCustomers = (tenantId: string, query: string, allCustomers: any[]) => {
-        return allCustomers.filter(
-          c => c.tenant_id === tenantId && c.email.includes(query)
-        );
+        return allCustomers.filter((c) => c.tenant_id === tenantId && c.email.includes(query));
       };
 
       const results = searchCustomers(tenant1.tenant_id, "@example.com", customers);
@@ -473,7 +460,7 @@ describe("Platform: Multi-Tenant Isolation", () => {
 
       // Business logic: Generic error for unauthorized access
       const getCustomer = (customerId: string, requestingTenantId: string, allCustomers: any[]) => {
-        const customer = allCustomers.find(c => c.customer_id === customerId);
+        const customer = allCustomers.find((c) => c.customer_id === customerId);
         if (!customer || customer.tenant_id !== requestingTenantId) {
           // Don't reveal if customer exists in another tenant
           throw new Error("Customer not found");
@@ -482,7 +469,7 @@ describe("Platform: Multi-Tenant Isolation", () => {
       };
 
       expect(() => getCustomer("cust_secret", tenant1.tenant_id, [customer])).toThrow(
-        "Customer not found"
+        "Customer not found",
       );
     });
   });

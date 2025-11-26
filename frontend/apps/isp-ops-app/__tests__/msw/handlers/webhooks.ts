@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   WebhookSubscription,
   WebhookDelivery,
@@ -13,7 +13,7 @@ import type {
   WebhookSubscriptionUpdate,
   WebhookTestResult,
   AvailableEvents,
-} from '../../../hooks/useWebhooks';
+} from "../../../hooks/useWebhooks";
 
 // In-memory storage for test data
 let webhookSubscriptions: WebhookSubscription[] = [];
@@ -33,9 +33,9 @@ export function resetWebhookStorage() {
 export function createMockWebhook(overrides?: Partial<WebhookSubscription>): WebhookSubscription {
   return {
     id: `wh-${nextWebhookId++}`,
-    url: 'https://example.com/webhook',
-    description: 'Test webhook',
-    events: ['subscriber.created'],
+    url: "https://example.com/webhook",
+    description: "Test webhook",
+    events: ["subscriber.created"],
     is_active: true,
     retry_enabled: true,
     max_retries: 3,
@@ -55,42 +55,50 @@ export function createMockWebhook(overrides?: Partial<WebhookSubscription>): Web
 // Helper to create a webhook delivery
 export function createMockDelivery(
   subscriptionId: string,
-  overrides?: Partial<WebhookDelivery>
+  overrides?: Partial<WebhookDelivery>,
 ): WebhookDelivery {
   const timestamp = new Date().toISOString();
 
   return {
     id: `del-${nextDeliveryId++}`,
     subscription_id: subscriptionId,
-    event_type: 'subscriber.created',
+    event_type: "subscriber.created",
     event_id: `evt-${nextDeliveryId}`,
-    status: 'success',
+    status: "success",
     response_code: 200,
     error_message: null,
     attempt_number: 1,
     duration_ms: 320,
     created_at: timestamp,
     next_retry_at: null,
-    response_body: 'OK',
+    response_body: "OK",
     ...overrides,
   };
 }
 
 // Helper to seed initial data
-export function seedWebhookData(webhooks: WebhookSubscription[], deliveriesData: WebhookDelivery[]) {
+export function seedWebhookData(
+  webhooks: WebhookSubscription[],
+  deliveriesData: WebhookDelivery[],
+) {
   webhookSubscriptions = [...webhooks];
   deliveries = [...deliveriesData];
 }
 
 export const webhookHandlers = [
   // GET /api/v1/webhooks/subscriptions - List webhook subscriptions
-  http.get('*/api/v1/webhooks/subscriptions', ({ request, params }) => {
+  http.get("*/api/v1/webhooks/subscriptions", ({ request, params }) => {
     const url = new URL(request.url);
-    const offset = parseInt(url.searchParams.get('offset') || '0');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-    const event = url.searchParams.get('event_type');
+    const offset = parseInt(url.searchParams.get("offset") || "0");
+    const limit = parseInt(url.searchParams.get("limit") || "20");
+    const event = url.searchParams.get("event_type");
 
-    console.log('[MSW] GET /api/v1/webhooks/subscriptions', { offset, limit, event, totalWebhooks: webhookSubscriptions.length });
+    console.log("[MSW] GET /api/v1/webhooks/subscriptions", {
+      offset,
+      limit,
+      event,
+      totalWebhooks: webhookSubscriptions.length,
+    });
 
     let filtered = webhookSubscriptions;
     if (event) {
@@ -101,19 +109,19 @@ export const webhookHandlers = [
     const end = offset + limit;
     const paginated = filtered.slice(start, end);
 
-    console.log('[MSW] Returning', paginated.length, 'webhooks');
+    console.log("[MSW] Returning", paginated.length, "webhooks");
 
     // Hook expects response.data to be the array directly
     return HttpResponse.json(paginated);
   }),
 
   // GET /api/v1/webhooks/subscriptions/:id/deliveries - Get webhook deliveries
-  http.get('*/api/v1/webhooks/subscriptions/:id/deliveries', ({ request, params }) => {
+  http.get("*/api/v1/webhooks/subscriptions/:id/deliveries", ({ request, params }) => {
     const { id } = params;
     const url = new URL(request.url);
-    const offset = parseInt(url.searchParams.get('offset') || '0');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-    const status = url.searchParams.get('status');
+    const offset = parseInt(url.searchParams.get("offset") || "0");
+    const limit = parseInt(url.searchParams.get("limit") || "20");
+    const status = url.searchParams.get("status");
 
     let filtered = deliveries.filter((d) => d.subscription_id === id);
     if (status) {
@@ -129,19 +137,19 @@ export const webhookHandlers = [
   }),
 
   // GET /api/v1/webhooks/events - Get available webhook events
-  http.get('*/api/v1/webhooks/events', ({ request, params }) => {
+  http.get("*/api/v1/webhooks/events", ({ request, params }) => {
     return HttpResponse.json({
       events: [
-        { event_type: 'subscriber.created', description: 'Triggered when a subscriber is created' },
-        { event_type: 'subscriber.updated', description: 'Triggered when a subscriber is updated' },
-        { event_type: 'subscriber.deleted', description: 'Triggered when a subscriber is deleted' },
+        { event_type: "subscriber.created", description: "Triggered when a subscriber is created" },
+        { event_type: "subscriber.updated", description: "Triggered when a subscriber is updated" },
+        { event_type: "subscriber.deleted", description: "Triggered when a subscriber is deleted" },
       ],
     });
   }),
 
   // POST /api/v1/webhooks/subscriptions - Create webhook subscription
-  http.post('*/api/v1/webhooks/subscriptions', async ({ request, params }) => {
-    const data = await request.json() as Partial<WebhookSubscription>;
+  http.post("*/api/v1/webhooks/subscriptions", async ({ request, params }) => {
+    const data = (await request.json()) as Partial<WebhookSubscription>;
 
     const newWebhook = createMockWebhook({
       ...data,
@@ -154,16 +162,16 @@ export const webhookHandlers = [
   }),
 
   // PATCH /api/v1/webhooks/subscriptions/:id - Update webhook subscription
-  http.patch('*/api/v1/webhooks/subscriptions/:id', async ({ request, params }) => {
+  http.patch("*/api/v1/webhooks/subscriptions/:id", async ({ request, params }) => {
     const { id } = params;
-    const updates = await request.json() as Partial<WebhookSubscription>;
+    const updates = (await request.json()) as Partial<WebhookSubscription>;
 
     const index = webhookSubscriptions.findIndex((wh) => wh.id === id);
 
     if (index === -1) {
       return HttpResponse.json(
-        { error: 'Webhook subscription not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Webhook subscription not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
@@ -177,15 +185,15 @@ export const webhookHandlers = [
   }),
 
   // DELETE /api/v1/webhooks/subscriptions/:id - Delete webhook subscription
-  http.delete('*/api/v1/webhooks/subscriptions/:id', ({ request, params }) => {
+  http.delete("*/api/v1/webhooks/subscriptions/:id", ({ request, params }) => {
     const { id } = params;
 
     const index = webhookSubscriptions.findIndex((wh) => wh.id === id);
 
     if (index === -1) {
       return HttpResponse.json(
-        { error: 'Webhook subscription not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Webhook subscription not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
@@ -195,20 +203,17 @@ export const webhookHandlers = [
   }),
 
   // POST /api/v1/webhooks/deliveries/:id/retry - Retry webhook delivery
-  http.post('*/api/v1/webhooks/deliveries/:id/retry', ({ request, params }) => {
+  http.post("*/api/v1/webhooks/deliveries/:id/retry", ({ request, params }) => {
     const { id } = params;
 
     const delivery = deliveries.find((d) => d.id === id);
 
     if (!delivery) {
-      return HttpResponse.json(
-        { error: 'Delivery not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "Delivery not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     // Update delivery status to retrying
-    delivery.status = 'retrying';
+    delivery.status = "retrying";
     delivery.attempt_number = (delivery.attempt_number || 1) + 1;
     delivery.next_retry_at = new Date(Date.now() + 60000).toISOString(); // Retry in 1 minute
 

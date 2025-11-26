@@ -33,6 +33,7 @@ DotMac Platform Architecture:
 ```
 
 **Challenge**: How do we share UI components across apps with different:
+
 - API clients (auth, error handling, base URLs)
 - Toast notification systems
 - Routing strategies
@@ -48,7 +49,7 @@ DotMac Platform Architecture:
 ```typescript
 // ❌ BAD: Hard-coded dependencies
 import { apiClient } from "@/lib/api/client"; // App-specific import!
-import { useToast } from "@/hooks/useToast";  // App-specific import!
+import { useToast } from "@/hooks/useToast"; // App-specific import!
 
 export function CustomerBilling({ customerId }: Props) {
   const { toast } = useToast();
@@ -63,6 +64,7 @@ export function CustomerBilling({ customerId }: Props) {
 ```
 
 **Problems**:
+
 1. Can't share across apps (imports are app-specific)
 2. Hard to test (can't mock dependencies)
 3. Tight coupling to specific implementations
@@ -97,6 +99,7 @@ export default function CustomerBilling({
 ```
 
 **Benefits**:
+
 1. ✅ Works in any app (no app-specific imports)
 2. ✅ Easy to test (mock dependencies)
 3. ✅ Loose coupling
@@ -128,6 +131,7 @@ export default function CustomerBilling({
 **Location**: `shared/packages/features/src/[module]/components/ComponentName.tsx`
 
 **Responsibilities**:
+
 - Implement UI logic
 - Accept dependencies as props
 - Define prop interfaces
@@ -229,6 +233,7 @@ export default function CustomerBilling({
 **Location**: `apps/[app-name]/components/[module]/ComponentName.tsx`
 
 **Responsibilities**:
+
 - Import shared component
 - Import app-specific dependencies
 - Provide dependencies to shared component
@@ -304,6 +309,7 @@ export interface [ComponentName]ApiClient {
 ```
 
 **Why**: Different apps have different:
+
 - Authentication strategies (JWT tokens, session cookies)
 - Base URLs
 - Error handling
@@ -352,6 +358,7 @@ export interface [ComponentName]Props {
 ```
 
 **Why**: Different apps might use:
+
 - Different toast libraries (sonner, react-hot-toast, shadcn)
 - Different styling
 - Different positioning
@@ -405,6 +412,7 @@ export interface [ComponentName]Logger {
 ```
 
 **Why**: Different apps have:
+
 - Different logging services (Sentry, LogRocket, DataDog)
 - Different log levels
 - Different context enrichment
@@ -452,6 +460,7 @@ export interface [ComponentName]Router {
 ```
 
 **Why**: Different apps have:
+
 - Different routing strategies (Next.js App Router, Pages Router)
 - Different base paths
 - Different URL structures
@@ -494,6 +503,7 @@ export interface [ComponentName]Props {
 ```
 
 **Why**: Different apps have:
+
 - Different URL structures
 - Different feature flags
 - Different branding
@@ -729,12 +739,12 @@ Prefix with component name:
 
 ```typescript
 // ✅ GOOD
-export interface CustomerListApiClient { }
-export interface CustomerListProps { }
+export interface CustomerListApiClient {}
+export interface CustomerListProps {}
 
 // ❌ BAD (too generic, might conflict)
-export interface ApiClient { }
-export interface Props { }
+export interface ApiClient {}
+export interface Props {}
 ```
 
 **2. Data Types**
@@ -743,12 +753,12 @@ Use descriptive, specific names:
 
 ```typescript
 // ✅ GOOD
-export interface Invoice { }
-export interface Customer { }
-export interface BandwidthProfile { }
+export interface Invoice {}
+export interface Customer {}
+export interface BandwidthProfile {}
 
 // ⚠️ OK but be careful
-export interface User { } // Might conflict with auth User type
+export interface User {} // Might conflict with auth User type
 ```
 
 **3. Namespaced Exports**
@@ -789,6 +799,7 @@ import { CustomersMetrics } from "@dotmac/features/crm";
 ```
 
 **When to use**: Components that:
+
 - Only display data (no fetching)
 - Have no side effects
 - Need no app-specific dependencies
@@ -818,6 +829,7 @@ export interface DiagnosticsDashboardProps {
 ```
 
 **When to use**: Components that:
+
 - Make API calls
 - Show notifications
 - Navigate
@@ -846,6 +858,7 @@ import { useONUs } from "@/hooks/useONUs";
 ```
 
 **When to use**: Components that:
+
 - Need complex data fetching logic
 - Use TanStack Query or SWR
 - Have polling or real-time updates
@@ -875,6 +888,7 @@ export const PermissionGuard = createPermissionGuard({
 ```
 
 **When to use**: Components that:
+
 - Need complex initialization
 - Are used in many places
 - Have circular dependencies
@@ -947,12 +961,14 @@ test("passes correct dependencies to shared component", () => {
 ### Do's ✅
 
 1. **Always inject external dependencies**
+
    ```typescript
    // ✅ GOOD
-   function Component({ apiClient, useToast }: Props) { }
+   function Component({ apiClient, useToast }: Props) {}
    ```
 
 2. **Define minimal interfaces**
+
    ```typescript
    // ✅ GOOD - only what's needed
    export interface ComponentApiClient {
@@ -961,6 +977,7 @@ test("passes correct dependencies to shared component", () => {
    ```
 
 3. **Export types with components**
+
    ```typescript
    // ✅ GOOD
    export { default as Component } from "./Component";
@@ -968,6 +985,7 @@ test("passes correct dependencies to shared component", () => {
    ```
 
 4. **Keep wrappers thin**
+
    ```typescript
    // ✅ GOOD - wrapper is just 5-10 lines
    export function Component({ id }: WrapperProps) {
@@ -991,21 +1009,24 @@ test("passes correct dependencies to shared component", () => {
 ### Don'ts ❌
 
 1. **Don't import app-specific code in shared components**
+
    ```typescript
    // ❌ BAD
    import { apiClient } from "@/lib/api/client";
    ```
 
 2. **Don't use process.env in shared components**
+
    ```typescript
    // ❌ BAD
    const url = process.env.NEXT_PUBLIC_API_URL;
 
    // ✅ GOOD - inject as prop
-   function Component({ apiUrl }: Props) { }
+   function Component({ apiUrl }: Props) {}
    ```
 
 3. **Don't create overly complex interfaces**
+
    ```typescript
    // ❌ BAD - too complex
    export interface ComponentApiClient extends AxiosInstance {
@@ -1019,6 +1040,7 @@ test("passes correct dependencies to shared component", () => {
    ```
 
 4. **Don't skip type exports**
+
    ```typescript
    // ❌ BAD
    export { default as Component } from "./Component";
@@ -1030,6 +1052,7 @@ test("passes correct dependencies to shared component", () => {
    ```
 
 5. **Don't put business logic in wrappers**
+
    ```typescript
    // ❌ BAD - wrapper has too much logic
    export function Component({ id }: Props) {
@@ -1054,13 +1077,13 @@ test("passes correct dependencies to shared component", () => {
 
 ```typescript
 // Instead of
-export interface User { }
+export interface User {}
 
 // Use
-export interface CustomerListUser { }
+export interface CustomerListUser {}
 // or
 export namespace CustomerList {
-  export interface User { }
+  export interface User {}
 }
 ```
 
@@ -1072,7 +1095,7 @@ export namespace CustomerList {
 
 ```typescript
 // types.ts
-export interface User { }
+export interface User {}
 
 // ComponentA.tsx
 import type { User } from "./types";

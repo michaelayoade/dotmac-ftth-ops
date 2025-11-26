@@ -26,13 +26,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import { useDiscoveredONUs, useProvisionONU } from "@/hooks/useVOLTHA";
 import {
@@ -157,11 +151,18 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
   return (
     <>
       <div className="flex gap-2">
-        <Button onClick={() => setShowDiscoveryModal(true)} aria-label="Discover unprovisioned ONUs">
+        <Button
+          onClick={() => setShowDiscoveryModal(true)}
+          aria-label="Discover unprovisioned ONUs"
+        >
           <Search className="w-4 h-4 mr-2" />
           Discover ONUs
         </Button>
-        <Button variant="outline" onClick={handleManualProvision} aria-label="Manually provision an ONU">
+        <Button
+          variant="outline"
+          onClick={handleManualProvision}
+          aria-label="Manually provision an ONU"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Manual Provision
         </Button>
@@ -219,7 +220,8 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                             <div>
                               <div className="font-medium">{onu.serial_number}</div>
                               <div className="text-xs text-muted-foreground">
-                                OLT: {metadata?.["olt_id"] || "Unknown"} • Port: {metadata?.["pon_port"] ?? "N/A"}
+                                OLT: {metadata?.["olt_id"] || "Unknown"} • Port:{" "}
+                                {metadata?.["pon_port"] ?? "N/A"}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 State: {onu.state || "Unknown"}
@@ -252,7 +254,11 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
             <Button variant="outline" onClick={() => setShowDiscoveryModal(false)}>
               Close
             </Button>
-            <Button onClick={() => discoverONUs()} disabled={isLoading} aria-label="Refresh discovered ONUs">
+            <Button
+              onClick={() => discoverONUs()}
+              disabled={isLoading}
+              aria-label="Refresh discovered ONUs"
+            >
               <Search className="w-4 h-4 mr-2" />
               Refresh
             </Button>
@@ -282,7 +288,10 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
             {/* Serial Number */}
             <div className="space-y-2">
               <Label htmlFor="serial_number">
-                Serial Number <span className="text-red-500" aria-label="required">*</span>
+                Serial Number{" "}
+                <span className="text-red-500" aria-label="required">
+                  *
+                </span>
               </Label>
               <Input
                 id="serial_number"
@@ -306,7 +315,10 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
             {/* Parent OLT */}
             <div className="space-y-2">
               <Label htmlFor="olt_device_id">
-                Parent OLT <span className="text-red-500" aria-label="required">*</span>
+                Parent OLT{" "}
+                <span className="text-red-500" aria-label="required">
+                  *
+                </span>
               </Label>
               <Select
                 value={provisionForm.olt_device_id}
@@ -335,7 +347,10 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
             {/* PON Port */}
             <div className="space-y-2">
               <Label htmlFor="pon_port">
-                PON Port Number <span className="text-red-500" aria-label="required">*</span>
+                PON Port Number{" "}
+                <span className="text-red-500" aria-label="required">
+                  *
+                </span>
               </Label>
               <Input
                 id="pon_port"
@@ -353,7 +368,8 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                 aria-describedby="pon_port_help"
               />
               <p id="pon_port_help" className="text-xs text-muted-foreground">
-                PON port on the OLT (typically {PON_PORT_CONFIG.MIN_PORT}-{PON_PORT_CONFIG.MAX_PORT})
+                PON port on the OLT (typically {PON_PORT_CONFIG.MIN_PORT}-{PON_PORT_CONFIG.MAX_PORT}
+                )
               </p>
             </div>
 

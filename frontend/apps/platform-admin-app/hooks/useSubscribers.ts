@@ -245,7 +245,10 @@ export function useSubscribers(params?: SubscriberQueryParams) {
         }
         return { subscribers: [], total: 0 };
       } catch (err) {
-        logger.error("Failed to fetch subscribers", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch subscribers",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -268,7 +271,10 @@ export function useSubscriber(subscriberId: string | null) {
         const response = await apiClient.get(`/subscribers/${subscriberId}`);
         return response.data as Subscriber;
       } catch (err) {
-        logger.error("Failed to fetch subscriber", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch subscriber",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -348,7 +354,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to create subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to create subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -372,7 +381,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to update subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to update subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -388,13 +400,22 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to delete subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to delete subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
   // Suspend subscriber mutation
   const suspendMutation = useMutation({
-    mutationFn: async ({ subscriberId, reason }: { subscriberId: string; reason?: string }): Promise<void> => {
+    mutationFn: async ({
+      subscriberId,
+      reason,
+    }: {
+      subscriberId: string;
+      reason?: string;
+    }): Promise<void> => {
       await apiClient.post(`/subscribers/${subscriberId}/suspend`, { reason });
     },
     onSuccess: (_, { subscriberId }) => {
@@ -403,7 +424,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to suspend subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to suspend subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -418,7 +442,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to activate subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to activate subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -439,7 +466,10 @@ export function useSubscriberOperations() {
       queryClient.invalidateQueries({ queryKey: subscribersKeys.statistics() });
     },
     onError: (err) => {
-      logger.error("Failed to terminate subscriber", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to terminate subscriber",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -452,9 +482,7 @@ export function useSubscriberOperations() {
       return true;
     },
     suspendSubscriber: async (subscriberId: string, reason?: string) => {
-      await suspendMutation.mutateAsync(
-        reason ? { subscriberId, reason } : { subscriberId }
-      );
+      await suspendMutation.mutateAsync(reason ? { subscriberId, reason } : { subscriberId });
       return true;
     },
     activateSubscriber: async (subscriberId: string) => {
@@ -462,9 +490,7 @@ export function useSubscriberOperations() {
       return true;
     },
     terminateSubscriber: async (subscriberId: string, reason?: string) => {
-      await terminateMutation.mutateAsync(
-        reason ? { subscriberId, reason } : { subscriberId }
-      );
+      await terminateMutation.mutateAsync(reason ? { subscriberId, reason } : { subscriberId });
       return true;
     },
     isLoading:

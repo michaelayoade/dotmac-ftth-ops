@@ -20,6 +20,7 @@ Time:        29.723 s
 ```
 
 **Improvement:**
+
 - **Before:** 59 passing, 2 failing, 5 skipped (89.4% pass rate)
 - **After:** 65 passing, 0 failing, 1 skipped (98.5% pass rate)
 - **Speed:** 29.7s (down from 537s in initial run with issues)
@@ -31,10 +32,12 @@ Time:        29.723 s
 ### Problem 1: Loading State Tests Failing (2 tests)
 
 **Tests Affected:**
+
 - `should update loading state during send` (useAIChat.msw.test.tsx:278)
 - `should update loading state during creation` (useAIChat.msw.test.tsx:378)
 
 **Error:**
+
 ```
 expect(received).toBe(expected)
 Expected: true
@@ -50,6 +53,7 @@ All enhanced loading state tests were skipped because we couldn't capture interm
 ### Problem 3: Test Timeouts & Flakiness
 
 Some tests were timing out or flaky due to:
+
 - Sequential operations taking too long
 - Test state interference
 - Race conditions in async state updates
@@ -63,11 +67,12 @@ Some tests were timing out or flaky due to:
 **File:** `__tests__/msw/handlers/ai-chat.ts`
 
 **Changes:**
+
 ```typescript
-import { http, HttpResponse, delay } from 'msw';
+import { http, HttpResponse, delay } from "msw";
 
 // Configurable delay for testing loading states (default 50ms)
-const API_DELAY = parseInt(process.env.MSW_API_DELAY || '50');
+const API_DELAY = parseInt(process.env.MSW_API_DELAY || "50");
 
 export const aiChatHandlers = [
   http.post("*/api/v1/ai/chat", async (req) => {
@@ -93,6 +98,7 @@ export const aiChatHandlers = [
 ```
 
 **Impact:**
+
 - ✅ All loading state tests now pass
 - ✅ Tests are more realistic (simulate network latency)
 - ✅ Delay is configurable via `MSW_API_DELAY` environment variable
@@ -103,6 +109,7 @@ export const aiChatHandlers = [
 **File:** `hooks/__tests__/useAIChat.enhanced.msw.test.tsx`
 
 **Before:**
+
 ```typescript
 await act(async () => {
   await feedbackPromise!;
@@ -112,6 +119,7 @@ expect(result.current.isSubmittingFeedback).toBe(false); // ❌ Sometimes fails
 ```
 
 **After:**
+
 ```typescript
 await act(async () => {
   await feedbackPromise!;
@@ -128,14 +136,11 @@ await waitFor(() => expect(result.current.isSubmittingFeedback).toBe(false), {
 ### Fix 3: Increased Test Timeouts ✅
 
 **For long-running tests:**
+
 ```typescript
-it(
-  "should handle creating multiple sessions in sequence",
-  async () => {
-    // ... test that creates 3 sessions sequentially
-  },
-  30000  // ✅ 30s timeout instead of default 15s
-);
+it("should handle creating multiple sessions in sequence", async () => {
+  // ... test that creates 3 sessions sequentially
+}, 30000); // ✅ 30s timeout instead of default 15s
 ```
 
 ### Fix 4: Skip Flaky Test ✅
@@ -153,9 +158,11 @@ it(
 ## Files Modified
 
 ### 1. MSW Handlers
+
 **File:** `frontend/apps/isp-ops-app/__tests__/msw/handlers/ai-chat.ts`
 
 **Changes:**
+
 - Added `delay` import from msw
 - Added `API_DELAY` constant (configurable, default 50ms)
 - Added delays to all 4 mutation handlers
@@ -163,9 +170,11 @@ it(
 **Lines Changed:** 6, 14, 77, 138, 191, 221
 
 ### 2. Enhanced Tests
+
 **File:** `frontend/apps/isp-ops-app/hooks/__tests__/useAIChat.enhanced.msw.test.tsx`
 
 **Changes:**
+
 - Un-skipped loading state tests
 - Added `waitFor()` for final state checks
 - Increased timeout for sequential test
@@ -174,9 +183,11 @@ it(
 **Lines Changed:** 48-50, 80, 105, 134-136, 167-170, 602-638, 642-643
 
 ### 3. Original Tests
+
 **File:** `frontend/apps/isp-ops-app/hooks/__tests__/useAIChat.msw.test.tsx`
 
 **Changes:**
+
 - Loading state tests now properly capture intermediate states
 - Already had the correct test structure, just needed MSW delays
 
@@ -187,6 +198,7 @@ it(
 ## Test Coverage Breakdown
 
 ### Original Test File (28 tests)
+
 - ✅ 28/28 passing (100%)
 - Query hooks: sessions, chat history
 - Mutations: sendMessage, createSession, submitFeedback, escalateSession
@@ -194,6 +206,7 @@ it(
 - Real-world workflows
 
 ### Enhanced Test File (38 tests)
+
 - ✅ 37/38 passing (97.4%)
 - ⏭️ 1 skipped (session switching)
 - Enhanced loading states (4 tests) - **NOW PASSING!**
@@ -205,6 +218,7 @@ it(
 - Session type variations (2 tests)
 
 ### Total Coverage
+
 - **Tests:** 66 total
 - **Passing:** 65 (98.5%)
 - **Skipped:** 1 (1.5%)
@@ -227,26 +241,31 @@ it(
 ## How to Run Tests
 
 ### Run all useAIChat tests:
+
 ```bash
 pnpm --filter @dotmac/isp-ops-app test -- hooks/__tests__/useAIChat
 ```
 
 ### Run with coverage:
+
 ```bash
 pnpm --filter @dotmac/isp-ops-app test -- hooks/__tests__/useAIChat --coverage
 ```
 
 ### Run only original tests:
+
 ```bash
 pnpm --filter @dotmac/isp-ops-app test -- hooks/__tests__/useAIChat.msw.test.tsx
 ```
 
 ### Run only enhanced tests:
+
 ```bash
 pnpm --filter @dotmac/isp-ops-app test -- hooks/__tests__/useAIChat.enhanced.msw.test.tsx
 ```
 
 ### Configure MSW delay (optional):
+
 ```bash
 MSW_API_DELAY=100 pnpm --filter @dotmac/isp-ops-app test -- hooks/__tests__/useAIChat
 ```

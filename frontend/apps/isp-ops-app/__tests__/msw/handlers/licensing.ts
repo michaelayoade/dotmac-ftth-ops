@@ -3,7 +3,7 @@
  * Mocks licensing modules, quotas, plans, subscriptions, and entitlements
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // In-memory storage
 let featureModules: any[] = [];
@@ -322,23 +322,22 @@ export const licensingHandlers = [
     const annualListPrice = monthlyPrice * 12;
     const annualDiscountPercent = plan.annual_discount_percent ?? 0;
     const annualPrice = annualListPrice * (1 - annualDiscountPercent / 100);
-    const selectedPrice =
-      billingPeriod === "ANNUAL" ? annualPrice : monthlyPrice;
+    const selectedPrice = billingPeriod === "ANNUAL" ? annualPrice : monthlyPrice;
     const subtotal = selectedPrice * quantity;
     const discountAmount =
       billingPeriod === "ANNUAL" ? (annualListPrice - annualPrice) * quantity : 0;
 
     return HttpResponse.json({
-        billing_period: billingPeriod,
-        quantity,
-        monthly: monthlyPrice,
-        annual: annualPrice,
-        subtotal,
-        discount_percentage: billingPeriod === "ANNUAL" ? annualDiscountPercent : 0,
-        discount_amount: discountAmount,
-        total: subtotal,
-        currency: "USD",
-      });
+      billing_period: billingPeriod,
+      quantity,
+      monthly: monthlyPrice,
+      annual: annualPrice,
+      subtotal,
+      discount_percentage: billingPeriod === "ANNUAL" ? annualDiscountPercent : 0,
+      discount_amount: discountAmount,
+      total: subtotal,
+      currency: "USD",
+    });
   }),
 
   // ============================================================================
@@ -391,7 +390,7 @@ export const licensingHandlers = [
     }
 
     currentSubscription.addons = (currentSubscription.addons || []).filter(
-      (addon: any) => addon.module_id !== body.module_id
+      (addon: any) => addon.module_id !== body.module_id,
     );
     currentSubscription.updated_at = new Date().toISOString();
 
@@ -415,11 +414,11 @@ export const licensingHandlers = [
     const entitled = module_code !== "DISABLED_MODULE";
 
     return HttpResponse.json({
-        entitled,
-        module_code,
-        capability_code,
-        reason: entitled ? null : "Module not available in current plan",
-      });
+      entitled,
+      module_code,
+      capability_code,
+      reason: entitled ? null : "Module not available in current plan",
+    });
   }),
 
   // POST /licensing/quotas/check - Check quota availability
@@ -430,12 +429,12 @@ export const licensingHandlers = [
     const quotaDef = quotaDefinitions.find((q) => q.quota_code === quota_code);
     if (!quotaDef) {
       return HttpResponse.json({
-          available: false,
-          remaining: 0,
-          limit: 0,
-          used: 0,
-          reason: "Quota not found",
-        });
+        available: false,
+        remaining: 0,
+        limit: 0,
+        used: 0,
+        reason: "Quota not found",
+      });
     }
 
     const used = quotaUsage.get(quota_code) || 0;
@@ -444,14 +443,14 @@ export const licensingHandlers = [
     const available = remaining >= quantity;
 
     return HttpResponse.json({
-        available,
-        remaining,
-        limit,
-        used,
-        quota_code,
-        quantity,
-        reason: available ? null : "Insufficient quota",
-      });
+      available,
+      remaining,
+      limit,
+      used,
+      quota_code,
+      quantity,
+      reason: available ? null : "Insufficient quota",
+    });
   }),
 
   // POST /licensing/quotas/consume - Consume quota

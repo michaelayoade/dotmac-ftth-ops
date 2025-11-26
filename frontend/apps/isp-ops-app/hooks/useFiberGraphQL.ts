@@ -94,7 +94,8 @@ const formatGraphQLError = (error?: ApolloError) => {
   };
 
   const networkError = error.networkError as { result?: unknown; bodyText?: string } | null;
-  const networkMessage = extractMessage(networkError?.result) ?? extractMessage(networkError?.bodyText);
+  const networkMessage =
+    extractMessage(networkError?.result) ?? extractMessage(networkError?.bodyText);
   return networkMessage ?? error.message;
 };
 

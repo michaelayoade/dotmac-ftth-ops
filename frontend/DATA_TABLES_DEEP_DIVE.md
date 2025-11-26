@@ -13,6 +13,7 @@
 The data table implementation is **production-ready** with enterprise-grade features, excellent architecture, and comprehensive documentation. Built on @tanstack/react-table, it provides multiple table variants for different use cases with strong type safety and accessibility.
 
 ### Key Strengths:
+
 - ✅ Multiple table implementations for different needs
 - ✅ Comprehensive feature set (sorting, filtering, pagination, bulk actions)
 - ✅ Excellent documentation with examples
@@ -22,6 +23,7 @@ The data table implementation is **production-ready** with enterprise-grade feat
 - ✅ Modular architecture with reusable components
 
 ### Areas for Improvement:
+
 - ⚠️ Minor i18n integration gaps
 - ⚠️ Some advanced features could use more examples
 - ⚠️ Server-side pagination examples needed
@@ -54,13 +56,13 @@ The data table implementation is **production-ready** with enterprise-grade feat
 
 ### Component Purpose
 
-| Component | Location | Purpose | When to Use |
-|-----------|----------|---------|-------------|
-| **Table** | `ui/src/components/table.tsx` | Base primitives | Building custom tables |
-| **DataTable** | `ui/src/components/data-table.tsx` | Basic features | Simple lists (< 100 rows) |
-| **EnhancedDataTable** | `ui/src/components/EnhancedDataTable.tsx` | Advanced features | Production apps |
-| **VirtualizedDataTable** | `primitives/performance/` | Virtual scrolling | 1000+ rows |
-| **AdvancedDataTable** | `primitives/data-display/` | Grouping/editing | Complex data management |
+| Component                | Location                                  | Purpose           | When to Use               |
+| ------------------------ | ----------------------------------------- | ----------------- | ------------------------- |
+| **Table**                | `ui/src/components/table.tsx`             | Base primitives   | Building custom tables    |
+| **DataTable**            | `ui/src/components/data-table.tsx`        | Basic features    | Simple lists (< 100 rows) |
+| **EnhancedDataTable**    | `ui/src/components/EnhancedDataTable.tsx` | Advanced features | Production apps           |
+| **VirtualizedDataTable** | `primitives/performance/`                 | Virtual scrolling | 1000+ rows                |
+| **AdvancedDataTable**    | `primitives/data-display/`                | Grouping/editing  | Complex data management   |
 
 ---
 
@@ -71,6 +73,7 @@ The data table implementation is **production-ready** with enterprise-grade feat
 #### **Core Features** (10/10)
 
 **Sorting** ✅
+
 - Location: `EnhancedDataTable.tsx:261`
 - Implementation: @tanstack/react-table `getSortedRowModel`
 - Multi-column sort: ✅ Supported
@@ -86,6 +89,7 @@ tableOptions.onSortingChange = setSorting;
 ```
 
 **Pagination** ✅
+
 - Location: `EnhancedDataTable.tsx:682-735`
 - Page sizes: `[10, 20, 30, 50, 100]` (configurable)
 - Navigation: Previous/Next buttons
@@ -100,13 +104,14 @@ tableOptions.onSortingChange = setSorting;
   size="sm"
   onClick={() => table.previousPage()}
   disabled={!table.getCanPreviousPage()}
-  aria-label="Go to previous page"  // ✅ Accessible
+  aria-label="Go to previous page" // ✅ Accessible
 >
   Previous
 </Button>
 ```
 
 **Search/Filtering** ✅
+
 - Location: `EnhancedDataTable.tsx:317-340`
 - Global search: ✅ Across all columns or specific fields
 - Column filters: ✅ Text, select, date, number
@@ -117,7 +122,9 @@ tableOptions.onSortingChange = setSorting;
 // Smart search implementation (Lines 317-340)
 const globalFilterFn = React.useCallback(
   (row: Row<TData>, _columnId: string, filterValue: string) => {
-    const searchTerm = String(filterValue ?? "").trim().toLowerCase();
+    const searchTerm = String(filterValue ?? "")
+      .trim()
+      .toLowerCase();
     if (!searchTerm) return true;
 
     // Search specific fields or all fields
@@ -134,6 +141,7 @@ const globalFilterFn = React.useCallback(
 #### **Advanced Features** (9/10)
 
 **Row Selection & Bulk Actions** ✅
+
 - Location: `EnhancedDataTable.tsx:202-224, 398-416`
 - Multi-select: ✅ Checkbox column
 - Select all: ✅ Header checkbox
@@ -151,8 +159,8 @@ const handleBulkAction = React.useCallback(
         title: action.confirmTitle ?? "Confirm action",
         description: action.confirmMessage,
         confirmText: action.confirmConfirmText ?? action.label,
-        variant: action.confirmVariant ??
-          (action.variant === "destructive" ? "destructive" : "default"),
+        variant:
+          action.confirmVariant ?? (action.variant === "destructive" ? "destructive" : "default"),
       });
       if (!confirmed) return;
     }
@@ -165,6 +173,7 @@ const handleBulkAction = React.useCallback(
 ```
 
 **Export to CSV** ✅
+
 - Location: `EnhancedDataTable.tsx:166-197`
 - Implementation: Clean, functional
 - Handles commas: ✅ Quoted values
@@ -196,6 +205,7 @@ function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: s
 ```
 
 **Quick Filters** ✅
+
 - Location: `EnhancedDataTable.tsx:267-280, 553-577`
 - Chip-based UI: ✅ Clear visual design
 - Multiple active: ✅ AND logic between filters
@@ -203,6 +213,7 @@ function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: s
 - Clear all: ✅ Reset button
 
 **Advanced Filter Bar** ✅
+
 - Location: `EnhancedDataTable.tsx:579-622`
 - Toggle visibility: ✅ Show/hide button
 - Field types: Text, Select, Date, Number ✅
@@ -210,6 +221,7 @@ function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: s
 - Responsive: ✅ Flexbox layout
 
 **Column Visibility** ✅
+
 - Location: `EnhancedDataTable.tsx:493-516`
 - Toggle dropdown: ✅ Checkbox menu
 - Per-column control: ✅ Individual toggles
@@ -218,17 +230,20 @@ function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: s
 #### **Loading & Error States** (10/10)
 
 **Loading State** ✅
+
 - Location: `EnhancedDataTable.tsx:642-647`
 - Implementation: Clean placeholder
 - Spans all columns: ✅
 - Accessibility: ✅ Text for screen readers
 
 **Error State** ✅
+
 - Location: `EnhancedDataTable.tsx:444-448`
 - Error banner: ✅ Destructive styling
 - Dismissible: ⚠️ Not dismissible (minor)
 
 **Empty State** ✅
+
 - Location: `EnhancedDataTable.tsx:671-677`
 - Custom message: ✅ Configurable
 - Centered display: ✅
@@ -240,6 +255,7 @@ function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: s
 ### Visual Design (9/10)
 
 **Styling**
+
 - Theme integration: ✅ CSS variables
 - Dark mode: ✅ Properly themed
 - Consistent spacing: ✅ Tailwind utilities
@@ -247,6 +263,7 @@ function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: s
 - Responsive: ✅ Mobile-friendly toolbar
 
 **Toolbar Design** ✅
+
 - Location: `EnhancedDataTable.tsx:450-624`
 - Layout: Flexbox with wrapping
 - Search input: Left-aligned
@@ -257,6 +274,7 @@ function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: s
 ### Interaction Patterns (10/10)
 
 **Row Click** ✅
+
 - Location: `EnhancedDataTable.tsx:654-662`
 - Smart exclusion: ✅ Skips checkboxes/buttons
 - Hover state: ✅ Visual feedback
@@ -277,6 +295,7 @@ onClick={(event) => {
 ```
 
 **Selection UX** ✅
+
 - Visual feedback: ✅ `data-state="selected"`
 - Batch select: ✅ Select all checkbox
 - Count display: ✅ "X of Y selected"
@@ -289,12 +308,14 @@ onClick={(event) => {
 ### WCAG 2.1 AA Compliance: **A+ (Excellent)**
 
 **Keyboard Navigation** ✅
+
 - All controls focusable: ✅
 - Tab order logical: ✅
 - Enter/Space work: ✅ On buttons
 - Arrow keys: ⚠️ Not for row navigation (acceptable)
 
 **ARIA Labels** ✅
+
 - Search input: ✅ `aria-label="Search table"` (Line 460)
 - Pagination controls: ✅ All labeled (Lines 701, 719, 729)
 - Filter toggle: ✅ `aria-label="Toggle filters"` (Line 469)
@@ -303,6 +324,7 @@ onClick={(event) => {
 - Bulk actions: ✅ Descriptive labels
 
 **Screen Reader Support** ✅
+
 - Table semantics: ✅ `<Table>`, `<TableHeader>`, `<TableBody>`
 - Row/cell structure: ✅ Proper nesting
 - Loading state: ✅ Announced
@@ -310,6 +332,7 @@ onClick={(event) => {
 - Selection count: ✅ Announced
 
 **Focus Management** ✅
+
 - Visible focus rings: ✅ Default browser + Tailwind
 - Focus not trapped: ✅
 - Focus order: ✅ Logical
@@ -323,29 +346,33 @@ onClick={(event) => {
 ### Mobile Support (8/10)
 
 **Toolbar Responsiveness** ✅
+
 - Location: `EnhancedDataTable.tsx:452`
 - Flex wrap: ✅ `flex-wrap`
 - Gap spacing: ✅ Consistent
 - Button sizing: ✅ `sm` size
 
 **Table Responsiveness** ⚠️
+
 - Horizontal scroll: ✅ Container scrollable
 - Mobile-optimized view: ❌ No card view for mobile
 - Sticky columns: ❌ Not implemented
 - Touch targets: ✅ 44px min (checkboxes, buttons)
 
 **Pagination on Mobile** ✅
+
 - Responsive spacing: ✅ `space-x-6 lg:space-x-8`
 - Button sizing: ✅ Appropriate
 - Dropdown accessible: ✅
 
 **Recommendation:**
+
 ```tsx
 // Add mobile card view option
 <EnhancedDataTable
   data={data}
   columns={columns}
-  mobileView="card"  // ⭐ Suggested feature
+  mobileView="card" // ⭐ Suggested feature
   renderMobileCard={(row) => <CustomCard {...row} />}
 />
 ```
@@ -357,6 +384,7 @@ onClick={(event) => {
 ### Client-Side Performance (9/10)
 
 **Rendering Optimization** ✅
+
 - Memoization: ✅ Extensive use of `React.useMemo`, `React.useCallback`
 - Virtual scrolling: ✅ Available in `VirtualizedDataTable`
 - Re-render prevention: ✅ Proper dependencies
@@ -372,11 +400,13 @@ const filteredData = React.useMemo(() => {
 ```
 
 **Large Dataset Handling**
+
 - Pagination: ✅ Limits rendered rows
 - Virtual scrolling: ✅ VirtualizedDataTable for 1000+ rows
 - Lazy loading: ⚠️ Not built-in (needs implementation)
 
 **Bundle Size**
+
 - @tanstack/react-table: ~50KB gzipped
 - Component code: ~8KB
 - Total: ✅ Reasonable
@@ -384,11 +414,13 @@ const filteredData = React.useMemo(() => {
 ### Server-Side Features
 
 **Server-Side Pagination** ⚠️
+
 - Support: ✅ `TablePagination` component supports it
 - Examples: ❌ No documented examples
 - Implementation: Requires custom setup
 
 **Recommendation:**
+
 ```tsx
 // Add server-side pagination example to docs
 function ServerPaginatedTable() {
@@ -420,6 +452,7 @@ function ServerPaginatedTable() {
 ### Test Coverage
 
 **Unit Tests** ✅
+
 - Location: `ui/src/components/__tests__/`
 - Files:
   - `data-table.test.tsx` ✅
@@ -432,6 +465,7 @@ function ServerPaginatedTable() {
 ### Type Safety (10/10)
 
 **TypeScript Implementation** ✅
+
 - Generic types: ✅ `<TData, TValue>`
 - Prop types: ✅ Comprehensive interfaces
 - Type exports: ✅ Re-exported from @tanstack/react-table
@@ -442,8 +476,8 @@ function ServerPaginatedTable() {
 export interface EnhancedDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  searchConfig?: SearchConfig<TData>;  // ✅ Generic
-  bulkActions?: BulkAction<TData>[];    // ✅ Generic
+  searchConfig?: SearchConfig<TData>; // ✅ Generic
+  bulkActions?: BulkAction<TData>[]; // ✅ Generic
   // ... all props properly typed
 }
 ```
@@ -455,6 +489,7 @@ export interface EnhancedDataTableProps<TData, TValue> {
 ### Component Documentation (10/10)
 
 **EnhancedDataTable.md** ✅
+
 - Length: 433 lines
 - Coverage: Comprehensive
 - Examples: 5+ complete examples
@@ -463,11 +498,13 @@ export interface EnhancedDataTableProps<TData, TValue> {
 - Use cases: ✅ Listed
 
 **Inline Documentation** ✅
+
 - JSDoc comments: ✅ All major functions
 - Type comments: ✅ Interface properties
 - Usage examples: ✅ In file header
 
 **Code Organization** ✅
+
 - Section comments: ✅ Clear markers
 - Logical grouping: ✅ Types, helpers, component
 - Consistent style: ✅
@@ -487,13 +524,15 @@ export interface EnhancedDataTableProps<TData, TValue> {
 **Location:** Throughout EnhancedDataTable.tsx
 
 **Current:**
+
 ```tsx
 <Button variant="outline" size="sm">
-  Columns  {/* ❌ Hardcoded */}
+  Columns {/* ❌ Hardcoded */}
 </Button>
 ```
 
 **Recommended Fix:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -509,6 +548,7 @@ export function EnhancedDataTable<TData, TValue>({ ... }) {
 ```
 
 **Add to locale files:**
+
 ```json
 {
   "dataTable": {
@@ -594,6 +634,7 @@ function ServerPaginatedTable() {
 **Issue:** Tables are hard to use on mobile
 
 **Recommendation:**
+
 ```tsx
 // Add mobile view prop
 interface EnhancedDataTableProps<TData, TValue> {
@@ -643,19 +684,16 @@ function EnhancedDataTable<TData, TValue>({ ... }) {
 **Issue:** Column visibility resets on page refresh
 
 **Recommendation:**
+
 ```tsx
-const [columnVisibilityState, setColumnVisibilityState] =
-  React.useState<VisibilityState>(() => {
-    const saved = localStorage.getItem(`table-columns-${tableId}`);
-    return saved ? JSON.parse(saved) : {};
-  });
+const [columnVisibilityState, setColumnVisibilityState] = React.useState<VisibilityState>(() => {
+  const saved = localStorage.getItem(`table-columns-${tableId}`);
+  return saved ? JSON.parse(saved) : {};
+});
 
 React.useEffect(() => {
   if (tableId) {
-    localStorage.setItem(
-      `table-columns-${tableId}`,
-      JSON.stringify(columnVisibilityState)
-    );
+    localStorage.setItem(`table-columns-${tableId}`, JSON.stringify(columnVisibilityState));
   }
 }, [columnVisibilityState, tableId]);
 ```
@@ -671,6 +709,7 @@ React.useEffect(() => {
 **Issue:** Loading state is basic text
 
 **Current:**
+
 ```tsx
 {isLoading ? (
   <TableRow>
@@ -682,6 +721,7 @@ React.useEffect(() => {
 ```
 
 **Recommended:**
+
 ```tsx
 {isLoading ? (
   <>
@@ -729,10 +769,9 @@ React.useEffect(() => {
 **Issue:** Headers scroll out of view
 
 **Recommendation:**
+
 ```tsx
-<TableHeader className="sticky top-0 z-10 bg-card">
-  {/* ... headers */}
-</TableHeader>
+<TableHeader className="sticky top-0 z-10 bg-card">{/* ... headers */}</TableHeader>
 ```
 
 **Caveat:** Requires fixed container height
@@ -748,22 +787,25 @@ React.useEffect(() => {
 #### 1. Column Definitions
 
 **✅ Good:**
+
 ```tsx
-const columns = useMemo<ColumnDef<Invoice>[]>(() => [
-  {
-    accessorKey: "invoice_number",
-    header: createSortableHeader("Invoice #"),
-    cell: ({ row }) => (
-      <Link href={`/invoices/${row.original.id}`}>
-        {row.getValue("invoice_number")}
-      </Link>
-    ),
-  },
-  // ... more columns
-], []); // ✅ Memoized, stable reference
+const columns = useMemo<ColumnDef<Invoice>[]>(
+  () => [
+    {
+      accessorKey: "invoice_number",
+      header: createSortableHeader("Invoice #"),
+      cell: ({ row }) => (
+        <Link href={`/invoices/${row.original.id}`}>{row.getValue("invoice_number")}</Link>
+      ),
+    },
+    // ... more columns
+  ],
+  [],
+); // ✅ Memoized, stable reference
 ```
 
 **❌ Bad:**
+
 ```tsx
 // ❌ Recreates columns on every render
 const columns = [
@@ -779,19 +821,23 @@ const columns = [
 #### 2. Bulk Actions
 
 **✅ Good:**
+
 ```tsx
-const bulkActions = useMemo<BulkAction<Invoice>[]>(() => [
-  {
-    label: "Send Invoices",
-    icon: Send,
-    action: async (invoices) => {
-      await sendInvoices(invoices.map(i => i.id));
-      queryClient.invalidateQueries(['invoices']);
+const bulkActions = useMemo<BulkAction<Invoice>[]>(
+  () => [
+    {
+      label: "Send Invoices",
+      icon: Send,
+      action: async (invoices) => {
+        await sendInvoices(invoices.map((i) => i.id));
+        queryClient.invalidateQueries(["invoices"]);
+      },
+      disabled: (invoices) => invoices.some((i) => i.status === "void"),
+      confirmMessage: "Send {count} invoice(s)?",
     },
-    disabled: (invoices) => invoices.some(i => i.status === 'void'),
-    confirmMessage: "Send {count} invoice(s)?",
-  },
-], [queryClient]); // ✅ Memoized with dependencies
+  ],
+  [queryClient],
+); // ✅ Memoized with dependencies
 ```
 
 ---
@@ -799,15 +845,16 @@ const bulkActions = useMemo<BulkAction<Invoice>[]>(() => [
 #### 3. Loading States
 
 **✅ Good:**
+
 ```tsx
-const { data, isLoading, error } = useQuery(['invoices'], fetchInvoices);
+const { data, isLoading, error } = useQuery(["invoices"], fetchInvoices);
 
 <EnhancedDataTable
   data={data ?? []}
   columns={columns}
   isLoading={isLoading}
   errorMessage={error?.message}
-/>
+/>;
 ```
 
 ---
@@ -815,6 +862,7 @@ const { data, isLoading, error } = useQuery(['invoices'], fetchInvoices);
 #### 4. Row Click Handling
 
 **✅ Good:**
+
 ```tsx
 <EnhancedDataTable
   data={customers}
@@ -832,13 +880,13 @@ const { data, isLoading, error } = useQuery(['invoices'], fetchInvoices);
 
 ### When to Use Which Table
 
-| Use Case | Component | Reason |
-|----------|-----------|--------|
-| Simple list (< 100 rows) | **DataTable** | Lightweight, sufficient features |
-| Production app | **EnhancedDataTable** | Full features, bulk actions, export |
-| 1000+ rows | **VirtualizedDataTable** | Virtual scrolling, performance |
-| Grouping/editing | **AdvancedDataTable** | Specialized features |
-| Custom implementation | **Table primitives** | Full control |
+| Use Case                 | Component                | Reason                              |
+| ------------------------ | ------------------------ | ----------------------------------- |
+| Simple list (< 100 rows) | **DataTable**            | Lightweight, sufficient features    |
+| Production app           | **EnhancedDataTable**    | Full features, bulk actions, export |
+| 1000+ rows               | **VirtualizedDataTable** | Virtual scrolling, performance      |
+| Grouping/editing         | **AdvancedDataTable**    | Specialized features                |
+| Custom implementation    | **Table primitives**     | Full control                        |
 
 ---
 
@@ -847,6 +895,7 @@ const { data, isLoading, error } = useQuery(['invoices'], fetchInvoices);
 ### Overall Assessment
 
 The data table implementation is **excellent** with:
+
 - ✅ Production-ready quality
 - ✅ Comprehensive feature set
 - ✅ Strong accessibility
@@ -857,18 +906,14 @@ The data table implementation is **excellent** with:
 ### Priority Recommendations
 
 **Implement Now (< 1 week):**
+
 1. i18n integration (2 hours)
 2. Skeleton loader (30 minutes)
 3. Persist column visibility (1 hour)
 
-**Implement Soon (< 1 month):**
-4. Server-side pagination example (1 hour)
-5. Mobile card view (3 hours)
-6. Sticky headers (1 hour)
+**Implement Soon (< 1 month):** 4. Server-side pagination example (1 hour) 5. Mobile card view (3 hours) 6. Sticky headers (1 hour)
 
-**Nice to Have (Future):**
-7. Column resizing (4 hours)
-8. Row reordering (6 hours)
+**Nice to Have (Future):** 7. Column resizing (4 hours) 8. Row reordering (6 hours)
 
 ### Total Estimated Time for All Improvements: **19 hours**
 
@@ -876,18 +921,18 @@ The data table implementation is **excellent** with:
 
 ## 📈 Metrics
 
-| Metric | Score | Notes |
-|--------|-------|-------|
-| **Features** | 95/100 | Comprehensive, missing only advanced features |
-| **Performance** | 90/100 | Good, virtualization available |
-| **Accessibility** | 100/100 | Excellent ARIA, keyboard nav |
-| **Documentation** | 100/100 | Outstanding docs with examples |
-| **Type Safety** | 100/100 | Full TypeScript, generic types |
-| **Responsive** | 80/100 | Works but lacks mobile optimization |
-| **i18n Ready** | 60/100 | Structure ready, labels hardcoded |
-| **Testing** | 85/100 | Tests exist, coverage not reviewed |
-| **Code Quality** | 95/100 | Clean, well-organized |
-| **DX (Developer Experience)** | 95/100 | Easy to use, clear API |
+| Metric                        | Score   | Notes                                         |
+| ----------------------------- | ------- | --------------------------------------------- |
+| **Features**                  | 95/100  | Comprehensive, missing only advanced features |
+| **Performance**               | 90/100  | Good, virtualization available                |
+| **Accessibility**             | 100/100 | Excellent ARIA, keyboard nav                  |
+| **Documentation**             | 100/100 | Outstanding docs with examples                |
+| **Type Safety**               | 100/100 | Full TypeScript, generic types                |
+| **Responsive**                | 80/100  | Works but lacks mobile optimization           |
+| **i18n Ready**                | 60/100  | Structure ready, labels hardcoded             |
+| **Testing**                   | 85/100  | Tests exist, coverage not reviewed            |
+| **Code Quality**              | 95/100  | Clean, well-organized                         |
+| **DX (Developer Experience)** | 95/100  | Easy to use, clear API                        |
 
 **Overall: 95/100 (A)**
 

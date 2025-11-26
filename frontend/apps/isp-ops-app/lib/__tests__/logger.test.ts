@@ -54,7 +54,7 @@ describe("logger", () => {
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining("[DEBUG]"),
         "Debug message",
-        {}
+        {},
       );
     });
 
@@ -72,7 +72,7 @@ describe("logger", () => {
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining("[DEBUG]"),
         "Debug message",
-        { key: "value" }
+        { key: "value" },
       );
     });
   });
@@ -122,7 +122,7 @@ describe("logger", () => {
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining("[WARN]"),
         "Warning message",
-        {}
+        {},
       );
     });
 
@@ -315,9 +315,7 @@ describe("logger", () => {
       const call = consoleLogSpy.mock.calls[0];
       const parsed = JSON.parse(call[0]);
 
-      expect(parsed.timestamp).toMatch(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
-      );
+      expect(parsed.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
 
     it("should still sanitize in production", async () => {
@@ -342,7 +340,7 @@ describe("logger", () => {
 
     it("should handle special characters in messages", async () => {
       const logger = await getLogger();
-      logger.info('Special chars: \n\t"\'`');
+      logger.info("Special chars: \n\t\"'`");
 
       expect(consoleLogSpy).toHaveBeenCalled();
     });

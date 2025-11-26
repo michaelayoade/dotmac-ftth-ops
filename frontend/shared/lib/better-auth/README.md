@@ -5,6 +5,7 @@ This directory contains the Better Auth configuration for the DotMac ISP Operati
 ## Overview
 
 Better Auth is a TypeScript-first authentication framework that provides:
+
 - Multi-tenant organization support
 - Role-based access control (RBAC)
 - Two-factor authentication (2FA)
@@ -64,27 +65,33 @@ function MyComponent() {
 The platform supports 13 different roles:
 
 ### Platform Admin
+
 - `super_admin` - Full system access
 - `platform_admin` - Platform management
 
 ### Tenant/ISP
+
 - `tenant_owner` - Organization owner
 - `tenant_admin` - Organization administrator
 - `tenant_member` - Organization member
 
 ### Operations
+
 - `network_admin` - Network operations
 - `support_agent` - Customer support
 - `technician` - Field technician
 
 ### Business
+
 - `sales_manager` - Sales operations
 - `billing_manager` - Billing operations
 
 ### Customer
+
 - `customer` - End customer
 
 ### Reseller
+
 - `reseller_owner` - Reseller organization owner
 - `reseller_admin` - Reseller administrator
 - `reseller_agent` - Reseller agent
@@ -175,6 +182,7 @@ npx @better-auth/cli migrate   # Apply migrations
 ```
 
 This creates tables for:
+
 - users
 - sessions
 - organizations
@@ -185,7 +193,9 @@ This creates tables for:
 ## Common Hooks
 
 ### useSession()
+
 Get current session and user:
+
 ```typescript
 const { data: session, isPending } = useSession();
 // session.user - User object
@@ -193,25 +203,33 @@ const { data: session, isPending } = useSession();
 ```
 
 ### useHasPermission(permission)
+
 Check if user has a specific permission:
+
 ```typescript
 const canEdit = useHasPermission("customers:update");
 ```
 
 ### useHasRole(role)
+
 Check if user has a specific role:
+
 ```typescript
 const isAdmin = useHasRole("tenant_admin");
 ```
 
 ### useIsSuperAdmin()
+
 Check if user is super admin:
+
 ```typescript
 const isSuperAdmin = useIsSuperAdmin();
 ```
 
 ### useCurrentOrganization()
+
 Get the active organization:
+
 ```typescript
 const organization = useCurrentOrganization();
 // organization.id
@@ -222,25 +240,28 @@ const organization = useCurrentOrganization();
 ## Authentication Actions
 
 ### Sign In
+
 ```typescript
 await signIn.email({
   email: "user@example.com",
   password: "password123",
-  callbackURL: "/dashboard"
+  callbackURL: "/dashboard",
 });
 ```
 
 ### Sign Up
+
 ```typescript
 await signUp.email({
   email: "user@example.com",
   password: "password123",
   name: "John Doe",
-  callbackURL: "/dashboard"
+  callbackURL: "/dashboard",
 });
 ```
 
 ### Sign Out
+
 ```typescript
 await signOut();
 ```
@@ -289,6 +310,7 @@ describe("Protected Component", () => {
 If migrating from the old `@dotmac/auth` package:
 
 ### Old Pattern
+
 ```typescript
 import { useAuth } from "@dotmac/auth";
 
@@ -296,13 +318,9 @@ const { user, isAuthenticated, login, logout, hasPermission } = useAuth();
 ```
 
 ### New Pattern
+
 ```typescript
-import {
-  useSession,
-  useHasPermission,
-  signIn,
-  signOut
-} from "@/lib/better-auth";
+import { useSession, useHasPermission, signIn, signOut } from "@/lib/better-auth";
 
 const { data: session } = useSession();
 const hasPermission = useHasPermission("users:create");
@@ -317,6 +335,7 @@ const hasPermission = useHasPermission("users:create");
 ## Support
 
 For questions or issues:
+
 1. Check the Better Auth documentation
 2. Review the migration guide
 3. Check this README

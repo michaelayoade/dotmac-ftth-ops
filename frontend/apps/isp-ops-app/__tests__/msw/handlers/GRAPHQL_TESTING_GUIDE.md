@@ -15,6 +15,7 @@ GraphQL testing in this project uses MSW v1.3.5 with specialized handler files o
 ### How GraphQL Handlers Work
 
 Unlike REST endpoints that match URLs, GraphQL handlers match by:
+
 1. **Operation name** (e.g., "FiberCableList", "SubscriberDashboard")
 2. **Operation type** (query vs mutation)
 
@@ -76,19 +77,19 @@ All GraphQL responses follow this structure:
 ### 1. Import the Handler and Utilities
 
 ```typescript
-import { renderHook, waitFor } from '@testing-library/react';
-import { createQueryWrapper } from '@/__tests__/test-utils';
+import { renderHook, waitFor } from "@testing-library/react";
+import { createQueryWrapper } from "@/__tests__/test-utils";
 import {
   seedFiberData,
   clearFiberData,
-  createMockFiberCable
-} from '@/__tests__/msw/handlers/graphql-fiber';
+  createMockFiberCable,
+} from "@/__tests__/msw/handlers/graphql-fiber";
 ```
 
 ### 2. Set Up Test Data
 
 ```typescript
-describe('useFiberGraphQL', () => {
+describe("useFiberGraphQL", () => {
   beforeEach(() => {
     clearFiberData();
 
@@ -96,11 +97,11 @@ describe('useFiberGraphQL', () => {
     seedFiberData({
       cables: [
         createMockFiberCable({
-          id: 'cable-1',
-          name: 'Test Cable',
-          status: 'ACTIVE'
+          id: "cable-1",
+          name: "Test Cable",
+          status: "ACTIVE",
         }),
-      ]
+      ],
     });
   });
 });
@@ -109,20 +110,19 @@ describe('useFiberGraphQL', () => {
 ### 3. Test the Hook
 
 ```typescript
-it('should fetch fiber cables', async () => {
-  const { result } = renderHook(
-    () => useFiberCablesQuery({ limit: 10 }),
-    { wrapper: createQueryWrapper() }
-  );
+it("should fetch fiber cables", async () => {
+  const { result } = renderHook(() => useFiberCablesQuery({ limit: 10 }), {
+    wrapper: createQueryWrapper(),
+  });
 
   await waitFor(() => {
     expect(result.current.data?.fiberCables.cables).toHaveLength(1);
   });
 
   expect(result.current.data?.fiberCables.cables[0]).toMatchObject({
-    id: 'cable-1',
-    name: 'Test Cable',
-    status: 'ACTIVE',
+    id: "cable-1",
+    name: "Test Cable",
+    status: "ACTIVE",
   });
 });
 ```
@@ -130,26 +130,21 @@ it('should fetch fiber cables', async () => {
 ### 4. Test Error Scenarios
 
 ```typescript
-import { server } from '@/__tests__/msw/server';
-import { graphql } from 'msw';
-import { createGraphQLError } from '@/__tests__/msw/handlers/graphql';
+import { server } from "@/__tests__/msw/server";
+import { graphql } from "msw";
+import { createGraphQLError } from "@/__tests__/msw/handlers/graphql";
 
-it('should handle GraphQL errors', async () => {
+it("should handle GraphQL errors", async () => {
   // Override the handler for this test
   server.use(
-    graphql.query('FiberCableList', (req, res, ctx) => {
-      return res(
-        ctx.errors([
-          createGraphQLError('Network unavailable', 'NETWORK_ERROR')
-        ])
-      );
-    })
+    graphql.query("FiberCableList", (req, res, ctx) => {
+      return res(ctx.errors([createGraphQLError("Network unavailable", "NETWORK_ERROR")]));
+    }),
   );
 
-  const { result } = renderHook(
-    () => useFiberCablesQuery({ limit: 10 }),
-    { wrapper: createQueryWrapper() }
-  );
+  const { result } = renderHook(() => useFiberCablesQuery({ limit: 10 }), {
+    wrapper: createQueryWrapper(),
+  });
 
   await waitFor(() => {
     expect(result.current.error).toBeDefined();
@@ -219,18 +214,15 @@ clearAllGraphQLData()
 ### Pattern 1: Testing Pagination
 
 ```typescript
-it('should paginate results', async () => {
+it("should paginate results", async () => {
   // Seed 100 cables
   seedFiberData({
-    cables: Array.from({ length: 100 }, (_, i) =>
-      createMockFiberCable({ id: `cable-${i}` })
-    )
+    cables: Array.from({ length: 100 }, (_, i) => createMockFiberCable({ id: `cable-${i}` })),
   });
 
-  const { result } = renderHook(
-    () => useFiberCablesQuery({ limit: 10, offset: 0 }),
-    { wrapper: createQueryWrapper() }
-  );
+  const { result } = renderHook(() => useFiberCablesQuery({ limit: 10, offset: 0 }), {
+    wrapper: createQueryWrapper(),
+  });
 
   await waitFor(() => {
     expect(result.current.data?.fiberCables.cables).toHaveLength(10);
@@ -243,22 +235,21 @@ it('should paginate results', async () => {
 ### Pattern 2: Testing Filters
 
 ```typescript
-it('should filter by status', async () => {
+it("should filter by status", async () => {
   seedFiberData({
     cables: [
-      createMockFiberCable({ id: 'cable-1', status: 'ACTIVE' }),
-      createMockFiberCable({ id: 'cable-2', status: 'INACTIVE' }),
-    ]
+      createMockFiberCable({ id: "cable-1", status: "ACTIVE" }),
+      createMockFiberCable({ id: "cable-2", status: "INACTIVE" }),
+    ],
   });
 
-  const { result } = renderHook(
-    () => useFiberCablesQuery({ status: 'ACTIVE' }),
-    { wrapper: createQueryWrapper() }
-  );
+  const { result } = renderHook(() => useFiberCablesQuery({ status: "ACTIVE" }), {
+    wrapper: createQueryWrapper(),
+  });
 
   await waitFor(() => {
     expect(result.current.data?.fiberCables.cables).toHaveLength(1);
-    expect(result.current.data?.fiberCables.cables[0].status).toBe('ACTIVE');
+    expect(result.current.data?.fiberCables.cables[0].status).toBe("ACTIVE");
   });
 });
 ```
@@ -266,22 +257,21 @@ it('should filter by status', async () => {
 ### Pattern 3: Testing Search
 
 ```typescript
-it('should search cables', async () => {
+it("should search cables", async () => {
   seedFiberData({
     cables: [
-      createMockFiberCable({ id: 'cable-1', name: 'Main Trunk Cable' }),
-      createMockFiberCable({ id: 'cable-2', name: 'Secondary Feed' }),
-    ]
+      createMockFiberCable({ id: "cable-1", name: "Main Trunk Cable" }),
+      createMockFiberCable({ id: "cable-2", name: "Secondary Feed" }),
+    ],
   });
 
-  const { result } = renderHook(
-    () => useFiberCablesQuery({ search: 'trunk' }),
-    { wrapper: createQueryWrapper() }
-  );
+  const { result } = renderHook(() => useFiberCablesQuery({ search: "trunk" }), {
+    wrapper: createQueryWrapper(),
+  });
 
   await waitFor(() => {
     expect(result.current.data?.fiberCables.cables).toHaveLength(1);
-    expect(result.current.data?.fiberCables.cables[0].name).toContain('Trunk');
+    expect(result.current.data?.fiberCables.cables[0].name).toContain("Trunk");
   });
 });
 ```
@@ -289,23 +279,22 @@ it('should search cables', async () => {
 ### Pattern 4: Testing Mutations
 
 ```typescript
-it('should create a fiber cable', async () => {
-  const { result } = renderHook(
-    () => useCreateFiberCableMutation(),
-    { wrapper: createQueryWrapper() }
-  );
+it("should create a fiber cable", async () => {
+  const { result } = renderHook(() => useCreateFiberCableMutation(), {
+    wrapper: createQueryWrapper(),
+  });
 
   act(() => {
     result.current.mutate({
-      name: 'New Cable',
-      fiberType: 'SINGLE_MODE',
+      name: "New Cable",
+      fiberType: "SINGLE_MODE",
       totalStrands: 12,
     });
   });
 
   await waitFor(() => {
     expect(result.current.isSuccess).toBe(true);
-    expect(result.current.data?.createFiberCable.name).toBe('New Cable');
+    expect(result.current.data?.createFiberCable.name).toBe("New Cable");
   });
 });
 ```
@@ -358,7 +347,7 @@ export const graphqlYourDomainHandlers = [
 
 ```typescript
 // In __tests__/msw/server.ts
-import { graphqlYourDomainHandlers } from './handlers/graphql-your-domain';
+import { graphqlYourDomainHandlers } from "./handlers/graphql-your-domain";
 
 export const handlers = [
   // ... other handlers
@@ -382,6 +371,7 @@ export const handlers = [
 **Problem**: MSW not intercepting GraphQL request
 
 **Solutions**:
+
 1. Check operation name matches exactly (case-sensitive)
 2. Verify handler is added to server.ts
 3. Check if handler is registered before test runs
@@ -392,6 +382,7 @@ export const handlers = [
 **Problem**: Test sees old data from previous test
 
 **Solutions**:
+
 1. Call clear function in `beforeEach`
 2. Use `jest.clearAllMocks()`
 3. Reset server handlers: `server.resetHandlers()`
@@ -401,6 +392,7 @@ export const handlers = [
 **Problem**: TypeScript errors on mock data
 
 **Solutions**:
+
 1. Use factory functions with proper types
 2. Add `as const` for literal types
 3. Check generated types match schema

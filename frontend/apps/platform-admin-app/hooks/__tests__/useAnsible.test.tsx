@@ -7,12 +7,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import {
-  useAWXHealth,
-  useJobTemplates,
-  useLaunchJob,
-  useCancelJob,
-} from "../useAnsible";
+import { useAWXHealth, useJobTemplates, useLaunchJob, useCancelJob } from "../useAnsible";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
 

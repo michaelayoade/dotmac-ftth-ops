@@ -72,10 +72,9 @@ function ProvisionPageContent() {
   const { data: presets = [] } = useQuery<Preset[]>({
     queryKey: ["device-presets"],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/presets`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/presets`, {
+        credentials: "include",
+      });
       if (!response.ok) return [];
       return response.json();
     },
@@ -85,10 +84,9 @@ function ProvisionPageContent() {
   const { data: bulkJobs = [] } = useQuery<BulkProvisionJob[]>({
     queryKey: ["bulk-provision-jobs"],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/provision/bulk/jobs`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/provision/bulk/jobs`, {
+        credentials: "include",
+      });
       if (!response.ok) return [];
       return response.json();
     },
@@ -98,15 +96,12 @@ function ProvisionPageContent() {
   // Single device provision
   const provisionMutation = useMutation({
     mutationFn: async (device: DeviceProvisionRequest) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/provision`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(device),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/provision`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(device),
+      });
       if (!response.ok) throw new Error("Failed to provision device");
       return response.json();
     },
@@ -136,14 +131,11 @@ function ProvisionPageContent() {
         formData.append("presetName", bulkPreset);
       }
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/provision/bulk`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/provision/bulk`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
       if (!response.ok) throw new Error("Failed to start bulk provisioning");
       return response.json();
     },
@@ -216,7 +208,8 @@ function ProvisionPageContent() {
   };
 
   const downloadTemplate = () => {
-    const template = "serial_number,product_class,oui\nEXAMPLE123,Device,00D09E\nEXAMPLE456,Router,AABBCC";
+    const template =
+      "serial_number,product_class,oui\nEXAMPLE123,Device,00D09E\nEXAMPLE456,Router,AABBCC";
     const blob = new Blob([template], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -254,9 +247,7 @@ function ProvisionPageContent() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Device Provisioning</h1>
-            <p className="text-sm text-muted-foreground">
-              Add new devices individually or in bulk
-            </p>
+            <p className="text-sm text-muted-foreground">Add new devices individually or in bulk</p>
           </div>
         </div>
       </div>
@@ -330,19 +321,16 @@ function ProvisionPageContent() {
               <div className="flex justify-end gap-2 pt-4">
                 <Button
                   variant="outline"
-                    onClick={() => {
-                      setSerialNumber("");
-                      setProductClass("");
-                      setOui("");
-                      setSinglePreset("");
-                    }}
+                  onClick={() => {
+                    setSerialNumber("");
+                    setProductClass("");
+                    setOui("");
+                    setSinglePreset("");
+                  }}
                 >
                   Clear
                 </Button>
-                <Button
-                  onClick={handleSingleProvision}
-                  disabled={provisionMutation.isPending}
-                >
+                <Button onClick={handleSingleProvision} disabled={provisionMutation.isPending}>
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Provision Device
                 </Button>
@@ -384,12 +372,7 @@ function ProvisionPageContent() {
               <div className="space-y-2">
                 <Label>CSV File</Label>
                 <div className="flex gap-2">
-                  <Input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileUpload}
-                    className="flex-1"
-                  />
+                  <Input type="file" accept=".csv" onChange={handleFileUpload} className="flex-1" />
                   <Button variant="outline" onClick={downloadTemplate}>
                     <Download className="h-4 w-4 mr-2" />
                     Download Template
@@ -453,11 +436,11 @@ function ProvisionPageContent() {
               <div className="flex justify-end gap-2 pt-4">
                 <Button
                   variant="outline"
-                    onClick={() => {
-                      setCsvFile(null);
-                      setCsvPreview([]);
-                      setBulkPreset("");
-                    }}
+                  onClick={() => {
+                    setCsvFile(null);
+                    setCsvPreview([]);
+                    setBulkPreset("");
+                  }}
                   disabled={!csvFile}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -543,9 +526,7 @@ function ProvisionPageContent() {
                                 {err.serialNumber}: {err.error}
                               </li>
                             ))}
-                            {job.errors.length > 3 && (
-                              <li>...and {job.errors.length - 3} more</li>
-                            )}
+                            {job.errors.length > 3 && <li>...and {job.errors.length - 3} more</li>}
                           </ul>
                         </div>
                       )}

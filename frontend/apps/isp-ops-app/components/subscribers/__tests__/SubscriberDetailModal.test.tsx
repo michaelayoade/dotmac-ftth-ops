@@ -18,8 +18,9 @@ jest.mock("@dotmac/features/subscribers", () => ({
 jest.mock("@/hooks/useSubscribers", () => ({
   useSubscriberServices: jest.fn(),
 }));
-const { useSubscriberServices: mockUseSubscriberServices } =
-  jest.requireMock("@/hooks/useSubscribers") as { useSubscriberServices: jest.Mock };
+const { useSubscriberServices: mockUseSubscriberServices } = jest.requireMock(
+  "@/hooks/useSubscribers",
+) as { useSubscriberServices: jest.Mock };
 
 describe("SubscriberDetailModal (App Wrapper)", () => {
   const mockSubscriber = {
@@ -77,13 +78,13 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
           <button onClick={() => onTerminate?.(subscriber!)}>Terminate</button>
           <button onClick={onRefreshServices}>Refresh</button>
         </div>
-      )
+      ),
     );
   });
 
   it("forwards subscriber prop to shared component", () => {
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     expect(screen.getByTestId("has-subscriber")).toHaveTextContent("yes");
@@ -91,7 +92,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
 
   it("forwards open prop to shared component", () => {
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     expect(screen.getByTestId("open")).toHaveTextContent("yes");
@@ -101,7 +102,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
     const onClose = jest.fn();
 
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={onClose} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={onClose} />,
     );
 
     expect(screen.getByTestId("has-close")).toHaveTextContent("yes");
@@ -120,7 +121,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
         open={true}
         onClose={jest.fn()}
         onUpdate={onUpdate}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-update")).toHaveTextContent("yes");
@@ -135,7 +136,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
         open={true}
         onClose={jest.fn()}
         onSuspend={onSuspend}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-suspend")).toHaveTextContent("yes");
@@ -154,7 +155,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
         open={true}
         onClose={jest.fn()}
         onActivate={onActivate}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-activate")).toHaveTextContent("yes");
@@ -173,7 +174,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
         open={true}
         onClose={jest.fn()}
         onTerminate={onTerminate}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-terminate")).toHaveTextContent("yes");
@@ -185,7 +186,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
 
   it("injects services from useSubscriberServices hook", () => {
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     expect(screen.getByTestId("services-count")).toHaveTextContent("2");
@@ -202,7 +203,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
     });
 
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     expect(screen.getByTestId("services-loading")).toHaveTextContent("yes");
@@ -217,7 +218,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
     });
 
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     expect(screen.getByTestId("has-refresh")).toHaveTextContent("yes");
@@ -245,7 +246,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
     });
 
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     expect(screen.getByTestId("services-count")).toHaveTextContent("0");
@@ -253,7 +254,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
 
   it("handles missing optional props gracefully", () => {
     renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     // Component should render fine without onUpdate, onSuspend, onActivate, onTerminate
@@ -287,7 +288,7 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
         onSuspend={onSuspend}
         onActivate={onActivate}
         onTerminate={onTerminate}
-      />
+      />,
     );
 
     expect(mockSharedModal).toHaveBeenCalledWith(
@@ -303,35 +304,31 @@ describe("SubscriberDetailModal (App Wrapper)", () => {
         servicesLoading: false,
         onRefreshServices: mockRefetch,
       }),
-      expect.anything()
+      expect.anything(),
     );
   });
 
   it("updates when subscriber ID changes", () => {
     const { rerender } = renderQuick(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />,
     );
 
     expect(mockUseSubscriberServices).toHaveBeenCalledWith("sub-123");
 
     const newSubscriber = { ...mockSubscriber, id: "sub-456" };
-    rerender(
-      <SubscriberDetailModal subscriber={newSubscriber} open={true} onClose={jest.fn()} />
-    );
+    rerender(<SubscriberDetailModal subscriber={newSubscriber} open={true} onClose={jest.fn()} />);
 
     expect(mockUseSubscriberServices).toHaveBeenCalledWith("sub-456");
   });
 
   it("handles subscriber changing from null to valid", () => {
     const { rerender } = renderQuick(
-      <SubscriberDetailModal subscriber={null} open={true} onClose={jest.fn()} />
+      <SubscriberDetailModal subscriber={null} open={true} onClose={jest.fn()} />,
     );
 
     expect(mockUseSubscriberServices).toHaveBeenCalledWith(null);
 
-    rerender(
-      <SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />
-    );
+    rerender(<SubscriberDetailModal subscriber={mockSubscriber} open={true} onClose={jest.fn()} />);
 
     expect(mockUseSubscriberServices).toHaveBeenCalledWith("sub-123");
   });

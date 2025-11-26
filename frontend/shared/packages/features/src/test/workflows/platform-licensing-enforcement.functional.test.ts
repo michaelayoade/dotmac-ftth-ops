@@ -64,15 +64,13 @@ describe("Platform: Licensing Enforcement", () => {
       const professionalPlan = createProfessionalPlan(); // Has analytics
 
       // Starter plan should NOT have analytics module
-      const starterHasAnalytics = starterPlan.modules?.some(
-        m => m.module_id === "mod_analytics"
-      ) || false;
+      const starterHasAnalytics =
+        starterPlan.modules?.some((m) => m.module_id === "mod_analytics") || false;
       expect(starterHasAnalytics).toBe(false);
 
       // Professional plan SHOULD have analytics module
-      const professionalHasAnalytics = professionalPlan.modules?.some(
-        m => m.module_id === "mod_analytics"
-      ) || false;
+      const professionalHasAnalytics =
+        professionalPlan.modules?.some((m) => m.module_id === "mod_analytics") || false;
       expect(professionalHasAnalytics).toBe(true);
     });
 
@@ -91,7 +89,7 @@ describe("Platform: Licensing Enforcement", () => {
       // Business logic: Module access requires ACTIVE subscription
       const canAccessModule = (sub: TenantSubscription, moduleId: string) => {
         if (sub.status !== "ACTIVE" && sub.status !== "TRIAL") return false;
-        return sub.modules?.some(m => m.module_id === moduleId && m.enabled) || false;
+        return sub.modules?.some((m) => m.module_id === moduleId && m.enabled) || false;
       };
 
       expect(canAccessModule(subscription, module.id)).toBe(true);
@@ -150,7 +148,7 @@ describe("Platform: Licensing Enforcement", () => {
         createMockModule({ category: "ANALYTICS" }),
       ];
 
-      const billingModules = modules.filter(m => m.category === "BILLING");
+      const billingModules = modules.filter((m) => m.category === "BILLING");
       expect(billingModules.length).toBe(2);
     });
   });
@@ -172,7 +170,7 @@ describe("Platform: Licensing Enforcement", () => {
 
       // Business logic: Cannot enable advanced module without core
       const canEnableAdvanced = (enabledModules: string[], dependencies: string[]) => {
-        return dependencies.every(dep => enabledModules.includes(dep));
+        return dependencies.every((dep) => enabledModules.includes(dep));
       };
 
       expect(canEnableAdvanced([coreModule.module_code], advancedModule.dependencies)).toBe(true);
@@ -223,7 +221,12 @@ describe("Platform: Licensing Enforcement", () => {
       const hasFeature = (planId: string, feature: string) => {
         const featureMap: Record<string, string[]> = {
           plan_starter: ["basic_billing", "customer_management"],
-          plan_professional: ["basic_billing", "customer_management", "advanced_analytics", "api_access"],
+          plan_professional: [
+            "basic_billing",
+            "customer_management",
+            "advanced_analytics",
+            "api_access",
+          ],
         };
         return featureMap[planId]?.includes(feature) || false;
       };
@@ -336,7 +339,7 @@ describe("Platform: Licensing Enforcement", () => {
       // Business logic: Disable but keep in list
       const updatedSubscription: TenantSubscription = {
         ...subscription,
-        modules: subscription.modules.map(m => ({
+        modules: subscription.modules.map((m) => ({
           ...m,
           enabled: false,
         })),
@@ -377,26 +380,29 @@ describe("Platform: Licensing Enforcement", () => {
 
       const updatedSubscription: TenantSubscription = {
         ...subscription,
-        modules: modulesToAdd.map((mod, idx) => ({
-          id: `sm_${idx}`,
-          module_id: mod.id,
-          enabled: true,
-        } as SubscriptionModule)),
+        modules: modulesToAdd.map(
+          (mod, idx) =>
+            ({
+              id: `sm_${idx}`,
+              module_id: mod.id,
+              enabled: true,
+            }) as SubscriptionModule,
+        ),
       };
 
       expect(updatedSubscription.modules.length).toBe(3);
-      expect(updatedSubscription.modules.every(m => m.enabled)).toBe(true);
+      expect(updatedSubscription.modules.every((m) => m.enabled)).toBe(true);
     });
 
     it("should validate all module dependencies before bulk activation", () => {
       const coreModule = createCoreModule({ module_code: "CORE" });
       const module1 = createPremiumModule({
         module_code: "MODULE_1",
-        dependencies: ["CORE"]
+        dependencies: ["CORE"],
       });
       const module2 = createPremiumModule({
         module_code: "MODULE_2",
-        dependencies: ["CORE", "MODULE_1"]
+        dependencies: ["CORE", "MODULE_1"],
       });
 
       // Business logic: Validate dependency chain
@@ -404,7 +410,7 @@ describe("Platform: Licensing Enforcement", () => {
         const allModuleCodes = [...toEnable];
 
         for (const moduleCode of toEnable) {
-          const module = modules.find(m => m.module_code === moduleCode);
+          const module = modules.find((m) => m.module_code === moduleCode);
           if (!module) continue;
 
           for (const dep of module.dependencies) {

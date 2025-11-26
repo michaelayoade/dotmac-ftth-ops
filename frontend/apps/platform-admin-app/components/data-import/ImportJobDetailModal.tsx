@@ -1,32 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@dotmac/ui";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  Download,
-  FileText,
-  XCircle,
-} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { AlertTriangle, CheckCircle2, Clock, Download, FileText, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useDataImport } from "@/hooks/useDataImport";
 import { FailureViewer } from "./FailureViewer";
@@ -37,11 +18,7 @@ interface ImportJobDetailModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ImportJobDetailModal({
-  jobId,
-  open,
-  onOpenChange,
-}: ImportJobDetailModalProps) {
+export function ImportJobDetailModal({ jobId, open, onOpenChange }: ImportJobDetailModalProps) {
   const { useImportJob, useImportJobStatus, downloadFailures } = useDataImport();
   const { data: job } = useImportJob(jobId);
   const { data: status } = useImportJobStatus(jobId);
@@ -71,9 +48,7 @@ export function ImportJobDetailModal({
             Import Job Details
             <Badge variant="outline">{job.job_type}</Badge>
           </DialogTitle>
-          <DialogDescription>
-            Job ID: {job.id}
-          </DialogDescription>
+          <DialogDescription>Job ID: {job.id}</DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -101,8 +76,8 @@ export function ImportJobDetailModal({
                         job.status === "completed"
                           ? "secondary"
                           : job.status === "failed"
-                          ? "destructive"
-                          : "outline"
+                            ? "destructive"
+                            : "outline"
                       }
                       className="mt-1"
                     >
@@ -275,7 +250,8 @@ export function ImportJobDetailModal({
                   <div>
                     <CardTitle>Failed Records</CardTitle>
                     <CardDescription>
-                      {job.failed_records} record{job.failed_records !== 1 ? "s" : ""} failed to import
+                      {job.failed_records} record{job.failed_records !== 1 ? "s" : ""} failed to
+                      import
                     </CardDescription>
                   </div>
                   {job.failed_records > 0 && (

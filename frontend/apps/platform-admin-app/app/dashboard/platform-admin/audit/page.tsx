@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import {
-  Shield,
-  BarChart3,
-} from "lucide-react";
+import { Shield, BarChart3 } from "lucide-react";
 import { AuditLogViewer } from "../components/AuditLogViewer";
 import { AuditSummaryDashboard } from "../components/AuditSummaryDashboard";
 

@@ -189,12 +189,16 @@ export default function CustomerServicePage() {
             >
               {plan.recommended && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge variant="outline" className="bg-primary">Recommended</Badge>
+                  <Badge variant="outline" className="bg-primary">
+                    Recommended
+                  </Badge>
                 </div>
               )}
               {plan.current && (
                 <div className="absolute -top-3 right-4">
-                  <Badge variant="outline" className="bg-green-500">Current Plan</Badge>
+                  <Badge variant="outline" className="bg-green-500">
+                    Current Plan
+                  </Badge>
                 </div>
               )}
 

@@ -168,7 +168,8 @@ export function useLogs(filters: LogsFilter = {}) {
     if (axios.isAxiosError(logsQuery.error)) {
       errorMessage = logsQuery.error.response?.data?.detail || "Failed to fetch logs";
     } else if (logsQuery.error instanceof Error) {
-      errorMessage = logsQuery.error.message === "Network error" ? "An error occurred" : logsQuery.error.message;
+      errorMessage =
+        logsQuery.error.message === "Network error" ? "An error occurred" : logsQuery.error.message;
     } else {
       errorMessage = "An error occurred";
     }

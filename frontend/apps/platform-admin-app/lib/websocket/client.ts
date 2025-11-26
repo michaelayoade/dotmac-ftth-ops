@@ -278,7 +278,10 @@ export class WebSocketClient {
   private buildUrl(): string {
     // Fall back to the base URL if URL parsing fails (e.g. SSR without window)
     try {
-      const url = new URL(this.baseUrl, typeof window !== "undefined" ? window.location.origin : undefined);
+      const url = new URL(
+        this.baseUrl,
+        typeof window !== "undefined" ? window.location.origin : undefined,
+      );
       if (this.token) {
         url.searchParams.set("token", this.token);
       }
@@ -300,8 +303,8 @@ export class WebSocketClient {
         // Send ping
         this.send({ event: "ping" });
 
-          // Set timeout for pong response
-          this.pongTimeout = setTimeout(() => {
+        // Set timeout for pong response
+        this.pongTimeout = setTimeout(() => {
           logger.warn("No pong received, connection may be stale. Reconnecting...");
           this.ws?.close(); // This will trigger handleClose which handles reconnection
         }, this.pongWaitTime);

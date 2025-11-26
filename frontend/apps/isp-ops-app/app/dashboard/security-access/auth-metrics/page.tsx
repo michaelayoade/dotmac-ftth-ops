@@ -41,7 +41,9 @@ export default function AuthMetricsPage() {
         {Object.entries(obj).map(([key, value]) => (
           <div key={key} className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{key}</span>
-            <span className="font-medium">{typeof value === "object" ? JSON.stringify(value) : String(value)}</span>
+            <span className="font-medium">
+              {typeof value === "object" ? JSON.stringify(value) : String(value)}
+            </span>
           </div>
         ))}
       </div>
@@ -55,7 +57,9 @@ export default function AuthMetricsPage() {
           <Activity className="h-6 w-6 text-blue-500" />
           <div>
             <h1 className="text-2xl font-semibold">Auth Metrics</h1>
-            <p className="text-sm text-muted-foreground">Login activity, MFA status, and API key usage.</p>
+            <p className="text-sm text-muted-foreground">
+              Login activity, MFA status, and API key usage.
+            </p>
           </div>
         </div>
 
@@ -66,7 +70,13 @@ export default function AuthMetricsPage() {
             <CardHeader>
               <CardTitle>Authentication Metrics</CardTitle>
             </CardHeader>
-            <CardContent>{loading ? <p className="text-sm text-muted-foreground">Loading...</p> : renderKV(metrics)}</CardContent>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              ) : (
+                renderKV(metrics)
+              )}
+            </CardContent>
           </Card>
 
           <Card>
@@ -74,7 +84,13 @@ export default function AuthMetricsPage() {
               <CardTitle>API Key Metrics</CardTitle>
               <Badge variant="outline">Tenant</Badge>
             </CardHeader>
-            <CardContent>{loading ? <p className="text-sm text-muted-foreground">Loading...</p> : renderKV(apiKeyMetrics)}</CardContent>
+            <CardContent>
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              ) : (
+                renderKV(apiKeyMetrics)
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>

@@ -19,13 +19,7 @@ import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { platformAdminService } from "@/lib/services/platform-admin-service";
 import { useToast } from "@dotmac/ui";
 interface AuditAction {
@@ -53,7 +47,7 @@ const ITEMS_PER_PAGE = 15;
 export default function UserActivityLogPage() {
   const params = useParams();
   const router = useRouter();
-  const userId = params['userId'] as string;
+  const userId = params["userId"] as string;
   const { toast } = useToast();
 
   const [allActions, setAllActions] = useState<AuditAction[]>([]);

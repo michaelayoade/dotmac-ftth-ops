@@ -278,7 +278,7 @@ export default function PartnerCustomerManagement({
                     e.target.value ? parseFloat(e.target.value) / 100 : undefined,
                   )
                 }
-                placeholder="Leave empty to use partner&apos;s default rate"
+                placeholder="Leave empty to use partner's default rate"
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <p className="text-xs text-muted-foreground mt-1">

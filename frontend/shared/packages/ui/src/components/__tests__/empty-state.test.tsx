@@ -215,7 +215,7 @@ describe("EmptyState", () => {
       render(
         <EmptyState title="No items">
           <div>Custom content</div>
-        </EmptyState>
+        </EmptyState>,
       );
 
       expect(screen.getByText("Custom content")).toBeInTheDocument();
@@ -227,7 +227,7 @@ describe("EmptyState", () => {
       render(
         <EmptyState title="No items" action={action}>
           <div>Custom content</div>
-        </EmptyState>
+        </EmptyState>,
       );
 
       expect(screen.getByText("Custom content")).toBeInTheDocument();
@@ -288,18 +288,14 @@ describe("EmptyState.List", () => {
       render(<EmptyState.List entityName="Users" />);
 
       expect(screen.getByText("No Users found")).toBeInTheDocument();
-      expect(
-        screen.getByText("Get started by creating your first users.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Get started by creating your first users.")).toBeInTheDocument();
     });
 
     it("renders with custom entity name", () => {
       render(<EmptyState.List entityName="Projects" />);
 
       expect(screen.getByText("No Projects found")).toBeInTheDocument();
-      expect(
-        screen.getByText("Get started by creating your first projects.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Get started by creating your first projects.")).toBeInTheDocument();
     });
 
     it("renders without create button when onCreateClick not provided", () => {
@@ -333,7 +329,7 @@ describe("EmptyState.List", () => {
           entityName="Users"
           onCreateClick={onCreateClick}
           createLabel="Add New User"
-        />
+        />,
       );
 
       expect(screen.getByText("Add New User")).toBeInTheDocument();
@@ -348,9 +344,7 @@ describe("EmptyState.List", () => {
     });
 
     it("applies custom className", () => {
-      const { container } = render(
-        <EmptyState.List entityName="Users" className="custom-list" />
-      );
+      const { container } = render(<EmptyState.List entityName="Users" className="custom-list" />);
 
       const emptyState = container.firstChild;
       expect(emptyState).toHaveClass("custom-list");
@@ -364,7 +358,9 @@ describe("EmptyState.Search", () => {
       render(<EmptyState.Search />);
 
       expect(screen.getByText("No results found")).toBeInTheDocument();
-      expect(screen.getByText("Try adjusting your filters or search criteria.")).toBeInTheDocument();
+      expect(
+        screen.getByText("Try adjusting your filters or search criteria."),
+      ).toBeInTheDocument();
     });
 
     it("renders with search term", () => {
@@ -429,13 +425,13 @@ describe("EmptyState.Error", () => {
 
       expect(screen.getByText("Something went wrong")).toBeInTheDocument();
       expect(
-        screen.getByText("We encountered an error loading this content. Please try again.")
+        screen.getByText("We encountered an error loading this content. Please try again."),
       ).toBeInTheDocument();
     });
 
     it("renders custom title and description", () => {
       render(
-        <EmptyState.Error title="Load Failed" description="Unable to load the requested data." />
+        <EmptyState.Error title="Load Failed" description="Unable to load the requested data." />,
       );
 
       expect(screen.getByText("Load Failed")).toBeInTheDocument();
@@ -524,7 +520,7 @@ describe("Real-World Usage Patterns", () => {
         description="There was a problem loading the user list."
         onRetry={onRetry}
         icon={AlertCircle}
-      />
+      />,
     );
 
     expect(screen.getByText("Failed to load users")).toBeInTheDocument();
@@ -544,7 +540,7 @@ describe("Real-World Usage Patterns", () => {
         description="You don't have any messages yet."
         action={{ label: "Compose Message", onClick: onCreate }}
         secondaryAction={{ label: "Learn More", onClick: onLearn }}
-      />
+      />,
     );
 
     await user.click(screen.getByText("Compose Message"));

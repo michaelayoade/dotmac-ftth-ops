@@ -45,7 +45,14 @@ describe("CreateCustomerModal (App Wrapper)", () => {
 
     // Default mock implementation
     mockSharedModal.mockImplementation(
-      ({ onClose, onCustomerCreated, editingCustomer, createCustomer, updateCustomer, loading }) => (
+      ({
+        onClose,
+        onCustomerCreated,
+        editingCustomer,
+        createCustomer,
+        updateCustomer,
+        loading,
+      }) => (
         <div data-testid="shared-modal">
           <div data-testid="has-close">{onClose ? "yes" : "no"}</div>
           <div data-testid="has-created">{onCustomerCreated ? "yes" : "no"}</div>
@@ -56,7 +63,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
           <button onClick={onClose}>Close</button>
           <button onClick={() => onCustomerCreated?.(mockCustomer)}>Save</button>
         </div>
-      )
+      ),
     );
   });
 
@@ -69,7 +76,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={jest.fn()}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-close")).toHaveTextContent("yes");
@@ -88,7 +95,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={onCustomerCreated}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-created")).toHaveTextContent("yes");
@@ -113,7 +120,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         editingCustomer={mockCustomer}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-editing")).toHaveTextContent("yes");
@@ -126,7 +133,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={jest.fn()}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-create-fn")).toHaveTextContent("yes");
@@ -136,7 +143,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
       expect.objectContaining({
         createCustomer: mockCreateCustomer,
       }),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -147,7 +154,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={jest.fn()}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-update-fn")).toHaveTextContent("yes");
@@ -157,7 +164,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
       expect.objectContaining({
         updateCustomer: mockUpdateCustomer,
       }),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -169,7 +176,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
         loading={true}
-      />
+      />,
     );
 
     expect(screen.getByTestId("loading")).toHaveTextContent("yes");
@@ -182,7 +189,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={jest.fn()}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-editing")).toHaveTextContent("no");
@@ -196,7 +203,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={jest.fn()}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     // Component should render fine without loading
@@ -215,7 +222,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
         loading={false}
-      />
+      />,
     );
 
     expect(mockSharedModal).toHaveBeenCalledWith(
@@ -226,7 +233,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         updateCustomer: mockUpdateCustomer,
         loading: false,
       }),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -250,7 +257,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={jest.fn()}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     screen.getByText("Save").click();
@@ -270,7 +277,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         onCustomerCreated={onCustomerCreated}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     screen.getByText("Save").click();
@@ -288,7 +295,7 @@ describe("CreateCustomerModal (App Wrapper)", () => {
         editingCustomer={mockCustomer}
         createCustomer={mockCreateCustomer}
         updateCustomer={mockUpdateCustomer}
-      />
+      />,
     );
 
     screen.getByText("Save").click();

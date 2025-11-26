@@ -106,9 +106,7 @@ describe("TimeTrackingPage", () => {
       </Wrapper>,
     );
 
-    expect(
-      screen.getByText(/couldn't find a technician profile/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/couldn't find a technician profile/i)).toBeInTheDocument();
   });
 
   describe("Clock In/Out", () => {
@@ -117,7 +115,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByText("Clock In")).toBeInTheDocument();
@@ -150,7 +148,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByText("Clock Out")).toBeInTheDocument();
@@ -170,7 +168,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       const clockInButton = screen.getByText("Clock In");
@@ -211,7 +209,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       const clockOutButton = screen.getByText("Clock Out");
@@ -232,7 +230,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByText(/No time entries/i)).toBeInTheDocument();
@@ -280,7 +278,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Status badges should be present (stats card has label "Submitted", entries have badge "Submitted")
@@ -320,7 +318,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByText(/6.5244/)).toBeInTheDocument();
@@ -363,7 +361,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       const submitButton = screen.getByText("Submit");
@@ -401,7 +399,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       // In a real scenario, this would check user role
@@ -453,7 +451,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       // Total hours
@@ -480,7 +478,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByText(/Loading/i)).toBeInTheDocument();
@@ -498,7 +496,7 @@ describe("TimeTrackingPage", () => {
       render(
         <Wrapper>
           <TimeTrackingPage />
-        </Wrapper>
+        </Wrapper>,
       );
 
       expect(screen.getByText(/Error/i)).toBeInTheDocument();

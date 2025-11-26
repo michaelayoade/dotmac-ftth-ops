@@ -9,13 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
@@ -139,9 +133,7 @@ export default function NewRADIUSSubscriberPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold">New RADIUS Subscriber</h1>
-          <p className="text-muted-foreground">
-            Create new RADIUS authentication credentials
-          </p>
+          <p className="text-muted-foreground">Create new RADIUS authentication credentials</p>
         </div>
       </div>
 
@@ -162,9 +154,7 @@ export default function NewRADIUSSubscriberPage() {
                   <Input
                     id="subscriber_id"
                     value={formData.subscriber_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subscriber_id: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, subscriber_id: e.target.value })}
                     placeholder="e.g., SUB001"
                     required
                   />
@@ -177,9 +167,7 @@ export default function NewRADIUSSubscriberPage() {
                   <Input
                     id="username"
                     value={formData.username}
-                    onChange={(e) =>
-                      setFormData({ ...formData, username: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     placeholder="e.g., user@domain.com"
                     required
                   />
@@ -193,9 +181,7 @@ export default function NewRADIUSSubscriberPage() {
                     id="password"
                     type="password"
                     value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Minimum 8 characters"
                     minLength={8}
                     required
@@ -217,8 +203,7 @@ export default function NewRADIUSSubscriberPage() {
                       <SelectItem value="">None</SelectItem>
                       {profiles?.map((profile) => (
                         <SelectItem key={profile.id} value={profile.id}>
-                          {profile.name} ({profile.download_rate}/{profile.upload_rate}{" "}
-                          Mbps)
+                          {profile.name} ({profile.download_rate}/{profile.upload_rate} Mbps)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -236,9 +221,7 @@ export default function NewRADIUSSubscriberPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="framed_ipv4_address">
-                    Framed IPv4 Address
-                  </Label>
+                  <Label htmlFor="framed_ipv4_address">Framed IPv4 Address</Label>
                   <Input
                     id="framed_ipv4_address"
                     value={formData.framed_ipv4_address}
@@ -253,9 +236,7 @@ export default function NewRADIUSSubscriberPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="framed_ipv6_address">
-                    Framed IPv6 Address
-                  </Label>
+                  <Label htmlFor="framed_ipv6_address">Framed IPv6 Address</Label>
                   <Input
                     id="framed_ipv6_address"
                     value={formData.framed_ipv6_address}
@@ -270,9 +251,7 @@ export default function NewRADIUSSubscriberPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="delegated_ipv6_prefix">
-                    Delegated IPv6 Prefix
-                  </Label>
+                  <Label htmlFor="delegated_ipv6_prefix">Delegated IPv6 Prefix</Label>
                   <Input
                     id="delegated_ipv6_prefix"
                     value={formData.delegated_ipv6_prefix}
@@ -302,9 +281,7 @@ export default function NewRADIUSSubscriberPage() {
                     id="session_timeout"
                     type="number"
                     value={formData.session_timeout}
-                    onChange={(e) =>
-                      setFormData({ ...formData, session_timeout: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, session_timeout: e.target.value })}
                     placeholder="e.g., 3600 (leave empty for unlimited)"
                     min="1"
                   />
@@ -316,9 +293,7 @@ export default function NewRADIUSSubscriberPage() {
                     id="idle_timeout"
                     type="number"
                     value={formData.idle_timeout}
-                    onChange={(e) =>
-                      setFormData({ ...formData, idle_timeout: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, idle_timeout: e.target.value })}
                     placeholder="e.g., 600 (leave empty for unlimited)"
                     min="1"
                   />

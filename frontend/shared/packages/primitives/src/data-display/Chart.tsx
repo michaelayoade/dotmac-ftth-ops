@@ -21,12 +21,14 @@ const RechartsPieChart =
   Recharts.PieChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
 const CartesianGrid =
   Recharts.CartesianGrid ?? (() => <div data-testid="cartesian-grid-fallback" />);
-const XAxis = Recharts.XAxis ?? (({ dataKey }: { dataKey?: string }) => (
-  <div data-testid="x-axis-fallback" data-key={dataKey} />
-));
-const YAxis = Recharts.YAxis ?? (({ domain }: { domain?: unknown }) => (
-  <div data-testid="y-axis-fallback" data-domain={domain} />
-));
+const XAxis =
+  Recharts.XAxis ??
+  (({ dataKey }: { dataKey?: string }) => <div data-testid="x-axis-fallback" data-key={dataKey} />);
+const YAxis =
+  Recharts.YAxis ??
+  (({ domain }: { domain?: unknown }) => (
+    <div data-testid="y-axis-fallback" data-domain={domain} />
+  ));
 const Tooltip = Recharts.Tooltip ?? (() => <div data-testid="tooltip-fallback" />);
 const Legend = Recharts.Legend ?? (() => <div data-testid="legend-fallback" />);
 const Line =
@@ -341,12 +343,7 @@ export function BarChart({
           {showLegend ? <Legend /> : null}
 
           {bars.map(({ key, fill, stackId }) => (
-            <Bar
-              key={key}
-              dataKey={key}
-              fill={fill}
-              {...(stackId ? { stackId } : {})}
-            />
+            <Bar key={key} dataKey={key} fill={fill} {...(stackId ? { stackId } : {})} />
           ))}
         </RechartsBarChart>
       </ResponsiveContainer>

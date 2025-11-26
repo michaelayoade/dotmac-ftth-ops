@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   ShoppingCart,
   Search,
@@ -82,17 +76,20 @@ function SalesOrdersPageContent() {
   const apiBaseUrl = api.baseUrl || "";
 
   // Fetch orders
-  const { data: orders = [], isLoading, refetch } = useQuery<Order[]>({
+  const {
+    data: orders = [],
+    isLoading,
+    refetch,
+  } = useQuery<Order[]>({
     queryKey: ["sales-orders", statusFilter, searchQuery, apiBaseUrl],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (searchQuery) params.append("customer_email", searchQuery);
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch orders");
       return response.json();
     },
@@ -102,10 +99,9 @@ function SalesOrdersPageContent() {
   const { data: stats } = useQuery<OrderStats>({
     queryKey: ["sales-stats", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders/stats/summary`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders/stats/summary`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
     },
@@ -114,13 +110,10 @@ function SalesOrdersPageContent() {
   // Process order mutation
   const processMutation = useMutation({
     mutationFn: async (orderId: number) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders/${orderId}/process`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders/${orderId}/process`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to process order");
       return response.json();
     },
@@ -141,13 +134,10 @@ function SalesOrdersPageContent() {
   // Cancel order mutation
   const cancelMutation = useMutation({
     mutationFn: async (orderId: number) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders/${orderId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders/${orderId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to cancel order");
       return response.json();
     },
@@ -345,10 +335,7 @@ function SalesOrdersPageContent() {
                     <Package className="h-8 w-8 text-primary" />
                     <div>
                       <CardTitle className="text-lg">
-                        <Link
-                          href={`/dashboard/sales/${order.id}`}
-                          className="hover:underline"
-                        >
+                        <Link href={`/dashboard/sales/${order.id}`} className="hover:underline">
                           {order.order_number}
                         </Link>
                       </CardTitle>

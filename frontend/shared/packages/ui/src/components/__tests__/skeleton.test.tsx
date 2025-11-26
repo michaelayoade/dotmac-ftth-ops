@@ -7,12 +7,7 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
 
-import {
-  Skeleton,
-  SkeletonCard,
-  SkeletonMetricCard,
-  SkeletonTable,
-} from "../skeleton";
+import { Skeleton, SkeletonCard, SkeletonMetricCard, SkeletonTable } from "../skeleton";
 
 describe("Skeleton", () => {
   describe("Basic Rendering", () => {
@@ -37,9 +32,7 @@ describe("Skeleton", () => {
     });
 
     it("renders with custom className", () => {
-      render(
-        <Skeleton className="custom-skeleton" data-testid="skeleton" />
-      );
+      render(<Skeleton className="custom-skeleton" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("custom-skeleton");
@@ -48,36 +41,28 @@ describe("Skeleton", () => {
 
   describe("Variants", () => {
     it("renders default variant", () => {
-      render(
-        <Skeleton variant="default" data-testid="skeleton" />
-      );
+      render(<Skeleton variant="default" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("rounded-lg");
     });
 
     it("renders text variant with smaller height", () => {
-      render(
-        <Skeleton variant="text" data-testid="skeleton" />
-      );
+      render(<Skeleton variant="text" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("h-4", "rounded");
     });
 
     it("renders circular variant", () => {
-      render(
-        <Skeleton variant="circular" data-testid="skeleton" />
-      );
+      render(<Skeleton variant="circular" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("rounded-full");
     });
 
     it("renders rectangular variant", () => {
-      render(
-        <Skeleton variant="rectangular" data-testid="skeleton" />
-      );
+      render(<Skeleton variant="rectangular" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("rounded-md");
@@ -105,7 +90,7 @@ describe("Skeleton", () => {
           <Skeleton variant="default" data-testid="default" />
           <Skeleton variant="circular" data-testid="circular" />
           <Skeleton variant="rectangular" data-testid="rectangular" />
-        </div>
+        </div>,
       );
 
       expect(screen.getByTestId("default")).toHaveClass("animate-pulse");
@@ -140,9 +125,7 @@ describe("Skeleton", () => {
 
   describe("HTML Attributes", () => {
     it("forwards data attributes", () => {
-      render(
-        <Skeleton data-testid="custom-skeleton" data-custom="value" />
-      );
+      render(<Skeleton data-testid="custom-skeleton" data-custom="value" />);
 
       const skeleton = screen.getByTestId("custom-skeleton");
       expect(skeleton).toHaveAttribute("data-custom", "value");
@@ -302,7 +285,7 @@ describe("Skeleton", () => {
           <Skeleton className="h-12 w-12 rounded-full" />
           <Skeleton className="h-4 w-[250px]" />
           <Skeleton className="h-4 w-[200px]" />
-        </div>
+        </div>,
       );
 
       const skeletons = document.querySelectorAll(".animate-pulse");
@@ -317,7 +300,7 @@ describe("Skeleton", () => {
             <Skeleton className="h-4 w-[250px]" />
             <Skeleton className="h-4 w-[200px]" />
           </div>
-        </div>
+        </div>,
       );
 
       const circularSkeleton = document.querySelector(".rounded-full");
@@ -334,7 +317,7 @@ describe("Skeleton", () => {
           <Skeleton className="h-8 w-full" />
           <Skeleton className="h-8 w-full" />
           <Skeleton className="h-8 w-full" />
-        </div>
+        </div>,
       );
 
       const skeletons = document.querySelectorAll(".animate-pulse");
@@ -353,7 +336,7 @@ describe("Skeleton", () => {
             <Skeleton className="h-10 w-full" />
           </div>
           <Skeleton className="h-10 w-[120px]" />
-        </div>
+        </div>,
       );
 
       const skeletons = document.querySelectorAll(".animate-pulse");
@@ -366,7 +349,7 @@ describe("Skeleton", () => {
           <SkeletonMetricCard />
           <SkeletonMetricCard />
           <SkeletonMetricCard />
-        </div>
+        </div>,
       );
 
       const cards = document.querySelectorAll(".rounded-lg.border");
@@ -387,7 +370,7 @@ describe("Skeleton", () => {
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
-        </div>
+        </div>,
       );
 
       const cards = document.querySelectorAll(".rounded-lg.border");
@@ -402,7 +385,7 @@ describe("Skeleton", () => {
           <Skeleton variant="circular" data-testid="circular" />
           <Skeleton variant="text" data-testid="text" />
           <Skeleton variant="rectangular" data-testid="rectangular" />
-        </div>
+        </div>,
       );
 
       expect(screen.getByTestId("circular")).toHaveClass("rounded-full");
@@ -418,7 +401,7 @@ describe("Skeleton", () => {
             <Skeleton className="h-4" />
             <Skeleton className="h-4 w-3/4" />
           </div>
-        </div>
+        </div>,
       );
 
       const skeletons = document.querySelectorAll(".animate-pulse");
@@ -431,7 +414,7 @@ describe("Skeleton", () => {
           <Skeleton className="h-20" />
           <Skeleton className="h-20" />
           <Skeleton className="h-20" />
-        </div>
+        </div>,
       );
 
       const skeletons = document.querySelectorAll(".animate-pulse");
@@ -441,9 +424,7 @@ describe("Skeleton", () => {
 
   describe("Accessibility", () => {
     it("can have aria-label for screen readers", () => {
-      const { container } = render(
-        <Skeleton aria-label="Loading user profile" />
-      );
+      const { container } = render(<Skeleton aria-label="Loading user profile" />);
 
       const skeleton = container.firstChild as HTMLElement;
       expect(skeleton).toHaveAttribute("aria-label", "Loading user profile");
@@ -468,7 +449,7 @@ describe("Skeleton", () => {
         <div>
           <span className="sr-only">Loading content...</span>
           <Skeleton />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Loading content...")).toBeInTheDocument();
@@ -477,36 +458,28 @@ describe("Skeleton", () => {
 
   describe("Customization", () => {
     it("supports custom width and height", () => {
-      render(
-        <Skeleton className="h-20 w-64" data-testid="skeleton" />
-      );
+      render(<Skeleton className="h-20 w-64" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("h-20", "w-64");
     });
 
     it("supports custom colors via className", () => {
-      render(
-        <Skeleton className="bg-gray-300" data-testid="skeleton" />
-      );
+      render(<Skeleton className="bg-gray-300" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("bg-gray-300");
     });
 
     it("supports custom border radius", () => {
-      render(
-        <Skeleton className="rounded-xl" data-testid="skeleton" />
-      );
+      render(<Skeleton className="rounded-xl" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("rounded-xl");
     });
 
     it("can disable animation via className override", () => {
-      render(
-        <Skeleton className="animate-none" data-testid="skeleton" />
-      );
+      render(<Skeleton className="animate-none" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("animate-none");
@@ -536,13 +509,7 @@ describe("Skeleton", () => {
     });
 
     it("maintains styles when combining multiple classNames", () => {
-      render(
-        <Skeleton
-          variant="circular"
-          className="h-16 w-16 border-2"
-          data-testid="skeleton"
-        />
-      );
+      render(<Skeleton variant="circular" className="h-16 w-16 border-2" data-testid="skeleton" />);
 
       const skeleton = screen.getByTestId("skeleton");
       expect(skeleton).toHaveClass("rounded-full", "h-16", "w-16", "border-2");

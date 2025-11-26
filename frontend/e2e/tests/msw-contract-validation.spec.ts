@@ -62,8 +62,10 @@ function assertIntegrationsContract(payload: IntegrationsResponse) {
     throw new Error("Response must include numeric total");
   }
   payload.integrations.forEach((integration, index) => {
-    if (typeof integration.name !== "string") throw new Error(`integration[${index}]: name must be string`);
-    if (typeof integration.type !== "string") throw new Error(`integration[${index}]: type must be string`);
+    if (typeof integration.name !== "string")
+      throw new Error(`integration[${index}]: name must be string`);
+    if (typeof integration.type !== "string")
+      throw new Error(`integration[${index}]: type must be string`);
     if (typeof integration.provider !== "string")
       throw new Error(`integration[${index}]: provider must be string`);
     if (typeof integration.enabled !== "boolean")

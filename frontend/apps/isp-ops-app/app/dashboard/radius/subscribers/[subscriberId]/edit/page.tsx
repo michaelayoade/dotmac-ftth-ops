@@ -9,13 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
@@ -43,7 +37,7 @@ export default function EditRADIUSSubscriberPage() {
   const params = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const subscriberId = decodeURIComponent(params['subscriberId'] as string);
+  const subscriberId = decodeURIComponent(params["subscriberId"] as string);
 
   const [formData, setFormData] = useState({
     password: "",
@@ -56,22 +50,19 @@ export default function EditRADIUSSubscriberPage() {
   });
 
   // Fetch subscriber details
-  const { data: subscriber, isLoading: subscriberLoading } =
-    useQuery<RADIUSSubscriber>({
-      queryKey: ["radius-subscriber", subscriberId],
-      queryFn: async () => {
-        try {
-          const response = await apiClient.get(
-            `/radius/subscribers/${subscriberId}`
-          );
-          return response.data;
-        } catch (error) {
-          logger.error("Failed to fetch subscriber", { error });
-          throw error;
-        }
-      },
-      enabled: !!subscriberId,
-    });
+  const { data: subscriber, isLoading: subscriberLoading } = useQuery<RADIUSSubscriber>({
+    queryKey: ["radius-subscriber", subscriberId],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get(`/radius/subscribers/${subscriberId}`);
+        return response.data;
+      } catch (error) {
+        logger.error("Failed to fetch subscriber", { error });
+        throw error;
+      }
+    },
+    enabled: !!subscriberId,
+  });
 
   // Fetch bandwidth profiles
   const { data: profiles } = useQuery<BandwidthProfile[]>({
@@ -98,12 +89,8 @@ export default function EditRADIUSSubscriberPage() {
         framed_ipv4_address: subscriber.framed_ipv4_address || "",
         framed_ipv6_address: subscriber.framed_ipv6_address || "",
         delegated_ipv6_prefix: subscriber.delegated_ipv6_prefix || "",
-        session_timeout: subscriber.session_timeout
-          ? String(subscriber.session_timeout)
-          : "",
-        idle_timeout: subscriber.idle_timeout
-          ? String(subscriber.idle_timeout)
-          : "",
+        session_timeout: subscriber.session_timeout ? String(subscriber.session_timeout) : "",
+        idle_timeout: subscriber.idle_timeout ? String(subscriber.idle_timeout) : "",
       });
     }
   }, [subscriber]);
@@ -111,10 +98,7 @@ export default function EditRADIUSSubscriberPage() {
   // Update subscriber mutation
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiClient.patch(
-        `/radius/subscribers/${subscriberId}`,
-        data
-      );
+      const response = await apiClient.patch(`/radius/subscribers/${subscriberId}`, data);
       return response.data;
     },
     onSuccess: () => {
@@ -158,10 +142,7 @@ export default function EditRADIUSSubscriberPage() {
       apiData.framed_ipv6_address = formData.framed_ipv6_address || null;
     }
 
-    if (
-      formData.delegated_ipv6_prefix !==
-      (subscriber?.delegated_ipv6_prefix || "")
-    ) {
+    if (formData.delegated_ipv6_prefix !== (subscriber?.delegated_ipv6_prefix || "")) {
       apiData.delegated_ipv6_prefix = formData.delegated_ipv6_prefix || null;
     }
 
@@ -172,9 +153,7 @@ export default function EditRADIUSSubscriberPage() {
       apiData.session_timeout = newSessionTimeout;
     }
 
-    const newIdleTimeout = formData.idle_timeout
-      ? parseInt(formData.idle_timeout, 10)
-      : null;
+    const newIdleTimeout = formData.idle_timeout ? parseInt(formData.idle_timeout, 10) : null;
     if (newIdleTimeout !== (subscriber?.idle_timeout || null)) {
       apiData.idle_timeout = newIdleTimeout;
     }
@@ -241,17 +220,13 @@ export default function EditRADIUSSubscriberPage() {
                 <div className="space-y-2">
                   <Label>Subscriber ID</Label>
                   <Input value={subscriber.subscriber_id} disabled />
-                  <p className="text-xs text-muted-foreground">
-                    Cannot be changed
-                  </p>
+                  <p className="text-xs text-muted-foreground">Cannot be changed</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Username</Label>
                   <Input value={subscriber?.username || ""} disabled />
-                  <p className="text-xs text-muted-foreground">
-                    Cannot be changed
-                  </p>
+                  <p className="text-xs text-muted-foreground">Cannot be changed</p>
                 </div>
 
                 <div className="space-y-2">
@@ -260,9 +235,7 @@ export default function EditRADIUSSubscriberPage() {
                     id="password"
                     type="password"
                     value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="Leave empty to keep current password"
                     minLength={8}
                   />
@@ -286,8 +259,7 @@ export default function EditRADIUSSubscriberPage() {
                       <SelectItem value="">None</SelectItem>
                       {profiles?.map((profile) => (
                         <SelectItem key={profile.id} value={profile.id}>
-                          {profile.name} ({profile.download_rate}/{profile.upload_rate}{" "}
-                          Kbps)
+                          {profile.name} ({profile.download_rate}/{profile.upload_rate} Kbps)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -305,9 +277,7 @@ export default function EditRADIUSSubscriberPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="framed_ipv4_address">
-                    Framed IPv4 Address
-                  </Label>
+                  <Label htmlFor="framed_ipv4_address">Framed IPv4 Address</Label>
                   <Input
                     id="framed_ipv4_address"
                     value={formData.framed_ipv4_address}
@@ -322,9 +292,7 @@ export default function EditRADIUSSubscriberPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="framed_ipv6_address">
-                    Framed IPv6 Address
-                  </Label>
+                  <Label htmlFor="framed_ipv6_address">Framed IPv6 Address</Label>
                   <Input
                     id="framed_ipv6_address"
                     value={formData.framed_ipv6_address}
@@ -339,9 +307,7 @@ export default function EditRADIUSSubscriberPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="delegated_ipv6_prefix">
-                    Delegated IPv6 Prefix
-                  </Label>
+                  <Label htmlFor="delegated_ipv6_prefix">Delegated IPv6 Prefix</Label>
                   <Input
                     id="delegated_ipv6_prefix"
                     value={formData.delegated_ipv6_prefix}
@@ -371,9 +337,7 @@ export default function EditRADIUSSubscriberPage() {
                     id="session_timeout"
                     type="number"
                     value={formData.session_timeout}
-                    onChange={(e) =>
-                      setFormData({ ...formData, session_timeout: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, session_timeout: e.target.value })}
                     placeholder="e.g., 3600 (leave empty for unlimited)"
                     min="1"
                   />
@@ -385,9 +349,7 @@ export default function EditRADIUSSubscriberPage() {
                     id="idle_timeout"
                     type="number"
                     value={formData.idle_timeout}
-                    onChange={(e) =>
-                      setFormData({ ...formData, idle_timeout: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, idle_timeout: e.target.value })}
                     placeholder="e.g., 600 (leave empty for unlimited)"
                     min="1"
                   />

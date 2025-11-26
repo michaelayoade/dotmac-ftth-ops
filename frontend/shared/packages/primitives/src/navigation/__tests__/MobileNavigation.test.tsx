@@ -6,14 +6,7 @@
  */
 
 import React from "react";
-import {
-  render,
-  renderA11y,
-  renderComprehensive,
-  screen,
-  fireEvent,
-  waitFor,
-} from "../../testing";
+import { render, renderA11y, renderComprehensive, screen, fireEvent, waitFor } from "../../testing";
 import { MobileNavigation } from "../MobileNavigation";
 
 // Mock focus trap hook
@@ -296,7 +289,7 @@ describe("MobileNavigation", () => {
 
     it("applies correct badge styling for active items", () => {
       render(
-        <MobileNavigation items={nestedItems} currentPath="/reports" onNavigate={mockNavigate} />
+        <MobileNavigation items={nestedItems} currentPath="/reports" onNavigate={mockNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -338,7 +331,14 @@ describe("MobileNavigation", () => {
         { id: "5", label: "Blog", href: "/blog" },
       ];
 
-      render(<MobileNavigation items={manyItems} currentPath="/" onNavigate={mockNavigate} variant="tabs" />);
+      render(
+        <MobileNavigation
+          items={manyItems}
+          currentPath="/"
+          onNavigate={mockNavigate}
+          variant="tabs"
+        />,
+      );
 
       expect(screen.getByTestId("chevron-down")).toBeInTheDocument();
       expect(screen.getByText("More navigation")).toBeInTheDocument();
@@ -351,7 +351,14 @@ describe("MobileNavigation", () => {
         { id: "5", label: "Blog", href: "/blog" },
       ];
 
-      render(<MobileNavigation items={manyItems} currentPath="/" onNavigate={mockNavigate} variant="tabs" />);
+      render(
+        <MobileNavigation
+          items={manyItems}
+          currentPath="/"
+          onNavigate={mockNavigate}
+          variant="tabs"
+        />,
+      );
 
       // First 4 items (Home, About, Services, Contact) should be visible directly
       expect(screen.getByText("Contact")).toBeInTheDocument();
@@ -385,7 +392,14 @@ describe("MobileNavigation", () => {
         { id: "5", label: "Blog", href: "/blog" },
       ];
 
-      render(<MobileNavigation items={manyItems} currentPath="/" onNavigate={mockNavigate} variant="tabs" />);
+      render(
+        <MobileNavigation
+          items={manyItems}
+          currentPath="/"
+          onNavigate={mockNavigate}
+          variant="tabs"
+        />,
+      );
 
       // Open overflow menu
       const moreButton = screen.getByLabelText("More navigation");
@@ -401,14 +415,28 @@ describe("MobileNavigation", () => {
 
   describe("Accordion Variant", () => {
     it("renders accordion navigation", () => {
-      render(<MobileNavigation items={nestedItems} currentPath="/" onNavigate={mockNavigate} variant="accordion" />);
+      render(
+        <MobileNavigation
+          items={nestedItems}
+          currentPath="/"
+          onNavigate={mockNavigate}
+          variant="accordion"
+        />,
+      );
 
       expect(screen.getByRole("navigation")).toBeInTheDocument();
       expect(screen.queryByText("Menu")).not.toBeInTheDocument();
     });
 
     it("expands and collapses items in accordion", () => {
-      render(<MobileNavigation items={nestedItems} currentPath="/" onNavigate={mockNavigate} variant="accordion" />);
+      render(
+        <MobileNavigation
+          items={nestedItems}
+          currentPath="/"
+          onNavigate={mockNavigate}
+          variant="accordion"
+        />,
+      );
 
       // Initially collapsed
       expect(screen.queryByText("Profile")).not.toBeInTheDocument();
@@ -425,9 +453,7 @@ describe("MobileNavigation", () => {
 
   describe("Accessibility", () => {
     it("passes accessibility validation for drawer variant", async () => {
-      await renderA11y(
-        <MobileNavigation {...defaultProps} />
-      );
+      await renderA11y(<MobileNavigation {...defaultProps} />);
     });
 
     it("has role=dialog for drawer", () => {
@@ -447,7 +473,14 @@ describe("MobileNavigation", () => {
     });
 
     it("has proper list structure for accordion variant", () => {
-      const { container } = render(<MobileNavigation items={nestedItems} currentPath="/" onNavigate={mockNavigate} variant="accordion" />);
+      const { container } = render(
+        <MobileNavigation
+          items={nestedItems}
+          currentPath="/"
+          onNavigate={mockNavigate}
+          variant="accordion"
+        />,
+      );
 
       const list = container.querySelector("ul");
       expect(list).toBeInTheDocument();
@@ -492,7 +525,7 @@ describe("MobileNavigation", () => {
           onNavigate={mockNavigate}
           variant="drawer"
           showOverlay={true}
-        />
+        />,
       );
 
       await expect(result.container).toBeAccessible();

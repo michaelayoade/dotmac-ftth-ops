@@ -319,21 +319,25 @@ export function JobsList() {
 ## Key Improvements
 
 ### 1. **Type Safety** ✅
+
 - Used `JobStatus` enum instead of string literals
 - `JobStatusVariants` for badge colors
 - No magic strings anywhere
 
 ### 2. **Internationalization** ✅
+
 - All user-facing text comes from translation files
 - Supports multiple languages (EN, ES, FR, DE, PT)
 - Uses `getStatusLabel()` utility for type-safe status translations
 
 ### 3. **Standardized Error Handling** ✅
+
 - Uses `useErrorHandler` hook
 - Consistent error display with `ErrorAlert`
 - Automatic retry functionality
 
 ### 4. **Maintainability** ✅
+
 - Single source of truth for all text content
 - Easy to add new languages
 - Changes to labels only require updating JSON files
@@ -376,18 +380,21 @@ export function JobsList() {
 With this implementation, the component automatically supports:
 
 ### English (EN)
+
 - Title: "Jobs"
 - Button: "Refresh"
 - Empty state: "No results found"
 - Status: "Running", "Completed", etc.
 
 ### Spanish (ES)
+
 - Title: "Trabajos"
 - Button: "Actualizar"
 - Empty state: "No se encontraron resultados"
 - Status: "En Ejecución", "Completado", etc.
 
 ### French (FR) - TODO
+
 - Title: "Travaux"
 - Button: "Actualiser"
 - Empty state: "Aucun résultat trouvé"
@@ -408,15 +415,15 @@ http://localhost:3000/fr/jobs  // French (when available)
 
 ## Benefits Summary
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| **Strings** | Hardcoded | From translation files |
-| **Type Safety** | String literals | Enums |
-| **Languages** | English only | 5+ languages supported |
-| **Maintainability** | Change in 50+ places | Change in 1 JSON file |
-| **Error Handling** | Custom | Standardized |
-| **Status Labels** | Custom function | Type-safe utility |
-| **Badge Variants** | Custom function | Shared constants |
+| Aspect              | Before               | After                  |
+| ------------------- | -------------------- | ---------------------- |
+| **Strings**         | Hardcoded            | From translation files |
+| **Type Safety**     | String literals      | Enums                  |
+| **Languages**       | English only         | 5+ languages supported |
+| **Maintainability** | Change in 50+ places | Change in 1 JSON file  |
+| **Error Handling**  | Custom               | Standardized           |
+| **Status Labels**   | Custom function      | Type-safe utility      |
+| **Badge Variants**  | Custom function      | Shared constants       |
 
 ---
 

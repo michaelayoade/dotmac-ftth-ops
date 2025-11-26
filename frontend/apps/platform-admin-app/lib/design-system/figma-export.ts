@@ -463,7 +463,10 @@ export function downloadTokens(format: "json" | "css" | "scss", portal?: PortalD
 /**
  * Copy tokens to clipboard
  */
-export async function copyTokensToClipboard(format: "json" | "css" | "scss", portal?: PortalDesignType) {
+export async function copyTokensToClipboard(
+  format: "json" | "css" | "scss",
+  portal?: PortalDesignType,
+) {
   let content: string;
 
   switch (format) {

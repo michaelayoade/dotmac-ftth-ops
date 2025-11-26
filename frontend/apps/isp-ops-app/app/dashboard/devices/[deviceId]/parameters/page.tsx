@@ -42,7 +42,7 @@ interface ParameterGroup {
 
 function ParametersPageContent() {
   const params = useParams();
-  const deviceId = params['deviceId'] as string;
+  const deviceId = params["deviceId"] as string;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Device"]));
@@ -58,13 +58,10 @@ function ParametersPageContent() {
   const { data: parametersData, isLoading } = useQuery<ParameterGroup[]>({
     queryKey: ["device-parameters", deviceId, refreshKey],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`,
-        {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to fetch parameters");
       return response.json();
     },
@@ -74,13 +71,10 @@ function ParametersPageContent() {
   const { data: device } = useQuery({
     queryKey: ["device", deviceId],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`,
-        {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to fetch device");
       return response.json();
     },
@@ -89,15 +83,12 @@ function ParametersPageContent() {
   // Update parameter mutation
   const updateMutation = useMutation({
     mutationFn: async ({ path, value }: { path: string; value: string }) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path, value }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path, value }),
+      });
       if (!response.ok) throw new Error("Failed to update parameter");
       return response.json();
     },
@@ -107,7 +98,7 @@ function ParametersPageContent() {
       setEditValue("");
       toast({
         title: "Parameter updated",
-        description: "The parameter has been successfully updated on the device."
+        description: "The parameter has been successfully updated on the device.",
       });
     },
     onError: (error: Error) => {
@@ -122,14 +113,11 @@ function ParametersPageContent() {
   // Refresh parameters
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to refresh");
       return response.json();
     },
@@ -175,7 +163,7 @@ function ParametersPageContent() {
         (p) =>
           p.name.toLowerCase().includes(searchLower) ||
           p.path.toLowerCase().includes(searchLower) ||
-          String(p.value).toLowerCase().includes(searchLower)
+          String(p.value).toLowerCase().includes(searchLower),
       );
 
       const matchingChildren = group.children
@@ -206,11 +194,7 @@ function ParametersPageContent() {
             className="h-8"
             autoFocus
           />
-          <Button
-            size="sm"
-            onClick={() => saveEdit(param)}
-            disabled={updateMutation.isPending}
-          >
+          <Button size="sm" onClick={() => saveEdit(param)} disabled={updateMutation.isPending}>
             <Save className="h-3 w-3" />
           </Button>
           <Button size="sm" variant="ghost" onClick={cancelEdit}>
@@ -296,9 +280,7 @@ function ParametersPageContent() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm">{param.name}</span>
-                      <Badge className={`text-xs ${getTypeColor(param.type)}`}>
-                        {param.type}
-                      </Badge>
+                      <Badge className={`text-xs ${getTypeColor(param.type)}`}>{param.type}</Badge>
                       {!param.writable && (
                         <Badge variant="outline" className="text-xs">
                           Read-only
@@ -408,7 +390,7 @@ function ParametersPageContent() {
                 {filteredGroups.length > 0
                   ? `Showing ${filteredGroups.reduce(
                       (acc, g) => acc + g.parameters.length,
-                      0
+                      0,
                     )} parameters`
                   : "No parameters found"}
               </CardDescription>

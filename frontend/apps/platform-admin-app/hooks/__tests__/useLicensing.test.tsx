@@ -4,12 +4,7 @@
  */
 
 import { renderHook, waitFor, act } from "@testing-library/react";
-import {
-  useLicensing,
-  useFeatureEntitlement,
-  useQuotaCheck,
-  licensingKeys,
-} from "../useLicensing";
+import { useLicensing, useFeatureEntitlement, useQuotaCheck, licensingKeys } from "../useLicensing";
 import {
   FeatureModule,
   QuotaDefinition,
@@ -156,10 +151,8 @@ describe("useLicensing", () => {
     });
 
     it("should set loading state correctly for modules", async () => {
-      (apiClient.get as jest.Mock).mockImplementation(() =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve({ data: [] }), 100)
-        )
+      (apiClient.get as jest.Mock).mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 100)),
       );
 
       const { result } = renderHook(() => useLicensing(), {
@@ -447,7 +440,7 @@ describe("useLicensing", () => {
       };
 
       await expect(result.current.createModule(createData)).rejects.toThrow(
-        "Failed to create module"
+        "Failed to create module",
       );
       expect(logger.error).toHaveBeenCalledWith("Failed to create module", error);
     });
@@ -728,7 +721,7 @@ describe("useLicensing", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith(
         "/licensing/subscriptions/current/addons",
-        addonData
+        addonData,
       );
     });
 
@@ -750,10 +743,9 @@ describe("useLicensing", () => {
         await result.current.removeAddon(removeData);
       });
 
-      expect(apiClient.delete).toHaveBeenCalledWith(
-        "/licensing/subscriptions/current/addons",
-        { data: removeData }
-      );
+      expect(apiClient.delete).toHaveBeenCalledWith("/licensing/subscriptions/current/addons", {
+        data: removeData,
+      });
     });
   });
 
@@ -832,7 +824,7 @@ describe("useLicensing", () => {
     it("should calculate plan price", async () => {
       const mockPricing = {
         monthly: 299.99,
-        annual: 2879.90,
+        annual: 2879.9,
       };
 
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockPricing });
@@ -980,9 +972,7 @@ describe("useLicensing", () => {
       });
 
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
   });
@@ -995,12 +985,9 @@ describe("useLicensing", () => {
 
       (apiClient.post as jest.Mock).mockResolvedValue({ data: mockResponse });
 
-      const { result } = renderHook(
-        () => useFeatureEntitlement("BILLING", "CREATE_INVOICE"),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useFeatureEntitlement("BILLING", "CREATE_INVOICE"), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -1177,9 +1164,7 @@ describe("useLicensing", () => {
       });
 
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
 
@@ -1242,9 +1227,7 @@ describe("useLicensing", () => {
       });
 
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
   });
@@ -1252,10 +1235,7 @@ describe("useLicensing", () => {
   describe("Loading States", () => {
     it("should show correct loading state during queries", async () => {
       (apiClient.get as jest.Mock).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: [] }), 100)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 100)),
       );
 
       const { result } = renderHook(() => useLicensing(), {
@@ -1274,7 +1254,7 @@ describe("useLicensing", () => {
           expect(result.current.plansLoading).toBe(false);
           expect(result.current.subscriptionLoading).toBe(false);
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
     });
   });

@@ -76,17 +76,21 @@ interface InstanceStatus {
 function InstanceDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const instanceId = params['instanceId'] as string;
+  const instanceId = params["instanceId"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
 
-  const { data: instance, isLoading, refetch } = useQuery<DeploymentInstance>({
+  const {
+    data: instance,
+    isLoading,
+    refetch,
+  } = useQuery<DeploymentInstance>({
     queryKey: ["deployment-instance", instanceId],
     queryFn: async () => {
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/deployment/instances/${instanceId}`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch instance");
       return response.json();
@@ -99,7 +103,7 @@ function InstanceDetailsPageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/deployment/instances/${instanceId}/status`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch status");
       return response.json();
@@ -109,15 +113,12 @@ function InstanceDetailsPageContent() {
 
   const suspendMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/suspend`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: parseInt(instanceId) }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/suspend`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: parseInt(instanceId) }),
+      });
       if (!response.ok) throw new Error("Failed to suspend");
       return response.json();
     },
@@ -129,15 +130,12 @@ function InstanceDetailsPageContent() {
 
   const resumeMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/resume`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: parseInt(instanceId) }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/resume`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: parseInt(instanceId) }),
+      });
       if (!response.ok) throw new Error("Failed to resume");
       return response.json();
     },
@@ -149,15 +147,12 @@ function InstanceDetailsPageContent() {
 
   const upgradeMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/upgrade`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: parseInt(instanceId) }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/upgrade`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: parseInt(instanceId) }),
+      });
       if (!response.ok) throw new Error("Failed to upgrade");
       return response.json();
     },
@@ -169,15 +164,12 @@ function InstanceDetailsPageContent() {
 
   const scaleMutation = useMutation({
     mutationFn: async (replicas: number) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/scale`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: parseInt(instanceId), replicas }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/scale`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: parseInt(instanceId), replicas }),
+      });
       if (!response.ok) throw new Error("Failed to scale");
       return response.json();
     },
@@ -189,15 +181,12 @@ function InstanceDetailsPageContent() {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/destroy`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instance_id: parseInt(instanceId) }),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/destroy`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instance_id: parseInt(instanceId) }),
+      });
       if (!response.ok) throw new Error("Failed to destroy");
     },
     onSuccess: () => {
@@ -224,7 +213,7 @@ function InstanceDetailsPageContent() {
     };
     const config = badges[state as keyof typeof badges] || {
       icon: XCircle,
-      color: "bg-gray-100 text-gray-800"
+      color: "bg-gray-100 text-gray-800",
     };
     const Icon = config.icon;
     return (
@@ -257,9 +246,7 @@ function InstanceDetailsPageContent() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">{instance.name}</h1>
-            <p className="text-sm text-muted-foreground">
-              Template: {instance.template_name}
-            </p>
+            <p className="text-sm text-muted-foreground">Template: {instance.template_name}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -377,15 +364,11 @@ function InstanceDetailsPageContent() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Created</p>
-                <p className="text-sm">
-                  {new Date(instance.created_at).toLocaleString()}
-                </p>
+                <p className="text-sm">{new Date(instance.created_at).toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Last Updated</p>
-                <p className="text-sm">
-                  {new Date(instance.updated_at).toLocaleString()}
-                </p>
+                <p className="text-sm">{new Date(instance.updated_at).toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Last Deployed</p>
@@ -555,9 +538,7 @@ function InstanceDetailsPageContent() {
                   {instance.deployment_logs.join("\n")}
                 </pre>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No logs available
-                </p>
+                <p className="text-sm text-muted-foreground text-center py-8">No logs available</p>
               )}
             </CardContent>
           </Card>

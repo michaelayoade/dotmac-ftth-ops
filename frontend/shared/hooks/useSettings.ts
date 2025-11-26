@@ -21,11 +21,11 @@ import {
   useQueryClient,
   type UseQueryOptions,
   type QueryKey,
-} from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@dotmac/ui';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
-import { parseListResponse, handleApiError } from '../utils/api-utils';
+} from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@dotmac/ui";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
+import { parseListResponse, handleApiError } from "../utils/api-utils";
 import {
   SettingsCategory,
   SettingsCategoryInfo,
@@ -37,7 +37,7 @@ import {
   SettingsUpdateRequest,
   SettingsValidationResult,
   SettingsValidationResultSchema,
-} from '../utils/settings-schemas';
+} from "../utils/settings-schemas";
 
 // Re-export types and utilities for convenience
 export type {
@@ -48,11 +48,9 @@ export type {
   SettingsUpdateRequest,
   SettingsValidationResult,
   AuditLog,
-} from '../utils/settings-schemas';
+} from "../utils/settings-schemas";
 
-export {
-  SETTINGS_CATEGORIES,
-} from '../utils/settings-schemas';
+export { SETTINGS_CATEGORIES } from "../utils/settings-schemas";
 
 export {
   getCategoryDisplayName,
@@ -61,7 +59,7 @@ export {
   isValidCategory,
   getAllCategories,
   formatSettingValue,
-} from '../utils/settings-utils';
+} from "../utils/settings-utils";
 
 // ============================================
 // Query Hooks
@@ -69,25 +67,25 @@ export {
 
 type QueryOptions<TData, TKey extends QueryKey> = Omit<
   UseQueryOptions<TData, Error, TData, TKey>,
-  'queryKey' | 'queryFn'
+  "queryKey" | "queryFn"
 >;
 
 /**
  * Fetch all settings categories
  */
 export function useSettingsCategories(
-  options?: QueryOptions<SettingsCategoryInfo[], ['settings', 'categories']>,
+  options?: QueryOptions<SettingsCategoryInfo[], ["settings", "categories"]>,
 ) {
   return useQuery<
     SettingsCategoryInfo[],
     Error,
     SettingsCategoryInfo[],
-    ['settings', 'categories']
+    ["settings", "categories"]
   >({
-    queryKey: ['settings', 'categories'],
+    queryKey: ["settings", "categories"],
     queryFn: async () => {
-      const response = await apiClient.get<SettingsCategoryInfo[]>('/admin/settings/categories');
-      const data = extractDataOrThrow(response, 'Failed to load settings categories');
+      const response = await apiClient.get<SettingsCategoryInfo[]>("/admin/settings/categories");
+      const data = extractDataOrThrow(response, "Failed to load settings categories");
 
       // Validate response with Zod
       if (Array.isArray(data)) {
@@ -105,15 +103,15 @@ export function useSettingsCategories(
 export function useCategorySettings(
   category: SettingsCategory,
   includeSensitive: boolean = false,
-  options?: QueryOptions<SettingsResponse, ['settings', 'category', SettingsCategory, boolean]>,
+  options?: QueryOptions<SettingsResponse, ["settings", "category", SettingsCategory, boolean]>,
 ) {
   return useQuery<
     SettingsResponse,
     Error,
     SettingsResponse,
-    ['settings', 'category', SettingsCategory, boolean]
+    ["settings", "category", SettingsCategory, boolean]
   >({
-    queryKey: ['settings', 'category', category, includeSensitive],
+    queryKey: ["settings", "category", category, includeSensitive],
     queryFn: async () => {
       const response = await apiClient.get<SettingsResponse>(
         `/admin/settings/category/${category}`,
@@ -121,7 +119,7 @@ export function useCategorySettings(
           params: { include_sensitive: includeSensitive },
         },
       );
-      const data = extractDataOrThrow(response, 'Failed to load category settings');
+      const data = extractDataOrThrow(response, "Failed to load category settings");
 
       // Validate response with Zod
       return SettingsResponseSchema.parse(data);
@@ -142,8 +140,8 @@ export function useAuditLogs(
   options?: QueryOptions<
     { data: AuditLog[]; total: number },
     [
-      'settings',
-      'audit-logs',
+      "settings",
+      "audit-logs",
       number,
       number,
       SettingsCategory | null | undefined,
@@ -156,17 +154,17 @@ export function useAuditLogs(
     Error,
     { data: AuditLog[]; total: number },
     [
-      'settings',
-      'audit-logs',
+      "settings",
+      "audit-logs",
       number,
       number,
       SettingsCategory | null | undefined,
       string | null | undefined,
     ]
   >({
-    queryKey: ['settings', 'audit-logs', offset, limit, category, userId],
+    queryKey: ["settings", "audit-logs", offset, limit, category, userId],
     queryFn: async () => {
-      const response = await apiClient.get<AuditLog[]>('/admin/settings/audit-logs', {
+      const response = await apiClient.get<AuditLog[]>("/admin/settings/audit-logs", {
         params: {
           offset,
           limit,
@@ -176,7 +174,7 @@ export function useAuditLogs(
       });
 
       // Use enhanced response parser with validation
-      const data = extractDataOrThrow(response, 'Failed to load audit logs');
+      const data = extractDataOrThrow(response, "Failed to load audit logs");
 
       // Handle both array and paginated response formats
       if (Array.isArray(data)) {
@@ -224,33 +222,31 @@ export function useUpdateCategorySettings() {
         `/admin/settings/category/${category}`,
         data,
       );
-      const result = extractDataOrThrow(response, 'Failed to update settings');
+      const result = extractDataOrThrow(response, "Failed to update settings");
 
       // Validate response with Zod
       return SettingsResponseSchema.parse(result);
     },
     onSuccess: (data, variables) => {
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['settings', 'categories'] });
+      queryClient.invalidateQueries({ queryKey: ["settings", "categories"] });
       queryClient.invalidateQueries({
-        queryKey: ['settings', 'category', variables.category],
+        queryKey: ["settings", "category", variables.category],
       });
-      queryClient.invalidateQueries({ queryKey: ['settings', 'audit-logs'] });
+      queryClient.invalidateQueries({ queryKey: ["settings", "audit-logs"] });
 
       toast({
-        title: 'Settings updated',
+        title: "Settings updated",
         description: `${data.display_name} settings were updated successfully.`,
       });
     },
     onError: (error: unknown) => {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : 'Failed to update settings';
+      const errorMessage = error instanceof Error ? error.message : "Failed to update settings";
 
       toast({
-        title: 'Update failed',
+        title: "Update failed",
         description: errorMessage,
-        variant: 'destructive',
+        variant: "destructive",
       });
     },
   });
@@ -269,13 +265,13 @@ export function useValidateSettings() {
       updates: Record<string, any>;
     }) => {
       const response = await apiClient.post<SettingsValidationResult>(
-        '/admin/settings/validate',
+        "/admin/settings/validate",
         updates,
         {
           params: { category },
         },
       );
-      const data = extractDataOrThrow(response, 'Failed to validate settings');
+      const data = extractDataOrThrow(response, "Failed to validate settings");
 
       // Validate response with Zod
       return SettingsValidationResultSchema.parse(data);

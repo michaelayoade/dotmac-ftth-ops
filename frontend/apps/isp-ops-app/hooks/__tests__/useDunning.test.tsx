@@ -138,7 +138,7 @@ const createMockStatistics = (overrides?: Partial<DunningStatistics>): DunningSt
 });
 
 const createMockCampaignStats = (
-  overrides?: Partial<DunningCampaignStats>
+  overrides?: Partial<DunningCampaignStats>,
 ): DunningCampaignStats => ({
   campaign_id: "camp-1",
   total_executions: 50,
@@ -154,7 +154,7 @@ const createMockCampaignStats = (
 });
 
 const createMockRecoveryChart = (
-  overrides?: Partial<DunningRecoveryChartData>
+  overrides?: Partial<DunningRecoveryChartData>,
 ): DunningRecoveryChartData => ({
   days: 30,
   data_points: [
@@ -178,22 +178,14 @@ describe("useDunning - Unit Tests", () => {
         "campaigns",
         { status: "active" },
       ]);
-      expect(dunningKeys.campaignDetail("camp-1")).toEqual([
-        "dunning",
-        "campaigns",
-        "camp-1",
-      ]);
+      expect(dunningKeys.campaignDetail("camp-1")).toEqual(["dunning", "campaigns", "camp-1"]);
       expect(dunningKeys.executions()).toEqual(["dunning", "executions"]);
       expect(dunningKeys.execution({ status: "active" })).toEqual([
         "dunning",
         "executions",
         { status: "active" },
       ]);
-      expect(dunningKeys.executionDetail("exec-1")).toEqual([
-        "dunning",
-        "executions",
-        "exec-1",
-      ]);
+      expect(dunningKeys.executionDetail("exec-1")).toEqual(["dunning", "executions", "exec-1"]);
       expect(dunningKeys.statistics()).toEqual(["dunning", "statistics"]);
       expect(dunningKeys.campaignStats("camp-1")).toEqual([
         "dunning",
@@ -404,7 +396,7 @@ describe("useDunning - Unit Tests", () => {
       });
 
       await expect(
-        result.current.mutateAsync({ campaignId: "camp-1", data: {} })
+        result.current.mutateAsync({ campaignId: "camp-1", data: {} }),
       ).rejects.toThrow();
 
       await waitFor(() => expect(result.current.isError).toBe(true));
@@ -434,7 +426,7 @@ describe("useDunning - Unit Tests", () => {
 
     it("should handle delete error", async () => {
       mockDunningService.deleteCampaign.mockRejectedValue(
-        new Error("Campaign has active executions")
+        new Error("Campaign has active executions"),
       );
 
       const onError = jest.fn();
@@ -477,9 +469,7 @@ describe("useDunning - Unit Tests", () => {
     });
 
     it("should handle pause error", async () => {
-      mockDunningService.pauseCampaign.mockRejectedValue(
-        new Error("Already paused")
-      );
+      mockDunningService.pauseCampaign.mockRejectedValue(new Error("Already paused"));
 
       const onError = jest.fn();
       const { result } = renderHook(() => usePauseDunningCampaign({ onError }), {
@@ -519,9 +509,7 @@ describe("useDunning - Unit Tests", () => {
     });
 
     it("should handle resume error", async () => {
-      mockDunningService.resumeCampaign.mockRejectedValue(
-        new Error("Already active")
-      );
+      mockDunningService.resumeCampaign.mockRejectedValue(new Error("Already active"));
 
       const onError = jest.fn();
       const { result } = renderHook(() => useResumeDunningCampaign({ onError }), {
@@ -560,10 +548,9 @@ describe("useDunning - Unit Tests", () => {
 
       mockDunningService.listExecutions.mockResolvedValue(mockExecutions);
 
-      const { result } = renderHook(
-        () => useDunningExecutions({ campaign_id: "camp-1" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useDunningExecutions({ campaign_id: "camp-1" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -578,10 +565,9 @@ describe("useDunning - Unit Tests", () => {
 
       mockDunningService.listExecutions.mockResolvedValue(mockExecutions);
 
-      const { result } = renderHook(
-        () => useDunningExecutions({ status: "completed" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useDunningExecutions({ status: "completed" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -630,9 +616,7 @@ describe("useDunning - Unit Tests", () => {
     });
 
     it("should handle not found error", async () => {
-      mockDunningService.getExecution.mockRejectedValue(
-        new Error("Execution not found")
-      );
+      mockDunningService.getExecution.mockRejectedValue(new Error("Execution not found"));
 
       const { result } = renderHook(() => useDunningExecution("exec-999"), {
         wrapper: createWrapper(),
@@ -675,18 +659,14 @@ describe("useDunning - Unit Tests", () => {
     });
 
     it("should handle start error", async () => {
-      mockDunningService.startExecution.mockRejectedValue(
-        new Error("Execution already active")
-      );
+      mockDunningService.startExecution.mockRejectedValue(new Error("Execution already active"));
 
       const onError = jest.fn();
       const { result } = renderHook(() => useStartDunningExecution({ onError }), {
         wrapper: createWrapper(),
       });
 
-      await expect(
-        result.current.mutateAsync({ subscription_id: "sub-1" })
-      ).rejects.toThrow();
+      await expect(result.current.mutateAsync({ subscription_id: "sub-1" })).rejects.toThrow();
 
       await waitFor(() => expect(result.current.isError).toBe(true));
 
@@ -717,17 +697,12 @@ describe("useDunning - Unit Tests", () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(mockDunningService.cancelExecution).toHaveBeenCalledWith(
-        "exec-1",
-        "Customer request"
-      );
+      expect(mockDunningService.cancelExecution).toHaveBeenCalledWith("exec-1", "Customer request");
       expect(onSuccess).toHaveBeenCalledWith(canceledExecution);
     });
 
     it("should handle cancel error", async () => {
-      mockDunningService.cancelExecution.mockRejectedValue(
-        new Error("Already completed")
-      );
+      mockDunningService.cancelExecution.mockRejectedValue(new Error("Already completed"));
 
       const onError = jest.fn();
       const { result } = renderHook(() => useCancelDunningExecution({ onError }), {
@@ -735,7 +710,7 @@ describe("useDunning - Unit Tests", () => {
       });
 
       await expect(
-        result.current.mutateAsync({ executionId: "exec-1", reason: "Test" })
+        result.current.mutateAsync({ executionId: "exec-1", reason: "Test" }),
       ).rejects.toThrow();
 
       await waitFor(() => expect(result.current.isError).toBe(true));
@@ -762,9 +737,7 @@ describe("useDunning - Unit Tests", () => {
     });
 
     it("should handle fetch error", async () => {
-      mockDunningService.getStatistics.mockRejectedValue(
-        new Error("Stats unavailable")
-      );
+      mockDunningService.getStatistics.mockRejectedValue(new Error("Stats unavailable"));
 
       const { result } = renderHook(() => useDunningStatistics(), {
         wrapper: createWrapper(),
@@ -804,9 +777,7 @@ describe("useDunning - Unit Tests", () => {
     });
 
     it("should handle fetch error", async () => {
-      mockDunningService.getCampaignStatistics.mockRejectedValue(
-        new Error("Campaign not found")
-      );
+      mockDunningService.getCampaignStatistics.mockRejectedValue(new Error("Campaign not found"));
 
       const { result } = renderHook(() => useDunningCampaignStatistics("camp-999"), {
         wrapper: createWrapper(),
@@ -850,9 +821,7 @@ describe("useDunning - Unit Tests", () => {
     });
 
     it("should handle fetch error", async () => {
-      mockDunningService.getRecoveryChartData.mockRejectedValue(
-        new Error("Chart unavailable")
-      );
+      mockDunningService.getRecoveryChartData.mockRejectedValue(new Error("Chart unavailable"));
 
       const { result } = renderHook(() => useDunningRecoveryChart(30), {
         wrapper: createWrapper(),
@@ -875,9 +844,7 @@ describe("useDunning - Unit Tests", () => {
         actions: [],
       };
 
-      mockDunningService.createCampaign.mockResolvedValue(
-        createMockCampaign({ id: "camp-new" })
-      );
+      mockDunningService.createCampaign.mockResolvedValue(createMockCampaign({ id: "camp-new" }));
 
       const { result: createResult } = renderHook(() => useCreateDunningCampaign(), {
         wrapper: createWrapper(),
@@ -891,7 +858,7 @@ describe("useDunning - Unit Tests", () => {
 
       // 2. Pause campaign
       mockDunningService.pauseCampaign.mockResolvedValue(
-        createMockCampaign({ id: "camp-new", status: "paused" })
+        createMockCampaign({ id: "camp-new", status: "paused" }),
       );
 
       const { result: pauseResult } = renderHook(() => usePauseDunningCampaign(), {
@@ -906,7 +873,7 @@ describe("useDunning - Unit Tests", () => {
 
       // 3. Resume campaign
       mockDunningService.resumeCampaign.mockResolvedValue(
-        createMockCampaign({ id: "camp-new", status: "active" })
+        createMockCampaign({ id: "camp-new", status: "active" }),
       );
 
       const { result: resumeResult } = renderHook(() => useResumeDunningCampaign(), {
@@ -935,9 +902,7 @@ describe("useDunning - Unit Tests", () => {
 
     it("should handle execution lifecycle", async () => {
       // 1. Start execution
-      mockDunningService.startExecution.mockResolvedValue(
-        createMockExecution({ id: "exec-new" })
-      );
+      mockDunningService.startExecution.mockResolvedValue(createMockExecution({ id: "exec-new" }));
 
       const { result: startResult } = renderHook(() => useStartDunningExecution(), {
         wrapper: createWrapper(),
@@ -954,7 +919,7 @@ describe("useDunning - Unit Tests", () => {
 
       // 2. Cancel execution
       mockDunningService.cancelExecution.mockResolvedValue(
-        createMockExecution({ id: "exec-new", status: "canceled" })
+        createMockExecution({ id: "exec-new", status: "canceled" }),
       );
 
       const { result: cancelResult } = renderHook(() => useCancelDunningExecution(), {
@@ -968,10 +933,7 @@ describe("useDunning - Unit Tests", () => {
         });
       });
 
-      expect(mockDunningService.cancelExecution).toHaveBeenCalledWith(
-        "exec-new",
-        "Test"
-      );
+      expect(mockDunningService.cancelExecution).toHaveBeenCalledWith("exec-new", "Test");
     });
 
     it("should handle concurrent fetches", async () => {

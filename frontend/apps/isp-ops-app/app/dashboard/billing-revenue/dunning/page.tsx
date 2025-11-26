@@ -5,14 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -93,7 +86,7 @@ const formatMoney = (amountInCents: number): string => {
 };
 
 const getStatusBadgeVariant = (
-  status: DunningExecution["status"]
+  status: DunningExecution["status"],
 ): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case "pending":
@@ -137,12 +130,9 @@ function DunningManagementContent() {
   const { data: stats, isLoading: statsLoading } = useQuery<DunningStats>({
     queryKey: ["dunning", "stats", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/stats`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/stats`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch dunning stats");
       }
@@ -151,17 +141,12 @@ function DunningManagementContent() {
     refetchInterval: 30000,
   });
 
-  const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<
-    DunningCampaign[]
-  >({
+  const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<DunningCampaign[]>({
     queryKey: ["dunning", "campaigns", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch dunning campaigns");
       }
@@ -170,17 +155,12 @@ function DunningManagementContent() {
     refetchInterval: 30000,
   });
 
-  const { data: executions = [], isLoading: executionsLoading } = useQuery<
-    DunningExecution[]
-  >({
+  const { data: executions = [], isLoading: executionsLoading } = useQuery<DunningExecution[]>({
     queryKey: ["dunning", "executions", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/executions`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/executions`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch dunning executions");
       }
@@ -190,24 +170,15 @@ function DunningManagementContent() {
   });
 
   const toggleCampaignMutation = useMutation({
-    mutationFn: async ({
-      campaignId,
-      isActive,
-    }: {
-      campaignId: string;
-      isActive: boolean;
-    }) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ is_active: isActive }),
-        }
-      );
+    mutationFn: async ({ campaignId, isActive }: { campaignId: string; isActive: boolean }) => {
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_active: isActive }),
+      });
       if (!response.ok) {
         throw new Error("Failed to update campaign");
       }
@@ -245,23 +216,14 @@ function DunningManagementContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Dunning Management
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Dunning Management</h1>
           <p className="text-muted-foreground">
             Manage dunning campaigns and track payment recovery
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={statsLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${statsLoading ? "animate-spin" : ""}`}
-            />
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={statsLoading}>
+            <RefreshCw className={`h-4 w-4 ${statsLoading ? "animate-spin" : ""}`} />
           </Button>
           <Button asChild>
             <Link href="/dashboard/billing-revenue/dunning/campaigns/new">
@@ -276,60 +238,42 @@ function DunningManagementContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Campaigns
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.total_campaigns ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.active_campaigns ?? 0} active
-            </p>
+            <div className="text-2xl font-bold">{stats?.total_campaigns ?? 0}</div>
+            <p className="text-xs text-muted-foreground">{stats?.active_campaigns ?? 0} active</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Campaigns
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.active_campaigns ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Currently running
-            </p>
+            <div className="text-2xl font-bold">{stats?.active_campaigns ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Currently running</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Recovered
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Recovered</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatMoney(stats?.total_recovered_amount ?? 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              All time recovery
-            </p>
+            <p className="text-xs text-muted-foreground">All time recovery</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Avg Recovery Rate
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Avg Recovery Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -345,45 +289,33 @@ function DunningManagementContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Executions
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Active Executions</CardTitle>
             <Activity className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.active_executions ?? 0}
-            </div>
+            <div className="text-2xl font-bold">{stats?.active_executions ?? 0}</div>
             <p className="text-xs text-muted-foreground">In progress</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Completed Executions
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Completed Executions</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.completed_executions ?? 0}
-            </div>
+            <div className="text-2xl font-bold">{stats?.completed_executions ?? 0}</div>
             <p className="text-xs text-muted-foreground">Successfully completed</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Failed Executions
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Failed Executions</CardTitle>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.failed_executions ?? 0}
-            </div>
+            <div className="text-2xl font-bold">{stats?.failed_executions ?? 0}</div>
             <p className="text-xs text-muted-foreground">
               {stats?.canceled_executions ?? 0} canceled
             </p>
@@ -392,9 +324,7 @@ function DunningManagementContent() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Avg Completion Time
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Avg Completion Time</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -427,9 +357,7 @@ function DunningManagementContent() {
               ) : activeCampaigns.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No active campaigns found
-                  </p>
+                  <p className="text-muted-foreground">No active campaigns found</p>
                 </div>
               ) : (
                 <Table>
@@ -451,8 +379,7 @@ function DunningManagementContent() {
                       const successRate =
                         campaign.total_executions > 0
                           ? (
-                              (campaign.successful_executions /
-                                campaign.total_executions) *
+                              (campaign.successful_executions / campaign.total_executions) *
                               100
                             ).toFixed(1)
                           : "0.0";
@@ -460,9 +387,7 @@ function DunningManagementContent() {
                         <TableRow key={campaign.id}>
                           <TableCell>
                             <div>
-                              <div className="font-medium">
-                                {campaign.name}
-                              </div>
+                              <div className="font-medium">{campaign.name}</div>
                               {campaign.description && (
                                 <div className="text-sm text-muted-foreground">
                                   {campaign.description}
@@ -471,27 +396,17 @@ function DunningManagementContent() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">
-                              P{campaign.priority}
-                            </Badge>
+                            <Badge variant="outline">P{campaign.priority}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={
-                                campaign.is_active ? "default" : "secondary"
-                              }
-                            >
+                            <Badge variant={campaign.is_active ? "default" : "secondary"}>
                               {campaign.is_active ? "Active" : "Inactive"}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            {campaign.trigger_after_days} days
-                          </TableCell>
+                          <TableCell>{campaign.trigger_after_days} days</TableCell>
                           <TableCell>{campaign.total_executions}</TableCell>
                           <TableCell>{successRate}%</TableCell>
-                          <TableCell>
-                            {formatMoney(campaign.total_recovered_amount)}
-                          </TableCell>
+                          <TableCell>{formatMoney(campaign.total_recovered_amount)}</TableCell>
                           <TableCell>
                             <Switch
                               checked={campaign.is_active}
@@ -536,9 +451,7 @@ function DunningManagementContent() {
               ) : executions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No executions found
-                  </p>
+                  <p className="text-muted-foreground">No executions found</p>
                 </div>
               ) : (
                 <Table>
@@ -558,25 +471,19 @@ function DunningManagementContent() {
                   </TableHeader>
                   <TableBody>
                     {executions.map((execution) => {
-                      const campaign = campaigns.find(
-                        (c) => c.id === execution.campaign_id
-                      );
+                      const campaign = campaigns.find((c) => c.id === execution.campaign_id);
                       return (
                         <TableRow key={execution.id}>
                           <TableCell className="font-mono text-sm">
                             {execution.id.substring(0, 8)}
                           </TableCell>
-                          <TableCell>
-                            {campaign?.name ?? execution.campaign_id}
-                          </TableCell>
+                          <TableCell>{campaign?.name ?? execution.campaign_id}</TableCell>
                           <TableCell className="font-mono text-sm">
                             {execution.customer_id.substring(0, 8)}
                           </TableCell>
                           <TableCell>
                             <Badge
-                              variant={getStatusBadgeVariant(
-                                execution.status
-                              )}
+                              variant={getStatusBadgeVariant(execution.status)}
                               className={getStatusColor(execution.status)}
                             >
                               {execution.status}
@@ -592,41 +499,31 @@ function DunningManagementContent() {
                                   className="h-full bg-blue-600"
                                   style={{
                                     width: `${
-                                      (execution.current_step /
-                                        execution.total_steps) *
-                                      100
+                                      (execution.current_step / execution.total_steps) * 100
                                     }%`,
                                   }}
                                 />
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            {formatMoney(execution.outstanding_amount)}
-                          </TableCell>
-                          <TableCell>
-                            {formatMoney(execution.recovered_amount)}
-                          </TableCell>
+                          <TableCell>{formatMoney(execution.outstanding_amount)}</TableCell>
+                          <TableCell>{formatMoney(execution.recovered_amount)}</TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              {formatDistanceToNow(
-                                new Date(execution.started_at),
-                                { addSuffix: true }
-                              )}
+                              {formatDistanceToNow(new Date(execution.started_at), {
+                                addSuffix: true,
+                              })}
                             </div>
                           </TableCell>
                           <TableCell>
                             {execution.next_action_at ? (
                               <div className="text-sm">
-                                {formatDistanceToNow(
-                                  new Date(execution.next_action_at),
-                                  { addSuffix: true }
-                                )}
+                                {formatDistanceToNow(new Date(execution.next_action_at), {
+                                  addSuffix: true,
+                                })}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground">
-                                -
-                              </span>
+                              <span className="text-muted-foreground">-</span>
                             )}
                           </TableCell>
                           <TableCell>

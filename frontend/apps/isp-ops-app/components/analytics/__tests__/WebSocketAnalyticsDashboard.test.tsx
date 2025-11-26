@@ -96,7 +96,7 @@ describe("WebSocketAnalyticsDashboard", () => {
   describe("Loading State", () => {
     it("shows loading message initially", () => {
       mockApiClient.get.mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        () => new Promise(() => {}), // Never resolves
       );
 
       renderQuick(<WebSocketAnalyticsDashboard />);
@@ -145,7 +145,7 @@ describe("WebSocketAnalyticsDashboard", () => {
       await waitFor(() => {
         expect(consoleError).toHaveBeenCalledWith(
           "Failed to fetch WebSocket analytics:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
 
@@ -175,7 +175,9 @@ describe("WebSocketAnalyticsDashboard", () => {
 
       await waitFor(() => {
         expect(screen.getByText("WebSocket Analytics")).toBeInTheDocument();
-        expect(screen.getByText("Real-time connection metrics and performance data")).toBeInTheDocument();
+        expect(
+          screen.getByText("Real-time connection metrics and performance data"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -272,7 +274,7 @@ describe("WebSocketAnalyticsDashboard", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/This represents how long connections stay active on average/)
+          screen.getByText(/This represents how long connections stay active on average/),
         ).toBeInTheDocument();
       });
     });

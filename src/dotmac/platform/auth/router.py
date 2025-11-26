@@ -508,7 +508,8 @@ class BetterAuthOrgEvent(BaseModel):
     model_config = ConfigDict()
 
     event: Literal["organization.created", "organization.deleted"] = Field(
-        ..., description="Organization event type",
+        ...,
+        description="Organization event type",
     )
     organization: BetterAuthOrganization
 

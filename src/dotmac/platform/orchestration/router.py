@@ -381,7 +381,9 @@ async def list_workflows(
         alias="status",
         description="Filter by status",
     ),
-    date_from: datetime | None = Query(None, description="Filter workflows created after this date"),
+    date_from: datetime | None = Query(
+        None, description="Filter workflows created after this date"
+    ),
     date_to: datetime | None = Query(None, description="Filter workflows created before this date"),
     limit: int = Query(50, ge=1, le=200, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),

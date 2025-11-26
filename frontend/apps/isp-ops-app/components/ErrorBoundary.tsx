@@ -6,7 +6,11 @@
 
 "use client";
 
-import { ErrorBoundary as SharedErrorBoundary, useAsyncError, withErrorBoundary } from "@dotmac/features/error-handling";
+import {
+  ErrorBoundary as SharedErrorBoundary,
+  useAsyncError,
+  withErrorBoundary,
+} from "@dotmac/features/error-handling";
 import { logger } from "@/lib/logger";
 import { type ReactNode } from "react";
 

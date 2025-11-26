@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Wifi,
   Search,
@@ -45,16 +39,20 @@ function ONUListPageContent() {
   const confirmDialog = useConfirmDialog();
 
   // Fetch ONUs
-  const { data: onusData, isLoading, refetch } = useQuery<DeviceListResponse>({
+  const {
+    data: onusData,
+    isLoading,
+    refetch,
+  } = useQuery<DeviceListResponse>({
     queryKey: ["access-onus"],
     queryFn: async () => {
       const response = await apiClient.get<DeviceListResponse>("/access/devices");
-      return response['data'];
+      return response["data"];
     },
     refetchInterval: 30000,
   });
 
-  const onus = (onusData?.devices || []).filter((device) => !device['root']);
+  const onus = (onusData?.devices || []).filter((device) => !device["root"]);
 
   // Device actions
   type DeviceOperation = "enable" | "disable" | "reboot" | "delete";
@@ -65,33 +63,28 @@ function ONUListPageContent() {
   } | null>(null);
 
   const operateMutation = useMutation({
-    mutationFn: async ({
-      device,
-      operation,
-    }: {
-      device: Device;
-      operation: DeviceOperation;
-    }) => {
+    mutationFn: async ({ device, operation }: { device: Device; operation: DeviceOperation }) => {
       const oltId =
-        device['metadata']?.['olt_id'] ||
-        device['parent_id'] ||
-        (device['metadata']?.['root_device_id'] as string | undefined);
-      const baseUrl = `/access/devices/${encodeURIComponent(device['id'])}/${operation}`;
+        device["metadata"]?.["olt_id"] ||
+        device["parent_id"] ||
+        (device["metadata"]?.["root_device_id"] as string | undefined);
+      const baseUrl = `/access/devices/${encodeURIComponent(device["id"])}/${operation}`;
       const url = oltId ? `${baseUrl}?olt_id=${encodeURIComponent(oltId)}` : baseUrl;
       const response = await apiClient.post(url);
-      return response['data'];
+      return response["data"];
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["access-onus"] });
-      toast({ title: `Device ${variables['operation']} request sent` });
+      toast({ title: `Device ${variables["operation"]} request sent` });
       if (variables.operation === "delete") {
-        queryClient.invalidateQueries({ queryKey: ["access-onu", variables['device'].id] });
+        queryClient.invalidateQueries({ queryKey: ["access-onu", variables["device"].id] });
       }
     },
     onError: (error: any, variables) => {
       toast({
-        title: `Failed to ${variables['operation']} device`,
-        description: error?.['response']?.['data']?.detail || error?.['message'] || "Operation failed",
+        title: `Failed to ${variables["operation"]} device`,
+        description:
+          error?.["response"]?.["data"]?.detail || error?.["message"] || "Operation failed",
         variant: "destructive",
       });
     },
@@ -99,27 +92,31 @@ function ONUListPageContent() {
   });
 
   const triggerOperation = (device: Device, operation: DeviceOperation) => {
-    setPendingOperation({ deviceId: device['id'], operation });
+    setPendingOperation({ deviceId: device["id"], operation });
     operateMutation.mutate({ device, operation });
   };
 
   // Filter ONUs
   const filteredONUs = onus.filter((onu) => {
-    const metadata = onu['metadata'] || {};
+    const metadata = onu["metadata"] || {};
     const needle = searchQuery.toLowerCase();
     const matchesSearch =
       !needle ||
-      onu['id'].toLowerCase().includes(needle) ||
-      (onu['serial_number'] || "").toLowerCase().includes(needle) ||
-      (onu['vendor'] || "").toLowerCase().includes(needle) ||
-      String(metadata['olt_id'] || "").toLowerCase().includes(needle) ||
-      String(metadata['pon_port'] || "").toLowerCase().includes(needle);
+      onu["id"].toLowerCase().includes(needle) ||
+      (onu["serial_number"] || "").toLowerCase().includes(needle) ||
+      (onu["vendor"] || "").toLowerCase().includes(needle) ||
+      String(metadata["olt_id"] || "")
+        .toLowerCase()
+        .includes(needle) ||
+      String(metadata["pon_port"] || "")
+        .toLowerCase()
+        .includes(needle);
 
     const matchesStatus =
-      statusFilter === "all" || (onu['oper_status'] || "").toUpperCase() === statusFilter;
+      statusFilter === "all" || (onu["oper_status"] || "").toUpperCase() === statusFilter;
 
     const matchesAdminState =
-      adminStateFilter === "all" || (onu['admin_state'] || "").toUpperCase() === adminStateFilter;
+      adminStateFilter === "all" || (onu["admin_state"] || "").toUpperCase() === adminStateFilter;
 
     return matchesSearch && matchesStatus && matchesAdminState;
   });
@@ -127,17 +124,21 @@ function ONUListPageContent() {
   const getOperStatusBadge = (status?: string) => {
     const badges = {
       ACTIVE: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
-      DISCOVERED: { icon: AlertTriangle, color: "bg-amber-100 text-amber-800", label: "Discovered" },
+      DISCOVERED: {
+        icon: AlertTriangle,
+        color: "bg-amber-100 text-amber-800",
+        label: "Discovered",
+      },
       ACTIVATING: { icon: RefreshCw, color: "bg-blue-100 text-blue-800", label: "Activating" },
       UNKNOWN: { icon: XCircle, color: "bg-gray-100 text-gray-800", label: "Unknown" },
       FAILED: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Failed" },
     };
     const config = badges[(status || "UNKNOWN") as keyof typeof badges] || badges.UNKNOWN;
-    const Icon = config['icon'];
+    const Icon = config["icon"];
     return (
-      <Badge className={config['color']}>
+      <Badge className={config["color"]}>
         <Icon className={`h-3 w-3 mr-1 ${status === "ACTIVATING" ? "animate-spin" : ""}`} />
-        {config['label']}
+        {config["label"]}
       </Badge>
     );
   };
@@ -179,9 +180,7 @@ function ONUListPageContent() {
             Refresh
           </Button>
           <Button asChild>
-            <Link href="/dashboard/pon/onus/discover">
-              Discover ONUs
-            </Link>
+            <Link href="/dashboard/pon/onus/discover">Discover ONUs</Link>
           </Button>
         </div>
       </div>
@@ -194,7 +193,7 @@ function ONUListPageContent() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats['total']}</div>
+            <div className="text-2xl font-bold">{stats["total"]}</div>
             <p className="text-xs text-muted-foreground">All devices</p>
           </CardContent>
         </Card>
@@ -205,9 +204,10 @@ function ONUListPageContent() {
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats['active']}</div>
+            <div className="text-2xl font-bold">{stats["active"]}</div>
             <p className="text-xs text-muted-foreground">
-              {stats['total'] > 0 ? Math.round((stats['active'] / stats['total']) * 100) : 0}% of total
+              {stats["total"] > 0 ? Math.round((stats["active"] / stats["total"]) * 100) : 0}% of
+              total
             </p>
           </CardContent>
         </Card>
@@ -218,7 +218,7 @@ function ONUListPageContent() {
             <AlertTriangle className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats['discovered']}</div>
+            <div className="text-2xl font-bold">{stats["discovered"]}</div>
             <p className="text-xs text-muted-foreground">Not provisioned</p>
           </CardContent>
         </Card>
@@ -229,7 +229,7 @@ function ONUListPageContent() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats['enabled']}</div>
+            <div className="text-2xl font-bold">{stats["enabled"]}</div>
             <p className="text-xs text-muted-foreground">Admin enabled</p>
           </CardContent>
         </Card>
@@ -292,28 +292,29 @@ function ONUListPageContent() {
           </Card>
         ) : (
           filteredONUs.map((onu) => {
-            const metadata = onu['metadata'] || {};
-            const supportedOperations: string[] = Array.isArray(metadata['supported_operations'])
-              ? metadata['supported_operations']
+            const metadata = onu["metadata"] || {};
+            const supportedOperations: string[] = Array.isArray(metadata["supported_operations"])
+              ? metadata["supported_operations"]
               : [];
 
-            const canPerform = (operation: DeviceOperation) => supportedOperations.includes(operation);
+            const canPerform = (operation: DeviceOperation) =>
+              supportedOperations.includes(operation);
             const isOperationPending = (operation: DeviceOperation) =>
-              pendingOperation?.deviceId === onu['id'] && pendingOperation.operation === operation;
+              pendingOperation?.deviceId === onu["id"] && pendingOperation.operation === operation;
 
             return (
-              <Card key={onu['id']} className="hover:border-primary transition-colors">
+              <Card key={onu["id"]} className="hover:border-primary transition-colors">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <Wifi className="h-8 w-8 text-primary" />
                     <div className="flex flex-col gap-1 items-end">
-                      {getOperStatusBadge(onu['oper_status'])}
-                      {getAdminStateBadge(onu['admin_state'])}
+                      {getOperStatusBadge(onu["oper_status"])}
+                      {getAdminStateBadge(onu["admin_state"])}
                     </div>
                   </div>
                   <CardTitle className="mt-2 truncate">
-                    <Link href={`/dashboard/pon/onus/${onu['id']}`} className="hover:underline">
-                      {onu['serial_number'] || onu['id']}
+                    <Link href={`/dashboard/pon/onus/${onu["id"]}`} className="hover:underline">
+                      {onu["serial_number"] || onu["id"]}
                     </Link>
                   </CardTitle>
                 </CardHeader>
@@ -321,26 +322,28 @@ function ONUListPageContent() {
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Vendor:</span>
-                      <span className="font-medium">{onu['vendor'] || "Unknown"}</span>
+                      <span className="font-medium">{onu["vendor"] || "Unknown"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Model:</span>
-                      <span className="font-medium">{onu['model'] || "N/A"}</span>
+                      <span className="font-medium">{onu["model"] || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Firmware:</span>
                       <span className="font-medium truncate ml-2">
-                        {onu['firmware_version'] || "N/A"}
+                        {onu["firmware_version"] || "N/A"}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">OLT:</span>
-                      <span className="font-medium">{metadata['olt_id'] || onu['parent_id'] || "N/A"}</span>
+                      <span className="font-medium">
+                        {metadata["olt_id"] || onu["parent_id"] || "N/A"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">PON Port:</span>
                       <span className="font-medium">
-                        {metadata['pon_port'] ?? onu['parent_port_no'] ?? "N/A"}
+                        {metadata["pon_port"] ?? onu["parent_port_no"] ?? "N/A"}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -356,7 +359,11 @@ function ONUListPageContent() {
                       variant="outline"
                       size="sm"
                       onClick={() => triggerOperation(onu, "enable")}
-                      disabled={!canPerform("enable") || isOperationPending("enable") || onu.admin_state === "ENABLED"}
+                      disabled={
+                        !canPerform("enable") ||
+                        isOperationPending("enable") ||
+                        onu.admin_state === "ENABLED"
+                      }
                       className="flex-1"
                       title={canPerform("enable") ? undefined : "Enable operation not supported"}
                     >
@@ -367,7 +374,11 @@ function ONUListPageContent() {
                       variant="outline"
                       size="sm"
                       onClick={() => triggerOperation(onu, "disable")}
-                      disabled={!canPerform("disable") || isOperationPending("disable") || onu.admin_state === "DISABLED"}
+                      disabled={
+                        !canPerform("disable") ||
+                        isOperationPending("disable") ||
+                        onu.admin_state === "DISABLED"
+                      }
                       className="flex-1"
                       title={canPerform("disable") ? undefined : "Disable operation not supported"}
                     >
@@ -383,7 +394,7 @@ function ONUListPageContent() {
                         }
                         const confirmed = await confirmDialog({
                           title: "Reboot ONU",
-                          description: `Reboot ONU ${onu['serial_number'] || onu['id']}?`,
+                          description: `Reboot ONU ${onu["serial_number"] || onu["id"]}?`,
                           confirmText: "Reboot",
                         });
                         if (!confirmed) {
@@ -405,7 +416,7 @@ function ONUListPageContent() {
                         }
                         const confirmed = await confirmDialog({
                           title: "Delete ONU",
-                          description: `Delete ONU ${onu['serial_number'] || onu['id']}? This cannot be undone.`,
+                          description: `Delete ONU ${onu["serial_number"] || onu["id"]}? This cannot be undone.`,
                           confirmText: "Delete",
                           variant: "destructive",
                         });

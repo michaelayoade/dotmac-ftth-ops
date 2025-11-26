@@ -115,9 +115,7 @@ describe("useVersioning (Jest Mocks)", () => {
     });
 
     it("should filter versions by status", async () => {
-      mockService.listVersions.mockResolvedValueOnce([
-        { version: "v1", status: "active" },
-      ] as any);
+      mockService.listVersions.mockResolvedValueOnce([{ version: "v1", status: "active" }] as any);
 
       const { result } = renderHook(() => useVersions({ status: "active" }), {
         wrapper: createWrapper(),

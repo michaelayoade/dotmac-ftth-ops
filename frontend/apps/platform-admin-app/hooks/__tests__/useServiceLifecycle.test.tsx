@@ -131,12 +131,9 @@ describe("useServiceLifecycle", () => {
     });
 
     it("should respect enabled option", async () => {
-      const { result } = renderHook(
-        () => useServiceStatistics({ enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useServiceStatistics({ enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -204,9 +201,9 @@ describe("useServiceLifecycle", () => {
                     by_status: {},
                   },
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useServiceStatistics(), {
@@ -275,12 +272,9 @@ describe("useServiceLifecycle", () => {
       });
 
       await waitFor(() => {
-        expect(apiClient.get).toHaveBeenCalledWith(
-          "/services/lifecycle/services",
-          {
-            params: { limit: 20, offset: 0, status: "active" },
-          }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/services/lifecycle/services", {
+          params: { limit: 20, offset: 0, status: "active" },
+        });
       });
     });
 
@@ -292,12 +286,9 @@ describe("useServiceLifecycle", () => {
       });
 
       await waitFor(() => {
-        expect(apiClient.get).toHaveBeenCalledWith(
-          "/services/lifecycle/services",
-          {
-            params: { limit: 20, offset: 0, status: "provisioning" },
-          }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/services/lifecycle/services", {
+          params: { limit: 20, offset: 0, status: "provisioning" },
+        });
       });
     });
 
@@ -309,12 +300,9 @@ describe("useServiceLifecycle", () => {
       });
 
       await waitFor(() => {
-        expect(apiClient.get).toHaveBeenCalledWith(
-          "/services/lifecycle/services",
-          {
-            params: { limit: 20, offset: 0, service_type: "internet" },
-          }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/services/lifecycle/services", {
+          params: { limit: 20, offset: 0, service_type: "internet" },
+        });
       });
     });
 
@@ -326,12 +314,9 @@ describe("useServiceLifecycle", () => {
       });
 
       await waitFor(() => {
-        expect(apiClient.get).toHaveBeenCalledWith(
-          "/services/lifecycle/services",
-          {
-            params: { limit: 50, offset: 10 },
-          }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/services/lifecycle/services", {
+          params: { limit: 50, offset: 10 },
+        });
       });
     });
 
@@ -348,30 +333,23 @@ describe("useServiceLifecycle", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
-        expect(apiClient.get).toHaveBeenCalledWith(
-          "/services/lifecycle/services",
-          {
-            params: {
-              limit: 30,
-              offset: 5,
-              status: "suspended",
-              service_type: "voip",
-            },
-          }
-        );
+        expect(apiClient.get).toHaveBeenCalledWith("/services/lifecycle/services", {
+          params: {
+            limit: 30,
+            offset: 5,
+            status: "suspended",
+            service_type: "voip",
+          },
+        });
       });
     });
 
     it("should handle all service statuses", async () => {
-      const statuses: ServiceStatusValue[] = [
-        "active",
-        "suspended",
-        "terminated",
-      ];
+      const statuses: ServiceStatusValue[] = ["active", "suspended", "terminated"];
 
       for (const status of statuses) {
         const mockInstance: ServiceInstanceSummary = {
@@ -389,12 +367,9 @@ describe("useServiceLifecycle", () => {
 
         (apiClient.get as jest.Mock).mockResolvedValue({ data: [mockInstance] });
 
-        const { result } = renderHook(
-          () => useServiceInstances({ status }),
-          {
-            wrapper: createWrapper(),
-          }
-        );
+        const { result } = renderHook(() => useServiceInstances({ status }), {
+          wrapper: createWrapper(),
+        });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -405,12 +380,9 @@ describe("useServiceLifecycle", () => {
     });
 
     it("should respect enabled option", async () => {
-      const { result } = renderHook(
-        () => useServiceInstances({ enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useServiceInstances({ enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -589,10 +561,9 @@ describe("useServiceLifecycle", () => {
         });
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1/suspend",
-        { reason: "Non-payment" }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/services/lifecycle/services/svc-1/suspend", {
+        reason: "Non-payment",
+      });
     });
 
     it("should suspend service without payload", async () => {
@@ -606,10 +577,7 @@ describe("useServiceLifecycle", () => {
         await result.current.mutateAsync({ serviceId: "svc-1" });
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1/suspend",
-        {}
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/services/lifecycle/services/svc-1/suspend", {});
     });
 
     it("should invalidate queries after successful suspension", async () => {
@@ -656,13 +624,13 @@ describe("useServiceLifecycle", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync({ serviceId: "svc-1" });
-        })
+        }),
       ).rejects.toThrow("Suspend failed");
     });
 
     it("should set loading state correctly during suspension", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useSuspendService(), {
@@ -699,10 +667,9 @@ describe("useServiceLifecycle", () => {
         });
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1/resume",
-        { note: "Payment received" }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/services/lifecycle/services/svc-1/resume", {
+        note: "Payment received",
+      });
     });
 
     it("should resume service without payload", async () => {
@@ -716,10 +683,7 @@ describe("useServiceLifecycle", () => {
         await result.current.mutateAsync({ serviceId: "svc-1" });
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1/resume",
-        {}
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/services/lifecycle/services/svc-1/resume", {});
     });
 
     it("should invalidate queries after successful resume", async () => {
@@ -766,7 +730,7 @@ describe("useServiceLifecycle", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync({ serviceId: "svc-1" });
-        })
+        }),
       ).rejects.toThrow("Resume failed");
     });
   });
@@ -796,7 +760,7 @@ describe("useServiceLifecycle", () => {
       expect(response).toEqual(mockResponse);
       expect(apiClient.post).toHaveBeenCalledWith(
         "/services/lifecycle/services/provision",
-        payload
+        payload,
       );
     });
 
@@ -846,7 +810,7 @@ describe("useServiceLifecycle", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync({ payload: {} });
-        })
+        }),
       ).rejects.toThrow("Provision failed");
     });
   });
@@ -866,10 +830,9 @@ describe("useServiceLifecycle", () => {
         });
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1/activate",
-        { activation_date: "2024-01-01" }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/services/lifecycle/services/svc-1/activate", {
+        activation_date: "2024-01-01",
+      });
     });
 
     it("should activate service without payload", async () => {
@@ -885,7 +848,7 @@ describe("useServiceLifecycle", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith(
         "/services/lifecycle/services/svc-1/activate",
-        {}
+        {},
       );
     });
 
@@ -933,7 +896,7 @@ describe("useServiceLifecycle", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync({ serviceId: "svc-1" });
-        })
+        }),
       ).rejects.toThrow("Activate failed");
     });
   });
@@ -953,10 +916,10 @@ describe("useServiceLifecycle", () => {
         });
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1/terminate",
-        { reason: "Customer request", termination_date: "2024-12-31" }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/services/lifecycle/services/svc-1/terminate", {
+        reason: "Customer request",
+        termination_date: "2024-12-31",
+      });
     });
 
     it("should terminate service without payload", async () => {
@@ -972,7 +935,7 @@ describe("useServiceLifecycle", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith(
         "/services/lifecycle/services/svc-1/terminate",
-        {}
+        {},
       );
     });
 
@@ -1020,7 +983,7 @@ describe("useServiceLifecycle", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync({ serviceId: "svc-1" });
-        })
+        }),
       ).rejects.toThrow("Terminate failed");
     });
   });
@@ -1040,10 +1003,10 @@ describe("useServiceLifecycle", () => {
         });
       });
 
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1",
-        { plan_id: "plan-2", bandwidth_mbps: 2000 }
-      );
+      expect(apiClient.patch).toHaveBeenCalledWith("/services/lifecycle/services/svc-1", {
+        plan_id: "plan-2",
+        bandwidth_mbps: 2000,
+      });
     });
 
     it("should modify service without payload", async () => {
@@ -1057,10 +1020,7 @@ describe("useServiceLifecycle", () => {
         await result.current.mutateAsync({ serviceId: "svc-1" });
       });
 
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1",
-        {}
-      );
+      expect(apiClient.patch).toHaveBeenCalledWith("/services/lifecycle/services/svc-1", {});
     });
 
     it("should invalidate queries after successful modification", async () => {
@@ -1104,7 +1064,7 @@ describe("useServiceLifecycle", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync({ serviceId: "svc-1" });
-        })
+        }),
       ).rejects.toThrow("Modify failed");
     });
   });
@@ -1126,7 +1086,7 @@ describe("useServiceLifecycle", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith(
         "/services/lifecycle/services/svc-1/health-check",
-        { check_connectivity: true }
+        { check_connectivity: true },
       );
     });
 
@@ -1143,7 +1103,7 @@ describe("useServiceLifecycle", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith(
         "/services/lifecycle/services/svc-1/health-check",
-        {}
+        {},
       );
     });
 
@@ -1191,7 +1151,7 @@ describe("useServiceLifecycle", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync({ serviceId: "svc-1" });
-        })
+        }),
       ).rejects.toThrow("Health check failed");
     });
   });
@@ -1231,7 +1191,7 @@ describe("useServiceLifecycle", () => {
         () => useServiceInstances({ status: "active", serviceType: "internet" }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -1296,9 +1256,9 @@ describe("useServiceLifecycle", () => {
                     by_status: {},
                   },
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useServiceStatistics(), {
@@ -1314,10 +1274,7 @@ describe("useServiceLifecycle", () => {
 
     it("should show loading state during mutation", async () => {
       (apiClient.post as jest.Mock).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: {} }), 100)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useSuspendService(), {
@@ -1397,12 +1354,12 @@ describe("useServiceLifecycle", () => {
       expect(apiClient.post).toHaveBeenNthCalledWith(
         1,
         "/services/lifecycle/services/svc-1/suspend",
-        {}
+        {},
       );
       expect(apiClient.post).toHaveBeenNthCalledWith(
         2,
         "/services/lifecycle/services/svc-2/suspend",
-        {}
+        {},
       );
     });
 
@@ -1429,14 +1386,10 @@ describe("useServiceLifecycle", () => {
         });
       });
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-1/suspend",
-        {}
-      );
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        "/services/lifecycle/services/svc-2",
-        { bandwidth_mbps: 500 }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/services/lifecycle/services/svc-1/suspend", {});
+      expect(apiClient.patch).toHaveBeenCalledWith("/services/lifecycle/services/svc-2", {
+        bandwidth_mbps: 500,
+      });
     });
   });
 });

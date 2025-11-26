@@ -3,7 +3,7 @@
  * Mocks partner portal dashboard, profile, referrals, commissions, customers, statements, and payouts
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // In-memory storage
 let partnerProfile: any = null;
@@ -94,7 +94,8 @@ function createMockCommission(data: Partial<any> = {}): any {
     invoice_id: data.invoice_id || undefined,
     amount: data.amount ?? 1000,
     commission_rate: data.commission_rate ?? 15,
-    commission_amount: data.commission_amount ?? (data.amount || 1000) * ((data.commission_rate || 15) / 100),
+    commission_amount:
+      data.commission_amount ?? (data.amount || 1000) * ((data.commission_rate || 15) / 100),
     status: data.status || "pending",
     event_date: data.event_date || now,
     payment_date: data.payment_date || undefined,
@@ -130,7 +131,8 @@ function createMockStatement(data: Partial<any> = {}): any {
   return {
     id: statementId,
     payout_id: data.payout_id || null,
-    period_start: data.period_start || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    period_start:
+      data.period_start || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     period_end: data.period_end || now,
     issued_at: data.issued_at || now,
     revenue_total: data.revenue_total ?? 10000,
@@ -157,7 +159,8 @@ function createMockPayout(data: Partial<any> = {}): any {
     status: data.status || "completed",
     payout_date: data.payout_date || now,
     completed_at: data.completed_at || now,
-    period_start: data.period_start || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    period_start:
+      data.period_start || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     period_end: data.period_end || now,
     notes: data.notes || null,
     failure_reason: data.failure_reason || null,

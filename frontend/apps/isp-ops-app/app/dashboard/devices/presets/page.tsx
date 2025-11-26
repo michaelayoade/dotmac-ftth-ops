@@ -8,7 +8,14 @@ import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@dotmac/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@dotmac/ui";
 import {
   ArrowLeft,
   Plus,
@@ -64,10 +71,9 @@ function PresetsPageContent() {
   const { data: presets = [], isLoading } = useQuery<Preset[]>({
     queryKey: ["device-presets"],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/presets`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/presets`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch presets");
       return response.json();
     },
@@ -83,19 +89,16 @@ function PresetsPageContent() {
         throw new Error("Invalid JSON configuration");
       }
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/presets`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: data.name,
-            description: data.description,
-            configuration: config,
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/presets`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          description: data.description,
+          configuration: config,
+        }),
+      });
       if (!response.ok) throw new Error("Failed to create preset");
       return response.json();
     },
@@ -124,19 +127,16 @@ function PresetsPageContent() {
         throw new Error("Invalid JSON configuration");
       }
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/presets/${id}`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: data.name,
-            description: data.description,
-            configuration: config,
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/presets/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          description: data.description,
+          configuration: config,
+        }),
+      });
       if (!response.ok) throw new Error("Failed to update preset");
       return response.json();
     },
@@ -159,13 +159,10 @@ function PresetsPageContent() {
   // Delete preset
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/presets/${id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/presets/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to delete preset");
       return response.json();
     },
@@ -185,19 +182,16 @@ function PresetsPageContent() {
   // Duplicate preset
   const duplicateMutation = useMutation({
     mutationFn: async (preset: Preset) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/presets`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: `${preset.name} (Copy)`,
-            description: preset.description,
-            configuration: preset.configuration,
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/presets`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${preset.name} (Copy)`,
+          description: preset.description,
+          configuration: preset.configuration,
+        }),
+      });
       if (!response.ok) throw new Error("Failed to duplicate preset");
       return response.json();
     },
@@ -238,7 +232,7 @@ function PresetsPageContent() {
   };
 
   const handleCreate = () => {
-    if (!formData['name'].trim()) {
+    if (!formData["name"].trim()) {
       toast({
         title: "Validation error",
         description: "Preset name is required",
@@ -251,7 +245,7 @@ function PresetsPageContent() {
   };
 
   const handleUpdate = () => {
-    if (!selectedPreset || !formData['name'].trim()) {
+    if (!selectedPreset || !formData["name"].trim()) {
       toast({
         title: "Validation error",
         description: "Preset name is required",
@@ -279,7 +273,7 @@ function PresetsPageContent() {
   const filteredPresets = presets.filter(
     (preset) =>
       preset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      preset.description.toLowerCase().includes(searchQuery.toLowerCase())
+      preset.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // Example preset configurations
@@ -301,7 +295,7 @@ function PresetsPageContent() {
     },
   ];
 
-  const loadExamplePreset = (example: typeof examplePresets[0]) => {
+  const loadExamplePreset = (example: (typeof examplePresets)[0]) => {
     setFormData({
       ...formData,
       name: example.name,
@@ -378,12 +372,8 @@ function PresetsPageContent() {
               </CardHeader>
               <CardContent className="flex-1 space-y-4">
                 <div className="text-xs text-muted-foreground">
-                  <p>
-                    Created: {new Date(preset.createdAt).toLocaleDateString()}
-                  </p>
-                  <p>
-                    Updated: {new Date(preset.updatedAt).toLocaleDateString()}
-                  </p>
+                  <p>Created: {new Date(preset.createdAt).toLocaleDateString()}</p>
+                  <p>Updated: {new Date(preset.updatedAt).toLocaleDateString()}</p>
                 </div>
 
                 {/* Configuration Preview */}
@@ -442,7 +432,7 @@ function PresetsPageContent() {
               <Input
                 id="create-name"
                 placeholder="e.g., Basic ONT Setup"
-                value={formData['name']}
+                value={formData["name"]}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
@@ -452,7 +442,7 @@ function PresetsPageContent() {
               <Textarea
                 id="create-description"
                 placeholder="Describe what this preset does..."
-                value={formData['description']}
+                value={formData["description"]}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
               />
@@ -508,16 +498,10 @@ function PresetsPageContent() {
             </Card>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleCreate}
-                disabled={createMutation.isPending}
-              >
+              <Button onClick={handleCreate} disabled={createMutation.isPending}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Create Preset
               </Button>
@@ -531,9 +515,7 @@ function PresetsPageContent() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Configuration Preset</DialogTitle>
-            <DialogDescription>
-              Modify the configuration template
-            </DialogDescription>
+            <DialogDescription>Modify the configuration template</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -542,7 +524,7 @@ function PresetsPageContent() {
               <Input
                 id="edit-name"
                 placeholder="e.g., Basic ONT Setup"
-                value={formData['name']}
+                value={formData["name"]}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
@@ -552,7 +534,7 @@ function PresetsPageContent() {
               <Textarea
                 id="edit-description"
                 placeholder="Describe what this preset does..."
-                value={formData['description']}
+                value={formData["description"]}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
               />
@@ -590,10 +572,7 @@ function PresetsPageContent() {
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleUpdate}
-                disabled={updateMutation.isPending}
-              >
+              <Button onClick={handleUpdate} disabled={updateMutation.isPending}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Save Changes
               </Button>

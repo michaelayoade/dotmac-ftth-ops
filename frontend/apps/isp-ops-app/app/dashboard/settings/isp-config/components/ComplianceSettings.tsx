@@ -8,7 +8,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, Lock, Info } from "lucide-react";
@@ -58,24 +64,24 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
     return months > 0 ? `${years} years ${months} months` : `${years} years`;
   };
 
-  const selectedRegion = DATA_RESIDENCY_REGIONS.find(r => r.value === settings.data_residency_region);
+  const selectedRegion = DATA_RESIDENCY_REGIONS.find(
+    (r) => r.value === settings.data_residency_region,
+  );
 
   return (
     <div className="space-y-6">
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          Compliance settings help ensure regulatory adherence.
-          Consult legal counsel for specific requirements in your jurisdiction.
+          Compliance settings help ensure regulatory adherence. Consult legal counsel for specific
+          requirements in your jurisdiction.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>Data Residency</CardTitle>
-          <CardDescription>
-            Define where customer data is stored and processed
-          </CardDescription>
+          <CardDescription>Define where customer data is stored and processed</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -99,15 +105,19 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              Primary region where customer data is stored. Changing this may require data migration.
+              Primary region where customer data is stored. Changing this may require data
+              migration.
             </p>
           </div>
 
           <Alert>
             <Lock className="h-4 w-4" />
             <AlertDescription>
-              Current region: <strong>{selectedRegion?.flag} {selectedRegion?.label}</strong>
-              {" "}- Data is stored in compliance with local regulations
+              Current region:{" "}
+              <strong>
+                {selectedRegion?.flag} {selectedRegion?.label}
+              </strong>{" "}
+              - Data is stored in compliance with local regulations
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -116,9 +126,7 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
       <Card>
         <CardHeader>
           <CardTitle>Regulatory Compliance</CardTitle>
-          <CardDescription>
-            Enable compliance features for specific regulations
-          </CardDescription>
+          <CardDescription>Enable compliance features for specific regulations</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* GDPR */}
@@ -140,8 +148,8 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                GDPR enabled: Right to deletion, access, and data portability are enforced.
-                Audit logs track all data access and modifications.
+                GDPR enabled: Right to deletion, access, and data portability are enforced. Audit
+                logs track all data access and modifications.
               </AlertDescription>
             </Alert>
           )}
@@ -180,8 +188,8 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
             <Alert variant="destructive">
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>HIPAA Enabled:</strong> Enhanced security measures and audit trails are required.
-                Ensure all staff are trained on HIPAA compliance.
+                <strong>HIPAA Enabled:</strong> Enhanced security measures and audit trails are
+                required. Ensure all staff are trained on HIPAA compliance.
               </AlertDescription>
             </Alert>
           )}
@@ -191,9 +199,7 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
       <Card>
         <CardHeader>
           <CardTitle>Data Retention Policies</CardTitle>
-          <CardDescription>
-            Configure how long different types of data are retained
-          </CardDescription>
+          <CardDescription>Configure how long different types of data are retained</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Audit Logs Retention */}
@@ -221,10 +227,13 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
               min="365"
               max="3650"
               value={settings.customer_data_retention_days}
-              onChange={(e) => updateSetting("customer_data_retention_days", parseInt(e.target.value))}
+              onChange={(e) =>
+                updateSetting("customer_data_retention_days", parseInt(e.target.value))
+              }
             />
             <p className="text-sm text-muted-foreground">
-              Days ({formatDays(settings.customer_data_retention_days)}) - How long to keep data after account closure
+              Days ({formatDays(settings.customer_data_retention_days)}) - How long to keep data
+              after account closure
             </p>
           </div>
 
@@ -245,9 +254,7 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
       <Card>
         <CardHeader>
           <CardTitle>Data Protection</CardTitle>
-          <CardDescription>
-            Configure data encryption and protection measures
-          </CardDescription>
+          <CardDescription>Configure data encryption and protection measures</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* PII Encryption */}
@@ -269,8 +276,8 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                PII encryption enabled: Customer names, addresses, phone numbers, and emails
-                are encrypted in the database.
+                PII encryption enabled: Customer names, addresses, phone numbers, and emails are
+                encrypted in the database.
               </AlertDescription>
             </Alert>
           )}
@@ -355,8 +362,8 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Anonymization replaces personal data with random values while preserving
-                statistical integrity for analytics and reporting.
+                Anonymization replaces personal data with random values while preserving statistical
+                integrity for analytics and reporting.
               </AlertDescription>
             </Alert>
           )}
@@ -370,17 +377,24 @@ export function ComplianceSettings({ settings, onChange }: ComplianceSettingsPro
           <div className="font-semibold mb-2">Compliance Summary:</div>
           <ul className="list-disc list-inside space-y-1 text-sm">
             <li>Data Region: {selectedRegion?.label}</li>
-            <li>Active Regulations: {[
-              settings.gdpr_enabled && "GDPR",
-              settings.ccpa_enabled && "CCPA",
-              settings.hipaa_enabled && "HIPAA"
-            ].filter(Boolean).join(", ") || "None"}</li>
+            <li>
+              Active Regulations:{" "}
+              {[
+                settings.gdpr_enabled && "GDPR",
+                settings.ccpa_enabled && "CCPA",
+                settings.hipaa_enabled && "HIPAA",
+              ]
+                .filter(Boolean)
+                .join(", ") || "None"}
+            </li>
             <li>Audit Retention: {formatDays(settings.audit_retention_days)}</li>
             <li>PII Encryption: {settings.pii_encryption_required ? "Enabled" : "Disabled"}</li>
-            <li>Privacy Rights: {[
-              settings.right_to_deletion && "Deletion",
-              settings.right_to_access && "Access"
-            ].filter(Boolean).join(", ") || "None"}</li>
+            <li>
+              Privacy Rights:{" "}
+              {[settings.right_to_deletion && "Deletion", settings.right_to_access && "Access"]
+                .filter(Boolean)
+                .join(", ") || "None"}
+            </li>
           </ul>
         </AlertDescription>
       </Alert>

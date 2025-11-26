@@ -4,10 +4,10 @@ This document captures everything needed to run the DotMac frontend in productio
 
 ## 1. Architecture Snapshot
 
-- **Apps**  
-  - `apps/isp-ops-app` → Tenant-facing ISP portal (`pnpm dev:isp`, port 3001).  
+- **Apps**
+  - `apps/isp-ops-app` → Tenant-facing ISP portal (`pnpm dev:isp`, port 3001).
   - `apps/platform-admin-app` → DotMac control plane (`pnpm dev:admin`, port 3002).
-- **Shared packages**  
+- **Shared packages**
   - `shared/packages/primitives`, `ui`, `headless`, `graphql`, etc. provide reusable UI, hooks, and data utilities.
 - **Key directories**
 
@@ -24,9 +24,9 @@ frontend/
 
 Each app has its own `.env.local.example`. Required variables:
 
-| App | File | Important Vars |
-|-----|------|----------------|
-| ISP Ops | `apps/isp-ops-app/.env.local` | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=isp-ops`, `NEXT_PUBLIC_FEATURES=…` |
+| App            | File                                 | Important Vars                                                                                            |
+| -------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| ISP Ops        | `apps/isp-ops-app/.env.local`        | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=isp-ops`, `NEXT_PUBLIC_FEATURES=…`                      |
 | Platform Admin | `apps/platform-admin-app/.env.local` | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=platform-admin`, `NEXT_PUBLIC_REQUIRE_SUPER_ADMIN=true` |
 
 Set `NEXT_PUBLIC_API_BASE_URL` to the backend ingress (`https://api.dotmac.com` in production). Both apps inherit auth cookies from the Better Auth backend.
@@ -129,9 +129,7 @@ import { useNetworkOverviewQuery } from "@dotmac/graphql/generated/react-query";
 import { mapQueryResult, QueryBoundary } from "@dotmac/graphql";
 
 export function NetworkDashboard() {
-  const result = mapQueryResult(
-    useNetworkOverviewQuery(undefined, { refetchInterval: 30_000 })
-  );
+  const result = mapQueryResult(useNetworkOverviewQuery(undefined, { refetchInterval: 30_000 }));
 
   return (
     <QueryBoundary result={result}>

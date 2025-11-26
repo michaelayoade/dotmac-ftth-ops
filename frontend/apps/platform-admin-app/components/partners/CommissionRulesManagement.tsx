@@ -4,38 +4,12 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Edit,
-  Loader2,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { AlertCircle, CheckCircle2, Edit, Loader2, Plus, Trash2 } from "lucide-react";
 import {
   useCommissionRules,
   useCreateCommissionRule,
@@ -72,11 +46,7 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
     page_size: 100,
   };
 
-  const {
-    data: rulesData,
-    isLoading,
-    error,
-  } = useCommissionRules(commissionRuleParams);
+  const { data: rulesData, isLoading, error } = useCommissionRules(commissionRuleParams);
 
   // Mutations
   const createMutation = useCreateCommissionRule();
@@ -120,7 +90,7 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
       try {
         await deleteMutation.mutateAsync(ruleId);
       } catch (error) {
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert(`Failed to delete rule: ${error}`);
       }
     }
@@ -130,19 +100,19 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
     try {
       // Validate required fields
       if (!formData.rule_name || !selectedPartnerId || !formData.effective_from) {
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Please fill in all required fields");
         return;
       }
 
       // Validate commission model configuration
       if (formData.commission_type === "revenue_share" && !formData.commission_rate) {
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Revenue share model requires a commission rate");
         return;
       }
       if (formData.commission_type === "flat_fee" && !formData.flat_fee_amount) {
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Flat fee model requires a flat fee amount");
         return;
       }
@@ -150,7 +120,7 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
         formData.commission_type === "hybrid" &&
         (!formData.commission_rate || !formData.flat_fee_amount)
       ) {
-    // eslint-disable-next-line no-alert
+        // eslint-disable-next-line no-alert
         alert("Hybrid model requires both commission rate and flat fee amount");
         return;
       }
@@ -318,11 +288,7 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                       <TableCell>{rule.priority}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditRule(rule)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleEditRule(rule)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
@@ -392,9 +358,10 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                 placeholder="e.g., Standard Revenue Share"
                 value={formData.rule_name || ""}
                 onChange={(e) =>
-                  setFormData(
-                    { ...formData, rule_name: e.target.value } as Partial<CreateCommissionRuleInput>,
-                  )
+                  setFormData({
+                    ...formData,
+                    rule_name: e.target.value,
+                  } as Partial<CreateCommissionRuleInput>)
                 }
               />
             </div>
@@ -407,9 +374,10 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                 placeholder="Optional description"
                 value={formData.description || ""}
                 onChange={(e) =>
-                  setFormData(
-                    { ...formData, description: e.target.value } as Partial<CreateCommissionRuleInput>,
-                  )
+                  setFormData({
+                    ...formData,
+                    description: e.target.value,
+                  } as Partial<CreateCommissionRuleInput>)
                 }
               />
             </div>
@@ -422,12 +390,10 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
               <Select
                 value={formData.commission_type ?? ""}
                 onValueChange={(value) =>
-                  setFormData(
-                    {
-                      ...formData,
-                      commission_type: value as CommissionModel,
-                    } as Partial<CreateCommissionRuleInput>,
-                  )
+                  setFormData({
+                    ...formData,
+                    commission_type: value as CommissionModel,
+                  } as Partial<CreateCommissionRuleInput>)
                 }
               >
                 <SelectTrigger>
@@ -509,9 +475,10 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                   type="date"
                   value={formData.effective_from || ""}
                   onChange={(e) =>
-                    setFormData(
-                      { ...formData, effective_from: e.target.value } as Partial<CreateCommissionRuleInput>,
-                    )
+                    setFormData({
+                      ...formData,
+                      effective_from: e.target.value,
+                    } as Partial<CreateCommissionRuleInput>)
                   }
                 />
               </div>
@@ -523,12 +490,10 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                   type="date"
                   value={formData.effective_to || ""}
                   onChange={(e) =>
-                    setFormData(
-                      {
-                        ...formData,
-                        effective_to: e.target.value || undefined,
-                      } as Partial<CreateCommissionRuleInput>,
-                    )
+                    setFormData({
+                      ...formData,
+                      effective_to: e.target.value || undefined,
+                    } as Partial<CreateCommissionRuleInput>)
                   }
                 />
               </div>
@@ -544,12 +509,10 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                 placeholder="1"
                 value={formData.priority || 1}
                 onChange={(e) =>
-                  setFormData(
-                    {
-                      ...formData,
-                      priority: parseInt(e.target.value) || 1,
-                    } as Partial<CreateCommissionRuleInput>,
-                  )
+                  setFormData({
+                    ...formData,
+                    priority: parseInt(e.target.value) || 1,
+                  } as Partial<CreateCommissionRuleInput>)
                 }
               />
               <p className="text-xs text-muted-foreground">
@@ -564,9 +527,10 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                 id="is_active"
                 checked={formData.is_active !== false}
                 onChange={(e) =>
-                  setFormData(
-                    { ...formData, is_active: e.target.checked } as Partial<CreateCommissionRuleInput>,
-                  )
+                  setFormData({
+                    ...formData,
+                    is_active: e.target.checked,
+                  } as Partial<CreateCommissionRuleInput>)
                 }
                 className="rounded border-gray-300"
               />

@@ -7,21 +7,8 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import {
   ArrowLeft,
@@ -92,7 +79,7 @@ export default function PriceSimulatorPage() {
     mutationFn: async (data: PriceCalculationRequest) => {
       const response = await apiClient.post<PriceCalculationResult>(
         `${apiBaseUrl}/api/v1/billing/pricing/calculate`,
-        data
+        data,
       );
       return response.data;
     },
@@ -113,7 +100,7 @@ export default function PriceSimulatorPage() {
   });
 
   const handleCalculate = () => {
-    if (!formData.product_id || !formData['customer_id'] || !formData.quantity) {
+    if (!formData.product_id || !formData["customer_id"] || !formData.quantity) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -138,7 +125,7 @@ export default function PriceSimulatorPage() {
 
     const requestData: PriceCalculationRequest = {
       product_id: formData.product_id,
-      customer_id: formData['customer_id'],
+      customer_id: formData["customer_id"],
       quantity,
       currency: formData.currency,
       ...(segments && { customer_segments: segments }),
@@ -203,10 +190,7 @@ export default function PriceSimulatorPage() {
             <RotateCcw className="mr-2 h-4 w-4" />
             Clear
           </Button>
-          <Button
-            onClick={handleCalculate}
-            disabled={calculatePriceMutation.isPending}
-          >
+          <Button onClick={handleCalculate} disabled={calculatePriceMutation.isPending}>
             {calculatePriceMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -239,9 +223,7 @@ export default function PriceSimulatorPage() {
               <Input
                 id="product_id"
                 value={formData.product_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, product_id: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}
                 placeholder="e.g., prod_123456"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -255,10 +237,8 @@ export default function PriceSimulatorPage() {
               </Label>
               <Input
                 id="customer_id"
-                value={formData['customer_id']}
-                onChange={(e) =>
-                  setFormData({ ...formData, customer_id: e.target.value })
-                }
+                value={formData["customer_id"]}
+                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 placeholder="e.g., cust_123456"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -275,14 +255,10 @@ export default function PriceSimulatorPage() {
                 type="number"
                 min="1"
                 value={formData.quantity}
-                onChange={(e) =>
-                  setFormData({ ...formData, quantity: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                 placeholder="1"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Number of units to purchase
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Number of units to purchase</p>
             </div>
 
             <div>
@@ -290,9 +266,7 @@ export default function PriceSimulatorPage() {
               <Input
                 id="customer_segments"
                 value={formData.customer_segments}
-                onChange={(e) =>
-                  setFormData({ ...formData, customer_segments: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, customer_segments: e.target.value })}
                 placeholder="e.g., vip, enterprise"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -304,9 +278,7 @@ export default function PriceSimulatorPage() {
               <Label htmlFor="currency">Currency</Label>
               <Select
                 value={formData.currency}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, currency: value })
-                }
+                onValueChange={(value) => setFormData({ ...formData, currency: value })}
               >
                 <SelectTrigger id="currency">
                   <SelectValue />
@@ -376,7 +348,11 @@ export default function PriceSimulatorPage() {
                       Total Discount
                     </span>
                     <span className="font-semibold">
-                      -{formatMoney(calculationResult.total_discount_amount, calculationResult.currency)}
+                      -
+                      {formatMoney(
+                        calculationResult.total_discount_amount,
+                        calculationResult.currency,
+                      )}
                     </span>
                   </div>
                 )}
@@ -401,7 +377,10 @@ export default function PriceSimulatorPage() {
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-green-900 dark:text-green-100">
-                      {formatMoney(calculationResult.total_discount_amount, calculationResult.currency)}
+                      {formatMoney(
+                        calculationResult.total_discount_amount,
+                        calculationResult.currency,
+                      )}
                     </div>
                   </div>
                 </div>
@@ -423,9 +402,7 @@ export default function PriceSimulatorPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Calculated at:</span>
-                  <span>
-                    {new Date(calculationResult.calculation_timestamp).toLocaleString()}
-                  </span>
+                  <span>{new Date(calculationResult.calculation_timestamp).toLocaleString()}</span>
                 </div>
               </div>
             </CardContent>
@@ -528,13 +505,20 @@ export default function PriceSimulatorPage() {
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-green-600">Discount Applied</span>
                   <span className="font-medium text-green-600">
-                    -{formatMoney(calculationResult.total_discount_amount, calculationResult.currency)} (
-                    {savingsPercentage.toFixed(1)}%)
+                    -
+                    {formatMoney(
+                      calculationResult.total_discount_amount,
+                      calculationResult.currency,
+                    )}{" "}
+                    ({savingsPercentage.toFixed(1)}%)
                   </span>
                 </div>
-                <div className="w-full h-8 bg-green-500 dark:bg-green-600 rounded-md" style={{
-                  width: `${savingsPercentage}%`,
-                }}></div>
+                <div
+                  className="w-full h-8 bg-green-500 dark:bg-green-600 rounded-md"
+                  style={{
+                    width: `${savingsPercentage}%`,
+                  }}
+                ></div>
               </div>
 
               {/* Final Price Bar */}

@@ -47,10 +47,7 @@ jest.mock("@dotmac/ui", () => {
       <TabsContext.Provider value={{ value, onValueChange }}>{children}</TabsContext.Provider>
     ),
     TabsList: ({ children }: PropsWithChildren) => <div>{children}</div>,
-    TabsTrigger: ({
-      children,
-      value,
-    }: PropsWithChildren & { value: string }) => {
+    TabsTrigger: ({ children, value }: PropsWithChildren & { value: string }) => {
       const ctx = React.useContext(TabsContext);
       return (
         <button
@@ -116,8 +113,6 @@ describe("IPCalculator", () => {
     render(<IPCalculator />);
 
     expect(screen.getByText("Binary Representation")).toBeInTheDocument();
-    expect(
-      screen.getByText(/11000000\.10101000\.00000001\.00000000/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/11000000\.10101000\.00000001\.00000000/i)).toBeInTheDocument();
   });
 });

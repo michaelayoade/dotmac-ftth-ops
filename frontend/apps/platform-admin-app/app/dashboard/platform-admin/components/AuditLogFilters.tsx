@@ -1,22 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Calendar,
-  Download,
-  RefreshCw,
-  Search,
-  X,
-} from "lucide-react";
+import { Calendar, Download, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { ActivityType, ActivitySeverity, ACTIVITY_CATEGORIES } from "@/types/audit";
 

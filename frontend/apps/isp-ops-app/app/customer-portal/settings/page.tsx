@@ -17,11 +17,7 @@ import { useCustomerProfile, useCustomerSettings } from "@/hooks/useCustomerPort
 export default function CustomerSettingsPage() {
   const { toast } = useToast();
   const { profile: customerProfile, loading: profileLoading, updateProfile } = useCustomerProfile();
-  const {
-    loading: settingsLoading,
-    updateSettings,
-    changePassword,
-  } = useCustomerSettings();
+  const { loading: settingsLoading, updateSettings, changePassword } = useCustomerSettings();
 
   const [profile, setProfile] = useState({
     firstName: "",
@@ -35,7 +31,7 @@ export default function CustomerSettingsPage() {
   });
 
   useEffect(() => {
-    if (customerProfile && typeof customerProfile === 'object' && 'first_name' in customerProfile) {
+    if (customerProfile && typeof customerProfile === "object" && "first_name" in customerProfile) {
       setProfile({
         firstName: customerProfile.first_name,
         lastName: customerProfile.last_name,
@@ -126,7 +122,7 @@ export default function CustomerSettingsPage() {
     try {
       await changePassword({
         currentPassword: security.currentPassword,
-        newPassword: security.newPassword
+        newPassword: security.newPassword,
       });
       toast({
         title: "Password Changed",
@@ -190,7 +186,9 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="firstName"
                     value={profile.firstName}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, firstName: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setProfile({ ...profile, firstName: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -198,7 +196,9 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="lastName"
                     value={profile.lastName}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, lastName: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setProfile({ ...profile, lastName: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -212,7 +212,9 @@ export default function CustomerSettingsPage() {
                   id="email"
                   type="email"
                   value={profile.email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, email: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setProfile({ ...profile, email: e.target.value })
+                  }
                 />
               </div>
 
@@ -225,7 +227,9 @@ export default function CustomerSettingsPage() {
                   id="phone"
                   type="tel"
                   value={profile.phone}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, phone: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setProfile({ ...profile, phone: e.target.value })
+                  }
                 />
               </div>
 

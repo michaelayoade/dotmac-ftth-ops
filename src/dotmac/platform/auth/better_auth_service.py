@@ -4,6 +4,7 @@ Better Auth Integration Service for FastAPI.
 This module provides session validation and user data extraction from Better Auth.
 Better Auth stores sessions in PostgreSQL tables and uses cookie-based authentication.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -182,13 +183,14 @@ class BetterAuthService:
             """)
 
             result = await self.db.execute(
-                query,
-                {"token": session_token, "now": datetime.now(UTC)}
+                query, {"token": session_token, "now": datetime.now(UTC)}
             )
             session_data = result.fetchone()
 
             if not session_data:
-                logger.debug("Better Auth session not found or expired", token=session_token[:10] + "...")
+                logger.debug(
+                    "Better Auth session not found or expired", token=session_token[:10] + "..."
+                )
                 return None
 
             # Extract session data
@@ -236,7 +238,9 @@ class BetterAuthService:
             permissions = []
 
             if selected_membership:
-                resolved_tenant_id = str(selected_membership[0])  # organization_id becomes tenant_id
+                resolved_tenant_id = str(
+                    selected_membership[0]
+                )  # organization_id becomes tenant_id
                 role = selected_membership[1]  # role from Better Auth
 
                 # Map Better Auth roles to our system roles
@@ -281,14 +285,16 @@ class BetterAuthService:
                         user_id=user_id,
                         error=str(rbac_error),
                     )
-                    permissions = self._get_role_permissions_for_role(role if selected_membership else None)
+                    permissions = self._get_role_permissions_for_role(
+                        role if selected_membership else None
+                    )
 
             logger.info(
                 "Better Auth session validated",
                 user_id=user_id,
                 email=email,
                 roles=roles,
-                tenant_id=resolved_tenant_id
+                tenant_id=resolved_tenant_id,
             )
 
             return UserInfo(

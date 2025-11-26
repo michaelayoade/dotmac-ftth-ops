@@ -159,7 +159,11 @@ async def update_isp_settings(
             validate_only=request.validate_only,
         )
 
-        message = "Settings validated successfully" if request.validate_only else "Settings updated successfully"
+        message = (
+            "Settings validated successfully"
+            if request.validate_only
+            else "Settings updated successfully"
+        )
 
         return SettingsUpdateResponse(
             success=True,
@@ -167,7 +171,9 @@ async def update_isp_settings(
             message=message,
         )
     except ISPSettingsError as exc:
-        logger.error("Failed to update ISP settings", error=str(exc), tenant_id=current_user.tenant_id)
+        logger.error(
+            "Failed to update ISP settings", error=str(exc), tenant_id=current_user.tenant_id
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=exc.user_message,
@@ -348,7 +354,11 @@ async def import_settings(
             validate_only=request.validate_only,
         )
 
-        message = "Settings import validated successfully" if request.validate_only else "Settings imported successfully"
+        message = (
+            "Settings import validated successfully"
+            if request.validate_only
+            else "Settings imported successfully"
+        )
 
         logger.info(
             "Settings imported",

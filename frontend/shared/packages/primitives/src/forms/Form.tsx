@@ -35,7 +35,12 @@ import { Slot } from "@radix-ui/react-slot";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { clsx } from "clsx";
-import { Controller, type FieldValues, type RegisterOptions, type UseFormReturn } from "react-hook-form";
+import {
+  Controller,
+  type FieldValues,
+  type RegisterOptions,
+  type UseFormReturn,
+} from "react-hook-form";
 
 import type { ValidationRule } from "../types";
 // useId is already destructured from React above
@@ -70,7 +75,8 @@ const inputVariants = cva(inputBaseClass, {
       default: "variant-default",
       outlined: "variant-outlined outlined border-2 border-primary/60",
       filled: "variant-filled filled bg-muted",
-      underlined: "variant-underlined underlined border-0 border-b border-input focus-visible:ring-0",
+      underlined:
+        "variant-underlined underlined border-0 border-b border-input focus-visible:ring-0",
     },
     size: {
       sm: "size-sm sm h-8 text-xs",
@@ -285,7 +291,12 @@ export const FormLabel = forwardRef<React.ElementRef<typeof LabelPrimitive.Root>
       <LabelPrimitive.Root
         ref={ref}
         htmlFor={htmlFor ?? field?.inputId}
-        className={clsx("form-label", { required }, field?.invalid && "text-destructive", className)}
+        className={clsx(
+          "form-label",
+          { required },
+          field?.invalid && "text-destructive",
+          className,
+        )}
         {...props}
       >
         {children}
@@ -419,14 +430,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const field = useFormFieldState();
 
     const controlId = field?.inputId ?? generatedId;
-    const isInvalid = field ? field.invalid : ariaInvalid ?? state === "error";
-    const describedBy = [
-      ariaDescribedBy,
-      field?.formDescriptionId,
-      field?.error ? field?.formMessageId : null,
-    ]
-      .filter(Boolean)
-      .join(" ") || undefined;
+    const isInvalid = field ? field.invalid : (ariaInvalid ?? state === "error");
+    const describedBy =
+      [ariaDescribedBy, field?.formDescriptionId, field?.error ? field?.formMessageId : null]
+        .filter(Boolean)
+        .join(" ") || undefined;
 
     const resolvedName = name ?? field?.name;
     const sharedProps = {
@@ -494,14 +502,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const generatedId = useUniqueId("textarea");
     const field = useFormFieldState();
     const controlId = field?.inputId ?? generatedId;
-    const isInvalid = field ? field.invalid : ariaInvalid ?? state === "error";
-    const describedBy = [
-      ariaDescribedBy,
-      field?.formDescriptionId,
-      field?.error ? field?.formMessageId : null,
-    ]
-      .filter(Boolean)
-      .join(" ") || undefined;
+    const isInvalid = field ? field.invalid : (ariaInvalid ?? state === "error");
+    const describedBy =
+      [ariaDescribedBy, field?.formDescriptionId, field?.error ? field?.formMessageId : null]
+        .filter(Boolean)
+        .join(" ") || undefined;
 
     const resolvedName = name ?? field?.name;
 
@@ -550,14 +555,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const generatedId = useUniqueId("select");
     const field = useFormFieldState();
     const controlId = field?.inputId ?? generatedId;
-    const isInvalid = field ? field.invalid : ariaInvalid ?? state === "error";
-    const describedBy = [
-      ariaDescribedBy,
-      field?.formDescriptionId,
-      field?.error ? field?.formMessageId : null,
-    ]
-      .filter(Boolean)
-      .join(" ") || undefined;
+    const isInvalid = field ? field.invalid : (ariaInvalid ?? state === "error");
+    const describedBy =
+      [ariaDescribedBy, field?.formDescriptionId, field?.error ? field?.formMessageId : null]
+        .filter(Boolean)
+        .join(" ") || undefined;
     const resolvedName = name ?? field?.name;
 
     return (
@@ -617,14 +619,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     const inputRef = React.useRef<HTMLInputElement | null>(null);
 
     const controlId = field?.inputId ?? checkboxId;
-    const isInvalid = field ? field.invalid : ariaInvalid ?? false;
-    const describedBy = [
-      ariaDescribedBy,
-      field?.formDescriptionId,
-      field?.error ? field?.formMessageId : null,
-    ]
-      .filter(Boolean)
-      .join(" ") || undefined;
+    const isInvalid = field ? field.invalid : (ariaInvalid ?? false);
+    const describedBy =
+      [ariaDescribedBy, field?.formDescriptionId, field?.error ? field?.formMessageId : null]
+        .filter(Boolean)
+        .join(" ") || undefined;
     const resolvedName = name ?? field?.name;
 
     React.useEffect(() => {
@@ -697,14 +696,11 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
     const field = useFormFieldState();
 
     const controlId = field?.inputId ?? radioId;
-    const isInvalid = field ? field.invalid : ariaInvalid ?? false;
-    const describedBy = [
-      ariaDescribedBy,
-      field?.formDescriptionId,
-      field?.error ? field?.formMessageId : null,
-    ]
-      .filter(Boolean)
-      .join(" ") || undefined;
+    const isInvalid = field ? field.invalid : (ariaInvalid ?? false);
+    const describedBy =
+      [ariaDescribedBy, field?.formDescriptionId, field?.error ? field?.formMessageId : null]
+        .filter(Boolean)
+        .join(" ") || undefined;
     const resolvedName = name ?? field?.name;
 
     return (
@@ -834,7 +830,9 @@ export const validationPatterns = {
 };
 
 function useUniqueId(prefix = "id"): string {
-  const [generatedId] = React.useState(() => `${prefix}-${Math.random().toString(36).slice(2, 11)}`);
+  const [generatedId] = React.useState(
+    () => `${prefix}-${Math.random().toString(36).slice(2, 11)}`,
+  );
   return generatedId;
 }
 

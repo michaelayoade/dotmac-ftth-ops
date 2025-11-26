@@ -53,14 +53,8 @@ function mergeBranding(
       baseColors.light?.secondaryForeground ??
       baseColors.secondaryForeground,
     accent: overrides.accent_color ?? baseColors.light?.accent ?? baseColors.accent,
-    background:
-      overrides.background_color ??
-      baseColors.light?.background ??
-      baseColors.background,
-    foreground:
-      overrides.foreground_color ??
-      baseColors.light?.foreground ??
-      baseColors.foreground,
+    background: overrides.background_color ?? baseColors.light?.background ?? baseColors.background,
+    foreground: overrides.foreground_color ?? baseColors.light?.foreground ?? baseColors.foreground,
   };
 
   const mergedDark = {
@@ -75,7 +69,8 @@ function mergeBranding(
       overrides.primary_foreground_color_dark ??
       baseColors.dark?.primaryForeground ??
       baseColors.primaryForeground,
-    secondary: overrides.secondary_color_dark ?? baseColors.dark?.secondary ?? mergedLight.secondary,
+    secondary:
+      overrides.secondary_color_dark ?? baseColors.dark?.secondary ?? mergedLight.secondary,
     secondaryHover:
       overrides.secondary_hover_color_dark ??
       baseColors.dark?.secondaryHover ??
@@ -111,8 +106,7 @@ function mergeBranding(
     companyName: overrides.company_name ?? defaultBranding.companyName,
     supportEmail: overrides.support_email ?? defaultBranding.supportEmail,
     successEmail: overrides.success_email ?? defaultBranding.successEmail,
-    partnerSupportEmail:
-      overrides.partner_support_email ?? defaultBranding.partnerSupportEmail,
+    partnerSupportEmail: overrides.partner_support_email ?? defaultBranding.partnerSupportEmail,
     colors: {
       ...baseColors,
       ...mergedLight,

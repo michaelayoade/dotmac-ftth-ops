@@ -89,7 +89,7 @@ describe("usePlatformTenants", () => {
 
     it("should start with loading state", () => {
       (platformAdminTenantService.listTenants as jest.Mock).mockImplementation(
-        () => new Promise(() => {})
+        () => new Promise(() => {}),
       );
 
       const { result } = renderHook(() => usePlatformTenants({ page: 1, limit: 10 }), {
@@ -174,7 +174,7 @@ describe("usePlatformTenants", () => {
         {
           wrapper: createWrapper(),
           initialProps: { page: 1 },
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));

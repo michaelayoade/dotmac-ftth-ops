@@ -31,11 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@dotmac/ui";
-import {
-  EnhancedDataTable,
-  type ColumnDef,
-  type BulkAction,
-} from "@dotmac/ui";
+import { EnhancedDataTable, type ColumnDef, type BulkAction } from "@dotmac/ui";
 import { MetricCardEnhanced } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { useQuotes, type Quote, type QuoteStatus } from "@/hooks/useCRM";
@@ -43,13 +39,7 @@ import { QuoteStatusBadge } from "@/components/crm/Badges";
 import { CreateQuoteModal } from "@/components/crm/CreateQuoteModal";
 import { QuoteDetailModal } from "@/components/crm/QuoteDetailModal";
 import { apiClient } from "@/lib/api/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 

@@ -95,7 +95,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Wait for data to load
@@ -126,14 +126,12 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Assert
       await waitFor(() => {
-        expect(deps.apiClient.get).toHaveBeenCalledWith(
-          expect.stringContaining(customerId)
-        );
+        expect(deps.apiClient.get).toHaveBeenCalledWith(expect.stringContaining(customerId));
       });
     });
 
@@ -150,7 +148,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Assert - should log error (error UI not implemented yet)
@@ -161,7 +159,7 @@ describe("ReceiptList Integration Tests", () => {
       expect(deps.logger.error).toHaveBeenCalledWith(
         expect.stringContaining("receipts"),
         expect.any(Error),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -177,7 +175,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Assert
@@ -202,7 +200,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={onReceiptSelect}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       await waitFor(() => {
@@ -235,7 +233,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Assert
@@ -263,7 +261,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Assert
@@ -290,7 +288,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Assert
@@ -319,7 +317,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Wait for error
@@ -335,7 +333,7 @@ describe("ReceiptList Integration Tests", () => {
           onReceiptSelect={undefined}
           apiClient={deps.apiClient}
           logger={deps.logger}
-        />
+        />,
       );
 
       // Assert - should eventually show data

@@ -5,9 +5,9 @@
  * WCAG 2.4.1 Level A requirement
  */
 
-'use client';
+"use client";
 
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 interface SkipLinkProps {
   /** Target element ID to skip to */
@@ -38,7 +38,7 @@ interface SkipLinkProps {
  * ```
  */
 export function SkipLink({ href, children, className }: SkipLinkProps) {
-  const t = useTranslations('accessibility');
+  const t = useTranslations("accessibility");
 
   return (
     <a
@@ -59,10 +59,10 @@ export function SkipLink({ href, children, className }: SkipLinkProps) {
         focus:ring-2
         focus:ring-ring
         focus:ring-offset-2
-        ${className || ''}
+        ${className || ""}
       `.trim()}
     >
-      {children || t('skipToMainContent')}
+      {children || t("skipToMainContent")}
     </a>
   );
 }
@@ -81,11 +81,7 @@ export function SkipLink({ href, children, className }: SkipLinkProps) {
  * />
  * ```
  */
-export function SkipLinks({
-  links,
-}: {
-  links: Array<{ href: string; label: string }>;
-}) {
+export function SkipLinks({ links }: { links: Array<{ href: string; label: string }> }) {
   return (
     <div className="skip-links">
       {links.map((link) => (

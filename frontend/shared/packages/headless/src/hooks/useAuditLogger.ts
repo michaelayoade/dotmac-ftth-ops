@@ -151,8 +151,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       return {
         source: serviceName,
         environment: process.env["NODE_ENV"] || "development",
-        correlation_id:
-          sessionId ?? `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        correlation_id: sessionId ?? `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         request_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         additional: {
           url: typeof window !== "undefined" ? window.location.href : undefined,

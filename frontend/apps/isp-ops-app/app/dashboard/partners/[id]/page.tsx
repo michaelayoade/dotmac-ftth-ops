@@ -13,7 +13,7 @@ import CommissionTrackingView from "@/components/partners/CommissionTrackingView
 
 export default function PartnerDetailPage() {
   const params = useParams();
-  const partnerId = params['id'] as string;
+  const partnerId = params["id"] as string;
   const { data: partner, isLoading, error } = usePartner(partnerId);
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<
@@ -171,9 +171,10 @@ export default function PartnerDetailPage() {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab['id'] as any)}
+              onClick={() => setActiveTab(tab["id"] as any)}
               className={`pb-3 px-1 border-b-2 transition-colors ${
-                activeTab === tab['id']? "border-blue-600 dark:border-blue-400 text-foreground"
+                activeTab === tab["id"]
+                  ? "border-blue-600 dark:border-blue-400 text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >

@@ -11,14 +11,10 @@ export {
   DashboardSkeleton,
   DashboardSkeletons,
   type DashboardSkeletonProps,
-} from './DashboardSkeleton';
+} from "./DashboardSkeleton";
 
 // Table skeletons
-export {
-  TableSkeleton,
-  TableSkeletons,
-  type TableSkeletonProps,
-} from './TableSkeleton';
+export { TableSkeleton, TableSkeletons, type TableSkeletonProps } from "./TableSkeleton";
 
 // Card skeletons
 export {
@@ -27,4 +23,4 @@ export {
   CardSkeletons,
   type CardSkeletonProps,
   type CardGridSkeletonProps,
-} from './CardSkeleton';
+} from "./CardSkeleton";

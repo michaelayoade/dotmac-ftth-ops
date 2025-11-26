@@ -98,7 +98,7 @@ describe("usePartnerPortal", () => {
           "http://localhost:3000/api/v1/partners/portal/dashboard",
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
         expect(result.current.data?.total_customers).toBe(50);
         expect(result.current.data?.current_tier).toBe("gold");
@@ -143,7 +143,7 @@ describe("usePartnerPortal", () => {
           "http://localhost:3000/api/v1/partners/portal/profile",
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
         expect(result.current.data?.id).toBe("partner-123");
         expect(result.current.data?.company_name).toBe("Acme Corporation");
@@ -197,7 +197,7 @@ describe("usePartnerPortal", () => {
               website: "https://new-company.com",
               phone: "+9876543210",
             }),
-          })
+          }),
         );
         expect(result.current.data?.company_name).toBe("New Company Name");
         expect(result.current.data?.website).toBe("https://new-company.com");
@@ -247,7 +247,7 @@ describe("usePartnerPortal", () => {
           "http://localhost:3000/api/v1/partners/portal/referrals",
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
         if (result.current.data) {
           expect(result.current.data).toHaveLength(2);
@@ -280,11 +280,11 @@ describe("usePartnerPortal", () => {
 
         expect(mockFetch).toHaveBeenCalledWith(
           expect.stringContaining("limit=10"),
-          expect.any(Object)
+          expect.any(Object),
         );
         expect(mockFetch).toHaveBeenCalledWith(
           expect.stringContaining("offset=5"),
-          expect.any(Object)
+          expect.any(Object),
         );
         expect(result.current.data).toHaveLength(10);
       });
@@ -378,7 +378,7 @@ describe("usePartnerPortal", () => {
           "http://localhost:3000/api/v1/partners/portal/commissions",
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
         if (result.current.data) {
           expect(result.current.data).toHaveLength(2);
@@ -430,7 +430,7 @@ describe("usePartnerPortal", () => {
           "http://localhost:3000/api/v1/partners/portal/customers",
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
         if (result.current.data) {
           expect(result.current.data).toHaveLength(2);
@@ -484,7 +484,7 @@ describe("usePartnerPortal", () => {
           "http://localhost:3000/api/v1/partners/portal/statements",
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
         if (result.current.data) {
           expect(result.current.data).toHaveLength(2);
@@ -545,7 +545,7 @@ describe("usePartnerPortal", () => {
           "http://localhost:3000/api/v1/partners/portal/payouts",
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
         if (result.current.data) {
           expect(result.current.data).toHaveLength(2);

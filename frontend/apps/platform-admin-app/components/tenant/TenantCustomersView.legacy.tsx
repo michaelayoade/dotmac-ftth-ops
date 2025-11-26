@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AlertCircle,
-  Download,
-  Filter,
-  Plus,
-  RefreshCw,
-  Search,
-} from "lucide-react";
+import { AlertCircle, Download, Filter, Plus, RefreshCw, Search } from "lucide-react";
 import { CustomersList } from "@/components/customers/CustomersList";
 import { CustomersMetrics } from "@/components/customers/CustomersMetrics";
 import { CreateCustomerModal } from "@/components/customers/CreateCustomerModal";

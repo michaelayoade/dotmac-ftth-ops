@@ -1,19 +1,24 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, CheckCircle2, Clock, Pause, Play, Plus, RefreshCw, Settings, Upload, XCircle } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Pause,
+  Play,
+  Plus,
+  RefreshCw,
+  Settings,
+  Upload,
+  XCircle,
+} from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import {
@@ -146,8 +151,18 @@ export function BulkOperationsDashboard() {
   };
 
   const getStatusBadge = (status: string) => {
-    type BadgeVariant = "default" | "destructive" | "outline" | "secondary" | "warning" | "success" | "info";
-    const styles: Record<string, { variant: BadgeVariant; icon: React.ElementType; color: string }> = {
+    type BadgeVariant =
+      | "default"
+      | "destructive"
+      | "outline"
+      | "secondary"
+      | "warning"
+      | "success"
+      | "info";
+    const styles: Record<
+      string,
+      { variant: BadgeVariant; icon: React.ElementType; color: string }
+    > = {
       pending: { variant: "secondary", icon: Clock, color: "text-blue-600" },
       running: { variant: "default", icon: Play, color: "text-green-600" },
       completed: {
@@ -160,7 +175,7 @@ export function BulkOperationsDashboard() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord = (styles[normalizedStatus] ?? styles['pending'])!;
+    const styleRecord = (styles[normalizedStatus] ?? styles["pending"])!;
     const Icon = styleRecord.icon;
 
     return (

@@ -166,7 +166,7 @@ class ServiceLifecycleService {
     // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
     // Add tenant ID header if available from localStorage
     if (typeof window !== "undefined") {
-    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
+      // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
       const tenantId = localStorage.getItem("tenant_id");
       if (tenantId) {
         headers["X-Tenant-ID"] = tenantId;

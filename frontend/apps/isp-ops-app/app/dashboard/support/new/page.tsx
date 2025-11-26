@@ -10,13 +10,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import {
@@ -44,7 +38,7 @@ export default function NewTicketPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData['subject'].trim() || !formData.message.trim()) {
+    if (!formData["subject"].trim() || !formData.message.trim()) {
       toast({
         title: "Validation Error",
         description: "Subject and message are required",
@@ -54,13 +48,15 @@ export default function NewTicketPage() {
     }
 
     const result = await createTicket({
-      subject: formData['subject'],
+      subject: formData["subject"],
       message: formData.message,
       target_type: formData.targetType,
       priority: formData.priority,
       ...(formData.ticketType ? { ticket_type: formData.ticketType } : {}),
       ...(formData.serviceAddress ? { service_address: formData.serviceAddress } : {}),
-      ...(formData.affectedServices.length > 0 ? { affected_services: formData.affectedServices } : {}),
+      ...(formData.affectedServices.length > 0
+        ? { affected_services: formData.affectedServices }
+        : {}),
     });
 
     if (result) {
@@ -109,7 +105,7 @@ export default function NewTicketPage() {
               <Input
                 id="subject"
                 placeholder="Brief description of the issue"
-                value={formData['subject']}
+                value={formData["subject"]}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 required
               />

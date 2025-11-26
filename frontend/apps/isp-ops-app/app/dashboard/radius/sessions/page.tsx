@@ -15,7 +15,11 @@ export default function RADIUSSessionsPage() {
   const confirmDialog = useConfirmDialog();
 
   // Fetch active sessions
-  const { data: sessions, isLoading, refetch } = useQuery<RADIUSSession[]>({
+  const {
+    data: sessions,
+    isLoading,
+    refetch,
+  } = useQuery<RADIUSSession[]>({
     queryKey: ["radius-sessions"],
     queryFn: async () => {
       try {

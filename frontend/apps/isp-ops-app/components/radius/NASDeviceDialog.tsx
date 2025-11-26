@@ -14,11 +14,7 @@ interface NASDeviceDialogProps {
   nasDevice?: NASDevice | null;
 }
 
-export function NASDeviceDialog({
-  open,
-  onOpenChange,
-  nasDevice,
-}: NASDeviceDialogProps) {
+export function NASDeviceDialog({ open, onOpenChange, nasDevice }: NASDeviceDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -34,10 +30,7 @@ export function NASDeviceDialog({
       deviceId?: number | undefined;
     }) => {
       if (isEdit && deviceId) {
-        const response = await apiClient.patch(
-          `/radius/nas/${deviceId}`,
-          data
-        );
+        const response = await apiClient.patch(`/radius/nas/${deviceId}`, data);
         return response.data;
       } else {
         const response = await apiClient.post("/radius/nas", data);
@@ -56,8 +49,7 @@ export function NASDeviceDialog({
       logger.error("Failed to save NAS device", { error });
       toast({
         title: "Error",
-        description:
-          error.response?.data?.detail || "Failed to save NAS device",
+        description: error.response?.data?.detail || "Failed to save NAS device",
         variant: "destructive",
       });
     },
@@ -66,7 +58,7 @@ export function NASDeviceDialog({
   const handleSubmit = async (
     data: NASDeviceFormData,
     isEdit: boolean,
-    deviceId?: number | undefined
+    deviceId?: number | undefined,
   ) => {
     await mutation.mutateAsync({ data, isEdit, deviceId: deviceId ?? undefined });
   };

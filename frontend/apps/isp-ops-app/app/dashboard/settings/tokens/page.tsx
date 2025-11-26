@@ -7,14 +7,7 @@ import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -186,7 +179,7 @@ function APITokensContent() {
     const expiryDate = new Date(expiresAt);
     const now = new Date();
     const daysUntilExpiry = Math.ceil(
-      (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     if (daysUntilExpiry < 0) {
@@ -348,7 +341,8 @@ function APITokensContent() {
           <div>
             <h4 className="font-medium mb-2">HTTP Header Authentication</h4>
             <code className="block bg-muted p-4 rounded-lg text-sm">
-              curl -H &quot;Authorization: Bearer YOUR_TOKEN&quot; https://api.example.com/v1/endpoint
+              curl -H &quot;Authorization: Bearer YOUR_TOKEN&quot;
+              https://api.example.com/v1/endpoint
             </code>
           </div>
           <div>
@@ -471,11 +465,7 @@ response = requests.get('https://api.example.com/v1/endpoint', headers=headers)`
                       size="sm"
                       onClick={() => setShowNewToken(!showNewToken)}
                     >
-                      {showNewToken ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showNewToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                     <Button
                       variant="outline"

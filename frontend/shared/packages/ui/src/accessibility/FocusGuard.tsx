@@ -6,7 +6,7 @@
 
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- Focus guard intentionally uses tabIndex for focus trapping */
 
-'use client';
+"use client";
 
 interface FocusGuardProps {
   /** Callback when guard receives focus */
@@ -26,15 +26,15 @@ export function FocusGuard({ onFocus }: FocusGuardProps) {
       tabIndex={0}
       onFocus={onFocus}
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: 0,
         left: 0,
-        width: '1px',
+        width: "1px",
         height: 0,
         padding: 0,
-        overflow: 'hidden',
-        clip: 'rect(0, 0, 0, 0)',
-        whiteSpace: 'nowrap',
+        overflow: "hidden",
+        clip: "rect(0, 0, 0, 0)",
+        whiteSpace: "nowrap",
         borderWidth: 0,
       }}
       aria-hidden="true"

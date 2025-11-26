@@ -5,9 +5,7 @@ export const dynamicParams = true;
 
 import PartnerOnboardingWorkflow from "@/components/partners/PartnerOnboardingWorkflow";
 import Link from "next/link";
-import {
-  ArrowLeft,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function PartnerOnboardingPage() {
   return (

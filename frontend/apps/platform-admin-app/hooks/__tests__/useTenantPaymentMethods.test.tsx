@@ -2,7 +2,11 @@
  * Platform Admin App - useTenantPaymentMethods tests
  * Tests for tenant payment method management with TanStack Query
  */
-import { usePaymentMethods, usePaymentMethodOperations, useTenantPaymentMethods } from "../useTenantPaymentMethods";
+import {
+  usePaymentMethods,
+  usePaymentMethodOperations,
+  useTenantPaymentMethods,
+} from "../useTenantPaymentMethods";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
@@ -152,7 +156,9 @@ describe("useTenantPaymentMethods", () => {
 
       await result.current.setDefaultPaymentMethod("pm_2");
 
-      expect(apiClient.post).toHaveBeenCalledWith("/billing/tenant/payment-methods/pm_2/set-default");
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/billing/tenant/payment-methods/pm_2/set-default",
+      );
     });
 
     it("should remove payment method successfully", async () => {
@@ -183,7 +189,10 @@ describe("useTenantPaymentMethods", () => {
 
       await result.current.verifyPaymentMethod("pm_2", request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/billing/tenant/payment-methods/pm_2/verify", request);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/billing/tenant/payment-methods/pm_2/verify",
+        request,
+      );
     });
   });
 

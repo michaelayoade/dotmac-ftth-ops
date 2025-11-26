@@ -18,9 +18,7 @@ export default function ISPCustomersView() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<CustomerStatusEnum | undefined>(
-    undefined
-  );
+  const [selectedStatus, setSelectedStatus] = useState<CustomerStatusEnum | undefined>(undefined);
 
   // Fetch customers and metrics using GraphQL hook
   const customerQueryOptions: Parameters<typeof useCustomerDashboardGraphQL>[0] = {
@@ -67,11 +65,7 @@ export default function ISPCustomersView() {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={isLoading || isFetching}
-          >
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading || isFetching}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -114,7 +108,7 @@ export default function ISPCustomersView() {
               value={selectedStatus || ""}
               onChange={(e) =>
                 setSelectedStatus(
-                  e.target.value ? (e.target.value as CustomerStatusEnum) : undefined
+                  e.target.value ? (e.target.value as CustomerStatusEnum) : undefined,
                 )
               }
               className="px-3 py-2 border rounded-md bg-background"
@@ -132,9 +126,7 @@ export default function ISPCustomersView() {
       {error ? (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load customers: {error}
-          </AlertDescription>
+          <AlertDescription>Failed to load customers: {error}</AlertDescription>
         </Alert>
       ) : (
         <CustomersList
@@ -149,8 +141,8 @@ export default function ISPCustomersView() {
         <CreateCustomerModal
           onClose={() => setShowCreateModal(false)}
           onCustomerCreated={handleCustomerCreated as any}
-          createCustomer={async () => ({} as any)}
-          updateCustomer={async () => ({} as any)}
+          createCustomer={async () => ({}) as any}
+          updateCustomer={async () => ({}) as any}
         />
       )}
     </div>

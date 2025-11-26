@@ -9,14 +9,7 @@ import { Textarea } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { platformConfig } from "@/lib/config";
-import {
-  ArrowLeft,
-  Play,
-  Activity,
-  XCircle,
-  AlertCircle,
-  Info,
-} from "lucide-react";
+import { ArrowLeft, Play, Activity, XCircle, AlertCircle, Info } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
@@ -31,7 +24,7 @@ interface JobTemplate {
 function PlaybookRunPageContent() {
   const params = useParams();
   const router = useRouter();
-  const templateId = params?.['id'] as string;
+  const templateId = params?.["id"] as string;
   const { toast } = useToast();
   const [extraVars, setExtraVars] = useState("{}");
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -43,7 +36,7 @@ function PlaybookRunPageContent() {
         `${platformConfig.api.baseUrl}/api/v1/ansible/job-templates/${templateId}`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         if (response.status === 404) {
@@ -58,17 +51,14 @@ function PlaybookRunPageContent() {
 
   const launchJobMutation = useMutation({
     mutationFn: async (data: { template_id: number; extra_vars?: object }) => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/ansible/jobs/launch`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/ansible/jobs/launch`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
       if (!response.ok) {
         const error = await response.json().catch(() => ({ detail: "Failed to launch job" }));
         throw new Error(error.detail || "Failed to launch job");
@@ -150,7 +140,9 @@ function PlaybookRunPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <XCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Playbook Not Found</h2>
-        <p className="text-muted-foreground mb-4">The playbook template you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The playbook template you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/automation/playbooks">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -232,8 +224,8 @@ function PlaybookRunPageContent() {
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-1">Extra Variables Format</p>
                 <p>
-                  Extra variables must be valid JSON. These variables will be passed to the
-                  Ansible playbook during execution. Leave empty if no extra variables are needed.
+                  Extra variables must be valid JSON. These variables will be passed to the Ansible
+                  playbook during execution. Leave empty if no extra variables are needed.
                 </p>
               </div>
             </div>
@@ -250,9 +242,7 @@ function PlaybookRunPageContent() {
                 {launchJobMutation.isPending ? "Launching..." : "Launch Playbook"}
               </Button>
               <Button variant="outline" asChild>
-                <Link href={`/dashboard/automation/playbooks/${templateId}`}>
-                  Cancel
-                </Link>
+                <Link href={`/dashboard/automation/playbooks/${templateId}`}>Cancel</Link>
               </Button>
             </div>
           </div>
@@ -263,15 +253,13 @@ function PlaybookRunPageContent() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Example Extra Variables</CardTitle>
-          <CardDescription>
-            Common patterns for extra variables
-          </CardDescription>
+          <CardDescription>Common patterns for extra variables</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
             <p className="text-sm font-medium mb-2">Basic Variables</p>
             <pre className="p-3 bg-accent rounded-lg text-sm font-mono overflow-x-auto">
-{`{
+              {`{
   "environment": "production",
   "debug_mode": false,
   "max_retries": 3
@@ -281,7 +269,7 @@ function PlaybookRunPageContent() {
           <div>
             <p className="text-sm font-medium mb-2">Network Configuration</p>
             <pre className="p-3 bg-accent rounded-lg text-sm font-mono overflow-x-auto">
-{`{
+              {`{
   "target_hosts": ["router1", "router2"],
   "vlan_id": 100,
   "interface": "eth0"

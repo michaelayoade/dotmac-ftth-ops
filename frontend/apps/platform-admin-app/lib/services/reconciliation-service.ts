@@ -188,9 +188,7 @@ class ReconciliationService {
     if (params?.days) searchParams.append("days", params.days.toString());
 
     const response = await fetch(
-      platformConfig.api.buildUrl(
-        `/billing/reconciliations/summary?${searchParams.toString()}`,
-      ),
+      platformConfig.api.buildUrl(`/billing/reconciliations/summary?${searchParams.toString()}`),
       {
         headers: this.getAuthHeaders(),
       },

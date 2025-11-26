@@ -861,8 +861,7 @@ export const AlertSeverityIndicator: React.FC<AlertSeverityProps> = ({
 
 // Components are already exported individually above
 
-export interface StatusIndicatorsProps
-  extends Omit<StatusBadgeProps, "variant" | "children"> {
+export interface StatusIndicatorsProps extends Omit<StatusBadgeProps, "variant" | "children"> {
   status: StatusVariant;
   showLabel?: boolean;
   label?: string;

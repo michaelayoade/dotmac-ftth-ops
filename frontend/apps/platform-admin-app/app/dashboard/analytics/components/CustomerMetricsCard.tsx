@@ -4,12 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
 import { useCustomerMetrics } from "@/lib/graphql/hooks";
-import {
-  TrendingUp,
-  UserMinus,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { TrendingUp, UserMinus, UserPlus, Users } from "lucide-react";
 import { Skeleton } from "@dotmac/ui";
 
 export function CustomerMetricsCard({ period = "30d" }: { period?: string }) {

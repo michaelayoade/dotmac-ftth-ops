@@ -6,22 +6,9 @@ import { Users, RefreshCw, TrendingUp, Clock, CheckCircle2, AlertCircle } from "
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 
 interface AgentPerformanceMetrics {
@@ -72,7 +59,12 @@ export default function AgentPerformancePage() {
   const dateRange = getDateRange();
 
   // Fetch agent performance metrics
-  const { data: metrics, isLoading, refetch, isFetching } = useQuery({
+  const {
+    data: metrics,
+    isLoading,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["agent-performance", dateRange],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -203,9 +195,7 @@ export default function AgentPerformancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {summary.avgSLACompliance.toFixed(1)}%
-            </div>
+            <div className="text-2xl font-bold">{summary.avgSLACompliance.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground mt-1">
               <Clock className="inline h-3 w-3 mr-1" />
               Team average
@@ -248,9 +238,7 @@ export default function AgentPerformancePage() {
                     <TableRow key={agent.agent_id}>
                       <TableCell>
                         <div>
-                          <div className="font-medium">
-                            {agent.agent_name || "Unknown Agent"}
-                          </div>
+                          <div className="font-medium">{agent.agent_name || "Unknown Agent"}</div>
                           <div className="text-sm text-muted-foreground">
                             {agent.agent_email || "No email"}
                           </div>
@@ -261,9 +249,7 @@ export default function AgentPerformancePage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-green-600">
-                            {agent.total_resolved}
-                          </span>
+                          <span className="font-medium text-green-600">{agent.total_resolved}</span>
                           <span className="text-xs text-muted-foreground">
                             (
                             {agent.total_assigned > 0

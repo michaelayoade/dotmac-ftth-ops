@@ -35,7 +35,7 @@ describe("Avatar", () => {
         "w-10",
         "shrink-0",
         "overflow-hidden",
-        "rounded-full"
+        "rounded-full",
       );
     });
 
@@ -52,7 +52,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByRole("img");
@@ -63,7 +63,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByRole("img");
@@ -74,7 +74,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByRole("img");
@@ -85,7 +85,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="John Doe" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByRole("img", { name: "John Doe" });
@@ -96,7 +96,7 @@ describe("Avatar", () => {
       const { container } = render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = container.querySelector("img");
@@ -107,7 +107,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" data-testid="avatar-image" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByTestId("avatar-image");
@@ -118,7 +118,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" className="custom-image" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByRole("img");
@@ -131,7 +131,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByText("JD")).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback data-testid="fallback">JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       const fallback = screen.getByTestId("fallback");
@@ -152,7 +152,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback data-testid="fallback">JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       const fallback = screen.getByTestId("fallback");
@@ -163,7 +163,7 @@ describe("Avatar", () => {
         "items-center",
         "justify-center",
         "rounded-full",
-        "bg-muted"
+        "bg-muted",
       );
     });
 
@@ -171,7 +171,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback className="custom-fallback">JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       const fallback = screen.getByText("JD");
@@ -182,7 +182,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback>AB</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByText("AB")).toBeInTheDocument();
@@ -194,7 +194,7 @@ describe("Avatar", () => {
           <AvatarFallback>
             <svg data-testid="user-icon" />
           </AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByTestId("user-icon")).toBeInTheDocument();
@@ -207,7 +207,7 @@ describe("Avatar", () => {
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" />
           <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByRole("img")).toBeInTheDocument();
@@ -218,7 +218,7 @@ describe("Avatar", () => {
       render(
         <Avatar data-testid="avatar">
           <AvatarImage src="/avatar.jpg" alt="User" />
-        </Avatar>
+        </Avatar>,
       );
 
       const avatar = screen.getByTestId("avatar");
@@ -231,7 +231,7 @@ describe("Avatar", () => {
       render(
         <Avatar data-testid="avatar">
           <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       const avatar = screen.getByTestId("avatar");
@@ -256,7 +256,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage ref={ref} src="/avatar.jpg" alt="User" />
-        </Avatar>
+        </Avatar>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLImageElement);
@@ -268,7 +268,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback ref={ref}>JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -308,7 +308,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" loading="lazy" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByRole("img");
@@ -318,12 +318,8 @@ describe("Avatar", () => {
     it("supports srcSet on AvatarImage", () => {
       render(
         <Avatar>
-          <AvatarImage
-            src="/avatar.jpg"
-            srcSet="/avatar-2x.jpg 2x, /avatar-3x.jpg 3x"
-            alt="User"
-          />
-        </Avatar>
+          <AvatarImage src="/avatar.jpg" srcSet="/avatar-2x.jpg 2x, /avatar-3x.jpg 3x" alt="User" />
+        </Avatar>,
       );
 
       const image = screen.getByRole("img");
@@ -373,7 +369,7 @@ describe("Avatar", () => {
             <h3>John Doe</h3>
             <p className="text-sm text-muted-foreground">john@example.com</p>
           </div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByRole("img", { name: "John Doe" })).toBeInTheDocument();
@@ -385,7 +381,7 @@ describe("Avatar", () => {
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="Jane Smith" />
           <AvatarFallback>JS</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByText("JS")).toBeInTheDocument();
@@ -405,7 +401,7 @@ describe("Avatar", () => {
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
             </svg>
           </AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByTestId("user-icon")).toBeInTheDocument();
@@ -422,7 +418,7 @@ describe("Avatar", () => {
             <p className="text-sm font-medium">Commenter Name</p>
             <p className="text-sm text-muted-foreground">Great article!</p>
           </div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Commenter Name")).toBeInTheDocument();
@@ -444,7 +440,7 @@ describe("Avatar", () => {
             <AvatarImage src="/user3.jpg" alt="User 3" />
             <AvatarFallback>U3</AvatarFallback>
           </Avatar>
-        </div>
+        </div>,
       );
 
       expect(screen.getByRole("img", { name: "User 1" })).toBeInTheDocument();
@@ -462,7 +458,7 @@ describe("Avatar", () => {
             </Avatar>
             <span>Account</span>
           </button>
-        </nav>
+        </nav>,
       );
 
       expect(screen.getByText("Account")).toBeInTheDocument();
@@ -485,7 +481,7 @@ describe("Avatar", () => {
             </Avatar>
             <div>Message 2</div>
           </div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Message 1")).toBeInTheDocument();
@@ -500,7 +496,7 @@ describe("Avatar", () => {
           <AvatarFallback className="bg-blue-500 text-white" data-testid="fallback">
             AB
           </AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       const fallback = screen.getByTestId("fallback");
@@ -534,7 +530,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User avatar" />
-        </Avatar>
+        </Avatar>,
       );
 
       const image = screen.getByRole("img", { name: "User avatar" });
@@ -552,7 +548,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback aria-label="User initials">JD</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByText("JD")).toBeInTheDocument();
@@ -570,7 +566,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarFallback>AB</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByText("AB")).toBeInTheDocument();
@@ -580,7 +576,7 @@ describe("Avatar", () => {
       render(
         <Avatar>
           <AvatarImage src="/avatar.jpg" alt="User" />
-        </Avatar>
+        </Avatar>,
       );
 
       expect(screen.getByRole("img")).toBeInTheDocument();
@@ -591,7 +587,7 @@ describe("Avatar", () => {
         <Avatar>
           <AvatarImage src="/nonexistent.jpg" alt="User" />
           <AvatarFallback>FB</AvatarFallback>
-        </Avatar>
+        </Avatar>,
       );
 
       // Both should render, browser will handle image error

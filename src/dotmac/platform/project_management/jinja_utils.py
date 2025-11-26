@@ -29,7 +29,7 @@ def create_jinja_environment() -> Environment:
         undefined=StrictUndefined,
         trim_blocks=True,
         lstrip_blocks=True,
-        autoescape=select_autoescape(enabled_extensions=('html', 'xml'), default_for_string=False),
+        autoescape=select_autoescape(enabled_extensions=("html", "xml"), default_for_string=False),
     )
 
     # Add custom filters

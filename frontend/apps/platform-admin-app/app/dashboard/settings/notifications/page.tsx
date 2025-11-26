@@ -169,7 +169,9 @@ const createDefaultPreferences = (): NotificationPreferences => ({
   },
 });
 
-const normalizePreferences = (data?: Partial<NotificationPreferences> | null): NotificationPreferences => {
+const normalizePreferences = (
+  data?: Partial<NotificationPreferences> | null,
+): NotificationPreferences => {
   const defaults = createDefaultPreferences();
   return {
     pauseAll: data?.pauseAll ?? defaults.pauseAll,
@@ -735,9 +737,9 @@ export default function NotificationSettingsPage() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={
-                              (preferences.email.categories[
+                              preferences.email.categories[
                                 category.id as keyof typeof preferences.email.categories
-                              ] ?? false)
+                              ] ?? false
                             }
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("email", category.id, checked)
@@ -749,9 +751,9 @@ export default function NotificationSettingsPage() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={
-                              (preferences.push.categories[
+                              preferences.push.categories[
                                 category.id as keyof typeof preferences.push.categories
-                              ] ?? false)
+                              ] ?? false
                             }
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("push", category.id, checked)
@@ -763,9 +765,9 @@ export default function NotificationSettingsPage() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={
-                              (preferences.inApp.categories[
+                              preferences.inApp.categories[
                                 category.id as keyof typeof preferences.inApp.categories
-                              ] ?? false)
+                              ] ?? false
                             }
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("inApp", category.id, checked)
@@ -777,9 +779,9 @@ export default function NotificationSettingsPage() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={
-                              (preferences.sms.categories[
+                              preferences.sms.categories[
                                 category.id as keyof typeof preferences.sms.categories
-                              ] ?? false)
+                              ] ?? false
                             }
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("sms", category.id, checked)
@@ -791,9 +793,9 @@ export default function NotificationSettingsPage() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={
-                              (preferences.slack.categories[
+                              preferences.slack.categories[
                                 category.id as keyof typeof preferences.slack.categories
-                              ] ?? false)
+                              ] ?? false
                             }
                             onCheckedChange={(checked) =>
                               handleCategoryToggle("slack", category.id, checked)

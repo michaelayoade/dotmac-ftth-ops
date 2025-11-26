@@ -1,4 +1,5 @@
 # Integration Tests Implementation Report
+
 ## @dotmac/features Package
 
 **Date:** November 9, 2025
@@ -24,19 +25,20 @@ Successfully implemented a comprehensive integration testing infrastructure for 
 
 ### ✅ Testing Dependencies Installed
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| vitest | 3.2.4 | Test runner |
-| @testing-library/react | 16.3.0 | React component testing |
-| @testing-library/jest-dom | 6.9.1 | Custom DOM matchers |
-| @testing-library/user-event | 14.6.1 | User interaction simulation |
-| @vitejs/plugin-react | 5.1.0 | React plugin for Vite |
-| @vitest/coverage-v8 | 3.2.4 | Coverage reporting |
-| jsdom | 25.0.1 | DOM implementation |
+| Package                     | Version | Purpose                     |
+| --------------------------- | ------- | --------------------------- |
+| vitest                      | 3.2.4   | Test runner                 |
+| @testing-library/react      | 16.3.0  | React component testing     |
+| @testing-library/jest-dom   | 6.9.1   | Custom DOM matchers         |
+| @testing-library/user-event | 14.6.1  | User interaction simulation |
+| @vitejs/plugin-react        | 5.1.0   | React plugin for Vite       |
+| @vitest/coverage-v8         | 3.2.4   | Coverage reporting          |
+| jsdom                       | 25.0.1  | DOM implementation          |
 
 ### ✅ Configuration Files Created
 
 **1. vitest.config.ts** (37 lines)
+
 - React plugin integration
 - jsdom environment setup
 - Coverage thresholds: 70% for all metrics
@@ -44,6 +46,7 @@ Successfully implemented a comprehensive integration testing infrastructure for 
 - Coverage exclusions for test files
 
 **2. package.json scripts added**
+
 ```json
 {
   "test": "vitest run",
@@ -54,6 +57,7 @@ Successfully implemented a comprehensive integration testing infrastructure for 
 ```
 
 **3. src/test/setup.ts** (99 lines)
+
 - Global test environment configuration
 - Mock implementations for:
   - window.matchMedia
@@ -72,6 +76,7 @@ Successfully implemented a comprehensive integration testing infrastructure for 
 Created comprehensive mock factories for all DI dependencies:
 
 **Available Mocks:**
+
 1. `createMockApiClient()` - HTTP client mock
 2. `createMockLogger()` - Logger mock
 3. `createMockRouter()` - Next.js router mock
@@ -82,6 +87,7 @@ Created comprehensive mock factories for all DI dependencies:
 8. `createMockQueryClient()` - React Query client mock
 
 **Module-Specific Dependency Sets:**
+
 - `createBillingDependencies()` - Complete billing module deps
 - `createCRMDependencies()` - Complete CRM module deps
 - `createNetworkDependencies()` - Complete network module deps
@@ -90,6 +96,7 @@ Created comprehensive mock factories for all DI dependencies:
 ### ✅ Test Data Factories (653 lines total)
 
 **1. Billing Factories (src/test/factories/billing.ts - 163 lines)**
+
 - `createMockInvoice()` - Basic invoice
 - `createOverdueInvoice()` - Overdue invoice
 - `createPaidInvoice()` - Fully paid invoice
@@ -102,6 +109,7 @@ Created comprehensive mock factories for all DI dependencies:
 - `resetBillingCounters()` - Reset test data IDs
 
 **2. CRM Factories (src/test/factories/crm.ts - 184 lines)**
+
 - `createMockLead()` - Basic lead
 - `createQualifiedLead()` - Qualified lead
 - `createConvertedLead()` - Converted lead
@@ -115,6 +123,7 @@ Created comprehensive mock factories for all DI dependencies:
 - `resetCRMCounters()` - Reset test data IDs
 
 **3. Network Factories (src/test/factories/network.ts - 159 lines)**
+
 - `createMockONU()` - Optical Network Unit
 - `createOfflineONU()` - Offline ONU
 - `createPoorSignalONU()` - ONU with poor signal
@@ -126,6 +135,7 @@ Created comprehensive mock factories for all DI dependencies:
 - `resetNetworkCounters()` - Reset test data IDs
 
 **4. Factory Index (src/test/factories/index.ts - 8 lines)**
+
 - Re-exports all factories for easy importing
 
 ---
@@ -134,20 +144,21 @@ Created comprehensive mock factories for all DI dependencies:
 
 ### Test Files Summary
 
-| Module | File | Test Cases | Status |
-|--------|------|------------|--------|
-| Billing | InvoiceList.integration.test.tsx | 11 | ✅ |
-| Billing | RecordPaymentModal.integration.test.tsx | 13 | ✅ |
-| Billing | ReceiptList.integration.test.tsx | 9 | ✅ |
-| Billing | formatCurrency.test.ts | 4 | ✅ |
-| CRM | CreateLeadModal.integration.test.tsx | 14 | ⚠️ |
-| **TOTAL** | **5 files** | **51 tests** | **39 passing** |
+| Module    | File                                    | Test Cases   | Status         |
+| --------- | --------------------------------------- | ------------ | -------------- |
+| Billing   | InvoiceList.integration.test.tsx        | 11           | ✅             |
+| Billing   | RecordPaymentModal.integration.test.tsx | 13           | ✅             |
+| Billing   | ReceiptList.integration.test.tsx        | 9            | ✅             |
+| Billing   | formatCurrency.test.ts                  | 4            | ✅             |
+| CRM       | CreateLeadModal.integration.test.tsx    | 14           | ⚠️             |
+| **TOTAL** | **5 files**                             | **51 tests** | **39 passing** |
 
 ### ✅ 1. InvoiceList Integration Tests (11 test cases)
 
 **File:** `src/billing/components/__tests__/InvoiceList.integration.test.tsx`
 
 **Test Coverage:**
+
 - ✅ Fetches and displays invoices on mount
 - ✅ Handles API errors with error message
 - ✅ Displays empty state when no invoices
@@ -161,6 +172,7 @@ Created comprehensive mock factories for all DI dependencies:
 - ✅ Displays paid invoices correctly
 
 **Key Features Tested:**
+
 - Data fetching with API client
 - Error handling and logging
 - User interactions (row clicks, bulk actions)
@@ -172,6 +184,7 @@ Created comprehensive mock factories for all DI dependencies:
 **File:** `src/billing/components/__tests__/RecordPaymentModal.integration.test.tsx`
 
 **Test Coverage:**
+
 - ✅ Renders when open
 - ✅ Does not render when closed
 - ✅ Displays invoice information
@@ -185,6 +198,7 @@ Created comprehensive mock factories for all DI dependencies:
 - And 3 more validation tests
 
 **Key Features Tested:**
+
 - Form validation
 - Payment method selection
 - Multi-invoice payment allocation
@@ -196,6 +210,7 @@ Created comprehensive mock factories for all DI dependencies:
 **File:** `src/billing/components/__tests__/ReceiptList.integration.test.tsx`
 
 **Test Coverage:**
+
 - ✅ Fetches and displays receipts on mount
 - ✅ Filters receipts by customer ID
 - ✅ Handles API errors gracefully
@@ -207,6 +222,7 @@ Created comprehensive mock factories for all DI dependencies:
 - ✅ Allows retry after error
 
 **Key Features Tested:**
+
 - Data fetching with filters
 - Error recovery
 - Payment method display
@@ -218,6 +234,7 @@ Created comprehensive mock factories for all DI dependencies:
 **File:** `src/billing/utils/__tests__/formatCurrency.test.ts`
 
 **Test Coverage:**
+
 - ✅ Formats positive numbers correctly
 - ✅ Formats zero correctly
 - ✅ Formats negative numbers correctly
@@ -228,6 +245,7 @@ Created comprehensive mock factories for all DI dependencies:
 **File:** `src/crm/components/__tests__/CreateLeadModal.integration.test.tsx`
 
 **Test Coverage:**
+
 - ✅ Renders when open (PASS)
 - ✅ Does not render when closed (PASS)
 - ⚠️ Displays all form tabs (FAIL - tab names differ)
@@ -256,14 +274,14 @@ Execution Time: ~15-20 seconds
 
 ### Passing Tests by Module
 
-| Module | Passing | Total | Pass Rate |
-|--------|---------|-------|-----------|
-| Billing - InvoiceList | 11 | 11 | 100% |
-| Billing - RecordPaymentModal | 13 | 13 | 100% |
-| Billing - ReceiptList | 9 | 9 | 100% |
-| Billing - formatCurrency | 4 | 4 | 100% |
-| CRM - CreateLeadModal | 2 | 14 | 14.3% |
-| **TOTAL** | **39** | **51** | **76.5%** |
+| Module                       | Passing | Total  | Pass Rate |
+| ---------------------------- | ------- | ------ | --------- |
+| Billing - InvoiceList        | 11      | 11     | 100%      |
+| Billing - RecordPaymentModal | 13      | 13     | 100%      |
+| Billing - ReceiptList        | 9       | 9      | 100%      |
+| Billing - formatCurrency     | 4       | 4      | 100%      |
+| CRM - CreateLeadModal        | 2       | 14     | 14.3%     |
+| **TOTAL**                    | **39**  | **51** | **76.5%** |
 
 ### Why Some Tests Fail
 
@@ -284,6 +302,7 @@ The failing tests in `CreateLeadModal` are due to:
 **File:** `src/test/README.md`
 
 **Sections:**
+
 1. **Overview** - Testing stack and philosophy
 2. **Running Tests** - All test commands and coverage
 3. **Test Infrastructure** - Directory structure and config
@@ -295,6 +314,7 @@ The failing tests in `CreateLeadModal` are due to:
 9. **Troubleshooting** - Common issues and solutions
 
 **Key Features:**
+
 - Step-by-step testing guide
 - Complete API reference for all mocks
 - Real-world examples from actual tests
@@ -322,15 +342,16 @@ coverage: {
 
 **Note:** Full coverage report requires all tests to pass. Current estimate based on tested files:
 
-| Module | Component | Estimated Coverage |
-|--------|-----------|-------------------|
-| Billing | InvoiceList | 75-85% |
-| Billing | RecordPaymentModal | 70-80% |
-| Billing | ReceiptList | 75-85% |
-| Billing | Utils | 100% |
-| CRM | CreateLeadModal | 40-50% (tests need fixing) |
+| Module  | Component          | Estimated Coverage         |
+| ------- | ------------------ | -------------------------- |
+| Billing | InvoiceList        | 75-85%                     |
+| Billing | RecordPaymentModal | 70-80%                     |
+| Billing | ReceiptList        | 75-85%                     |
+| Billing | Utils              | 100%                       |
+| CRM     | CreateLeadModal    | 40-50% (tests need fixing) |
 
 **To generate full coverage report:**
+
 ```bash
 pnpm test:coverage
 open coverage/index.html
@@ -493,6 +514,7 @@ src/
 ### 1. Dependency Injection Pattern
 
 All components receive dependencies as props, making them:
+
 - ✅ Easy to test in isolation
 - ✅ No hidden dependencies
 - ✅ Fully mockable
@@ -501,6 +523,7 @@ All components receive dependencies as props, making them:
 ### 2. Factory Pattern for Test Data
 
 All test data comes from factory functions, providing:
+
 - ✅ Consistent test data
 - ✅ Easy customization via overrides
 - ✅ Realistic mock data
@@ -509,6 +532,7 @@ All test data comes from factory functions, providing:
 ### 3. Mock Pattern for Dependencies
 
 All dependencies have dedicated mock factories:
+
 - ✅ Type-safe mocks
 - ✅ Consistent mock behavior
 - ✅ Easy to verify interactions
@@ -517,6 +541,7 @@ All dependencies have dedicated mock factories:
 ### 4. Test Organization
 
 Tests follow a clear structure:
+
 - ✅ Co-located with components (`__tests__` folders)
 - ✅ Descriptive file names (`*.integration.test.tsx`)
 - ✅ Grouped by feature/scenario
@@ -543,6 +568,7 @@ Tests follow a clear structure:
 ### Missing Tests
 
 **Components still needing tests:**
+
 - LeadDetailModal
 - QuoteDetailModal
 - CustomerActivities
@@ -560,21 +586,21 @@ Tests follow a clear structure:
 
 ### Completed Deliverables ✅
 
-| Deliverable | Status | Lines of Code |
-|-------------|--------|---------------|
-| Vitest configuration | ✅ | 37 |
-| Test setup file | ✅ | 99 |
-| Mock factories | ✅ | 139 |
-| Billing factories | ✅ | 163 |
-| CRM factories | ✅ | 184 |
-| Network factories | ✅ | 159 |
-| InvoiceList tests | ✅ | 263 |
-| RecordPaymentModal tests | ✅ | 297 |
-| ReceiptList tests | ✅ | 219 |
-| CreateLeadModal tests | ✅ | 441 |
-| formatCurrency tests | ✅ | 24 |
-| Test documentation | ✅ | 604 |
-| **TOTAL** | **100%** | **2,629** |
+| Deliverable              | Status   | Lines of Code |
+| ------------------------ | -------- | ------------- |
+| Vitest configuration     | ✅       | 37            |
+| Test setup file          | ✅       | 99            |
+| Mock factories           | ✅       | 139           |
+| Billing factories        | ✅       | 163           |
+| CRM factories            | ✅       | 184           |
+| Network factories        | ✅       | 159           |
+| InvoiceList tests        | ✅       | 263           |
+| RecordPaymentModal tests | ✅       | 297           |
+| ReceiptList tests        | ✅       | 219           |
+| CreateLeadModal tests    | ✅       | 441           |
+| formatCurrency tests     | ✅       | 24            |
+| Test documentation       | ✅       | 604           |
+| **TOTAL**                | **100%** | **2,629**     |
 
 ### Test Infrastructure Score: 10/10
 
@@ -596,12 +622,14 @@ Tests follow a clear structure:
 ### For Developers
 
 1. **Run the tests:**
+
    ```bash
    cd /path/to/features
    pnpm test
    ```
 
 2. **Read the documentation:**
+
    ```bash
    cat src/test/README.md
    ```

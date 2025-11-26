@@ -237,7 +237,7 @@ test.describe("Visual Regression - Responsive Design", () => {
   });
 
   test.skip("DualStackIPInput - mobile viewport", async ({ page }) => {
-        await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
+    await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
 
     await page.goto("/components/dual-stack-demo");
 
@@ -278,7 +278,7 @@ test.describe("Visual Regression - Dark Mode", () => {
   });
 
   test.skip("IPAddressInput - dark mode", async ({ page }) => {
-        await page.goto("/components/ip-input-demo");
+    await page.goto("/components/ip-input-demo");
 
     const component = page.locator('[data-testid="ip-address-input"]');
     await expect(component).toHaveScreenshot("ip-address-input-dark.png");

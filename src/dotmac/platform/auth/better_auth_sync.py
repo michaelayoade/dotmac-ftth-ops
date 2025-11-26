@@ -129,7 +129,9 @@ class BetterAuthSyncService:
                 return new_user
 
         except Exception as e:
-            logger.error("Error syncing user from Better Auth", user_id=user_id, error=str(e), exc_info=True)
+            logger.error(
+                "Error syncing user from Better Auth", user_id=user_id, error=str(e), exc_info=True
+            )
             await self.db.rollback()
             return None
 

@@ -252,18 +252,20 @@ export function useRenderTemplate(options?: {
   onSuccess?: (data: RenderTemplateResponse) => void;
   onError?: (error: Error) => void;
 }) {
-  return useMutation<RenderTemplateResponse, Error, { id: string; variables: Record<string, unknown> }>(
-    {
-      mutationFn: ({ id, variables }) => communicationsService.renderTemplate(id, variables),
-      onSuccess: (data) => {
-        options?.onSuccess?.(data);
-      },
-      onError: (error) => {
-        // toast.error('Failed to render template', { description: error.message });
-        options?.onError?.(error);
-      },
+  return useMutation<
+    RenderTemplateResponse,
+    Error,
+    { id: string; variables: Record<string, unknown> }
+  >({
+    mutationFn: ({ id, variables }) => communicationsService.renderTemplate(id, variables),
+    onSuccess: (data) => {
+      options?.onSuccess?.(data);
     },
-  );
+    onError: (error) => {
+      // toast.error('Failed to render template', { description: error.message });
+      options?.onError?.(error);
+    },
+  });
 }
 
 /**
@@ -293,7 +295,12 @@ export function useQuickRender(options?: {
  * GET /api/v1/communications/logs
  */
 export function useCommunicationLogs(params: ListCommunicationsParams = {}) {
-  return useQuery<{ logs: CommunicationLog[]; total: number }, Error, { logs: CommunicationLog[]; total: number }, any>({
+  return useQuery<
+    { logs: CommunicationLog[]; total: number },
+    Error,
+    { logs: CommunicationLog[]; total: number },
+    any
+  >({
     queryKey: communicationsKeys.logs.list(params),
     queryFn: () => communicationsService.listLogs(params),
     staleTime: 10000, // 10 seconds

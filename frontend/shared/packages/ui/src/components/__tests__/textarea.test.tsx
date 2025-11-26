@@ -30,13 +30,7 @@ describe("Textarea", () => {
       render(<Textarea data-testid="textarea" />);
 
       const textarea = screen.getByTestId("textarea");
-      expect(textarea).toHaveClass(
-        "flex",
-        "min-h-[80px]",
-        "w-full",
-        "rounded-md",
-        "border"
-      );
+      expect(textarea).toHaveClass("flex", "min-h-[80px]", "w-full", "rounded-md", "border");
     });
 
     it("supports custom className", () => {
@@ -186,7 +180,9 @@ describe("Textarea", () => {
     });
 
     it("supports readOnly attribute", () => {
-      render(<Textarea readOnly value="Read only text" onChange={() => {}} data-testid="textarea" />);
+      render(
+        <Textarea readOnly value="Read only text" onChange={() => {}} data-testid="textarea" />,
+      );
 
       const textarea = screen.getByTestId("textarea");
       expect(textarea).toHaveAttribute("readOnly");
@@ -352,7 +348,7 @@ describe("Textarea", () => {
           placeholder="Enter description"
           maxLength={500}
           defaultValue="Product description goes here"
-        />
+        />,
       );
 
       expect(screen.getByRole("textbox")).toHaveValue("Product description goes here");
@@ -366,7 +362,7 @@ describe("Textarea", () => {
         <form onSubmit={onSubmit}>
           <Textarea placeholder="Share your feedback" required />
           <button type="submit">Submit</button>
-        </form>
+        </form>,
       );
 
       const textarea = screen.getByPlaceholderText("Share your feedback");
@@ -385,7 +381,7 @@ describe("Textarea", () => {
           rows={6}
           maxLength={200}
           defaultValue="Software developer passionate about React and TypeScript."
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -400,7 +396,7 @@ describe("Textarea", () => {
         <div>
           <Textarea placeholder="Type a message..." rows={3} />
           <button onClick={onSend}>Send</button>
-        </div>
+        </div>,
       );
 
       const textarea = screen.getByPlaceholderText("Type a message...");
@@ -418,7 +414,7 @@ console.log(greeting);`;
           className="font-mono"
           rows={10}
           defaultValue={code}
-        />
+        />,
       );
 
       const textarea = screen.getByRole("textbox");
@@ -444,7 +440,7 @@ console.log(greeting);`;
         <div>
           <Textarea aria-describedby="description" />
           <div id="description">Enter your comment here</div>
-        </div>
+        </div>,
       );
 
       const textarea = screen.getByRole("textbox");

@@ -124,8 +124,7 @@ function TierBadge({ tier }: TierBadgeProps) {
     },
   } as const satisfies Record<string, { label: string; className: string }>;
 
-  const config =
-    tierConfig[normalizedTier as keyof typeof tierConfig] ?? tierConfig["FREE"];
+  const config = tierConfig[normalizedTier as keyof typeof tierConfig] ?? tierConfig["FREE"];
 
   return (
     <span
@@ -196,7 +195,11 @@ function CustomerRow<TCustomer = any>({
   const customerCountry = customerData.country;
   const customerStatus = customerData.status;
   const customerTier = customerData.tier;
-  const customerType = (customerData.customerType || customerData.customer_type || "").toUpperCase();
+  const customerType = (
+    customerData.customerType ||
+    customerData.customer_type ||
+    ""
+  ).toUpperCase();
   const companyName = customerData.companyName || customerData.company_name;
   const customerNumber = customerData.customerNumber || customerData.customer_number;
   const lifetimeValue = parseFloat(customerData.lifetimeValue || customerData.lifetime_value || 0);
@@ -268,15 +271,12 @@ function CustomerRow<TCustomer = any>({
     } else {
       // Fallback to direct API call
       try {
-        const response = await fetch(
-          `${apiBaseUrl}/api/v1/customers/${customerId}/status`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            headers: buildAuthHeaders(),
-            body: JSON.stringify({ status: newStatus }),
-          },
-        );
+        const response = await fetch(`${apiBaseUrl}/api/v1/customers/${customerId}/status`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: buildAuthHeaders(),
+          body: JSON.stringify({ status: newStatus }),
+        });
 
         if (!response.ok) throw new Error("Failed to update customer status");
 
@@ -312,7 +312,8 @@ function CustomerRow<TCustomer = any>({
       } catch (error) {
         toast({
           title: "Reset Failed",
-          description: error instanceof Error ? error.message : "Failed to send password reset email",
+          description:
+            error instanceof Error ? error.message : "Failed to send password reset email",
           variant: "destructive",
         });
       }
@@ -337,7 +338,8 @@ function CustomerRow<TCustomer = any>({
       } catch (error) {
         toast({
           title: "Reset Failed",
-          description: error instanceof Error ? error.message : "Failed to send password reset email",
+          description:
+            error instanceof Error ? error.message : "Failed to send password reset email",
           variant: "destructive",
         });
       }
@@ -374,9 +376,7 @@ function CustomerRow<TCustomer = any>({
           </div>
           <div className="ml-4">
             <div className="text-sm font-medium text-white">{customerName}</div>
-            {companyName && (
-              <div className="text-sm text-slate-400">{companyName}</div>
-            )}
+            {companyName && <div className="text-sm text-slate-400">{companyName}</div>}
             <div className="text-xs text-slate-500">#{customerNumber}</div>
           </div>
         </div>

@@ -29,9 +29,7 @@ let exportRequests: Map<string, AuditExportResponse> = new Map();
 // Mock Data Generators
 // ============================================
 
-export function createMockActivity(
-  overrides: Partial<AuditActivity> = {}
-): AuditActivity {
+export function createMockActivity(overrides: Partial<AuditActivity> = {}): AuditActivity {
   const id = overrides.id || `activity-${Date.now()}-${Math.random()}`;
   return {
     id,
@@ -53,7 +51,7 @@ export function createMockActivity(
 }
 
 export function createMockActivitySummary(
-  overrides: Partial<ActivitySummary> = {}
+  overrides: Partial<ActivitySummary> = {},
 ): ActivitySummary {
   return {
     total_activities: 100,
@@ -92,7 +90,7 @@ export function createMockActivitySummary(
 }
 
 export function createMockComplianceReport(
-  overrides: Partial<ComplianceReport> = {}
+  overrides: Partial<ComplianceReport> = {},
 ): ComplianceReport {
   return {
     report_id: `report-${Date.now()}`,
@@ -142,10 +140,7 @@ export function getActivities(): AuditActivity[] {
 // Filtering Logic
 // ============================================
 
-function applyFilters(
-  items: AuditActivity[],
-  filters: AuditFilterParams
-): AuditActivity[] {
+function applyFilters(items: AuditActivity[], filters: AuditFilterParams): AuditActivity[] {
   let filtered = [...items];
 
   if (filters.user_id) {
@@ -171,9 +166,7 @@ function applyFilters(
   if (filters.days) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - filters.days);
-    filtered = filtered.filter(
-      (a) => new Date(a.timestamp) >= cutoffDate
-    );
+    filtered = filtered.filter((a) => new Date(a.timestamp) >= cutoffDate);
   }
 
   return filtered;
@@ -239,18 +232,20 @@ export const auditHandlers = [
     // Filter by days
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    const filtered = activities.filter(
-      (a) => new Date(a.timestamp) >= cutoffDate
-    );
+    const filtered = activities.filter((a) => new Date(a.timestamp) >= cutoffDate);
 
     // Build summary
     const summary: ActivitySummary = {
       total_activities: filtered.length,
       by_severity: {
         [ActivitySeverity.LOW]: filtered.filter((a) => a.severity === ActivitySeverity.LOW).length,
-        [ActivitySeverity.MEDIUM]: filtered.filter((a) => a.severity === ActivitySeverity.MEDIUM).length,
-        [ActivitySeverity.HIGH]: filtered.filter((a) => a.severity === ActivitySeverity.HIGH).length,
-        [ActivitySeverity.CRITICAL]: filtered.filter((a) => a.severity === ActivitySeverity.CRITICAL).length,
+        [ActivitySeverity.MEDIUM]: filtered.filter((a) => a.severity === ActivitySeverity.MEDIUM)
+          .length,
+        [ActivitySeverity.HIGH]: filtered.filter((a) => a.severity === ActivitySeverity.HIGH)
+          .length,
+        [ActivitySeverity.CRITICAL]: filtered.filter(
+          (a) => a.severity === ActivitySeverity.CRITICAL,
+        ).length,
       },
       by_type: {},
       by_user: [],
@@ -293,9 +288,7 @@ export const auditHandlers = [
     // Filter by days
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    const filtered = activities.filter(
-      (a) => new Date(a.timestamp) >= cutoffDate
-    );
+    const filtered = activities.filter((a) => new Date(a.timestamp) >= cutoffDate);
 
     // Sort by timestamp desc and limit
     const recent = filtered
@@ -323,7 +316,7 @@ export const auditHandlers = [
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     const filtered = activities.filter(
-      (a) => a.user_id === userId && new Date(a.timestamp) >= cutoffDate
+      (a) => a.user_id === userId && new Date(a.timestamp) >= cutoffDate,
     );
 
     // Sort and limit
@@ -344,15 +337,9 @@ export const auditHandlers = [
       severity: url.searchParams.get("severity") as ActivitySeverity | undefined,
       resource_type: url.searchParams.get("resource_type") || undefined,
       resource_id: url.searchParams.get("resource_id") || undefined,
-      days: url.searchParams.get("days")
-        ? parseInt(url.searchParams.get("days")!)
-        : undefined,
-      page: url.searchParams.get("page")
-        ? parseInt(url.searchParams.get("page")!)
-        : 1,
-      per_page: url.searchParams.get("per_page")
-        ? parseInt(url.searchParams.get("per_page")!)
-        : 20,
+      days: url.searchParams.get("days") ? parseInt(url.searchParams.get("days")!) : undefined,
+      page: url.searchParams.get("page") ? parseInt(url.searchParams.get("page")!) : 1,
+      per_page: url.searchParams.get("per_page") ? parseInt(url.searchParams.get("per_page")!) : 20,
     };
 
     console.log("[MSW] GET /api/v1/audit/activities", filters);
@@ -389,10 +376,7 @@ export const auditHandlers = [
     const activity = activities.find((a) => a.id === activityId);
 
     if (!activity) {
-      return HttpResponse.json(
-        { error: "Activity not found", code: "NOT_FOUND" },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "Activity not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     return HttpResponse.json(activity);
@@ -411,7 +395,7 @@ export const auditHandlers = [
     if (!exportRequest.format) {
       return HttpResponse.json(
         { error: "Format is required", code: "VALIDATION_ERROR" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -442,7 +426,7 @@ export const auditHandlers = [
           error: "From and to dates are required",
           code: "VALIDATION_ERROR",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

@@ -112,7 +112,9 @@ export function ONUDetailView({
       }
       const device = deviceDetail.device;
       const oltId =
-        device.metadata?.["olt_id"] || device.parent_id || (device.metadata?.["root_device_id"] as string | undefined);
+        device.metadata?.["olt_id"] ||
+        device.parent_id ||
+        (device.metadata?.["root_device_id"] as string | undefined);
       const baseUrl = `/api/v1/access/devices/${encodeURIComponent(onuId)}/${operation}`;
       const url = oltId ? `${baseUrl}?olt_id=${encodeURIComponent(oltId)}` : baseUrl;
       const response = await apiClient.post(url);
@@ -180,9 +182,13 @@ export function ONUDetailView({
           <Button
             variant="outline"
             onClick={() => handleOperation("enable")}
-            disabled={!canPerform("enable") || pendingOperation !== null || device.admin_state === "ENABLED"}
+            disabled={
+              !canPerform("enable") || pendingOperation !== null || device.admin_state === "ENABLED"
+            }
             title={
-              canPerform("enable") ? undefined : "Enable operation not supported by this device driver"
+              canPerform("enable")
+                ? undefined
+                : "Enable operation not supported by this device driver"
             }
           >
             <Power className="h-4 w-4 mr-2" />
@@ -191,9 +197,15 @@ export function ONUDetailView({
           <Button
             variant="outline"
             onClick={() => handleOperation("disable")}
-            disabled={!canPerform("disable") || pendingOperation !== null || device.admin_state === "DISABLED"}
+            disabled={
+              !canPerform("disable") ||
+              pendingOperation !== null ||
+              device.admin_state === "DISABLED"
+            }
             title={
-              canPerform("disable") ? undefined : "Disable operation not supported by this device driver"
+              canPerform("disable")
+                ? undefined
+                : "Disable operation not supported by this device driver"
             }
           >
             <PowerOff className="h-4 w-4 mr-2" />
@@ -204,7 +216,9 @@ export function ONUDetailView({
             onClick={() => handleOperation("reboot")}
             disabled={!canPerform("reboot") || pendingOperation !== null}
             title={
-              canPerform("reboot") ? undefined : "Reboot operation not supported by this device driver"
+              canPerform("reboot")
+                ? undefined
+                : "Reboot operation not supported by this device driver"
             }
           >
             <RotateCw className="h-4 w-4 mr-2" />
@@ -229,7 +243,9 @@ export function ONUDetailView({
             }}
             disabled={!canPerform("delete") || pendingOperation !== null}
             title={
-              canPerform("delete") ? undefined : "Delete operation not supported by this device driver"
+              canPerform("delete")
+                ? undefined
+                : "Delete operation not supported by this device driver"
             }
           >
             <Trash2 className="h-4 w-4 mr-2" />
@@ -259,7 +275,9 @@ export function ONUDetailView({
             <CardTitle className="text-sm">Admin State</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge className={statusBadgeClasses(device.admin_state)}>{device.admin_state || "UNKNOWN"}</Badge>
+            <Badge className={statusBadgeClasses(device.admin_state)}>
+              {device.admin_state || "UNKNOWN"}
+            </Badge>
           </CardContent>
         </Card>
         <Card>
@@ -305,7 +323,9 @@ export function ONUDetailView({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Parent OLT</p>
-            <p className="font-medium">{device.parent_id || device.metadata?.["olt_id"] || "Unknown"}</p>
+            <p className="font-medium">
+              {device.parent_id || device.metadata?.["olt_id"] || "Unknown"}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Parent Port</p>
@@ -358,13 +378,18 @@ export function ONUDetailView({
             </div>
           ) : (
             ports.map((port) => (
-              <div key={`${port.device_id}-${port.port_no}`} className="border rounded-lg p-4 space-y-2">
+              <div
+                key={`${port.device_id}-${port.port_no}`}
+                className="border rounded-lg p-4 space-y-2"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Wifi className="h-4 w-4 text-primary" />
                     <span className="font-medium">Port {port.port_no}</span>
                   </div>
-                  <Badge className={statusBadgeClasses(port.oper_status)}>{port.oper_status || "UNKNOWN"}</Badge>
+                  <Badge className={statusBadgeClasses(port.oper_status)}>
+                    {port.oper_status || "UNKNOWN"}
+                  </Badge>
                 </div>
                 <div className="grid gap-2 md:grid-cols-2 text-sm">
                   <div>

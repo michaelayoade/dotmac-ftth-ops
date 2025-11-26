@@ -88,8 +88,7 @@ const RICH_TEXT_ALLOWED_ATTR = [
   "aria-hidden",
 ];
 
-const SAFE_URI_PATTERN =
-  /^(?:(?:https?|mailto|tel):|(?:data:image\/(?:png|gif|jpeg|webp);)|#)/i;
+const SAFE_URI_PATTERN = /^(?:(?:https?|mailto|tel):|(?:data:image\/(?:png|gif|jpeg|webp);)|#)/i;
 
 /**
  * Sanitize rich HTML content (emails, receipts, etc.) while preserving

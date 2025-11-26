@@ -26,10 +26,5 @@ export default function TemplatesPage() {
     router.push("/dashboard/projects");
   };
 
-  return (
-    <TemplateBuilder
-      onSave={handleSave}
-      onCancel={handleCancel}
-    />
-  );
+  return <TemplateBuilder onSave={handleSave} onCancel={handleCancel} />;
 }

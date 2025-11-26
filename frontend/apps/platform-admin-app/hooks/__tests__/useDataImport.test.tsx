@@ -85,9 +85,7 @@ describe("Platform Admin useDataImport hook", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["import-jobs"] });
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Upload successful" }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Upload successful" }));
   });
 
   it("exposes nested useImportJobs hook", async () => {

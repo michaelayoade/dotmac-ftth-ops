@@ -18,13 +18,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 import { Receipt } from "lucide-react";
 import { useState } from "react";
@@ -214,12 +208,7 @@ export function CreateCreditNoteModal({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isCreating}
-            >
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isCreating}>
               Cancel
             </Button>
             <Button type="submit" disabled={isCreating}>

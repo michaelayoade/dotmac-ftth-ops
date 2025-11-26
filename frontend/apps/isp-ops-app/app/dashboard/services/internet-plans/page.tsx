@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Wifi,
   Search,
@@ -65,7 +59,11 @@ function InternetPlansPageContent() {
   const confirmDialog = useConfirmDialog();
 
   // Fetch plans
-  const { data: plans = [], isLoading, refetch } = useQuery<InternetPlan[]>({
+  const {
+    data: plans = [],
+    isLoading,
+    refetch,
+  } = useQuery<InternetPlan[]>({
     queryKey: ["internet-plans", planTypeFilter, statusFilter, publicFilter, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -76,7 +74,7 @@ function InternetPlansPageContent() {
 
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/services/internet-plans?${params.toString()}`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch plans");
       return response.json();
@@ -91,7 +89,7 @@ function InternetPlansPageContent() {
         {
           method: "DELETE",
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to delete plan");
     },
@@ -136,7 +134,7 @@ function InternetPlansPageContent() {
     };
     const config = badges[type as keyof typeof badges] || {
       color: "bg-gray-100 text-gray-800",
-      label: type
+      label: type,
     };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
@@ -375,7 +373,9 @@ function InternetPlansPageContent() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Monthly:</span>
-                    <span className="font-bold text-green-600">${plan.monthly_price.toFixed(2)}</span>
+                    <span className="font-bold text-green-600">
+                      ${plan.monthly_price.toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Setup Fee:</span>
@@ -396,7 +396,10 @@ function InternetPlansPageContent() {
                     </Badge>
                   )}
                   {plan.is_promotional && (
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-50 text-amber-700 border-amber-200 text-xs"
+                    >
                       Promo
                     </Badge>
                   )}

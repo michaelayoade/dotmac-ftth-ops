@@ -17,20 +17,20 @@ import { Pool } from "pg";
 type AuthInstance = ReturnType<typeof betterAuth>;
 
 const shouldBypassAuth = () =>
-  process.env['NODE_ENV'] === "test" ||
-  process.env['BETTER_AUTH_BYPASS'] === "true" ||
-  process.env['NEXT_PUBLIC_SKIP_BETTER_AUTH'] === "true" ||
-  process.env['E2E_AUTH_BYPASS'] === "true";
+  process.env["NODE_ENV"] === "test" ||
+  process.env["BETTER_AUTH_BYPASS"] === "true" ||
+  process.env["NEXT_PUBLIC_SKIP_BETTER_AUTH"] === "true" ||
+  process.env["E2E_AUTH_BYPASS"] === "true";
 
 const resolveAuthEnvironment = () => {
   if (shouldBypassAuth()) {
     return null;
   }
 
-  const databaseUrl = process.env['DATABASE_URL'] || process.env['DOTMAC_DATABASE_URL'];
-  const authSecret = process.env['BETTER_AUTH_SECRET'] || process.env['JWT_SECRET'];
+  const databaseUrl = process.env["DATABASE_URL"] || process.env["DOTMAC_DATABASE_URL"];
+  const authSecret = process.env["BETTER_AUTH_SECRET"] || process.env["JWT_SECRET"];
   const authUrl =
-    process.env['BETTER_AUTH_URL'] || process.env['NEXT_PUBLIC_API_URL'] || "http://localhost:3000";
+    process.env["BETTER_AUTH_URL"] || process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3000";
 
   if (!databaseUrl) {
     throw new Error(
@@ -65,9 +65,9 @@ const getPool = (connectionString: string) => {
   cachedPoolConnectionString = normalized;
 
   // Log pool errors in development
-  if (process.env['NODE_ENV'] !== 'production') {
-    cachedPool.on('error', (err) => {
-      console.error('[better-auth] Pool error:', err.message);
+  if (process.env["NODE_ENV"] !== "production") {
+    cachedPool.on("error", (err) => {
+      console.error("[better-auth] Pool error:", err.message);
     });
   }
 
@@ -255,9 +255,27 @@ const createMockAuthInstance = (): AuthInstance => {
     signIn: { email: noop },
     signUp: { email: noop },
     signOut: noop,
-    useSession: () => ({ data: null, error: null, isPending: false, isRefetching: false, refetch: noop }),
-    useActiveOrganization: () => ({ data: null, error: null, isPending: false, isRefetching: false, refetch: noop }),
-    useListOrganizations: () => ({ data: [], error: null, isPending: false, isRefetching: false, refetch: noop }),
+    useSession: () => ({
+      data: null,
+      error: null,
+      isPending: false,
+      isRefetching: false,
+      refetch: noop,
+    }),
+    useActiveOrganization: () => ({
+      data: null,
+      error: null,
+      isPending: false,
+      isRefetching: false,
+      refetch: noop,
+    }),
+    useListOrganizations: () => ({
+      data: [],
+      error: null,
+      isPending: false,
+      isRefetching: false,
+      refetch: noop,
+    }),
     handlers: {},
     $Infer: { Session: { session: {}, user: {} } },
   } as unknown as AuthInstance;
@@ -379,8 +397,8 @@ const createAuthInstance = (): AuthInstance => {
       enabled: true,
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }) => {
-        const webhook = process.env['BETTER_AUTH_RESET_EMAIL_WEBHOOK'];
-        const secret = process.env['BETTER_AUTH_WEBHOOK_SECRET'];
+        const webhook = process.env["BETTER_AUTH_RESET_EMAIL_WEBHOOK"];
+        const secret = process.env["BETTER_AUTH_WEBHOOK_SECRET"];
 
         if (webhook && typeof fetch === "function") {
           const headers: Record<string, string> = {
@@ -401,10 +419,7 @@ const createAuthInstance = (): AuthInstance => {
             });
             return;
           } catch (err) {
-            console.error(
-              "[better-auth] Failed to send reset password email via webhook",
-              err,
-            );
+            console.error("[better-auth] Failed to send reset password email via webhook", err);
           }
         }
 
@@ -420,7 +435,7 @@ const createAuthInstance = (): AuthInstance => {
       crossSubDomainCookies: {
         enabled: false,
       },
-      useSecureCookies: process.env['NODE_ENV'] === "production",
+      useSecureCookies: process.env["NODE_ENV"] === "production",
       generateId: () => {
         // Use crypto for secure ID generation
         return crypto.randomUUID();
@@ -445,8 +460,8 @@ const createAuthInstance = (): AuthInstance => {
         roles: Object.values(roles) as any,
 
         onCreate: async (organization: { id: string; name: string; slug?: string }) => {
-          const webhook = process.env['BETTER_AUTH_ORG_WEBHOOK_URL'];
-          const secret = process.env['BETTER_AUTH_WEBHOOK_SECRET'];
+          const webhook = process.env["BETTER_AUTH_ORG_WEBHOOK_URL"];
+          const secret = process.env["BETTER_AUTH_WEBHOOK_SECRET"];
 
           if (webhook && typeof fetch === "function") {
             const headers: Record<string, string> = {
@@ -466,10 +481,7 @@ const createAuthInstance = (): AuthInstance => {
                 }),
               });
             } catch (err) {
-              console.error(
-                "[better-auth] Failed to send organization.created webhook",
-                err,
-              );
+              console.error("[better-auth] Failed to send organization.created webhook", err);
             }
           }
 
@@ -479,8 +491,8 @@ const createAuthInstance = (): AuthInstance => {
         },
 
         onDelete: async (organization: { id: string; name: string; slug?: string }) => {
-          const webhook = process.env['BETTER_AUTH_ORG_WEBHOOK_URL'];
-          const secret = process.env['BETTER_AUTH_WEBHOOK_SECRET'];
+          const webhook = process.env["BETTER_AUTH_ORG_WEBHOOK_URL"];
+          const secret = process.env["BETTER_AUTH_WEBHOOK_SECRET"];
 
           if (webhook && typeof fetch === "function") {
             const headers: Record<string, string> = {
@@ -500,10 +512,7 @@ const createAuthInstance = (): AuthInstance => {
                 }),
               });
             } catch (err) {
-              console.error(
-                "[better-auth] Failed to send organization.deleted webhook",
-                err,
-              );
+              console.error("[better-auth] Failed to send organization.deleted webhook", err);
             }
           }
 
@@ -517,8 +526,8 @@ const createAuthInstance = (): AuthInstance => {
     // Trust proxy headers (important for deployment)
     trustedOrigins: [
       authUrl,
-      process.env['NEXT_PUBLIC_ADMIN_URL'] || "http://localhost:3001",
-      process.env['NEXT_PUBLIC_ISP_URL'] || "http://localhost:3002",
+      process.env["NEXT_PUBLIC_ADMIN_URL"] || "http://localhost:3001",
+      process.env["NEXT_PUBLIC_ISP_URL"] || "http://localhost:3002",
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:3002",

@@ -23,14 +23,7 @@ vi.mock("@dotmac/ui", async () => {
   return {
     ...actual,
     ...simpleSelectMocks,
-    EnhancedDataTable: ({
-      data,
-      columns,
-      loading,
-      isLoading,
-      error,
-      onRowClick,
-    }: any) => {
+    EnhancedDataTable: ({ data, columns, loading, isLoading, error, onRowClick }: any) => {
       if (loading || isLoading) return <div>Loading...</div>;
       if (error) return <div role="alert">Error: {error}</div>;
       if (!data || data.length === 0) return <div>No invoices found</div>;
@@ -94,13 +87,7 @@ describe("InvoiceList Integration Tests", () => {
       deps.apiClient.get.mockResolvedValue({ data: { invoices } });
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Wait for data to load
       await waitFor(() => {
@@ -108,9 +95,7 @@ describe("InvoiceList Integration Tests", () => {
       });
 
       // Verify API was called with correct parameters
-      expect(deps.apiClient.get).toHaveBeenCalledWith(
-        "/billing/invoices?tenant_id=tenant_123"
-      );
+      expect(deps.apiClient.get).toHaveBeenCalledWith("/billing/invoices?tenant_id=tenant_123");
 
       // Verify invoices are displayed
       invoices.forEach((invoice) => {
@@ -124,13 +109,7 @@ describe("InvoiceList Integration Tests", () => {
       deps.apiClient.get.mockRejectedValue(new Error(errorMessage));
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Assert - should log error (error UI not implemented yet)
       await waitFor(() => {
@@ -141,7 +120,7 @@ describe("InvoiceList Integration Tests", () => {
       expect(deps.logger.error).toHaveBeenCalledWith(
         "Failed to fetch invoices",
         expect.any(Error),
-        { tenantId: "tenant_123" }
+        { tenantId: "tenant_123" },
       );
     });
 
@@ -150,13 +129,7 @@ describe("InvoiceList Integration Tests", () => {
       deps.apiClient.get.mockResolvedValue({ data: { invoices: [] } });
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Assert
       await waitFor(() => {
@@ -174,13 +147,7 @@ describe("InvoiceList Integration Tests", () => {
       const onInvoiceSelect = vi.fn();
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={onInvoiceSelect}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={onInvoiceSelect} {...deps} />);
 
       await waitFor(() => {
         expect(screen.getAllByText(firstInvoice.invoice_number)[0]).toBeInTheDocument();
@@ -206,13 +173,7 @@ describe("InvoiceList Integration Tests", () => {
       const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       await waitFor(() => {
         expect(screen.getByText(firstInvoice.invoice_number)).toBeInTheDocument();
@@ -239,13 +200,7 @@ describe("InvoiceList Integration Tests", () => {
       (confirmDialog as any).mockResolvedValue(true);
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       await waitFor(() => {
         expect(screen.getAllByText(firstInvoice.invoice_number)[0]).toBeInTheDocument();
@@ -265,13 +220,7 @@ describe("InvoiceList Integration Tests", () => {
       deps.apiClient.post.mockRejectedValue(new Error("API Error"));
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Assert - component should load successfully even if bulk actions might fail later
       await waitFor(() => {
@@ -285,21 +234,13 @@ describe("InvoiceList Integration Tests", () => {
       deps.apiClient.get.mockRejectedValue(error);
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Assert
       await waitFor(() => {
-        expect(deps.logger.error).toHaveBeenCalledWith(
-          "Failed to fetch invoices",
-          error,
-          { tenantId: "tenant_123" }
-        );
+        expect(deps.logger.error).toHaveBeenCalledWith("Failed to fetch invoices", error, {
+          tenantId: "tenant_123",
+        });
       });
     });
   });
@@ -314,13 +255,7 @@ describe("InvoiceList Integration Tests", () => {
       deps.apiClient.get.mockReturnValue(promise as any);
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Assert - should show loading
       expect(screen.getByText("Loading invoices...")).toBeInTheDocument();
@@ -342,19 +277,11 @@ describe("InvoiceList Integration Tests", () => {
       });
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Assert
       await waitFor(() => {
-        expect(
-          screen.getAllByText(overdueInvoice.invoice_number)[0]
-        ).toBeInTheDocument();
+        expect(screen.getAllByText(overdueInvoice.invoice_number)[0]).toBeInTheDocument();
       });
     });
 
@@ -366,13 +293,7 @@ describe("InvoiceList Integration Tests", () => {
       });
 
       // Act
-      render(
-        <InvoiceList
-          tenantId="tenant_123"
-          onInvoiceSelect={undefined}
-          {...deps}
-        />
-      );
+      render(<InvoiceList tenantId="tenant_123" onInvoiceSelect={undefined} {...deps} />);
 
       // Assert
       await waitFor(() => {

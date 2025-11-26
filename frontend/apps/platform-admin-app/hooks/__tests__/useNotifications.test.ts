@@ -186,13 +186,13 @@ describe("useNotifications", () => {
             priority: "high",
             notificationType: "invoice_overdue",
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitForNotificationsReady(result);
 
       expect(apiClient.get).toHaveBeenCalledWith(
-        "/notifications?unread_only=true&priority=high&notification_type=invoice_overdue"
+        "/notifications?unread_only=true&priority=high&notification_type=invoice_overdue",
       );
     });
 
@@ -213,7 +213,7 @@ describe("useNotifications", () => {
       expect(result.current.unreadCount).toBe(0);
       expect(result.current.error).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        "Notifications endpoint returned 403. Using empty fallback data."
+        "Notifications endpoint returned 403. Using empty fallback data.",
       );
     });
 
@@ -355,10 +355,7 @@ describe("useNotifications", () => {
   describe("Mutation - Mark All as Read", () => {
     it("should mark all notifications as read with optimistic update", async () => {
       const mockResponse: NotificationListResponse = {
-        notifications: [
-          mockNotification,
-          { ...mockNotification, id: "notif-2" },
-        ],
+        notifications: [mockNotification, { ...mockNotification, id: "notif-2" }],
         total: 2,
         unread_count: 2,
       };
@@ -583,13 +580,13 @@ describe("useNotificationTemplates", () => {
 
       const { result } = renderHook(
         () => useNotificationTemplates({ type: "email", activeOnly: true }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(apiClient.get).toHaveBeenCalledWith(
-        "/communications/templates?type=email&active_only=true"
+        "/communications/templates?type=email&active_only=true",
       );
     });
 
@@ -609,7 +606,7 @@ describe("useNotificationTemplates", () => {
       expect(result.current.templates).toEqual([]);
       expect(result.current.error).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        "Templates endpoint returned 403. Falling back to empty template list."
+        "Templates endpoint returned 403. Falling back to empty template list.",
       );
     });
 
@@ -704,7 +701,7 @@ describe("useNotificationTemplates", () => {
       expect(updated).toEqual(updatedTemplate);
       expect(apiClient.patch).toHaveBeenCalledWith(
         "/communications/templates/template-1",
-        updateData
+        updateData,
       );
     });
 
@@ -794,10 +791,9 @@ describe("useNotificationTemplates", () => {
       });
 
       expect(preview).toEqual(mockPreview);
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/communications/templates/template-1/render",
-        { data: { company_name: "Acme Corp", user_name: "John" } }
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/communications/templates/template-1/render", {
+        data: { company_name: "Acme Corp", user_name: "John" },
+      });
     });
 
     it("should handle render errors", async () => {
@@ -862,13 +858,13 @@ describe("useCommunicationLogs", () => {
             page: 1,
             pageSize: 20,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(apiClient.get).toHaveBeenCalledWith(
-        "/communications/logs?type=email&status=delivered&recipient=user%40example.com&start_date=2025-01-01&end_date=2025-01-31&page=1&page_size=20"
+        "/communications/logs?type=email&status=delivered&recipient=user%40example.com&start_date=2025-01-01&end_date=2025-01-31&page=1&page_size=20",
       );
     });
 
@@ -889,7 +885,7 @@ describe("useCommunicationLogs", () => {
       expect(result.current.total).toBe(0);
       expect(result.current.error).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        "Communications logs endpoint returned 403. Falling back to empty log set."
+        "Communications logs endpoint returned 403. Falling back to empty log set.",
       );
     });
 
@@ -1047,7 +1043,7 @@ describe("useBulkNotifications", () => {
         () =>
           new Promise((resolve) => {
             setTimeout(() => resolve({ data: mockResponse }), 100);
-          })
+          }),
       );
 
       const { result } = renderHook(() => useBulkNotifications(), {
@@ -1179,7 +1175,7 @@ describe("useUnreadCount", () => {
 
       expect(result.current!.unreadCount).toBe(0);
       expect(logger.warn).toHaveBeenCalledWith(
-        "Unread count endpoint returned 403. Defaulting to zero unread notifications."
+        "Unread count endpoint returned 403. Defaulting to zero unread notifications.",
       );
       unmount();
     });
@@ -1206,7 +1202,7 @@ describe("useUnreadCount", () => {
 
       const { result, unmount } = renderHook(
         () => useUnreadCount({ autoRefresh: true, refreshInterval: 5000 }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitForUnreadReady(result);

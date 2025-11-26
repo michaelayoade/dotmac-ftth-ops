@@ -2,4 +2,4 @@
  * Shared Utilities Package
  */
 
-export * from './observability';
+export * from "./observability";

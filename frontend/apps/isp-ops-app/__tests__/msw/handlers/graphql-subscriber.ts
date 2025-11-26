@@ -119,7 +119,8 @@ export function createMockSubscriber(data: Partial<Subscriber> = {}): Subscriber
     subscriberId: data.subscriberId ?? `SUB-${String(subscriberId).padStart(6, "0")}`,
     username: data.username ?? `subscriber${subscriberId}@example.com`,
     enabled: data.enabled ?? true,
-    framedIpAddress: data.framedIpAddress ?? `10.10.${Math.floor(subscriberId / 256)}.${subscriberId % 256}`,
+    framedIpAddress:
+      data.framedIpAddress ?? `10.10.${Math.floor(subscriberId / 256)}.${subscriberId % 256}`,
     bandwidthProfileId: data.bandwidthProfileId ?? "profile-100mbps",
     createdAt: data.createdAt ?? now,
     updatedAt: data.updatedAt ?? now,
@@ -127,7 +128,9 @@ export function createMockSubscriber(data: Partial<Subscriber> = {}): Subscriber
   };
 }
 
-export function createMockSubscriberMetrics(data: Partial<SubscriberMetrics> = {}): SubscriberMetrics {
+export function createMockSubscriberMetrics(
+  data: Partial<SubscriberMetrics> = {},
+): SubscriberMetrics {
   return {
     __typename: "SubscriberMetrics",
     totalCount: data.totalCount ?? 0,
@@ -138,7 +141,9 @@ export function createMockSubscriberMetrics(data: Partial<SubscriberMetrics> = {
   };
 }
 
-export function createMockSubscriberDashboard(data: Partial<SubscriberDashboardData> = {}): SubscriberDashboardData {
+export function createMockSubscriberDashboard(
+  data: Partial<SubscriberDashboardData> = {},
+): SubscriberDashboardData {
   const subs = data.subscribers ?? [];
   const activeCount = subs.filter((s) => s.sessions.length > 0).length;
   const enabledCount = subs.filter((s) => s.enabled).length;
@@ -227,7 +232,7 @@ export const graphqlSubscriberHandlers = [
         (s) =>
           s.username.toLowerCase().includes(searchLower) ||
           s.subscriberId.toLowerCase().includes(searchLower) ||
-          s.framedIpAddress?.toLowerCase().includes(searchLower)
+          s.framedIpAddress?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -259,7 +264,9 @@ export const graphqlSubscriberHandlers = [
 
   // Active Sessions query
   graphql.query("ActiveSessions", ({ variables }) => {
-    const { limit = 100, username } = getVariables<{ limit?: number; username?: string }>(variables);
+    const { limit = 100, username } = getVariables<{ limit?: number; username?: string }>(
+      variables,
+    );
 
     let allSessions: Session[] = [];
 

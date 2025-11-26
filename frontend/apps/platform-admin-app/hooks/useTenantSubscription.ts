@@ -113,13 +113,18 @@ export function useTenantSubscriptionQuery() {
     queryKey: tenantSubscriptionKeys.current(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<TenantSubscription>("/billing/tenant/subscription/current");
+        const response = await apiClient.get<TenantSubscription>(
+          "/billing/tenant/subscription/current",
+        );
         logger.info("Fetched tenant subscription", {
           subscription_id: response.data?.subscription_id,
         });
         return response.data;
       } catch (err) {
-        logger.error("Failed to fetch subscription", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch subscription",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -137,11 +142,16 @@ export function useAvailablePlans() {
     queryKey: tenantSubscriptionKeys.availablePlans(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<AvailablePlan[]>("/billing/tenant/subscription/available-plans");
+        const response = await apiClient.get<AvailablePlan[]>(
+          "/billing/tenant/subscription/available-plans",
+        );
         logger.info("Fetched available plans", { count: response.data.length });
         return response.data;
       } catch (err) {
-        logger.error("Failed to fetch available plans", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch available plans",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -161,7 +171,10 @@ export function useSubscriptionOperations() {
   // Preview plan change mutation
   const previewMutation = useMutation({
     mutationFn: async (request: PlanChangeRequest) => {
-      const response = await apiClient.post<ProrationPreview>("/billing/tenant/subscription/preview-change", request);
+      const response = await apiClient.post<ProrationPreview>(
+        "/billing/tenant/subscription/preview-change",
+        request,
+      );
       return response.data;
     },
     onSuccess: (data, request) => {
@@ -169,7 +182,10 @@ export function useSubscriptionOperations() {
       logger.info("Previewed plan change", { new_plan_id: request.new_plan_id });
     },
     onError: (err) => {
-      logger.error("Failed to preview plan change", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to preview plan change",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -178,7 +194,7 @@ export function useSubscriptionOperations() {
     mutationFn: async (request: PlanChangeRequest) => {
       const response = await apiClient.post<TenantSubscription>(
         "/billing/tenant/subscription/change-plan",
-        request
+        request,
       );
       return response.data;
     },
@@ -199,7 +215,10 @@ export function useSubscriptionOperations() {
   // Cancel subscription mutation
   const cancelMutation = useMutation({
     mutationFn: async (request: SubscriptionCancelRequest) => {
-      const response = await apiClient.post<TenantSubscription>("/billing/tenant/subscription/cancel", request);
+      const response = await apiClient.post<TenantSubscription>(
+        "/billing/tenant/subscription/cancel",
+        request,
+      );
       return response.data;
     },
     onSuccess: (data, request) => {
@@ -212,14 +231,19 @@ export function useSubscriptionOperations() {
       });
     },
     onError: (err) => {
-      logger.error("Failed to cancel subscription", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to cancel subscription",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
   // Reactivate subscription mutation
   const reactivateMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post<TenantSubscription>("/billing/tenant/subscription/reactivate");
+      const response = await apiClient.post<TenantSubscription>(
+        "/billing/tenant/subscription/reactivate",
+      );
       return response.data;
     },
     onSuccess: (data) => {
@@ -230,7 +254,10 @@ export function useSubscriptionOperations() {
       logger.info("Reactivated subscription");
     },
     onError: (err) => {
-      logger.error("Failed to reactivate subscription", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to reactivate subscription",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 

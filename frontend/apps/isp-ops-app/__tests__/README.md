@@ -51,21 +51,18 @@ __tests__/
 The MSW server is configured in `__tests__/msw/server.ts`:
 
 ```typescript
-import { setupServer } from 'msw/node';
-import { webhookHandlers } from './handlers/webhooks';
-import { notificationHandlers } from './handlers/notifications';
+import { setupServer } from "msw/node";
+import { webhookHandlers } from "./handlers/webhooks";
+import { notificationHandlers } from "./handlers/notifications";
 
-export const server = setupServer(
-  ...webhookHandlers,
-  ...notificationHandlers
-);
+export const server = setupServer(...webhookHandlers, ...notificationHandlers);
 ```
 
 The server lifecycle is managed in `jest.setup.ts`:
 
 ```typescript
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'warn' });
+  server.listen({ onUnhandledRequest: "warn" });
 });
 
 afterEach(() => {
@@ -89,15 +86,15 @@ Handlers intercept API requests and return mock responses. They must:
 Example webhook handler:
 
 ```typescript
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 export const webhookHandlers = [
   // GET endpoint with filtering
-  http.get('*/api/v1/webhooks/subscriptions', (req) => {
+  http.get("*/api/v1/webhooks/subscriptions", (req) => {
     const url = new URL(req.url);
-    const offset = parseInt(url.searchParams.get('offset') || '0');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-    const event = url.searchParams.get('event_type');
+    const offset = parseInt(url.searchParams.get("offset") || "0");
+    const limit = parseInt(url.searchParams.get("limit") || "20");
+    const event = url.searchParams.get("event_type");
 
     let filtered = webhookSubscriptions;
     if (event) {
@@ -111,7 +108,7 @@ export const webhookHandlers = [
   }),
 
   // POST endpoint
-  http.post('*/api/v1/webhooks/subscriptions', async (req) => {
+  http.post("*/api/v1/webhooks/subscriptions", async (req) => {
     const data = await req.json<Partial<WebhookSubscription>>();
     const newWebhook = createMockWebhook(data);
     webhookSubscriptions.push(newWebhook);
@@ -119,12 +116,12 @@ export const webhookHandlers = [
   }),
 
   // DELETE endpoint
-  http.delete('*/api/v1/webhooks/subscriptions/:id', (req) => {
+  http.delete("*/api/v1/webhooks/subscriptions/:id", (req) => {
     const { id } = req.params;
     const index = webhookSubscriptions.findIndex((wh) => wh.id === id);
 
     if (index === -1) {
-      return HttpResponse.json({ error: 'Not found', code: 'NOT_FOUND' }, { status: 404 });
+      return HttpResponse.json({ error: "Not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     webhookSubscriptions.splice(index, 1);
@@ -153,7 +150,7 @@ export function resetWebhookStorage() {
 // Helper to seed test data
 export function seedWebhookData(
   webhooks: WebhookSubscription[],
-  deliveriesData: WebhookDelivery[]
+  deliveriesData: WebhookDelivery[],
 ) {
   webhookSubscriptions = [...webhooks];
   deliveries = [...deliveriesData];
@@ -165,14 +162,12 @@ export function seedWebhookData(
 Create consistent mock data with factory functions:
 
 ```typescript
-export function createMockWebhook(
-  overrides?: Partial<WebhookSubscription>
-): WebhookSubscription {
+export function createMockWebhook(overrides?: Partial<WebhookSubscription>): WebhookSubscription {
   return {
     id: `wh-${nextWebhookId++}`,
-    url: 'https://example.com/webhook',
-    description: 'Test webhook',
-    events: ['subscriber.created'],
+    url: "https://example.com/webhook",
+    description: "Test webhook",
+    events: ["subscriber.created"],
     is_active: true,
     retry_enabled: true,
     max_retries: 3,
@@ -281,33 +276,27 @@ it("should filter webhooks by event", async () => {
 
   seedWebhookData(webhooks, []);
 
-  const { result } = renderHook(
-    () => useWebhooks({ eventFilter: "subscriber.created" }),
-    { wrapper: createQueryWrapper(queryClient) }
-  );
+  const { result } = renderHook(() => useWebhooks({ eventFilter: "subscriber.created" }), {
+    wrapper: createQueryWrapper(queryClient),
+  });
 
   await waitFor(() => expect(result.current.loading).toBe(false));
 
   // Should only return webhooks with subscriber.created event
   expect(result.current.webhooks).toHaveLength(2);
-  expect(
-    result.current.webhooks.every((wh) =>
-      wh.events.includes("subscriber.created")
-    )
-  ).toBe(true);
+  expect(result.current.webhooks.every((wh) => wh.events.includes("subscriber.created"))).toBe(
+    true,
+  );
 });
 
 it("should handle pagination", async () => {
-  const webhooks = Array.from({ length: 25 }, (_, i) =>
-    createMockWebhook({ id: `wh-${i + 1}` })
-  );
+  const webhooks = Array.from({ length: 25 }, (_, i) => createMockWebhook({ id: `wh-${i + 1}` }));
 
   seedWebhookData(webhooks, []);
 
-  const { result } = renderHook(
-    () => useWebhooks({ page: 2, limit: 10 }),
-    { wrapper: createQueryWrapper(queryClient) }
-  );
+  const { result } = renderHook(() => useWebhooks({ page: 2, limit: 10 }), {
+    wrapper: createQueryWrapper(queryClient),
+  });
 
   await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -326,7 +315,7 @@ import { makeApiEndpointFail } from "../../__tests__/test-utils";
 
 it("should handle fetch error", async () => {
   // Make the endpoint fail
-  makeApiEndpointFail('get', '/api/v1/webhooks/subscriptions', 'Server error', 500);
+  makeApiEndpointFail("get", "/api/v1/webhooks/subscriptions", "Server error", 500);
 
   const { result } = renderHook(() => useWebhooks(), {
     wrapper: createQueryWrapper(queryClient),
@@ -391,14 +380,14 @@ Check what the hook expects and match exactly:
 
 ```typescript
 // Hook code:
-const response = await apiClient.get('/webhooks/subscriptions');
-const data = (response.data || []) as any[];  // Expects array directly
+const response = await apiClient.get("/webhooks/subscriptions");
+const data = (response.data || []) as any[]; // Expects array directly
 
 // Handler should return:
-return res(ctx.json(paginated));  // Array directly
+return res(ctx.json(paginated)); // Array directly
 
 // NOT:
-return res(ctx.json({ data: paginated }));  // ❌ Wrapped in object
+return res(ctx.json({ data: paginated })); // ❌ Wrapped in object
 ```
 
 ### 3. Parameter Names Must Match
@@ -408,7 +397,7 @@ return res(ctx.json({ data: paginated }));  // ❌ Wrapped in object
 if (statusFilter) params.append("status", statusFilter);
 
 // Handler must read: status (not statusFilter)
-const status = url.searchParams.get('status');
+const status = url.searchParams.get("status");
 ```
 
 ### 4. Reset Storage Between Tests
@@ -418,7 +407,7 @@ Always reset in-memory storage in `beforeEach`:
 ```typescript
 beforeEach(() => {
   queryClient = createTestQueryClient();
-  resetWebhookStorage();     // ✅ Clear MSW data
+  resetWebhookStorage(); // ✅ Clear MSW data
   resetNotificationStorage(); // ✅ Clear MSW data
 });
 ```
@@ -431,7 +420,7 @@ Create mock data with factory functions for consistency:
 // ✅ GOOD - Using factory
 const webhook = createMockWebhook({
   url: "https://example.com/webhook",
-  events: ["subscriber.created"]
+  events: ["subscriber.created"],
 });
 
 // ❌ BAD - Manual object creation (missing required fields)
@@ -455,12 +444,8 @@ it("should handle webhook with mixed delivery statuses", async () => {
   });
 
   const deliveries = [
-    ...Array.from({ length: 10 }, () =>
-      createMockDelivery("wh-1", { status: "success" })
-    ),
-    ...Array.from({ length: 3 }, () =>
-      createMockDelivery("wh-1", { status: "failed" })
-    ),
+    ...Array.from({ length: 10 }, () => createMockDelivery("wh-1", { status: "success" })),
+    ...Array.from({ length: 3 }, () => createMockDelivery("wh-1", { status: "failed" })),
   ];
 
   seedWebhookData([webhook], deliveries);
@@ -470,10 +455,9 @@ it("should handle webhook with mixed delivery statuses", async () => {
     wrapper: createQueryWrapper(queryClient),
   });
 
-  const { result: deliveriesResult } = renderHook(
-    () => useWebhookDeliveries("wh-1"),
-    { wrapper: createQueryWrapper(queryClient) }
-  );
+  const { result: deliveriesResult } = renderHook(() => useWebhookDeliveries("wh-1"), {
+    wrapper: createQueryWrapper(queryClient),
+  });
 
   await waitFor(() => {
     expect(webhookResult.current.loading).toBe(false);
@@ -543,18 +527,18 @@ Example migration:
 
 ```typescript
 // BEFORE (jest.mock)
-jest.mock('@/lib/api/client');
+jest.mock("@/lib/api/client");
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 mockApiClient.get.mockResolvedValue({ data: { data: mockWebhooks } });
 
 // AFTER (MSW)
-import { seedWebhookData, createMockWebhook } from '../test-utils';
+import { seedWebhookData, createMockWebhook } from "../test-utils";
 
 beforeEach(() => {
   resetWebhookStorage();
 });
 
-it('test', async () => {
+it("test", async () => {
   const mockWebhooks = [createMockWebhook()];
   seedWebhookData(mockWebhooks, []);
   // ... rest of test

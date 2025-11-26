@@ -493,7 +493,17 @@ export function NotificationProvider({
       connect,
       disconnect,
     }),
-    [state, addNotification, removeNotification, markAsRead, markAllAsRead, clearAll, updateSettings, connect, disconnect],
+    [
+      state,
+      addNotification,
+      removeNotification,
+      markAsRead,
+      markAllAsRead,
+      clearAll,
+      updateSettings,
+      connect,
+      disconnect,
+    ],
   );
 
   return (

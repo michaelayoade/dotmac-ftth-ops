@@ -277,7 +277,9 @@ export const createProfessionalPlan = (overrides?: Partial<ServicePlan>): Servic
 // Subscription Factories
 // ============================================================================
 
-export const createMockSubscription = (overrides?: Partial<TenantSubscription>): TenantSubscription => {
+export const createMockSubscription = (
+  overrides?: Partial<TenantSubscription>,
+): TenantSubscription => {
   const id = subscriptionCounter++;
   const now = new Date();
   const monthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -299,7 +301,9 @@ export const createMockSubscription = (overrides?: Partial<TenantSubscription>):
   };
 };
 
-export const createTrialSubscription = (overrides?: Partial<TenantSubscription>): TenantSubscription => {
+export const createTrialSubscription = (
+  overrides?: Partial<TenantSubscription>,
+): TenantSubscription => {
   const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
   return createMockSubscription({
@@ -310,14 +314,18 @@ export const createTrialSubscription = (overrides?: Partial<TenantSubscription>)
   });
 };
 
-export const createActiveSubscription = (overrides?: Partial<TenantSubscription>): TenantSubscription => {
+export const createActiveSubscription = (
+  overrides?: Partial<TenantSubscription>,
+): TenantSubscription => {
   return createMockSubscription({
     status: SubscriptionStatus.ACTIVE,
     ...overrides,
   });
 };
 
-export const createExpiredSubscription = (overrides?: Partial<TenantSubscription>): TenantSubscription => {
+export const createExpiredSubscription = (
+  overrides?: Partial<TenantSubscription>,
+): TenantSubscription => {
   const pastDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   return createMockSubscription({

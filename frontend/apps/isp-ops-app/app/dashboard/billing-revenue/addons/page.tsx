@@ -5,7 +5,22 @@ import { useTenantAddons, Addon } from "@/hooks/useTenantAddons";
 import { AddonCard } from "@/components/tenant/billing/AddonCard";
 import { ActiveAddonCard } from "@/components/tenant/billing/ActiveAddonCard";
 import { AddonsPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
-import { Card, CardContent, CardHeader, CardTitle, Button, Input, Alert, AlertDescription, AlertTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  Input,
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@dotmac/ui";
 import { AlertCircle, Search, Zap, RefreshCw } from "lucide-react";
 import { toast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -98,7 +113,7 @@ export default function BillingAddonsPage() {
     try {
       await cancelAddon(tenantAddonId, {
         cancel_at_period_end: !cancelImmediately,
-        cancel_immediately: cancelImmediately
+        cancel_immediately: cancelImmediately,
       });
       toast.success("Add-on cancelled");
     } catch (err: any) {

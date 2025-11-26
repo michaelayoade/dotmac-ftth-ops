@@ -6,8 +6,8 @@
  * channel utilization, site metrics, dashboard, and utility functions.
  */
 
-import { renderHook, waitFor } from '@testing-library/react';
-import { createApolloWrapper } from '@/__tests__/test-utils';
+import { renderHook, waitFor } from "@testing-library/react";
+import { createApolloWrapper } from "@/__tests__/test-utils";
 import {
   useAccessPointListGraphQL,
   useAccessPointDetailGraphQL,
@@ -26,13 +26,13 @@ import {
   calculateSignalQuality,
   getSignalQualityLabel,
   getFrequencyBandLabel,
-} from '../useWirelessGraphQL';
-import * as generatedHooks from '@/lib/graphql/generated';
-import { AccessPointStatus, FrequencyBand } from '@/lib/graphql/generated';
+} from "../useWirelessGraphQL";
+import * as generatedHooks from "@/lib/graphql/generated";
+import { AccessPointStatus, FrequencyBand } from "@/lib/graphql/generated";
 
 // Mock the generated GraphQL hooks
-jest.mock('@/lib/graphql/generated', () => ({
-  ...jest.requireActual('@/lib/graphql/generated'),
+jest.mock("@/lib/graphql/generated", () => ({
+  ...jest.requireActual("@/lib/graphql/generated"),
   useAccessPointListQuery: jest.fn(),
   useAccessPointDetailQuery: jest.fn(),
   useAccessPointsBySiteQuery: jest.fn(),
@@ -48,27 +48,27 @@ jest.mock('@/lib/graphql/generated', () => ({
   useWirelessSiteMetricsQuery: jest.fn(),
   useWirelessDashboardQuery: jest.fn(),
   AccessPointStatus: {
-    Online: 'ONLINE',
-    Offline: 'OFFLINE',
-    Degraded: 'DEGRADED',
+    Online: "ONLINE",
+    Offline: "OFFLINE",
+    Degraded: "DEGRADED",
   },
   FrequencyBand: {
-    Band_2_4Ghz: 'BAND_2_4GHZ',
-    Band_5Ghz: 'BAND_5GHZ',
-    Band_6Ghz: 'BAND_6GHZ',
+    Band_2_4Ghz: "BAND_2_4GHZ",
+    Band_5Ghz: "BAND_5GHZ",
+    Band_6Ghz: "BAND_6GHZ",
   },
 }));
 
 // Test data factories
 const createMockAccessPoint = (overrides: any = {}) => ({
-  id: 'ap-001',
-  name: 'AP-Building-A-01',
+  id: "ap-001",
+  name: "AP-Building-A-01",
   status: AccessPointStatus.Online,
-  macAddress: '00:11:22:33:44:55',
-  ipAddress: '192.168.1.100',
-  siteId: 'site-001',
-  model: 'UniFi 6 Pro',
-  firmwareVersion: '6.0.21',
+  macAddress: "00:11:22:33:44:55",
+  ipAddress: "192.168.1.100",
+  siteId: "site-001",
+  model: "UniFi 6 Pro",
+  firmwareVersion: "6.0.21",
   connectedClients: 15,
   uptime: 3600000,
   location: { latitude: 40.7128, longitude: -74.006 },
@@ -76,40 +76,40 @@ const createMockAccessPoint = (overrides: any = {}) => ({
 });
 
 const createMockWirelessClient = (overrides: any = {}) => ({
-  id: 'client-001',
-  macAddress: 'AA:BB:CC:DD:EE:FF',
-  hostname: 'laptop-001',
-  ipAddress: '10.0.0.50',
-  accessPointId: 'ap-001',
-  customerId: 'customer-001',
+  id: "client-001",
+  macAddress: "AA:BB:CC:DD:EE:FF",
+  hostname: "laptop-001",
+  ipAddress: "10.0.0.50",
+  accessPointId: "ap-001",
+  customerId: "customer-001",
   frequencyBand: FrequencyBand.Band_5Ghz,
   rssi: -55,
   snr: 40,
   txRate: 866,
   rxRate: 780,
-  connectedAt: '2024-01-01T10:00:00Z',
+  connectedAt: "2024-01-01T10:00:00Z",
   ...overrides,
 });
 
 const createMockCoverageZone = (overrides: any = {}) => ({
-  id: 'zone-001',
-  name: 'Building A Coverage',
-  siteId: 'site-001',
-  accessPoints: ['ap-001', 'ap-002'],
+  id: "zone-001",
+  name: "Building A Coverage",
+  siteId: "site-001",
+  accessPoints: ["ap-001", "ap-002"],
   coverageArea: 5000,
   ...overrides,
 });
 
-describe('useWirelessGraphQL - Access Point Hooks', () => {
+describe("useWirelessGraphQL - Access Point Hooks", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('useAccessPointListGraphQL', () => {
-    it('should fetch access point list successfully', async () => {
+  describe("useAccessPointListGraphQL", () => {
+    it("should fetch access point list successfully", async () => {
       const mockAccessPoints = [
-        createMockAccessPoint({ id: 'ap-001' }),
-        createMockAccessPoint({ id: 'ap-002' }),
+        createMockAccessPoint({ id: "ap-001" }),
+        createMockAccessPoint({ id: "ap-002" }),
       ];
 
       (generatedHooks.useAccessPointListQuery as jest.Mock).mockReturnValue({
@@ -138,7 +138,7 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
       expect(result.current.hasNextPage).toBe(false);
     });
 
-    it('should handle empty access point list', async () => {
+    it("should handle empty access point list", async () => {
       (generatedHooks.useAccessPointListQuery as jest.Mock).mockReturnValue({
         data: {
           accessPoints: {
@@ -164,7 +164,7 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
       expect(result.current.total).toBe(0);
     });
 
-    it('should respect query options', () => {
+    it("should respect query options", () => {
       (generatedHooks.useAccessPointListQuery as jest.Mock).mockReturnValue({
         data: undefined,
         loading: true,
@@ -178,10 +178,10 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
             limit: 100,
             offset: 50,
             status: AccessPointStatus.Online,
-            siteId: 'site-001',
-            search: 'building-a',
+            siteId: "site-001",
+            search: "building-a",
           }),
-        { wrapper: createApolloWrapper() }
+        { wrapper: createApolloWrapper() },
       );
 
       expect(generatedHooks.useAccessPointListQuery).toHaveBeenCalledWith(
@@ -190,15 +190,15 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
             limit: 100,
             offset: 50,
             status: AccessPointStatus.Online,
-            siteId: 'site-001',
-            search: 'building-a',
+            siteId: "site-001",
+            search: "building-a",
           },
-        })
+        }),
       );
     });
 
-    it('should handle errors', async () => {
-      const error = new Error('Failed to fetch access points');
+    it("should handle errors", async () => {
+      const error = new Error("Failed to fetch access points");
 
       (generatedHooks.useAccessPointListQuery as jest.Mock).mockReturnValue({
         data: undefined,
@@ -212,13 +212,13 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
       });
 
       await waitFor(() => {
-        expect(result.current.error).toBe('Failed to fetch access points');
+        expect(result.current.error).toBe("Failed to fetch access points");
       });
     });
   });
 
-  describe('useAccessPointDetailGraphQL', () => {
-    it('should fetch access point detail successfully', async () => {
+  describe("useAccessPointDetailGraphQL", () => {
+    it("should fetch access point detail successfully", async () => {
       const mockAP = createMockAccessPoint();
 
       (generatedHooks.useAccessPointDetailQuery as jest.Mock).mockReturnValue({
@@ -228,7 +228,7 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
         refetch: jest.fn(),
       });
 
-      const { result } = renderHook(() => useAccessPointDetailGraphQL({ id: 'ap-001' }), {
+      const { result } = renderHook(() => useAccessPointDetailGraphQL({ id: "ap-001" }), {
         wrapper: createApolloWrapper(),
       });
 
@@ -239,7 +239,7 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
       expect(result.current.accessPoint).toEqual(mockAP);
     });
 
-    it('should not fetch when enabled is false', () => {
+    it("should not fetch when enabled is false", () => {
       (generatedHooks.useAccessPointDetailQuery as jest.Mock).mockReturnValue({
         data: undefined,
         loading: false,
@@ -247,21 +247,21 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
         refetch: jest.fn(),
       });
 
-      renderHook(() => useAccessPointDetailGraphQL({ id: 'ap-001', enabled: false }), {
+      renderHook(() => useAccessPointDetailGraphQL({ id: "ap-001", enabled: false }), {
         wrapper: createApolloWrapper(),
       });
 
       expect(generatedHooks.useAccessPointDetailQuery).toHaveBeenCalledWith(
         expect.objectContaining({
           skip: true,
-        })
+        }),
       );
     });
   });
 
-  describe('useAccessPointsBySiteGraphQL', () => {
-    it('should fetch access points by site', async () => {
-      const mockAPs = [createMockAccessPoint({ siteId: 'site-001' })];
+  describe("useAccessPointsBySiteGraphQL", () => {
+    it("should fetch access points by site", async () => {
+      const mockAPs = [createMockAccessPoint({ siteId: "site-001" })];
 
       (generatedHooks.useAccessPointsBySiteQuery as jest.Mock).mockReturnValue({
         data: { accessPointsBySite: mockAPs },
@@ -270,10 +270,9 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
         refetch: jest.fn(),
       });
 
-      const { result } = renderHook(
-        () => useAccessPointsBySiteGraphQL({ siteId: 'site-001' }),
-        { wrapper: createApolloWrapper() }
-      );
+      const { result } = renderHook(() => useAccessPointsBySiteGraphQL({ siteId: "site-001" }), {
+        wrapper: createApolloWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -284,16 +283,16 @@ describe('useWirelessGraphQL - Access Point Hooks', () => {
   });
 });
 
-describe('useWirelessGraphQL - Wireless Client Hooks', () => {
+describe("useWirelessGraphQL - Wireless Client Hooks", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('useWirelessClientListGraphQL', () => {
-    it('should fetch wireless client list successfully', async () => {
+  describe("useWirelessClientListGraphQL", () => {
+    it("should fetch wireless client list successfully", async () => {
       const mockClients = [
-        createMockWirelessClient({ id: 'client-001' }),
-        createMockWirelessClient({ id: 'client-002' }),
+        createMockWirelessClient({ id: "client-001" }),
+        createMockWirelessClient({ id: "client-002" }),
       ];
 
       (generatedHooks.useWirelessClientListQuery as jest.Mock).mockReturnValue({
@@ -321,7 +320,7 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
       expect(result.current.total).toBe(2);
     });
 
-    it('should filter by frequency band', () => {
+    it("should filter by frequency band", () => {
       (generatedHooks.useWirelessClientListQuery as jest.Mock).mockReturnValue({
         data: undefined,
         loading: true,
@@ -329,23 +328,22 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
         refetch: jest.fn(),
       });
 
-      renderHook(
-        () => useWirelessClientListGraphQL({ frequencyBand: FrequencyBand.Band_5Ghz }),
-        { wrapper: createApolloWrapper() }
-      );
+      renderHook(() => useWirelessClientListGraphQL({ frequencyBand: FrequencyBand.Band_5Ghz }), {
+        wrapper: createApolloWrapper(),
+      });
 
       expect(generatedHooks.useWirelessClientListQuery).toHaveBeenCalledWith(
         expect.objectContaining({
           variables: expect.objectContaining({
             frequencyBand: FrequencyBand.Band_5Ghz,
           }),
-        })
+        }),
       );
     });
   });
 
-  describe('useWirelessClientDetailGraphQL', () => {
-    it('should fetch wireless client detail', async () => {
+  describe("useWirelessClientDetailGraphQL", () => {
+    it("should fetch wireless client detail", async () => {
       const mockClient = createMockWirelessClient();
 
       (generatedHooks.useWirelessClientDetailQuery as jest.Mock).mockReturnValue({
@@ -355,10 +353,9 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
         refetch: jest.fn(),
       });
 
-      const { result } = renderHook(
-        () => useWirelessClientDetailGraphQL({ id: 'client-001' }),
-        { wrapper: createApolloWrapper() }
-      );
+      const { result } = renderHook(() => useWirelessClientDetailGraphQL({ id: "client-001" }), {
+        wrapper: createApolloWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -368,9 +365,9 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
     });
   });
 
-  describe('useWirelessClientsByAccessPointGraphQL', () => {
-    it('should fetch clients by access point', async () => {
-      const mockClients = [createMockWirelessClient({ accessPointId: 'ap-001' })];
+  describe("useWirelessClientsByAccessPointGraphQL", () => {
+    it("should fetch clients by access point", async () => {
+      const mockClients = [createMockWirelessClient({ accessPointId: "ap-001" })];
 
       (generatedHooks.useWirelessClientsByAccessPointQuery as jest.Mock).mockReturnValue({
         data: { wirelessClientsByAccessPoint: mockClients },
@@ -380,8 +377,8 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
       });
 
       const { result } = renderHook(
-        () => useWirelessClientsByAccessPointGraphQL({ accessPointId: 'ap-001' }),
-        { wrapper: createApolloWrapper() }
+        () => useWirelessClientsByAccessPointGraphQL({ accessPointId: "ap-001" }),
+        { wrapper: createApolloWrapper() },
       );
 
       await waitFor(() => {
@@ -392,9 +389,9 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
     });
   });
 
-  describe('useWirelessClientsByCustomerGraphQL', () => {
-    it('should fetch clients by customer', async () => {
-      const mockClients = [createMockWirelessClient({ customerId: 'customer-001' })];
+  describe("useWirelessClientsByCustomerGraphQL", () => {
+    it("should fetch clients by customer", async () => {
+      const mockClients = [createMockWirelessClient({ customerId: "customer-001" })];
 
       (generatedHooks.useWirelessClientsByCustomerQuery as jest.Mock).mockReturnValue({
         data: { wirelessClientsByCustomer: mockClients },
@@ -404,8 +401,8 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
       });
 
       const { result } = renderHook(
-        () => useWirelessClientsByCustomerGraphQL({ customerId: 'customer-001' }),
-        { wrapper: createApolloWrapper() }
+        () => useWirelessClientsByCustomerGraphQL({ customerId: "customer-001" }),
+        { wrapper: createApolloWrapper() },
       );
 
       await waitFor(() => {
@@ -417,13 +414,13 @@ describe('useWirelessGraphQL - Wireless Client Hooks', () => {
   });
 });
 
-describe('useWirelessGraphQL - Coverage Zone Hooks', () => {
+describe("useWirelessGraphQL - Coverage Zone Hooks", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('useCoverageZoneListGraphQL', () => {
-    it('should fetch coverage zone list', async () => {
+  describe("useCoverageZoneListGraphQL", () => {
+    it("should fetch coverage zone list", async () => {
       const mockZones = [createMockCoverageZone()];
 
       (generatedHooks.useCoverageZoneListQuery as jest.Mock).mockReturnValue({
@@ -451,8 +448,8 @@ describe('useWirelessGraphQL - Coverage Zone Hooks', () => {
     });
   });
 
-  describe('useCoverageZoneDetailGraphQL', () => {
-    it('should fetch coverage zone detail', async () => {
+  describe("useCoverageZoneDetailGraphQL", () => {
+    it("should fetch coverage zone detail", async () => {
       const mockZone = createMockCoverageZone();
 
       (generatedHooks.useCoverageZoneDetailQuery as jest.Mock).mockReturnValue({
@@ -462,7 +459,7 @@ describe('useWirelessGraphQL - Coverage Zone Hooks', () => {
         refetch: jest.fn(),
       });
 
-      const { result } = renderHook(() => useCoverageZoneDetailGraphQL({ id: 'zone-001' }), {
+      const { result } = renderHook(() => useCoverageZoneDetailGraphQL({ id: "zone-001" }), {
         wrapper: createApolloWrapper(),
       });
 
@@ -474,9 +471,9 @@ describe('useWirelessGraphQL - Coverage Zone Hooks', () => {
     });
   });
 
-  describe('useCoverageZonesBySiteGraphQL', () => {
-    it('should fetch coverage zones by site', async () => {
-      const mockZones = [createMockCoverageZone({ siteId: 'site-001' })];
+  describe("useCoverageZonesBySiteGraphQL", () => {
+    it("should fetch coverage zones by site", async () => {
+      const mockZones = [createMockCoverageZone({ siteId: "site-001" })];
 
       (generatedHooks.useCoverageZonesBySiteQuery as jest.Mock).mockReturnValue({
         data: { coverageZonesBySite: mockZones },
@@ -485,10 +482,9 @@ describe('useWirelessGraphQL - Coverage Zone Hooks', () => {
         refetch: jest.fn(),
       });
 
-      const { result } = renderHook(
-        () => useCoverageZonesBySiteGraphQL({ siteId: 'site-001' }),
-        { wrapper: createApolloWrapper() }
-      );
+      const { result } = renderHook(() => useCoverageZonesBySiteGraphQL({ siteId: "site-001" }), {
+        wrapper: createApolloWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -499,15 +495,15 @@ describe('useWirelessGraphQL - Coverage Zone Hooks', () => {
   });
 });
 
-describe('useWirelessGraphQL - Analytics Hooks', () => {
+describe("useWirelessGraphQL - Analytics Hooks", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('useRfAnalyticsGraphQL', () => {
-    it('should fetch RF analytics', async () => {
+  describe("useRfAnalyticsGraphQL", () => {
+    it("should fetch RF analytics", async () => {
       const mockAnalytics = {
-        siteId: 'site-001',
+        siteId: "site-001",
         avgSignalStrength: -60,
         avgNoise: -90,
         interferenceLevel: 10,
@@ -520,7 +516,7 @@ describe('useWirelessGraphQL - Analytics Hooks', () => {
         refetch: jest.fn(),
       });
 
-      const { result } = renderHook(() => useRfAnalyticsGraphQL({ siteId: 'site-001' }), {
+      const { result } = renderHook(() => useRfAnalyticsGraphQL({ siteId: "site-001" }), {
         wrapper: createApolloWrapper(),
       });
 
@@ -532,8 +528,8 @@ describe('useWirelessGraphQL - Analytics Hooks', () => {
     });
   });
 
-  describe('useChannelUtilizationGraphQL', () => {
-    it('should fetch channel utilization', async () => {
+  describe("useChannelUtilizationGraphQL", () => {
+    it("should fetch channel utilization", async () => {
       const mockUtilization = [
         { channel: 1, utilization: 45 },
         { channel: 6, utilization: 60 },
@@ -549,10 +545,10 @@ describe('useWirelessGraphQL - Analytics Hooks', () => {
       const { result } = renderHook(
         () =>
           useChannelUtilizationGraphQL({
-            siteId: 'site-001',
+            siteId: "site-001",
             band: FrequencyBand.Band_2_4Ghz,
           }),
-        { wrapper: createApolloWrapper() }
+        { wrapper: createApolloWrapper() },
       );
 
       await waitFor(() => {
@@ -563,10 +559,10 @@ describe('useWirelessGraphQL - Analytics Hooks', () => {
     });
   });
 
-  describe('useWirelessSiteMetricsGraphQL', () => {
-    it('should fetch wireless site metrics', async () => {
+  describe("useWirelessSiteMetricsGraphQL", () => {
+    it("should fetch wireless site metrics", async () => {
       const mockMetrics = {
-        siteId: 'site-001',
+        siteId: "site-001",
         totalAccessPoints: 10,
         onlineAccessPoints: 9,
         totalClients: 150,
@@ -580,10 +576,9 @@ describe('useWirelessGraphQL - Analytics Hooks', () => {
         refetch: jest.fn(),
       });
 
-      const { result } = renderHook(
-        () => useWirelessSiteMetricsGraphQL({ siteId: 'site-001' }),
-        { wrapper: createApolloWrapper() }
-      );
+      const { result } = renderHook(() => useWirelessSiteMetricsGraphQL({ siteId: "site-001" }), {
+        wrapper: createApolloWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -593,8 +588,8 @@ describe('useWirelessGraphQL - Analytics Hooks', () => {
     });
   });
 
-  describe('useWirelessDashboardGraphQL', () => {
-    it('should fetch wireless dashboard data', async () => {
+  describe("useWirelessDashboardGraphQL", () => {
+    it("should fetch wireless dashboard data", async () => {
       const mockDashboard = {
         totalAccessPoints: 50,
         onlineAccessPoints: 48,
@@ -622,85 +617,85 @@ describe('useWirelessGraphQL - Analytics Hooks', () => {
   });
 });
 
-describe('Utility Functions', () => {
-  describe('calculateSignalQuality', () => {
-    it('should return 100% for excellent signal (-30 dBm)', () => {
+describe("Utility Functions", () => {
+  describe("calculateSignalQuality", () => {
+    it("should return 100% for excellent signal (-30 dBm)", () => {
       expect(calculateSignalQuality(-30)).toBe(100);
     });
 
-    it('should return 100% for better than -30 dBm', () => {
+    it("should return 100% for better than -30 dBm", () => {
       expect(calculateSignalQuality(-20)).toBe(100);
     });
 
-    it('should return 0% for poor signal (-90 dBm)', () => {
+    it("should return 0% for poor signal (-90 dBm)", () => {
       expect(calculateSignalQuality(-90)).toBe(0);
     });
 
-    it('should return 0% for worse than -90 dBm', () => {
+    it("should return 0% for worse than -90 dBm", () => {
       expect(calculateSignalQuality(-100)).toBe(0);
     });
 
-    it('should calculate percentage for mid-range values', () => {
+    it("should calculate percentage for mid-range values", () => {
       const quality = calculateSignalQuality(-60);
       expect(quality).toBeGreaterThan(0);
       expect(quality).toBeLessThan(100);
       expect(quality).toBe(50);
     });
 
-    it('should return 0 for null value', () => {
+    it("should return 0 for null value", () => {
       expect(calculateSignalQuality(null)).toBe(0);
     });
 
-    it('should return 0 for undefined value', () => {
+    it("should return 0 for undefined value", () => {
       expect(calculateSignalQuality(undefined)).toBe(0);
     });
   });
 
-  describe('getSignalQualityLabel', () => {
+  describe("getSignalQualityLabel", () => {
     it('should return "Excellent" for strong signal', () => {
-      expect(getSignalQualityLabel(-40)).toBe('Excellent');
+      expect(getSignalQualityLabel(-40)).toBe("Excellent");
     });
 
     it('should return "Good" for good signal', () => {
-      expect(getSignalQualityLabel(-55)).toBe('Good');
+      expect(getSignalQualityLabel(-55)).toBe("Good");
     });
 
     it('should return "Fair" for fair signal', () => {
-      expect(getSignalQualityLabel(-65)).toBe('Fair');
+      expect(getSignalQualityLabel(-65)).toBe("Fair");
     });
 
     it('should return "Poor" for weak signal', () => {
-      expect(getSignalQualityLabel(-80)).toBe('Poor');
+      expect(getSignalQualityLabel(-80)).toBe("Poor");
     });
 
     it('should return "Unknown" for null value', () => {
-      expect(getSignalQualityLabel(null)).toBe('Unknown');
+      expect(getSignalQualityLabel(null)).toBe("Unknown");
     });
 
     it('should return "Unknown" for undefined value', () => {
-      expect(getSignalQualityLabel(undefined)).toBe('Unknown');
+      expect(getSignalQualityLabel(undefined)).toBe("Unknown");
     });
   });
 
-  describe('getFrequencyBandLabel', () => {
+  describe("getFrequencyBandLabel", () => {
     it('should return "2.4 GHz" for 2.4GHz band', () => {
-      expect(getFrequencyBandLabel(FrequencyBand.Band_2_4Ghz)).toBe('2.4 GHz');
+      expect(getFrequencyBandLabel(FrequencyBand.Band_2_4Ghz)).toBe("2.4 GHz");
     });
 
     it('should return "5 GHz" for 5GHz band', () => {
-      expect(getFrequencyBandLabel(FrequencyBand.Band_5Ghz)).toBe('5 GHz');
+      expect(getFrequencyBandLabel(FrequencyBand.Band_5Ghz)).toBe("5 GHz");
     });
 
     it('should return "6 GHz" for 6GHz band', () => {
-      expect(getFrequencyBandLabel(FrequencyBand.Band_6Ghz)).toBe('6 GHz');
+      expect(getFrequencyBandLabel(FrequencyBand.Band_6Ghz)).toBe("6 GHz");
     });
 
     it('should return "Unknown" for null value', () => {
-      expect(getFrequencyBandLabel(null)).toBe('Unknown');
+      expect(getFrequencyBandLabel(null)).toBe("Unknown");
     });
 
     it('should return "Unknown" for undefined value', () => {
-      expect(getFrequencyBandLabel(undefined)).toBe('Unknown');
+      expect(getFrequencyBandLabel(undefined)).toBe("Unknown");
     });
   });
 });

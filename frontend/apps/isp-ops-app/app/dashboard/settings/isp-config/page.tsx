@@ -59,7 +59,11 @@ export default function ISPConfigPage() {
   const [localSettings, setLocalSettings] = useState<ISPSettings | null>(null);
 
   // Fetch current settings
-  const { data: settings, isLoading, error } = useQuery<ISPSettings>({
+  const {
+    data: settings,
+    isLoading,
+    error,
+  } = useQuery<ISPSettings>({
     queryKey: ["isp-settings"],
     queryFn: async () => {
       const response = await http.get("/isp-settings");
@@ -199,7 +203,10 @@ export default function ISPConfigPage() {
     // Calculate what changed
     const changes: any = {};
     Object.keys(localSettings).forEach((key) => {
-      if (JSON.stringify(localSettings[key as keyof ISPSettings]) !== JSON.stringify(settings[key as keyof ISPSettings])) {
+      if (
+        JSON.stringify(localSettings[key as keyof ISPSettings]) !==
+        JSON.stringify(settings[key as keyof ISPSettings])
+      ) {
         changes[key] = localSettings[key as keyof ISPSettings];
       }
     });
@@ -239,9 +246,7 @@ export default function ISPConfigPage() {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load settings. Please try again.
-        </AlertDescription>
+        <AlertDescription>Failed to load settings. Please try again.</AlertDescription>
       </Alert>
     );
   }
@@ -254,17 +259,11 @@ export default function ISPConfigPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">ISP Configuration</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage ISP-specific settings and defaults
-          </p>
+          <p className="text-muted-foreground mt-1">Manage ISP-specific settings and defaults</p>
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-          >
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -293,18 +292,10 @@ export default function ISPConfigPage() {
           <AlertDescription className="flex items-center justify-between">
             <span>You have unsaved changes</span>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDiscard}
-              >
+              <Button variant="outline" size="sm" onClick={handleDiscard}>
                 Discard
               </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={saveMutation.isPending}
-              >
+              <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -420,15 +411,17 @@ export default function ISPConfigPage() {
       <Card>
         <CardHeader>
           <CardTitle>Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible actions that affect your ISP configuration
-          </CardDescription>
+          <CardDescription>Irreversible actions that affect your ISP configuration</CardDescription>
         </CardHeader>
         <CardContent>
           <Button
             variant="destructive"
             onClick={() => {
-              if (confirm("Are you sure you want to reset all settings to defaults? This cannot be undone.")) {
+              if (
+                confirm(
+                  "Are you sure you want to reset all settings to defaults? This cannot be undone.",
+                )
+              ) {
                 resetMutation.mutate();
               }
             }}

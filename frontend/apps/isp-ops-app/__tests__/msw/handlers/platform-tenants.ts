@@ -3,12 +3,12 @@
  * Mocks platform-admin tenant management endpoints
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   TenantDetails,
   PlatformTenantListResponse,
   TenantUser,
-  TenantStatistics
+  TenantStatistics,
 } from "@/lib/services/platform-admin-tenant-service";
 
 // ============================================
@@ -74,7 +74,9 @@ export function createMockTenantUser(overrides: Partial<TenantUser> = {}): Tenan
   };
 }
 
-export function createMockTenantStatistics(overrides: Partial<TenantStatistics> = {}): TenantStatistics {
+export function createMockTenantStatistics(
+  overrides: Partial<TenantStatistics> = {},
+): TenantStatistics {
   const now = new Date().toISOString();
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -139,8 +141,7 @@ export const platformTenantsHandlers = [
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
         (t) =>
-          t.name.toLowerCase().includes(searchLower) ||
-          t.slug.toLowerCase().includes(searchLower)
+          t.name.toLowerCase().includes(searchLower) || t.slug.toLowerCase().includes(searchLower),
       );
     }
 
@@ -346,26 +347,29 @@ export const platformTenantsHandlers = [
   }),
 
   // POST /platform-admin/tenants/:tenantId/impersonate - Impersonate tenant
-  http.post("*/api/v1/platform-admin/tenants/:tenantId/impersonate", async ({ params, request }) => {
-    const tenantId = params.tenantId as string;
-    const body = await request.json<{ duration?: number }>();
-    console.log(`[MSW] POST /platform-admin/tenants/${tenantId}/impersonate`);
+  http.post(
+    "*/api/v1/platform-admin/tenants/:tenantId/impersonate",
+    async ({ params, request }) => {
+      const tenantId = params.tenantId as string;
+      const body = await request.json<{ duration?: number }>();
+      console.log(`[MSW] POST /platform-admin/tenants/${tenantId}/impersonate`);
 
-    const tenant = tenants.find((t) => t.id === tenantId);
-    if (!tenant) {
-      console.log(`[MSW] Tenant ${tenantId} not found`);
-      return HttpResponse.json({ detail: "Tenant not found" }, { status: 404 });
-    }
+      const tenant = tenants.find((t) => t.id === tenantId);
+      if (!tenant) {
+        console.log(`[MSW] Tenant ${tenantId} not found`);
+        return HttpResponse.json({ detail: "Tenant not found" }, { status: 404 });
+      }
 
-    const duration = body.duration || 3600; // Default 1 hour
+      const duration = body.duration || 3600; // Default 1 hour
 
-    const response = {
-      access_token: `mock-access-token-${tenantId}-${Date.now()}`,
-      expires_in: duration,
-      refresh_token: `mock-refresh-token-${tenantId}-${Date.now()}`,
-    };
+      const response = {
+        access_token: `mock-access-token-${tenantId}-${Date.now()}`,
+        expires_in: duration,
+        refresh_token: `mock-refresh-token-${tenantId}-${Date.now()}`,
+      };
 
-    console.log(`[MSW] Generated impersonation token for tenant ${tenantId}`);
-    return HttpResponse.json(response);
-  }),
+      console.log(`[MSW] Generated impersonation token for tenant ${tenantId}`);
+      return HttpResponse.json(response);
+    },
+  ),
 ];

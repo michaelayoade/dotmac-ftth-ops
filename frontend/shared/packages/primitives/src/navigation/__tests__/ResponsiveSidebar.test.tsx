@@ -6,14 +6,7 @@
  */
 
 import React from "react";
-import {
-  render,
-  renderA11y,
-  renderComprehensive,
-  screen,
-  fireEvent,
-  waitFor,
-} from "../../testing";
+import { render, renderA11y, renderComprehensive, screen, fireEvent, waitFor } from "../../testing";
 import { ResponsiveSidebar } from "../ResponsiveSidebar";
 
 // Mock icons
@@ -35,7 +28,9 @@ jest.mock("../../utils/accessibility", () => ({
 
 describe("ResponsiveSidebar", () => {
   const HomeIcon = ({ className }: any) => <div className={className} data-testid="home-icon" />;
-  const SettingsIcon = ({ className }: any) => <div className={className} data-testid="settings-icon" />;
+  const SettingsIcon = ({ className }: any) => (
+    <div className={className} data-testid="settings-icon" />
+  );
   const UsersIcon = ({ className }: any) => <div className={className} data-testid="users-icon" />;
   const FileIcon = ({ className }: any) => <div className={className} data-testid="file-icon" />;
 
@@ -70,7 +65,7 @@ describe("ResponsiveSidebar", () => {
   describe("Mobile View", () => {
     it("renders mobile menu button", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       expect(screen.getByText("Menu")).toBeInTheDocument();
@@ -79,7 +74,7 @@ describe("ResponsiveSidebar", () => {
 
     it("opens mobile drawer when menu button is clicked", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -90,7 +85,7 @@ describe("ResponsiveSidebar", () => {
 
     it("displays navigation items in mobile drawer", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -102,7 +97,7 @@ describe("ResponsiveSidebar", () => {
 
     it("closes mobile drawer when close button is clicked", async () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -118,7 +113,7 @@ describe("ResponsiveSidebar", () => {
 
     it("closes mobile drawer when overlay is clicked", async () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -134,7 +129,7 @@ describe("ResponsiveSidebar", () => {
 
     it("closes mobile drawer when Escape key is pressed", async () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -149,7 +144,7 @@ describe("ResponsiveSidebar", () => {
 
     it("locks body scroll when mobile drawer is open", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -159,7 +154,7 @@ describe("ResponsiveSidebar", () => {
 
     it("restores body scroll when mobile drawer is closed", async () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -179,7 +174,7 @@ describe("ResponsiveSidebar", () => {
           currentPath="/home"
           onNavigate={mockOnNavigate}
           title="Main Navigation"
-        />
+        />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -190,7 +185,7 @@ describe("ResponsiveSidebar", () => {
 
     it("closes mobile drawer after navigation", async () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -209,7 +204,7 @@ describe("ResponsiveSidebar", () => {
   describe("Desktop View", () => {
     it("renders desktop sidebar", () => {
       const { container } = render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       const desktopSidebar = container.querySelector("aside");
@@ -218,7 +213,7 @@ describe("ResponsiveSidebar", () => {
 
     it("displays navigation items in desktop sidebar", () => {
       const { container } = render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       // Check desktop navigation exists
@@ -233,7 +228,7 @@ describe("ResponsiveSidebar", () => {
           currentPath="/home"
           onNavigate={mockOnNavigate}
           collapsible={true}
-        />
+        />,
       );
 
       const collapseButton = screen.getByLabelText("Collapse sidebar");
@@ -247,7 +242,7 @@ describe("ResponsiveSidebar", () => {
           currentPath="/home"
           onNavigate={mockOnNavigate}
           collapsible={false}
-        />
+        />,
       );
 
       expect(screen.queryByLabelText("Collapse sidebar")).not.toBeInTheDocument();
@@ -262,7 +257,7 @@ describe("ResponsiveSidebar", () => {
           onNavigate={mockOnNavigate}
           collapsible={true}
           defaultCollapsed={false}
-        />
+        />,
       );
 
       const aside = container.querySelector("aside");
@@ -282,7 +277,7 @@ describe("ResponsiveSidebar", () => {
           onNavigate={mockOnNavigate}
           collapsible={true}
           defaultCollapsed={true}
-        />
+        />,
       );
 
       const aside = container.querySelector("aside");
@@ -302,7 +297,7 @@ describe("ResponsiveSidebar", () => {
           onNavigate={mockOnNavigate}
           collapsible={true}
           defaultCollapsed={true}
-        />
+        />,
       );
 
       const aside = container.querySelector("aside");
@@ -317,7 +312,7 @@ describe("ResponsiveSidebar", () => {
           onNavigate={mockOnNavigate}
           collapsible={true}
           defaultCollapsed={true}
-        />
+        />,
       );
 
       const aside = container.querySelector("aside")!;
@@ -336,7 +331,7 @@ describe("ResponsiveSidebar", () => {
           onNavigate={mockOnNavigate}
           collapsible={true}
           defaultCollapsed={true}
-        />
+        />,
       );
 
       const aside = container.querySelector("aside")!;
@@ -351,7 +346,11 @@ describe("ResponsiveSidebar", () => {
   describe("Navigation", () => {
     it("highlights active navigation item", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/settings" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar
+          items={basicItems}
+          currentPath="/settings"
+          onNavigate={mockOnNavigate}
+        />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -365,7 +364,7 @@ describe("ResponsiveSidebar", () => {
 
     it("calls onNavigate when navigation item is clicked", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -377,7 +376,7 @@ describe("ResponsiveSidebar", () => {
 
     it("renders navigation items with icons", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -387,7 +386,7 @@ describe("ResponsiveSidebar", () => {
 
     it("applies correct icon color for active item", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -400,7 +399,7 @@ describe("ResponsiveSidebar", () => {
 
     it("applies correct icon color for inactive items", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -415,7 +414,7 @@ describe("ResponsiveSidebar", () => {
   describe("Nested Navigation", () => {
     it("renders items with children", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -427,7 +426,7 @@ describe("ResponsiveSidebar", () => {
 
     it("expands nested items when parent is clicked", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -448,7 +447,7 @@ describe("ResponsiveSidebar", () => {
 
     it("collapses nested items when parent is clicked again", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -467,7 +466,7 @@ describe("ResponsiveSidebar", () => {
 
     it("rotates chevron when nested item is expanded", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -485,7 +484,7 @@ describe("ResponsiveSidebar", () => {
 
     it("sets aria-expanded on parent items", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -503,7 +502,7 @@ describe("ResponsiveSidebar", () => {
 
     it("navigates to child item when clicked", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -520,7 +519,7 @@ describe("ResponsiveSidebar", () => {
 
     it("does not navigate when parent with children is clicked", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -537,7 +536,7 @@ describe("ResponsiveSidebar", () => {
   describe("Badge Support", () => {
     it("renders badge when provided", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -548,7 +547,7 @@ describe("ResponsiveSidebar", () => {
 
     it("applies correct badge styling for inactive items", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -560,7 +559,7 @@ describe("ResponsiveSidebar", () => {
 
     it("applies correct badge styling for active items", () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/users" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/users" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -578,7 +577,7 @@ describe("ResponsiveSidebar", () => {
           currentPath="/home"
           onNavigate={mockOnNavigate}
           footer={<div data-testid="footer">Footer Content</div>}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -591,7 +590,7 @@ describe("ResponsiveSidebar", () => {
 
     it("does not render footer section when footer is not provided", () => {
       const { container } = render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -605,13 +604,13 @@ describe("ResponsiveSidebar", () => {
   describe("Accessibility", () => {
     it("passes accessibility validation", async () => {
       await renderA11y(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
     });
 
     it("mobile drawer has role=dialog", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -623,18 +622,22 @@ describe("ResponsiveSidebar", () => {
 
     it("navigation has proper list structure", () => {
       const { container } = render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
 
-      const list = container.querySelector('ul');
+      const list = container.querySelector("ul");
       expect(list).toBeInTheDocument();
     });
 
     it("sets aria-current on active items", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/settings" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar
+          items={basicItems}
+          currentPath="/settings"
+          onNavigate={mockOnNavigate}
+        />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -647,7 +650,7 @@ describe("ResponsiveSidebar", () => {
 
     it("close button has sr-only text", () => {
       render(
-        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={basicItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       fireEvent.click(screen.getByText("Menu"));
@@ -663,7 +666,7 @@ describe("ResponsiveSidebar", () => {
           onNavigate={mockOnNavigate}
           collapsible={true}
           defaultCollapsed={false}
-        />
+        />,
       );
 
       const collapseButton = screen.getByLabelText("Collapse sidebar");
@@ -684,7 +687,7 @@ describe("ResponsiveSidebar", () => {
           currentPath="/home"
           onNavigate={mockOnNavigate}
           className="custom-sidebar"
-        />
+        />,
       );
 
       const aside = container.querySelector("aside");
@@ -702,7 +705,7 @@ describe("ResponsiveSidebar", () => {
           title="Main Navigation"
           footer={<div>Footer</div>}
           collapsible={true}
-        />
+        />,
       );
 
       await expect(result.container).toBeAccessible();
@@ -713,7 +716,7 @@ describe("ResponsiveSidebar", () => {
 
     it("handles complete navigation flow", async () => {
       render(
-        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />
+        <ResponsiveSidebar items={nestedItems} currentPath="/home" onNavigate={mockOnNavigate} />,
       );
 
       // Open mobile drawer
@@ -745,7 +748,7 @@ describe("ResponsiveSidebar", () => {
           currentPath="/home"
           onNavigate={mockOnNavigate}
           collapsible={true}
-        />
+        />,
       );
 
       const aside = container.querySelector("aside")!;

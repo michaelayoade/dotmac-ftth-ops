@@ -116,9 +116,7 @@ class MikrotikRouterOSDriver(BaseOLTDriver):
         async with self._api_lock:
             return await asyncio.to_thread(self._execute_api_command, path, kwargs)
 
-    def _execute_api_command(
-        self, path: str, params: dict[str, Any]
-    ) -> list[dict[str, Any]]:
+    def _execute_api_command(self, path: str, params: dict[str, Any]) -> list[dict[str, Any]]:
         """Execute API command synchronously."""
         api = self._get_api()
         cmd = api.path(path)
@@ -270,7 +268,9 @@ class MikrotikRouterOSDriver(BaseOLTDriver):
         # Get system identity
         try:
             identity = await self._run_api_command("/system/identity")
-            device_name = identity[0].get("name", self.config.olt_id) if identity else self.config.olt_id
+            device_name = (
+                identity[0].get("name", self.config.olt_id) if identity else self.config.olt_id
+            )
         except Exception:
             device_name = self.config.olt_id
 
@@ -678,7 +678,10 @@ class MikrotikRouterOSDriver(BaseOLTDriver):
                             api = self._get_api()
                             cmd = api.path("/ppp/secret")
                             cmd.update(
-                                **{".id": item_id, "disabled": "true" if operation == "disable" else "false"}
+                                **{
+                                    ".id": item_id,
+                                    "disabled": "true" if operation == "disable" else "false",
+                                }
                             )
                             return True
             except Exception:

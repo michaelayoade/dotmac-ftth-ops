@@ -81,7 +81,7 @@ describe("DualStackIPInput", () => {
       render(<DualStackIPInput {...defaultProps} requireAtLeastOne={true} />);
 
       expect(
-        screen.getByText("At least one IP address (IPv4 or IPv6) is required")
+        screen.getByText("At least one IP address (IPv4 or IPv6) is required"),
       ).toBeInTheDocument();
     });
 
@@ -109,11 +109,11 @@ describe("DualStackIPInput", () => {
           onIPv4Change={jest.fn()}
           onIPv6Change={jest.fn()}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "At least one IP address must be provided"
+        "At least one IP address must be provided",
       );
     });
 
@@ -125,10 +125,12 @@ describe("DualStackIPInput", () => {
           onIPv4Change={jest.fn()}
           onIPv6Change={jest.fn()}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
-      expect(screen.queryByText("At least one IP address must be provided")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("At least one IP address must be provided"),
+      ).not.toBeInTheDocument();
     });
 
     it("does not show error when IPv6 is provided", () => {
@@ -139,10 +141,12 @@ describe("DualStackIPInput", () => {
           onIPv4Change={jest.fn()}
           onIPv6Change={jest.fn()}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
-      expect(screen.queryByText("At least one IP address must be provided")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("At least one IP address must be provided"),
+      ).not.toBeInTheDocument();
     });
 
     it("does not show error when both are provided", () => {
@@ -153,10 +157,12 @@ describe("DualStackIPInput", () => {
           onIPv4Change={jest.fn()}
           onIPv6Change={jest.fn()}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
-      expect(screen.queryByText("At least one IP address must be provided")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("At least one IP address must be provided"),
+      ).not.toBeInTheDocument();
     });
 
     it("does not show error when requireAtLeastOne is false", () => {
@@ -167,10 +173,12 @@ describe("DualStackIPInput", () => {
           onIPv4Change={jest.fn()}
           onIPv6Change={jest.fn()}
           requireAtLeastOne={false}
-        />
+        />,
       );
 
-      expect(screen.queryByText("At least one IP address must be provided")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("At least one IP address must be provided"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -265,17 +273,13 @@ describe("DualStackIPInput", () => {
 
   describe("Error Display", () => {
     it("displays IPv4 error when provided", () => {
-      render(
-        <DualStackIPInput {...defaultProps} ipv4Error="Invalid IPv4 address" />
-      );
+      render(<DualStackIPInput {...defaultProps} ipv4Error="Invalid IPv4 address" />);
 
       expect(screen.getByText("Invalid IPv4 address")).toBeInTheDocument();
     });
 
     it("displays IPv6 error when provided", () => {
-      render(
-        <DualStackIPInput {...defaultProps} ipv6Error="Invalid IPv6 address" />
-      );
+      render(<DualStackIPInput {...defaultProps} ipv6Error="Invalid IPv6 address" />);
 
       expect(screen.getByText("Invalid IPv6 address")).toBeInTheDocument();
     });
@@ -286,7 +290,7 @@ describe("DualStackIPInput", () => {
           {...defaultProps}
           ipv4Error="IPv4 is invalid"
           ipv6Error="IPv6 is invalid"
-        />
+        />,
       );
 
       expect(screen.getByText("IPv4 is invalid")).toBeInTheDocument();
@@ -332,9 +336,7 @@ describe("DualStackIPInput", () => {
     });
 
     it("applies custom className", () => {
-      const { container } = render(
-        <DualStackIPInput {...defaultProps} className="custom-class" />
-      );
+      const { container } = render(<DualStackIPInput {...defaultProps} className="custom-class" />);
 
       const wrapper = container.firstChild;
       expect(wrapper).toHaveClass("custom-class");
@@ -350,7 +352,7 @@ describe("DualStackIPInput", () => {
           onIPv4Change={jest.fn()}
           onIPv6Change={jest.fn()}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
       const alert = screen.getByRole("alert");
@@ -385,12 +387,12 @@ describe("DualStackIPInput", () => {
           onIPv4Change={onIPv4Change}
           onIPv6Change={onIPv6Change}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
       // Initially shows error
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "At least one IP address must be provided"
+        "At least one IP address must be provided",
       );
 
       // Add IPv4 - error should disappear
@@ -411,7 +413,7 @@ describe("DualStackIPInput", () => {
           onIPv4Change={jest.fn()}
           onIPv6Change={onIPv6Change}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
       const ipv6Input = screen.getByLabelText("IPv6 Address");
@@ -431,7 +433,7 @@ describe("DualStackIPInput", () => {
           onIPv4Change={onIPv4Change}
           onIPv6Change={jest.fn()}
           requireAtLeastOne={true}
-        />
+        />,
       );
 
       const ipv4Input = screen.getByLabelText("IPv4 Address");

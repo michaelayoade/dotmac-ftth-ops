@@ -69,9 +69,7 @@ export const createPaidInvoice = (overrides?: Partial<Invoice>): Invoice => {
 /**
  * Create a partially paid invoice
  */
-export const createPartiallyPaidInvoice = (
-  overrides?: Partial<Invoice>
-): Invoice => {
+export const createPartiallyPaidInvoice = (overrides?: Partial<Invoice>): Invoice => {
   const amount = overrides?.total_amount ?? 150.0;
   const paidAmount = amount * 0.5;
   return createMockInvoice({
@@ -103,7 +101,7 @@ export const createMockInvoices = (count: number = 5): Invoice[] => {
     createMockInvoice({
       invoice_id: `inv_${i + 1}`,
       invoice_number: `INV-${String(i + 1).padStart(5, "0")}`,
-    })
+    }),
   );
 };
 

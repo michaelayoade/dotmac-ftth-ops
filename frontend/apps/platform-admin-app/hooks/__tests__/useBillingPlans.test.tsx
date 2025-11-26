@@ -114,9 +114,7 @@ describe("useBillingPlans", () => {
 
       expect(result.current.plans).toEqual(mockPlans);
       expect(result.current.error).toBeNull();
-      expect(apiClient.get).toHaveBeenCalledWith(
-        "/billing/subscriptions/plans?active_only=true"
-      );
+      expect(apiClient.get).toHaveBeenCalledWith("/billing/subscriptions/plans?active_only=true");
     });
 
     it("should fetch plans with activeOnly=false", async () => {
@@ -182,7 +180,7 @@ describe("useBillingPlans", () => {
 
       expect(result.current.plans).toEqual(mockPlans);
       expect(apiClient.get).toHaveBeenCalledWith(
-        "/billing/subscriptions/plans?active_only=true&product_id=prod-1"
+        "/billing/subscriptions/plans?active_only=true&product_id=prod-1",
       );
     });
 
@@ -231,7 +229,7 @@ describe("useBillingPlans", () => {
       expect(result.current.plans).toEqual([]);
       expect(logger.warn).toHaveBeenCalledWith(
         "Plans response contains error",
-        "Some error occurred"
+        "Some error occurred",
       );
     });
 
@@ -312,9 +310,9 @@ describe("useBillingPlans", () => {
                   success: true,
                   data: [],
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useBillingPlans(), {
@@ -708,7 +706,7 @@ describe("useBillingPlans", () => {
         result.current.createPlan({
           product_id: "prod-1",
           billing_interval: "monthly",
-        })
+        }),
       ).rejects.toThrow("Failed to create plan");
       expect(logger.error).toHaveBeenCalledWith("Failed to create plan", error);
     });
@@ -731,7 +729,7 @@ describe("useBillingPlans", () => {
         result.current.createPlan({
           product_id: "prod-1",
           billing_interval: "monthly",
-        })
+        }),
       ).rejects.toThrow("Invalid response format");
     });
   });
@@ -782,7 +780,7 @@ describe("useBillingPlans", () => {
 
       expect(apiClient.patch).toHaveBeenCalledWith(
         "/billing/subscriptions/plans/plan-1",
-        updateData
+        updateData,
       );
     });
 
@@ -942,9 +940,9 @@ describe("useBillingPlans", () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      await expect(
-        result.current.updatePlan("plan-1", { description: "Updated" })
-      ).rejects.toThrow("Failed to update plan");
+      await expect(result.current.updatePlan("plan-1", { description: "Updated" })).rejects.toThrow(
+        "Failed to update plan",
+      );
       expect(logger.error).toHaveBeenCalledWith("Failed to update plan", error);
     });
   });
@@ -1111,7 +1109,7 @@ describe("useBillingPlans", () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       const initialCallCount = (apiClient.get as jest.Mock).mock.calls.filter((call) =>
-        call[0].includes("/billing/subscriptions/plans")
+        call[0].includes("/billing/subscriptions/plans"),
       ).length;
 
       await act(async () => {
@@ -1120,7 +1118,7 @@ describe("useBillingPlans", () => {
 
       await waitFor(() => {
         const newCallCount = (apiClient.get as jest.Mock).mock.calls.filter((call) =>
-          call[0].includes("/billing/subscriptions/plans")
+          call[0].includes("/billing/subscriptions/plans"),
         ).length;
         expect(newCallCount).toBeGreaterThan(initialCallCount);
       });
@@ -1139,7 +1137,7 @@ describe("useBillingPlans", () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       const initialCallCount = (apiClient.get as jest.Mock).mock.calls.filter((call) =>
-        call[0].includes("/billing/catalog/products")
+        call[0].includes("/billing/catalog/products"),
       ).length;
 
       await act(async () => {
@@ -1148,7 +1146,7 @@ describe("useBillingPlans", () => {
 
       await waitFor(() => {
         const newCallCount = (apiClient.get as jest.Mock).mock.calls.filter((call) =>
-          call[0].includes("/billing/catalog/products")
+          call[0].includes("/billing/catalog/products"),
         ).length;
         expect(newCallCount).toBeGreaterThan(initialCallCount);
       });
@@ -1167,7 +1165,7 @@ describe("useBillingPlans", () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       const initialCallCount = (apiClient.get as jest.Mock).mock.calls.filter((call) =>
-        call[0].includes("/billing/subscriptions/plans")
+        call[0].includes("/billing/subscriptions/plans"),
       ).length;
 
       await act(async () => {
@@ -1176,7 +1174,7 @@ describe("useBillingPlans", () => {
 
       await waitFor(() => {
         const newCallCount = (apiClient.get as jest.Mock).mock.calls.filter((call) =>
-          call[0].includes("/billing/subscriptions/plans")
+          call[0].includes("/billing/subscriptions/plans"),
         ).length;
         expect(newCallCount).toBeGreaterThan(initialCallCount);
       });
@@ -1194,8 +1192,8 @@ describe("useBillingPlans", () => {
                   success: true,
                   data: [],
                 }),
-              100
-            )
+              100,
+            ),
           );
         }
         return Promise.resolve({ data: [] });
@@ -1221,8 +1219,8 @@ describe("useBillingPlans", () => {
                 resolve({
                   data: [],
                 }),
-              100
-            )
+              100,
+            ),
           );
         }
         return Promise.resolve({ success: true, data: [] });
@@ -1254,9 +1252,9 @@ describe("useBillingPlans", () => {
                   success: true,
                   data: {},
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useBillingPlans(), {
@@ -1290,9 +1288,9 @@ describe("useBillingPlans", () => {
                 resolve({
                   data: {},
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useBillingPlans(), {
@@ -1316,10 +1314,7 @@ describe("useBillingPlans", () => {
       });
 
       (apiClient.delete as jest.Mock).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({}), 100)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({}), 100)),
       );
 
       const { result } = renderHook(() => useBillingPlans(), {

@@ -28,11 +28,7 @@ import {
  * Helper function to calculate proration
  * Formula: (monthly_amount / days_in_month) * days_used
  */
-function calculateProration(
-  monthlyAmount: number,
-  daysInMonth: number,
-  daysUsed: number
-): number {
+function calculateProration(monthlyAmount: number, daysInMonth: number, daysUsed: number): number {
   return (monthlyAmount / daysInMonth) * daysUsed;
 }
 
@@ -46,11 +42,7 @@ function calculateTax(amount: number, taxRate: number): number {
 /**
  * Helper function to apply discount
  */
-function applyDiscount(
-  amount: number,
-  discountPercent?: number,
-  discountAmount?: number
-): number {
+function applyDiscount(amount: number, discountPercent?: number, discountAmount?: number): number {
   if (discountAmount) {
     return Math.max(0, amount - discountAmount);
   }
@@ -530,7 +522,7 @@ describe("Billing Calculations: Late Fees", () => {
 
     // Act
     const daysPastDue = Math.floor(
-      (currentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+      (currentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
     );
     const shouldChargeFee = daysPastDue > gracePeriodDays;
 
@@ -600,7 +592,7 @@ describe("Billing Calculations: Early Termination Fees", () => {
     // Act
     const totalETF = services.reduce(
       (sum, service) => sum + service.monthlyCharge * service.remainingMonths,
-      0
+      0,
     );
 
     // Assert

@@ -314,10 +314,7 @@ export function SystemConfiguration() {
 
   return (
     <div className="space-y-6">
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => handleTabChange(v as "overview" | "settings")}
-      >
+      <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as "overview" | "settings")}>
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Database className="h-4 w-4" />

@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   APIKey,
   APIKeyCreateResponse,
@@ -13,7 +13,7 @@ import type {
   APIKeyUpdateRequest,
   APIKeyListResponse,
   AvailableScopes,
-} from '../../../hooks/useApiKeys';
+} from "../../../hooks/useApiKeys";
 
 // In-memory storage for test data
 let apiKeys: APIKey[] = [];
@@ -29,14 +29,14 @@ export function resetApiKeysStorage() {
 export function createMockApiKey(overrides?: Partial<APIKey>): APIKey {
   return {
     id: `key-${nextApiKeyId++}`,
-    name: 'Test API Key',
-    scopes: ['read:subscribers'],
+    name: "Test API Key",
+    scopes: ["read:subscribers"],
     created_at: new Date().toISOString(),
     expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    description: 'Test API key for testing',
+    description: "Test API key for testing",
     last_used_at: null,
     is_active: true,
-    key_preview: 'sk_test_**********************1234',
+    key_preview: "sk_test_**********************1234",
     ...overrides,
   };
 }
@@ -44,25 +44,25 @@ export function createMockApiKey(overrides?: Partial<APIKey>): APIKey {
 // Helper to create available scopes
 export function createMockAvailableScopes(): AvailableScopes {
   return {
-    'read:subscribers': {
-      name: 'Read Subscribers',
-      description: 'Read subscriber information',
+    "read:subscribers": {
+      name: "Read Subscribers",
+      description: "Read subscriber information",
     },
-    'write:subscribers': {
-      name: 'Write Subscribers',
-      description: 'Create and update subscribers',
+    "write:subscribers": {
+      name: "Write Subscribers",
+      description: "Create and update subscribers",
     },
-    'delete:subscribers': {
-      name: 'Delete Subscribers',
-      description: 'Delete subscribers',
+    "delete:subscribers": {
+      name: "Delete Subscribers",
+      description: "Delete subscribers",
     },
-    'read:billing': {
-      name: 'Read Billing',
-      description: 'Read billing information',
+    "read:billing": {
+      name: "Read Billing",
+      description: "Read billing information",
     },
-    'write:billing': {
-      name: 'Write Billing',
-      description: 'Create and update billing records',
+    "write:billing": {
+      name: "Write Billing",
+      description: "Create and update billing records",
     },
   };
 }
@@ -74,18 +74,18 @@ export function seedApiKeysData(keys: APIKey[]) {
 
 export const apiKeysHandlers = [
   // GET /api/v1/auth/api-keys - List API keys with pagination
-  http.get('*/api/v1/auth/api-keys', ({ request, params }) => {
+  http.get("*/api/v1/auth/api-keys", ({ request, params }) => {
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const limit = parseInt(url.searchParams.get("limit") || "50");
 
-    console.log('[MSW] GET /api/v1/auth/api-keys', { page, limit, totalKeys: apiKeys.length });
+    console.log("[MSW] GET /api/v1/auth/api-keys", { page, limit, totalKeys: apiKeys.length });
 
     // Calculate pagination
     const offset = (page - 1) * limit;
     const paginated = apiKeys.slice(offset, offset + limit);
 
-    console.log('[MSW] Returning', paginated.length, 'API keys');
+    console.log("[MSW] Returning", paginated.length, "API keys");
 
     const response: APIKeyListResponse = {
       api_keys: paginated,
@@ -98,17 +98,17 @@ export const apiKeysHandlers = [
   }),
 
   // GET /api/v1/auth/api-keys/scopes/available - Get available scopes
-  http.get('*/api/v1/auth/api-keys/scopes/available', ({ request, params }) => {
-    console.log('[MSW] GET /api/v1/auth/api-keys/scopes/available');
+  http.get("*/api/v1/auth/api-keys/scopes/available", ({ request, params }) => {
+    console.log("[MSW] GET /api/v1/auth/api-keys/scopes/available");
     const scopes = createMockAvailableScopes();
     return HttpResponse.json(scopes);
   }),
 
   // POST /api/v1/auth/api-keys - Create API key
-  http.post('*/api/v1/auth/api-keys', async ({ request, params }) => {
-    const data = await request.json() as APIKeyCreateRequest;
+  http.post("*/api/v1/auth/api-keys", async ({ request, params }) => {
+    const data = (await request.json()) as APIKeyCreateRequest;
 
-    console.log('[MSW] POST /api/v1/auth/api-keys', data);
+    console.log("[MSW] POST /api/v1/auth/api-keys", data);
 
     const newKey: APIKeyCreateResponse = {
       ...createMockApiKey({
@@ -122,26 +122,23 @@ export const apiKeysHandlers = [
 
     apiKeys.push(newKey);
 
-    console.log('[MSW] Created API key', newKey.id);
+    console.log("[MSW] Created API key", newKey.id);
 
     return HttpResponse.json(newKey, { status: 201 });
   }),
 
   // PATCH /api/v1/auth/api-keys/:id - Update API key
-  http.patch('*/api/v1/auth/api-keys/:id', async ({ request, params }) => {
+  http.patch("*/api/v1/auth/api-keys/:id", async ({ request, params }) => {
     const { id } = params;
-    const updates = await request.json() as APIKeyUpdateRequest;
+    const updates = (await request.json()) as APIKeyUpdateRequest;
 
-    console.log('[MSW] PATCH /api/v1/auth/api-keys/:id', { id, updates });
+    console.log("[MSW] PATCH /api/v1/auth/api-keys/:id", { id, updates });
 
     const index = apiKeys.findIndex((key) => key.id === id);
 
     if (index === -1) {
-      console.log('[MSW] API key not found', id);
-      return HttpResponse.json(
-        { error: 'API key not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      console.log("[MSW] API key not found", id);
+      return HttpResponse.json({ error: "API key not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     apiKeys[index] = {
@@ -149,30 +146,27 @@ export const apiKeysHandlers = [
       ...updates,
     };
 
-    console.log('[MSW] Updated API key', apiKeys[index].id);
+    console.log("[MSW] Updated API key", apiKeys[index].id);
 
     return HttpResponse.json(apiKeys[index]);
   }),
 
   // DELETE /api/v1/auth/api-keys/:id - Revoke API key
-  http.delete('*/api/v1/auth/api-keys/:id', ({ request, params }) => {
+  http.delete("*/api/v1/auth/api-keys/:id", ({ request, params }) => {
     const { id } = params;
 
-    console.log('[MSW] DELETE /api/v1/auth/api-keys/:id', { id });
+    console.log("[MSW] DELETE /api/v1/auth/api-keys/:id", { id });
 
     const index = apiKeys.findIndex((key) => key.id === id);
 
     if (index === -1) {
-      console.log('[MSW] API key not found', id);
-      return HttpResponse.json(
-        { error: 'API key not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      console.log("[MSW] API key not found", id);
+      return HttpResponse.json({ error: "API key not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     apiKeys.splice(index, 1);
 
-    console.log('[MSW] Deleted API key', id);
+    console.log("[MSW] Deleted API key", id);
 
     return new HttpResponse(null, { status: 204 });
   }),

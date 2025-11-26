@@ -93,7 +93,7 @@ describe("useIntegrations (Jest Mocks)", () => {
           return new HttpResponse(JSON.stringify({ error: "Server error" }), { status: 500 });
         }
         return HttpResponse.json(mockHealthCheckResponse);
-      })
+      }),
     );
   });
 
@@ -209,7 +209,7 @@ describe("useIntegrations (Jest Mocks)", () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       const readyIntegrations = result.current.data?.integrations.filter(
-        (i) => i.status === "ready"
+        (i) => i.status === "ready",
       );
       expect(readyIntegrations).toHaveLength(2);
     });
@@ -375,7 +375,7 @@ describe("useIntegrations (Jest Mocks)", () => {
           acc[i.status] = (acc[i.status] || 0) + 1;
           return acc;
         },
-        {} as Record<string, number>
+        {} as Record<string, number>,
       );
 
       expect(statusCounts?.ready).toBe(1);
@@ -409,11 +409,9 @@ describe("useIntegrations (Jest Mocks)", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      const withMeta = result.current.data?.integrations.find(
-        (i) => i.name === "with-metadata"
-      );
+      const withMeta = result.current.data?.integrations.find((i) => i.name === "with-metadata");
       const withoutMeta = result.current.data?.integrations.find(
-        (i) => i.name === "without-metadata"
+        (i) => i.name === "without-metadata",
       );
 
       expect(withMeta?.metadata).toBeDefined();

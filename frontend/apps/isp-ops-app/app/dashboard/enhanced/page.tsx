@@ -64,13 +64,25 @@ export default function EnhancedDashboardPage() {
 
   const hasRadiusAccess = features.enableRadius && hasPermission("isp.radius.read");
 
-  const { data: radiusSubscribers, isLoading: subscribersLoading, refetch: refetchSubscribers } = useRADIUSSubscribers(0, 100, {
+  const {
+    data: radiusSubscribers,
+    isLoading: subscribersLoading,
+    refetch: refetchSubscribers,
+  } = useRADIUSSubscribers(0, 100, {
     enabled: hasRadiusAccess,
   });
-  const { data: activeSessions, isLoading: sessionsLoading, refetch: refetchSessions } = useRADIUSSessions(0, 100, {
+  const {
+    data: activeSessions,
+    isLoading: sessionsLoading,
+    refetch: refetchSessions,
+  } = useRADIUSSessions(0, 100, {
     enabled: hasRadiusAccess,
   });
-  const { data: serviceStats, isLoading: serviceStatsLoading, refetch: refetchServices } = useServiceStatistics({});
+  const {
+    data: serviceStats,
+    isLoading: serviceStatsLoading,
+    refetch: refetchServices,
+  } = useServiceStatistics({});
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -81,11 +93,7 @@ export default function EnhancedDashboardPage() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([
-        refetchSubscribers?.(),
-        refetchSessions?.(),
-        refetchServices?.(),
-      ]);
+      await Promise.all([refetchSubscribers?.(), refetchSessions?.(), refetchServices?.()]);
     } finally {
       setIsRefreshing(false);
     }
@@ -98,12 +106,10 @@ export default function EnhancedDashboardPage() {
   const activeServices = serviceStats?.active_count ?? 0;
 
   // Calculate metrics
-  const subscriberActiveRate = totalSubscribers > 0
-    ? ((activeSubscribers / totalSubscribers) * 100).toFixed(1)
-    : 0;
-  const sessionRate = activeSubscribers > 0
-    ? ((activeSessionsCount / activeSubscribers) * 100).toFixed(1)
-    : 0;
+  const subscriberActiveRate =
+    totalSubscribers > 0 ? ((activeSubscribers / totalSubscribers) * 100).toFixed(1) : 0;
+  const sessionRate =
+    activeSubscribers > 0 ? ((activeSessionsCount / activeSubscribers) * 100).toFixed(1) : 0;
 
   // KPI Data
   const kpis: KPIItem[] = [
@@ -167,7 +173,12 @@ export default function EnhancedDashboardPage() {
         showPercentage: true,
       },
       status: {
-        type: Number(subscriberActiveRate) > 90 ? "success" : Number(subscriberActiveRate) > 70 ? "warning" : "error",
+        type:
+          Number(subscriberActiveRate) > 90
+            ? "success"
+            : Number(subscriberActiveRate) > 70
+              ? "warning"
+              : "error",
       },
     },
   ];

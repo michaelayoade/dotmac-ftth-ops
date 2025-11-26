@@ -148,11 +148,11 @@ export function useTraces(filters: TracesFilter = {}) {
       try {
         const queryString = buildTracesQueryString(filters);
         const response = await apiClient.get<TracesResponse>(
-          `/observability/traces${queryString ? `?${queryString}` : ""}`
+          `/observability/traces${queryString ? `?${queryString}` : ""}`,
         );
         logger.info("Fetched traces", {
           count: response.data.traces.length,
-          filters
+          filters,
         });
         return response.data;
       } catch (err) {
@@ -166,13 +166,14 @@ export function useTraces(filters: TracesFilter = {}) {
 
   const fetchTraceDetails = async (traceId: string): Promise<TraceData | null> => {
     try {
-      const response = await apiClient.get<TraceData>(
-        `/observability/traces/${traceId}`
-      );
+      const response = await apiClient.get<TraceData>(`/observability/traces/${traceId}`);
       logger.info("Fetched trace details", { traceId });
       return response.data;
     } catch (err) {
-      logger.error("Failed to fetch trace details", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to fetch trace details",
+        err instanceof Error ? err : new Error(String(err)),
+      );
       return null;
     }
   };
@@ -209,17 +210,20 @@ export function useMetrics(metricNames?: string[], startTime?: string, endTime?:
         if (endTime) params.append("end_time", endTime);
 
         const response = await apiClient.get<MetricsResponse>(
-          `/observability/metrics${params.toString() ? `?${params.toString()}` : ""}`
+          `/observability/metrics${params.toString() ? `?${params.toString()}` : ""}`,
         );
         logger.info("Fetched metrics", {
           count: response.data.metrics.length,
           metricNames,
           startTime,
-          endTime
+          endTime,
         });
         return response.data;
       } catch (err) {
-        logger.error("Failed to fetch metrics", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch metrics",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -244,16 +248,17 @@ export function useServiceMap() {
     queryKey: observabilityKeys.serviceMap(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<ServiceMapResponse>(
-          "/observability/service-map"
-        );
+        const response = await apiClient.get<ServiceMapResponse>("/observability/service-map");
         logger.info("Fetched service map", {
           servicesCount: response.data.services.length,
-          dependenciesCount: response.data.dependencies.length
+          dependenciesCount: response.data.dependencies.length,
         });
         return response.data;
       } catch (err) {
-        logger.error("Failed to fetch service map", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch service map",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -278,17 +283,18 @@ export function usePerformance() {
     queryKey: observabilityKeys.performance(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<PerformanceResponse>(
-          "/observability/performance"
-        );
+        const response = await apiClient.get<PerformanceResponse>("/observability/performance");
         logger.info("Fetched performance metrics", {
           percentilesCount: response.data.percentiles.length,
           slowestEndpointsCount: response.data.slowest_endpoints.length,
-          errorTypesCount: response.data.most_frequent_errors.length
+          errorTypesCount: response.data.most_frequent_errors.length,
         });
         return response.data;
       } catch (err) {
-        logger.error("Failed to fetch performance metrics", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch performance metrics",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },

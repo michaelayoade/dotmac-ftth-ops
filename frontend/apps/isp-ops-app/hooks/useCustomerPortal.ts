@@ -150,206 +150,200 @@ export const customerPortalKeys = {
 
 function createCustomerPortalApi(buildUrl: BuildApiUrl) {
   return {
-  fetchProfile: async (): Promise<CustomerProfile> => {
-    const response = await customerPortalFetch(buildUrl("/customer/profile"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch profile");
-    }
-    return response.json();
-  },
+    fetchProfile: async (): Promise<CustomerProfile> => {
+      const response = await customerPortalFetch(buildUrl("/customer/profile"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+      return response.json();
+    },
 
-  updateProfile: async (updates: Partial<CustomerProfile>): Promise<CustomerProfile> => {
-    const response = await customerPortalFetch(buildUrl("/customer/profile"), {
-      method: "PUT",
-      body: JSON.stringify(updates),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to update profile");
-    }
-    return response.json();
-  },
+    updateProfile: async (updates: Partial<CustomerProfile>): Promise<CustomerProfile> => {
+      const response = await customerPortalFetch(buildUrl("/customer/profile"), {
+        method: "PUT",
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+      return response.json();
+    },
 
-  fetchService: async (): Promise<CustomerService> => {
-    const response = await customerPortalFetch(buildUrl("/customer/service"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch service");
-    }
-    return response.json();
-  },
+    fetchService: async (): Promise<CustomerService> => {
+      const response = await customerPortalFetch(buildUrl("/customer/service"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch service");
+      }
+      return response.json();
+    },
 
-  upgradePlan: async (planId: string): Promise<CustomerService> => {
-    const response = await customerPortalFetch(
-      buildUrl("/customer/service/upgrade"),
-      {
+    upgradePlan: async (planId: string): Promise<CustomerService> => {
+      const response = await customerPortalFetch(buildUrl("/customer/service/upgrade"), {
         method: "POST",
         body: JSON.stringify({ plan_id: planId }),
-      },
-    );
-    if (!response.ok) {
-      throw new Error("Failed to upgrade plan");
-    }
-    return response.json();
-  },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to upgrade plan");
+      }
+      return response.json();
+    },
 
-  fetchInvoices: async (): Promise<CustomerInvoice[]> => {
-    const response = await customerPortalFetch(buildUrl("/customer/invoices"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch invoices");
-    }
-    return response.json();
-  },
+    fetchInvoices: async (): Promise<CustomerInvoice[]> => {
+      const response = await customerPortalFetch(buildUrl("/customer/invoices"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch invoices");
+      }
+      return response.json();
+    },
 
-  fetchPayments: async (): Promise<CustomerPayment[]> => {
-    const response = await customerPortalFetch(buildUrl("/customer/payments"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch payments");
-    }
-    return response.json();
-  },
+    fetchPayments: async (): Promise<CustomerPayment[]> => {
+      const response = await customerPortalFetch(buildUrl("/customer/payments"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch payments");
+      }
+      return response.json();
+    },
 
-  makePayment: async (
-    invoiceId: string,
-    amount: number,
-    paymentMethodId: string,
-  ): Promise<CustomerPayment> => {
-    const response = await customerPortalFetch(buildUrl("/customer/payments"), {
-      method: "POST",
-      body: JSON.stringify({
-        invoice_id: invoiceId,
-        amount,
-        payment_method_id: paymentMethodId,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to process payment");
-    }
-    return response.json();
-  },
+    makePayment: async (
+      invoiceId: string,
+      amount: number,
+      paymentMethodId: string,
+    ): Promise<CustomerPayment> => {
+      const response = await customerPortalFetch(buildUrl("/customer/payments"), {
+        method: "POST",
+        body: JSON.stringify({
+          invoice_id: invoiceId,
+          amount,
+          payment_method_id: paymentMethodId,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to process payment");
+      }
+      return response.json();
+    },
 
-  fetchUsage: async (): Promise<CustomerUsage> => {
-    const response = await customerPortalFetch(buildUrl("/customer/usage"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch usage");
-    }
-    return response.json();
-  },
+    fetchUsage: async (): Promise<CustomerUsage> => {
+      const response = await customerPortalFetch(buildUrl("/customer/usage"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch usage");
+      }
+      return response.json();
+    },
 
-  fetchTickets: async (): Promise<CustomerTicket[]> => {
-    const response = await customerPortalFetch(buildUrl("/customer/tickets"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch tickets");
-    }
-    return response.json();
-  },
+    fetchTickets: async (): Promise<CustomerTicket[]> => {
+      const response = await customerPortalFetch(buildUrl("/customer/tickets"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch tickets");
+      }
+      return response.json();
+    },
 
-  createTicket: async (ticketData: {
-    subject: string;
-    description: string;
-    category: string;
-    priority: string;
-  }): Promise<CustomerTicket> => {
-    const response = await customerPortalFetch(buildUrl("/customer/tickets"), {
-      method: "POST",
-      body: JSON.stringify(ticketData),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to create ticket");
-    }
-    return response.json();
-  },
+    createTicket: async (ticketData: {
+      subject: string;
+      description: string;
+      category: string;
+      priority: string;
+    }): Promise<CustomerTicket> => {
+      const response = await customerPortalFetch(buildUrl("/customer/tickets"), {
+        method: "POST",
+        body: JSON.stringify(ticketData),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create ticket");
+      }
+      return response.json();
+    },
 
-  fetchSettings: async (): Promise<any> => {
-    const response = await customerPortalFetch(buildUrl("/customer/settings"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch settings");
-    }
-    return response.json();
-  },
+    fetchSettings: async (): Promise<any> => {
+      const response = await customerPortalFetch(buildUrl("/customer/settings"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch settings");
+      }
+      return response.json();
+    },
 
-  updateSettings: async (updates: any): Promise<any> => {
-    const response = await customerPortalFetch(buildUrl("/customer/settings"), {
-      method: "PUT",
-      body: JSON.stringify(updates),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to update settings");
-    }
-    return response.json();
-  },
+    updateSettings: async (updates: any): Promise<any> => {
+      const response = await customerPortalFetch(buildUrl("/customer/settings"), {
+        method: "PUT",
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update settings");
+      }
+      return response.json();
+    },
 
-  changePassword: async (currentPassword: string, newPassword: string): Promise<any> => {
-    const response = await customerPortalFetch(
-      buildUrl("/customer/change-password"),
-      {
+    changePassword: async (currentPassword: string, newPassword: string): Promise<any> => {
+      const response = await customerPortalFetch(buildUrl("/customer/change-password"), {
         method: "POST",
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: newPassword,
         }),
-      },
-    );
-    if (!response.ok) {
-      throw new Error("Failed to change password");
-    }
-    return response.json();
-  },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to change password");
+      }
+      return response.json();
+    },
 
-  fetchPaymentMethods: async (): Promise<CustomerPaymentMethod[]> => {
-    const response = await customerPortalFetch(buildUrl("/customer/payment-methods"));
-    if (!response.ok) {
-      throw new Error("Failed to fetch payment methods");
-    }
-    return response.json();
-  },
+    fetchPaymentMethods: async (): Promise<CustomerPaymentMethod[]> => {
+      const response = await customerPortalFetch(buildUrl("/customer/payment-methods"));
+      if (!response.ok) {
+        throw new Error("Failed to fetch payment methods");
+      }
+      return response.json();
+    },
 
-  addPaymentMethod: async (request: any): Promise<CustomerPaymentMethod> => {
-    const response = await customerPortalFetch(buildUrl("/customer/payment-methods"), {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to add payment method");
-    }
-    return response.json();
-  },
-
-  setDefaultPaymentMethod: async (paymentMethodId: string): Promise<void> => {
-    const response = await customerPortalFetch(
-      buildUrl(`/customer/payment-methods/${paymentMethodId}/set-default`),
-      {
+    addPaymentMethod: async (request: any): Promise<CustomerPaymentMethod> => {
+      const response = await customerPortalFetch(buildUrl("/customer/payment-methods"), {
         method: "POST",
-      },
-    );
-    if (!response.ok) {
-      throw new Error("Failed to set default payment method");
-    }
-  },
+        body: JSON.stringify(request),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to add payment method");
+      }
+      return response.json();
+    },
 
-  removePaymentMethod: async (paymentMethodId: string): Promise<void> => {
-    const response = await customerPortalFetch(
-      buildUrl(`/customer/payment-methods/${paymentMethodId}`),
-      {
-        method: "DELETE",
-      },
-    );
-    if (!response.ok) {
-      throw new Error("Failed to remove payment method");
-    }
-  },
+    setDefaultPaymentMethod: async (paymentMethodId: string): Promise<void> => {
+      const response = await customerPortalFetch(
+        buildUrl(`/customer/payment-methods/${paymentMethodId}/set-default`),
+        {
+          method: "POST",
+        },
+      );
+      if (!response.ok) {
+        throw new Error("Failed to set default payment method");
+      }
+    },
 
-  toggleAutoPay: async (paymentMethodId: string, enabled: boolean): Promise<void> => {
-    const response = await customerPortalFetch(
-      buildUrl(`/customer/payment-methods/${paymentMethodId}/auto-pay`),
-      {
-        method: "PUT",
-        body: JSON.stringify({ enabled }),
-      },
-    );
-    if (!response.ok) {
-      throw new Error("Failed to toggle auto pay");
-    }
-  },
-};
+    removePaymentMethod: async (paymentMethodId: string): Promise<void> => {
+      const response = await customerPortalFetch(
+        buildUrl(`/customer/payment-methods/${paymentMethodId}`),
+        {
+          method: "DELETE",
+        },
+      );
+      if (!response.ok) {
+        throw new Error("Failed to remove payment method");
+      }
+    },
+
+    toggleAutoPay: async (paymentMethodId: string, enabled: boolean): Promise<void> => {
+      const response = await customerPortalFetch(
+        buildUrl(`/customer/payment-methods/${paymentMethodId}/auto-pay`),
+        {
+          method: "PUT",
+          body: JSON.stringify({ enabled }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error("Failed to toggle auto pay");
+      }
+    },
+  };
 }
 
 function useCustomerPortalApiContext() {
@@ -527,7 +521,11 @@ export function useCustomerPayments(): {
   loading: boolean;
   error: string | null;
   refetch: () => void;
-  makePayment: (args: { invoiceId: string; amount: number; paymentMethodId: string }) => Promise<CustomerPayment>;
+  makePayment: (args: {
+    invoiceId: string;
+    amount: number;
+    paymentMethodId: string;
+  }) => Promise<CustomerPayment>;
   isProcessingPayment: boolean;
 } {
   const queryClient = useQueryClient();
@@ -621,7 +619,12 @@ export function useCustomerTickets(): {
   loading: boolean;
   error: string | null;
   refetch: () => void;
-  createTicket: (ticketData: { subject: string; description: string; category: string; priority: string }) => Promise<CustomerTicket>;
+  createTicket: (ticketData: {
+    subject: string;
+    description: string;
+    category: string;
+    priority: string;
+  }) => Promise<CustomerTicket>;
   isCreatingTicket: boolean;
 } {
   const queryClient = useQueryClient();
@@ -722,8 +725,13 @@ export function useCustomerSettings(): {
   });
 
   const changePasswordMutation = useMutation({
-    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
-      portalApi.changePassword(currentPassword, newPassword),
+    mutationFn: ({
+      currentPassword,
+      newPassword,
+    }: {
+      currentPassword: string;
+      newPassword: string;
+    }) => portalApi.changePassword(currentPassword, newPassword),
     onMutate: () => {
       logger.info("Changing password");
     },
@@ -780,7 +788,10 @@ export function useCustomerPaymentMethods(): {
   const addMutation = useMutation({
     mutationFn: (request: any) => portalApi.addPaymentMethod(request),
     onSuccess: (newMethod) => {
-      queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) => [...old, newMethod]);
+      queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) => [
+        ...old,
+        newMethod,
+      ]);
       queryClient.invalidateQueries({ queryKey });
       logger.info("Payment method added successfully");
     },

@@ -28,7 +28,7 @@ describe("Dialog", () => {
             <DialogTitle>Dialog Title</DialogTitle>
             <DialogDescription>Dialog content</DialogDescription>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       const trigger = screen.getByRole("button", { name: "Open Dialog" });
@@ -49,7 +49,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       expect(screen.queryByText("Title")).not.toBeInTheDocument();
@@ -62,7 +62,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Open" }));
@@ -109,7 +109,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Open" }));
@@ -127,7 +127,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -143,7 +143,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -157,7 +157,7 @@ describe("Dialog", () => {
           <DialogContent className="custom-content">
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -174,7 +174,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>My Dialog Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -188,7 +188,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -203,7 +203,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle className="custom-title">Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -221,7 +221,7 @@ describe("Dialog", () => {
             <DialogTitle>Title</DialogTitle>
             <DialogDescription>This is the dialog description</DialogDescription>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -236,7 +236,7 @@ describe("Dialog", () => {
             <DialogTitle>Title</DialogTitle>
             <DialogDescription>Description</DialogDescription>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -252,7 +252,7 @@ describe("Dialog", () => {
             <DialogTitle>Title</DialogTitle>
             <DialogDescription className="custom-desc">Description</DialogDescription>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -272,7 +272,7 @@ describe("Dialog", () => {
               <DialogDescription>Header description</DialogDescription>
             </DialogHeader>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -289,7 +289,7 @@ describe("Dialog", () => {
               <DialogTitle>Title</DialogTitle>
             </DialogHeader>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -307,7 +307,7 @@ describe("Dialog", () => {
               <DialogTitle>Title</DialogTitle>
             </DialogHeader>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -328,7 +328,7 @@ describe("Dialog", () => {
               <button>Confirm</button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -346,7 +346,7 @@ describe("Dialog", () => {
               <button>Action</button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -365,7 +365,7 @@ describe("Dialog", () => {
               <button>Action</button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -384,7 +384,7 @@ describe("Dialog", () => {
             <DialogTitle>Title</DialogTitle>
             <DialogClose>Close</DialogClose>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Open" }));
@@ -415,7 +415,7 @@ describe("Dialog", () => {
               </DialogClose>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Open" }));
@@ -439,7 +439,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -453,7 +453,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -476,7 +476,7 @@ describe("Dialog", () => {
               <button>Action 2</button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Open" }));
@@ -495,7 +495,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -511,7 +511,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Open" }));
@@ -538,7 +538,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -554,7 +554,7 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogTitle>Title</DialogTitle>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -586,16 +586,14 @@ describe("Dialog", () => {
               <button onClick={handleConfirm}>Confirm</button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Delete Account" }));
 
       await waitFor(() => {
         expect(screen.getByText("Are you sure?")).toBeInTheDocument();
-        expect(
-          screen.getByText(/This action cannot be undone/)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/This action cannot be undone/)).toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
@@ -621,7 +619,7 @@ describe("Dialog", () => {
               </DialogFooter>
             </form>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       fireEvent.click(screen.getByRole("button", { name: "Add User" }));
@@ -641,7 +639,9 @@ describe("Dialog", () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Error</DialogTitle>
-              <DialogDescription>An error occurred while processing your request.</DialogDescription>
+              <DialogDescription>
+                An error occurred while processing your request.
+              </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <DialogClose asChild>
@@ -649,7 +649,7 @@ describe("Dialog", () => {
               </DialogClose>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>,
       );
 
       await waitFor(() => {
@@ -673,7 +673,7 @@ describe("Dialog", () => {
       const { container } = render(
         <DialogHeader data-testid="header">
           <div>Content</div>
-        </DialogHeader>
+        </DialogHeader>,
       );
 
       expect(container.querySelector('[data-testid="header"]')).toBeInTheDocument();
@@ -683,7 +683,7 @@ describe("Dialog", () => {
       const { container } = render(
         <DialogFooter data-testid="footer">
           <div>Content</div>
-        </DialogFooter>
+        </DialogFooter>,
       );
 
       expect(container.querySelector('[data-testid="footer"]')).toBeInTheDocument();

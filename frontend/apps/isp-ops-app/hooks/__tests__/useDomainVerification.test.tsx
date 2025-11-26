@@ -5,7 +5,11 @@
 
 import { renderHook, waitFor, act, cleanup } from "@testing-library/react";
 import { createQueryWrapper } from "@/__tests__/test-utils";
-import { useDomainVerification, useDomainStatus, useDomainValidation } from "../useDomainVerification";
+import {
+  useDomainVerification,
+  useDomainStatus,
+  useDomainValidation,
+} from "../useDomainVerification";
 import { domainVerificationService } from "@/lib/services/domain-verification-service";
 import type {
   DomainVerificationResponse,
@@ -51,7 +55,7 @@ describe("useDomainVerification", () => {
 
   // Helper to create mock verification response
   function createMockVerificationResponse(
-    overrides?: Partial<DomainVerificationResponse>
+    overrides?: Partial<DomainVerificationResponse>,
   ): DomainVerificationResponse {
     return {
       domain: "example.com",
@@ -75,7 +79,7 @@ describe("useDomainVerification", () => {
 
   // Helper to create mock status response
   function createMockStatusResponse(
-    overrides?: Partial<DomainVerificationStatusResponse>
+    overrides?: Partial<DomainVerificationStatusResponse>,
   ): DomainVerificationStatusResponse {
     return {
       domain: null,
@@ -255,7 +259,10 @@ describe("useDomainVerification", () => {
         // First initiate verification
         let initiateResult;
         await act(async () => {
-          initiateResult = await result.current.initiateAsync({ domain: "example.com", method: "dns_txt" });
+          initiateResult = await result.current.initiateAsync({
+            domain: "example.com",
+            method: "dns_txt",
+          });
         });
 
         await waitFor(() => expect(result.current.initiateResult?.status === "pending").toBe(true));
@@ -455,7 +462,10 @@ describe("useDomainVerification", () => {
 
       // Initiate verification
       await act(async () => {
-        await verificationResult.current.initiateAsync({ domain: "example.com", method: "dns_txt" });
+        await verificationResult.current.initiateAsync({
+          domain: "example.com",
+          method: "dns_txt",
+        });
       });
 
       await waitFor(() => expect(verificationResult.current.initiateResult).toBeDefined());
@@ -505,7 +515,10 @@ describe("useDomainVerification", () => {
       // Initiate first
       let initiateResult;
       await act(async () => {
-        initiateResult = await verificationResult.current.initiateAsync({ domain: "example.com", method: "dns_txt" });
+        initiateResult = await verificationResult.current.initiateAsync({
+          domain: "example.com",
+          method: "dns_txt",
+        });
       });
 
       await waitFor(() => expect(verificationResult.current.initiateResult).toBeDefined());
@@ -519,7 +532,9 @@ describe("useDomainVerification", () => {
         });
       });
 
-      await waitFor(() => expect(verificationResult.current.checkResult?.status === "verified").toBe(true));
+      await waitFor(() =>
+        expect(verificationResult.current.checkResult?.status === "verified").toBe(true),
+      );
 
       await act(async () => {
         await statusResult.current.refetch();
@@ -539,7 +554,7 @@ describe("useDomainVerification", () => {
         createMockStatusResponse({
           domain: "example.com",
           is_verified: true,
-        })
+        }),
       );
       mockedService.removeDomain.mockResolvedValueOnce(removeResponse);
       mockedService.getStatus.mockResolvedValueOnce(createMockStatusResponse());
@@ -581,7 +596,7 @@ describe("useDomainStatus", () => {
   const tenantId = "tenant-123";
 
   function createMockStatusResponse(
-    overrides?: Partial<DomainVerificationStatusResponse>
+    overrides?: Partial<DomainVerificationStatusResponse>,
   ): DomainVerificationStatusResponse {
     return {
       domain: null,
@@ -709,7 +724,7 @@ describe("Real-world scenarios", () => {
   const tenantId = "tenant-real-world";
 
   function createMockVerificationResponse(
-    overrides?: Partial<DomainVerificationResponse>
+    overrides?: Partial<DomainVerificationResponse>,
   ): DomainVerificationResponse {
     return {
       domain: "example.com",

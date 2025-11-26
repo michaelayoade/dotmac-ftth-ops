@@ -49,100 +49,98 @@ export default function LoginPage() {
     }
   }, []);
 
-  const onSubmit = useCallback(
-    async (data: LoginFormData) => {
-      setError("");
-      setLoading(true);
+  const onSubmit = useCallback(async (data: LoginFormData) => {
+    setError("");
+    setLoading(true);
 
-      try {
-        if (authBypassEnabled) {
-          logger.info("Auth bypass enabled - skipping Better Auth", { email: data.email });
-          setOperatorAccessToken(bypassToken);
-          try {
-            localStorage.setItem("tenant_id", bypassTenantId);
-          } catch {
-            // ignore storage failures
-          }
-          window.location.href = "/dashboard";
-          return;
+    try {
+      if (authBypassEnabled) {
+        logger.info("Auth bypass enabled - skipping Better Auth", { email: data.email });
+        setOperatorAccessToken(bypassToken);
+        try {
+          localStorage.setItem("tenant_id", bypassTenantId);
+        } catch {
+          // ignore storage failures
         }
-
-        // Use Better Auth for authentication
-        logger.info("Starting Better Auth login process", { email: data.email });
-
-        const result = await signIn.email({
-          email: data.email,
-          password: data.password,
-          callbackURL: "/dashboard",
-        });
-
-        if (result.error) {
-          logger.error("Better Auth login failed", { error: result.error });
-          setError(result.error.message || "Login failed");
-          return;
-        }
-
-        const sessionData = result.data;
-        const tokenFromData =
-          sessionData &&
-          typeof sessionData === "object" &&
-          "token" in sessionData
-            ? (sessionData as { token?: string }).token
-            : undefined;
-        const sessionToken =
-          tokenFromData ??
-          (sessionData &&
-            typeof sessionData === "object" &&
-            "session" in sessionData &&
-            typeof sessionData.session === "object"
-            ? (sessionData.session as { token?: string } | null)?.token
-            : undefined);
-        const tenantId =
-          (result.data?.user as ExtendedUser | undefined)?.tenant_id ||
-          (result.data?.user as ExtendedUser | undefined)?.activeOrganization?.id;
-
-        if (sessionToken) {
-          setOperatorAccessToken(sessionToken);
-        } else {
-          clearOperatorAuthTokens();
-        }
-
-        if (tenantId) {
-          try {
-            localStorage.setItem("tenant_id", tenantId);
-          } catch {
-            // ignore storage failures
-          }
-        } else {
-          try {
-            localStorage.removeItem("tenant_id");
-          } catch {
-            // ignore storage failures
-          }
-        }
-
-        logger.info("Better Auth login successful");
-        await new Promise((resolve) => setTimeout(resolve, 100));
         window.location.href = "/dashboard";
-      } catch (err: any) {
-        logger.error("Login request threw an error", err instanceof Error ? err : new Error(String(err)));
-
-        // Extract error message from various possible locations
-        let errorMessage = "Login failed";
-        if (err?.message) {
-          errorMessage = err.message;
-        }
-
-        logger.error("Login failed", {
-          message: errorMessage,
-        });
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
+        return;
       }
-    },
-    [],
-  );
+
+      // Use Better Auth for authentication
+      logger.info("Starting Better Auth login process", { email: data.email });
+
+      const result = await signIn.email({
+        email: data.email,
+        password: data.password,
+        callbackURL: "/dashboard",
+      });
+
+      if (result.error) {
+        logger.error("Better Auth login failed", { error: result.error });
+        setError(result.error.message || "Login failed");
+        return;
+      }
+
+      const sessionData = result.data;
+      const tokenFromData =
+        sessionData && typeof sessionData === "object" && "token" in sessionData
+          ? (sessionData as { token?: string }).token
+          : undefined;
+      const sessionToken =
+        tokenFromData ??
+        (sessionData &&
+        typeof sessionData === "object" &&
+        "session" in sessionData &&
+        typeof sessionData.session === "object"
+          ? (sessionData.session as { token?: string } | null)?.token
+          : undefined);
+      const tenantId =
+        (result.data?.user as ExtendedUser | undefined)?.tenant_id ||
+        (result.data?.user as ExtendedUser | undefined)?.activeOrganization?.id;
+
+      if (sessionToken) {
+        setOperatorAccessToken(sessionToken);
+      } else {
+        clearOperatorAuthTokens();
+      }
+
+      if (tenantId) {
+        try {
+          localStorage.setItem("tenant_id", tenantId);
+        } catch {
+          // ignore storage failures
+        }
+      } else {
+        try {
+          localStorage.removeItem("tenant_id");
+        } catch {
+          // ignore storage failures
+        }
+      }
+
+      logger.info("Better Auth login successful");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      logger.error(
+        "Login request threw an error",
+        err instanceof Error ? err : new Error(String(err)),
+      );
+
+      // Extract error message from various possible locations
+      let errorMessage = "Login failed";
+      if (err?.message) {
+        errorMessage = err.message;
+      }
+
+      logger.error("Login failed", {
+        message: errorMessage,
+      });
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-12 bg-background">
@@ -198,7 +196,7 @@ export default function LoginPage() {
               autoComplete="username"
               {...register("email")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors['email']? "border-red-500" : "border-border"
+                errors["email"] ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="username or email"
               data-testid="email-input"

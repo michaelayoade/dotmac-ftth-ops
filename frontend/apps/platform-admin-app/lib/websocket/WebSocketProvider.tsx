@@ -73,7 +73,7 @@ export function WebSocketProvider({
   // Get WebSocket URL from props or environment
   const wsUrl =
     url ||
-    process.env['NEXT_PUBLIC_WEBSOCKET_URL'] ||
+    process.env["NEXT_PUBLIC_WEBSOCKET_URL"] ||
     `ws://${typeof window !== "undefined" ? window.location.host : "localhost:8000"}/ws`;
 
   const connect = useCallback(() => {

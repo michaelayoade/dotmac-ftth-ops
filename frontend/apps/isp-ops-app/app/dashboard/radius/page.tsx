@@ -3,16 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import {
-  Server,
-  Activity,
-  Gauge,
-  ArrowRight,
-  Users,
-  Wifi,
-  TrendingUp,
-  Clock,
-} from "lucide-react";
+import { Server, Activity, Gauge, ArrowRight, Users, Wifi, TrendingUp, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -44,8 +35,12 @@ export default function RADIUSDashboardPage() {
         // Fetch data from multiple endpoints
         const [sessionsRes, nasRes, profilesRes] = await Promise.all([
           apiClient.get("/radius/sessions").catch(() => ({ data: [] })),
-          apiClient.get("/radius/nas", { params: { skip: 0, limit: 1000 } }).catch(() => ({ data: [] })),
-          apiClient.get("/radius/bandwidth-profiles", { params: { skip: 0, limit: 1000 } }).catch(() => ({ data: [] })),
+          apiClient
+            .get("/radius/nas", { params: { skip: 0, limit: 1000 } })
+            .catch(() => ({ data: [] })),
+          apiClient
+            .get("/radius/bandwidth-profiles", { params: { skip: 0, limit: 1000 } })
+            .catch(() => ({ data: [] })),
         ]);
 
         return {
@@ -236,9 +231,7 @@ export default function RADIUSDashboardPage() {
         </CardHeader>
         <CardContent>
           {sessionsLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading recent sessions...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading recent sessions...</div>
           ) : !recentSessions || recentSessions.length === 0 ? (
             <div className="text-center py-8">
               <Wifi className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -300,15 +293,21 @@ export default function RADIUSDashboardPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Authentication Service</span>
-                <Badge variant="default" className="bg-green-500">Operational</Badge>
+                <Badge variant="default" className="bg-green-500">
+                  Operational
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Accounting Service</span>
-                <Badge variant="default" className="bg-green-500">Operational</Badge>
+                <Badge variant="default" className="bg-green-500">
+                  Operational
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">CoA/DM Service</span>
-                <Badge variant="default" className="bg-green-500">Operational</Badge>
+                <Badge variant="default" className="bg-green-500">
+                  Operational
+                </Badge>
               </div>
             </div>
           </CardContent>

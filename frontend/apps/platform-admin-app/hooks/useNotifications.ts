@@ -303,7 +303,10 @@ export function useNotifications(options?: {
           logger.warn("Notifications endpoint returned 403. Using empty fallback data.");
           return { notifications: [], total: 0, unread_count: 0 };
         }
-        logger.error("Failed to fetch notifications", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch notifications",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -323,21 +326,20 @@ export function useNotifications(options?: {
 
       // Snapshot previous value
       const previousData = queryClient.getQueryData<NotificationListResponse>(
-        notificationsKeys.list(listFilters)
+        notificationsKeys.list(listFilters),
       );
 
       // Optimistically update
       if (previousData) {
-        queryClient.setQueryData<NotificationListResponse>(
-          notificationsKeys.list(listFilters),
-          {
-            ...previousData,
-            notifications: previousData.notifications.map((n) =>
-              n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
-            ),
-            unread_count: Math.max(0, previousData.unread_count - 1),
-          }
-        );
+        queryClient.setQueryData<NotificationListResponse>(notificationsKeys.list(listFilters), {
+          ...previousData,
+          notifications: previousData.notifications.map((n) =>
+            n.id === notificationId
+              ? { ...n, is_read: true, read_at: new Date().toISOString() }
+              : n,
+          ),
+          unread_count: Math.max(0, previousData.unread_count - 1),
+        });
       }
 
       return { previousData };
@@ -345,12 +347,12 @@ export function useNotifications(options?: {
     onError: (err, notificationId, context) => {
       // Rollback on error
       if (context?.previousData) {
-        queryClient.setQueryData(
-          notificationsKeys.list(listFilters),
-          context.previousData
-        );
+        queryClient.setQueryData(notificationsKeys.list(listFilters), context.previousData);
       }
-      logger.error("Failed to mark notification as read", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to mark notification as read",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
@@ -366,37 +368,34 @@ export function useNotifications(options?: {
       await queryClient.cancelQueries({ queryKey: notificationsKeys.lists() });
 
       const previousData = queryClient.getQueryData<NotificationListResponse>(
-        notificationsKeys.list(listFilters)
+        notificationsKeys.list(listFilters),
       );
 
       if (previousData) {
-        queryClient.setQueryData<NotificationListResponse>(
-          notificationsKeys.list(listFilters),
-          {
-            ...previousData,
-            notifications: previousData.notifications.map((n) =>
-              n.id === notificationId
-                ? (({ read_at: _ignored, ...rest }) => ({
-                    ...rest,
-                    is_read: false,
-                  }))(n)
-                : n
-            ),
-            unread_count: previousData.unread_count + 1,
-          }
-        );
+        queryClient.setQueryData<NotificationListResponse>(notificationsKeys.list(listFilters), {
+          ...previousData,
+          notifications: previousData.notifications.map((n) =>
+            n.id === notificationId
+              ? (({ read_at: _ignored, ...rest }) => ({
+                  ...rest,
+                  is_read: false,
+                }))(n)
+              : n,
+          ),
+          unread_count: previousData.unread_count + 1,
+        });
       }
 
       return { previousData };
     },
     onError: (err, notificationId, context) => {
       if (context?.previousData) {
-        queryClient.setQueryData(
-          notificationsKeys.list(listFilters),
-          context.previousData
-        );
+        queryClient.setQueryData(notificationsKeys.list(listFilters), context.previousData);
       }
-      logger.error("Failed to mark notification as unread", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to mark notification as unread",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
@@ -412,34 +411,31 @@ export function useNotifications(options?: {
       await queryClient.cancelQueries({ queryKey: notificationsKeys.lists() });
 
       const previousData = queryClient.getQueryData<NotificationListResponse>(
-        notificationsKeys.list(listFilters)
+        notificationsKeys.list(listFilters),
       );
 
       if (previousData) {
-        queryClient.setQueryData<NotificationListResponse>(
-          notificationsKeys.list(listFilters),
-          {
-            ...previousData,
-            notifications: previousData.notifications.map((n) => ({
-              ...n,
-              is_read: true,
-              read_at: new Date().toISOString(),
-            })),
-            unread_count: 0,
-          }
-        );
+        queryClient.setQueryData<NotificationListResponse>(notificationsKeys.list(listFilters), {
+          ...previousData,
+          notifications: previousData.notifications.map((n) => ({
+            ...n,
+            is_read: true,
+            read_at: new Date().toISOString(),
+          })),
+          unread_count: 0,
+        });
       }
 
       return { previousData };
     },
     onError: (err, variables, context) => {
       if (context?.previousData) {
-        queryClient.setQueryData(
-          notificationsKeys.list(listFilters),
-          context.previousData
-        );
+        queryClient.setQueryData(notificationsKeys.list(listFilters), context.previousData);
       }
-      logger.error("Failed to mark all as read", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to mark all as read",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
@@ -455,7 +451,10 @@ export function useNotifications(options?: {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.lists() });
     },
     onError: (err) => {
-      logger.error("Failed to archive notification", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to archive notification",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -468,7 +467,10 @@ export function useNotifications(options?: {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.lists() });
     },
     onError: (err) => {
-      logger.error("Failed to delete notification", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to delete notification",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -562,7 +564,10 @@ export function useNotificationTemplates(options?: {
           logger.warn("Templates endpoint returned 403. Falling back to empty template list.");
           return [];
         }
-        logger.error("Failed to fetch templates", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch templates",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -573,23 +578,9 @@ export function useNotificationTemplates(options?: {
   // Mutation: Create template
   const createTemplateMutation = useMutation({
     mutationFn: async (data: TemplateCreateRequest) => {
-      const response = await apiClient.post<CommunicationTemplate>("/communications/templates", data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationsKeys.templates() });
-    },
-    onError: (err) => {
-      logger.error("Failed to create template", err instanceof Error ? err : new Error(String(err)));
-    },
-  });
-
-  // Mutation: Update template
-  const updateTemplateMutation = useMutation({
-    mutationFn: async ({ templateId, data }: { templateId: string; data: TemplateUpdateRequest }) => {
-      const response = await apiClient.patch<CommunicationTemplate>(
-        `/communications/templates/${templateId}`,
-        data
+      const response = await apiClient.post<CommunicationTemplate>(
+        "/communications/templates",
+        data,
       );
       return response.data;
     },
@@ -597,7 +588,36 @@ export function useNotificationTemplates(options?: {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.templates() });
     },
     onError: (err) => {
-      logger.error("Failed to update template", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to create template",
+        err instanceof Error ? err : new Error(String(err)),
+      );
+    },
+  });
+
+  // Mutation: Update template
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({
+      templateId,
+      data,
+    }: {
+      templateId: string;
+      data: TemplateUpdateRequest;
+    }) => {
+      const response = await apiClient.patch<CommunicationTemplate>(
+        `/communications/templates/${templateId}`,
+        data,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.templates() });
+    },
+    onError: (err) => {
+      logger.error(
+        "Failed to update template",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -610,14 +630,17 @@ export function useNotificationTemplates(options?: {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.templates() });
     },
     onError: (err) => {
-      logger.error("Failed to delete template", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to delete template",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
   // Helper: Render template preview
   const renderTemplatePreview = async (
     templateId: string,
-    data: Record<string, unknown>
+    data: Record<string, unknown>,
   ): Promise<{ subject?: string; text?: string; html?: string } | null> => {
     try {
       const response = await apiClient.post<{
@@ -627,7 +650,10 @@ export function useNotificationTemplates(options?: {
       }>(`/communications/templates/${templateId}/render`, { data });
       return response.data || null;
     } catch (err) {
-      logger.error("Failed to render template preview", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to render template preview",
+        err instanceof Error ? err : new Error(String(err)),
+      );
       return null;
     }
   };
@@ -722,7 +748,10 @@ export function useCommunicationLogs(options?: {
           logger.warn("Communications logs endpoint returned 403. Falling back to empty log set.");
           return { logs: [], total: 0 };
         }
-        logger.error("Failed to fetch communication logs", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch communication logs",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -739,7 +768,10 @@ export function useCommunicationLogs(options?: {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.logs() });
     },
     onError: (err) => {
-      logger.error("Failed to retry communication", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to retry communication",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -785,17 +817,25 @@ export function useBulkNotifications() {
       queryClient.invalidateQueries({ queryKey: notificationsKeys.lists() });
     },
     onError: (err) => {
-      logger.error("Failed to send bulk notification", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to send bulk notification",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
   // Helper: Get bulk job status
   const getBulkJobStatus = async (jobId: string): Promise<BulkNotificationResponse | null> => {
     try {
-      const response = await apiClient.get<BulkNotificationResponse>(`/notifications/bulk/${jobId}`);
+      const response = await apiClient.get<BulkNotificationResponse>(
+        `/notifications/bulk/${jobId}`,
+      );
       return response.data || null;
     } catch (err) {
-      logger.error("Failed to get bulk job status", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to get bulk job status",
+        err instanceof Error ? err : new Error(String(err)),
+      );
       return null;
     }
   };
@@ -827,16 +867,23 @@ export function useUnreadCount(options?: { autoRefresh?: boolean; refreshInterva
     queryKey: notificationsKeys.unreadCount(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<{ unread_count: number }>("/notifications/unread-count");
+        const response = await apiClient.get<{ unread_count: number }>(
+          "/notifications/unread-count",
+        );
         return response.data?.unread_count ?? 0;
       } catch (err: unknown) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const e = err as any;
         if (e.response?.status === 403) {
-          logger.warn("Unread count endpoint returned 403. Defaulting to zero unread notifications.");
+          logger.warn(
+            "Unread count endpoint returned 403. Defaulting to zero unread notifications.",
+          );
           return 0;
         }
-        logger.error("Failed to fetch unread count", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch unread count",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },

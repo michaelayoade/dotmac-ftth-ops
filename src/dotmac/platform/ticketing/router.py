@@ -171,7 +171,9 @@ async def list_ticket_messages(
     tenant_id = get_current_tenant_id()
     try:
         ticket = await service.get_ticket(ticket_id, current_user, tenant_id, include_messages=True)
-        return [TicketMessageResponse.model_validate(m, from_attributes=True) for m in ticket.messages]
+        return [
+            TicketMessageResponse.model_validate(m, from_attributes=True) for m in ticket.messages
+        ]
     except Exception as exc:  # pragma: no cover
         logger.warning("ticket.messages.list.failed", ticket_id=str(ticket_id), error=str(exc))
         _handle_ticket_error(exc)

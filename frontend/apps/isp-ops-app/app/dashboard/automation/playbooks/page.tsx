@@ -6,21 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { platformConfig } from "@/lib/config";
@@ -67,12 +54,9 @@ function PlaybooksPageContent() {
   const { data: templates = [], isLoading: templatesLoading } = useQuery<JobTemplate[]>({
     queryKey: ["ansible", "job-templates"],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/ansible/job-templates`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/ansible/job-templates`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch job templates");
       }
@@ -85,12 +69,9 @@ function PlaybooksPageContent() {
     queryFn: async () => {
       // Note: This endpoint may not exist yet, returning mock data if it fails
       try {
-        const response = await fetch(
-          `${platformConfig.api.baseUrl}/api/v1/ansible/stats`,
-          {
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/ansible/stats`, {
+          credentials: "include",
+        });
         if (!response.ok) {
           throw new Error("Stats not available");
         }
@@ -120,7 +101,7 @@ function PlaybooksPageContent() {
     const search = searchQuery.toLowerCase();
     return (
       template.name.toLowerCase().includes(search) ||
-      ((template['description']?? "").toLowerCase().includes(search) ?? false) ||
+      ((template["description"] ?? "").toLowerCase().includes(search) ?? false) ||
       ((template.playbook ?? "").toLowerCase().includes(search) ?? false)
     );
   });
@@ -153,20 +134,11 @@ function PlaybooksPageContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Playbooks</h1>
-          <p className="text-muted-foreground">
-            Manage and execute Ansible playbooks via AWX
-          </p>
+          <p className="text-muted-foreground">Manage and execute Ansible playbooks via AWX</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={templatesLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${templatesLoading ? "animate-spin" : ""}`}
-            />
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={templatesLoading}>
+            <RefreshCw className={`h-4 w-4 ${templatesLoading ? "animate-spin" : ""}`} />
           </Button>
           <Button onClick={() => setShowComingSoon(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -179,69 +151,45 @@ function PlaybooksPageContent() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Playbooks
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Playbooks</CardTitle>
             <FileCode className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.total_templates ?? templates.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Available templates
-            </p>
+            <div className="text-2xl font-bold">{stats?.total_templates ?? templates.length}</div>
+            <p className="text-xs text-muted-foreground">Available templates</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Recent Runs
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Recent Runs</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.recent_jobs ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Last 24 hours
-            </p>
+            <div className="text-2xl font-bold">{stats?.recent_jobs ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Last 24 hours</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Successful Jobs
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Successful Jobs</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.successful_jobs ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              All time
-            </p>
+            <div className="text-2xl font-bold">{stats?.successful_jobs ?? 0}</div>
+            <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Failed Jobs
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Failed Jobs</CardTitle>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.failed_jobs ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              All time
-            </p>
+            <div className="text-2xl font-bold">{stats?.failed_jobs ?? 0}</div>
+            <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
       </div>
@@ -302,9 +250,7 @@ function PlaybooksPageContent() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-mono text-xs">
-                        {template.playbook || "-"}
-                      </div>
+                      <div className="font-mono text-xs">{template.playbook || "-"}</div>
                     </TableCell>
                     <TableCell>
                       {template.last_job_run ? (
@@ -317,15 +263,11 @@ function PlaybooksPageContent() {
                         <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      {getStatusBadge(template.last_job_status)}
-                    </TableCell>
+                    <TableCell>{getStatusBadge(template.last_job_status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/dashboard/automation/playbooks/${template.id}`}>
-                            View
-                          </Link>
+                          <Link href={`/dashboard/automation/playbooks/${template.id}`}>View</Link>
                         </Button>
                         <Button size="sm" asChild>
                           <Link href={`/dashboard/automation/playbooks/${template.id}/run`}>
@@ -349,8 +291,8 @@ function PlaybooksPageContent() {
           <DialogHeader>
             <DialogTitle>Coming Soon</DialogTitle>
             <DialogDescription>
-              Playbook creation through the UI is coming soon. For now, please manage
-              playbooks directly via the AWX interface.
+              Playbook creation through the UI is coming soon. For now, please manage playbooks
+              directly via the AWX interface.
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setShowComingSoon(false)}>Got it</Button>

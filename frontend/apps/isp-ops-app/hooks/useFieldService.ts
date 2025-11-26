@@ -163,7 +163,7 @@ const fetchSchedules = async (
 ): Promise<ScheduleListResponse> => {
   const params = buildQueryParams(filter);
   const data = await fetchJSON<any>(`${buildUrl(SCHEDULING_API)}/technicians/schedules?${params}`);
-  const schedules = Array.isArray(data) ? data : data?.schedules ?? [];
+  const schedules = Array.isArray(data) ? data : (data?.schedules ?? []);
   return {
     schedules,
     total: data?.total ?? schedules.length,
@@ -206,7 +206,7 @@ const fetchAssignments = async (
 ): Promise<AssignmentListResponse> => {
   const params = buildQueryParams(filter);
   const data = await fetchJSON<any>(`${buildUrl(SCHEDULING_API)}/assignments?${params}`);
-  const assignments = Array.isArray(data) ? data : data?.assignments ?? [];
+  const assignments = Array.isArray(data) ? data : (data?.assignments ?? []);
   return {
     assignments,
     total: data?.total ?? assignments.length,
@@ -286,7 +286,10 @@ const updateAssignment = async (
 // Time Tracking API Functions
 // ============================================================================
 
-const clockIn = async (buildUrl: (path: string) => string, data: ClockInData): Promise<TimeEntry> => {
+const clockIn = async (
+  buildUrl: (path: string) => string,
+  data: ClockInData,
+): Promise<TimeEntry> => {
   return fetchJSON(`${buildUrl(TIME_API)}/clock-in`, {
     method: "POST",
     body: JSON.stringify(data),
@@ -310,7 +313,7 @@ const fetchTimeEntries = async (
 ): Promise<TimeEntryListResponse> => {
   const params = buildQueryParams(filter);
   const data = await fetchJSON<any>(`${buildUrl(TIME_API)}/entries?${params}`);
-  const entries = Array.isArray(data) ? data : data?.entries ?? [];
+  const entries = Array.isArray(data) ? data : (data?.entries ?? []);
   return {
     entries,
     total: data?.total ?? entries.length,
@@ -413,10 +416,7 @@ const fetchVehicles = async (
   return fetchJSON(`${buildUrl(RESOURCES_API)}/vehicles?${params}`);
 };
 
-const fetchVehicle = async (
-  buildUrl: (path: string) => string,
-  id: string,
-): Promise<Vehicle> => {
+const fetchVehicle = async (buildUrl: (path: string) => string, id: string): Promise<Vehicle> => {
   return fetchJSON(`${buildUrl(RESOURCES_API)}/vehicles/${id}`);
 };
 
@@ -640,8 +640,13 @@ export const useRescheduleAssignment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { scheduledStart: string; scheduledEnd: string; reason?: string } }) =>
-      rescheduleAssignment(buildUrl, id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { scheduledStart: string; scheduledEnd: string; reason?: string };
+    }) => rescheduleAssignment(buildUrl, id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["assignment", variables.id] });
@@ -910,10 +915,7 @@ export const useReturnResource = () => {
   });
 };
 
-export const useResourceAssignments = (
-  technicianId?: string,
-  options?: { enabled?: boolean },
-) => {
+export const useResourceAssignments = (technicianId?: string, options?: { enabled?: boolean }) => {
   const { api, buildUrl } = useFieldServiceApi();
   return useQuery({
     queryKey: ["resource-assignments", technicianId, api.baseUrl, api.prefix],

@@ -23,9 +23,12 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     if (isDev) console.log("Service worker registered:", registration.scope);
 
     // Check for updates every hour
-    setInterval(() => {
-      registration.update();
-    }, 60 * 60 * 1000);
+    setInterval(
+      () => {
+        registration.update();
+      },
+      60 * 60 * 1000,
+    );
 
     // Listen for update found
     registration.addEventListener("updatefound", () => {
@@ -77,7 +80,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 }
 
 export async function subscribeToPushNotifications(
-  registration: ServiceWorkerRegistration
+  registration: ServiceWorkerRegistration,
 ): Promise<PushSubscription | null> {
   try {
     const permission = await requestNotificationPermission();
@@ -88,7 +91,7 @@ export async function subscribeToPushNotifications(
     }
 
     // Get VAPID public key from environment or server
-    const vapidPublicKey = process['env']['NEXT_PUBLIC_VAPID_PUBLIC_KEY'] || "";
+    const vapidPublicKey = process["env"]["NEXT_PUBLIC_VAPID_PUBLIC_KEY"] || "";
 
     if (!vapidPublicKey) {
       console.error("VAPID public key not configured");
@@ -119,7 +122,7 @@ export async function subscribeToPushNotifications(
 }
 
 export async function unsubscribeFromPushNotifications(
-  registration: ServiceWorkerRegistration
+  registration: ServiceWorkerRegistration,
 ): Promise<boolean> {
   try {
     const subscription = await registration.pushManager.getSubscription();
@@ -164,10 +167,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 // Local Notifications (Fallback)
 // ============================================================================
 
-export function showLocalNotification(
-  title: string,
-  options?: NotificationOptions
-): void {
+export function showLocalNotification(title: string, options?: NotificationOptions): void {
   if (!("Notification" in window)) {
     if (isDev) console.log("Notifications not supported");
     return;
@@ -211,9 +211,7 @@ interface PendingLocation {
   };
 }
 
-export async function saveOfflineTimeEntry(
-  entry: PendingTimeEntry["data"]
-): Promise<void> {
+export async function saveOfflineTimeEntry(entry: PendingTimeEntry["data"]): Promise<void> {
   const db = await openDB();
   const tx = db.transaction("pending-time-entries", "readwrite");
   const store = tx.objectStore("pending-time-entries");
@@ -232,9 +230,7 @@ export async function saveOfflineTimeEntry(
   }
 }
 
-export async function saveOfflineLocation(
-  location: PendingLocation["data"]
-): Promise<void> {
+export async function saveOfflineLocation(location: PendingLocation["data"]): Promise<void> {
   const db = await openDB();
   const tx = db.transaction("pending-locations", "readwrite");
   const store = tx.objectStore("pending-locations");
@@ -284,20 +280,20 @@ function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open("dotmac-offline", 1);
 
-    request.onerror = () => reject(request['error']);
-    request.onsuccess = () => resolve(request['result']);
+    request.onerror = () => reject(request["error"]);
+    request.onsuccess = () => resolve(request["result"]);
 
     request.onupgradeneeded = (event) => {
-      const db = (event['target'] as IDBOpenDBRequest).result;
+      const db = (event["target"] as IDBOpenDBRequest).result;
 
-      if (!db['objectStoreNames'].contains("pending-time-entries")) {
+      if (!db["objectStoreNames"].contains("pending-time-entries")) {
         db.createObjectStore("pending-time-entries", {
           keyPath: "id",
           autoIncrement: true,
         });
       }
 
-      if (!db['objectStoreNames'].contains("pending-locations")) {
+      if (!db["objectStoreNames"].contains("pending-locations")) {
         db.createObjectStore("pending-locations", {
           keyPath: "id",
           autoIncrement: true,
@@ -343,9 +339,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
-export function setupInstallPrompt(
-  callback: (prompt: BeforeInstallPromptEvent) => void
-): void {
+export function setupInstallPrompt(callback: (prompt: BeforeInstallPromptEvent) => void): void {
   if (typeof window === "undefined") return;
 
   window.addEventListener("beforeinstallprompt", (e) => {
@@ -382,14 +376,8 @@ export function canShowInstallPrompt(): boolean {
 // Periodic Background Sync (Experimental)
 // ============================================================================
 
-export async function registerPeriodicSync(
-  tag: string,
-  minInterval: number
-): Promise<boolean> {
-  if (
-    !("serviceWorker" in navigator) ||
-    !("periodicSync" in ServiceWorkerRegistration.prototype)
-  ) {
+export async function registerPeriodicSync(tag: string, minInterval: number): Promise<boolean> {
+  if (!("serviceWorker" in navigator) || !("periodicSync" in ServiceWorkerRegistration.prototype)) {
     if (isDev) console.log("Periodic background sync not supported");
     return false;
   }
@@ -417,10 +405,7 @@ export async function registerPeriodicSync(
 }
 
 export async function unregisterPeriodicSync(tag: string): Promise<boolean> {
-  if (
-    !("serviceWorker" in navigator) ||
-    !("periodicSync" in ServiceWorkerRegistration.prototype)
-  ) {
+  if (!("serviceWorker" in navigator) || !("periodicSync" in ServiceWorkerRegistration.prototype)) {
     return false;
   }
 

@@ -2,7 +2,15 @@
 
 import { useMemo } from "react";
 import { RefreshCw, AlertTriangle, CheckCircle, ShieldAlert, Activity } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge } from "@dotmac/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+  Badge,
+} from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { useHealth } from "@/hooks/useHealth";
 import { useSystemHealth } from "@/hooks/useOperations";
@@ -99,7 +107,9 @@ export default function InfrastructureStatusPage() {
       rows.push(
         ...health.services.map((service, index) => {
           const normalized =
-            service.status === "healthy" || service.status === "degraded" || service.status === "unhealthy"
+            service.status === "healthy" ||
+            service.status === "degraded" ||
+            service.status === "unhealthy"
               ? service.status
               : "unknown";
           return {
@@ -167,7 +177,7 @@ export default function InfrastructureStatusPage() {
             )}
           </div>
           <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : 'hidden'}`} />
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : "hidden"}`} />
             {isLoading ? "Refreshing…" : "Refresh"}
           </Button>
         </div>
@@ -182,7 +192,9 @@ export default function InfrastructureStatusPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-lg">Overall Status</CardTitle>
-              <CardDescription>Aggregated health across core infrastructure services.</CardDescription>
+              <CardDescription>
+                Aggregated health across core infrastructure services.
+              </CardDescription>
             </div>
             <Badge className={`border ${statusColor(overallStatus)}`} variant="outline">
               {overallStatus.toUpperCase()}
@@ -204,15 +216,22 @@ export default function InfrastructureStatusPage() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <div className={`rounded-md border px-2 py-1 text-xs font-medium ${statusColor(service.status)}`}>
+                          <div
+                            className={`rounded-md border px-2 py-1 text-xs font-medium ${statusColor(service.status)}`}
+                          >
                             <Icon className="h-3.5 w-3.5" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground">{service.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{service.source}</p>
+                            <p className="text-xs text-muted-foreground capitalize">
+                              {service.source}
+                            </p>
                           </div>
                         </div>
-                        <Badge className={`border ${statusColor(service.status)}`} variant="outline">
+                        <Badge
+                          className={`border ${statusColor(service.status)}`}
+                          variant="outline"
+                        >
                           {service.status.toUpperCase()}
                         </Badge>
                       </div>
@@ -238,7 +257,9 @@ export default function InfrastructureStatusPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Core Service Detail</CardTitle>
-              <CardDescription>Status reported by the backend `/ready` and `/health` endpoints.</CardDescription>
+              <CardDescription>
+                Status reported by the backend `/ready` and `/health` endpoints.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {services.length === 0 ? (
@@ -248,7 +269,10 @@ export default function InfrastructureStatusPage() {
               ) : (
                 <div className="space-y-3">
                   {services.map((service) => (
-                    <div key={`detail-${service.id}`} className="flex items-start justify-between gap-3 rounded-md border border-border/80 bg-card/70 p-3">
+                    <div
+                      key={`detail-${service.id}`}
+                      className="flex items-start justify-between gap-3 rounded-md border border-border/80 bg-card/70 p-3"
+                    >
                       <div>
                         <p className="text-sm font-medium text-foreground">{service.name}</p>
                         <p className="text-xs text-muted-foreground">Source: {service.source}</p>
@@ -275,19 +299,25 @@ export default function InfrastructureStatusPage() {
               <div>
                 <p className="font-medium text-foreground">1. Check Docker containers</p>
                 <p className="text-xs">
-                  Run <code className="rounded bg-muted px-1 py-0.5 text-xs">docker ps</code> to confirm containers are running and healthy.
+                  Run <code className="rounded bg-muted px-1 py-0.5 text-xs">docker ps</code> to
+                  confirm containers are running and healthy.
                 </p>
               </div>
               <div>
                 <p className="font-medium text-foreground">2. Inspect logs</p>
                 <p className="text-xs">
-                  Use <code className="rounded bg-muted px-1 py-0.5 text-xs">docker logs &lt;container&gt;</code> or the built-in infrastructure logs dashboard.
+                  Use{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    docker logs &lt;container&gt;
+                  </code>{" "}
+                  or the built-in infrastructure logs dashboard.
                 </p>
               </div>
               <div>
                 <p className="font-medium text-foreground">3. Verify tenant OSS config</p>
                 <p className="text-xs">
-                  Ensure each tenant has the required OSS entries (e.g., NetBox credentials) in <code>tenant_settings</code>.
+                  Ensure each tenant has the required OSS entries (e.g., NetBox credentials) in{" "}
+                  <code>tenant_settings</code>.
                 </p>
               </div>
             </CardContent>

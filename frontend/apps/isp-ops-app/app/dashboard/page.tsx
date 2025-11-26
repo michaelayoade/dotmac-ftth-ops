@@ -4,19 +4,12 @@ import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useSystemHealth } from "@/hooks/useOperations";
 import { useServiceInstances, useServiceStatistics } from "@/hooks/useServiceLifecycle";
-import { useRADIUSSessions, useRADIUSSubscribers } from '@/hooks/useRADIUS';
+import { useRADIUSSessions, useRADIUSSubscribers } from "@/hooks/useRADIUS";
 import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useFeatureFlag } from "@/lib/feature-flags";
@@ -46,8 +39,8 @@ export default function DashboardPage() {
   const authBypassEnabled = isAuthBypassEnabled();
 
   // Feature flags
-  const { enabled: radiusSessionsEnabled } = useFeatureFlag('radius-sessions');
-  const { enabled: radiusSubscribersEnabled } = useFeatureFlag('radius-subscribers');
+  const { enabled: radiusSessionsEnabled } = useFeatureFlag("radius-sessions");
+  const { enabled: radiusSubscribersEnabled } = useFeatureFlag("radius-subscribers");
 
   const { features } = useAppConfig();
   const allowNetworkCalls = !authBypassEnabled;

@@ -4,33 +4,39 @@
  * Provides helpers for testing React components and hooks with proper setup.
  */
 
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, RenderHookOptions, RenderHookResult } from '@testing-library/react';
-import { act } from '@testing-library/react';
-import { ApolloClient, ApolloProvider, InMemoryCache, NormalizedCacheObject, createHttpLink } from '@apollo/client';
-import '@/lib/graphql/patchApolloCache';
-import { server } from './msw/server';
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, RenderHookOptions, RenderHookResult } from "@testing-library/react";
+import { act } from "@testing-library/react";
+import {
+  ApolloClient,
+  ApolloProvider,
+  InMemoryCache,
+  NormalizedCacheObject,
+  createHttpLink,
+} from "@apollo/client";
+import "@/lib/graphql/patchApolloCache";
+import { server } from "./msw/server";
 import {
   resetSubscriberStorage as mswResetSubscriberStorage,
   createMockSubscriber as mswCreateMockSubscriber,
   createMockService as mswCreateMockService,
   seedSubscriberData as mswSeedSubscriberData,
-} from './msw/handlers/subscribers';
+} from "./msw/handlers/subscribers";
 import {
   resetWebhookStorage,
   createMockWebhook,
   createMockDelivery,
   seedWebhookData,
-} from './msw/handlers/webhooks';
+} from "./msw/handlers/webhooks";
 import {
   resetNotificationStorage,
   createMockNotification,
   createMockTemplate,
   createMockLog,
   seedNotificationData,
-} from './msw/handlers/notifications';
-import { http, HttpResponse } from 'msw';
+} from "./msw/handlers/notifications";
+import { http, HttpResponse } from "msw";
 
 /**
  * Creates a QueryClient with test-friendly defaults
@@ -65,7 +71,7 @@ export function createTestQueryClient(): QueryClient {
  */
 export function createTestApolloClient(): ApolloClient<NormalizedCacheObject> {
   const httpLink = createHttpLink({
-    uri: 'http://localhost:3000/api/v1/graphql',
+    uri: "http://localhost:3000/api/v1/graphql",
   });
 
   return new ApolloClient({
@@ -86,15 +92,15 @@ export function createTestApolloClient(): ApolloClient<NormalizedCacheObject> {
     }),
     defaultOptions: {
       watchQuery: {
-        fetchPolicy: 'no-cache',
-        errorPolicy: 'all',
+        fetchPolicy: "no-cache",
+        errorPolicy: "all",
       },
       query: {
-        fetchPolicy: 'no-cache',
-        errorPolicy: 'all',
+        fetchPolicy: "no-cache",
+        errorPolicy: "all",
       },
       mutate: {
-        errorPolicy: 'all',
+        errorPolicy: "all",
       },
     },
   });
@@ -130,9 +136,9 @@ export function createApolloWrapper(apolloClient?: ApolloClient<NormalizedCacheO
  */
 export function renderHookWithQuery<TProps, TResult>(
   hook: (props: TProps) => TResult,
-  options?: Omit<RenderHookOptions<TProps>, 'wrapper'> & {
+  options?: Omit<RenderHookOptions<TProps>, "wrapper"> & {
     queryClient?: QueryClient;
-  }
+  },
 ): RenderHookResult<TResult, TProps> {
   const { queryClient, ...renderOptions } = options || {};
   const wrapper = createQueryWrapper(queryClient);
@@ -192,10 +198,7 @@ export function flushPromises(): Promise<void> {
  * @param condition Function that returns true when the condition is met
  * @param timeout Maximum time to wait in ms
  */
-export async function waitForCondition(
-  condition: () => boolean,
-  timeout = 1000
-): Promise<void> {
+export async function waitForCondition(condition: () => boolean, timeout = 1000): Promise<void> {
   const startTime = Date.now();
 
   while (!condition()) {
@@ -250,7 +253,7 @@ export function createApiError(message: string, status = 400) {
  * global.fetch.mockResolvedValue(createFetchResponse({ data: 'test' }));
  */
 export function setupFetchMock() {
-  if (!global.fetch || typeof (global.fetch as any).mockClear !== 'function') {
+  if (!global.fetch || typeof (global.fetch as any).mockClear !== "function") {
     global.fetch = jest.fn();
   }
   (global.fetch as jest.Mock).mockClear();
@@ -262,17 +265,14 @@ export function setupFetchMock() {
  * @example
  * global.fetch.mockResolvedValue(createFetchResponse({ data: 'test' }));
  */
-export function createFetchResponse<T>(
-  data: T,
-  options: { ok?: boolean; status?: number } = {}
-) {
+export function createFetchResponse<T>(data: T, options: { ok?: boolean; status?: number } = {}) {
   const { ok = true, status = 200 } = options;
 
   return {
     ok,
     status,
-    statusText: ok ? 'OK' : 'Error',
-    headers: new Headers({ 'content-type': 'application/json' }),
+    statusText: ok ? "OK" : "Error",
+    headers: new Headers({ "content-type": "application/json" }),
     json: jest.fn().mockResolvedValue(data),
     text: jest.fn().mockResolvedValue(JSON.stringify(data)),
     blob: jest.fn().mockResolvedValue(new Blob([JSON.stringify(data)])),
@@ -284,12 +284,12 @@ export function createFetchResponse<T>(
  */
 
 export const createMockPlugin = (overrides = {}) => ({
-  id: 'plugin-123',
-  name: 'Test Plugin',
-  description: 'A test plugin',
-  version: '1.0.0',
+  id: "plugin-123",
+  name: "Test Plugin",
+  description: "A test plugin",
+  version: "1.0.0",
   enabled: true,
-  category: 'integration',
+  category: "integration",
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   ...overrides,
@@ -319,7 +319,7 @@ export {
   createMockBillingPlan,
   createMockProduct,
   seedBillingPlansData,
-} from './msw/handlers/billing-plans';
+} from "./msw/handlers/billing-plans";
 
 // Dunning helpers
 export {
@@ -327,19 +327,17 @@ export {
   createMockDunningCampaign,
   createMockDunningExecution,
   seedDunningData,
-} from './msw/handlers/dunning';
+} from "./msw/handlers/dunning";
 
 // Credit Notes helpers
 export {
   resetCreditNotesStorage,
   createMockCreditNote,
   seedCreditNotesData,
-} from './msw/handlers/credit-notes';
+} from "./msw/handlers/credit-notes";
 
 // Invoice Actions helpers
-export {
-  resetInvoiceActionsStorage,
-} from './msw/handlers/invoice-actions';
+export { resetInvoiceActionsStorage } from "./msw/handlers/invoice-actions";
 
 // Network Monitoring helpers
 export {
@@ -351,7 +349,7 @@ export {
   createMockAlert,
   createMockAlertRule,
   seedNetworkMonitoringData,
-} from './msw/handlers/network-monitoring';
+} from "./msw/handlers/network-monitoring";
 
 // Network Inventory (NetBox) helpers
 export {
@@ -359,7 +357,7 @@ export {
   createMockNetboxHealth,
   createMockNetboxSite,
   seedNetworkInventoryData,
-} from './msw/handlers/network-inventory';
+} from "./msw/handlers/network-inventory";
 
 // RADIUS helpers
 export {
@@ -367,7 +365,7 @@ export {
   createMockRADIUSSubscriber,
   createMockRADIUSSession,
   seedRADIUSData,
-} from './msw/handlers/radius';
+} from "./msw/handlers/radius";
 
 // Subscriber helpers
 export {
@@ -384,28 +382,20 @@ export {
   createMockHistory,
   createMockNote,
   seedFaultData,
-} from './msw/handlers/faults';
+} from "./msw/handlers/faults";
 
 // User helpers
-export {
-  resetUserStorage,
-  createMockUser,
-  seedUserData,
-} from './msw/handlers/users';
+export { resetUserStorage, createMockUser, seedUserData } from "./msw/handlers/users";
 
 // API Keys helpers
-export {
-  resetApiKeysStorage,
-  createMockApiKey,
-  seedApiKeysData,
-} from './msw/handlers/apiKeys';
+export { resetApiKeysStorage, createMockApiKey, seedApiKeysData } from "./msw/handlers/apiKeys";
 
 // Integrations helpers
 export {
   resetIntegrationsStorage,
   createMockIntegration,
   seedIntegrationsData,
-} from './msw/handlers/integrations';
+} from "./msw/handlers/integrations";
 
 // Health helpers
 export {
@@ -415,7 +405,7 @@ export {
   seedHealthData,
   makeHealthCheckFail,
   makeHealthCheckSucceed,
-} from './msw/handlers/health';
+} from "./msw/handlers/health";
 
 // Feature Flags helpers
 export {
@@ -423,7 +413,7 @@ export {
   createMockFeatureFlag,
   createMockFlagStatus,
   seedFeatureFlagsData,
-} from './msw/handlers/featureFlags';
+} from "./msw/handlers/featureFlags";
 
 // Operations/Monitoring helpers
 export {
@@ -433,7 +423,7 @@ export {
   createMockOperationsServiceHealth,
   createMockSystemHealth,
   seedOperationsData,
-} from './msw/handlers/operations';
+} from "./msw/handlers/operations";
 
 // Jobs helpers
 export {
@@ -441,7 +431,7 @@ export {
   createMockJob,
   createMockFieldInstallationJob,
   seedJobsData,
-} from './msw/handlers/jobs';
+} from "./msw/handlers/jobs";
 
 // Scheduler helpers
 export {
@@ -449,14 +439,10 @@ export {
   createMockScheduledJob,
   createMockJobChain,
   seedSchedulerData,
-} from './msw/handlers/scheduler';
+} from "./msw/handlers/scheduler";
 
 // Logs helpers
-export {
-  resetLogsStorage,
-  createMockLogEntry,
-  seedLogsData,
-} from './msw/handlers/logs';
+export { resetLogsStorage, createMockLogEntry, seedLogsData } from "./msw/handlers/logs";
 
 // Service Lifecycle helpers
 export {
@@ -464,7 +450,7 @@ export {
   createMockServiceInstance,
   seedServiceLifecycleData,
   createMockServiceStatistics,
-} from './msw/handlers/service-lifecycle';
+} from "./msw/handlers/service-lifecycle";
 
 // Orchestration helpers
 export {
@@ -472,14 +458,10 @@ export {
   createMockWorkflow,
   createMockWorkflowStep,
   seedOrchestrationData,
-} from './msw/handlers/orchestration';
+} from "./msw/handlers/orchestration";
 
 // Partners helpers
-export {
-  clearPartnersData,
-  createMockPartner,
-  seedPartners,
-} from './msw/handlers/partners';
+export { clearPartnersData, createMockPartner, seedPartners } from "./msw/handlers/partners";
 
 // Technicians helpers
 export {
@@ -488,7 +470,7 @@ export {
   createMockTechnicianLocation,
   seedTechniciansData,
   seedLocationHistory,
-} from './msw/handlers/technicians';
+} from "./msw/handlers/technicians";
 
 // GraphQL Subscriber helpers
 export {
@@ -498,7 +480,7 @@ export {
   createMockSession as createMockGraphQLSession,
   createMockSubscriberMetrics as createMockGraphQLSubscriberMetrics,
   createMockSubscriberDashboard as createMockGraphQLSubscriberDashboard,
-} from './msw/handlers/graphql-subscriber';
+} from "./msw/handlers/graphql-subscriber";
 
 /**
  * Add a runtime handler to MSW server
@@ -525,13 +507,13 @@ export function addMockHandler(...handlers: Parameters<typeof server.use>) {
  * });
  */
 export function overrideApiEndpoint(
-  method: 'get' | 'post' | 'patch' | 'put' | 'delete',
+  method: "get" | "post" | "patch" | "put" | "delete",
   path: string,
-  handler: Parameters<typeof http.get>[1]
+  handler: Parameters<typeof http.get>[1],
 ) {
   const httpMethod = http[method];
   // Add wildcard to match full URLs with host
-  const fullPath = path.startsWith('*') ? path : `*${path}`;
+  const fullPath = path.startsWith("*") ? path : `*${path}`;
   server.use(httpMethod(fullPath, handler as any));
 }
 
@@ -542,16 +524,13 @@ export function overrideApiEndpoint(
  * makeApiEndpointFail('get', '/api/v1/webhooks', 'Network error', 500);
  */
 export function makeApiEndpointFail(
-  method: 'get' | 'post' | 'patch' | 'put' | 'delete',
+  method: "get" | "post" | "patch" | "put" | "delete",
   path: string,
   errorMessage: string,
-  status = 500
+  status = 500,
 ) {
   overrideApiEndpoint(method, path, ({ request }) => {
-    return HttpResponse.json(
-      { error: errorMessage, code: 'TEST_ERROR' },
-      { status }
-    );
+    return HttpResponse.json({ error: errorMessage, code: "TEST_ERROR" }, { status });
   });
 }
 
@@ -562,10 +541,10 @@ export function makeApiEndpointFail(
  * makeApiEndpointReturn('get', '/api/v1/webhooks', { data: [] });
  */
 export function makeApiEndpointReturn(
-  method: 'get' | 'post' | 'patch' | 'put' | 'delete',
+  method: "get" | "post" | "patch" | "put" | "delete",
   path: string,
   data: any,
-  status = 200
+  status = 200,
 ) {
   overrideApiEndpoint(method, path, ({ request }) => {
     return HttpResponse.json(data, { status });

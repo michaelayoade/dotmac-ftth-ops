@@ -7,13 +7,7 @@ import { Badge } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Plus,
   Receipt,
@@ -26,14 +20,7 @@ import {
   DollarSign,
   Calendar,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { useManualPayments, useVerifyPayment } from "@/hooks/useBankAccounts";
 import type {
   ManualPaymentResponse,

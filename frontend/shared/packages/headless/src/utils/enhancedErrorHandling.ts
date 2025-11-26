@@ -593,11 +593,7 @@ export const EnhancedErrorFactory = {
       retryable: false,
     }),
 
-  authorization: (
-    resource: string,
-    operation?: string,
-    context: Partial<ErrorContext> = {},
-  ) =>
+  authorization: (resource: string, operation?: string, context: Partial<ErrorContext> = {}) =>
     new EnhancedISPError({
       code: ErrorCode.AUTHZ_RESOURCE_FORBIDDEN,
       message: `Access denied to ${resource}`,

@@ -146,7 +146,7 @@ describe("useDunning", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
@@ -900,7 +900,7 @@ describe("useDunning", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
@@ -1159,7 +1159,7 @@ describe("useDunning", () => {
 
       expect(dunningService.cancelExecution).toHaveBeenCalledWith(
         "execution-1",
-        "Payment received"
+        "Payment received",
       );
     });
 
@@ -1577,7 +1577,7 @@ describe("useDunning", () => {
 
     it("should set isLoading correctly during operations", async () => {
       (dunningService.pauseCampaign as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({}), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({}), 100)),
       );
 
       const { result } = renderHook(() => useDunningOperations(), {
@@ -1625,7 +1625,7 @@ describe("useDunning", () => {
       });
 
       await expect(result.current.cancelExecution("execution-1", "Test")).rejects.toThrow(
-        "Cancel failed"
+        "Cancel failed",
       );
     });
   });

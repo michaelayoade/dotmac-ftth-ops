@@ -7,11 +7,7 @@ import {
   PartnerCustomerInput,
   PartnerOnboardingInput,
 } from "@/hooks/usePartners";
-import {
-  CheckCircle,
-  Circle,
-  Loader2,
-} from "lucide-react";
+import { CheckCircle, Circle, Loader2 } from "lucide-react";
 import { Button } from "@dotmac/ui";
 
 type OnboardingStep = "partner" | "customer" | "license" | "deployment" | "review";
@@ -127,7 +123,7 @@ export default function PartnerOnboardingWorkflow() {
 
       const result = await completeOnboarding.mutateAsync(onboardingData);
 
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert(
         `Partner onboarding completed successfully!\n\n` +
           `Partner: ${result.partner.company_name}\n` +
@@ -440,7 +436,7 @@ export default function PartnerOnboardingWorkflow() {
                     company_name: e.target.value,
                   })
                 }
-                placeholder="Leave empty to use partner&apos;s company name"
+                placeholder="Leave empty to use partner's company name"
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>

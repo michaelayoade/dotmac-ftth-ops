@@ -186,11 +186,7 @@ describe("Input", () => {
       render(<Input />);
 
       const input = screen.getByRole("textbox");
-      expect(input).toHaveClass(
-        "focus:outline-none",
-        "focus:ring-2",
-        "focus:ring-primary"
-      );
+      expect(input).toHaveClass("focus:outline-none", "focus:ring-2", "focus:ring-primary");
     });
 
     it("supports aria-label", () => {
@@ -207,7 +203,7 @@ describe("Input", () => {
             Email
           </label>
           <Input id="email-input" aria-labelledby="email-label" />
-        </div>
+        </div>,
       );
 
       const input = screen.getByRole("textbox");
@@ -219,7 +215,7 @@ describe("Input", () => {
         <div>
           <Input aria-describedby="error-msg" error="Error" />
           <span id="error-msg">Error message</span>
-        </div>
+        </div>,
       );
 
       const input = screen.getByRole("textbox");
@@ -346,13 +342,8 @@ describe("Input", () => {
       render(
         <div>
           <label htmlFor="email">Email</label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            required
-          />
-        </div>
+          <Input id="email" type="email" placeholder="name@example.com" required />
+        </div>,
       );
 
       const input = screen.getByPlaceholderText("name@example.com");
@@ -371,7 +362,7 @@ describe("Input", () => {
             aria-describedby="password-error"
           />
           <span id="password-error">Password is too short</span>
-        </div>
+        </div>,
       );
 
       const input = document.querySelector('input[type="password"]');
@@ -380,26 +371,14 @@ describe("Input", () => {
     });
 
     it("renders search input", () => {
-      render(
-        <Input
-          type="search"
-          placeholder="Search..."
-          aria-label="Search"
-        />
-      );
+      render(<Input type="search" placeholder="Search..." aria-label="Search" />);
 
       const input = screen.getByPlaceholderText("Search...");
       expect(input).toHaveAttribute("type", "search");
     });
 
     it("renders disabled input with placeholder", () => {
-      render(
-        <Input
-          disabled
-          placeholder="Not available"
-          value="Read only"
-        />
-      );
+      render(<Input disabled placeholder="Not available" value="Read only" />);
 
       const input = screen.getByPlaceholderText("Not available");
       expect(input).toBeDisabled();

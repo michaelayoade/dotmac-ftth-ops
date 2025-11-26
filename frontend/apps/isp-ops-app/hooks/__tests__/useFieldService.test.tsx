@@ -18,7 +18,12 @@ import {
   useVehicles,
   useAssignResource,
 } from "../useFieldService";
-import { TechnicianStatus, SkillLevel, TimeEntryType, TimeEntryStatus } from "@/types/field-service";
+import {
+  TechnicianStatus,
+  SkillLevel,
+  TimeEntryType,
+  TimeEntryStatus,
+} from "@/types/field-service";
 
 // Mock the AppConfigContext
 jest.mock("@/providers/AppConfigContext", () => ({
@@ -114,12 +119,9 @@ describe("useFieldService hooks (Jest Mocks)", () => {
         json: async () => mockTechnicians,
       } as Response);
 
-      const { result } = renderHook(
-        () => useTechnicians({ status: [TechnicianStatus.ACTIVE] }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useTechnicians({ status: [TechnicianStatus.ACTIVE] }), {
+        wrapper: createWrapper(),
+      });
 
       await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
@@ -298,12 +300,9 @@ describe("useFieldService hooks (Jest Mocks)", () => {
         json: async () => mockEntries,
       } as Response);
 
-      const { result } = renderHook(
-        () => useTimeEntries({ technicianId: "tech-1" }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useTimeEntries({ technicianId: "tech-1" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
@@ -327,12 +326,9 @@ describe("useFieldService hooks (Jest Mocks)", () => {
         json: async () => mockEntries,
       } as Response);
 
-      const { result } = renderHook(
-        () => useTimeEntries({ status: [TimeEntryStatus.SUBMITTED] }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useTimeEntries({ status: [TimeEntryStatus.SUBMITTED] }), {
+        wrapper: createWrapper(),
+      });
 
       await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
@@ -363,12 +359,9 @@ describe("useFieldService hooks (Jest Mocks)", () => {
         json: async () => mockAssignments,
       } as Response);
 
-      const { result } = renderHook(
-        () => useAssignments({ technicianId: "tech-1" }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useAssignments({ technicianId: "tech-1" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitForFieldServiceSuccess(() => result.current.isSuccess);
 
@@ -469,12 +462,9 @@ describe("useFieldService hooks (Jest Mocks)", () => {
         json: async () => mockEquipment,
       } as Response);
 
-      const { result } = renderHook(
-        () => useEquipment({ category: ["fiber-tools"] }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useEquipment({ category: ["fiber-tools"] }), {
+        wrapper: createWrapper(),
+      });
 
       await waitForFieldServiceSuccess(() => result.current.isSuccess);
 

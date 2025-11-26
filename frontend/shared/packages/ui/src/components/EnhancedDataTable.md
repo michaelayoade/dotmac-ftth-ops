@@ -327,33 +327,33 @@ export function InvoiceListPage() {
 
 ## Props Reference
 
-| Prop                | Type                         | Default                 | Description              |
-| ------------------- | ---------------------------- | ----------------------- | ------------------------ |
-| `data`              | `TData[]`                    | Required                | Table data               |
-| `columns`           | `ColumnDef<TData, TValue>[]` | Required                | Column definitions       |
-| `searchable`        | `boolean`                    | `true`                  | Enable search            |
-| `searchPlaceholder` | `string`                     | `"Search..."`           | Search input placeholder |
-| `searchColumn`      | `string`                     | `undefined`             | Column to search on      |
-| `paginated`         | `boolean`                    | `true`                  | Enable pagination        |
-| `pageSizeOptions`   | `number[]`                   | `[10, 20, 30, 50, 100]` | Page size options        |
-| `defaultPageSize`   | `number`                     | `10`                    | Default page size        |
-| `selectable`        | `boolean`                    | `false`                 | Enable row selection     |
-| `bulkActions`       | `BulkAction<TData>[]`        | `[]`                    | Bulk action definitions  |
-| `filterable`        | `boolean`                    | `false`                 | Enable filter bar        |
-| `filters`           | `FilterConfig[]`             | `[]`                    | Filter definitions       |
-| `exportable`        | `boolean`                    | `false`                 | Enable CSV export        |
-| `exportFilename`    | `string`                     | `"data"`                | Export filename          |
-| `exportColumns`     | `(keyof TData)[]`            | All columns             | Columns to export        |
-| `columnVisibility`  | `boolean`                    | `true`                  | Enable column toggle     |
-| `emptyMessage`      | `string`                     | `"No results."`         | Empty state message      |
-| `className`         | `string`                     | `undefined`             | Additional CSS classes   |
-| `isLoading`         | `boolean`                    | `false`                 | Loading state            |
-| `onRowClick`        | `(row: TData) => void`       | `undefined`             | Row click handler        |
-| `toolbarActions`    | `React.ReactNode`            | `undefined`             | Custom toolbar buttons   |
-| `translations`      | `Partial<EnhancedDataTableTranslations>` | Defaults (EN) | Override UI labels for i18n |
-| `enableResponsiveCards` | `boolean`               | `false`                 | Show card layout on mobile |
-| `renderMobileCard`  | `(row: Row<TData>) => React.ReactNode` | `undefined` | Renderer for mobile cards |
-| `responsiveCardBreakpoint` | `number`             | `768`                   | Max width for card view  |
+| Prop                       | Type                                     | Default                 | Description                 |
+| -------------------------- | ---------------------------------------- | ----------------------- | --------------------------- |
+| `data`                     | `TData[]`                                | Required                | Table data                  |
+| `columns`                  | `ColumnDef<TData, TValue>[]`             | Required                | Column definitions          |
+| `searchable`               | `boolean`                                | `true`                  | Enable search               |
+| `searchPlaceholder`        | `string`                                 | `"Search..."`           | Search input placeholder    |
+| `searchColumn`             | `string`                                 | `undefined`             | Column to search on         |
+| `paginated`                | `boolean`                                | `true`                  | Enable pagination           |
+| `pageSizeOptions`          | `number[]`                               | `[10, 20, 30, 50, 100]` | Page size options           |
+| `defaultPageSize`          | `number`                                 | `10`                    | Default page size           |
+| `selectable`               | `boolean`                                | `false`                 | Enable row selection        |
+| `bulkActions`              | `BulkAction<TData>[]`                    | `[]`                    | Bulk action definitions     |
+| `filterable`               | `boolean`                                | `false`                 | Enable filter bar           |
+| `filters`                  | `FilterConfig[]`                         | `[]`                    | Filter definitions          |
+| `exportable`               | `boolean`                                | `false`                 | Enable CSV export           |
+| `exportFilename`           | `string`                                 | `"data"`                | Export filename             |
+| `exportColumns`            | `(keyof TData)[]`                        | All columns             | Columns to export           |
+| `columnVisibility`         | `boolean`                                | `true`                  | Enable column toggle        |
+| `emptyMessage`             | `string`                                 | `"No results."`         | Empty state message         |
+| `className`                | `string`                                 | `undefined`             | Additional CSS classes      |
+| `isLoading`                | `boolean`                                | `false`                 | Loading state               |
+| `onRowClick`               | `(row: TData) => void`                   | `undefined`             | Row click handler           |
+| `toolbarActions`           | `React.ReactNode`                        | `undefined`             | Custom toolbar buttons      |
+| `translations`             | `Partial<EnhancedDataTableTranslations>` | Defaults (EN)           | Override UI labels for i18n |
+| `enableResponsiveCards`    | `boolean`                                | `false`                 | Show card layout on mobile  |
+| `renderMobileCard`         | `(row: Row<TData>) => React.ReactNode`   | `undefined`             | Renderer for mobile cards   |
+| `responsiveCardBreakpoint` | `number`                                 | `768`                   | Max width for card view     |
 
 ## BulkAction Type
 

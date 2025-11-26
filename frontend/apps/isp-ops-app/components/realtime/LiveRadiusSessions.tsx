@@ -164,19 +164,13 @@ export function LiveRadiusSessions({
           </div>
           <div className="p-3 bg-green-50 rounded">
             <p className="text-xs text-green-900">Total RX</p>
-            <p
-              className="text-xl font-bold text-green-900"
-              data-testid="compact-total-rx"
-            >
+            <p className="text-xl font-bold text-green-900" data-testid="compact-total-rx">
               {formatBytes(totalBytesIn)}
             </p>
           </div>
           <div className="p-3 bg-blue-50 rounded">
             <p className="text-xs text-blue-900">Total TX</p>
-            <p
-              className="text-xl font-bold text-blue-900"
-              data-testid="compact-total-tx"
-            >
+            <p className="text-xl font-bold text-blue-900" data-testid="compact-total-tx">
               {formatBytes(totalBytesOut)}
             </p>
           </div>
@@ -225,10 +219,7 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-900">Total RX</p>
-              <p
-                className="text-2xl font-bold text-green-900"
-                data-testid="summary-total-rx"
-              >
+              <p className="text-2xl font-bold text-green-900" data-testid="summary-total-rx">
                 {formatBytes(totalBytesIn)}
               </p>
             </div>
@@ -240,10 +231,7 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-blue-900">Total TX</p>
-              <p
-                className="text-2xl font-bold text-blue-900"
-                data-testid="summary-total-tx"
-              >
+              <p className="text-2xl font-bold text-blue-900" data-testid="summary-total-tx">
                 {formatBytes(totalBytesOut)}
               </p>
             </div>
@@ -255,10 +243,7 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-purple-900">Total Traffic</p>
-              <p
-                className="text-2xl font-bold text-purple-900"
-                data-testid="summary-total-traffic"
-              >
+              <p className="text-2xl font-bold text-purple-900" data-testid="summary-total-traffic">
                 {formatBytes(totalBytesIn + totalBytesOut)}
               </p>
             </div>

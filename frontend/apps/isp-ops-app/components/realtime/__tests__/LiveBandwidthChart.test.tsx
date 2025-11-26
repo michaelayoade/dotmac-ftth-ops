@@ -21,9 +21,7 @@ jest.mock("@/lib/websocket/WebSocketProvider", () => ({
 // Mock Recharts
 jest.mock("recharts", () => ({
   LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
-  Line: ({ dataKey, stroke }: any) => (
-    <div data-testid={`line-${dataKey}`} data-stroke={stroke} />
-  ),
+  Line: ({ dataKey, stroke }: any) => <div data-testid={`line-${dataKey}`} data-stroke={stroke} />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
   CartesianGrid: () => <div data-testid="grid" />,
@@ -170,9 +168,7 @@ describe("LiveBandwidthChart", () => {
 
     it("formats upload with 1 decimal place", () => {
       mockUseWebSocket.mockReturnValue({ isConnected: true });
-      mockUseWebSocketSubscription.mockReturnValue([
-        { ...mockBandwidthData, upload_mbps: 10.456 },
-      ]);
+      mockUseWebSocketSubscription.mockReturnValue([{ ...mockBandwidthData, upload_mbps: 10.456 }]);
 
       render(<LiveBandwidthChart />);
 
@@ -192,9 +188,7 @@ describe("LiveBandwidthChart", () => {
 
     it("rounds latency to integer", () => {
       mockUseWebSocket.mockReturnValue({ isConnected: true });
-      mockUseWebSocketSubscription.mockReturnValue([
-        { ...mockBandwidthData, latency_ms: 15.9 },
-      ]);
+      mockUseWebSocketSubscription.mockReturnValue([{ ...mockBandwidthData, latency_ms: 15.9 }]);
 
       render(<LiveBandwidthChart />);
 

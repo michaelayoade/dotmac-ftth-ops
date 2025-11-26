@@ -52,7 +52,7 @@ interface Job {
 
 function JobDetailsPageContent() {
   const params = useParams();
-  const jobId = params?.['jobId'] as string;
+  const jobId = params?.["jobId"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { api } = useAppConfig();
@@ -71,7 +71,10 @@ function JobDetailsPageContent() {
     enabled: !!jobId,
     refetchInterval: (query) => {
       // Auto-refresh while job is running or pending
-      if (query?.state?.data && (query.state.data.status === "running" || query.state.data.status === "pending")) {
+      if (
+        query?.state?.data &&
+        (query.state.data.status === "running" || query.state.data.status === "pending")
+      ) {
         return 3000; // Refresh every 3 seconds
       }
       return false;
@@ -129,12 +132,19 @@ function JobDetailsPageContent() {
   });
 
   const getStatusBadge = (status: JobStatus) => {
-    const statusConfig: Record<JobStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      JobStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       pending: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Pending" },
       running: { icon: Loader, color: "bg-blue-100 text-blue-800", label: "Running" },
       completed: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Completed" },
       failed: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Failed" },
-      cancelled: { icon: AlertTriangle, color: "bg-orange-100 text-orange-800", label: "Cancelled" },
+      cancelled: {
+        icon: AlertTriangle,
+        color: "bg-orange-100 text-orange-800",
+        label: "Cancelled",
+      },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -161,7 +171,9 @@ function JobDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Job Not Found</h2>
-        <p className="text-muted-foreground mb-4">The job you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The job you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/jobs">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -197,7 +209,9 @@ function JobDetailsPageContent() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold font-mono">{job.id.substring(0, 8)}...</h1>
-            <p className="text-sm text-muted-foreground">{job.job_type.replace(/_/g, " ").toUpperCase()}</p>
+            <p className="text-sm text-muted-foreground">
+              {job.job_type.replace(/_/g, " ").toUpperCase()}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -273,7 +287,8 @@ function JobDetailsPageContent() {
           <CardContent>
             <div className="text-2xl font-bold">{job.items_processed}</div>
             <p className="text-xs text-muted-foreground">
-              {job.items_total > 0 ? Math.round((job.items_processed / job.items_total) * 100) : 0}% complete
+              {job.items_total > 0 ? Math.round((job.items_processed / job.items_total) * 100) : 0}%
+              complete
             </p>
           </CardContent>
         </Card>
@@ -414,7 +429,9 @@ function JobDetailsPageContent() {
                 </pre>
               ) : (
                 <p className="text-muted-foreground">
-                  {job.status === "completed" ? "No result data available" : "Job has not completed yet"}
+                  {job.status === "completed"
+                    ? "No result data available"
+                    : "Job has not completed yet"}
                 </p>
               )}
             </CardContent>

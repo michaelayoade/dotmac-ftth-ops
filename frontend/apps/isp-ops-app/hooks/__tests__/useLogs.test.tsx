@@ -5,7 +5,7 @@
  * All 24 tests covering logs, stats, services, and real-world scenarios.
  */
 
-import React from 'react';
+import React from "react";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
@@ -17,12 +17,12 @@ jest.mock("axios");
 const mockAxios = axios as jest.Mocked<typeof axios>;
 
 // Mock useAppConfig
-jest.mock('@/providers/AppConfigContext', () => ({
+jest.mock("@/providers/AppConfigContext", () => ({
   AppConfigProvider: ({ children }: { children: React.ReactNode }) => children,
   useAppConfig: jest.fn(() => ({
     api: {
-      baseUrl: 'http://localhost:3000',
-      prefix: '/api/v1',
+      baseUrl: "http://localhost:3000",
+      prefix: "/api/v1",
     },
     features: {},
   })),
@@ -30,14 +30,14 @@ jest.mock('@/providers/AppConfigContext', () => ({
 
 // Mock useToast
 const mockToast = jest.fn();
-jest.mock('@dotmac/ui', () => ({
+jest.mock("@dotmac/ui", () => ({
   useToast: jest.fn(() => ({
     toast: mockToast,
   })),
 }));
 
 // Mock logger
-jest.mock('@/lib/logger', () => ({
+jest.mock("@/lib/logger", () => ({
   logger: {
     error: jest.fn(),
     info: jest.fn(),
@@ -86,11 +86,7 @@ describe("useLogs (Jest Mocks)", () => {
     it("should generate correct query keys", () => {
       expect(logsKeys.all).toEqual(["logs"]);
       expect(logsKeys.lists()).toEqual(["logs", "list"]);
-      expect(logsKeys.list({ level: "ERROR" })).toEqual([
-        "logs",
-        "list",
-        { level: "ERROR" },
-      ]);
+      expect(logsKeys.list({ level: "ERROR" })).toEqual(["logs", "list", { level: "ERROR" }]);
       expect(logsKeys.stats()).toEqual(["logs", "stats"]);
       expect(logsKeys.services()).toEqual(["logs", "services"]);
     });
@@ -190,10 +186,9 @@ describe("useLogs (Jest Mocks)", () => {
 
       expect(result.current.logs).toHaveLength(2);
       expect(result.current.logs.every((log) => log.level === "ERROR")).toBe(true);
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining("level=ERROR"),
-        { withCredentials: true }
-      );
+      expect(mockAxios.get).toHaveBeenCalledWith(expect.stringContaining("level=ERROR"), {
+        withCredentials: true,
+      });
     });
 
     it("should filter logs by service", async () => {
@@ -222,10 +217,9 @@ describe("useLogs (Jest Mocks)", () => {
 
       expect(result.current.logs).toHaveLength(2);
       expect(result.current.logs.every((log) => log.service === "api-gateway")).toBe(true);
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining("service=api-gateway"),
-        { withCredentials: true }
-      );
+      expect(mockAxios.get).toHaveBeenCalledWith(expect.stringContaining("service=api-gateway"), {
+        withCredentials: true,
+      });
     });
 
     it("should search logs by message content", async () => {
@@ -253,10 +247,9 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       expect(result.current.logs).toHaveLength(2);
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining("search=payment"),
-        { withCredentials: true }
-      );
+      expect(mockAxios.get).toHaveBeenCalledWith(expect.stringContaining("search=payment"), {
+        withCredentials: true,
+      });
     });
 
     it("should search logs by metadata", async () => {
@@ -290,9 +283,7 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       expect(result.current.logs).toHaveLength(2);
-      expect(
-        result.current.logs.every((log) => log.metadata.request_id === "req-123")
-      ).toBe(true);
+      expect(result.current.logs.every((log) => log.metadata.request_id === "req-123")).toBe(true);
     });
 
     it("should filter logs by time range", async () => {
@@ -323,10 +314,9 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       expect(result.current.logs).toHaveLength(2);
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining("start_time="),
-        { withCredentials: true }
-      );
+      expect(mockAxios.get).toHaveBeenCalledWith(expect.stringContaining("start_time="), {
+        withCredentials: true,
+      });
     });
 
     it("should handle pagination", async () => {
@@ -334,7 +324,7 @@ describe("useLogs (Jest Mocks)", () => {
         createMockLogEntry({
           id: `log-${String(i + 11).padStart(2, "0")}`,
           timestamp: new Date(Date.now() - (i + 10) * 1000).toISOString(),
-        })
+        }),
       );
 
       const mockResponse: LogsResponse = {
@@ -360,10 +350,9 @@ describe("useLogs (Jest Mocks)", () => {
       expect(result.current.pagination.page_size).toBe(10);
       expect(result.current.pagination.has_more).toBe(true);
       expect(result.current.pagination.total).toBe(25);
-      expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining("page=2"),
-        { withCredentials: true }
-      );
+      expect(mockAxios.get).toHaveBeenCalledWith(expect.stringContaining("page=2"), {
+        withCredentials: true,
+      });
     });
 
     it("should handle multiple filters simultaneously", async () => {
@@ -392,7 +381,7 @@ describe("useLogs (Jest Mocks)", () => {
 
       const { result } = renderHook(
         () => useLogs({ level: "ERROR", service: "api-gateway", search: "error" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => {
@@ -488,9 +477,12 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       // Wait for stats to load
-      await waitFor(() => {
-        expect(result.current.stats).not.toBeNull();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(result.current.stats).not.toBeNull();
+        },
+        { timeout: 3000 },
+      );
 
       expect(result.current.stats?.total).toBe(4);
       expect(result.current.stats?.by_level.ERROR).toBe(2);
@@ -537,9 +529,12 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       // Wait for stats to load
-      await waitFor(() => {
-        expect(result.current.stats).not.toBeNull();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(result.current.stats).not.toBeNull();
+        },
+        { timeout: 3000 },
+      );
 
       expect(result.current.stats?.total).toBe(0);
     });
@@ -595,7 +590,7 @@ describe("useLogs (Jest Mocks)", () => {
 
       // Services query has staleTime: 300000ms, so it won't auto-fetch immediately
       // Verify the hook provides the services property
-      expect(result.current).toHaveProperty('services');
+      expect(result.current).toHaveProperty("services");
     });
 
     it("should handle empty services list", async () => {
@@ -614,7 +609,7 @@ describe("useLogs (Jest Mocks)", () => {
         .mockResolvedValue({ data: null });
 
       const { result } = renderHook(() => useLogs(), {
-        wrapper: createWrapper(true),  // Enable auto-fetch
+        wrapper: createWrapper(true), // Enable auto-fetch
       });
 
       await waitFor(() => {
@@ -622,9 +617,12 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       // Wait for services query to complete
-      await waitFor(() => {
-        expect(result.current.services).toEqual([]);
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(result.current.services).toEqual([]);
+        },
+        { timeout: 3000 },
+      );
     });
 
     it("should return empty array on services error", async () => {
@@ -641,7 +639,7 @@ describe("useLogs (Jest Mocks)", () => {
         .mockRejectedValueOnce(new Error("Services unavailable"));
 
       const { result } = renderHook(() => useLogs(), {
-        wrapper: createWrapper(true),  // Enable auto-fetch
+        wrapper: createWrapper(true), // Enable auto-fetch
       });
 
       await waitFor(() => {
@@ -652,9 +650,12 @@ describe("useLogs (Jest Mocks)", () => {
       expect(result.current.logs).toHaveLength(1);
 
       // Services should be empty array on error (default fallback)
-      await waitFor(() => {
-        expect(result.current.services).toEqual([]);
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(result.current.services).toEqual([]);
+        },
+        { timeout: 3000 },
+      );
     });
   });
 
@@ -729,9 +730,12 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       // Stats should be available after fetch
-      await waitFor(() => {
-        expect(result.current.stats).not.toBeNull();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(result.current.stats).not.toBeNull();
+        },
+        { timeout: 3000 },
+      );
     });
   });
 
@@ -797,9 +801,12 @@ describe("useLogs (Jest Mocks)", () => {
         await result.current.fetchStats();
       });
 
-      await waitFor(() => {
-        expect(result.current.stats).not.toBeNull();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(result.current.stats).not.toBeNull();
+        },
+        { timeout: 3000 },
+      );
 
       // Verify logs and stats data
       expect(result.current.logs).toHaveLength(3);
@@ -809,7 +816,7 @@ describe("useLogs (Jest Mocks)", () => {
       expect(result.current.stats?.by_level.INFO).toBe(1);
 
       // Verify hook structure includes services property
-      expect(result.current).toHaveProperty('services');
+      expect(result.current).toHaveProperty("services");
     });
 
     it("should handle troubleshooting scenario - filter by error level and specific service", async () => {
@@ -836,10 +843,9 @@ describe("useLogs (Jest Mocks)", () => {
 
       mockAxios.get.mockResolvedValueOnce({ data: mockResponse });
 
-      const { result } = renderHook(
-        () => useLogs({ level: "ERROR", service: "billing-service" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useLogs({ level: "ERROR", service: "billing-service" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -894,9 +900,7 @@ describe("useLogs (Jest Mocks)", () => {
       });
 
       expect(result.current.logs).toHaveLength(4);
-      expect(
-        result.current.logs.every((log) => log.metadata.request_id === requestId)
-      ).toBe(true);
+      expect(result.current.logs.every((log) => log.metadata.request_id === requestId)).toBe(true);
     });
 
     it("should handle high-volume scenario with pagination", async () => {
@@ -906,7 +910,7 @@ describe("useLogs (Jest Mocks)", () => {
           id: `log-${String(i + 1).padStart(3, "0")}`,
           timestamp: new Date(Date.now() - i * 1000).toISOString(),
           message: `Page 1 log ${i + 1}`,
-        })
+        }),
       );
 
       const page1Response: LogsResponse = {
@@ -963,10 +967,9 @@ describe("useLogs (Jest Mocks)", () => {
       // Get errors from last 15 minutes
       const startTime = new Date(now - 900000).toISOString();
 
-      const { result } = renderHook(
-        () => useLogs({ level: "ERROR", start_time: startTime }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useLogs({ level: "ERROR", start_time: startTime }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);

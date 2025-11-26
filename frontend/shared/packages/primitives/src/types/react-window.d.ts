@@ -23,9 +23,7 @@ declare module "react-window" {
     }) => React.ReactElement | null;
   }
 
-  export type FixedSizeList<ItemData = unknown> = React.Component<
-    FixedSizeListProps<ItemData>
-  >;
+  export type FixedSizeList<ItemData = unknown> = React.Component<FixedSizeListProps<ItemData>>;
 
   export const FixedSizeList: {
     new <ItemData = unknown>(props: FixedSizeListProps<ItemData>): FixedSizeList<ItemData>;

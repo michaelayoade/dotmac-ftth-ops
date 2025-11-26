@@ -6,10 +6,10 @@
  * splice points, service areas, health metrics, and network analytics.
  */
 
-import { graphql, HttpResponse } from 'msw';
+import { graphql, HttpResponse } from "msw";
 
 const camelCaseKey = (key: string) => {
-  if (key.startsWith('__')) {
+  if (key.startsWith("__")) {
     return key;
   }
   return key.replace(/_([a-z])/g, (_, char: string) => char.toUpperCase());
@@ -19,9 +19,9 @@ const camelize = (value: any): any => {
   if (Array.isArray(value)) {
     return value.map(camelize);
   }
-  if (value && typeof value === 'object') {
+  if (value && typeof value === "object") {
     return Object.entries(value).reduce((acc: Record<string, any>, [key, val]) => {
-      const camelKey = typeof key === 'string' ? camelCaseKey(key) : key;
+      const camelKey = typeof key === "string" ? camelCaseKey(key) : key;
       acc[camelKey as string] = camelize(val);
       return acc;
     }, {});
@@ -38,14 +38,19 @@ const getVariables = <T extends Record<string, any>>(variables?: Record<string, 
 // TYPES
 // ============================================================================
 
-export type FiberCableStatus = 'ACTIVE' | 'INACTIVE' | 'DAMAGED' | 'UNDER_CONSTRUCTION' | 'DECOMMISSIONED';
-export type FiberType = 'SINGLE_MODE' | 'MULTI_MODE' | 'HYBRID';
-export type CableInstallationType = 'UNDERGROUND' | 'AERIAL' | 'DUCT' | 'DIRECT_BURIAL';
-export type SpliceStatus = 'ACTIVE' | 'DAMAGED' | 'PENDING' | 'VERIFIED';
-export type SpliceType = 'FUSION' | 'MECHANICAL';
-export type DistributionPointType = 'CABINET' | 'CLOSURE' | 'POLE' | 'MANHOLE';
-export type ServiceAreaType = 'RESIDENTIAL' | 'COMMERCIAL' | 'INDUSTRIAL' | 'MIXED';
-export type FiberHealthStatus = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' | 'CRITICAL';
+export type FiberCableStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "DAMAGED"
+  | "UNDER_CONSTRUCTION"
+  | "DECOMMISSIONED";
+export type FiberType = "SINGLE_MODE" | "MULTI_MODE" | "HYBRID";
+export type CableInstallationType = "UNDERGROUND" | "AERIAL" | "DUCT" | "DIRECT_BURIAL";
+export type SpliceStatus = "ACTIVE" | "DAMAGED" | "PENDING" | "VERIFIED";
+export type SpliceType = "FUSION" | "MECHANICAL";
+export type DistributionPointType = "CABINET" | "CLOSURE" | "POLE" | "MANHOLE";
+export type ServiceAreaType = "RESIDENTIAL" | "COMMERCIAL" | "INDUSTRIAL" | "MIXED";
+export type FiberHealthStatus = "EXCELLENT" | "GOOD" | "FAIR" | "POOR" | "CRITICAL";
 
 export interface FiberCable {
   id: string;
@@ -272,18 +277,18 @@ export interface FiberDashboard {
 }
 
 const STRAND_COLORS = [
-  'blue',
-  'orange',
-  'green',
-  'brown',
-  'slate',
-  'white',
-  'red',
-  'black',
-  'yellow',
-  'violet',
-  'rose',
-  'aqua',
+  "blue",
+  "orange",
+  "green",
+  "brown",
+  "slate",
+  "white",
+  "red",
+  "black",
+  "yellow",
+  "violet",
+  "rose",
+  "aqua",
 ];
 
 const toIsoString = (value?: string) => value ?? new Date().toISOString();
@@ -294,12 +299,15 @@ const ensureGeoPoint = (overrides?: Partial<GeoPoint>): GeoPoint => ({
   altitude: overrides?.altitude ?? 12,
 });
 
-const ensureAddress = (overrides?: Partial<Address>, fallbackStreet = 'Fiber District'): Address => ({
+const ensureAddress = (
+  overrides?: Partial<Address>,
+  fallbackStreet = "Fiber District",
+): Address => ({
   streetAddress: overrides?.streetAddress ?? fallbackStreet,
-  city: overrides?.city ?? 'Metropolis',
-  stateProvince: overrides?.stateProvince ?? 'State',
-  postalCode: overrides?.postalCode ?? '10001',
-  country: overrides?.country ?? 'USA',
+  city: overrides?.city ?? "Metropolis",
+  stateProvince: overrides?.stateProvince ?? "State",
+  postalCode: overrides?.postalCode ?? "10001",
+  country: overrides?.country ?? "USA",
 });
 
 const calculatePercent = (used: number, total: number) => {
@@ -309,11 +317,12 @@ const calculatePercent = (used: number, total: number) => {
   return Number(((used / total) * 100).toFixed(2));
 };
 
-const ensureArray = <T,>(value: T[] | undefined, fallback: T[]): T[] => {
+const ensureArray = <T>(value: T[] | undefined, fallback: T[]): T[] => {
   return value && value.length ? value : fallback;
 };
 
-const isDefined = <T,>(value: T | null | undefined): value is T => value !== null && value !== undefined;
+const isDefined = <T>(value: T | null | undefined): value is T =>
+  value !== null && value !== undefined;
 
 const buildStrands = (total: number, used: number, strands?: FiberStrand[]): FiberStrand[] => {
   if (strands?.length) {
@@ -335,10 +344,14 @@ const buildStrands = (total: number, used: number, strands?: FiberStrand[]): Fib
 };
 
 const getCableStartPointId = (cable: FiberCable) =>
-  (cable as any).startDistributionPointId ?? (cable as any).start_distribution_point_id ?? cable.start_point_id;
+  (cable as any).startDistributionPointId ??
+  (cable as any).start_distribution_point_id ??
+  cable.start_point_id;
 
 const getCableEndPointId = (cable: FiberCable) =>
-  (cable as any).endDistributionPointId ?? (cable as any).end_distribution_point_id ?? cable.end_point_id;
+  (cable as any).endDistributionPointId ??
+  (cable as any).end_distribution_point_id ??
+  cable.end_point_id;
 
 const toGraphQLFiberCable = (raw?: FiberCable): Record<string, any> | null => {
   if (!raw) {
@@ -346,19 +359,24 @@ const toGraphQLFiberCable = (raw?: FiberCable): Record<string, any> | null => {
   }
 
   const totalStrands = raw.totalStrands ?? raw.total_strands ?? raw.fiber_count ?? 24;
-  const usedStrands = raw.usedStrands ?? raw.used_strands ?? raw.utilized_fibers ?? Math.min(totalStrands, 12);
-  const availableStrands = raw.availableStrands ?? raw.available_strands ?? raw.available_fibers ?? Math.max(totalStrands - usedStrands, 0);
+  const usedStrands =
+    raw.usedStrands ?? raw.used_strands ?? raw.utilized_fibers ?? Math.min(totalStrands, 12);
+  const availableStrands =
+    raw.availableStrands ??
+    raw.available_strands ??
+    raw.available_fibers ??
+    Math.max(totalStrands - usedStrands, 0);
   const lengthMeters = raw.lengthMeters ?? raw.length_meters ?? 1500;
   const startDistributionPointId =
     raw.startDistributionPointId ??
     (raw as any).start_distribution_point_id ??
     raw.start_point_id ??
-    'dp-start-001';
+    "dp-start-001";
   const endDistributionPointId =
     raw.endDistributionPointId ??
     (raw as any).end_distribution_point_id ??
     raw.end_point_id ??
-    'dp-end-001';
+    "dp-end-001";
   const route = (raw as any).route ?? {};
   const startPoint = ensureGeoPoint(route.startPoint);
   const endPoint = ensureGeoPoint(
@@ -378,26 +396,26 @@ const toGraphQLFiberCable = (raw?: FiberCable): Record<string, any> | null => {
             altitude: (startPoint.altitude + endPoint.altitude) / 2,
           }),
         ];
-  const splicePointIds = ensureArray(
-    (raw as any).splicePointIds ?? (raw as any).splice_point_ids,
-    ['splice-001', 'splice-002'],
-  );
+  const splicePointIds = ensureArray((raw as any).splicePointIds ?? (raw as any).splice_point_ids, [
+    "splice-001",
+    "splice-002",
+  ]);
 
   return {
     id: raw.id,
     cableId: raw.cableId ?? raw.cable_id ?? raw.id,
     cableCode: raw.cableCode ?? raw.cable_code ?? `FC-${raw.id}`,
     name: raw.name ?? `Fiber Cable ${raw.id}`,
-    description: raw.description ?? raw.route_description ?? 'Primary backbone connection',
-    status: raw.status ?? 'ACTIVE',
+    description: raw.description ?? raw.route_description ?? "Primary backbone connection",
+    status: raw.status ?? "ACTIVE",
     isActive: raw.isActive ?? raw.is_active ?? true,
-    fiberType: raw.fiberType ?? raw.fiber_type ?? 'SINGLE_MODE',
+    fiberType: raw.fiberType ?? raw.fiber_type ?? "SINGLE_MODE",
     totalStrands,
     availableStrands,
     usedStrands,
-    manufacturer: raw.manufacturer ?? 'Corning',
-    model: raw.model ?? 'SM-24',
-    installationType: raw.installationType ?? raw.installation_type ?? 'UNDERGROUND',
+    manufacturer: raw.manufacturer ?? "Corning",
+    model: raw.model ?? "SM-24",
+    installationType: raw.installationType ?? raw.installation_type ?? "UNDERGROUND",
     route: {
       pathGeojson: route.pathGeojson ?? '{"type":"LineString","coordinates":[[0,0],[1,1]]}',
       totalDistanceMeters: route.totalDistanceMeters ?? lengthMeters,
@@ -412,8 +430,8 @@ const toGraphQLFiberCable = (raw?: FiberCable): Record<string, any> | null => {
     strands: buildStrands(totalStrands, usedStrands, (raw as any).strands),
     startDistributionPointId,
     endDistributionPointId,
-    startPointName: raw.startPointName ?? raw.start_point_name ?? 'Start Distribution Point',
-    endPointName: raw.endPointName ?? raw.end_point_name ?? 'End Distribution Point',
+    startPointName: raw.startPointName ?? raw.start_point_name ?? "Start Distribution Point",
+    endPointName: raw.endPointName ?? raw.end_point_name ?? "End Distribution Point",
     capacityUtilizationPercent:
       raw.capacityUtilizationPercent ??
       raw.capacity_utilization_percent ??
@@ -424,18 +442,17 @@ const toGraphQLFiberCable = (raw?: FiberCable): Record<string, any> | null => {
     totalLossDb: raw.totalLossDb ?? raw.total_loss_db ?? 0.5,
     averageAttenuationDbPerKm:
       raw.averageAttenuationDbPerKm ?? raw.average_attenuation_db_per_km ?? 0.25,
-    maxAttenuationDbPerKm:
-      raw.maxAttenuationDbPerKm ?? raw.max_attenuation_db_per_km ?? 0.3,
-    conduitId: (raw as any).conduitId ?? (raw as any).conduit_id ?? 'conduit-001',
-    ductNumber: (raw as any).ductNumber ?? (raw as any).duct_number ?? 'duct-1',
+    maxAttenuationDbPerKm: raw.maxAttenuationDbPerKm ?? raw.max_attenuation_db_per_km ?? 0.3,
+    conduitId: (raw as any).conduitId ?? (raw as any).conduit_id ?? "conduit-001",
+    ductNumber: (raw as any).ductNumber ?? (raw as any).duct_number ?? "duct-1",
     armored: (raw as any).armored ?? (raw as any).is_armored ?? false,
     fireRated: (raw as any).fireRated ?? (raw as any).is_fire_rated ?? true,
-    ownerId: (raw as any).ownerId ?? (raw as any).owner_id ?? 'owner-001',
-    ownerName: (raw as any).ownerName ?? (raw as any).owner_name ?? 'Dotmac Fiber',
-    healthStatus: (raw as any).healthStatus ?? raw.health_status ?? 'GOOD',
+    ownerId: (raw as any).ownerId ?? (raw as any).owner_id ?? "owner-001",
+    ownerName: (raw as any).ownerName ?? (raw as any).owner_name ?? "Dotmac Fiber",
+    healthStatus: (raw as any).healthStatus ?? raw.health_status ?? "GOOD",
     healthScore: (raw as any).healthScore ?? 95,
     isLeased: raw.isLeased ?? raw.is_leased ?? false,
-    installedAt: raw.installedAt ?? raw.installed_at ?? raw.installation_date ?? '2024-01-15',
+    installedAt: raw.installedAt ?? raw.installed_at ?? raw.installation_date ?? "2024-01-15",
     testedAt: (raw as any).testedAt ?? raw.last_inspection_date ?? toIsoString(),
     createdAt: raw.createdAt ?? raw.created_at ?? toIsoString(),
     updatedAt: raw.updatedAt ?? raw.updated_at ?? toIsoString(),
@@ -454,50 +471,48 @@ const toGraphQLSplicePoint = (raw?: SplicePoint): Record<string, any> | null => 
     id: raw.id,
     spliceId: (raw as any).spliceId ?? raw.splice_code ?? `SP-${raw.id}`,
     name: raw.name ?? raw.splice_code ?? `Splice ${raw.id}`,
-    cableId: (raw as any).cableId ?? raw.cable_id ?? 'cable-001',
-    description: raw.description ?? raw.location_description ?? 'Fiber splice enclosure',
-    status: raw.status ?? 'ACTIVE',
-    isActive: raw.status !== 'DECOMMISSIONED',
+    cableId: (raw as any).cableId ?? raw.cable_id ?? "cable-001",
+    description: raw.description ?? raw.location_description ?? "Fiber splice enclosure",
+    status: raw.status ?? "ACTIVE",
+    isActive: raw.status !== "DECOMMISSIONED",
     location: ensureGeoPoint({
       latitude: raw.latitude,
       longitude: raw.longitude,
       altitude: (raw as any).altitude,
     }),
-    address: ensureAddress((raw as any).address, raw.location_description ?? 'Fiber Node'),
-    distributionPointId: raw.distribution_point_id ?? 'dp-001',
-    closureType: raw.splice_type ?? 'FUSION',
-    manufacturer: raw.manufacturer ?? 'Corning',
-    model: raw.model ?? 'SP-1',
+    address: ensureAddress((raw as any).address, raw.location_description ?? "Fiber Node"),
+    distributionPointId: raw.distribution_point_id ?? "dp-001",
+    closureType: raw.splice_type ?? "FUSION",
+    manufacturer: raw.manufacturer ?? "Corning",
+    model: raw.model ?? "SP-1",
     trayCount: (raw as any).trayCount ?? 4,
     trayCapacity: (raw as any).trayCapacity ?? 24,
     cablesConnected: (raw as any).cablesConnected ?? 2,
     cableCount: (raw as any).cableCount ?? 2,
-    spliceConnections:
-      (raw as any).spliceConnections ??
-      [
-        {
-          cableAId: raw.cable_id ?? 'cable-001',
-          cableAStrand: 1,
-          cableBId: 'cable-002',
-          cableBStrand: 1,
-          spliceType: 'FUSION',
-          lossDb: 0.12,
-          reflectanceDb: -45,
-          isPassing: true,
-          testResult: 'PASS',
-          testedAt: toIsoString(),
-          testedBy: 'Technician A',
-        },
-      ],
+    spliceConnections: (raw as any).spliceConnections ?? [
+      {
+        cableAId: raw.cable_id ?? "cable-001",
+        cableAStrand: 1,
+        cableBId: "cable-002",
+        cableBStrand: 1,
+        spliceType: "FUSION",
+        lossDb: 0.12,
+        reflectanceDb: -45,
+        isPassing: true,
+        testResult: "PASS",
+        testedAt: toIsoString(),
+        testedBy: "Technician A",
+      },
+    ],
     totalSplices,
     activeSplices,
     averageSpliceLossDb: (raw as any).averageSpliceLossDb ?? 0.12,
     maxSpliceLossDb: (raw as any).maxSpliceLossDb ?? 0.35,
     passingSplices: (raw as any).passingSplices ?? Math.max(activeSplices - 1, 0),
     failingSplices: (raw as any).failingSplices ?? 1,
-    accessType: (raw as any).accessType ?? 'CABINET',
+    accessType: (raw as any).accessType ?? "CABINET",
     requiresSpecialAccess: (raw as any).requiresSpecialAccess ?? false,
-    accessNotes: (raw as any).accessNotes ?? 'Badge access required',
+    accessNotes: (raw as any).accessNotes ?? "Badge access required",
     installedAt: raw.installation_date ?? toIsoString(),
     lastTestedAt: raw.last_test_date ?? toIsoString(),
     lastMaintainedAt: raw.last_maintenance_date ?? toIsoString(),
@@ -513,26 +528,25 @@ const toGraphQLDistributionPoint = (raw?: DistributionPoint): Record<string, any
 
   const totalCapacity = raw.total_capacity ?? 96;
   const usedCapacity = raw.used_capacity ?? raw.utilized_capacity ?? 48;
-  const availableCapacity =
-    raw.available_capacity ?? Math.max(totalCapacity - usedCapacity, 0);
+  const availableCapacity = raw.available_capacity ?? Math.max(totalCapacity - usedCapacity, 0);
 
   return {
     id: raw.id,
-    siteId: (raw as any).siteId ?? raw.site_id ?? 'site-001',
-    siteName: raw.site_name ?? 'Downtown Site',
+    siteId: (raw as any).siteId ?? raw.site_id ?? "site-001",
+    siteName: raw.site_name ?? "Downtown Site",
     name: raw.name ?? `Distribution Point ${raw.id}`,
-    description: raw.description ?? raw.location_description ?? 'Distribution cabinet',
-    pointType: raw.point_type ?? 'CABINET',
-    status: raw.status ?? 'ACTIVE',
-    isActive: raw.status !== 'DECOMMISSIONED',
+    description: raw.description ?? raw.location_description ?? "Distribution cabinet",
+    pointType: raw.point_type ?? "CABINET",
+    status: raw.status ?? "ACTIVE",
+    isActive: raw.status !== "DECOMMISSIONED",
     location: ensureGeoPoint({
       latitude: raw.latitude,
       longitude: raw.longitude,
       altitude: (raw as any).altitude,
     }),
-    address: ensureAddress((raw as any).address, raw.location_description ?? 'Main St'),
-    manufacturer: raw.manufacturer ?? 'FiberHome',
-    model: raw.model ?? 'DP-96',
+    address: ensureAddress((raw as any).address, raw.location_description ?? "Main St"),
+    manufacturer: raw.manufacturer ?? "FiberHome",
+    model: raw.model ?? "DP-96",
     totalCapacity,
     availableCapacity,
     usedCapacity,
@@ -540,9 +554,9 @@ const toGraphQLDistributionPoint = (raw?: DistributionPoint): Record<string, any
     incomingCables: (raw as any).incomingCables ?? 4,
     outgoingCables: (raw as any).outgoingCables ?? 8,
     totalCablesConnected: (raw as any).totalCablesConnected ?? 12,
-    splicePoints: ensureArray((raw as any).splicePoints, ['splice-001', 'splice-002']),
+    splicePoints: ensureArray((raw as any).splicePoints, ["splice-001", "splice-002"]),
     splicePointCount: (raw as any).splicePointCount ?? 2,
-    serviceAreaIds: ensureArray((raw as any).serviceAreaIds, ['sa-001']),
+    serviceAreaIds: ensureArray((raw as any).serviceAreaIds, ["sa-001"]),
     hasPower: (raw as any).hasPower ?? true,
     batteryBackup: (raw as any).batteryBackup ?? true,
     environmentalMonitoring: (raw as any).environmentalMonitoring ?? true,
@@ -553,10 +567,10 @@ const toGraphQLDistributionPoint = (raw?: DistributionPoint): Record<string, any
     fiberStrandCount: (raw as any).fiberStrandCount ?? 192,
     availableStrandCount: (raw as any).availableStrandCount ?? 100,
     servesCustomerCount: (raw as any).servesCustomerCount ?? 250,
-    accessType: raw.accessType ?? 'LOCKED',
+    accessType: raw.accessType ?? "LOCKED",
     requiresKey: (raw as any).requiresKey ?? true,
-    securityLevel: (raw as any).securityLevel ?? 'standard',
-    accessNotes: raw.accessNotes ?? 'Requires technician badge',
+    securityLevel: (raw as any).securityLevel ?? "standard",
+    accessNotes: raw.accessNotes ?? "Requires technician badge",
     ports:
       (raw as any).ports ??
       Array.from({ length: 4 }, (_, index) => ({
@@ -588,32 +602,37 @@ const toGraphQLServiceArea = (raw?: ServiceArea): Record<string, any> | null => 
   const usedCapacity = (raw as any).usedCapacity ?? Math.round(totalCapacity * 0.6);
   const distributionPointIds = ensureArray(
     (raw as any).distributionPointIds ?? raw.distribution_point_ids,
-    ['dp-001', 'dp-002'],
+    ["dp-001", "dp-002"],
   );
 
   return {
     id: raw.id,
     areaId: (raw as any).areaId ?? raw.area_code ?? raw.id,
     name: raw.name ?? raw.area_name ?? `Service Area ${raw.id}`,
-    description: raw.description ?? raw.notes ?? 'Fiber coverage area',
-    areaType: raw.area_type ?? 'RESIDENTIAL',
+    description: raw.description ?? raw.notes ?? "Fiber coverage area",
+    areaType: raw.area_type ?? "RESIDENTIAL",
     isActive: (raw as any).isActive ?? true,
     isServiceable: raw.is_serviceable ?? true,
-    boundaryGeojson: raw.coverage_geometry ?? '{"type":"Polygon","coordinates":[[0,0],[1,0],[1,1],[0,1],[0,0]]}',
+    boundaryGeojson:
+      raw.coverage_geometry ?? '{"type":"Polygon","coordinates":[[0,0],[1,0],[1,1],[0,1],[0,0]]}',
     areaSqkm: (raw as any).areaSqkm ?? 10,
-    city: (raw as any).city ?? 'Metropolis',
-    stateProvince: (raw as any).stateProvince ?? 'State',
-    postalCodes: ensureArray(raw.postal_codes ?? (raw as any).postalCodes, ['10001']),
+    city: (raw as any).city ?? "Metropolis",
+    stateProvince: (raw as any).stateProvince ?? "State",
+    postalCodes: ensureArray(raw.postal_codes ?? (raw as any).postalCodes, ["10001"]),
     streetCount: (raw as any).streetCount ?? 25,
     homesPassed,
     homesConnected,
     businessesPassed: (raw as any).businessesPassed ?? 50,
     businessesConnected: (raw as any).businessesConnected ?? 25,
     penetrationRatePercent:
-      (raw as any).penetrationRatePercent ?? raw.penetration_rate ?? calculatePercent(homesConnected, homesPassed),
+      (raw as any).penetrationRatePercent ??
+      raw.penetration_rate ??
+      calculatePercent(homesConnected, homesPassed),
     distributionPointIds,
     distributionPointCount:
-      (raw as any).distributionPointCount ?? raw.distribution_point_count ?? distributionPointIds.length,
+      (raw as any).distributionPointCount ??
+      raw.distribution_point_count ??
+      distributionPointIds.length,
     totalFiberKm: raw.total_fiber_km ?? 12.5,
     totalCapacity,
     usedCapacity,
@@ -621,16 +640,15 @@ const toGraphQLServiceArea = (raw?: ServiceArea): Record<string, any> | null => 
     capacityUtilizationPercent:
       (raw as any).capacityUtilizationPercent ?? calculatePercent(usedCapacity, totalCapacity),
     maxBandwidthGbps: (raw as any).maxBandwidthGbps ?? 10,
-    averageDistanceToDistributionMeters:
-      (raw as any).averageDistanceToDistributionMeters ?? 150,
+    averageDistanceToDistributionMeters: (raw as any).averageDistanceToDistributionMeters ?? 150,
     estimatedPopulation: (raw as any).estimatedPopulation ?? 10000,
     householdDensityPerSqkm: (raw as any).householdDensityPerSqkm ?? 800,
-    constructionStatus: raw.construction_status ?? 'COMPLETED',
+    constructionStatus: raw.construction_status ?? "COMPLETED",
     constructionCompletePercent: (raw as any).constructionCompletePercent ?? 100,
     targetCompletionDate: (raw as any).targetCompletionDate ?? toIsoString(),
-    plannedAt: (raw as any).plannedAt ?? '2023-01-01',
-    constructionStartedAt: (raw as any).constructionStartedAt ?? '2023-06-01',
-    activatedAt: (raw as any).activatedAt ?? '2024-02-01',
+    plannedAt: (raw as any).plannedAt ?? "2023-01-01",
+    constructionStartedAt: (raw as any).constructionStartedAt ?? "2023-06-01",
+    activatedAt: (raw as any).activatedAt ?? "2024-02-01",
     createdAt: raw.created_at ?? toIsoString(),
     updatedAt: raw.updated_at ?? toIsoString(),
   };
@@ -683,45 +701,47 @@ let healthMetrics: FiberHealthMetric[] = [];
 export function createMockFiberCable(overrides: Partial<FiberCable> = {}): FiberCable {
   const id = overrides.id || `cable-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const cableId = overrides.cableId ?? overrides.cable_id ?? id;
-  const cableCode = overrides.cableCode ?? overrides.cable_code ?? `FC-${id.split('-')[1]}`;
-  const name = overrides.name ?? `Fiber Cable ${id.split('-')[1]}`;
-  const description = overrides.description ?? 'Primary backbone connection';
-  const status = overrides.status ?? 'ACTIVE';
-  const fiberType = overrides.fiberType ?? overrides.fiber_type ?? 'SINGLE_MODE';
-  const installationType = overrides.installationType ?? overrides.installation_type ?? 'UNDERGROUND';
+  const cableCode = overrides.cableCode ?? overrides.cable_code ?? `FC-${id.split("-")[1]}`;
+  const name = overrides.name ?? `Fiber Cable ${id.split("-")[1]}`;
+  const description = overrides.description ?? "Primary backbone connection";
+  const status = overrides.status ?? "ACTIVE";
+  const fiberType = overrides.fiberType ?? overrides.fiber_type ?? "SINGLE_MODE";
+  const installationType =
+    overrides.installationType ?? overrides.installation_type ?? "UNDERGROUND";
   const totalStrands = overrides.total_strands ?? overrides.fiber_count ?? 24;
   const usedStrands =
     overrides.used_strands ?? overrides.utilized_fibers ?? Math.min(12, totalStrands);
   const availableStrands = overrides.available_strands ?? totalStrands - usedStrands;
   const lengthMeters = overrides.length_meters ?? 1500;
-  const startPointId = overrides.start_point_id ?? 'dp-start-001';
-  const endPointId = overrides.end_point_id ?? 'dp-end-001';
+  const startPointId = overrides.start_point_id ?? "dp-start-001";
+  const endPointId = overrides.end_point_id ?? "dp-end-001";
   const startDistributionPointId =
     overrides.startDistributionPointId ?? overrides.start_distribution_point_id ?? startPointId;
   const endDistributionPointId =
     overrides.endDistributionPointId ?? overrides.end_distribution_point_id ?? endPointId;
-  const routeDescription = overrides.route_description ?? 'Main street to distribution cabinet';
-  const installationDate = overrides.installation_date ?? '2024-01-15';
-  const lastInspectionDate = overrides.last_inspection_date ?? '2024-11-01';
-  const siteId = overrides.site_id ?? 'site-001';
-  const siteName = overrides.site_name ?? 'Downtown Site';
-  const healthStatus = overrides.health_status ?? 'GOOD';
+  const routeDescription = overrides.route_description ?? "Main street to distribution cabinet";
+  const installationDate = overrides.installation_date ?? "2024-01-15";
+  const lastInspectionDate = overrides.last_inspection_date ?? "2024-11-01";
+  const siteId = overrides.site_id ?? "site-001";
+  const siteName = overrides.site_name ?? "Downtown Site";
+  const healthStatus = overrides.health_status ?? "GOOD";
   const signalLossDb = overrides.signal_loss_db ?? 0.25;
   const createdAt = overrides.created_at ?? new Date().toISOString();
   const updatedAt = overrides.updated_at ?? new Date().toISOString();
   const capacityUtilization =
-    overrides.capacity_utilization_percent ?? Number(((usedStrands / totalStrands) * 100).toFixed(2));
+    overrides.capacity_utilization_percent ??
+    Number(((usedStrands / totalStrands) * 100).toFixed(2));
   const bandwidthCapacity = overrides.bandwidth_capacity_gbps ?? 10;
   const spliceCount = overrides.splice_count ?? 4;
   const totalLossDb = overrides.total_loss_db ?? 0.5;
   const avgAttenuation = overrides.average_attenuation_db_per_km ?? 0.25;
   const maxAttenuation = overrides.max_attenuation_db_per_km ?? 0.3;
   const isLeased = overrides.is_leased ?? false;
-  const manufacturer = overrides.manufacturer ?? 'Corning';
-  const model = overrides.model ?? 'SM-24';
-  const startPointName = overrides.start_point_name ?? 'Main Hub';
-  const endPointName = overrides.end_point_name ?? 'Distribution Node';
-  const splicePointIds = overrides.splice_point_ids ?? ['splice-001', 'splice-002'];
+  const manufacturer = overrides.manufacturer ?? "Corning";
+  const model = overrides.model ?? "SM-24";
+  const startPointName = overrides.start_point_name ?? "Main Hub";
+  const endPointName = overrides.end_point_name ?? "Distribution Node";
+  const splicePointIds = overrides.splice_point_ids ?? ["splice-001", "splice-002"];
 
   return {
     id,
@@ -821,51 +841,54 @@ export function createMockSplicePoint(overrides: Partial<SplicePoint> = {}): Spl
 
   return {
     id,
-    splice_code: `SP-${id.split('-')[1]}`,
-    cable_id: 'cable-001',
-    cable_code: 'FC-001',
-    distribution_point_id: 'dp-001',
-    splice_type: 'FUSION',
-    status: 'ACTIVE',
+    splice_code: `SP-${id.split("-")[1]}`,
+    cable_id: "cable-001",
+    cable_code: "FC-001",
+    distribution_point_id: "dp-001",
+    splice_type: "FUSION",
+    status: "ACTIVE",
     fiber_count: 12,
-    location_description: 'Junction box at Main St',
+    location_description: "Junction box at Main St",
     latitude: 40.7128,
-    longitude: -74.0060,
-    installation_date: '2024-02-01',
-    last_test_date: '2024-10-15',
-    test_results: 'Pass',
-    notes: 'All splices verified',
+    longitude: -74.006,
+    installation_date: "2024-02-01",
+    last_test_date: "2024-10-15",
+    test_results: "Pass",
+    notes: "All splices verified",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
   };
 }
 
-export function createMockDistributionPoint(overrides: Partial<DistributionPoint> = {}): DistributionPoint {
+export function createMockDistributionPoint(
+  overrides: Partial<DistributionPoint> = {},
+): DistributionPoint {
   const id = overrides.id || `dp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const totalCapacity = overrides.total_capacity || 96;
-  const utilizedCapacity = overrides.utilized_capacity !== undefined ? overrides.utilized_capacity : 48;
+  const utilizedCapacity =
+    overrides.utilized_capacity !== undefined ? overrides.utilized_capacity : 48;
 
   return {
     id,
-    point_code: `DP-${id.split('-')[1]}`,
-    pointCode: overrides.pointCode ?? `DP-${id.split('-')[1]}`,
-    name: overrides.name ?? `Distribution Point ${id.split('-')[1]}`,
-    point_type: 'CABINET',
-    status: 'ACTIVE',
+    point_code: `DP-${id.split("-")[1]}`,
+    pointCode: overrides.pointCode ?? `DP-${id.split("-")[1]}`,
+    name: overrides.name ?? `Distribution Point ${id.split("-")[1]}`,
+    point_type: "CABINET",
+    status: "ACTIVE",
     total_capacity: totalCapacity,
     utilized_capacity: utilizedCapacity,
     used_capacity: utilizedCapacity,
     available_capacity: totalCapacity - utilizedCapacity,
-    site_id: 'site-001',
-    siteId: overrides.siteId ?? overrides.site_id ?? 'site-001',
-    site_name: 'Downtown Site',
-    location_description: 'Main St & 5th Ave',
+    site_id: "site-001",
+    siteId: overrides.siteId ?? overrides.site_id ?? "site-001",
+    site_name: "Downtown Site",
+    location_description: "Main St & 5th Ave",
     latitude: 40.7589,
     longitude: -73.9851,
-    installation_date: '2023-12-01',
-    last_maintenance_date: '2024-10-01',
-    notes: 'Regular maintenance completed',
+    installation_date: "2023-12-01",
+    last_maintenance_date: "2024-10-01",
+    notes: "Regular maintenance completed",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -879,17 +902,17 @@ export function createMockServiceArea(overrides: Partial<ServiceArea> = {}): Ser
 
   return {
     id,
-    area_code: `SA-${id.split('-')[1]}`,
-    area_name: 'Downtown District',
-    area_type: 'RESIDENTIAL',
+    area_code: `SA-${id.split("-")[1]}`,
+    area_name: "Downtown District",
+    area_type: "RESIDENTIAL",
     is_serviceable: true,
-    construction_status: 'COMPLETED',
+    construction_status: "COMPLETED",
     total_homes_passed: totalHomes,
     connected_homes: connectedHomes,
     penetration_rate: (connectedHomes / totalHomes) * 100,
-    postal_codes: ['10001', '10002'],
+    postal_codes: ["10001", "10002"],
     coverage_geometry: '{"type":"Polygon","coordinates":[...]}',
-    notes: 'Fully deployed',
+    notes: "Fully deployed",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -903,27 +926,61 @@ export function createMockFiberDashboard(): FiberDashboard {
     fiberCables.length > 0
       ? fiberCables.map(toGraphQLFiberCable).filter(isDefined)
       : [
-          toGraphQLFiberCable(createMockFiberCable({ id: 'cable-001', utilized_fibers: 22, fiber_count: 24 })),
-          toGraphQLFiberCable(createMockFiberCable({ id: 'cable-002', utilized_fibers: 18, fiber_count: 24 })),
-          toGraphQLFiberCable(createMockFiberCable({ id: 'cable-003', utilized_fibers: 16, fiber_count: 24 })),
+          toGraphQLFiberCable(
+            createMockFiberCable({ id: "cable-001", utilized_fibers: 22, fiber_count: 24 }),
+          ),
+          toGraphQLFiberCable(
+            createMockFiberCable({ id: "cable-002", utilized_fibers: 18, fiber_count: 24 }),
+          ),
+          toGraphQLFiberCable(
+            createMockFiberCable({ id: "cable-003", utilized_fibers: 16, fiber_count: 24 }),
+          ),
         ].filter(isDefined);
 
   const distributionRecords =
     distributionPoints.length > 0
       ? distributionPoints.map(toGraphQLDistributionPoint).filter(isDefined)
       : [
-          toGraphQLDistributionPoint(createMockDistributionPoint({ id: 'dp-001', utilized_capacity: 88, total_capacity: 96 })),
-          toGraphQLDistributionPoint(createMockDistributionPoint({ id: 'dp-002', utilized_capacity: 72, total_capacity: 96 })),
-          toGraphQLDistributionPoint(createMockDistributionPoint({ id: 'dp-003', utilized_capacity: 92, total_capacity: 96 })),
+          toGraphQLDistributionPoint(
+            createMockDistributionPoint({
+              id: "dp-001",
+              utilized_capacity: 88,
+              total_capacity: 96,
+            }),
+          ),
+          toGraphQLDistributionPoint(
+            createMockDistributionPoint({
+              id: "dp-002",
+              utilized_capacity: 72,
+              total_capacity: 96,
+            }),
+          ),
+          toGraphQLDistributionPoint(
+            createMockDistributionPoint({
+              id: "dp-003",
+              utilized_capacity: 92,
+              total_capacity: 96,
+            }),
+          ),
         ].filter(isDefined);
 
   const serviceAreaRecords =
     serviceAreas.length > 0
       ? serviceAreas.map(toGraphQLServiceArea).filter(isDefined)
       : [
-          toGraphQLServiceArea(createMockServiceArea({ id: 'sa-001', connected_homes: 450, total_homes_passed: 500 })),
-          toGraphQLServiceArea(createMockServiceArea({ id: 'sa-002', connected_homes: 380, total_homes_passed: 500 })),
-          toGraphQLServiceArea(createMockServiceArea({ id: 'sa-003', is_serviceable: false, construction_status: 'PLANNED' })),
+          toGraphQLServiceArea(
+            createMockServiceArea({ id: "sa-001", connected_homes: 450, total_homes_passed: 500 }),
+          ),
+          toGraphQLServiceArea(
+            createMockServiceArea({ id: "sa-002", connected_homes: 380, total_homes_passed: 500 }),
+          ),
+          toGraphQLServiceArea(
+            createMockServiceArea({
+              id: "sa-003",
+              is_serviceable: false,
+              construction_status: "PLANNED",
+            }),
+          ),
         ].filter(isDefined);
 
   const toCableSummary = (entry: Record<string, any>): FiberDashboardCableSummary => ({
@@ -935,7 +992,9 @@ export function createMockFiberDashboard(): FiberDashboard {
     usedStrands: entry.usedStrands,
   });
 
-  const toDistributionSummary = (entry: Record<string, any>): FiberDashboardDistributionSummary => ({
+  const toDistributionSummary = (
+    entry: Record<string, any>,
+  ): FiberDashboardDistributionSummary => ({
     id: entry.id,
     name: entry.name,
     capacityUtilizationPercent: entry.capacityUtilizationPercent,
@@ -956,37 +1015,47 @@ export function createMockFiberDashboard(): FiberDashboard {
   const distributionSummaries = distributionRecords.map(toDistributionSummary);
   const serviceAreaSummaries = serviceAreaRecords.map(toServiceAreaSummary);
 
-  const cablesRequiringAttention: FiberDashboardAttention[] = cableRecords.slice(0, 3).map(entry => ({
-    id: entry.id,
-    cableId: entry.cableId,
-    cableName: entry.name,
-    healthStatus: entry.healthStatus ?? 'GOOD',
-    healthScore: entry.healthScore ?? 95,
-    requiresMaintenance: entry.capacityUtilizationPercent >= 85 || entry.healthStatus === 'POOR',
-  }));
+  const cablesRequiringAttention: FiberDashboardAttention[] = cableRecords
+    .slice(0, 3)
+    .map((entry) => ({
+      id: entry.id,
+      cableId: entry.cableId,
+      cableName: entry.name,
+      healthStatus: entry.healthStatus ?? "GOOD",
+      healthScore: entry.healthScore ?? 95,
+      requiresMaintenance: entry.capacityUtilizationPercent >= 85 || entry.healthStatus === "POOR",
+    }));
 
-  const distributionNearCapacity = distributionSummaries.filter(entry => entry.capacityUtilizationPercent >= 85);
+  const distributionNearCapacity = distributionSummaries.filter(
+    (entry) => entry.capacityUtilizationPercent >= 85,
+  );
   const serviceAreasNeedingExpansion = serviceAreaSummaries.filter(
-    entry => entry.penetrationRatePercent < 65 || entry.homesConnected < entry.homesPassed * 0.6,
+    (entry) => entry.penetrationRatePercent < 65 || entry.homesConnected < entry.homesPassed * 0.6,
   );
 
-  const recentTestResults: FiberDashboardTestResult[] = cableRecords.slice(0, 3).map((entry, index) => ({
-    testId: `test-${index + 1}`,
-    cableId: entry.cableId,
-    strandId: index + 1,
-    testedAt: toIsoString(),
-    isPassing: index % 2 === 0,
-    totalLossDb: entry.totalLossDb ?? 0.5,
-  }));
+  const recentTestResults: FiberDashboardTestResult[] = cableRecords
+    .slice(0, 3)
+    .map((entry, index) => ({
+      testId: `test-${index + 1}`,
+      cableId: entry.cableId,
+      strandId: index + 1,
+      testedAt: toIsoString(),
+      isPassing: index % 2 === 0,
+      totalLossDb: entry.totalLossDb ?? 0.5,
+    }));
 
-  const ensureSummaryFallback = <T,>(items: T[], fallback: T[]): T[] => (items.length ? items : fallback);
+  const ensureSummaryFallback = <T>(items: T[], fallback: T[]): T[] =>
+    items.length ? items : fallback;
 
   const buildTrend = (start: number, step: number) =>
     Array.from({ length: 6 }, (_, idx) => Number((start + idx * step).toFixed(2)));
 
   return {
     analytics,
-    topCablesByUtilization: ensureSummaryFallback(topCables, cableRecords.slice(0, 3).map(toCableSummary)),
+    topCablesByUtilization: ensureSummaryFallback(
+      topCables,
+      cableRecords.slice(0, 3).map(toCableSummary),
+    ),
     topDistributionPointsByCapacity: ensureSummaryFallback(
       distributionSummaries.slice(0, 2),
       distributionRecords.slice(0, 2).map(toDistributionSummary),
@@ -1060,9 +1129,9 @@ export function createMockNetworkAnalytics(): FiberNetworkAnalytics {
 export function createMockHealthMetrics(): FiberHealthMetric {
   return {
     id: `health-${Date.now()}`,
-    cable_id: 'cable-001',
-    cable_code: 'FC-001',
-    health_status: 'GOOD',
+    cable_id: "cable-001",
+    cable_code: "FC-001",
+    health_status: "GOOD",
     signal_loss_db: 0.25,
     reflectance_db: -45.0,
     test_wavelength: 1550,
@@ -1105,7 +1174,7 @@ export function resetFiberData() {
 
 export const graphqlFiberHandlers = [
   // Fiber Dashboard Query
-  graphql.query('FiberDashboard', ({ variables }) => {
+  graphql.query("FiberDashboard", ({ variables }) => {
     const dashboard = createMockFiberDashboard();
     return respondWithCamelCase({
       fiberDashboard: dashboard,
@@ -1113,8 +1182,16 @@ export const graphqlFiberHandlers = [
   }),
 
   // Fiber Cable List Query (with pagination)
-  graphql.query('FiberCableList', ({ variables }) => {
-    const { limit = 50, offset = 0, status, fiberType, installationType, siteId, search } = getVariables<{
+  graphql.query("FiberCableList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      status,
+      fiberType,
+      installationType,
+      siteId,
+      search,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       status?: FiberCableStatus;
@@ -1127,25 +1204,30 @@ export const graphqlFiberHandlers = [
     let filtered = [...fiberCables];
 
     if (status) {
-      filtered = filtered.filter(c => c.status === status);
+      filtered = filtered.filter((c) => c.status === status);
     }
     if (fiberType) {
-      filtered = filtered.filter(c => (c as any).fiberType === fiberType || c.fiber_type === fiberType);
+      filtered = filtered.filter(
+        (c) => (c as any).fiberType === fiberType || c.fiber_type === fiberType,
+      );
     }
     if (installationType) {
       filtered = filtered.filter(
-        c => (c as any).installationType === installationType || c.installation_type === installationType
+        (c) =>
+          (c as any).installationType === installationType ||
+          c.installation_type === installationType,
       );
     }
     if (siteId) {
-      filtered = filtered.filter(c => (c as any).siteId === siteId || c.site_id === siteId);
+      filtered = filtered.filter((c) => (c as any).siteId === siteId || c.site_id === siteId);
     }
     if (search) {
       const searchLower = search.toLowerCase();
-      filtered = filtered.filter(c =>
-        c.cable_code.toLowerCase().includes(searchLower) ||
-        (c.route_description?.toLowerCase().includes(searchLower) ?? false) ||
-        (c.name?.toLowerCase().includes(searchLower) ?? false)
+      filtered = filtered.filter(
+        (c) =>
+          c.cable_code.toLowerCase().includes(searchLower) ||
+          (c.route_description?.toLowerCase().includes(searchLower) ?? false) ||
+          (c.name?.toLowerCase().includes(searchLower) ?? false),
       );
     }
 
@@ -1166,9 +1248,9 @@ export const graphqlFiberHandlers = [
   }),
 
   // Fiber Cable Detail Query
-  graphql.query('FiberCableDetail', ({ variables }) => {
+  graphql.query("FiberCableDetail", ({ variables }) => {
     const { id } = getVariables<{ id?: string }>(variables);
-    const cable = fiberCables.find(c => c.id === id);
+    const cable = fiberCables.find((c) => c.id === id);
 
     return respondWithCamelCase({
       fiberCable: toGraphQLFiberCable(cable) || null,
@@ -1176,11 +1258,14 @@ export const graphqlFiberHandlers = [
   }),
 
   // Fiber Cables By Route Query
-  graphql.query('FiberCablesByRoute', ({ variables }) => {
-    const { startPointId, endPointId } = getVariables<{ startPointId?: string; endPointId?: string }>(variables);
+  graphql.query("FiberCablesByRoute", ({ variables }) => {
+    const { startPointId, endPointId } = getVariables<{
+      startPointId?: string;
+      endPointId?: string;
+    }>(variables);
     const cables = fiberCables
       .filter(
-        c => getCableStartPointId(c) === startPointId && getCableEndPointId(c) === endPointId
+        (c) => getCableStartPointId(c) === startPointId && getCableEndPointId(c) === endPointId,
       )
       .map(toGraphQLFiberCable)
       .filter(isDefined);
@@ -1191,10 +1276,10 @@ export const graphqlFiberHandlers = [
   }),
 
   // Fiber Cables By Distribution Point Query
-  graphql.query('FiberCablesByDistributionPoint', ({ variables }) => {
+  graphql.query("FiberCablesByDistributionPoint", ({ variables }) => {
     const { distributionPointId } = getVariables<{ distributionPointId?: string }>(variables);
     const cables = fiberCables
-      .filter(c => {
+      .filter((c) => {
         const startId = getCableStartPointId(c);
         const endId = getCableEndPointId(c);
         return startId === distributionPointId || endId === distributionPointId;
@@ -1208,24 +1293,27 @@ export const graphqlFiberHandlers = [
   }),
 
   // Fiber Health Metrics Query
-  graphql.query('FiberHealthMetrics', ({ variables }) => {
-    const { cableId, healthStatus } = getVariables<{ cableId?: string; healthStatus?: FiberHealthStatus }>(variables);
+  graphql.query("FiberHealthMetrics", ({ variables }) => {
+    const { cableId, healthStatus } = getVariables<{
+      cableId?: string;
+      healthStatus?: FiberHealthStatus;
+    }>(variables);
 
     let filtered = [...healthMetrics];
 
     if (cableId) {
-      filtered = filtered.filter(m => m.cable_id === cableId);
+      filtered = filtered.filter((m) => m.cable_id === cableId);
     }
     if (healthStatus) {
-      filtered = filtered.filter(m => m.health_status === healthStatus);
+      filtered = filtered.filter((m) => m.health_status === healthStatus);
     }
 
     if (cableId && filtered.length === 0) {
       filtered = [
         createMockHealthMetrics({
           cable_id: cableId,
-          cable_code: (cableId || '').toUpperCase(),
-          health_status: 'GOOD',
+          cable_code: (cableId || "").toUpperCase(),
+          health_status: "GOOD",
         }),
       ];
     }
@@ -1238,7 +1326,7 @@ export const graphqlFiberHandlers = [
   }),
 
   // Fiber Network Analytics Query
-  graphql.query('FiberNetworkAnalytics', ({ variables }) => {
+  graphql.query("FiberNetworkAnalytics", ({ variables }) => {
     const analytics = createMockNetworkAnalytics();
 
     return respondWithCamelCase({
@@ -1247,8 +1335,14 @@ export const graphqlFiberHandlers = [
   }),
 
   // Splice Point List Query (with pagination)
-  graphql.query('SplicePointList', ({ variables }) => {
-    const { limit = 50, offset = 0, status, cableId, distributionPointId } = getVariables<{
+  graphql.query("SplicePointList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      status,
+      cableId,
+      distributionPointId,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       status?: SpliceStatus;
@@ -1259,14 +1353,16 @@ export const graphqlFiberHandlers = [
     let filtered = [...splicePoints];
 
     if (status) {
-      filtered = filtered.filter(s => s.status === status);
+      filtered = filtered.filter((s) => s.status === status);
     }
     if (cableId) {
-      filtered = filtered.filter(s => (s as any).cableId === cableId || s.cable_id === cableId);
+      filtered = filtered.filter((s) => (s as any).cableId === cableId || s.cable_id === cableId);
     }
     if (distributionPointId) {
       filtered = filtered.filter(
-        s => (s as any).distributionPointId === distributionPointId || s.distribution_point_id === distributionPointId
+        (s) =>
+          (s as any).distributionPointId === distributionPointId ||
+          s.distribution_point_id === distributionPointId,
       );
     }
 
@@ -1286,9 +1382,9 @@ export const graphqlFiberHandlers = [
   }),
 
   // Splice Point Detail Query
-  graphql.query('SplicePointDetail', ({ variables }) => {
+  graphql.query("SplicePointDetail", ({ variables }) => {
     const { id } = getVariables<{ id?: string }>(variables);
-    const splice = splicePoints.find(s => s.id === id);
+    const splice = splicePoints.find((s) => s.id === id);
 
     return respondWithCamelCase({
       splicePoint: toGraphQLSplicePoint(splice) || null,
@@ -1296,10 +1392,10 @@ export const graphqlFiberHandlers = [
   }),
 
   // Splice Points By Cable Query
-  graphql.query('SplicePointsByCable', ({ variables }) => {
+  graphql.query("SplicePointsByCable", ({ variables }) => {
     const { cableId } = getVariables<{ cableId?: string }>(variables);
     const splices = splicePoints
-      .filter(s => (s as any).cableId === cableId || s.cable_id === cableId)
+      .filter((s) => (s as any).cableId === cableId || s.cable_id === cableId)
       .map(toGraphQLSplicePoint)
       .filter(isDefined);
 
@@ -1309,8 +1405,15 @@ export const graphqlFiberHandlers = [
   }),
 
   // Distribution Point List Query (with pagination)
-  graphql.query('DistributionPointList', ({ variables }) => {
-    const { limit = 50, offset = 0, pointType, status, siteId, nearCapacity } = getVariables<{
+  graphql.query("DistributionPointList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      pointType,
+      status,
+      siteId,
+      nearCapacity,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       pointType?: DistributionPointType;
@@ -1322,16 +1425,18 @@ export const graphqlFiberHandlers = [
     let filtered = [...distributionPoints];
 
     if (pointType) {
-      filtered = filtered.filter(d => (d as any).pointType === pointType || d.point_type === pointType);
+      filtered = filtered.filter(
+        (d) => (d as any).pointType === pointType || d.point_type === pointType,
+      );
     }
     if (status) {
-      filtered = filtered.filter(d => d.status === status);
+      filtered = filtered.filter((d) => d.status === status);
     }
     if (siteId) {
-      filtered = filtered.filter(d => (d as any).siteId === siteId || d.site_id === siteId);
+      filtered = filtered.filter((d) => (d as any).siteId === siteId || d.site_id === siteId);
     }
     if (nearCapacity) {
-      filtered = filtered.filter(d => {
+      filtered = filtered.filter((d) => {
         const utilized = d.used_capacity ?? d.utilized_capacity ?? 0;
         const total = d.total_capacity ?? 1;
         const utilizationPercent = (utilized / total) * 100;
@@ -1355,9 +1460,9 @@ export const graphqlFiberHandlers = [
   }),
 
   // Distribution Point Detail Query
-  graphql.query('DistributionPointDetail', ({ variables }) => {
+  graphql.query("DistributionPointDetail", ({ variables }) => {
     const { id } = getVariables<{ id?: string }>(variables);
-    const point = distributionPoints.find(d => d.id === id);
+    const point = distributionPoints.find((d) => d.id === id);
 
     return respondWithCamelCase({
       distributionPoint: toGraphQLDistributionPoint(point) || null,
@@ -1365,10 +1470,10 @@ export const graphqlFiberHandlers = [
   }),
 
   // Distribution Points By Site Query
-  graphql.query('DistributionPointsBySite', ({ variables }) => {
+  graphql.query("DistributionPointsBySite", ({ variables }) => {
     const { siteId } = getVariables<{ siteId?: string }>(variables);
     const points = distributionPoints
-      .filter(d => (d as any).siteId === siteId || d.site_id === siteId)
+      .filter((d) => (d as any).siteId === siteId || d.site_id === siteId)
       .map(toGraphQLDistributionPoint)
       .filter(isDefined);
 
@@ -1378,8 +1483,14 @@ export const graphqlFiberHandlers = [
   }),
 
   // Service Area List Query (with pagination)
-  graphql.query('ServiceAreaList', ({ variables }) => {
-    const { limit = 50, offset = 0, areaType, isServiceable, constructionStatus } = getVariables<{
+  graphql.query("ServiceAreaList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      areaType,
+      isServiceable,
+      constructionStatus,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       areaType?: ServiceAreaType;
@@ -1390,14 +1501,20 @@ export const graphqlFiberHandlers = [
     let filtered = [...serviceAreas];
 
     if (areaType) {
-      filtered = filtered.filter(a => (a as any).areaType === areaType || a.area_type === areaType);
+      filtered = filtered.filter(
+        (a) => (a as any).areaType === areaType || a.area_type === areaType,
+      );
     }
     if (isServiceable !== undefined) {
-      filtered = filtered.filter(a => (a.is_serviceable ?? (a as any).isServiceable) === isServiceable);
+      filtered = filtered.filter(
+        (a) => (a.is_serviceable ?? (a as any).isServiceable) === isServiceable,
+      );
     }
     if (constructionStatus) {
       filtered = filtered.filter(
-        a => (a as any).constructionStatus === constructionStatus || a.construction_status === constructionStatus
+        (a) =>
+          (a as any).constructionStatus === constructionStatus ||
+          a.construction_status === constructionStatus,
       );
     }
 
@@ -1417,9 +1534,9 @@ export const graphqlFiberHandlers = [
   }),
 
   // Service Area Detail Query
-  graphql.query('ServiceAreaDetail', ({ variables }) => {
+  graphql.query("ServiceAreaDetail", ({ variables }) => {
     const { id } = getVariables<{ id?: string }>(variables);
-    const area = serviceAreas.find(a => a.id === id);
+    const area = serviceAreas.find((a) => a.id === id);
 
     return respondWithCamelCase({
       serviceArea: toGraphQLServiceArea(area) || null,
@@ -1427,10 +1544,10 @@ export const graphqlFiberHandlers = [
   }),
 
   // Service Areas By Postal Code Query
-  graphql.query('ServiceAreasByPostalCode', ({ variables }) => {
+  graphql.query("ServiceAreasByPostalCode", ({ variables }) => {
     const { postalCode } = getVariables<{ postalCode?: string }>(variables);
     const areas = serviceAreas
-      .filter(a => (a.postal_codes ?? (a as any).postalCodes ?? []).includes(postalCode))
+      .filter((a) => (a.postal_codes ?? (a as any).postalCodes ?? []).includes(postalCode))
       .map(toGraphQLServiceArea)
       .filter(isDefined);
 

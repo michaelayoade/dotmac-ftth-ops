@@ -32,5 +32,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   { className, variant = "primary", size = "md", ...props },
   ref,
 ) {
-  return <button ref={ref} className={buttonVariants({ variant, size }) + (className ? ` ${className}` : "")} {...props} />;
+  return (
+    <button
+      ref={ref}
+      className={buttonVariants({ variant, size }) + (className ? ` ${className}` : "")}
+      {...props}
+    />
+  );
 });

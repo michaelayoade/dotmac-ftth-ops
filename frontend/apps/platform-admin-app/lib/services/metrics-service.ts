@@ -215,25 +215,25 @@ export async function getOperationsMetrics(): Promise<OperationsMetrics> {
   const r = raw as any;
   return {
     customers: {
-      total: r.customers?.total ?? r['totalCustomers'] ?? 0,
-      newThisMonth: r.customers?.newThisMonth ?? r['newCustomersThisMonth'] ?? 0,
-      growthRate: r.customers?.growthRate ?? r['customerGrowthRate'] ?? 0,
-      churnRisk: r.customers?.churnRisk ?? r['customersAtRisk'] ?? 0,
+      total: r.customers?.total ?? r["totalCustomers"] ?? 0,
+      newThisMonth: r.customers?.newThisMonth ?? r["newCustomersThisMonth"] ?? 0,
+      growthRate: r.customers?.growthRate ?? r["customerGrowthRate"] ?? 0,
+      churnRisk: r.customers?.churnRisk ?? r["customersAtRisk"] ?? 0,
     },
     communications: {
-      totalSent: r.communications?.totalSent ?? r['totalCommunications'] ?? 0,
-      sentToday: r.communications?.sentToday ?? r['communicationsSentToday'] ?? 0,
-      deliveryRate: r.communications?.deliveryRate ?? r['communicationDeliveryRate'] ?? 0,
+      totalSent: r.communications?.totalSent ?? r["totalCommunications"] ?? 0,
+      sentToday: r.communications?.sentToday ?? r["communicationsSentToday"] ?? 0,
+      deliveryRate: r.communications?.deliveryRate ?? r["communicationDeliveryRate"] ?? 0,
     },
     files: {
-      totalFiles: r.files?.totalFiles ?? r['totalFiles'] ?? 0,
-      totalSize: r.files?.totalSize ?? r['totalFileSize'] ?? 0,
-      uploadsToday: r.files?.uploadsToday ?? r['filesUploadedToday'] ?? 0,
-      downloadsToday: r.files?.downloadsToday ?? r['fileDownloadsToday'] ?? 0,
+      totalFiles: r.files?.totalFiles ?? r["totalFiles"] ?? 0,
+      totalSize: r.files?.totalSize ?? r["totalFileSize"] ?? 0,
+      uploadsToday: r.files?.uploadsToday ?? r["filesUploadedToday"] ?? 0,
+      downloadsToday: r.files?.downloadsToday ?? r["fileDownloadsToday"] ?? 0,
     },
     activity: {
-      eventsPerHour: r.activity?.eventsPerHour ?? r['eventsPerHour'] ?? 0,
-      activeUsers: r.activity?.activeUsers ?? r['activeUsers'] ?? 0,
+      eventsPerHour: r.activity?.eventsPerHour ?? r["eventsPerHour"] ?? 0,
+      activeUsers: r.activity?.activeUsers ?? r["activeUsers"] ?? 0,
     },
   };
 }

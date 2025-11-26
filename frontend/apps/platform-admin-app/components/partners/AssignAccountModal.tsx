@@ -68,7 +68,7 @@ export default function AssignAccountModal({ partnerId, onClose }: AssignAccount
       await assignMutation.mutateAsync(formData);
     } catch (error) {
       console.error("Failed to assign account:", error);
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert("Failed to assign account");
     }
   };

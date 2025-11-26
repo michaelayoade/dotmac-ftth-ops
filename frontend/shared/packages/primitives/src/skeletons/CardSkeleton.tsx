@@ -5,15 +5,15 @@
  * Supports various card layouts including metrics, info cards, and content cards.
  */
 
-import React from 'react';
-import { clsx } from 'clsx';
+import React from "react";
+import { clsx } from "clsx";
 
 export interface CardSkeletonProps {
   /**
    * Card variant
    * @default "default"
    */
-  variant?: 'default' | 'metric' | 'info' | 'detailed' | 'compact';
+  variant?: "default" | "metric" | "info" | "detailed" | "compact";
 
   /**
    * Show header section
@@ -53,16 +53,10 @@ export interface CardSkeletonProps {
 /**
  * Base skeleton box component
  */
-function SkeletonBox({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+function SkeletonBox({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={clsx(
-        'bg-gray-200 dark:bg-gray-700 rounded animate-pulse',
-        className
-      )}
+      className={clsx("bg-gray-200 dark:bg-gray-700 rounded animate-pulse", className)}
       {...props}
     />
   );
@@ -115,10 +109,7 @@ function InfoCardSkeleton({
         {Array.from({ length: contentLines }).map((_, i) => (
           <SkeletonBox
             key={i}
-            className={clsx(
-              'h-4',
-              i === contentLines - 1 ? 'w-3/4' : 'w-full'
-            )}
+            className={clsx("h-4", i === contentLines - 1 ? "w-3/4" : "w-full")}
           />
         ))}
       </div>
@@ -163,10 +154,7 @@ function DetailedCardSkeleton({
           {Array.from({ length: contentLines }).map((_, i) => (
             <SkeletonBox
               key={i}
-              className={clsx(
-                'h-4',
-                i === contentLines - 1 ? 'w-2/3' : 'w-full'
-              )}
+              className={clsx("h-4", i === contentLines - 1 ? "w-2/3" : "w-full")}
             />
           ))}
         </div>
@@ -227,12 +215,7 @@ function DefaultCardSkeleton({
   height?: string;
 }) {
   return (
-    <div
-      className={clsx(
-        'bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4',
-        height
-      )}
-    >
+    <div className={clsx("bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4", height)}>
       {showHeader && (
         <div className="space-y-2">
           <SkeletonBox className="h-6 w-40" />
@@ -244,10 +227,7 @@ function DefaultCardSkeleton({
         {Array.from({ length: contentLines }).map((_, i) => (
           <SkeletonBox
             key={i}
-            className={clsx(
-              'h-4',
-              i === contentLines - 1 ? 'w-3/4' : 'w-full'
-            )}
+            className={clsx("h-4", i === contentLines - 1 ? "w-3/4" : "w-full")}
           />
         ))}
       </div>
@@ -292,7 +272,7 @@ function DefaultCardSkeleton({
  * ```
  */
 export function CardSkeleton({
-  variant = 'default',
+  variant = "default",
   showHeader = true,
   showFooter = false,
   showIcon = false,
@@ -309,15 +289,12 @@ export function CardSkeleton({
 
   return (
     <div className={className}>
-      {variant === 'metric' && <MetricCardSkeleton showIcon={showIcon} />}
-      {variant === 'info' && <InfoCardSkeleton {...commonProps} />}
-      {variant === 'detailed' && <DetailedCardSkeleton {...commonProps} />}
-      {variant === 'compact' && <CompactCardSkeleton showIcon={showIcon} />}
-      {variant === 'default' && (
-        <DefaultCardSkeleton
-          {...commonProps}
-          {...(height !== undefined ? { height } : {})}
-        />
+      {variant === "metric" && <MetricCardSkeleton showIcon={showIcon} />}
+      {variant === "info" && <InfoCardSkeleton {...commonProps} />}
+      {variant === "detailed" && <DetailedCardSkeleton {...commonProps} />}
+      {variant === "compact" && <CompactCardSkeleton showIcon={showIcon} />}
+      {variant === "default" && (
+        <DefaultCardSkeleton {...commonProps} {...(height !== undefined ? { height } : {})} />
       )}
     </div>
   );
@@ -344,12 +321,12 @@ export interface CardGridSkeletonProps {
    * Card variant
    * @default "default"
    */
-  variant?: CardSkeletonProps['variant'];
+  variant?: CardSkeletonProps["variant"];
 
   /**
    * Props to pass to each card
    */
-  cardProps?: Omit<CardSkeletonProps, 'variant' | 'className'>;
+  cardProps?: Omit<CardSkeletonProps, "variant" | "className">;
 
   /**
    * Custom className for grid container
@@ -368,17 +345,14 @@ export interface CardGridSkeletonProps {
 export function CardGridSkeleton({
   count = 6,
   columns = 3,
-  variant = 'default',
+  variant = "default",
   cardProps,
   className,
 }: CardGridSkeletonProps) {
-  const gridCols =
-    columns === 2 ? 'grid-cols-2' :
-    columns === 3 ? 'grid-cols-3' :
-    'grid-cols-4';
+  const gridCols = columns === 2 ? "grid-cols-2" : columns === 3 ? "grid-cols-3" : "grid-cols-4";
 
   return (
-    <div className={clsx('grid gap-4', gridCols, className)}>
+    <div className={clsx("grid gap-4", gridCols, className)}>
       {Array.from({ length: count }).map((_, i) => (
         <CardSkeleton key={i} variant={variant} {...cardProps} />
       ))}
@@ -414,12 +388,7 @@ export const CardSkeletons = {
    * Grid of metric cards
    */
   MetricGrid: () => (
-    <CardGridSkeleton
-      count={4}
-      columns={4}
-      variant="metric"
-      cardProps={{ showIcon: true }}
-    />
+    <CardGridSkeleton count={4} columns={4} variant="metric" cardProps={{ showIcon: true }} />
   ),
 
   /**

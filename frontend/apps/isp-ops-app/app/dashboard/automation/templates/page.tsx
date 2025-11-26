@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   FileCode,
   Search,
@@ -54,13 +48,16 @@ function TemplatesPageContent() {
   const confirmDialog = useConfirmDialog();
 
   // Fetch templates
-  const { data: templates = [], isLoading, refetch } = useQuery<DeploymentTemplate[]>({
+  const {
+    data: templates = [],
+    isLoading,
+    refetch,
+  } = useQuery<DeploymentTemplate[]>({
     queryKey: ["deployment-templates"],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/deployment/templates`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/deployment/templates`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch templates");
       return response.json();
     },
@@ -74,7 +71,7 @@ function TemplatesPageContent() {
         {
           method: "DELETE",
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to delete template");
     },
@@ -98,8 +95,7 @@ function TemplatesPageContent() {
       template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesBackend =
-      backendFilter === "all" || template.backend === backendFilter;
+    const matchesBackend = backendFilter === "all" || template.backend === backendFilter;
 
     const matchesActive =
       activeFilter === "all" ||
@@ -112,10 +108,13 @@ function TemplatesPageContent() {
   const stats = {
     total: templates.length,
     active: templates.filter((t) => t.is_active).length,
-    byBackend: templates.reduce((acc, t) => {
-      acc[t.backend] = (acc[t.backend] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>),
+    byBackend: templates.reduce(
+      (acc, t) => {
+        acc[t.backend] = (acc[t.backend] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
   };
 
   const getBackendBadge = (backend: string) => {
@@ -124,7 +123,10 @@ function TemplatesPageContent() {
       KUBERNETES: { label: "Kubernetes", color: "bg-blue-100 text-blue-800" },
       DOCKER_COMPOSE: { label: "Docker", color: "bg-cyan-100 text-cyan-800" },
     };
-    const config = badges[backend as keyof typeof badges] || { label: backend, color: "bg-gray-100 text-gray-800" };
+    const config = badges[backend as keyof typeof badges] || {
+      label: backend,
+      color: "bg-gray-100 text-gray-800",
+    };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
@@ -261,11 +263,23 @@ function TemplatesPageContent() {
                   <FileCode className="h-8 w-8 text-primary" />
                   <div className="flex flex-col gap-1 items-end">
                     {getBackendBadge(template.backend)}
-                    <Badge className={template.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                    <Badge
+                      className={
+                        template.is_active
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }
+                    >
                       {template.is_active ? (
-                        <><CheckCircle className="h-3 w-3 mr-1" />Active</>
+                        <>
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Active
+                        </>
                       ) : (
-                        <><XCircle className="h-3 w-3 mr-1" />Inactive</>
+                        <>
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Inactive
+                        </>
                       )}
                     </Badge>
                   </div>

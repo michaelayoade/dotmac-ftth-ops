@@ -18,104 +18,107 @@ export default function VirtualizedSubscribersPage() {
 
   const subscribers = subscribersData?.data ?? [];
 
-  const columns = useMemo(() => [
-    {
-      key: "subscriber_id",
-      label: "Subscriber ID",
-      width: 200,
-      render: (row: RADIUSSubscriber) => (
-        <span className="font-mono text-sm">{row.subscriber_id}</span>
-      ),
-    },
-    {
-      key: "username",
-      label: "Username",
-      width: 250,
-      render: (row: RADIUSSubscriber) => (
-        <div>
-          <div className="font-medium">{row.username || "—"}</div>
-          <div className="text-sm text-muted-foreground">ID: {row.id}</div>
-        </div>
-      ),
-    },
-    {
-      key: "enabled",
-      label: "Status",
-      width: 120,
-      render: (row: RADIUSSubscriber) => (
-        <Badge variant={row.enabled ? "default" : "destructive"}>
-          {row.enabled ? "Enabled" : "Disabled"}
-        </Badge>
-      ),
-    },
-    {
-      key: "connection",
-      label: "Connection",
-      width: 100,
-      render: (row: RADIUSSubscriber) => {
-        const isEnabled = row.enabled;
-        return (
-          <div className="flex items-center gap-2">
-            {isEnabled ? (
-              <Wifi className="h-4 w-4 text-green-500" />
-            ) : (
-              <Wifi className="h-4 w-4 text-gray-400" />
-            )}
-            <span className="text-sm">{isEnabled ? "Active" : "Inactive"}</span>
+  const columns = useMemo(
+    () => [
+      {
+        key: "subscriber_id",
+        label: "Subscriber ID",
+        width: 200,
+        render: (row: RADIUSSubscriber) => (
+          <span className="font-mono text-sm">{row.subscriber_id}</span>
+        ),
+      },
+      {
+        key: "username",
+        label: "Username",
+        width: 250,
+        render: (row: RADIUSSubscriber) => (
+          <div>
+            <div className="font-medium">{row.username || "—"}</div>
+            <div className="text-sm text-muted-foreground">ID: {row.id}</div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      key: "bandwidth_profile_id",
-      label: "Bandwidth Profile",
-      width: 150,
-      render: (row: RADIUSSubscriber) => row.bandwidth_profile_id || "—",
-    },
-    {
-      key: "framed_ipv4_address",
-      label: "IPv4 Address",
-      width: 150,
-      render: (row: RADIUSSubscriber) => (
-        <span className="font-mono text-sm">{row.framed_ipv4_address || "Dynamic"}</span>
-      ),
-    },
-    {
-      key: "created_at",
-      label: "Created",
-      width: 180,
-      render: (row: RADIUSSubscriber) => {
-        if (!row.created_at) return <span className="text-muted-foreground">—</span>;
-        try {
+      {
+        key: "enabled",
+        label: "Status",
+        width: 120,
+        render: (row: RADIUSSubscriber) => (
+          <Badge variant={row.enabled ? "default" : "destructive"}>
+            {row.enabled ? "Enabled" : "Disabled"}
+          </Badge>
+        ),
+      },
+      {
+        key: "connection",
+        label: "Connection",
+        width: 100,
+        render: (row: RADIUSSubscriber) => {
+          const isEnabled = row.enabled;
           return (
-            <span className="text-sm">
-              {formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}
-            </span>
+            <div className="flex items-center gap-2">
+              {isEnabled ? (
+                <Wifi className="h-4 w-4 text-green-500" />
+              ) : (
+                <Wifi className="h-4 w-4 text-gray-400" />
+              )}
+              <span className="text-sm">{isEnabled ? "Active" : "Inactive"}</span>
+            </div>
           );
-        } catch {
-          return <span className="text-muted-foreground">—</span>;
-        }
+        },
       },
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      width: 150,
-      render: (row: RADIUSSubscriber) => (
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
-        </div>
-      ),
-    },
-  ], []);
+      {
+        key: "bandwidth_profile_id",
+        label: "Bandwidth Profile",
+        width: 150,
+        render: (row: RADIUSSubscriber) => row.bandwidth_profile_id || "—",
+      },
+      {
+        key: "framed_ipv4_address",
+        label: "IPv4 Address",
+        width: 150,
+        render: (row: RADIUSSubscriber) => (
+          <span className="font-mono text-sm">{row.framed_ipv4_address || "Dynamic"}</span>
+        ),
+      },
+      {
+        key: "created_at",
+        label: "Created",
+        width: 180,
+        render: (row: RADIUSSubscriber) => {
+          if (!row.created_at) return <span className="text-muted-foreground">—</span>;
+          try {
+            return (
+              <span className="text-sm">
+                {formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}
+              </span>
+            );
+          } catch {
+            return <span className="text-muted-foreground">—</span>;
+          }
+        },
+      },
+      {
+        key: "actions",
+        label: "Actions",
+        width: 150,
+        render: (row: RADIUSSubscriber) => (
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="container mx-auto p-6 space-y-6">

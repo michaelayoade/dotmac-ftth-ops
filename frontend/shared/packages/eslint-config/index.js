@@ -68,11 +68,13 @@ module.exports = {
       },
       {
         selector: "AssignmentExpression[left.property.name='innerHTML']",
-        message: "innerHTML assignments can lead to XSS. Use textContent or a sanitization library.",
+        message:
+          "innerHTML assignments can lead to XSS. Use textContent or a sanitization library.",
       },
       {
         selector: "AssignmentExpression[left.property.name='outerHTML']",
-        message: "outerHTML assignments can lead to XSS. Use textContent or a sanitization library.",
+        message:
+          "outerHTML assignments can lead to XSS. Use textContent or a sanitization library.",
       },
     ],
 

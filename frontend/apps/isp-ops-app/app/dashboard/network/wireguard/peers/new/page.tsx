@@ -22,13 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { ArrowLeft, Loader2, Save, AlertCircle } from "lucide-react";
 import { useToast } from "@dotmac/ui";
@@ -58,47 +52,51 @@ export default function CreatePeerPage() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData['server_id']) {
-      newErrors['server_id'] = "Server is required";
+    if (!formData["server_id"]) {
+      newErrors["server_id"] = "Server is required";
     }
 
-    if (!formData['peer_name'] || formData['peer_name'].trim().length === 0) {
-      newErrors['peer_name'] = "Peer name is required";
-    } else if (formData['peer_name'].length > 100) {
-      newErrors['peer_name'] = "Peer name must be 100 characters or less";
+    if (!formData["peer_name"] || formData["peer_name"].trim().length === 0) {
+      newErrors["peer_name"] = "Peer name is required";
+    } else if (formData["peer_name"].length > 100) {
+      newErrors["peer_name"] = "Peer name must be 100 characters or less";
     }
 
-    if (hasCustomerInfo && !formData['customer_id']) {
-      newErrors['customer_id'] = "Customer ID is required when customer info is enabled";
+    if (hasCustomerInfo && !formData["customer_id"]) {
+      newErrors["customer_id"] = "Customer ID is required when customer info is enabled";
     }
 
-    if (formData['allowed_ips']) {
+    if (formData["allowed_ips"]) {
       // Basic validation for IP ranges
       const ips =
-        typeof formData['allowed_ips'] === "string"
-          ? formData['allowed_ips'].split(",").map((ip: string) => ip.trim())
-          : formData['allowed_ips'];
+        typeof formData["allowed_ips"] === "string"
+          ? formData["allowed_ips"].split(",").map((ip: string) => ip.trim())
+          : formData["allowed_ips"];
       for (const ip of ips) {
         if (!ip) continue;
         // Check if it's a valid CIDR notation (basic check)
         if (!/^[\d\.:a-fA-F]+\/\d+$/.test(ip)) {
-          newErrors['allowed_ips'] = `Invalid IP range: ${ip}`;
+          newErrors["allowed_ips"] = `Invalid IP range: ${ip}`;
           break;
         }
       }
     }
 
-    if (formData['persistent_keepalive'] !== undefined && formData['persistent_keepalive'] !== null) {
-      if (formData['persistent_keepalive'] < 0 || formData['persistent_keepalive'] > 3600) {
-        newErrors['persistent_keepalive'] = "Persistent keepalive must be between 0 and 3600 seconds";
+    if (
+      formData["persistent_keepalive"] !== undefined &&
+      formData["persistent_keepalive"] !== null
+    ) {
+      if (formData["persistent_keepalive"] < 0 || formData["persistent_keepalive"] > 3600) {
+        newErrors["persistent_keepalive"] =
+          "Persistent keepalive must be between 0 and 3600 seconds";
       }
     }
 
-    if (formData['expiration_date']) {
-      const expirationDate = new Date(formData['expiration_date']);
+    if (formData["expiration_date"]) {
+      const expirationDate = new Date(formData["expiration_date"]);
       const now = new Date();
       if (expirationDate < now) {
-        newErrors['expiration_date'] = "Expiration date must be in the future";
+        newErrors["expiration_date"] = "Expiration date must be in the future";
       }
     }
 
@@ -119,15 +117,20 @@ export default function CreatePeerPage() {
     }
 
     // Prepare request data
-    const peerName = (formData['peer_name'] || formData['name'] || "").trim();
-    const allowedIps = formData['allowed_ips'];
-    const allowedIpsStr = typeof allowedIps === 'string' ? allowedIps.trim() : (Array.isArray(allowedIps) ? allowedIps[0] : "0.0.0.0/0, ::/0");
+    const peerName = (formData["peer_name"] || formData["name"] || "").trim();
+    const allowedIps = formData["allowed_ips"];
+    const allowedIpsStr =
+      typeof allowedIps === "string"
+        ? allowedIps.trim()
+        : Array.isArray(allowedIps)
+          ? allowedIps[0]
+          : "0.0.0.0/0, ::/0";
     const requestData: CreateWireGuardPeerRequest = {
-      server_id: formData['server_id'],
+      server_id: formData["server_id"],
       name: peerName || "WireGuard Peer",
       allowed_ips: allowedIpsStr || "0.0.0.0/0, ::/0",
       persistent_keepalive:
-        formData['persistent_keepalive'] !== undefined ? formData['persistent_keepalive'] : 25,
+        formData["persistent_keepalive"] !== undefined ? formData["persistent_keepalive"] : 25,
     };
 
     if (peerName) {
@@ -135,35 +138,35 @@ export default function CreatePeerPage() {
     }
 
     if (hasCustomerInfo) {
-      const customerId = formData['customer_id']?.trim();
+      const customerId = formData["customer_id"]?.trim();
       if (customerId) {
         requestData.customer_id = customerId;
       }
     }
 
-    if (formData['notes']) {
-      const trimmedNotes = formData['notes'].trim();
+    if (formData["notes"]) {
+      const trimmedNotes = formData["notes"].trim();
       if (trimmedNotes) {
         requestData.notes = trimmedNotes;
       }
     }
 
-    if (formData['expiration_date']) {
-      requestData.expiration_date = formData['expiration_date'];
+    if (formData["expiration_date"]) {
+      requestData.expiration_date = formData["expiration_date"];
     }
 
     createPeer.mutate(requestData, {
       onSuccess: (data) => {
         toast({
           title: "Peer Created",
-          description: `Peer "${data['peer_name']}" has been created successfully`,
+          description: `Peer "${data["peer_name"]}" has been created successfully`,
         });
-        router.push(`/dashboard/network/wireguard/peers/${data['id']}`);
+        router.push(`/dashboard/network/wireguard/peers/${data["id"]}`);
       },
       onError: (error: any) => {
         toast({
           title: "Error Creating Peer",
-          description: error['response']?.['data']?.detail || "Failed to create peer",
+          description: error["response"]?.["data"]?.detail || "Failed to create peer",
           variant: "destructive",
         });
       },
@@ -238,7 +241,7 @@ export default function CreatePeerPage() {
                 WireGuard Server <span className="text-red-500">*</span>
               </Label>
               <Select
-                value={formData['server_id']}
+                value={formData["server_id"]}
                 onValueChange={(value) => handleChange("server_id", value)}
               >
                 <SelectTrigger id="server_id">
@@ -246,13 +249,13 @@ export default function CreatePeerPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {servers?.map((server) => (
-                    <SelectItem key={server['id']} value={server['id']}>
-                      {server['name']} ({server['public_endpoint']})
+                    <SelectItem key={server["id"]} value={server["id"]}>
+                      {server["name"]} ({server["public_endpoint"]})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors['server_id'] && <p className="text-sm text-red-500">{errors['server_id']}</p>}
+              {errors["server_id"] && <p className="text-sm text-red-500">{errors["server_id"]}</p>}
             </div>
 
             {/* Peer Name */}
@@ -262,13 +265,13 @@ export default function CreatePeerPage() {
               </Label>
               <Input
                 id="peer_name"
-                value={formData['peer_name']}
+                value={formData["peer_name"]}
                 onChange={(e) => handleChange("peer_name", e.target.value)}
                 placeholder="e.g., john-laptop, office-router"
                 maxLength={100}
               />
               <p className="text-sm text-muted-foreground">Friendly name to identify this peer</p>
-              {errors['peer_name'] && <p className="text-sm text-red-500">{errors['peer_name']}</p>}
+              {errors["peer_name"] && <p className="text-sm text-red-500">{errors["peer_name"]}</p>}
             </div>
 
             {/* Customer Information Toggle */}
@@ -293,14 +296,16 @@ export default function CreatePeerPage() {
                 </Label>
                 <Input
                   id="customer_id"
-                  value={formData['customer_id'] || ""}
+                  value={formData["customer_id"] || ""}
                   onChange={(e) => handleChange("customer_id", e.target.value)}
                   placeholder="Enter customer ID"
                 />
                 <p className="text-sm text-muted-foreground">
                   Link this peer to a customer account
                 </p>
-                {errors['customer_id'] && <p className="text-sm text-red-500">{errors['customer_id']}</p>}
+                {errors["customer_id"] && (
+                  <p className="text-sm text-red-500">{errors["customer_id"]}</p>
+                )}
               </div>
             )}
 
@@ -309,14 +314,16 @@ export default function CreatePeerPage() {
               <Label htmlFor="allowed_ips">Allowed IPs</Label>
               <Input
                 id="allowed_ips"
-                value={formData['allowed_ips']}
+                value={formData["allowed_ips"]}
                 onChange={(e) => handleChange("allowed_ips", e.target.value)}
                 placeholder="0.0.0.0/0, ::/0"
               />
               <p className="text-sm text-muted-foreground">
                 Comma-separated list of IP ranges this peer can route (default: all traffic)
               </p>
-              {errors['allowed_ips'] && <p className="text-sm text-red-500">{errors['allowed_ips']}</p>}
+              {errors["allowed_ips"] && (
+                <p className="text-sm text-red-500">{errors["allowed_ips"]}</p>
+              )}
             </div>
 
             {/* Persistent Keepalive */}
@@ -327,14 +334,14 @@ export default function CreatePeerPage() {
                 type="number"
                 min={0}
                 max={3600}
-                value={formData['persistent_keepalive'] || 25}
+                value={formData["persistent_keepalive"] || 25}
                 onChange={(e) => handleChange("persistent_keepalive", parseInt(e.target.value, 10))}
               />
               <p className="text-sm text-muted-foreground">
                 How often to send keepalive packets (0 = disabled, recommended: 25)
               </p>
-              {errors['persistent_keepalive'] && (
-                <p className="text-sm text-red-500">{errors['persistent_keepalive']}</p>
+              {errors["persistent_keepalive"] && (
+                <p className="text-sm text-red-500">{errors["persistent_keepalive"]}</p>
               )}
             </div>
 
@@ -344,14 +351,14 @@ export default function CreatePeerPage() {
               <Input
                 id="expiration_date"
                 type="datetime-local"
-                value={formData['expiration_date'] || ""}
+                value={formData["expiration_date"] || ""}
                 onChange={(e) => handleChange("expiration_date", e.target.value)}
               />
               <p className="text-sm text-muted-foreground">
                 When this peer&apos;s access should expire (leave blank for no expiration)
               </p>
-              {errors['expiration_date'] && (
-                <p className="text-sm text-red-500">{errors['expiration_date']}</p>
+              {errors["expiration_date"] && (
+                <p className="text-sm text-red-500">{errors["expiration_date"]}</p>
               )}
             </div>
 
@@ -360,7 +367,7 @@ export default function CreatePeerPage() {
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
-                value={formData['notes'] || ""}
+                value={formData["notes"] || ""}
                 onChange={(e) => handleChange("notes", e.target.value)}
                 placeholder="Additional information about this peer..."
                 rows={4}

@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bot, Send, X, Minimize2, Maximize2, ThumbsUp, ThumbsDown, AlertCircle } from "lucide-react";
+import {
+  Bot,
+  Send,
+  X,
+  Minimize2,
+  Maximize2,
+  ThumbsUp,
+  ThumbsDown,
+  AlertCircle,
+} from "lucide-react";
 import { Card } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
@@ -201,9 +210,7 @@ export function AIChatWidget({
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
+                <p className="text-xs opacity-70 mt-1">{message.timestamp.toLocaleTimeString()}</p>
               </div>
             </div>
           ))}

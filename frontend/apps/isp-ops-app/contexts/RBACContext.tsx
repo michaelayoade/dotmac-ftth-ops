@@ -369,7 +369,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         if (p.name === "*") return true;
 
         // Category and action match (convert enum to string for comparison)
-        if (String(p.category) === category && (!action || String(p.action) === action)) return true;
+        if (String(p.category) === category && (!action || String(p.action) === action))
+          return true;
 
         return false;
       });
@@ -553,10 +554,7 @@ export function useRole(role: string): boolean {
 /**
  * Hook for category access
  */
-export function useCategoryAccess(
-  category: string,
-  action?: string,
-): boolean {
+export function useCategoryAccess(category: string, action?: string): boolean {
   const { canAccess } = useRBAC();
   return canAccess(category, action);
 }

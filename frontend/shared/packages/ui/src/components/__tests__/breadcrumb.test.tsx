@@ -70,7 +70,7 @@ describe("Breadcrumb", () => {
             { label: "Products", href: "/products" },
             { label: "Category" },
           ]}
-        />
+        />,
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe("Breadcrumb", () => {
             { label: "Home", href: "/" },
             { label: "About", href: "/about" },
           ]}
-        />
+        />,
       );
 
       const homeLink = screen.getByText("Home");
@@ -94,14 +94,7 @@ describe("Breadcrumb", () => {
     });
 
     it("renders last item as text without link", () => {
-      render(
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Current" },
-          ]}
-        />
-      );
+      render(<Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Current" }]} />);
 
       const lastItem = screen.getByText("Current");
       expect(lastItem.tagName).toBe("SPAN");
@@ -115,7 +108,7 @@ describe("Breadcrumb", () => {
             { label: "Products", href: "/products" },
             { label: "Item" },
           ]}
-        />
+        />,
       );
 
       // ChevronRight icons used as separators
@@ -124,14 +117,7 @@ describe("Breadcrumb", () => {
     });
 
     it("does not render separator before first item", () => {
-      render(
-        <Breadcrumb
-          items={[
-            { label: "First", href: "/" },
-            { label: "Second" },
-          ]}
-        />
-      );
+      render(<Breadcrumb items={[{ label: "First", href: "/" }, { label: "Second" }]} />);
 
       const firstItem = screen.getByText("First").closest("li");
       const separator = firstItem?.querySelector('[aria-hidden="true"]');
@@ -141,14 +127,7 @@ describe("Breadcrumb", () => {
 
   describe("Current Page", () => {
     it("marks last item with aria-current='page'", () => {
-      render(
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Current Page" },
-          ]}
-        />
-      );
+      render(<Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Current Page" }]} />);
 
       const currentPage = screen.getByText("Current Page");
       expect(currentPage).toHaveAttribute("aria-current", "page");
@@ -162,7 +141,7 @@ describe("Breadcrumb", () => {
             { label: "Products", href: "/products" },
             { label: "Current" },
           ]}
-        />
+        />,
       );
 
       const homeLink = screen.getByText("Home");
@@ -182,7 +161,7 @@ describe("Breadcrumb", () => {
             { label: "Documentation", href: "/docs" },
             { label: "Getting Started" },
           ]}
-        />
+        />,
       );
 
       expect(screen.getByText("Home")).toHaveAttribute("href", "/");
@@ -199,7 +178,7 @@ describe("Breadcrumb", () => {
             { label: "Computers", href: "/electronics/computers" },
             { label: "Laptops" },
           ]}
-        />
+        />,
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
@@ -216,7 +195,7 @@ describe("Breadcrumb", () => {
             { label: "Users", href: "/dashboard/users" },
             { label: "John Doe" },
           ]}
-        />
+        />,
       );
 
       expect(screen.getByText("Dashboard")).toHaveAttribute("href", "/dashboard");
@@ -234,7 +213,7 @@ describe("Breadcrumb", () => {
             { label: "src", href: "/projects/myapp/src" },
             { label: "index.ts" },
           ]}
-        />
+        />,
       );
 
       expect(screen.getByText("Root")).toBeInTheDocument();
@@ -244,14 +223,7 @@ describe("Breadcrumb", () => {
 
   describe("Styling", () => {
     it("applies text styles to links", () => {
-      render(
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Current" },
-          ]}
-        />
-      );
+      render(<Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Current" }]} />);
 
       const link = screen.getByRole("link", { name: "Home" });
       // Check that the link has styling classes
@@ -259,14 +231,7 @@ describe("Breadcrumb", () => {
     });
 
     it("applies muted style to current page", () => {
-      render(
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Current" },
-          ]}
-        />
-      );
+      render(<Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Current" }]} />);
 
       const current = screen.getByText("Current");
       expect(current).toHaveClass("text-muted-foreground");
@@ -284,12 +249,8 @@ describe("Breadcrumb", () => {
     it("handles item without href as text", () => {
       render(
         <Breadcrumb
-          items={[
-            { label: "First", href: "/" },
-            { label: "Second" },
-            { label: "Third" },
-          ]}
-        />
+          items={[{ label: "First", href: "/" }, { label: "Second" }, { label: "Third" }]}
+        />,
       );
 
       // Second item has no href but is not last, so rendered as text
@@ -313,11 +274,8 @@ describe("Breadcrumb", () => {
     it("handles special characters in labels", () => {
       render(
         <Breadcrumb
-          items={[
-            { label: "Home & Garden", href: "/" },
-            { label: "Tools & Equipment" },
-          ]}
-        />
+          items={[{ label: "Home & Garden", href: "/" }, { label: "Tools & Equipment" }]}
+        />,
       );
 
       expect(screen.getByText("Home & Garden")).toBeInTheDocument();
@@ -334,12 +292,7 @@ describe("Breadcrumb", () => {
 
     it("uses ordered list for items", () => {
       const { container } = render(
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "About" },
-          ]}
-        />
+        <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "About" }]} />,
       );
 
       const ol = container.querySelector("ol");
@@ -348,12 +301,7 @@ describe("Breadcrumb", () => {
 
     it("marks separators as decorative", () => {
       const { container } = render(
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "About" },
-          ]}
-        />
+        <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "About" }]} />,
       );
 
       const separator = container.querySelector('[aria-hidden="true"]');
@@ -361,14 +309,7 @@ describe("Breadcrumb", () => {
     });
 
     it("clearly identifies current page", () => {
-      render(
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Current Page" },
-          ]}
-        />
-      );
+      render(<Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Current Page" }]} />);
 
       const current = screen.getByText("Current Page");
       expect(current).toHaveAttribute("aria-current", "page");

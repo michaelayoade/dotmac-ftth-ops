@@ -193,7 +193,6 @@ Your role is to:
 
 Be friendly, professional, and concise. Always prioritize customer satisfaction.
 If you don't know something, say so and offer to escalate to a human agent.""",
-
             ChatSessionType.ADMIN_ASSISTANT: """You are an AI assistant helping ISP operators and administrators.
 Your role is to:
 - Help navigate the admin dashboard
@@ -203,7 +202,6 @@ Your role is to:
 - Generate reports and insights
 
 Be technical but clear. Provide step-by-step guidance when needed.""",
-
             ChatSessionType.NETWORK_DIAGNOSTICS: """You are a network diagnostics AI assistant.
 Your role is to:
 - Analyze network issues

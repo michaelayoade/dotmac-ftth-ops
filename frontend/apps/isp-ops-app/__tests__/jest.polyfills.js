@@ -8,13 +8,13 @@
  * any modules are loaded.
  */
 
-const { TextDecoder, TextEncoder } = require('util');
+const { TextDecoder, TextEncoder } = require("util");
 
 // Polyfill TextEncoder/TextDecoder for MSW
 Object.assign(global, { TextDecoder, TextEncoder });
 
 // Polyfill BroadcastChannel for MSW
-if (typeof global.BroadcastChannel === 'undefined') {
+if (typeof global.BroadcastChannel === "undefined") {
   global.BroadcastChannel = class BroadcastChannel {
     constructor(name) {
       this.name = name;
@@ -27,19 +27,19 @@ if (typeof global.BroadcastChannel === 'undefined') {
 }
 
 // Polyfill fetch and related APIs for MSW (in case they're not provided by JSDOM)
-if (typeof global.fetch === 'undefined') {
+if (typeof global.fetch === "undefined") {
   global.fetch = jest.fn();
 }
 
-if (typeof global.Request === 'undefined') {
+if (typeof global.Request === "undefined") {
   global.Request = class Request {};
 }
 
-if (typeof global.Response === 'undefined') {
+if (typeof global.Response === "undefined") {
   global.Response = class Response {};
 }
 
-if (typeof global.Headers === 'undefined') {
+if (typeof global.Headers === "undefined") {
   global.Headers = class Headers {
     constructor() {
       this.map = new Map();

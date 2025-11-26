@@ -71,7 +71,7 @@ function ResetPasswordForm() {
         setLoading(false);
       }
     },
-    [token]
+    [token],
   );
 
   if (!token) {
@@ -110,9 +110,7 @@ function ResetPasswordForm() {
               <span className="text-3xl">✅</span>
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Password Reset!</h1>
-            <p className="text-muted-foreground">
-              Your password has been successfully reset.
-            </p>
+            <p className="text-muted-foreground">Your password has been successfully reset.</p>
           </div>
 
           <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-8 space-y-6">

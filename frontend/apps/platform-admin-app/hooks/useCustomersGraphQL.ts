@@ -34,8 +34,9 @@ import {
 import { CustomerStatusEnum } from "@shared/packages/graphql/generated";
 import type { CustomerListQuery } from "@shared/packages/graphql/generated/graphql";
 
-type CustomerListItem =
-  NonNullable<NonNullable<CustomerListQuery["customers"]>["customers"]>[number];
+type CustomerListItem = NonNullable<
+  NonNullable<CustomerListQuery["customers"]>["customers"]
+>[number];
 
 // ============================================================================
 // Customer List Hook
@@ -178,13 +179,10 @@ export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {
   const { toast } = useToast();
   const { enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const metricsQuery = useCustomerMetricsQuery(
-    undefined,
-    {
-      enabled,
-      refetchInterval: pollInterval,
-    },
-  );
+  const metricsQuery = useCustomerMetricsQuery(undefined, {
+    enabled,
+    refetchInterval: pollInterval,
+  });
   const { data, isLoading, error, refetch } = metricsQuery;
 
   useEffect(() => {
@@ -535,11 +533,11 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
   const deviceData = data?.customerDevices ?? null;
 
   return {
-    devices: deviceData?.['devices'] ?? [],
-    totalDevices: deviceData?.['totalDevices'] ?? 0,
-    onlineDevices: deviceData?.['onlineDevices'] ?? 0,
-    offlineDevices: deviceData?.['offlineDevices'] ?? 0,
-    needingUpdates: deviceData?.['needingUpdates'] ?? 0,
+    devices: deviceData?.["devices"] ?? [],
+    totalDevices: deviceData?.["totalDevices"] ?? 0,
+    onlineDevices: deviceData?.["onlineDevices"] ?? 0,
+    offlineDevices: deviceData?.["offlineDevices"] ?? 0,
+    needingUpdates: deviceData?.["needingUpdates"] ?? 0,
     isLoading,
     error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,

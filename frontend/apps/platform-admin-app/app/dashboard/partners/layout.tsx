@@ -12,4 +12,3 @@ export default function PartnersLayout({ children }: PartnersLayoutProps) {
     <RouteGuard permission={["partners.read", "platform:partners:read"]}>{children}</RouteGuard>
   );
 }
-

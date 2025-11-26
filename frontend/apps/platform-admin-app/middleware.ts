@@ -39,9 +39,7 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Check if trying to access ISP-only routes
-  const isAccessingIspRoute = ISP_ONLY_ROUTES.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isAccessingIspRoute = ISP_ONLY_ROUTES.some((route) => pathname.startsWith(route));
 
   if (isAccessingIspRoute) {
     // Block access with forbidden response
@@ -53,7 +51,7 @@ export function middleware(request: NextRequest) {
         allowedApp: "isp-ops-app",
         currentApp: "platform-admin-app",
       },
-      { status: 403 }
+      { status: 403 },
     );
   }
 

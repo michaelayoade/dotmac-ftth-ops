@@ -28,19 +28,14 @@ const mockUseWebSocketSubscription = jest.fn(() => [null]);
 
 jest.mock("@/lib/websocket/WebSocketProvider", () => ({
   useWebSocket: () => mockUseWebSocket(),
-  useWebSocketSubscription: <T,>(channel: string) =>
-    mockUseWebSocketSubscription(channel),
+  useWebSocketSubscription: <T,>(channel: string) => mockUseWebSocketSubscription(channel),
 }));
 
 // Mock UI components
 jest.mock("@dotmac/ui", () => ({
   Card: ({ children }: any) => <div data-testid="card">{children}</div>,
-  CardContent: ({ children }: any) => (
-    <div data-testid="card-content">{children}</div>
-  ),
-  CardDescription: ({ children }: any) => (
-    <div data-testid="card-description">{children}</div>
-  ),
+  CardContent: ({ children }: any) => <div data-testid="card-content">{children}</div>,
+  CardDescription: ({ children }: any) => <div data-testid="card-description">{children}</div>,
   CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
   CardTitle: ({ children, className }: any) => (
     <div data-testid="card-title" className={className}>
@@ -69,9 +64,7 @@ jest.mock("@dotmac/ui", () => ({
       {children}
     </th>
   ),
-  TableHeader: ({ children }: any) => (
-    <thead data-testid="table-header">{children}</thead>
-  ),
+  TableHeader: ({ children }: any) => <thead data-testid="table-header">{children}</thead>,
   TableRow: ({ children }: any) => <tr data-testid="table-row">{children}</tr>,
 }));
 

@@ -305,36 +305,38 @@ export const ModalDescription = forwardRef<
 });
 
 // Modal body component
-export const ModalBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { "data-testid"?: string }>(
-  ({ className, children, "data-testid": dataTestId, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={clsx("modal-body", className)}
-        data-testid={dataTestId ?? "modal-body"}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  },
-);
+export const ModalBody = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { "data-testid"?: string }
+>(({ className, children, "data-testid": dataTestId, ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={clsx("modal-body", className)}
+      data-testid={dataTestId ?? "modal-body"}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
 // Modal footer component
-export const ModalFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { "data-testid"?: string }>(
-  ({ className, children, "data-testid": dataTestId, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={clsx("modal-footer", className)}
-        data-testid={dataTestId ?? "modal-footer"}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  },
-);
+export const ModalFooter = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { "data-testid"?: string }
+>(({ className, children, "data-testid": dataTestId, ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={clsx("modal-footer", className)}
+      data-testid={dataTestId ?? "modal-footer"}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
 // Modal trigger component
 export interface ModalTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

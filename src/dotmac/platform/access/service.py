@@ -179,7 +179,11 @@ class AccessNetworkService:
         }
 
     async def acknowledge_alarm(
-        self, alarm_id: str, olt_id: str | None = None, actor: str | None = None, note: str | None = None
+        self,
+        alarm_id: str,
+        olt_id: str | None = None,
+        actor: str | None = None,
+        note: str | None = None,
     ) -> dict[str, Any]:
         """
         Attempt to acknowledge an alarm.
@@ -217,7 +221,11 @@ class AccessNetworkService:
         }
 
     async def clear_alarm(
-        self, alarm_id: str, olt_id: str | None = None, actor: str | None = None, note: str | None = None
+        self,
+        alarm_id: str,
+        olt_id: str | None = None,
+        actor: str | None = None,
+        note: str | None = None,
     ) -> dict[str, Any]:
         """
         Attempt to clear an alarm.

@@ -62,17 +62,15 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
       <Alert>
         <Palette className="h-4 w-4" />
         <AlertDescription>
-          Customize the customer portal appearance and features for your brand.
-          Changes are visible to customers immediately after saving.
+          Customize the customer portal appearance and features for your brand. Changes are visible
+          to customers immediately after saving.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>Domain Configuration</CardTitle>
-          <CardDescription>
-            Configure custom domain for customer portal
-          </CardDescription>
+          <CardDescription>Configure custom domain for customer portal</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -94,8 +92,9 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
               <AlertDescription>
                 <strong>DNS Configuration Required:</strong>
                 <br />
-                Add a CNAME record for <code className="bg-muted px-1 py-0.5 rounded">{settings.custom_domain}</code>
-                {" "}pointing to your platform domain.
+                Add a CNAME record for{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">{settings.custom_domain}</code>{" "}
+                pointing to your platform domain.
               </AlertDescription>
             </Alert>
           )}
@@ -105,9 +104,7 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Branding & Theme</CardTitle>
-          <CardDescription>
-            Customize colors, logos, and visual appearance
-          </CardDescription>
+          <CardDescription>Customize colors, logos, and visual appearance</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Primary Color */}
@@ -199,9 +196,7 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
               onChange={(e) => updateSetting("favicon_url", e.target.value || null)}
               placeholder="https://cdn.myisp.com/favicon.ico"
             />
-            <p className="text-sm text-muted-foreground">
-              URL to favicon (16x16 or 32x32 ICO/PNG)
-            </p>
+            <p className="text-sm text-muted-foreground">URL to favicon (16x16 or 32x32 ICO/PNG)</p>
           </div>
         </CardContent>
       </Card>
@@ -232,8 +227,8 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Custom CSS is applied globally to the customer portal.
-              Test thoroughly before deploying to production.
+              Custom CSS is applied globally to the customer portal. Test thoroughly before
+              deploying to production.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -242,9 +237,7 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Portal Features</CardTitle>
-          <CardDescription>
-            Enable or disable customer-facing features
-          </CardDescription>
+          <CardDescription>Enable or disable customer-facing features</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Self-Service */}
@@ -342,9 +335,7 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
               onChange={(e) => updateSetting("support_email", e.target.value || null)}
               placeholder="support@myisp.com"
             />
-            <p className="text-sm text-muted-foreground">
-              Contact email displayed to customers
-            </p>
+            <p className="text-sm text-muted-foreground">Contact email displayed to customers</p>
           </div>
 
           {/* Support Phone */}
@@ -368,12 +359,13 @@ export function PortalSettings({ settings, onChange }: PortalSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Portal Preview</CardTitle>
-          <CardDescription>
-            Preview of how your portal will look
-          </CardDescription>
+          <CardDescription>Preview of how your portal will look</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-lg p-6" style={{ borderColor: settings.theme_primary_color }}>
+          <div
+            className="border rounded-lg p-6"
+            style={{ borderColor: settings.theme_primary_color }}
+          >
             <div className="flex items-center justify-between mb-4">
               {settings.logo_url && !portalLogoError ? (
                 <Image

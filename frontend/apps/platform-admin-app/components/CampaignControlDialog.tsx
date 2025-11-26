@@ -35,7 +35,8 @@ export function CampaignControlDialog(props: CampaignControlDialogProps) {
       mutateAsync: async ({ campaignId, data }: { campaignId: string; data: unknown }) => {
         await mutation.mutateAsync({
           campaignId,
-          data: data as Partial<Pick<DunningCampaign, "priority" | "is_active">> & Record<string, unknown>
+          data: data as Partial<Pick<DunningCampaign, "priority" | "is_active">> &
+            Record<string, unknown>,
         });
       },
     };

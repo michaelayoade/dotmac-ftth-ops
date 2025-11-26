@@ -4,12 +4,7 @@ import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  X,
-  Save,
-  User,
-  Building,
-} from "lucide-react";
+import { X, Save, User, Building } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import {
@@ -155,7 +150,8 @@ export function CustomerEditModalRefactored({
 
   const defaultValues = useMemo<CustomerFormData>(
     () => ({
-      customer_type: (customer.customer_type === "individual" || customer.customer_type === "business"
+      customer_type: (customer.customer_type === "individual" ||
+      customer.customer_type === "business"
         ? customer.customer_type
         : "individual") as "individual" | "business",
       first_name: customer.first_name ?? "",

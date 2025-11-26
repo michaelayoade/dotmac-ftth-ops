@@ -11,18 +11,21 @@ Dunning & collections functionality is tested using **Jest Mocks** for unit test
 ### The Problem with MSW + Axios
 
 MSW (Mock Service Worker) has compatibility issues with axios + React Query for complex hooks:
+
 - MSW intercepts requests successfully ✅
 - MSW returns mock data ✅
 - But React Query doesn't reliably update hook state for mutations ❌
 - Mutation result data doesn't populate ❌
 
 **MSW Test Results**: 26/27 passing (96%)
+
 - 1 failing test due to mutation data flow issue
 - Queries worked well, but mutations didn't populate result data
 
 ### The Solution: Jest Mocks
 
 Jest mocks work perfectly with axios-based hooks:
+
 - ✅ Direct control over service layer responses
 - ✅ React Query receives and processes data correctly
 - ✅ All query and mutation states update properly
@@ -41,6 +44,7 @@ Jest mocks work perfectly with axios-based hooks:
 ### Test Coverage
 
 #### **Query Key Factory (1 test)** ✅
+
 - Correct query key generation for all dunning operations
 
 #### **Query Hooks (22 tests)** ✅
@@ -112,6 +116,7 @@ Jest mocks work perfectly with axios-based hooks:
    - Handle cancel error
 
 #### **Real-World Scenarios (3 tests)** ✅
+
 - Handle campaign lifecycle (create → update → pause → resume → delete)
 - Handle execution lifecycle (start → check status → cancel)
 - Handle concurrent fetches (campaigns + executions + statistics)
@@ -160,6 +165,7 @@ export function useDunningCampaigns(filters?: DunningCampaignFilters) {
 ```
 
 **Features:**
+
 - Filter by status (active, paused, completed)
 - Filter by schedule type
 - Sort by various fields
@@ -181,6 +187,7 @@ export function useDunningCampaign(campaignId: string | null) {
 ```
 
 **Features:**
+
 - Conditional query (enabled only when campaignId provided)
 - Returns full campaign details including stages
 - Faster stale time for detail views
@@ -200,6 +207,7 @@ export function useDunningExecutions(filters?: DunningExecutionFilters) {
 ```
 
 **Features:**
+
 - Filter by campaign_id
 - Filter by status (pending, in_progress, completed, failed, cancelled)
 - Track execution history
@@ -221,6 +229,7 @@ export function useDunningExecution(executionId: string | null) {
 ```
 
 **Features:**
+
 - Conditional query
 - Returns detailed execution results
 - Includes subscriber counts and stage results
@@ -240,6 +249,7 @@ export function useDunningStatistics() {
 ```
 
 **Features:**
+
 - Overall dunning statistics
 - Campaign and execution counts
 - Recovery metrics
@@ -261,6 +271,7 @@ export function useDunningCampaignStatistics(campaignId: string | null) {
 ```
 
 **Features:**
+
 - Campaign-specific statistics
 - Execution history
 - Stage effectiveness metrics
@@ -280,6 +291,7 @@ export function useDunningRecoveryChart(days: number = 30) {
 ```
 
 **Features:**
+
 - Recovery trend data over time
 - Configurable time period (defaults to 30 days)
 - Returns array of daily recovery metrics
@@ -313,6 +325,7 @@ export function useCreateDunningCampaign(options?: {
 ```
 
 **Features:**
+
 - Create new dunning campaign with stages
 - Invalidates all dunning queries on success
 - Optional success/error callbacks
@@ -329,10 +342,10 @@ export function useUpdateDunningCampaign(options?: {
   return useMutation({
     mutationFn: async ({
       campaignId,
-      data
+      data,
     }: {
       campaignId: string;
-      data: UpdateDunningCampaignRequest
+      data: UpdateDunningCampaignRequest;
     }) => {
       return await dunningService.updateCampaign(campaignId, data);
     },
@@ -347,6 +360,7 @@ export function useUpdateDunningCampaign(options?: {
 ```
 
 **Features:**
+
 - Update existing campaign
 - Invalidates campaign list and specific campaign
 - Optimistic updates possible
@@ -375,6 +389,7 @@ export function useDeleteDunningCampaign(options?: {
 ```
 
 **Features:**
+
 - Delete campaign
 - Removes campaign from cache
 - Invalidates campaign list
@@ -403,6 +418,7 @@ export function usePauseDunningCampaign(options?: {
 ```
 
 **Features:**
+
 - Pause active campaign
 - Updates campaign status
 - Invalidates relevant caches
@@ -431,6 +447,7 @@ export function useResumeDunningCampaign(options?: {
 ```
 
 **Features:**
+
 - Resume paused campaign
 - Updates campaign status
 - Invalidates relevant caches
@@ -459,6 +476,7 @@ export function useStartDunningExecution(options?: {
 ```
 
 **Features:**
+
 - Start campaign execution
 - Returns execution details
 - Invalidates executions and statistics
@@ -487,6 +505,7 @@ export function useCancelDunningExecution(options?: {
 ```
 
 **Features:**
+
 - Cancel running execution
 - Updates execution status
 - Invalidates relevant caches
@@ -579,16 +598,13 @@ it("should fetch campaigns successfully", async () => {
 
 ```typescript
 it("should filter campaigns by status", async () => {
-  const mockCampaigns = [
-    createMockCampaign({ status: "active" }),
-  ];
+  const mockCampaigns = [createMockCampaign({ status: "active" })];
 
   mockDunningService.listCampaigns.mockResolvedValue(mockCampaigns);
 
-  const { result } = renderHook(
-    () => useDunningCampaigns({ status: "active" }),
-    { wrapper: createWrapper() }
-  );
+  const { result } = renderHook(() => useDunningCampaigns({ status: "active" }), {
+    wrapper: createWrapper(),
+  });
 
   await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -625,10 +641,9 @@ it("should create campaign successfully", async () => {
   mockDunningService.createCampaign.mockResolvedValue(createdCampaign);
 
   const onSuccess = jest.fn();
-  const { result } = renderHook(
-    () => useCreateDunningCampaign({ onSuccess }),
-    { wrapper: createWrapper() }
-  );
+  const { result } = renderHook(() => useCreateDunningCampaign({ onSuccess }), {
+    wrapper: createWrapper(),
+  });
 
   await act(async () => {
     await result.current.mutateAsync(newCampaign);
@@ -650,14 +665,11 @@ it("should handle campaign lifecycle", async () => {
 
   // 1. Create
   const onCreateSuccess = jest.fn();
-  const createHook = renderHook(
-    () => useCreateDunningCampaign({ onSuccess: onCreateSuccess }),
-    { wrapper: createWrapper() }
-  );
+  const createHook = renderHook(() => useCreateDunningCampaign({ onSuccess: onCreateSuccess }), {
+    wrapper: createWrapper(),
+  });
 
-  mockDunningService.createCampaign.mockResolvedValue(
-    createMockCampaign({ id: campaignId })
-  );
+  mockDunningService.createCampaign.mockResolvedValue(createMockCampaign({ id: campaignId }));
 
   await act(async () => {
     await createHook.result.current.mutateAsync(newCampaignData);
@@ -667,13 +679,12 @@ it("should handle campaign lifecycle", async () => {
 
   // 2. Update
   const onUpdateSuccess = jest.fn();
-  const updateHook = renderHook(
-    () => useUpdateDunningCampaign({ onSuccess: onUpdateSuccess }),
-    { wrapper: createWrapper() }
-  );
+  const updateHook = renderHook(() => useUpdateDunningCampaign({ onSuccess: onUpdateSuccess }), {
+    wrapper: createWrapper(),
+  });
 
   mockDunningService.updateCampaign.mockResolvedValue(
-    createMockCampaign({ id: campaignId, name: "Updated" })
+    createMockCampaign({ id: campaignId, name: "Updated" }),
   );
 
   await act(async () => {
@@ -687,10 +698,9 @@ it("should handle campaign lifecycle", async () => {
 
   // 3. Pause
   const onPauseSuccess = jest.fn();
-  const pauseHook = renderHook(
-    () => usePauseDunningCampaign({ onSuccess: onPauseSuccess }),
-    { wrapper: createWrapper() }
-  );
+  const pauseHook = renderHook(() => usePauseDunningCampaign({ onSuccess: onPauseSuccess }), {
+    wrapper: createWrapper(),
+  });
 
   mockDunningService.pauseCampaign.mockResolvedValue();
 
@@ -702,10 +712,9 @@ it("should handle campaign lifecycle", async () => {
 
   // 4. Resume
   const onResumeSuccess = jest.fn();
-  const resumeHook = renderHook(
-    () => useResumeDunningCampaign({ onSuccess: onResumeSuccess }),
-    { wrapper: createWrapper() }
-  );
+  const resumeHook = renderHook(() => useResumeDunningCampaign({ onSuccess: onResumeSuccess }), {
+    wrapper: createWrapper(),
+  });
 
   mockDunningService.resumeCampaign.mockResolvedValue();
 
@@ -717,10 +726,9 @@ it("should handle campaign lifecycle", async () => {
 
   // 5. Delete
   const onDeleteSuccess = jest.fn();
-  const deleteHook = renderHook(
-    () => useDeleteDunningCampaign({ onSuccess: onDeleteSuccess }),
-    { wrapper: createWrapper() }
-  );
+  const deleteHook = renderHook(() => useDeleteDunningCampaign({ onSuccess: onDeleteSuccess }), {
+    wrapper: createWrapper(),
+  });
 
   mockDunningService.deleteCampaign.mockResolvedValue();
 
@@ -777,10 +785,9 @@ Since mutation result data doesn't always populate in test environment, use `onS
 ```typescript
 // ✅ Correct - Use callback to verify mutation success
 const onSuccess = jest.fn();
-const { result } = renderHook(
-  () => useCreateDunningCampaign({ onSuccess }),
-  { wrapper: createWrapper() }
-);
+const { result } = renderHook(() => useCreateDunningCampaign({ onSuccess }), {
+  wrapper: createWrapper(),
+});
 
 await act(async () => {
   await result.current.mutateAsync(data);
@@ -797,6 +804,7 @@ expect(result.current.data?.name).toBe("New Campaign");
 ## Test Quality Metrics
 
 ### Coverage Summary
+
 - ✅ **40 tests passing (100%)**
 - ✅ **~3.5 seconds execution time**
 - ✅ **Comprehensive coverage:**
@@ -806,6 +814,7 @@ expect(result.current.data?.name).toBe("New Campaign");
   - Real-world scenarios tested (lifecycle, concurrent, execution flow)
 
 ### Test Organization
+
 - Clear test structure with describe blocks
 - Consistent naming conventions
 - Mock data helper functions
@@ -822,6 +831,7 @@ expect(result.current.data?.name).toBe("New Campaign");
 **MSW Test Results:** 26/27 passing (96%)
 
 **Problems with MSW:**
+
 - 1 test failing (mutation data flow issue)
 - Mutation result data doesn't populate reliably
 - Less control over service layer responses
@@ -829,6 +839,7 @@ expect(result.current.data?.name).toBe("New Campaign");
 **Jest Mock Results:** 40/40 passing (100%)
 
 **Benefits of Jest Mocks:**
+
 - 100% test pass rate
 - Direct control over dunningService responses
 - Simple, straightforward mocking
@@ -871,10 +882,9 @@ mockDunningService.createCampaign.mockResolvedValue(createdCampaign);
 // Test with callback verification
 it("should create campaign successfully", async () => {
   const onSuccess = jest.fn();
-  const { result } = renderHook(
-    () => useCreateDunningCampaign({ onSuccess }),
-    { wrapper: createWrapper() }
-  );
+  const { result } = renderHook(() => useCreateDunningCampaign({ onSuccess }), {
+    wrapper: createWrapper(),
+  });
 
   await act(async () => {
     await result.current.mutateAsync(newCampaign);
@@ -891,6 +901,7 @@ it("should create campaign successfully", async () => {
 During migration, discovered method name mismatch:
 
 **Problem:**
+
 ```typescript
 // Mock had wrong method name
 getRecoveryChart: jest.fn(), // ❌ Wrong
@@ -900,12 +911,12 @@ const data = await dunningService.getRecoveryChartData(days); // ✅ Correct
 ```
 
 **Solution:**
+
 ```typescript
 // Updated mock to correct method name
-getRecoveryChartData: jest.fn(), // ✅ Fixed
-
-// Updated test expectations
-expect(mockDunningService.getRecoveryChartData).toHaveBeenCalledWith(30);
+getRecoveryChartData: (jest.fn(), // ✅ Fixed
+  // Updated test expectations
+  expect(mockDunningService.getRecoveryChartData).toHaveBeenCalledWith(30));
 expect(result.current.data).toHaveLength(1); // Returns array, not object
 expect(result.current.data?.[0].days).toBe(30);
 ```
@@ -916,18 +927,19 @@ expect(result.current.data?.[0].days).toBe(30);
 
 ### useDunning vs useSubscribers
 
-| Feature | useDunning | useSubscribers |
-|---------|------------|----------------|
-| **Queries** | 7 hooks | 4 hooks |
-| **Mutations** | 7 hooks | 6 hooks |
-| **Service Layer** | dunningService | apiClient (direct) |
-| **MSW Results** | 26/27 (96%) | 22/25 (88%) |
-| **Jest Mock Results** | **40/40 (100%)** | **43/43 (100%)** |
-| **Speed (Jest)** | ~3.5 seconds | ~3 seconds |
+| Feature               | useDunning       | useSubscribers     |
+| --------------------- | ---------------- | ------------------ |
+| **Queries**           | 7 hooks          | 4 hooks            |
+| **Mutations**         | 7 hooks          | 6 hooks            |
+| **Service Layer**     | dunningService   | apiClient (direct) |
+| **MSW Results**       | 26/27 (96%)      | 22/25 (88%)        |
+| **Jest Mock Results** | **40/40 (100%)** | **43/43 (100%)**   |
+| **Speed (Jest)**      | ~3.5 seconds     | ~3 seconds         |
 
 ### When to Use Jest Mocks vs MSW
 
 **Use Jest Mocks when:**
+
 - ✅ Hook has mutations (like useDunning, useSubscribers, useOrchestration)
 - ✅ Hook uses axios or service layer
 - ✅ You need mutation data verification via callbacks
@@ -935,6 +947,7 @@ expect(result.current.data?.[0].days).toBe(30);
 - ✅ Complex business logic in service layer
 
 **Use MSW when:**
+
 - ✅ Hook has only queries (like useOperations)
 - ✅ Hook uses fetch API (like useCustomerPortal)
 - ✅ You want realistic network-level testing
@@ -948,6 +961,7 @@ Comprehensive E2E tests exist for dunning functionality:
 **File:** `frontend/e2e/tests/dunning.spec.ts`
 
 **Coverage:**
+
 - Complete campaign management workflow
 - Campaign creation with stages
 - Execution lifecycle
@@ -962,6 +976,7 @@ Comprehensive E2E tests exist for dunning functionality:
 ## Continuous Integration
 
 ### Unit Tests
+
 - ✅ Run on every PR
 - ✅ Must pass before merge
 - ✅ Fast (~3.5 seconds)
@@ -1023,6 +1038,7 @@ pnpm test hooks/__tests__/useDunning.test.tsx --coverage
 ✅ **Fixed getRecoveryChartData method name issue**
 
 **Key Takeaway:**
+
 - **Jest mocks + service layer + queries + mutations = ✅ Perfect**
 - **MSW + axios + mutations = ❌ Issues**
 - **Callback-based verification = ✅ Reliable for mutations**

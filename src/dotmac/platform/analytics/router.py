@@ -418,9 +418,7 @@ async def get_billing_metrics_analytics(
 
     # Compute derived values with safe fallbacks
     payments_count = total_payments_count or successful_payments + failed_payments
-    payment_success_rate = (
-        (successful_payments / payments_count) * 100 if payments_count else 0.0
-    )
+    payment_success_rate = (successful_payments / payments_count) * 100 if payments_count else 0.0
     revenue_total = total_payment_amount or mrr
     outstanding_balance = float(overdue_invoices) * (mrr / max(total_invoices or 1, 1))
 

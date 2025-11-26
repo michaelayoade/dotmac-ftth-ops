@@ -37,7 +37,7 @@ describe("Switch", () => {
         "w-11",
         "items-center",
         "rounded-full",
-        "transition-colors"
+        "transition-colors",
       );
     });
 
@@ -265,7 +265,7 @@ describe("Switch", () => {
         <div>
           <span id="switch-label">Dark mode</span>
           <Switch aria-labelledby="switch-label" />
-        </div>
+        </div>,
       );
 
       const switchButton = screen.getByRole("switch");
@@ -369,7 +369,7 @@ describe("Switch", () => {
         <div className="flex items-center space-x-2">
           <Switch id="airplane-mode" />
           <label htmlFor="airplane-mode">Airplane Mode</label>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Airplane Mode")).toBeInTheDocument();
@@ -403,7 +403,7 @@ describe("Switch", () => {
         <div>
           <Switch disabled checked={false} />
           <span className="text-muted-foreground">Feature not available</span>
-        </div>
+        </div>,
       );
 
       const switchButton = screen.getByRole("switch");
@@ -426,7 +426,7 @@ describe("Switch", () => {
             <Switch id="sms" />
             <label htmlFor="sms">SMS notifications</label>
           </div>
-        </form>
+        </form>,
       );
 
       const switches = screen.getAllByRole("switch");
@@ -450,7 +450,7 @@ describe("Switch", () => {
             </div>
             <Switch checked={true} />
           </div>
-        </div>
+        </div>,
       );
 
       const switches = screen.getAllByRole("switch");
@@ -485,9 +485,7 @@ describe("Switch", () => {
     });
 
     it("maintains styling with custom className", () => {
-      render(
-        <Switch checked={true} className="custom-class" data-testid="switch" />
-      );
+      render(<Switch checked={true} className="custom-class" data-testid="switch" />);
 
       const switchButton = screen.getByTestId("switch");
       expect(switchButton).toHaveClass("custom-class", "bg-primary");

@@ -31,14 +31,7 @@ import {
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { formatCurrency } from "@dotmac/features/billing";
 import { useToast } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
@@ -65,7 +58,7 @@ export default function CreditNoteDetailPage() {
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
 
-  const creditNoteId = params['id'] as string;
+  const creditNoteId = params["id"] as string;
 
   const [creditNote, setCreditNote] = useState<CreditNote | null>(null);
   const [loading, setLoading] = useState(true);
@@ -218,9 +211,7 @@ export default function CreditNoteDetailPage() {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <div className="rounded-lg border border-red-900/20 bg-red-950/20 p-4">
-          <div className="text-red-600 dark:text-red-400">
-            {error || "Credit note not found"}
-          </div>
+          <div className="text-red-600 dark:text-red-400">{error || "Credit note not found"}</div>
           <div className="flex gap-2 mt-4">
             <button
               onClick={fetchCreditNote}
@@ -293,11 +284,7 @@ export default function CreditNoteDetailPage() {
             </Button>
           )}
           {(creditNote.status === "draft" || creditNote.status === "issued") && (
-            <Button
-              variant="destructive"
-              onClick={handleVoidCreditNote}
-              disabled={actionLoading}
-            >
+            <Button variant="destructive" onClick={handleVoidCreditNote} disabled={actionLoading}>
               <XCircle className="h-4 w-4 mr-2" />
               Void
             </Button>
@@ -403,9 +390,7 @@ export default function CreditNoteDetailPage() {
                     <div className="text-sm font-medium text-muted-foreground mb-1">
                       Customer Notes
                     </div>
-                    <div className="text-sm p-3 rounded-lg bg-muted/50">
-                      {creditNote.notes}
-                    </div>
+                    <div className="text-sm p-3 rounded-lg bg-muted/50">{creditNote.notes}</div>
                   </div>
                 )}
                 {creditNote.internal_notes && (
@@ -567,7 +552,8 @@ export default function CreditNoteDetailPage() {
                 placeholder={creditNote.available_credit.toString()}
               />
               <p className="text-xs text-muted-foreground">
-                Leave empty to apply full available credit ({formatCurrency(creditNote.available_credit, creditNote.currency)})
+                Leave empty to apply full available credit (
+                {formatCurrency(creditNote.available_credit, creditNote.currency)})
               </p>
             </div>
           </div>

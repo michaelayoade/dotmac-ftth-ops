@@ -34,7 +34,11 @@ export interface CustomerDetailModalProps<TCustomer = any> {
   onClose: () => void;
   onEdit: (customer: TCustomer) => void;
   onDelete: (customer: TCustomer) => void;
-  getCustomer: (id: string, includeRelations?: boolean, includeMetrics?: boolean) => Promise<TCustomer>;
+  getCustomer: (
+    id: string,
+    includeRelations?: boolean,
+    includeMetrics?: boolean,
+  ) => Promise<TCustomer>;
   CustomerActivities?: React.ComponentType<{ customerId: string }>;
   CustomerNotes?: React.ComponentType<{ customerId: string }>;
   CustomerSubscriptions?: React.ComponentType<{ customerId: string }>;
@@ -74,13 +78,13 @@ function StatusBadge({ status }: { status: string }) {
     },
   };
 
-  const config = (statusConfig[normalizedStatus] || statusConfig['prospect'])!;
+  const config = (statusConfig[normalizedStatus] || statusConfig["prospect"])!;
 
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config['className']}`}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config["className"]}`}
     >
-      {config['label']}
+      {config["label"]}
     </span>
   );
 }
@@ -111,13 +115,13 @@ function TierBadge({ tier }: { tier: string }) {
     },
   };
 
-  const config = (tierConfig[normalizedTier] || tierConfig['free'])!;
+  const config = (tierConfig[normalizedTier] || tierConfig["free"])!;
 
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config['className']}`}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config["className"]}`}
     >
-      {config['label']}
+      {config["label"]}
     </span>
   );
 }
@@ -147,7 +151,11 @@ function CustomerOverview<TCustomer = any>({ customer }: { customer: TCustomer }
     customerData.displayName ||
     `${customerData.first_name || customerData.firstName || ""}${customerData.middle_name || customerData.middleName ? ` ${customerData.middle_name || customerData.middleName}` : ""} ${customerData.last_name || customerData.lastName || ""}`;
 
-  const customerType = (customerData.customer_type || customerData.customerType || "").toLowerCase();
+  const customerType = (
+    customerData.customer_type ||
+    customerData.customerType ||
+    ""
+  ).toLowerCase();
   const customerIcon = customerType === "individual" ? User : Building;
   const IconComponent = customerIcon;
 
@@ -165,7 +173,9 @@ function CustomerOverview<TCustomer = any>({ customer }: { customer: TCustomer }
             <div className="ml-4">
               <h3 className="text-xl font-semibold text-white">{customerName}</h3>
               {(customerData.company_name || customerData.companyName) && (
-                <p className="text-slate-400">{customerData.company_name || customerData.companyName}</p>
+                <p className="text-slate-400">
+                  {customerData.company_name || customerData.companyName}
+                </p>
               )}
               <p className="text-sm text-slate-500">
                 #{customerData.customer_number || customerData.customerNumber}
@@ -264,7 +274,9 @@ function CustomerOverview<TCustomer = any>({ customer }: { customer: TCustomer }
             <div>
               <p className="text-sm text-slate-400">Avg Order Value</p>
               <p className="text-2xl font-bold text-white">
-                {formatCurrency(customerData.average_order_value || customerData.averageOrderValue || 0)}
+                {formatCurrency(
+                  customerData.average_order_value || customerData.averageOrderValue || 0,
+                )}
               </p>
             </div>
             <DollarSign className="h-8 w-8 text-purple-400" />
@@ -298,7 +310,7 @@ function CustomerOverview<TCustomer = any>({ customer }: { customer: TCustomer }
         </div>
 
         {/* Address */}
-        {((customerData.address_line_1 || customerData.addressLine1) || customerData.city) && (
+        {(customerData.address_line_1 || customerData.addressLine1 || customerData.city) && (
           <div className="bg-slate-800 rounded-lg p-6">
             <h4 className="text-lg font-semibold text-white mb-4">Address</h4>
             <div className="space-y-1 text-slate-300">
@@ -329,8 +341,10 @@ function CustomerOverview<TCustomer = any>({ customer }: { customer: TCustomer }
         )}
 
         {/* Purchase History */}
-        {((customerData.first_purchase_date || customerData.firstPurchaseDate) ||
-          (customerData.last_purchase_date || customerData.lastPurchaseDate)) && (
+        {(customerData.first_purchase_date ||
+          customerData.firstPurchaseDate ||
+          customerData.last_purchase_date ||
+          customerData.lastPurchaseDate) && (
           <div className="bg-slate-800 rounded-lg p-6">
             <h4 className="text-lg font-semibold text-white mb-4">Purchase History</h4>
             <div className="space-y-3">
@@ -420,13 +434,34 @@ export function CustomerDetailModal<TCustomer = any>({
 
   const tabs = [
     { id: "overview", label: "Overview", icon: User, component: CustomerOverview },
-    ...(CustomerSubscriptions ? [{ id: "subscriptions", label: "Subscriptions", icon: Wifi, component: CustomerSubscriptions }] : []),
-    ...(CustomerNetwork ? [{ id: "network", label: "Network", icon: Globe, component: CustomerNetwork }] : []),
-    ...(CustomerDevices ? [{ id: "devices", label: "Devices", icon: Router, component: CustomerDevices }] : []),
-    ...(CustomerTickets ? [{ id: "tickets", label: "Tickets", icon: Ticket, component: CustomerTickets }] : []),
-    ...(CustomerBilling ? [{ id: "billing", label: "Billing", icon: FileText, component: CustomerBilling }] : []),
-    ...(CustomerActivities ? [{ id: "activities", label: "Activities", icon: Activity, component: CustomerActivities }] : []),
-    ...(CustomerNotes ? [{ id: "notes", label: "Notes", icon: MessageSquare, component: CustomerNotes }] : []),
+    ...(CustomerSubscriptions
+      ? [
+          {
+            id: "subscriptions",
+            label: "Subscriptions",
+            icon: Wifi,
+            component: CustomerSubscriptions,
+          },
+        ]
+      : []),
+    ...(CustomerNetwork
+      ? [{ id: "network", label: "Network", icon: Globe, component: CustomerNetwork }]
+      : []),
+    ...(CustomerDevices
+      ? [{ id: "devices", label: "Devices", icon: Router, component: CustomerDevices }]
+      : []),
+    ...(CustomerTickets
+      ? [{ id: "tickets", label: "Tickets", icon: Ticket, component: CustomerTickets }]
+      : []),
+    ...(CustomerBilling
+      ? [{ id: "billing", label: "Billing", icon: FileText, component: CustomerBilling }]
+      : []),
+    ...(CustomerActivities
+      ? [{ id: "activities", label: "Activities", icon: Activity, component: CustomerActivities }]
+      : []),
+    ...(CustomerNotes
+      ? [{ id: "notes", label: "Notes", icon: MessageSquare, component: CustomerNotes }]
+      : []),
   ];
 
   const detailedCustomerData = detailedCustomer as any;

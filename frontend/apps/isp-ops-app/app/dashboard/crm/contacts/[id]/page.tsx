@@ -3,29 +3,14 @@
 import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  Save,
-  Mail,
-  Phone,
-  Building2,
-  Calendar,
-  User,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Save, Mail, Phone, Building2, Calendar, User, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
@@ -77,7 +62,7 @@ export default function ContactDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const contactId = params['id'] as string;
+  const contactId = params["id"] as string;
   const confirmDialog = useConfirmDialog();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -285,9 +270,7 @@ export default function ContactDetailPage() {
                         <Input
                           id="first_name"
                           value={formData.first_name || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, first_name: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                         />
                       </div>
                       <div className="space-y-2">
@@ -305,9 +288,7 @@ export default function ContactDetailPage() {
                         <Input
                           id="last_name"
                           value={formData.last_name || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, last_name: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                         />
                       </div>
                     </div>
@@ -318,9 +299,7 @@ export default function ContactDetailPage() {
                         <Input
                           id="company"
                           value={formData.company || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, company: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                         />
                       </div>
                       <div className="space-y-2">
@@ -328,9 +307,7 @@ export default function ContactDetailPage() {
                         <Input
                           id="job_title"
                           value={formData.job_title || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, job_title: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
                         />
                       </div>
                       <div className="space-y-2">
@@ -338,9 +315,7 @@ export default function ContactDetailPage() {
                         <Input
                           id="department"
                           value={formData.department || ""}
-                          onChange={(e) =>
-                            setFormData({ ...formData, department: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                         />
                       </div>
                     </div>
@@ -349,10 +324,8 @@ export default function ContactDetailPage() {
                       <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
                         <Select
-                          value={formData['status'] || ""}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, status: value })
-                          }
+                          value={formData["status"] || ""}
+                          onValueChange={(value) => setFormData({ ...formData, status: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -369,9 +342,7 @@ export default function ContactDetailPage() {
                         <Label htmlFor="stage">Stage</Label>
                         <Select
                           value={formData.stage || ""}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, stage: value })
-                          }
+                          onValueChange={(value) => setFormData({ ...formData, stage: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -391,9 +362,7 @@ export default function ContactDetailPage() {
                       <Textarea
                         id="notes"
                         value={formData.notes || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, notes: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                         rows={4}
                       />
                     </div>
@@ -431,7 +400,13 @@ export default function ContactDetailPage() {
                     <div>
                       <Label className="text-muted-foreground">Full Name</Label>
                       <p className="font-medium">
-                        {[contact.prefix, contact.first_name, contact.middle_name, contact.last_name, contact.suffix]
+                        {[
+                          contact.prefix,
+                          contact.first_name,
+                          contact.middle_name,
+                          contact.last_name,
+                          contact.suffix,
+                        ]
                           .filter(Boolean)
                           .join(" ") || "—"}
                       </p>
@@ -444,9 +419,7 @@ export default function ContactDetailPage() {
 
                   {contact.contact_methods && contact.contact_methods.length > 0 && (
                     <div>
-                      <Label className="text-muted-foreground mb-2 block">
-                        Contact Methods
-                      </Label>
+                      <Label className="text-muted-foreground mb-2 block">Contact Methods</Label>
                       <div className="space-y-2">
                         {contact.contact_methods.map((method) => (
                           <div
@@ -454,9 +427,7 @@ export default function ContactDetailPage() {
                             className="flex items-center gap-2 p-2 bg-accent/50 rounded"
                           >
                             {getContactMethodIcon(method.type)}
-                            <span className="font-medium capitalize">
-                              {method.type}:
-                            </span>
+                            <span className="font-medium capitalize">{method.type}:</span>
                             <span>{method.value}</span>
                             {method.label && (
                               <Badge variant="outline" className="text-xs">
@@ -579,13 +550,9 @@ export default function ContactDetailPage() {
                           })}
                         </span>
                       </div>
-                      {activity.subject && (
-                        <p className="font-medium">{activity.subject}</p>
-                      )}
+                      {activity.subject && <p className="font-medium">{activity.subject}</p>}
                       {activity.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {activity.description}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{activity.description}</p>
                       )}
                     </div>
                   ))}

@@ -2,27 +2,27 @@
  * Shared utility functions for admin settings
  */
 
-import { SettingsCategory } from './settings-schemas';
+import { SettingsCategory } from "./settings-schemas";
 
 /**
  * Category display names mapping
  */
 const CATEGORY_DISPLAY_NAMES: Record<SettingsCategory, string> = {
-  database: 'Database Configuration',
-  jwt: 'JWT & Authentication',
-  redis: 'Redis Cache',
-  vault: 'Vault/Secrets Management',
-  storage: 'Object Storage (MinIO/S3)',
-  email: 'Email & SMTP',
-  tenant: 'Multi-tenancy',
-  cors: 'CORS Configuration',
-  rate_limit: 'Rate Limiting',
-  observability: 'Logging & Monitoring',
-  celery: 'Background Tasks',
-  features: 'Feature Flags',
-  billing: 'Billing & Subscriptions',
-  branding: 'Branding & Identity',
-  urls: 'External Links & Templates',
+  database: "Database Configuration",
+  jwt: "JWT & Authentication",
+  redis: "Redis Cache",
+  vault: "Vault/Secrets Management",
+  storage: "Object Storage (MinIO/S3)",
+  email: "Email & SMTP",
+  tenant: "Multi-tenancy",
+  cors: "CORS Configuration",
+  rate_limit: "Rate Limiting",
+  observability: "Logging & Monitoring",
+  celery: "Background Tasks",
+  features: "Feature Flags",
+  billing: "Billing & Subscriptions",
+  branding: "Branding & Identity",
+  urls: "External Links & Templates",
 };
 
 /**
@@ -40,21 +40,21 @@ export function getCategoryDisplayName(category: SettingsCategory): string {
  * @returns Formatted relative time string
  */
 export function formatLastUpdated(timestamp: string | null | undefined): string {
-  if (!timestamp) return 'Never';
+  if (!timestamp) return "Never";
 
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
 
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
 
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
 
   return date.toLocaleDateString();
 }
@@ -67,11 +67,11 @@ export function formatLastUpdated(timestamp: string | null | undefined): string 
  */
 export function maskSensitiveValue(value: any, sensitive: boolean): string {
   if (!sensitive) return String(value);
-  if (!value) return '';
+  if (!value) return "";
 
   const str = String(value);
-  if (str.length <= 4) return '***';
-  return str.substring(0, 4) + '***';
+  if (str.length <= 4) return "***";
+  return str.substring(0, 4) + "***";
 }
 
 /**
@@ -98,18 +98,18 @@ export function getAllCategories(): SettingsCategory[] {
  * @returns Formatted value string
  */
 export function formatSettingValue(value: any, type: string): string {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return "—";
 
   switch (type) {
-    case 'boolean':
-      return value ? 'Enabled' : 'Disabled';
-    case 'number':
-    case 'integer':
+    case "boolean":
+      return value ? "Enabled" : "Disabled";
+    case "number":
+    case "integer":
       return String(value);
-    case 'array':
-      return Array.isArray(value) ? value.join(', ') : String(value);
-    case 'json':
-    case 'object':
+    case "array":
+      return Array.isArray(value) ? value.join(", ") : String(value);
+    case "json":
+    case "object":
       return JSON.stringify(value, null, 2);
     default:
       return String(value);

@@ -134,7 +134,10 @@ export function usePaymentMethods() {
         logger.info("Fetched payment methods", { count: response.data.length });
         return response.data;
       } catch (err) {
-        logger.error("Failed to fetch payment methods", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch payment methods",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -162,7 +165,10 @@ export function usePaymentMethodOperations() {
       logger.info("Added payment method", { method_type: request.method_type });
     },
     onError: (err) => {
-      logger.error("Failed to add payment method", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to add payment method",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -175,7 +181,10 @@ export function usePaymentMethodOperations() {
       paymentMethodId: string;
       request: UpdatePaymentMethodRequest;
     }) => {
-      const response = await apiClient.patch(`/billing/tenant/payment-methods/${paymentMethodId}`, request);
+      const response = await apiClient.patch(
+        `/billing/tenant/payment-methods/${paymentMethodId}`,
+        request,
+      );
       return response.data;
     },
     onSuccess: (_, { paymentMethodId }) => {
@@ -184,14 +193,19 @@ export function usePaymentMethodOperations() {
       logger.info("Updated payment method", { payment_method_id: paymentMethodId });
     },
     onError: (err) => {
-      logger.error("Failed to update payment method", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to update payment method",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
   // Set default payment method mutation
   const setDefaultMutation = useMutation({
     mutationFn: async (paymentMethodId: string) => {
-      const response = await apiClient.post(`/billing/tenant/payment-methods/${paymentMethodId}/set-default`);
+      const response = await apiClient.post(
+        `/billing/tenant/payment-methods/${paymentMethodId}/set-default`,
+      );
       return response.data;
     },
     onSuccess: (_, paymentMethodId) => {
@@ -208,7 +222,10 @@ export function usePaymentMethodOperations() {
       logger.info("Set default payment method", { payment_method_id: paymentMethodId });
     },
     onError: (err) => {
-      logger.error("Failed to set default payment method", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to set default payment method",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -220,14 +237,17 @@ export function usePaymentMethodOperations() {
     onSuccess: (_, paymentMethodId) => {
       // Optimistic update: Remove from cache
       queryClient.setQueryData<PaymentMethod[]>(paymentMethodsKeys.list(), (old) =>
-        old ? old.filter((pm) => pm.payment_method_id !== paymentMethodId) : []
+        old ? old.filter((pm) => pm.payment_method_id !== paymentMethodId) : [],
       );
       // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: paymentMethodsKeys.list() });
       logger.info("Removed payment method", { payment_method_id: paymentMethodId });
     },
     onError: (err) => {
-      logger.error("Failed to remove payment method", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to remove payment method",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -240,7 +260,10 @@ export function usePaymentMethodOperations() {
       paymentMethodId: string;
       request: VerifyPaymentMethodRequest;
     }) => {
-      const response = await apiClient.post(`/billing/tenant/payment-methods/${paymentMethodId}/verify`, request);
+      const response = await apiClient.post(
+        `/billing/tenant/payment-methods/${paymentMethodId}/verify`,
+        request,
+      );
       return response.data;
     },
     onSuccess: (_, { paymentMethodId }) => {
@@ -249,7 +272,10 @@ export function usePaymentMethodOperations() {
       logger.info("Verified payment method", { payment_method_id: paymentMethodId });
     },
     onError: (err) => {
-      logger.error("Failed to verify payment method", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to verify payment method",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -325,7 +351,11 @@ export const useTenantPaymentMethods = () => {
     paymentMethods: methodsQuery.data ?? [],
     defaultPaymentMethod,
     loading: methodsQuery.isLoading || operations.isLoading,
-    error: methodsQuery.error ? String(methodsQuery.error) : operations.error ? String(operations.error) : null,
+    error: methodsQuery.error
+      ? String(methodsQuery.error)
+      : operations.error
+        ? String(operations.error)
+        : null,
 
     // Actions
     fetchPaymentMethods: methodsQuery.refetch,

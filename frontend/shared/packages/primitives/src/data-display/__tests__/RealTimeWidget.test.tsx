@@ -612,18 +612,14 @@ describe("RealTimeMetricsWidget Component", () => {
 
   describe("Threshold Visualization", () => {
     it("renders threshold bars when thresholds are provided", () => {
-      const { container } = render(
-        <RealTimeMetricsWidget title="Metrics" metrics={mockMetrics} />,
-      );
+      const { container } = render(<RealTimeMetricsWidget title="Metrics" metrics={mockMetrics} />);
 
       const thresholdBars = container.querySelectorAll(".metric-threshold-bar");
       expect(thresholdBars.length).toBeGreaterThan(0);
     });
 
     it("applies correct status colors based on thresholds", () => {
-      const { container } = render(
-        <RealTimeMetricsWidget title="Metrics" metrics={mockMetrics} />,
-      );
+      const { container } = render(<RealTimeMetricsWidget title="Metrics" metrics={mockMetrics} />);
 
       const normalStatus = container.querySelector(".status-normal");
       expect(normalStatus).toBeInTheDocument();
@@ -680,9 +676,7 @@ describe("RealTimeWidget Accessibility", () => {
   });
 
   it("BaseRealTimeWidget is accessible", async () => {
-    await renderA11y(
-      <BaseRealTimeWidget title="Accessible Widget">Content</BaseRealTimeWidget>,
-    );
+    await renderA11y(<BaseRealTimeWidget title="Accessible Widget">Content</BaseRealTimeWidget>);
   }, 30000);
 
   it("NetworkDeviceWidget is accessible", async () => {

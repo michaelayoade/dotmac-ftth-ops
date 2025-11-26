@@ -207,11 +207,7 @@ export default function UsageBillingPage() {
             stats ? usageService.formatCurrency(stats.pending_amount) : "—",
             !stats,
           )}
-          {renderStatCard(
-            "Records",
-            stats ? stats.total_records : loading ? "…" : 0,
-            !stats,
-          )}
+          {renderStatCard("Records", stats ? stats.total_records : loading ? "…" : 0, !stats)}
         </div>
 
         <Card>
@@ -292,7 +288,8 @@ export default function UsageBillingPage() {
               />
             </div>
             <div className="md:col-span-3 text-sm text-muted-foreground">
-              Estimated total: <span className="font-semibold text-foreground">{totalAmountMajor}</span>
+              Estimated total:{" "}
+              <span className="font-semibold text-foreground">{totalAmountMajor}</span>
             </div>
           </CardContent>
         </Card>

@@ -8,12 +8,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Send,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-} from "lucide-react";
+import { Send, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import {
   useBulkNotifications,
   useNotificationTemplates,
@@ -27,13 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Label } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Checkbox } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
@@ -162,10 +151,10 @@ export default function BulkNotificationSenderPage() {
       ? recipientFilter.customerIds.split(",").map((id) => id.trim())
       : undefined;
     const status = recipientFilter.status.length > 0 ? recipientFilter.status : undefined;
-    const connectionType = recipientFilter.connectionType.length > 0 ? recipientFilter.connectionType : undefined;
+    const connectionType =
+      recipientFilter.connectionType.length > 0 ? recipientFilter.connectionType : undefined;
 
-    const recipientFiltersPresent =
-      subscriberIds || customerIds || status || connectionType;
+    const recipientFiltersPresent = subscriberIds || customerIds || status || connectionType;
 
     const request: BulkNotificationRequest = {
       channels,
@@ -224,7 +213,8 @@ export default function BulkNotificationSenderPage() {
       logger.error("Failed to send bulk notification", err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to send notification. Please try again.",
+        description:
+          err instanceof Error ? err.message : "Failed to send notification. Please try again.",
         variant: "destructive",
       });
     }
@@ -348,7 +338,10 @@ export default function BulkNotificationSenderPage() {
                     <Select
                       value={customMessage.priority}
                       onValueChange={(v: unknown) =>
-                        setCustomMessage({ ...customMessage, priority: v as "low" | "medium" | "high" | "urgent" })
+                        setCustomMessage({
+                          ...customMessage,
+                          priority: v as "low" | "medium" | "high" | "urgent",
+                        })
                       }
                     >
                       <SelectTrigger id="priority">

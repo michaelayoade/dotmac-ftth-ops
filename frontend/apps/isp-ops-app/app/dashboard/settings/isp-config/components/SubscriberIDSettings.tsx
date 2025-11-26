@@ -8,7 +8,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, AlertTriangle } from "lucide-react";
@@ -47,9 +53,7 @@ export function SubscriberIDSettings({ settings, onChange }: SubscriberIDSetting
       <Card>
         <CardHeader>
           <CardTitle>ID Generation Format</CardTitle>
-          <CardDescription>
-            Configure how subscriber and customer IDs are generated
-          </CardDescription>
+          <CardDescription>Configure how subscriber and customer IDs are generated</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Format Selection */}
@@ -71,7 +75,10 @@ export function SubscriberIDSettings({ settings, onChange }: SubscriberIDSetting
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              Example: <code className="bg-muted px-2 py-1 rounded">{formatExamples[settings.format as keyof typeof formatExamples]}</code>
+              Example:{" "}
+              <code className="bg-muted px-2 py-1 rounded">
+                {formatExamples[settings.format as keyof typeof formatExamples]}
+              </code>
             </p>
           </div>
 
@@ -93,7 +100,9 @@ export function SubscriberIDSettings({ settings, onChange }: SubscriberIDSetting
           )}
 
           {/* Sequence Settings */}
-          {(settings.format === "sequential" || settings.format === "prefix_sequential" || settings.format === "custom_pattern") && (
+          {(settings.format === "sequential" ||
+            settings.format === "prefix_sequential" ||
+            settings.format === "custom_pattern") && (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -105,9 +114,7 @@ export function SubscriberIDSettings({ settings, onChange }: SubscriberIDSetting
                     value={settings.sequence_start}
                     onChange={(e) => updateSetting("sequence_start", parseInt(e.target.value))}
                   />
-                  <p className="text-sm text-muted-foreground">
-                    First subscriber ID number
-                  </p>
+                  <p className="text-sm text-muted-foreground">First subscriber ID number</p>
                 </div>
 
                 <div className="space-y-2">
@@ -120,9 +127,7 @@ export function SubscriberIDSettings({ settings, onChange }: SubscriberIDSetting
                     value={settings.sequence_padding}
                     onChange={(e) => updateSetting("sequence_padding", parseInt(e.target.value))}
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Pad with zeros (6 = 000001)
-                  </p>
+                  <p className="text-sm text-muted-foreground">Pad with zeros (6 = 000001)</p>
                 </div>
               </div>
             </>
@@ -141,10 +146,19 @@ export function SubscriberIDSettings({ settings, onChange }: SubscriberIDSetting
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>Available variables:</p>
                 <ul className="list-disc list-inside ml-2">
-                  <li><code>{"{prefix}"}</code> - Prefix value above</li>
-                  <li><code>{"{year}"}</code> - Current year (YYYY)</li>
-                  <li><code>{"{month}"}</code> - Current month (MM)</li>
-                  <li><code>{"{sequence}"}</code> or <code>{"{sequence:05d}"}</code> - Incrementing number</li>
+                  <li>
+                    <code>{"{prefix}"}</code> - Prefix value above
+                  </li>
+                  <li>
+                    <code>{"{year}"}</code> - Current year (YYYY)
+                  </li>
+                  <li>
+                    <code>{"{month}"}</code> - Current month (MM)
+                  </li>
+                  <li>
+                    <code>{"{sequence}"}</code> or <code>{"{sequence:05d}"}</code> - Incrementing
+                    number
+                  </li>
                 </ul>
               </div>
             </div>
@@ -155,7 +169,8 @@ export function SubscriberIDSettings({ settings, onChange }: SubscriberIDSetting
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                UUID format generates random unique IDs. This cannot be changed later without data migration.
+                UUID format generates random unique IDs. This cannot be changed later without data
+                migration.
               </AlertDescription>
             </Alert>
           )}

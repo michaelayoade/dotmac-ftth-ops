@@ -28,10 +28,6 @@ export function IPAddressList(props: IPAddressListProps) {
   };
 
   return (
-    <SharedIPAddressList
-      {...props}
-      ipUtilities={ipUtilities}
-      DualStackBadge={DualStackBadge}
-    />
+    <SharedIPAddressList {...props} ipUtilities={ipUtilities} DualStackBadge={DualStackBadge} />
   );
 }

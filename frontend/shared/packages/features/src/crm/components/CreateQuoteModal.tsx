@@ -7,24 +7,12 @@
 
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { Plus, X, Calculator, DollarSign, Trash2 } from "lucide-react";
@@ -184,7 +172,7 @@ export function CreateQuoteModal({
 
   const handleAddLineItem = () => {
     if (!newLineItem.description.trim()) {
-            // toast.error("Invalid Line Item: Please provide a description.");
+      // toast.error("Invalid Line Item: Please provide a description.");
       return;
     }
 

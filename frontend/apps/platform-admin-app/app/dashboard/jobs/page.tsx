@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
@@ -39,7 +33,14 @@ import { Progress } from "@dotmac/ui";
 import { useAppConfig } from "@/providers/AppConfigContext";
 
 type JobStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
-type JobType = "bulk_import" | "bulk_export" | "firmware_upgrade" | "batch_provisioning" | "data_migration" | "report_generation" | "custom";
+type JobType =
+  | "bulk_import"
+  | "bulk_export"
+  | "firmware_upgrade"
+  | "batch_provisioning"
+  | "data_migration"
+  | "report_generation"
+  | "custom";
 
 interface Job {
   id: string;
@@ -98,7 +99,10 @@ function JobsPageContent() {
     },
     refetchInterval: (query) => {
       // Auto-refresh if there are running or pending jobs
-      if (query?.state?.data?.jobs && query.state.data.jobs.some((j: Job) => j.status === "running" || j.status === "pending")) {
+      if (
+        query?.state?.data?.jobs &&
+        query.state.data.jobs.some((j: Job) => j.status === "running" || j.status === "pending")
+      ) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -122,11 +126,11 @@ function JobsPageContent() {
 
   const stats: JobStats = statsData || {
     total_jobs: jobs.length,
-    pending_jobs: jobs.filter(j => j.status === "pending").length,
-    running_jobs: jobs.filter(j => j.status === "running").length,
-    completed_jobs: jobs.filter(j => j.status === "completed").length,
-    failed_jobs: jobs.filter(j => j.status === "failed").length,
-    cancelled_jobs: jobs.filter(j => j.status === "cancelled").length,
+    pending_jobs: jobs.filter((j) => j.status === "pending").length,
+    running_jobs: jobs.filter((j) => j.status === "running").length,
+    completed_jobs: jobs.filter((j) => j.status === "completed").length,
+    failed_jobs: jobs.filter((j) => j.status === "failed").length,
+    cancelled_jobs: jobs.filter((j) => j.status === "cancelled").length,
   };
 
   // Cancel job mutation
@@ -164,12 +168,19 @@ function JobsPageContent() {
   });
 
   const getStatusBadge = (status: JobStatus) => {
-    const statusConfig: Record<JobStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      JobStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       pending: { icon: Clock, color: "bg-gray-100 text-gray-800", label: "Pending" },
       running: { icon: Loader, color: "bg-blue-100 text-blue-800", label: "Running" },
       completed: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Completed" },
       failed: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Failed" },
-      cancelled: { icon: AlertTriangle, color: "bg-orange-100 text-orange-800", label: "Cancelled" },
+      cancelled: {
+        icon: AlertTriangle,
+        color: "bg-orange-100 text-orange-800",
+        label: "Cancelled",
+      },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -373,9 +384,7 @@ function JobsPageContent() {
                             {job.id.substring(0, 8)}...
                           </Link>
                         </CardTitle>
-                        <CardDescription>
-                          {getJobTypeLabel(job.job_type)}
-                        </CardDescription>
+                        <CardDescription>{getJobTypeLabel(job.job_type)}</CardDescription>
                       </div>
                     </div>
                     {getStatusBadge(job.status)}

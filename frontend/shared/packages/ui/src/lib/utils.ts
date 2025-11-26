@@ -76,9 +76,7 @@ export function getPortalConfig(portal: PortalType): PortalColorType {
  * Generate CSS variables for portal theme
  * @deprecated Use UniversalTheme from @dotmac/primitives instead
  */
-export function generatePortalCSSVariables(
-  portal: PortalType
-): Record<string, string> {
+export function generatePortalCSSVariables(portal: PortalType): Record<string, string> {
   const config = getPortalConfig(portal);
   return {
     "--portal-primary": config.primary,

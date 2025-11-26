@@ -86,8 +86,7 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
     // Check against both client and server tokens
     const storedToken = sessionStorage.getItem("csrf-token");
     return (
-      tokenToValidate === storedToken ||
-      (serverToken !== null && tokenToValidate === serverToken)
+      tokenToValidate === storedToken || (serverToken !== null && tokenToValidate === serverToken)
     );
   };
 

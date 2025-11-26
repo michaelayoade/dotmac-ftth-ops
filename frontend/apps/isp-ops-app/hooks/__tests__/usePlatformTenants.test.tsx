@@ -107,7 +107,7 @@ describe("usePlatformTenants", () => {
 
     it("should handle fetch error", async () => {
       (platformAdminTenantService.listTenants as jest.Mock).mockRejectedValue(
-        new Error("Failed to fetch tenants")
+        new Error("Failed to fetch tenants"),
       );
 
       const { result } = renderHook(() => usePlatformTenants({ page: 1, limit: 10 }), {
@@ -120,7 +120,7 @@ describe("usePlatformTenants", () => {
 
     it("should start with pending state", () => {
       (platformAdminTenantService.listTenants as jest.Mock).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        () => new Promise(() => {}), // Never resolves
       );
 
       const { result } = renderHook(() => usePlatformTenants({ page: 1, limit: 10 }), {
@@ -132,9 +132,7 @@ describe("usePlatformTenants", () => {
     });
 
     it("should pass correct params to service", async () => {
-      const mockTenants = [
-        createMockTenant({ id: "1", name: "Test Tenant", status: "active" }),
-      ];
+      const mockTenants = [createMockTenant({ id: "1", name: "Test Tenant", status: "active" })];
 
       (platformAdminTenantService.listTenants as jest.Mock).mockResolvedValue({
         tenants: mockTenants,
@@ -147,7 +145,7 @@ describe("usePlatformTenants", () => {
         () => usePlatformTenants({ page: 1, limit: 20, search: "test" }),
         {
           wrapper: createQueryWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -179,7 +177,7 @@ describe("usePlatformTenants", () => {
 
     it("should handle pagination - page 1", async () => {
       const allTenants = Array.from({ length: 10 }, (_, i) =>
-        createMockTenant({ id: `${i + 1}`, name: `Tenant ${i + 1}` })
+        createMockTenant({ id: `${i + 1}`, name: `Tenant ${i + 1}` }),
       );
 
       (platformAdminTenantService.listTenants as jest.Mock).mockResolvedValue({
@@ -216,7 +214,7 @@ describe("usePlatformTenants", () => {
         () => usePlatformTenants({ page: 1, limit: 10, status: "active" }),
         {
           wrapper: createQueryWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -243,7 +241,7 @@ describe("usePlatformTenants", () => {
         () => usePlatformTenants({ page: 1, limit: 10, search: "acme" }),
         {
           wrapper: createQueryWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -270,7 +268,7 @@ describe("usePlatformTenants", () => {
               queryKey: ["platform-tenant-details", "tenant-123"],
               queryFn: () => platformAdminTenantService.getTenantDetails("tenant-123"),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -282,7 +280,7 @@ describe("usePlatformTenants", () => {
 
       it("should handle 404 when tenant not found", async () => {
         (platformAdminTenantService.getTenantDetails as jest.Mock).mockRejectedValue(
-          new Error("Tenant not found")
+          new Error("Tenant not found"),
         );
 
         const { result } = renderHook(
@@ -291,7 +289,7 @@ describe("usePlatformTenants", () => {
               queryKey: ["platform-tenant-details", "nonexistent"],
               queryFn: () => platformAdminTenantService.getTenantDetails("nonexistent"),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await waitFor(() => expect(result.current.isError).toBe(true));
@@ -313,7 +311,7 @@ describe("usePlatformTenants", () => {
               queryKey: ["tenant-users", "tenant-123"],
               queryFn: () => platformAdminTenantService.getTenantUsers("tenant-123"),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -332,7 +330,7 @@ describe("usePlatformTenants", () => {
               queryKey: ["tenant-users", "tenant-empty"],
               queryFn: () => platformAdminTenantService.getTenantUsers("tenant-empty"),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -358,7 +356,7 @@ describe("usePlatformTenants", () => {
               queryKey: ["tenant-statistics", "tenant-stats"],
               queryFn: () => platformAdminTenantService.getTenantStatistics("tenant-stats"),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -379,15 +377,22 @@ describe("usePlatformTenants", () => {
           settings: { timezone: "UTC", theme: "dark", language: "es" },
         });
 
-        (platformAdminTenantService.updateTenantSettings as jest.Mock).mockResolvedValue(updatedTenant);
+        (platformAdminTenantService.updateTenantSettings as jest.Mock).mockResolvedValue(
+          updatedTenant,
+        );
 
         const { result } = renderHook(
           () =>
             useMutation({
-              mutationFn: ({ tenantId, settings }: { tenantId: string; settings: Record<string, any> }) =>
-                platformAdminTenantService.updateTenantSettings(tenantId, settings),
+              mutationFn: ({
+                tenantId,
+                settings,
+              }: {
+                tenantId: string;
+                settings: Record<string, any>;
+              }) => platformAdminTenantService.updateTenantSettings(tenantId, settings),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await act(async () => {
@@ -411,7 +416,9 @@ describe("usePlatformTenants", () => {
           limits: { max_users: 100, max_storage_gb: 200, max_api_calls_month: 10000 },
         });
 
-        (platformAdminTenantService.updateTenantLimits as jest.Mock).mockResolvedValue(updatedTenant);
+        (platformAdminTenantService.updateTenantLimits as jest.Mock).mockResolvedValue(
+          updatedTenant,
+        );
 
         const { result } = renderHook(
           () =>
@@ -419,7 +426,7 @@ describe("usePlatformTenants", () => {
               mutationFn: ({ tenantId, limits }: { tenantId: string; limits: any }) =>
                 platformAdminTenantService.updateTenantLimits(tenantId, limits),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await act(async () => {
@@ -438,7 +445,9 @@ describe("usePlatformTenants", () => {
 
     describe("disableTenantUser", () => {
       it("should disable tenant user successfully", async () => {
-        (platformAdminTenantService.disableTenantUser as jest.Mock).mockResolvedValue({ success: true });
+        (platformAdminTenantService.disableTenantUser as jest.Mock).mockResolvedValue({
+          success: true,
+        });
 
         const { result } = renderHook(
           () =>
@@ -446,7 +455,7 @@ describe("usePlatformTenants", () => {
               mutationFn: ({ tenantId, userId }: { tenantId: string; userId: string }) =>
                 platformAdminTenantService.disableTenantUser(tenantId, userId),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await act(async () => {
@@ -471,7 +480,7 @@ describe("usePlatformTenants", () => {
               mutationFn: ({ tenantId, reason }: { tenantId: string; reason?: string }) =>
                 platformAdminTenantService.deleteTenant(tenantId, reason),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await act(async () => {
@@ -502,7 +511,7 @@ describe("usePlatformTenants", () => {
               mutationFn: ({ tenantId, duration }: { tenantId: string; duration?: number }) =>
                 platformAdminTenantService.impersonateTenant(tenantId, duration),
             }),
-          { wrapper: createQueryWrapper() }
+          { wrapper: createQueryWrapper() },
         );
 
         await act(async () => {

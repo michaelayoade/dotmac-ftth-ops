@@ -162,7 +162,16 @@ export default function AssignRoleModal({
     } finally {
       setAssigning(false);
     }
-  }, [selectedUsers, role.name, expiresAt, onAssign, fetchRoleAssignments, apiClient, toast, logger]);
+  }, [
+    selectedUsers,
+    role.name,
+    expiresAt,
+    onAssign,
+    fetchRoleAssignments,
+    apiClient,
+    toast,
+    logger,
+  ]);
 
   const confirmDialog = useConfirmDialog();
 

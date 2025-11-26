@@ -15,9 +15,7 @@ const resolveAuthEnvironment = () => {
   const databaseUrl = process.env.DATABASE_URL || process.env.DOTMAC_DATABASE_URL;
   const authSecret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET;
   const authUrl =
-    process.env.BETTER_AUTH_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:3000";
+    process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
   if (!databaseUrl) {
     throw new Error(

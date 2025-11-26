@@ -6,10 +6,7 @@
 
 import React from "react";
 import { renderQuick, screen, fireEvent } from "@dotmac/testing";
-import {
-  ConnectionStatusIndicator,
-  CompactConnectionStatus,
-} from "../ConnectionStatusIndicator";
+import { ConnectionStatusIndicator, CompactConnectionStatus } from "../ConnectionStatusIndicator";
 import type { ConnectionStatus } from "@/types/realtime";
 
 // Mock hooks and components
@@ -50,12 +47,7 @@ jest.mock("@dotmac/ui", () => ({
     </div>
   ),
   Button: ({ children, onClick, variant, size }: any) => (
-    <button
-      data-testid="button"
-      onClick={onClick}
-      data-variant={variant}
-      data-size={size}
-    >
+    <button data-testid="button" onClick={onClick} data-variant={variant} data-size={size}>
       {children}
     </button>
   ),
@@ -285,27 +277,21 @@ describe("ConnectionStatusIndicator", () => {
     });
 
     it("applies top-right position", () => {
-      const { container } = renderQuick(
-        <ConnectionStatusIndicator position="top-right" />,
-      );
+      const { container } = renderQuick(<ConnectionStatusIndicator position="top-right" />);
 
       const wrapper = container.querySelector(".top-4.right-4");
       expect(wrapper).toBeInTheDocument();
     });
 
     it("applies top-left position", () => {
-      const { container } = renderQuick(
-        <ConnectionStatusIndicator position="top-left" />,
-      );
+      const { container } = renderQuick(<ConnectionStatusIndicator position="top-left" />);
 
       const wrapper = container.querySelector(".top-4.left-4");
       expect(wrapper).toBeInTheDocument();
     });
 
     it("applies bottom-left position", () => {
-      const { container } = renderQuick(
-        <ConnectionStatusIndicator position="bottom-left" />,
-      );
+      const { container } = renderQuick(<ConnectionStatusIndicator position="bottom-left" />);
 
       const wrapper = container.querySelector(".bottom-4.left-4");
       expect(wrapper).toBeInTheDocument();
@@ -390,9 +376,7 @@ describe("ConnectionStatusIndicator", () => {
 
       // Check overall status is connecting
       const badges = screen.getAllByTestId("badge");
-      const connectingBadge = badges.find((badge) =>
-        badge.textContent?.includes("Connecting"),
-      );
+      const connectingBadge = badges.find((badge) => badge.textContent?.includes("Connecting"));
       expect(connectingBadge).toBeInTheDocument();
 
       // Check error warning is shown

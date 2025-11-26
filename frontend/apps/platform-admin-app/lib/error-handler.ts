@@ -16,8 +16,8 @@
  * ```
  */
 
-import { logger } from './logger';
-import { ROUTES } from './routes';
+import { logger } from "./logger";
+import { ROUTES } from "./routes";
 
 export interface ErrorOptions {
   /**
@@ -63,10 +63,7 @@ export interface ApiError extends Error {
  * Check if error is an API error (from axios or fetch)
  */
 export const isApiError = (error: unknown): error is ApiError => {
-  return (
-    error instanceof Error &&
-    ('status' in error || 'response' in error)
-  );
+  return error instanceof Error && ("status" in error || "response" in error);
 };
 
 /**
@@ -77,21 +74,21 @@ export const getErrorMessage = (error: unknown): string => {
     return error.message;
   }
 
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
 
   if (isApiError(error) && error.data) {
     const data = error.data as Record<string, unknown>;
-    if (data['message'] && typeof data['message'] === 'string') {
-      return data['message'];
+    if (data["message"] && typeof data["message"] === "string") {
+      return data["message"];
     }
-    if (data['detail'] && typeof data['detail'] === 'string') {
-      return data['detail'];
+    if (data["detail"] && typeof data["detail"] === "string") {
+      return data["detail"];
     }
   }
 
-  return 'An unexpected error occurred. Please try again.';
+  return "An unexpected error occurred. Please try again.";
 };
 
 /**
@@ -105,11 +102,11 @@ export const getErrorStatus = (error: unknown): number | undefined => {
   // Check for axios error response
   if (
     error &&
-    typeof error === 'object' &&
-    'response' in error &&
+    typeof error === "object" &&
+    "response" in error &&
     error.response &&
-    typeof error.response === 'object' &&
-    'status' in error.response
+    typeof error.response === "object" &&
+    "status" in error.response
   ) {
     return (error.response as { status: number }).status;
   }
@@ -124,15 +121,15 @@ export const getErrorStatus = (error: unknown): number | undefined => {
 const showToastNotification = (options: {
   title: string;
   description?: string;
-  variant: 'default' | 'destructive';
+  variant: "default" | "destructive";
 }) => {
   // In a real implementation, this would use the toast context
   // For now, we'll dispatch a custom event that can be listened to
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     window.dispatchEvent(
-      new CustomEvent('toast', {
+      new CustomEvent("toast", {
         detail: options,
-      })
+      }),
     );
   }
 };
@@ -140,10 +137,7 @@ const showToastNotification = (options: {
 /**
  * Handle API errors with consistent behavior
  */
-export const handleApiError = (
-  error: unknown,
-  options: ErrorOptions = {}
-): void => {
+export const handleApiError = (error: unknown, options: ErrorOptions = {}): void => {
   const {
     showToast = true,
     userMessage,
@@ -156,7 +150,7 @@ export const handleApiError = (
   const message = userMessage || getErrorMessage(error);
 
   // Log error with context
-  logger.error('API Error', error, {
+  logger.error("API Error", error, {
     status,
     message,
     ...context,
@@ -164,12 +158,12 @@ export const handleApiError = (
 
   // Handle 401 Unauthorized - redirect to login
   if (status === 401 && redirectOnUnauthorized) {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Save current path for redirect after login
       const currentPath = window.location.pathname;
       if (currentPath !== ROUTES.LOGIN) {
         // eslint-disable-next-line no-restricted-globals -- sessionStorage usage
-        sessionStorage.setItem('redirectAfterLogin', currentPath);
+        sessionStorage.setItem("redirectAfterLogin", currentPath);
       }
 
       // Redirect to login
@@ -182,9 +176,9 @@ export const handleApiError = (
   if (status === 403) {
     if (showToast) {
       showToastNotification({
-        title: 'Access Denied',
-        description: 'You do not have permission to perform this action.',
-        variant: 'destructive',
+        title: "Access Denied",
+        description: "You do not have permission to perform this action.",
+        variant: "destructive",
       });
     }
   }
@@ -193,9 +187,9 @@ export const handleApiError = (
   else if (status === 404) {
     if (showToast) {
       showToastNotification({
-        title: 'Not Found',
+        title: "Not Found",
         description: message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
   }
@@ -204,9 +198,9 @@ export const handleApiError = (
   else if (status === 422) {
     if (showToast) {
       showToastNotification({
-        title: 'Validation Error',
+        title: "Validation Error",
         description: message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
   }
@@ -215,9 +209,9 @@ export const handleApiError = (
   else if (status && status >= 500) {
     if (showToast) {
       showToastNotification({
-        title: 'Server Error',
-        description: 'An unexpected server error occurred. Please try again later.',
-        variant: 'destructive',
+        title: "Server Error",
+        description: "An unexpected server error occurred. Please try again later.",
+        variant: "destructive",
       });
     }
   }
@@ -226,9 +220,9 @@ export const handleApiError = (
   else {
     if (showToast) {
       showToastNotification({
-        title: 'Error',
+        title: "Error",
         description: message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
   }
@@ -242,28 +236,20 @@ export const handleApiError = (
 /**
  * Handle general errors (non-API)
  */
-export const handleError = (
-  error: unknown,
-  options: ErrorOptions = {}
-): void => {
-  const {
-    showToast = true,
-    userMessage,
-    context,
-    onError,
-  } = options;
+export const handleError = (error: unknown, options: ErrorOptions = {}): void => {
+  const { showToast = true, userMessage, context, onError } = options;
 
   const message = userMessage || getErrorMessage(error);
 
   // Log error
-  logger.error('Error', error, context);
+  logger.error("Error", error, context);
 
   // Show toast notification
   if (showToast) {
     showToastNotification({
-      title: 'Error',
+      title: "Error",
       description: message,
-      variant: 'destructive',
+      variant: "destructive",
     });
   }
 
@@ -278,12 +264,12 @@ export const handleError = (
  */
 export const handleValidationError = (
   errors: Record<string, string[]>,
-  options: ErrorOptions = {}
+  options: ErrorOptions = {},
 ): void => {
   const { showToast = true } = options;
 
   // Log validation errors
-  logger.warn('Validation errors', { errors });
+  logger.warn("Validation errors", { errors });
 
   if (showToast) {
     // Get first error message
@@ -293,9 +279,9 @@ export const handleValidationError = (
 
       if (firstError) {
         showToastNotification({
-          title: 'Validation Error',
+          title: "Validation Error",
           description: firstError,
-          variant: 'destructive',
+          variant: "destructive",
         });
       }
     }
@@ -305,16 +291,14 @@ export const handleValidationError = (
 /**
  * Create error boundary handler
  */
-export const createErrorBoundaryHandler = (
-  componentName: string
-) => {
+export const createErrorBoundaryHandler = (componentName: string) => {
   return (error: Error, errorInfo: React.ErrorInfo): void => {
     logger.error(`Error in ${componentName}`, error, {
       componentStack: errorInfo.componentStack,
     });
 
     // In production, you might want to send this to an error tracking service
-    if (process.env['NODE_ENV'] === 'production') {
+    if (process.env["NODE_ENV"] === "production") {
       // Send to error tracking service (e.g., Sentry)
       // sendToErrorTracking(error, { componentName, ...errorInfo });
     }
@@ -326,7 +310,7 @@ export const createErrorBoundaryHandler = (
  */
 export const withErrorHandling = <T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
-  options: ErrorOptions = {}
+  options: ErrorOptions = {},
 ): T => {
   return (async (...args: unknown[]) => {
     try {

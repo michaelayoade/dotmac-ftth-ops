@@ -261,7 +261,7 @@ Jane,Smith,jane.smith@example.com,+15559876543`;
       const totalRecords = 1000;
       const batchSize = 100;
       const records = Array.from({ length: totalRecords }, (_, i) =>
-        createMockCustomer({ id: `cust_${i}` })
+        createMockCustomer({ id: `cust_${i}` }),
       );
 
       // Act
@@ -308,9 +308,7 @@ Jane,Smith,jane.smith@example.com,+15559876543`;
       ];
 
       // Act
-      const retriableRecords = failedRecords.filter(
-        (r) => r.retries < r.maxRetries
-      );
+      const retriableRecords = failedRecords.filter((r) => r.retries < r.maxRetries);
 
       // Assert
       expect(retriableRecords.length).toBe(2);
@@ -349,7 +347,7 @@ describe("Data Migration: Export Operations", () => {
     it("should handle special characters in CSV export", () => {
       // Arrange
       const record = {
-        name: 'Company, Inc.',
+        name: "Company, Inc.",
         description: 'Description with "quotes"',
         notes: "Line 1\nLine 2",
       };
@@ -373,10 +371,7 @@ describe("Data Migration: Export Operations", () => {
   describe("JSON Export", () => {
     it("should export data to JSON format", () => {
       // Arrange
-      const customers = [
-        createMockCustomer(),
-        createMockCustomer(),
-      ];
+      const customers = [createMockCustomer(), createMockCustomer()];
 
       // Act
       const jsonExport = JSON.stringify(customers, null, 2);
@@ -552,7 +547,7 @@ describe("Data Migration: Data Integrity", () => {
 
       // Act
       const hasRelatedRecords = relatedInvoices.some(
-        (invoice) => invoice.customer_id === customerToDelete
+        (invoice) => invoice.customer_id === customerToDelete,
       );
 
       // Assert - Should prevent deletion
@@ -593,8 +588,14 @@ describe("Data Migration: Data Integrity", () => {
       // Act - Simple checksum using record count and IDs
       const sourceChecksum = sourceData.length;
       const migratedChecksum = migratedData.length;
-      const sourceIds = sourceData.map((r) => r.id).sort().join(",");
-      const migratedIds = migratedData.map((r) => r.id).sort().join(",");
+      const sourceIds = sourceData
+        .map((r) => r.id)
+        .sort()
+        .join(",");
+      const migratedIds = migratedData
+        .map((r) => r.id)
+        .sort()
+        .join(",");
 
       // Assert
       expect(sourceChecksum).toBe(migratedChecksum);
@@ -614,9 +615,7 @@ describe("Data Migration: Error Handling", () => {
       ];
 
       // Act
-      const errors = records
-        .filter((r) => !r.valid)
-        .map((r) => ({ id: r.id, error: r.error }));
+      const errors = records.filter((r) => !r.valid).map((r) => ({ id: r.id, error: r.error }));
 
       // Assert
       expect(errors.length).toBe(2);

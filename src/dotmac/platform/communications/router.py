@@ -75,7 +75,9 @@ def _parse_datetime(value: str | None) -> datetime | None:
         return None
 
 
-def _render_from_strings(subject: str, text_body: str | None, html_body: str | None, data: dict[str, Any]) -> RenderedTemplate:
+def _render_from_strings(
+    subject: str, text_body: str | None, html_body: str | None, data: dict[str, Any]
+) -> RenderedTemplate:
     """Render subject/text/html with quick_render for reuse."""
     result = quick_render(
         subject=subject or "",
@@ -86,7 +88,9 @@ def _render_from_strings(subject: str, text_body: str | None, html_body: str | N
     return result
 
 
-def _compute_progress(task_service: Any, task_id: str | None, recipient_count: int | None) -> int | None:
+def _compute_progress(
+    task_service: Any, task_id: str | None, recipient_count: int | None
+) -> int | None:
     """Best-effort progress computation using Celery task info."""
     if not task_service or not task_id:
         return None
@@ -103,7 +107,9 @@ def _compute_progress(task_service: Any, task_id: str | None, recipient_count: i
     return None
 
 
-def _progress_payload(task_service: Any, task_id: str | None, recipient_count: int | None) -> dict[str, Any] | None:
+def _progress_payload(
+    task_service: Any, task_id: str | None, recipient_count: int | None
+) -> dict[str, Any] | None:
     """Return detailed progress payload from Celery info."""
     if not task_service or not task_id:
         return None
@@ -197,7 +203,9 @@ async def send_email_endpoint(
                 # Log the communication attempt
                 log_entry = await metrics_service.log_communication(
                     type=CommunicationType.EMAIL,
-                    recipient=", ".join([addr for addr in ( _extract_email(a) or "" for a in request.to ) if addr]),
+                    recipient=", ".join(
+                        [addr for addr in (_extract_email(a) or "" for a in request.to) if addr]
+                    ),
                     subject=request.subject,
                     sender=request.from_email,
                     text_body=request.text_body,
@@ -1044,7 +1052,9 @@ async def queue_bulk_job(
 
 
 @router.get("/bulk/{job_id}/status")
-async def get_bulk_status(job_id: str, current_user: UserInfo = Depends(get_current_user)) -> dict[str, Any]:
+async def get_bulk_status(
+    job_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> dict[str, Any]:
     """Get bulk job status (compat)."""
     tenant_id = getattr(current_user, "tenant_id", None)
     task_service = get_task_service()
@@ -1087,7 +1097,9 @@ async def get_bulk_status(job_id: str, current_user: UserInfo = Depends(get_curr
     operation = {
         "id": job_id,
         "tenant_id": tenant_id or "default",
-        "template_id": info.get("template_id") or meta.get("metadata", {}).get("template_id") or "template_1",
+        "template_id": info.get("template_id")
+        or meta.get("metadata", {}).get("template_id")
+        or "template_1",
         "recipient_count": total or 0,
         "status": info.get("status") or status.get("status", "processing"),
         "progress": progress,
@@ -1105,7 +1117,9 @@ async def get_bulk_status(job_id: str, current_user: UserInfo = Depends(get_curr
 
 
 @router.post("/bulk/{job_id}/cancel")
-async def cancel_bulk_job(job_id: str, current_user: UserInfo = Depends(get_current_user)) -> dict[str, Any]:
+async def cancel_bulk_job(
+    job_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> dict[str, Any]:
     """Cancel bulk job (compat)."""
     task_service = get_task_service()
     cancelled = task_service.cancel_task(job_id)
@@ -1600,7 +1614,9 @@ async def get_communications_metrics(
                 **({"bulk_jobs": bulk_summary} if bulk_summary else {}),
             )
     except Exception as exc:
-        logger.warning("Communications metrics unavailable; returning synthetic metrics.", error=str(exc))
+        logger.warning(
+            "Communications metrics unavailable; returning synthetic metrics.", error=str(exc)
+        )
 
     stats_block = {
         "total_sent": 100,
@@ -1833,9 +1849,7 @@ async def list_bulk_jobs(
 
             total = (await db.execute(count_query)).scalar() or 0
             result = await db.execute(
-                base_query.order_by(order_field)
-                .offset(offset)
-                .limit(page_size)
+                base_query.order_by(order_field).offset(offset).limit(page_size)
             )
             jobs = result.scalars().all()
 
@@ -1908,7 +1922,9 @@ async def get_bulk_job(
                     if tenant_id:
                         log_conditions.append(CommunicationLog.tenant_id == tenant_id)
 
-                    total_query = select(func.count(CommunicationLog.id)).where(and_(*log_conditions))
+                    total_query = select(func.count(CommunicationLog.id)).where(
+                        and_(*log_conditions)
+                    )
                     logs_total = (await db.execute(total_query)).scalar() or 0
 
                     offset = max(logs_page - 1, 0) * logs_page_size
@@ -2061,7 +2077,9 @@ async def list_logs(
 
 
 @router.get("/logs/{log_id}", response_model=CommunicationLogSchema)
-async def get_log(log_id: str, current_user: UserInfo = Depends(get_current_user)) -> CommunicationLogSchema:
+async def get_log(
+    log_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> CommunicationLogSchema:
     """Get single communication log."""
     tenant_id = getattr(current_user, "tenant_id", None)
     try:
@@ -2087,6 +2105,8 @@ async def get_log(log_id: str, current_user: UserInfo = Depends(get_current_user
 
 
 @router.post("/logs/{log_id}/retry")
-async def retry_log(log_id: str, current_user: UserInfo = Depends(get_current_user)) -> dict[str, Any]:
+async def retry_log(
+    log_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> dict[str, Any]:
     """Retry a failed communication (stub)."""
     return {"log_id": log_id, "status": "queued"}

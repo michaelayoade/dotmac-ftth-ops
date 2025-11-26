@@ -25,12 +25,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useProjects, useProjectMetrics, useTeams } from "@/hooks/useProjects";
-import {
-  Project,
-  ProjectStatus,
-  ProjectPriority,
-  ProjectFilter,
-} from "@/types/project-management";
+import { Project, ProjectStatus, ProjectPriority, ProjectFilter } from "@/types/project-management";
 
 // ============================================================================
 // Metrics Card Component
@@ -112,9 +107,7 @@ function ProjectCard({ project, onSelect, teamNameById }: ProjectCardProps) {
               <CardTitle className="text-lg">{project.name}</CardTitle>
               <Badge className={statusColors[project.status]}>{project.status}</Badge>
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {project.description}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
           </div>
         </div>
       </CardHeader>
@@ -173,11 +166,7 @@ function ProjectCard({ project, onSelect, teamNameById }: ProjectCardProps) {
           <div className="flex items-center justify-between pt-2 border-t">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
-                {(
-                  teamNameById.get(project.ownerId) ??
-                  project.owner.name ??
-                  "U"
-                )
+                {(teamNameById.get(project.ownerId) ?? project.owner.name ?? "U")
                   .charAt(0)
                   .toUpperCase()}
               </div>
@@ -366,9 +355,7 @@ export default function ProjectDashboard() {
           <CardContent className="p-12 text-center">
             <LayoutGrid className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No projects found</h3>
-            <p className="text-muted-foreground mb-4">
-              Get started by creating your first project
-            </p>
+            <p className="text-muted-foreground mb-4">Get started by creating your first project</p>
             <Button onClick={handleCreateProject}>
               <Plus className="h-4 w-4 mr-2" />
               Create Project

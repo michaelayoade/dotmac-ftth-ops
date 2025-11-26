@@ -13,13 +13,7 @@
 
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
@@ -327,11 +321,7 @@ export function AlarmDetailModal<TAlarm = any>({
               Create Ticket
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onFetchDetails?.(alarmData.id)}
-          >
+          <Button size="sm" variant="outline" onClick={() => onFetchDetails?.(alarmData.id)}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -426,7 +416,9 @@ export function AlarmDetailModal<TAlarm = any>({
                   {alarmData.message && (
                     <div>
                       <Label className="text-xs text-muted-foreground">Message</Label>
-                      <p className="text-sm mt-1 font-mono bg-muted p-2 rounded">{alarmData.message}</p>
+                      <p className="text-sm mt-1 font-mono bg-muted p-2 rounded">
+                        {alarmData.message}
+                      </p>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-4">
@@ -486,7 +478,9 @@ export function AlarmDetailModal<TAlarm = any>({
               </Card>
 
               {/* Root Cause Analysis */}
-              {(alarmData.is_root_cause || alarmData.probable_cause || alarmData.recommended_action) && (
+              {(alarmData.is_root_cause ||
+                alarmData.probable_cause ||
+                alarmData.recommended_action) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Root Cause Analysis</CardTitle>

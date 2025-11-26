@@ -7,11 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { AdvancedRevenueChart } from "@/components/analytics/AdvancedRevenueChart";
 import { ChurnAnalysisChart } from "@/components/analytics/ChurnAnalysisChart";
 import { CustomReportBuilder } from "@/components/analytics/CustomReportBuilder";
-import {
-  BarChart3,
-  TrendingDown,
-  FileText,
-} from "lucide-react";
+import { BarChart3, TrendingDown, FileText } from "lucide-react";
 
 export default function AdvancedAnalyticsPage() {
   return (

@@ -336,17 +336,16 @@ export function UniversalChart({
     };
 
     switch (type) {
-      case "line":
-        {
-          const hasXAxisAngle = typeof xAxis?.angle === "number";
-          const leftDomain = yAxis?.left?.domain;
-          const rightDomain = yAxis?.right?.domain;
+      case "line": {
+        const hasXAxisAngle = typeof xAxis?.angle === "number";
+        const leftDomain = yAxis?.left?.domain;
+        const rightDomain = yAxis?.right?.domain;
 
-          return (
-            <LineChart {...commonProps}>
-              <defs>
-                {seriesWithColors.map((s, index) => (
-                  <linearGradient key={s.key} id={`gradient-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+        return (
+          <LineChart {...commonProps}>
+            <defs>
+              {seriesWithColors.map((s, index) => (
+                <linearGradient key={s.key} id={`gradient-${s.key}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={s.color} stopOpacity={0.3} />
                   <stop offset="95%" stopColor={s.color} stopOpacity={0.1} />
                 </linearGradient>
@@ -412,7 +411,7 @@ export function UniversalChart({
             {showBrush && <Brush dataKey={xAxis?.dataKey || "x"} height={30} />}
           </LineChart>
         );
-        }
+      }
 
       case "area":
         return (

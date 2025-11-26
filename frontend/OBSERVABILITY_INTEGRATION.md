@@ -73,11 +73,11 @@ OBSERVABILITY__ALERTMANAGER_BASE_URL=http://localhost:9093
 When using `useErrorHandler`, errors are automatically sent to OpenTelemetry:
 
 ```typescript
-import { useErrorHandler } from '@dotmac/hooks';
+import { useErrorHandler } from "@dotmac/hooks";
 
 function MyComponent() {
   const { handleError } = useErrorHandler({
-    reportError: true,  // ✅ Default: true
+    reportError: true, // ✅ Default: true
   });
 
   const fetchData = async () => {
@@ -86,8 +86,8 @@ function MyComponent() {
     } catch (err) {
       // Automatically reported to observability stack
       handleError(err, {
-        component: 'MyComponent',
-        action: 'fetchData',
+        component: "MyComponent",
+        action: "fetchData",
         userId: user?.id,
       });
     }
@@ -150,22 +150,22 @@ frontend.errors.total{
 ### Custom Metrics
 
 ```typescript
-import { recordMetric } from '@dotmac/utils/observability';
+import { recordMetric } from "@dotmac/utils/observability";
 
 // Record custom metric
-recordMetric('frontend.page.load_time', 1234, {
-  page: '/dashboard',
-  user_type: 'admin',
+recordMetric("frontend.page.load_time", 1234, {
+  page: "/dashboard",
+  user_type: "admin",
 });
 
 // Record performance
-import { recordPerformance } from '@dotmac/utils/observability';
+import { recordPerformance } from "@dotmac/utils/observability";
 
 const start = performance.now();
 await someOperation();
 const duration = performance.now() - start;
 
-recordPerformance('api.customer.fetch', duration, {
+recordPerformance("api.customer.fetch", duration, {
   count: 100,
   cached: false,
 });
@@ -177,10 +177,11 @@ Each browser session gets a unique ID for error correlation:
 
 ```typescript
 // Automatically created and stored in sessionStorage
-observability_session_id: "550e8400-e29b-41d4-a716-446655440000"
+observability_session_id: "550e8400-e29b-41d4-a716-446655440000";
 ```
 
 This allows you to:
+
 - Correlate multiple errors from the same session
 - Track user journey when errors occur
 - Identify patterns in error sequences
@@ -299,6 +300,7 @@ In development, errors log detailed context:
 ### Trace Correlation
 
 Errors are linked to distributed traces, allowing you to:
+
 1. Find the error in Grafana Loki
 2. Get the trace ID from error attributes
 3. View the full request trace in Tempo
@@ -342,16 +344,18 @@ http://localhost:9090/graph?g0.expr=frontend_errors_total
 ## Best Practices
 
 1. **Always include context**
+
    ```typescript
    handleError(error, {
-     component: 'ComponentName',
-     action: 'actionName',
+     component: "ComponentName",
+     action: "actionName",
      userId: user?.id,
-     customData: 'any relevant context',
+     customData: "any relevant context",
    });
    ```
 
 2. **Use meaningful component names**
+
    ```typescript
    // ✅ Good
    { component: 'CustomerList', action: 'fetchCustomers' }
@@ -361,9 +365,10 @@ http://localhost:9090/graph?g0.expr=frontend_errors_total
    ```
 
 3. **Don't report expected errors**
+
    ```typescript
    // User cancelled action - don't report
-   if (error.code === 'USER_CANCELLED') {
+   if (error.code === "USER_CANCELLED") {
      return;
    }
 
@@ -373,8 +378,8 @@ http://localhost:9090/graph?g0.expr=frontend_errors_total
 4. **Include relevant user context** (without PII)
    ```typescript
    handleError(error, {
-     component: 'PaymentForm',
-     userRole: user.role,        // ✅ OK
+     component: "PaymentForm",
+     userRole: user.role, // ✅ OK
      planTier: subscription.tier, // ✅ OK
      // email: user.email,        // ❌ Don't include PII
    });
@@ -385,11 +390,13 @@ http://localhost:9090/graph?g0.expr=frontend_errors_total
 ### Errors not appearing in Grafana
 
 1. **Check OpenTelemetry endpoint**
+
    ```typescript
    console.log(process.env.NEXT_PUBLIC_OTEL_ENDPOINT);
    ```
 
 2. **Verify collector is running**
+
    ```bash
    curl http://localhost:4318/v1/logs
    ```

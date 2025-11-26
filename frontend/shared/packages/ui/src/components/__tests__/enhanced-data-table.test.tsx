@@ -264,11 +264,7 @@ describe("EnhancedDataTable", () => {
     ];
 
     render(
-      <EnhancedDataTable
-        {...defaultProps}
-        columns={actionableColumns}
-        onRowClick={onRowClick}
-      />,
+      <EnhancedDataTable {...defaultProps} columns={actionableColumns} onRowClick={onRowClick} />,
     );
 
     await user.click(screen.getByText("Item 1"));

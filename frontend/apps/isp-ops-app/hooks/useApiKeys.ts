@@ -118,7 +118,10 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
   const page = options.page ?? 1;
   const limit = options.limit ?? 50;
 
-  const fetchApiKeysRequest = async (targetPage: number, targetLimit: number): Promise<ApiKeysQueryResult> => {
+  const fetchApiKeysRequest = async (
+    targetPage: number,
+    targetLimit: number,
+  ): Promise<ApiKeysQueryResult> => {
     const queryString = buildApiKeysQuery(targetPage, targetLimit);
     try {
       const response = await apiClient.get<APIKeyListResponse>(`/auth/api-keys?${queryString}`);
@@ -146,7 +149,10 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
         const response = await apiClient.get("/auth/api-keys/scopes/available");
         return (response.data as AvailableScopes) || ({} as AvailableScopes);
       } catch (err) {
-        logger.error("Failed to fetch available scopes", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch available scopes",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         console.error(err);
         return {} as AvailableScopes;
       }
@@ -180,7 +186,13 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
 
   // Update API key mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: APIKeyUpdateRequest }): Promise<APIKey> => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: APIKeyUpdateRequest;
+    }): Promise<APIKey> => {
       const response = await apiClient.patch(`/auth/api-keys/${id}`, data);
       return response.data as APIKey;
     },
@@ -195,7 +207,9 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
         };
       });
       queryClient.invalidateQueries({ queryKey: apiKeysKeys.lists() });
-      setApiKeysState((current) => current.map((key) => (key.id === updatedKey.id ? updatedKey : key)));
+      setApiKeysState((current) =>
+        current.map((key) => (key.id === updatedKey.id ? updatedKey : key)),
+      );
     },
     onError: (err) => {
       logger.error("Failed to update API key", err instanceof Error ? err : new Error(String(err)));
@@ -276,7 +290,8 @@ export function useApiKeys(options: UseApiKeysOptions = {}) {
     isRevoking,
     fetchApiKeys,
     createApiKey: createMutation.mutateAsync,
-    updateApiKey: async (id: string, data: APIKeyUpdateRequest) => updateMutation.mutateAsync({ id, data }),
+    updateApiKey: async (id: string, data: APIKeyUpdateRequest) =>
+      updateMutation.mutateAsync({ id, data }),
     revokeApiKey: revokeMutation.mutateAsync,
     getAvailableScopes,
   };

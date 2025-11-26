@@ -28,9 +28,6 @@ export function PreviewTemplateModal(props: PreviewTemplateModalProps) {
   };
 
   return (
-    <SharedPreviewTemplateModal
-      {...props}
-      renderTemplatePreview={renderTemplatePreviewSafe}
-    />
+    <SharedPreviewTemplateModal {...props} renderTemplatePreview={renderTemplatePreviewSafe} />
   );
 }

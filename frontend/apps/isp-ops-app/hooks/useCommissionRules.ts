@@ -73,16 +73,15 @@ const defaultHeaders = { "Content-Type": "application/json" };
 async function fetchCommissionRules(
   buildUrl: BuildApiUrl,
   params?: {
-  partner_id?: string;
-  is_active?: boolean;
-  page?: number;
-  page_size?: number;
-},
+    partner_id?: string;
+    is_active?: boolean;
+    page?: number;
+    page_size?: number;
+  },
 ): Promise<CommissionRuleListResponse> {
   const queryParams = new URLSearchParams();
   if (params?.partner_id) queryParams.append("partner_id", params.partner_id);
-  if (params?.is_active !== undefined)
-    queryParams.append("is_active", String(params.is_active));
+  if (params?.is_active !== undefined) queryParams.append("is_active", String(params.is_active));
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.page_size) queryParams.append("page_size", String(params.page_size));
 
@@ -170,10 +169,10 @@ async function deleteCommissionRule(buildUrl: BuildApiUrl, ruleId: string): Prom
 async function fetchApplicableRules(
   buildUrl: BuildApiUrl,
   params: {
-  partner_id: string;
-  product_id?: string;
-  customer_id?: string;
-},
+    partner_id: string;
+    product_id?: string;
+    customer_id?: string;
+  },
 ): Promise<CommissionRule[]> {
   const queryParams = new URLSearchParams();
   if (params.product_id) queryParams.append("product_id", params.product_id);
@@ -185,9 +184,7 @@ async function fetchApplicableRules(
   const res = await fetch(url, { headers: defaultHeaders, credentials: "include" });
 
   if (!res.ok) {
-    const error = await res
-      .json()
-      .catch(() => ({ detail: "Failed to fetch applicable rules" }));
+    const error = await res.json().catch(() => ({ detail: "Failed to fetch applicable rules" }));
     throw new Error(error.detail || `HTTP ${res.status}`);
   }
 
@@ -235,8 +232,7 @@ export function useCreateCommissionRule() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateCommissionRuleInput) =>
-      createCommissionRule(api.buildUrl, payload),
+    mutationFn: (payload: CreateCommissionRuleInput) => createCommissionRule(api.buildUrl, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["commission-rules"] });
     },

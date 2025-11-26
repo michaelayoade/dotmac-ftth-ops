@@ -9,7 +9,13 @@
 import React from "react";
 import { Badge } from "@dotmac/ui";
 import { Card } from "@dotmac/ui";
-import { IPFamily, formatIPAddress, isPrivateIPv4, isULAIPv6, isLinkLocalIPv6 } from "@/lib/utils/ip-address";
+import {
+  IPFamily,
+  formatIPAddress,
+  isPrivateIPv4,
+  isULAIPv6,
+  isLinkLocalIPv6,
+} from "@/lib/utils/ip-address";
 import { cn } from "@/lib/utils";
 
 export interface IPAddressDisplayProps {

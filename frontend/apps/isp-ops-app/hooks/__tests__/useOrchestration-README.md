@@ -11,6 +11,7 @@ Orchestration workflow functionality is tested using **Jest Mocks** for unit tes
 ### The Problem with MSW + Axios + Mutations
 
 MSW (Mock Service Worker) has compatibility issues with axios + React Query for complex hooks:
+
 - MSW intercepts requests successfully ✅
 - MSW returns mock data ✅
 - But React Query doesn't reliably update hook state for mutations ❌
@@ -22,6 +23,7 @@ MSW (Mock Service Worker) has compatibility issues with axios + React Query for 
 ### The Solution: Jest Mocks
 
 Jest mocks work perfectly with axios-based hooks:
+
 - ✅ Direct control over API client responses
 - ✅ React Query receives and processes data correctly
 - ✅ All query and mutation states update properly
@@ -40,6 +42,7 @@ Jest mocks work perfectly with axios-based hooks:
 ### Test Coverage
 
 #### **Query Key Factory (6 tests)** ✅
+
 - Correct base key generation
 - Correct stats key generation
 - Correct workflows key without filters
@@ -94,6 +97,7 @@ Jest mocks work perfectly with axios-based hooks:
    - Show loading state during export
 
 #### **Cache Invalidation (2 tests)** ✅
+
 - Invalidate queries after retrying workflow
 - Invalidate queries after canceling workflow
 
@@ -135,6 +139,7 @@ export function useOrchestrationStats() {
 ```
 
 **Features:**
+
 - Fetches workflow statistics (total, pending, running, completed, failed)
 - Includes success rate and average duration
 - Breaks down counts by workflow type
@@ -163,10 +168,9 @@ export function useWorkflows(options: UseWorkflowsOptions = {}) {
       if (status) params["status"] = status;
       if (workflowType) params["workflow_type"] = workflowType;
 
-      const response = await apiClient.get<WorkflowListResponse>(
-        "orchestration/workflows",
-        { params }
-      );
+      const response = await apiClient.get<WorkflowListResponse>("orchestration/workflows", {
+        params,
+      });
       return response.data;
     },
     staleTime: 10000,
@@ -177,6 +181,7 @@ export function useWorkflows(options: UseWorkflowsOptions = {}) {
 ```
 
 **Features:**
+
 - Supports filtering by status and workflow type
 - Pagination support (page, pageSize)
 - Optional auto-refresh with configurable interval
@@ -190,9 +195,7 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
     queryKey: orchestrationKeys.workflow(workflowId ?? ""),
     queryFn: async () => {
       if (!workflowId) return null;
-      const response = await apiClient.get<Workflow>(
-        `/orchestration/workflows/${workflowId}`
-      );
+      const response = await apiClient.get<Workflow>(`/orchestration/workflows/${workflowId}`);
       return response.data;
     },
     enabled: !!workflowId,
@@ -220,6 +223,7 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
 ```
 
 **Features:**
+
 - Fetches single workflow with all steps
 - Conditional query (enabled only when workflowId provided)
 - Smart polling: automatically stops for terminal states
@@ -242,11 +246,11 @@ export function useRetryWorkflow() {
     onSuccess: (workflowId) => {
       // Invalidate the specific workflow and stats
       queryClient.invalidateQueries({
-        queryKey: orchestrationKeys.workflow(workflowId)
+        queryKey: orchestrationKeys.workflow(workflowId),
       });
       invalidateWorkflowLists(queryClient);
       queryClient.invalidateQueries({
-        queryKey: orchestrationKeys.stats()
+        queryKey: orchestrationKeys.stats(),
       });
     },
     onError: (err: any) => {
@@ -263,6 +267,7 @@ export function useRetryWorkflow() {
 ```
 
 **Features:**
+
 - Retries failed workflows
 - Invalidates workflow detail, workflow lists, and stats
 - Error handling with logging
@@ -281,11 +286,11 @@ export function useCancelWorkflow() {
     },
     onSuccess: (workflowId) => {
       queryClient.invalidateQueries({
-        queryKey: orchestrationKeys.workflow(workflowId)
+        queryKey: orchestrationKeys.workflow(workflowId),
       });
       invalidateWorkflowLists(queryClient);
       queryClient.invalidateQueries({
-        queryKey: orchestrationKeys.stats()
+        queryKey: orchestrationKeys.stats(),
       });
     },
     onError: (err: any) => {
@@ -302,6 +307,7 @@ export function useCancelWorkflow() {
 ```
 
 **Features:**
+
 - Cancels running workflows
 - Comprehensive cache invalidation
 - Error handling and logging
@@ -311,13 +317,7 @@ export function useCancelWorkflow() {
 ```typescript
 export function useExportWorkflows() {
   return useMutation({
-    mutationFn: async ({
-      format,
-      options
-    }: {
-      format: "csv" | "json";
-      options: ExportOptions
-    }) => {
+    mutationFn: async ({ format, options }: { format: "csv" | "json"; options: ExportOptions }) => {
       const params = new URLSearchParams();
       if (options.workflowType) params.append("workflow_type", options.workflowType);
       if (options.status) params.append("status", options.status);
@@ -328,10 +328,9 @@ export function useExportWorkflows() {
         params.append("include_steps", options.includeSteps.toString());
       }
 
-      const response = await apiClient.get(
-        `orchestration/export/${format}?${params.toString()}`,
-        { responseType: "blob" }
-      );
+      const response = await apiClient.get(`orchestration/export/${format}?${params.toString()}`, {
+        responseType: "blob",
+      });
 
       // Create blob and download
       const blob = new Blob([response.data], {
@@ -365,6 +364,7 @@ export function useExportWorkflows() {
 ```
 
 **Features:**
+
 - Export workflows as CSV or JSON
 - Comprehensive filtering (type, status, date range, limit)
 - Automatic file download
@@ -481,10 +481,9 @@ it("should fetch workflows with status filter", async () => {
 
   mockApiClient.get.mockResolvedValue({ data: mockResponse });
 
-  const { result } = renderHook(
-    () => useWorkflows({ status: "running" }),
-    { wrapper: createWrapper() }
-  );
+  const { result } = renderHook(() => useWorkflows({ status: "running" }), {
+    wrapper: createWrapper(),
+  });
 
   await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -509,9 +508,7 @@ it("should retry workflow successfully", async () => {
 
   await result.current.retryWorkflow("wf-123");
 
-  expect(mockApiClient.post).toHaveBeenCalledWith(
-    "/orchestration/workflows/wf-123/retry"
-  );
+  expect(mockApiClient.post).toHaveBeenCalledWith("/orchestration/workflows/wf-123/retry");
   expect(result.current.loading).toBe(false);
   expect(result.current.error).toBeNull();
 });
@@ -581,12 +578,12 @@ it("should export workflows as CSV with correct API call", async () => {
 
   await result.current.exportCSV({
     status: "completed",
-    limit: 100
+    limit: 100,
   });
 
   expect(mockApiClient.get).toHaveBeenCalledWith(
     "orchestration/export/csv?status=completed&limit=100",
-    { responseType: "blob" }
+    { responseType: "blob" },
   );
 });
 ```
@@ -598,12 +595,14 @@ it("should export workflows as CSV with correct API call", async () => {
 ### ✅ Always Include Status Code (when needed)
 
 For most responses, you don't need to mock status:
+
 ```typescript
 // ✅ Correct - React Query checks response.data
 mockApiClient.get.mockResolvedValue({ data: mockData });
 ```
 
 Only mock status when using `extractDataOrThrow`:
+
 ```typescript
 // Only needed if using extractDataOrThrow helper
 mockApiClient.get.mockResolvedValue({ data: mockData, status: 200 });
@@ -666,6 +665,7 @@ it("should call API with correct parameters", async () => {
 ## Test Quality Metrics
 
 ### Coverage Summary
+
 - ✅ **38 tests passing (100%)**
 - ✅ **~3 seconds execution time**
 - ✅ **Comprehensive coverage:**
@@ -677,6 +677,7 @@ it("should call API with correct parameters", async () => {
   - Export functionality tested
 
 ### Test Organization
+
 - Clear test structure with describe blocks
 - Consistent naming conventions
 - Good separation of concerns (queries, mutations, cache invalidation)
@@ -692,6 +693,7 @@ it("should call API with correct parameters", async () => {
 **MSW Test Results:** 47/74 passing (64%)
 
 **Problems with MSW:**
+
 - 8/9 useWorkflows tests failing (filter/pagination issues)
 - 12/12 export tests failing (blob response handling)
 - Complex handler configuration required
@@ -700,6 +702,7 @@ it("should call API with correct parameters", async () => {
 **Jest Mock Results:** 38/38 passing (100%)
 
 **Benefits of Jest Mocks:**
+
 - Simple, direct API mocking
 - Full control over responses
 - Easy to debug
@@ -750,10 +753,9 @@ mockApiClient.get.mockResolvedValue({
 
 // Test
 it("should fetch workflows with status filter", async () => {
-  const { result } = renderHook(
-    () => useWorkflows({ status: "running" }),
-    { wrapper: createWrapper() }
-  );
+  const { result } = renderHook(() => useWorkflows({ status: "running" }), {
+    wrapper: createWrapper(),
+  });
 
   await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -771,18 +773,19 @@ it("should fetch workflows with status filter", async () => {
 
 ### useOrchestration vs useOperations
 
-| Feature | useOrchestration | useOperations |
-|---------|------------------|---------------|
-| **Queries** | 3 hooks | 3 hooks |
-| **Mutations** | 3 hooks | 0 hooks |
+| Feature        | useOrchestration  | useOperations      |
+| -------------- | ----------------- | ------------------ |
+| **Queries**    | 3 hooks           | 3 hooks            |
+| **Mutations**  | 3 hooks           | 0 hooks            |
 | **MSW Works?** | ❌ Issues (47/74) | ✅ Perfect (30/30) |
-| **Solution** | Jest mocks | MSW |
-| **Pass Rate** | 38/38 (100%) | 30/30 (100%) |
-| **Speed** | ~3 seconds | ~13 seconds |
+| **Solution**   | Jest mocks        | MSW                |
+| **Pass Rate**  | 38/38 (100%)      | 30/30 (100%)       |
+| **Speed**      | ~3 seconds        | ~13 seconds        |
 
 ### When to Use Jest Mocks vs MSW
 
 **Use Jest Mocks when:**
+
 - ✅ Hook has mutations (like useOrchestration, usePlugins)
 - ✅ Hook uses axios
 - ✅ You need full mutation data verification
@@ -790,6 +793,7 @@ it("should fetch workflows with status filter", async () => {
 - ✅ Complex filtering/pagination logic
 
 **Use MSW when:**
+
 - ✅ Hook has only queries (like useOperations)
 - ✅ Hook uses fetch API (like useCustomerPortal)
 - ✅ You want realistic network-level testing
@@ -807,10 +811,9 @@ it("should handle workflow lifecycle", async () => {
   const pendingWorkflow = createMockWorkflow({ status: "pending" });
   mockApiClient.get.mockResolvedValueOnce({ data: pendingWorkflow });
 
-  const { result, rerender } = renderHook(
-    () => useWorkflow("wf-123", true),
-    { wrapper: createWrapper() }
-  );
+  const { result, rerender } = renderHook(() => useWorkflow("wf-123", true), {
+    wrapper: createWrapper(),
+  });
 
   await waitFor(() => expect(result.current.data?.status).toBe("pending"));
 
@@ -843,28 +846,22 @@ it("should retry failed workflow", async () => {
   });
   mockApiClient.get.mockResolvedValue({ data: failedWorkflow });
 
-  const { result: workflowResult } = renderHook(
-    () => useWorkflow("wf-123"),
-    { wrapper: createWrapper() }
-  );
+  const { result: workflowResult } = renderHook(() => useWorkflow("wf-123"), {
+    wrapper: createWrapper(),
+  });
 
-  await waitFor(() =>
-    expect(workflowResult.current.data?.status).toBe("failed")
-  );
+  await waitFor(() => expect(workflowResult.current.data?.status).toBe("failed"));
 
   // 2. Retry workflow
   mockApiClient.post.mockResolvedValueOnce({ data: {} });
 
-  const { result: retryResult } = renderHook(
-    () => useRetryWorkflow(),
-    { wrapper: createWrapper() }
-  );
+  const { result: retryResult } = renderHook(() => useRetryWorkflow(), {
+    wrapper: createWrapper(),
+  });
 
   await retryResult.current.retryWorkflow("wf-123");
 
-  expect(mockApiClient.post).toHaveBeenCalledWith(
-    "/orchestration/workflows/wf-123/retry"
-  );
+  expect(mockApiClient.post).toHaveBeenCalledWith("/orchestration/workflows/wf-123/retry");
 
   // 3. Verify cache invalidation triggered
   // (This would refetch the workflow in real scenarios)
@@ -876,12 +873,14 @@ it("should retry failed workflow", async () => {
 ## Continuous Integration
 
 ### Unit Tests
+
 - ✅ Run on every PR
 - ✅ Must pass before merge
 - ✅ Fast (~3 seconds)
 - ✅ No dependencies
 
 ### E2E Tests
+
 - ✅ Comprehensive Playwright tests for orchestration workflows
 - ✅ Tests workflow lifecycle (pending → running → completed/failed)
 - ✅ Tests user interactions (retry, cancel, export)
@@ -922,13 +921,14 @@ pnpm playwright test orchestration.spec.ts -g "should retry a failed workflow"
 **Cause:** URL path mismatch (with/without "/" prefix)
 
 **Fix:** Ensure test expectations match hook implementation:
+
 ```typescript
 // Hook implementation uses:
 await apiClient.get(`/orchestration/workflows/${workflowId}`);
 
 // Test should expect:
 expect(mockApiClient.get).toHaveBeenCalledWith(
-  "/orchestration/workflows/wf-123"  // ← Include "/" prefix!
+  "/orchestration/workflows/wf-123", // ← Include "/" prefix!
 );
 ```
 
@@ -939,6 +939,7 @@ expect(mockApiClient.get).toHaveBeenCalledWith(
 **Cause:** Not waiting for async state updates
 
 **Fix:** Use `waitFor`:
+
 ```typescript
 await waitFor(() => expect(result.current.isLoading).toBe(false));
 expect(result.current.data).toBeDefined();
@@ -951,6 +952,7 @@ expect(result.current.data).toBeDefined();
 **Cause:** Query is disabled or condition not met
 
 **Fix:** Check query conditions:
+
 ```typescript
 // useWorkflow only fetches when workflowId is not null
 const { result } = renderHook(() => useWorkflow(null), {
@@ -1002,6 +1004,7 @@ expect(mockApiClient.get).not.toHaveBeenCalled();
 ✅ **Migration from MSW (47/74) to jest mocks (38/38) success story**
 
 **Key Takeaway:**
+
 - **Jest mocks + axios + queries + mutations = ✅ Perfect**
 - **MSW + axios + mutations = ❌ Issues**
 

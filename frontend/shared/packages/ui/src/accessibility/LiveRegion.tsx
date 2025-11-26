@@ -4,15 +4,15 @@
  * ARIA live region for announcing dynamic content changes
  */
 
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface LiveRegionProps {
   /** Message to announce */
   message: string;
   /** Priority level */
-  priority?: 'polite' | 'assertive' | 'off';
+  priority?: "polite" | "assertive" | "off";
   /** Whether to clear message after announcement */
   autoClear?: boolean;
   /** Delay before clearing (ms) */
@@ -41,7 +41,7 @@ interface LiveRegionProps {
  */
 export function LiveRegion({
   message,
-  priority = 'polite',
+  priority = "polite",
   autoClear = true,
   clearDelay = 1000,
 }: LiveRegionProps) {
@@ -57,7 +57,7 @@ export function LiveRegion({
     if (autoClear) {
       const timer = setTimeout(() => {
         if (regionRef.current) {
-          regionRef.current.textContent = '';
+          regionRef.current.textContent = "";
         }
       }, clearDelay);
 
@@ -101,13 +101,13 @@ export function LiveRegion({
 export function StatusAnnouncer<T extends string>({
   status,
   messages,
-  priority = 'polite',
+  priority = "polite",
 }: {
   status: T;
   messages: Partial<Record<T, string>>;
-  priority?: 'polite' | 'assertive';
+  priority?: "polite" | "assertive";
 }) {
-  const message = messages[status] || '';
+  const message = messages[status] || "";
 
   return <LiveRegion message={message} priority={priority} />;
 }

@@ -14,14 +14,7 @@ import {
   DollarSign,
   FileText,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { useReconciliations, useReconciliationSummary } from "@/hooks/useReconciliation";
 import { ReconciliationWizard } from "./ReconciliationWizard";
 

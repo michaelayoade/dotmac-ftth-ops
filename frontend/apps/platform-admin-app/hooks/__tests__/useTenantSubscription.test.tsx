@@ -96,8 +96,8 @@ const mockProrationPreview = {
   proration: {
     proration_amount: 25,
     proration_description: "Prorated charge for upgrade",
-    old_plan_unused_amount: 24.50,
-    new_plan_prorated_amount: 49.50,
+    old_plan_unused_amount: 24.5,
+    new_plan_prorated_amount: 49.5,
     days_remaining: 15,
   },
   estimated_invoice_amount: 25,
@@ -179,7 +179,10 @@ describe("useTenantSubscription", () => {
 
       await result.current.previewPlanChange(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/billing/tenant/subscription/preview-change", request);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/billing/tenant/subscription/preview-change",
+        request,
+      );
 
       // Wait for state update
       await waitFor(() => {
@@ -203,7 +206,10 @@ describe("useTenantSubscription", () => {
 
       await result.current.changePlan(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/billing/tenant/subscription/change-plan", request);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/billing/tenant/subscription/change-plan",
+        request,
+      );
     });
 
     it("should cancel subscription successfully", async () => {

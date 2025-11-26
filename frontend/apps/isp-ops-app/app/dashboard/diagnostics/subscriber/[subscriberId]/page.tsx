@@ -6,14 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -102,17 +95,35 @@ interface DiagnosticRun {
 
 const getStatusBadge = (status: DiagnosticStatus) => {
   const badges = {
-    [DiagnosticStatus.PENDING]: { icon: Clock, color: "bg-yellow-100 text-yellow-800", label: "Pending" },
-    [DiagnosticStatus.RUNNING]: { icon: Loader2, color: "bg-blue-100 text-blue-800", label: "Running" },
-    [DiagnosticStatus.COMPLETED]: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Completed" },
+    [DiagnosticStatus.PENDING]: {
+      icon: Clock,
+      color: "bg-yellow-100 text-yellow-800",
+      label: "Pending",
+    },
+    [DiagnosticStatus.RUNNING]: {
+      icon: Loader2,
+      color: "bg-blue-100 text-blue-800",
+      label: "Running",
+    },
+    [DiagnosticStatus.COMPLETED]: {
+      icon: CheckCircle,
+      color: "bg-green-100 text-green-800",
+      label: "Completed",
+    },
     [DiagnosticStatus.FAILED]: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Failed" },
-    [DiagnosticStatus.TIMEOUT]: { icon: AlertCircle, color: "bg-orange-100 text-orange-800", label: "Timeout" },
+    [DiagnosticStatus.TIMEOUT]: {
+      icon: AlertCircle,
+      color: "bg-orange-100 text-orange-800",
+      label: "Timeout",
+    },
   };
   const config = badges[status] || badges[DiagnosticStatus.PENDING];
   const Icon = config.icon;
   return (
     <Badge className={config.color}>
-      <Icon className={`h-3 w-3 mr-1 ${status === DiagnosticStatus.RUNNING ? "animate-spin" : ""}`} />
+      <Icon
+        className={`h-3 w-3 mr-1 ${status === DiagnosticStatus.RUNNING ? "animate-spin" : ""}`}
+      />
       {config.label}
     </Badge>
   );
@@ -122,9 +133,17 @@ const getSeverityBadge = (severity: DiagnosticSeverity | null) => {
   if (!severity) return null;
   const badges = {
     [DiagnosticSeverity.INFO]: { icon: Info, color: "bg-blue-100 text-blue-800", label: "Info" },
-    [DiagnosticSeverity.WARNING]: { icon: AlertTriangle, color: "bg-yellow-100 text-yellow-800", label: "Warning" },
+    [DiagnosticSeverity.WARNING]: {
+      icon: AlertTriangle,
+      color: "bg-yellow-100 text-yellow-800",
+      label: "Warning",
+    },
     [DiagnosticSeverity.ERROR]: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
-    [DiagnosticSeverity.CRITICAL]: { icon: AlertOctagon, color: "bg-red-600 text-white", label: "Critical" },
+    [DiagnosticSeverity.CRITICAL]: {
+      icon: AlertOctagon,
+      color: "bg-red-600 text-white",
+      label: "Critical",
+    },
   };
   const config = badges[severity];
   if (!config) return null;
@@ -146,7 +165,7 @@ function SubscriberDiagnosticsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const subscriberId = params['subscriberId'] as string;
+  const subscriberId = params["subscriberId"] as string;
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl || "";
 
@@ -154,24 +173,26 @@ function SubscriberDiagnosticsContent() {
   const [latestRunId, setLatestRunId] = useState<string | null>(null);
 
   // Fetch recent runs for this subscriber
-  const { data: runsData, isLoading: runsLoading } = useQuery<{ total: number; items: DiagnosticRun[] }>({
+  const { data: runsData, isLoading: runsLoading } = useQuery<{
+    total: number;
+    items: DiagnosticRun[];
+  }>({
     queryKey: ["diagnostics-runs", subscriberId, apiBaseUrl],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("subscriber_id", subscriberId);
       params.append("limit", "10");
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch diagnostic runs");
       return response.json();
     },
     refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if any diagnostic is running
       const hasRunning = query?.state?.data?.items?.some(
-        (run) => run.status === DiagnosticStatus.RUNNING || run.status === DiagnosticStatus.PENDING
+        (run) => run.status === DiagnosticStatus.RUNNING || run.status === DiagnosticStatus.PENDING,
       );
       return hasRunning ? 5000 : false;
     },
@@ -181,17 +202,18 @@ function SubscriberDiagnosticsContent() {
   const { data: latestRun } = useQuery<DiagnosticRun>({
     queryKey: ["diagnostic-run", latestRunId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/diagnostics/runs/${latestRunId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/diagnostics/runs/${latestRunId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch diagnostic run");
       return response.json();
     },
     enabled: !!latestRunId,
     refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if diagnostic is running or pending
-      return query?.state?.data && (query.state.data.status === DiagnosticStatus.RUNNING || query.state.data.status === DiagnosticStatus.PENDING)
+      return query?.state?.data &&
+        (query.state.data.status === DiagnosticStatus.RUNNING ||
+          query.state.data.status === DiagnosticStatus.PENDING)
         ? 5000
         : false;
     },
@@ -213,7 +235,7 @@ function SubscriberDiagnosticsContent() {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to run connectivity check");
       return response.json();
@@ -224,7 +246,11 @@ function SubscriberDiagnosticsContent() {
       toast({ title: "Success", description: "Connectivity check started" });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to run connectivity check", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to run connectivity check",
+        variant: "destructive",
+      });
     },
   });
 
@@ -233,7 +259,7 @@ function SubscriberDiagnosticsContent() {
     mutationFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/radius-sessions`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to get RADIUS sessions");
       return response.json();
@@ -244,7 +270,11 @@ function SubscriberDiagnosticsContent() {
       toast({ title: "Success", description: "RADIUS sessions retrieved" });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to get RADIUS sessions", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to get RADIUS sessions",
+        variant: "destructive",
+      });
     },
   });
 
@@ -253,7 +283,7 @@ function SubscriberDiagnosticsContent() {
     mutationFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/onu-status`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to get ONU status");
       return response.json();
@@ -273,7 +303,7 @@ function SubscriberDiagnosticsContent() {
     mutationFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/cpe-status`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to get CPE status");
       return response.json();
@@ -293,7 +323,7 @@ function SubscriberDiagnosticsContent() {
     mutationFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/ip-verification`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to verify IP");
       return response.json();
@@ -317,7 +347,7 @@ function SubscriberDiagnosticsContent() {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to restart CPE");
       return response.json();
@@ -338,7 +368,7 @@ function SubscriberDiagnosticsContent() {
     mutationFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/health-check`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to run health check");
       return response.json();
@@ -374,7 +404,9 @@ function SubscriberDiagnosticsContent() {
         </div>
         <Button
           variant="outline"
-          onClick={() => queryClient.invalidateQueries({ queryKey: ["diagnostics-runs", subscriberId] })}
+          onClick={() =>
+            queryClient.invalidateQueries({ queryKey: ["diagnostics-runs", subscriberId] })
+          }
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -533,7 +565,10 @@ function SubscriberDiagnosticsContent() {
                 <div className="text-sm font-medium mb-2">Recommendations</div>
                 <div className="space-y-2">
                   {latestRun.recommendations.map((rec, i) => (
-                    <div key={i} className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded border border-blue-200">
+                    <div
+                      key={i}
+                      className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded border border-blue-200"
+                    >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{rec.title}</p>
@@ -608,12 +643,8 @@ function SubscriberDiagnosticsContent() {
                         {getSeverityBadge(run.severity)}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {run.duration_ms ? `${run.duration_ms}ms` : "N/A"}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(run.created_at), "PPp")}
-                    </TableCell>
+                    <TableCell>{run.duration_ms ? `${run.duration_ms}ms` : "N/A"}</TableCell>
+                    <TableCell>{format(new Date(run.created_at), "PPp")}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" asChild>
                         <Link href={`/dashboard/diagnostics/runs/${run.id}`}>
@@ -636,8 +667,8 @@ function SubscriberDiagnosticsContent() {
           <DialogHeader>
             <DialogTitle>Restart CPE Device</DialogTitle>
             <DialogDescription>
-              This will restart the customer&apos;s CPE device, which may cause a temporary service interruption.
-              Are you sure you want to proceed?
+              This will restart the customer&apos;s CPE device, which may cause a temporary service
+              interruption. Are you sure you want to proceed?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Feature Flag System
@@ -23,25 +23,25 @@
  * ```
  */
 
-import { useState, useEffect } from 'react';
-import { logger } from './logger';
+import { useState, useEffect } from "react";
+import { logger } from "./logger";
 
 /**
  * Available feature flags
  * Add new flags here as they are created
  */
 export type FeatureFlag =
-  | 'radius-sessions'
-  | 'radius-subscribers'
-  | 'opentelemetry-tracing'
-  | 'experimental-ui'
-  | 'graphql-migration'
-  | 'network-monitoring-v2'
-  | 'advanced-analytics'
-  | 'multi-tenant-mode'
-  | 'webhook-retry'
-  | 'job-scheduling'
-  | 'real-time-updates';
+  | "radius-sessions"
+  | "radius-subscribers"
+  | "opentelemetry-tracing"
+  | "experimental-ui"
+  | "graphql-migration"
+  | "network-monitoring-v2"
+  | "advanced-analytics"
+  | "multi-tenant-mode"
+  | "webhook-retry"
+  | "job-scheduling"
+  | "real-time-updates";
 
 /**
  * Feature flag configuration
@@ -73,71 +73,71 @@ interface FeatureFlagConfig {
  * Feature flag definitions
  */
 const FEATURE_FLAGS: Record<FeatureFlag, FeatureFlagConfig> = {
-  'radius-sessions': {
-    name: 'radius-sessions',
-    description: 'Enable RADIUS sessions widget on dashboard',
+  "radius-sessions": {
+    name: "radius-sessions",
+    description: "Enable RADIUS sessions widget on dashboard",
     defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_RADIUS_SESSIONS',
+    envVar: "NEXT_PUBLIC_FEATURE_RADIUS_SESSIONS",
   },
-  'radius-subscribers': {
-    name: 'radius-subscribers',
-    description: 'Enable RADIUS subscribers widget on dashboard',
+  "radius-subscribers": {
+    name: "radius-subscribers",
+    description: "Enable RADIUS subscribers widget on dashboard",
     defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_RADIUS_SUBSCRIBERS',
+    envVar: "NEXT_PUBLIC_FEATURE_RADIUS_SUBSCRIBERS",
   },
-  'opentelemetry-tracing': {
-    name: 'opentelemetry-tracing',
-    description: 'Enable OpenTelemetry distributed tracing',
+  "opentelemetry-tracing": {
+    name: "opentelemetry-tracing",
+    description: "Enable OpenTelemetry distributed tracing",
     defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_OTEL_TRACING',
+    envVar: "NEXT_PUBLIC_FEATURE_OTEL_TRACING",
   },
-  'experimental-ui': {
-    name: 'experimental-ui',
-    description: 'Enable experimental UI components',
+  "experimental-ui": {
+    name: "experimental-ui",
+    description: "Enable experimental UI components",
     defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_EXPERIMENTAL_UI',
+    envVar: "NEXT_PUBLIC_FEATURE_EXPERIMENTAL_UI",
   },
-  'graphql-migration': {
-    name: 'graphql-migration',
-    description: 'Use GraphQL instead of REST API where available',
+  "graphql-migration": {
+    name: "graphql-migration",
+    description: "Use GraphQL instead of REST API where available",
     defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_GRAPHQL_MIGRATION',
+    envVar: "NEXT_PUBLIC_FEATURE_GRAPHQL_MIGRATION",
   },
-  'network-monitoring-v2': {
-    name: 'network-monitoring-v2',
-    description: 'Enable new network monitoring dashboard',
+  "network-monitoring-v2": {
+    name: "network-monitoring-v2",
+    description: "Enable new network monitoring dashboard",
     defaultEnabled: true,
-    envVar: 'NEXT_PUBLIC_FEATURE_NETWORK_MONITORING_V2',
+    envVar: "NEXT_PUBLIC_FEATURE_NETWORK_MONITORING_V2",
   },
-  'advanced-analytics': {
-    name: 'advanced-analytics',
-    description: 'Enable advanced analytics features',
+  "advanced-analytics": {
+    name: "advanced-analytics",
+    description: "Enable advanced analytics features",
     defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_ADVANCED_ANALYTICS',
+    envVar: "NEXT_PUBLIC_FEATURE_ADVANCED_ANALYTICS",
   },
-  'multi-tenant-mode': {
-    name: 'multi-tenant-mode',
-    description: 'Enable multi-tenant features',
+  "multi-tenant-mode": {
+    name: "multi-tenant-mode",
+    description: "Enable multi-tenant features",
     defaultEnabled: true,
-    envVar: 'NEXT_PUBLIC_FEATURE_MULTI_TENANT',
+    envVar: "NEXT_PUBLIC_FEATURE_MULTI_TENANT",
   },
-  'webhook-retry': {
-    name: 'webhook-retry',
-    description: 'Enable automatic webhook retry mechanism',
+  "webhook-retry": {
+    name: "webhook-retry",
+    description: "Enable automatic webhook retry mechanism",
     defaultEnabled: true,
-    envVar: 'NEXT_PUBLIC_FEATURE_WEBHOOK_RETRY',
+    envVar: "NEXT_PUBLIC_FEATURE_WEBHOOK_RETRY",
   },
-  'job-scheduling': {
-    name: 'job-scheduling',
-    description: 'Enable job scheduling interface',
+  "job-scheduling": {
+    name: "job-scheduling",
+    description: "Enable job scheduling interface",
     defaultEnabled: true,
-    envVar: 'NEXT_PUBLIC_FEATURE_JOB_SCHEDULING',
+    envVar: "NEXT_PUBLIC_FEATURE_JOB_SCHEDULING",
   },
-  'real-time-updates': {
-    name: 'real-time-updates',
-    description: 'Enable real-time WebSocket updates',
+  "real-time-updates": {
+    name: "real-time-updates",
+    description: "Enable real-time WebSocket updates",
     defaultEnabled: false,
-    envVar: 'NEXT_PUBLIC_FEATURE_REALTIME_UPDATES',
+    envVar: "NEXT_PUBLIC_FEATURE_REALTIME_UPDATES",
   },
 };
 
@@ -148,7 +148,7 @@ export const isFeatureEnabled = (flag: FeatureFlag): boolean => {
   const config = FEATURE_FLAGS[flag];
 
   if (!config) {
-    logger.warn('Unknown feature flag', { flag });
+    logger.warn("Unknown feature flag", { flag });
     return false;
   }
 
@@ -156,7 +156,7 @@ export const isFeatureEnabled = (flag: FeatureFlag): boolean => {
   if (config.envVar) {
     const envValue = process.env[config.envVar];
     if (envValue !== undefined) {
-      return envValue === 'true' || envValue === '1';
+      return envValue === "true" || envValue === "1";
     }
   }
 
@@ -178,16 +178,16 @@ export const useFeatureFlag = (flag: FeatureFlag) => {
       }
     };
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       window.addEventListener(
-        'featureFlagChange' as unknown as string,
-        handleFeatureFlagChange as EventListener
+        "featureFlagChange" as unknown as string,
+        handleFeatureFlagChange as EventListener,
       );
 
       return () => {
         window.removeEventListener(
-          'featureFlagChange' as unknown as string,
-          handleFeatureFlagChange as EventListener
+          "featureFlagChange" as unknown as string,
+          handleFeatureFlagChange as EventListener,
         );
       };
     }
@@ -202,19 +202,19 @@ export const useFeatureFlag = (flag: FeatureFlag) => {
  * Toggle feature flag at runtime (for development/testing)
  */
 export const toggleFeatureFlag = (flag: FeatureFlag, enabled: boolean): void => {
-  if (process.env.NODE_ENV === 'production') {
-    logger.warn('Cannot toggle feature flags in production');
+  if (process.env.NODE_ENV === "production") {
+    logger.warn("Cannot toggle feature flags in production");
     return;
   }
 
-  logger.info('Feature flag toggled', { flag, enabled });
+  logger.info("Feature flag toggled", { flag, enabled });
 
   // Dispatch event to update all hooks
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     window.dispatchEvent(
-      new CustomEvent('featureFlagChange', {
+      new CustomEvent("featureFlagChange", {
         detail: { flag, enabled },
-      })
+      }),
     );
   }
 };

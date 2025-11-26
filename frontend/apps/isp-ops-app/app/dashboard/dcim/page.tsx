@@ -15,13 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   useSites,
   useDevices,
@@ -96,11 +90,10 @@ export default function DCIMPage() {
   // Data fetching
   const { data: netboxHealth } = useNetBoxHealth();
   const { data: sites = [], isLoading: sitesLoading } = useSites({});
-  const deviceParams = selectedSiteForDevices
-    ? { site: selectedSiteForDevices.toString() }
-    : {};
+  const deviceParams = selectedSiteForDevices ? { site: selectedSiteForDevices.toString() } : {};
   const { data: devices = [], isLoading: devicesLoading } = useDevices(deviceParams);
-  const interfaceParams = selectedDeviceForInterfaces !== undefined ? { device: selectedDeviceForInterfaces } : {};
+  const interfaceParams =
+    selectedDeviceForInterfaces !== undefined ? { device: selectedDeviceForInterfaces } : {};
   const { data: interfaces = [], isLoading: interfacesLoading } = useInterfaces(interfaceParams);
 
   // Mutations
@@ -131,7 +124,7 @@ export default function DCIMPage() {
   const filteredInterfaces = interfaces.filter((iface) => {
     const matchesSearch =
       iface.name.toLowerCase().includes(interfaceSearch.toLowerCase()) ||
-      iface['description']?.toLowerCase().includes(interfaceSearch.toLowerCase());
+      iface["description"]?.toLowerCase().includes(interfaceSearch.toLowerCase());
     return matchesSearch;
   });
 

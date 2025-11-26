@@ -140,7 +140,9 @@ function deriveDarkScale(
 function getPortalPalette(portal: PortalType, mode: "light" | "dark"): PortalColorPalette {
   const base = colorTokens[portal];
   const primary =
-    mode === "dark" ? deriveDarkScale(base.primary) : (base.primary as PortalColorPalette["primary"]);
+    mode === "dark"
+      ? deriveDarkScale(base.primary)
+      : (base.primary as PortalColorPalette["primary"]);
   const accent =
     mode === "dark"
       ? adjustHslLightness(base.accent.DEFAULT, DARK_LIGHTNESS_SHIFT / 2)
@@ -268,11 +270,7 @@ export function PortalThemeProvider({ children }: { children: React.ReactNode })
     [currentPortal, theme],
   );
 
-  return (
-    <PortalThemeContext.Provider value={contextValue}>
-      {children}
-    </PortalThemeContext.Provider>
-  );
+  return <PortalThemeContext.Provider value={contextValue}>{children}</PortalThemeContext.Provider>;
 }
 
 /**

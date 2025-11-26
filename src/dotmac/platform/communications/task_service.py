@@ -325,10 +325,13 @@ class TaskService:
         )
         return str(task.id)
 
-    def send_bulk_emails_async(self, job: BulkEmailJob, *, metadata: dict[str, Any] | None = None) -> str:
+    def send_bulk_emails_async(
+        self, job: BulkEmailJob, *, metadata: dict[str, Any] | None = None
+    ) -> str:
         """Queue bulk emails and persist metadata for status lookups."""
         task = send_bulk_email_task.delay(job.model_dump())
         try:
+
             async def _persist() -> None:
                 async with get_async_session_context() as db:
                     meta = BulkJobMetadata(
@@ -345,6 +348,7 @@ class TaskService:
             # Fire and forget persistence
             try:
                 import asyncio
+
                 asyncio.get_event_loop().create_task(_persist())
             except Exception:
                 _run_async(_persist())
@@ -369,6 +373,7 @@ class TaskService:
 
     def get_bulk_metadata(self, job_id: str) -> dict[str, Any] | None:
         try:
+
             async def _fetch() -> dict[str, Any] | None:
                 async with get_async_session_context() as db:
                     stmt = select(BulkJobMetadata).where(BulkJobMetadata.job_id == job_id)

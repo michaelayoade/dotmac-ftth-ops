@@ -4,16 +4,16 @@
  * Standardized hooks for consistent error handling across the application
  */
 
-import { useCallback, useState } from 'react';
-import { useToast } from './useToast';
+import { useCallback, useState } from "react";
+import { useToast } from "./useToast";
 import {
   AppError,
   createAppError,
   isAuthError,
   ErrorSeverity,
   type ErrorCategory,
-} from '@dotmac/types';
-import { reportErrorToObservability } from '@dotmac/utils/observability';
+} from "@dotmac/types";
+import { reportErrorToObservability } from "@dotmac/utils/observability";
 
 // ============================================================================
 // useErrorHandler Hook
@@ -89,16 +89,14 @@ export interface UseErrorHandlerReturn {
  * }
  * ```
  */
-export function useErrorHandler(
-  options: UseErrorHandlerOptions = {}
-): UseErrorHandlerReturn {
+export function useErrorHandler(options: UseErrorHandlerOptions = {}): UseErrorHandlerReturn {
   const {
     showToast = true,
     logError = true,
     reportError = true,
     onError,
     redirectOnAuthError = true,
-    authRedirectPath = '/login',
+    authRedirectPath = "/login",
   } = options;
 
   const { toast } = useToast?.() ?? { toast: undefined };
@@ -114,7 +112,7 @@ export function useErrorHandler(
 
       // Log to console
       if (logError) {
-        console.error('[Error Handler]', {
+        console.error("[Error Handler]", {
           message: appError.message,
           category: appError.category,
           severity: appError.severity,
@@ -124,7 +122,7 @@ export function useErrorHandler(
       }
 
       // Report to observability stack (OpenTelemetry/Prometheus/Grafana)
-      if (reportError && typeof window !== 'undefined') {
+      if (reportError && typeof window !== "undefined") {
         // TODO: Integrate with your observability stack
         // This should send to your OpenTelemetry endpoint
         reportErrorToObservability(appError);
@@ -133,10 +131,9 @@ export function useErrorHandler(
       // Show toast notification
       if (showToast && toast) {
         const toastVariant =
-          appError.severity === ErrorSeverity.CRITICAL ||
-          appError.severity === ErrorSeverity.ERROR
-            ? 'destructive'
-            : 'default';
+          appError.severity === ErrorSeverity.CRITICAL || appError.severity === ErrorSeverity.ERROR
+            ? "destructive"
+            : "default";
 
         toast({
           variant: toastVariant,
@@ -147,7 +144,7 @@ export function useErrorHandler(
 
       // Handle auth errors
       if (redirectOnAuthError && isAuthError(rawError)) {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const currentPath = window.location.pathname;
           const redirectUrl = `${authRedirectPath}?redirect=${encodeURIComponent(currentPath)}`;
           window.location.href = redirectUrl;
@@ -159,15 +156,7 @@ export function useErrorHandler(
         onError(appError);
       }
     },
-    [
-      logError,
-      reportError,
-      showToast,
-      toast,
-      redirectOnAuthError,
-      authRedirectPath,
-      onError,
-    ]
+    [logError, reportError, showToast, toast, redirectOnAuthError, authRedirectPath, onError],
   );
 
   const clearError = useCallback(() => {
@@ -239,15 +228,8 @@ export interface UseApiErrorReturn extends UseErrorHandlerReturn {
  * }
  * ```
  */
-export function useApiError(
-  options: UseApiErrorOptions = {}
-): UseApiErrorReturn {
-  const {
-    autoRetry = false,
-    maxRetries = 3,
-    retryDelay = 1000,
-    ...errorHandlerOptions
-  } = options;
+export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorReturn {
+  const { autoRetry = false, maxRetries = 3, retryDelay = 1000, ...errorHandlerOptions } = options;
 
   const errorHandler = useErrorHandler(errorHandlerOptions);
   const [retryCount, setRetryCount] = useState(0);
@@ -261,24 +243,21 @@ export function useApiError(
       if (autoRetry && errorHandler.error?.retryable && retryCount < maxRetries) {
         setIsRetrying(true);
 
-        setTimeout(() => {
-          setRetryCount((prev) => prev + 1);
-          setIsRetrying(false);
+        setTimeout(
+          () => {
+            setRetryCount((prev) => prev + 1);
+            setIsRetrying(false);
 
-          // Execute retry callback if available
-          if (errorHandler.retry) {
-            errorHandler.retry();
-          }
-        }, retryDelay * Math.pow(2, retryCount)); // Exponential backoff
+            // Execute retry callback if available
+            if (errorHandler.retry) {
+              errorHandler.retry();
+            }
+          },
+          retryDelay * Math.pow(2, retryCount),
+        ); // Exponential backoff
       }
     },
-    [
-      errorHandler,
-      autoRetry,
-      retryCount,
-      maxRetries,
-      retryDelay,
-    ]
+    [errorHandler, autoRetry, retryCount, maxRetries, retryDelay],
   );
 
   const resetRetry = useCallback(() => {

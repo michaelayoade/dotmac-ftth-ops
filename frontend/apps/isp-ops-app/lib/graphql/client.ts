@@ -42,8 +42,8 @@ function resolveGraphQLEndpoint(preferred?: string): string {
     return preferred;
   }
 
-  if (process.env['NEXT_PUBLIC_API_URL']) {
-    return `${process.env['NEXT_PUBLIC_API_URL']}/api/v1/graphql`;
+  if (process.env["NEXT_PUBLIC_API_URL"]) {
+    return `${process.env["NEXT_PUBLIC_API_URL"]}/api/v1/graphql`;
   }
 
   return "/api/v1/graphql";
@@ -70,11 +70,11 @@ const createErrorLink = (getClient: () => ApolloClient<NormalizedCacheObject> | 
           message,
           locations,
           path,
-          code: extensions?.['code'],
+          code: extensions?.["code"],
           operation: operation.operationName,
         });
 
-        if (extensions?.['code'] === "UNAUTHENTICATED") {
+        if (extensions?.["code"] === "UNAUTHENTICATED") {
           logger.warn("Authentication required for GraphQL query - redirecting to login");
 
           const client = getClient();
@@ -116,7 +116,7 @@ function buildCache() {
           sessions: {
             keyArgs: ["filters", "status"],
             merge(existing = [], incoming: any[], { args }) {
-              if (args?.['offset'] === 0 || !existing.length) {
+              if (args?.["offset"] === 0 || !existing.length) {
                 return incoming;
               }
               return [...existing, ...incoming];
@@ -132,8 +132,8 @@ function buildCache() {
           subscribers: {
             keyArgs: ["filters", "status", "search"],
             merge(existing, incoming, { args, variables }) {
-              const offset = args?.['offset'] ?? variables?.['offset'] ?? 0;
-              const limit = args?.['limit'] ?? variables?.['limit'];
+              const offset = args?.["offset"] ?? variables?.["offset"] ?? 0;
+              const limit = args?.["limit"] ?? variables?.["limit"];
 
               if (!existing || offset === 0 || !limit) {
                 return incoming;
@@ -170,8 +170,8 @@ function buildCache() {
           sessions: {
             keyArgs: ["filters", "status", "subscriber"],
             merge(existing, incoming, { args, variables }) {
-              const offset = args?.['offset'] ?? variables?.['offset'] ?? 0;
-              const limit = args?.['limit'] ?? variables?.['limit'];
+              const offset = args?.["offset"] ?? variables?.["offset"] ?? 0;
+              const limit = args?.["limit"] ?? variables?.["limit"];
 
               if (!existing || offset === 0 || !limit) {
                 return incoming;
@@ -249,8 +249,6 @@ export function createApolloClient(
   return client;
 }
 
-export async function clearApolloCache(
-  client: ApolloClient<NormalizedCacheObject>,
-): Promise<void> {
+export async function clearApolloCache(client: ApolloClient<NormalizedCacheObject>): Promise<void> {
   await client.clearStore();
 }

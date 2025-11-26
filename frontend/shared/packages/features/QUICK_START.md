@@ -253,7 +253,11 @@ export type { AddSubscriberModalProps, CreateSubscriberRequest } from "./AddSubs
 
 // Add new component
 export { default as ServicePlansList } from "./ServicePlansList";
-export type { ServicePlansListProps, ServicePlan, ServicePlansListApiClient } from "./ServicePlansList";
+export type {
+  ServicePlansListProps,
+  ServicePlan,
+  ServicePlansListApiClient,
+} from "./ServicePlansList";
 ```
 
 **Step 4: Verify module index exports it**
@@ -749,16 +753,16 @@ export default function MyComponent({ apiUrl }: MyComponentProps) {
 
 ```typescript
 // ❌ BAD - wrong location
-shared/packages/features/src/MyComponent.tsx
+shared / packages / features / src / MyComponent.tsx;
 ```
 
 **Right:**
 
 ```typescript
 // ✅ GOOD - proper module structure
-shared/packages/features/src/[module]/components/MyComponent.tsx
-shared/packages/features/src/[module]/components/index.ts
-shared/packages/features/src/[module]/index.ts
+shared / packages / features / src / [module] / components / MyComponent.tsx;
+shared / packages / features / src / [module] / components / index.ts;
+shared / packages / features / src / [module] / index.ts;
 ```
 
 ---
@@ -768,6 +772,7 @@ shared/packages/features/src/[module]/index.ts
 ### Q: Which module should I put my component in?
 
 **A**: Choose based on functional area:
+
 - Customer data/CRUD → `customers`
 - Billing/payments → `billing`
 - CRM/sales → `crm`
@@ -780,6 +785,7 @@ shared/packages/features/src/[module]/index.ts
 ### Q: Do I always need to use dependency injection?
 
 **A**: No. Only if your component:
+
 - Makes API calls
 - Shows notifications (toasts)
 - Navigates to other pages
@@ -791,10 +797,12 @@ Display-only components can skip DI.
 ### Q: Can I use React Query in shared components?
 
 **A**: Yes! Either:
+
 1. Use it directly if both apps use React Query
 2. Inject a custom hook that wraps React Query
 
 Example:
+
 ```typescript
 export interface MyComponentProps {
   useData: () => {
@@ -808,6 +816,7 @@ export interface MyComponentProps {
 ### Q: How do I handle app-specific styling?
 
 **A**: Use props:
+
 ```typescript
 export interface MyComponentProps {
   className?: string;
@@ -821,6 +830,7 @@ export interface MyComponentProps {
 ### Q: Can I use Next.js-specific features?
 
 **A**: Only via injection:
+
 - `useRouter` → Inject router object
 - `Image` component → Use HTML `<img>` or inject Image component
 - `Link` → Inject navigation function
@@ -828,6 +838,7 @@ export interface MyComponentProps {
 ### Q: How do I update documentation?
 
 **A**: When adding/modifying components:
+
 1. Update [COMPONENTS.md](./COMPONENTS.md)
 2. Update module README if exists
 3. Update [ARCHITECTURE.md](./ARCHITECTURE.md) if adding a module
@@ -836,11 +847,13 @@ export interface MyComponentProps {
 ### Q: Should I create a new module?
 
 **A**: Create a new module if:
+
 - You have 3+ related components
 - It's a distinct functional area
 - It doesn't fit existing modules
 
 Steps:
+
 1. Create `src/new-module/components/`
 2. Create `src/new-module/components/index.ts`
 3. Create `src/new-module/index.ts`

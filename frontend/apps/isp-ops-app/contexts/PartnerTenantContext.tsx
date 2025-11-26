@@ -51,14 +51,14 @@ export function PartnerTenantProvider({ children }: { children: ReactNode }) {
         const { apiClient } = await import("@/lib/api/client");
 
         const response = await apiClient.get<{ tenants: ManagedTenant[]; total: number }>(
-          "/partner/customers"
+          "/partner/customers",
         );
 
         setManagedTenants(response.data.tenants || []);
 
         // Restore active tenant from localStorage
         const savedTenantId = localStorage.getItem("active_managed_tenant_id");
-        if (savedTenantId && response.data.tenants.some(t => t.tenant_id === savedTenantId)) {
+        if (savedTenantId && response.data.tenants.some((t) => t.tenant_id === savedTenantId)) {
           setActiveTenantId(savedTenantId);
         }
 

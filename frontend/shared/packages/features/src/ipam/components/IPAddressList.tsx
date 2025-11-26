@@ -7,14 +7,7 @@
 
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
@@ -291,7 +284,9 @@ function AddressGroupRow({
           <div className="space-y-1">
             {ipv4 && (
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm">{ipUtilities.formatIPAddress(ipv4.address)}</span>
+                <span className="font-mono text-sm">
+                  {ipUtilities.formatIPAddress(ipv4.address)}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -304,7 +299,9 @@ function AddressGroupRow({
             )}
             {ipv6 && (
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm">{ipUtilities.formatIPAddress(ipv6.address)}</span>
+                <span className="font-mono text-sm">
+                  {ipUtilities.formatIPAddress(ipv6.address)}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"

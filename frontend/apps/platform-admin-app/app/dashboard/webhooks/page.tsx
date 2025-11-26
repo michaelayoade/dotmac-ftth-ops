@@ -82,9 +82,9 @@ export default function WebhooksPage() {
   const filteredWebhooks = webhooks.filter((webhook) => {
     const matchesSearch =
       searchQuery === "" ||
-      webhook['name']?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      webhook["name"]?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       webhook.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      webhook['description']?.toLowerCase().includes(searchQuery.toLowerCase());
+      webhook["description"]?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesEvent = eventFilter === "all" || webhook.events.includes(eventFilter);
 

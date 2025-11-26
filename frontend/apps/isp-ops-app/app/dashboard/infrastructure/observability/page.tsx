@@ -50,11 +50,7 @@ export default function ObservabilityPage() {
     () => (selectedService !== "all" ? { service: selectedService } : {}),
     [selectedService],
   );
-  const {
-    traces,
-    isLoading: tracesLoading,
-    refetch: refetchTraces,
-  } = useTraces(traceFilters);
+  const { traces, isLoading: tracesLoading, refetch: refetchTraces } = useTraces(traceFilters);
   const { metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useMetrics();
   const { serviceMap, isLoading: serviceMapLoading, refetch: refetchServiceMap } = useServiceMap();
   const {

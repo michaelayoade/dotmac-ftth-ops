@@ -31,10 +31,10 @@ interface RealtimeContextValue {
     subscribers: ConnectionStatus;
     sessions: ConnectionStatus;
   };
-  
+
   // Actions
   clearEvents: () => void;
-  
+
   // Health metrics
   overallStatus: ConnectionStatus;
   allConnected: boolean;
@@ -50,11 +50,11 @@ interface RealtimeProviderProps {
 
 /**
  * RealtimeProvider - Singleton provider for realtime SSE connections
- * 
+ *
  * This provider manages all realtime SSE subscriptions in a single place,
  * preventing duplicate connections when multiple components need access
  * to connection status or events.
- * 
+ *
  * Usage: Wrap your app layout with this provider and use useRealtime() hook
  * in components that need access to realtime data.
  */
@@ -97,9 +97,11 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   };
 
   // Calculate health metrics
-  const allConnected = Object.values(statuses).every((status) => status === ConnectionStatus.CONNECTED);
+  const allConnected = Object.values(statuses).every(
+    (status) => status === ConnectionStatus.CONNECTED,
+  );
   const anyConnecting = Object.values(statuses).some(
-    (status) => status === ConnectionStatus.CONNECTING || status === ConnectionStatus.RECONNECTING
+    (status) => status === ConnectionStatus.CONNECTING || status === ConnectionStatus.RECONNECTING,
   );
   const anyError = Object.values(statuses).some((status) => status === ConnectionStatus.ERROR);
 
@@ -141,10 +143,10 @@ export function useRealtime(): RealtimeContextValue {
 
   if (!context) {
     // Log warning in development
-    if (process.env['NODE_ENV'] === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       console.warn(
         "useRealtime (or useRealtimeHealth/useRealtimeConnections) is being used outside of RealtimeProvider. " +
-        "Returning disconnected state. Wrap your component tree with <RealtimeProvider> to enable realtime connections."
+          "Returning disconnected state. Wrap your component tree with <RealtimeProvider> to enable realtime connections.",
       );
     }
 
@@ -175,12 +177,12 @@ export function useRealtime(): RealtimeContextValue {
 
 /**
  * Hook for accessing just the health metrics (backward compatibility)
- * 
+ *
  * @returns Health metrics for all realtime connections
  */
 export function useRealtimeHealth() {
   const { overallStatus, allConnected, anyConnecting, anyError, statuses } = useRealtime();
-  
+
   return {
     overallStatus,
     allConnected,
@@ -192,12 +194,13 @@ export function useRealtimeHealth() {
 
 /**
  * Hook for accessing all connection data (backward compatibility)
- * 
+ *
  * @returns All events and connection statuses
  */
 export function useRealtimeConnections() {
-  const { onuEvents, alerts, tickets, subscribers, sessions, clearEvents, statuses } = useRealtime();
-  
+  const { onuEvents, alerts, tickets, subscribers, sessions, clearEvents, statuses } =
+    useRealtime();
+
   return {
     onuEvents,
     alerts,

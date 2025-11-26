@@ -106,16 +106,17 @@ describe("Platform Admin useUsageBilling hooks", () => {
         wrapper,
       });
       await waitFor(() => expect(aggregates.result.current.isSuccess).toBe(true));
-      expect(mockedService.listUsageAggregates).toHaveBeenCalledWith({ usage_type: "data_transfer" });
+      expect(mockedService.listUsageAggregates).toHaveBeenCalledWith({
+        usage_type: "data_transfer",
+      });
 
       const stats = renderHook(() => useUsageStatistics("2024-01-01", "2024-01-31"), { wrapper });
       await waitFor(() => expect(stats.result.current.isSuccess).toBe(true));
       expect(mockedService.getUsageStatistics).toHaveBeenCalledWith("2024-01-01", "2024-01-31");
 
-      const chart = renderHook(
-        () => useUsageChartData({ period_type: "daily", days: 7 } as any),
-        { wrapper },
-      );
+      const chart = renderHook(() => useUsageChartData({ period_type: "daily", days: 7 } as any), {
+        wrapper,
+      });
       await waitFor(() => expect(chart.result.current.isSuccess).toBe(true));
       expect(mockedService.getUsageChartData).toHaveBeenCalledWith({
         period_type: "daily",
@@ -141,7 +142,10 @@ describe("Platform Admin useUsageBilling hooks", () => {
       );
 
       await act(async () => {
-        await result.current.mutateAsync({ subscription_id: "sub-1", usage_type: "data_transfer" } as any);
+        await result.current.mutateAsync({
+          subscription_id: "sub-1",
+          usage_type: "data_transfer",
+        } as any);
       });
 
       expect(mockedService.createUsageRecord).toHaveBeenCalled();
@@ -160,7 +164,9 @@ describe("Platform Admin useUsageBilling hooks", () => {
       const { result } = renderHook(() => useCreateUsageRecordsBulk(), { wrapper });
 
       await act(async () => {
-        await result.current.mutateAsync([{ subscription_id: "sub-1", usage_type: "data_transfer" } as any]);
+        await result.current.mutateAsync([
+          { subscription_id: "sub-1", usage_type: "data_transfer" } as any,
+        ]);
       });
 
       expect(mockedService.createUsageRecordsBulk).toHaveBeenCalled();

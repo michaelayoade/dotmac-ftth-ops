@@ -149,7 +149,7 @@ export function useBrowserNotifications(): UseBrowserNotificationsReturn {
         console.error("[Notifications] Failed to show:", error);
       }
     },
-    [isSupported, permission, isEnabled]
+    [isSupported, permission, isEnabled],
   );
 
   return {
@@ -180,9 +180,7 @@ export function useGeofenceNotifications(enabled: boolean = true) {
       if (!enabled) return;
 
       const isArrival = event.event_type === "enter";
-      const title = isArrival
-        ? "🚀 Technician Arrived"
-        : "✅ Technician Departed";
+      const title = isArrival ? "🚀 Technician Arrived" : "✅ Technician Departed";
 
       const body = `${event.technician_name} ${isArrival ? "arrived at" : "left"} job site\n${event.message}`;
 
@@ -194,7 +192,7 @@ export function useGeofenceNotifications(enabled: boolean = true) {
         data: { jobId: event.job_id, type: "geofence" },
       });
     },
-    [enabled, notifications]
+    [enabled, notifications],
   );
 
   return {
@@ -239,7 +237,7 @@ export function useJobNotifications(enabled: boolean = true) {
         data: { jobId: event.job_id, type: "job_status" },
       });
     },
-    [enabled, notifications]
+    [enabled, notifications],
   );
 
   return {
@@ -283,7 +281,7 @@ export function useTechnicianNotifications(enabled: boolean = true) {
         data: { technicianId: event.technician_id, type: "technician_status" },
       });
     },
-    [enabled, notifications]
+    [enabled, notifications],
   );
 
   return {

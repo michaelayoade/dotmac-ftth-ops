@@ -49,9 +49,7 @@ let nextRuleId = 1;
 // Mock Data Generators
 // ============================================
 
-export function createMockCommissionRule(
-  overrides: Partial<CommissionRule> = {}
-): CommissionRule {
+export function createMockCommissionRule(overrides: Partial<CommissionRule> = {}): CommissionRule {
   const id = overrides.id || `rule-${nextRuleId++}`;
   return {
     id,
@@ -106,28 +104,23 @@ export const commissionRulesHandlers = [
       const productId = url.searchParams.get("product_id");
       const customerId = url.searchParams.get("customer_id");
 
-      console.log(
-        "[MSW] GET /api/v1/partners/commission-rules/partners/:partnerId/applicable",
-        { partnerId, productId, customerId }
-      );
+      console.log("[MSW] GET /api/v1/partners/commission-rules/partners/:partnerId/applicable", {
+        partnerId,
+        productId,
+        customerId,
+      });
 
       // Filter by partner
-      let filtered = rules.filter(
-        (r) => r.partner_id === partnerId && r.is_active
-      );
+      let filtered = rules.filter((r) => r.partner_id === partnerId && r.is_active);
 
       // Filter by product if specified
       if (productId) {
-        filtered = filtered.filter((r) =>
-          r.applies_to_products?.includes(productId)
-        );
+        filtered = filtered.filter((r) => r.applies_to_products?.includes(productId));
       }
 
       // Filter by customer if specified
       if (customerId) {
-        filtered = filtered.filter((r) =>
-          r.applies_to_customers?.includes(customerId)
-        );
+        filtered = filtered.filter((r) => r.applies_to_customers?.includes(customerId));
       }
 
       // Sort by priority (lower number = higher priority)
@@ -135,7 +128,7 @@ export const commissionRulesHandlers = [
 
       console.log(`[MSW] Returning ${filtered.length} applicable rules`);
       return HttpResponse.json(filtered);
-    }
+    },
   ),
 
   // GET /api/v1/partners/commission-rules/ - List commission rules
@@ -219,32 +212,29 @@ export const commissionRulesHandlers = [
   }),
 
   // PATCH /api/v1/partners/commission-rules/:id - Update commission rule
-  http.patch(
-    "*/api/v1/partners/commission-rules/:id",
-    async ({ request, params }) => {
-      const { id } = params;
-      const updateData = await request.json();
+  http.patch("*/api/v1/partners/commission-rules/:id", async ({ request, params }) => {
+    const { id } = params;
+    const updateData = await request.json();
 
-      console.log("[MSW] PATCH /api/v1/partners/commission-rules/:id", {
-        id,
-        updateData,
-      });
+    console.log("[MSW] PATCH /api/v1/partners/commission-rules/:id", {
+      id,
+      updateData,
+    });
 
-      const rule = rules.find((r) => r.id === id);
+    const rule = rules.find((r) => r.id === id);
 
-      if (!rule) {
-        return HttpResponse.json({ detail: "Rule not found" }, { status: 404 });
-      }
-
-      // Update rule
-      Object.assign(rule, updateData, {
-        updated_at: new Date().toISOString(),
-      });
-
-      console.log("[MSW] Updated commission rule:", rule.id);
-      return HttpResponse.json(rule);
+    if (!rule) {
+      return HttpResponse.json({ detail: "Rule not found" }, { status: 404 });
     }
-  ),
+
+    // Update rule
+    Object.assign(rule, updateData, {
+      updated_at: new Date().toISOString(),
+    });
+
+    console.log("[MSW] Updated commission rule:", rule.id);
+    return HttpResponse.json(rule);
+  }),
 
   // DELETE /api/v1/partners/commission-rules/:id - Delete commission rule
   http.delete("*/api/v1/partners/commission-rules/:id", ({ request, params }) => {

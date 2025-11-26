@@ -25,14 +25,7 @@ import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { formatCurrency } from "@dotmac/features/billing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +41,7 @@ export default function ReceiptDetailPage() {
   const queryClient = useQueryClient();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const receiptId = params['id'] as string;
+  const receiptId = params["id"] as string;
 
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -298,9 +291,7 @@ export default function ReceiptDetailPage() {
                     <ReceiptIcon className="h-6 w-6" />
                     Receipt
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {receipt.receipt_number}
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">{receipt.receipt_number}</p>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">Issue Date</div>
@@ -348,9 +339,7 @@ export default function ReceiptDetailPage() {
                   {receipt.payment_id && (
                     <div>
                       <div className="text-muted-foreground">Payment ID</div>
-                      <div className="font-medium font-mono text-xs">
-                        {receipt.payment_id}
-                      </div>
+                      <div className="font-medium font-mono text-xs">{receipt.payment_id}</div>
                     </div>
                   )}
                 </div>
@@ -374,9 +363,7 @@ export default function ReceiptDetailPage() {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          router.push(
-                            `/dashboard/billing-revenue/invoices/${receipt.invoice_id}`
-                          )
+                          router.push(`/dashboard/billing-revenue/invoices/${receipt.invoice_id}`)
                         }
                       >
                         View Invoice

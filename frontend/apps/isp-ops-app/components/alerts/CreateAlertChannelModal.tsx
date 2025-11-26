@@ -15,7 +15,11 @@ interface CreateAlertChannelModalProps {
   onSuccess: () => void;
 }
 
-export function CreateAlertChannelModal({ isOpen, onClose, onSuccess }: CreateAlertChannelModalProps) {
+export function CreateAlertChannelModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: CreateAlertChannelModalProps) {
   const [formData, setFormData] = useState({
     id: "",
     name: "",

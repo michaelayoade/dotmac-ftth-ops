@@ -12,24 +12,24 @@
  * Error severity levels
  */
 export enum ErrorSeverity {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
-  CRITICAL = 'critical',
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  CRITICAL = "critical",
 }
 
 /**
  * Error categories for better classification
  */
 export enum ErrorCategory {
-  NETWORK = 'network',
-  AUTHENTICATION = 'authentication',
-  AUTHORIZATION = 'authorization',
-  VALIDATION = 'validation',
-  NOT_FOUND = 'not_found',
-  SERVER = 'server',
-  CLIENT = 'client',
-  UNKNOWN = 'unknown',
+  NETWORK = "network",
+  AUTHENTICATION = "authentication",
+  AUTHORIZATION = "authorization",
+  VALIDATION = "validation",
+  NOT_FOUND = "not_found",
+  SERVER = "server",
+  CLIENT = "client",
+  UNKNOWN = "unknown",
 }
 
 /**
@@ -99,28 +99,28 @@ export interface AppError {
  * Extract error message from various error formats
  */
 export function extractErrorMessage(error: unknown): string {
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
 
-  if (error && typeof error === 'object') {
+  if (error && typeof error === "object") {
     const err = error as Record<string, unknown>;
 
     // API error response
-    if ('detail' in err && typeof err['detail'] === 'string') {
-      return err['detail'] as string;
+    if ("detail" in err && typeof err["detail"] === "string") {
+      return err["detail"] as string;
     }
 
-    if ('message' in err && typeof err['message'] === 'string') {
-      return err['message'] as string;
+    if ("message" in err && typeof err["message"] === "string") {
+      return err["message"] as string;
     }
 
     // Axios error response
-    if ('response' in err && err['response']) {
-      const response = err['response'] as Record<string, unknown>;
-      if (response['data'] && typeof response['data'] === 'object') {
-        const data = response['data'] as ApiErrorResponse;
-        return data.detail || data.message || 'An error occurred';
+    if ("response" in err && err["response"]) {
+      const response = err["response"] as Record<string, unknown>;
+      if (response["data"] && typeof response["data"] === "object") {
+        const data = response["data"] as ApiErrorResponse;
+        return data.detail || data.message || "An error occurred";
       }
     }
 
@@ -130,28 +130,28 @@ export function extractErrorMessage(error: unknown): string {
     }
   }
 
-  return 'An unexpected error occurred';
+  return "An unexpected error occurred";
 }
 
 /**
  * Extract status code from error
  */
 export function extractStatusCode(error: unknown): number | undefined {
-  if (error && typeof error === 'object') {
+  if (error && typeof error === "object") {
     const err = error as Record<string, unknown>;
 
-    if ('status' in err && typeof err['status'] === 'number') {
-      return err['status'] as number;
+    if ("status" in err && typeof err["status"] === "number") {
+      return err["status"] as number;
     }
 
-    if ('statusCode' in err && typeof err['statusCode'] === 'number') {
-      return err['statusCode'] as number;
+    if ("statusCode" in err && typeof err["statusCode"] === "number") {
+      return err["statusCode"] as number;
     }
 
-    if ('response' in err && err['response']) {
-      const response = err['response'] as Record<string, unknown>;
-      if ('status' in response && typeof response['status'] === 'number') {
-        return response['status'] as number;
+    if ("response" in err && err["response"]) {
+      const response = err["response"] as Record<string, unknown>;
+      if ("status" in response && typeof response["status"] === "number") {
+        return response["status"] as number;
       }
     }
   }
@@ -175,23 +175,23 @@ export function categorizeError(error: unknown): ErrorCategory {
     if (statusCode >= 400) return ErrorCategory.CLIENT;
   }
 
-  if (message.includes('network') || message.includes('fetch')) {
+  if (message.includes("network") || message.includes("fetch")) {
     return ErrorCategory.NETWORK;
   }
 
-  if (message.includes('unauthorized') || message.includes('token')) {
+  if (message.includes("unauthorized") || message.includes("token")) {
     return ErrorCategory.AUTHENTICATION;
   }
 
-  if (message.includes('forbidden') || message.includes('permission')) {
+  if (message.includes("forbidden") || message.includes("permission")) {
     return ErrorCategory.AUTHORIZATION;
   }
 
-  if (message.includes('not found')) {
+  if (message.includes("not found")) {
     return ErrorCategory.NOT_FOUND;
   }
 
-  if (message.includes('validation') || message.includes('invalid')) {
+  if (message.includes("validation") || message.includes("invalid")) {
     return ErrorCategory.VALIDATION;
   }
 
@@ -222,7 +222,7 @@ export function isRetryableError(error: unknown): boolean {
 
   // Timeout errors are retryable
   const message = extractErrorMessage(error).toLowerCase();
-  if (message.includes('timeout') || message.includes('timed out')) {
+  if (message.includes("timeout") || message.includes("timed out")) {
     return true;
   }
 
@@ -238,23 +238,23 @@ export function getSuggestedAction(error: unknown): string | undefined {
 
   switch (category) {
     case ErrorCategory.AUTHENTICATION:
-      return 'Please log in again';
+      return "Please log in again";
     case ErrorCategory.AUTHORIZATION:
-      return 'Contact your administrator for access';
+      return "Contact your administrator for access";
     case ErrorCategory.NETWORK:
-      return 'Check your internet connection and try again';
+      return "Check your internet connection and try again";
     case ErrorCategory.NOT_FOUND:
-      return 'The requested resource could not be found';
+      return "The requested resource could not be found";
     case ErrorCategory.VALIDATION:
-      return 'Please check your input and try again';
+      return "Please check your input and try again";
     case ErrorCategory.SERVER:
-      return 'Our team has been notified. Please try again later';
+      return "Our team has been notified. Please try again later";
     default:
       if (statusCode === 429) {
-        return 'Too many requests. Please wait a moment';
+        return "Too many requests. Please wait a moment";
       }
       if (isRetryableError(error)) {
-        return 'Please try again';
+        return "Please try again";
       }
       return undefined;
   }
@@ -280,13 +280,13 @@ export function createAppError(error: unknown, context?: Record<string, unknown>
   const appError: AppError = {
     id: crypto.randomUUID(),
     message,
-    details: error instanceof Error ? (error.stack ?? '') : JSON.stringify(error),
+    details: error instanceof Error ? (error.stack ?? "") : JSON.stringify(error),
     category,
     severity,
     originalError: error,
     timestamp: new Date(),
     retryable: isRetryableError(error),
-    action: action ?? 'Please try again or contact support',
+    action: action ?? "Please try again or contact support",
   };
 
   if (statusCode !== undefined) {
@@ -313,20 +313,22 @@ export function isAuthError(error: unknown): boolean {
  */
 export function isValidationError(error: unknown): boolean {
   const statusCode = extractStatusCode(error);
-  return statusCode === 422 || statusCode === 400 || categorizeError(error) === ErrorCategory.VALIDATION;
+  return (
+    statusCode === 422 || statusCode === 400 || categorizeError(error) === ErrorCategory.VALIDATION
+  );
 }
 
 /**
  * Extract field errors from API validation error
  */
 export function extractFieldErrors(error: unknown): Record<string, string[]> | undefined {
-  if (error && typeof error === 'object') {
+  if (error && typeof error === "object") {
     const err = error as Record<string, unknown>;
 
-    if ('response' in err && err['response']) {
-      const response = err['response'] as Record<string, unknown>;
-      if (response['data'] && typeof response['data'] === 'object') {
-        const data = response['data'] as ApiErrorResponse;
+    if ("response" in err && err["response"]) {
+      const response = err["response"] as Record<string, unknown>;
+      if (response["data"] && typeof response["data"] === "object") {
+        const data = response["data"] as ApiErrorResponse;
 
         if (data.errors && Array.isArray(data.errors)) {
           const fieldErrors: Record<string, string[]> = {};

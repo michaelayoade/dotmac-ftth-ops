@@ -209,7 +209,7 @@ describe("LoadingOverlay", () => {
         <div style={{ position: "relative" }}>
           <div>Card Content</div>
           <LoadingOverlay loading={true} message="Loading..." />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Card Content")).toBeInTheDocument();
@@ -344,7 +344,7 @@ describe("InlineLoader", () => {
       render(
         <button>
           <InlineLoader size="sm" message="Saving..." />
-        </button>
+        </button>,
       );
 
       expect(screen.getByText("Saving...")).toBeInTheDocument();
@@ -354,7 +354,7 @@ describe("InlineLoader", () => {
       render(
         <div>
           <InlineLoader size="sm" /> <span>Processing request...</span>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Processing request...")).toBeInTheDocument();
@@ -373,7 +373,7 @@ describe("InlineLoader", () => {
         <div>
           <LoadingOverlay loading={false} />
           <InlineLoader message="Loading items..." />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Loading items...")).toBeInTheDocument();
@@ -409,7 +409,7 @@ describe("LoadingOverlay and InlineLoader Together", () => {
         <div>
           <InlineLoader message="Loading sidebar..." />
         </div>
-      </div>
+      </div>,
     );
 
     expect(screen.getByText("Loading main content...")).toBeInTheDocument();
@@ -424,7 +424,7 @@ describe("LoadingOverlay and InlineLoader Together", () => {
           <div>Main Content</div>
         </div>
         <InlineLoader message="Loading additional data..." size="sm" />
-      </div>
+      </div>,
     );
 
     expect(screen.getByText("Main Content")).toBeInTheDocument();

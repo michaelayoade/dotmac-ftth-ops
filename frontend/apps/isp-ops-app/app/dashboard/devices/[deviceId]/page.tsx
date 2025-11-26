@@ -87,7 +87,7 @@ interface DeviceEvent {
 
 function DeviceDetailsPageContent() {
   const params = useParams();
-  const deviceId = params['deviceId'] as string;
+  const deviceId = params["deviceId"] as string;
   const [activeTab, setActiveTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -99,13 +99,10 @@ function DeviceDetailsPageContent() {
   const { data: device, isLoading } = useQuery<DeviceDetails>({
     queryKey: ["device", deviceId, refreshKey],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`,
-        {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to fetch device");
       return response.json();
     },
@@ -116,13 +113,10 @@ function DeviceDetailsPageContent() {
   const { data: events = [] } = useQuery<DeviceEvent[]>({
     queryKey: ["device-events", deviceId, refreshKey],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/events`,
-        {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/events`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) return [];
       return response.json();
     },
@@ -131,14 +125,11 @@ function DeviceDetailsPageContent() {
   // Refresh device
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to refresh device");
       return response.json();
     },
@@ -158,14 +149,11 @@ function DeviceDetailsPageContent() {
   // Reboot device
   const rebootMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/reboot`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/reboot`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to reboot device");
       return response.json();
     },
@@ -218,7 +206,11 @@ function DeviceDetailsPageContent() {
       case "error":
         return <Badge variant="destructive">Error</Badge>;
       case "warning":
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400">Warning</Badge>;
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400">
+            Warning
+          </Badge>
+        );
       default:
         return <Badge variant="secondary">Info</Badge>;
     }
@@ -281,7 +273,9 @@ function DeviceDetailsPageContent() {
             onClick={() => refreshMutation.mutate()}
             disabled={refreshMutation.isPending}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
           <Button
@@ -324,7 +318,10 @@ function DeviceDetailsPageContent() {
           <CardContent>
             <div className="text-2xl font-bold">{formatUptime(device.stats?.uptime)}</div>
             <p className="text-xs text-muted-foreground">
-              Last seen: {device.summary?.lastContact ? new Date(device.summary.lastContact).toLocaleString() : "Never"}
+              Last seen:{" "}
+              {device.summary?.lastContact
+                ? new Date(device.summary.lastContact).toLocaleString()
+                : "Never"}
             </p>
           </CardContent>
         </Card>
@@ -355,9 +352,7 @@ function DeviceDetailsPageContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{device.wifi?.clients || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              SSID: {device.wifi?.ssid || "N/A"}
-            </p>
+            <p className="text-xs text-muted-foreground">SSID: {device.wifi?.ssid || "N/A"}</p>
           </CardContent>
         </Card>
       </div>
@@ -529,16 +524,12 @@ function DeviceDetailsPageContent() {
             </CardHeader>
             <CardContent>
               {events.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No events recorded
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No events recorded</div>
               ) : (
                 <div className="space-y-3">
                   {events.map((event, index) => (
                     <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
-                      <div className="flex-shrink-0 mt-0.5">
-                        {getSeverityBadge(event.severity)}
-                      </div>
+                      <div className="flex-shrink-0 mt-0.5">{getSeverityBadge(event.severity)}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-medium">{event.type}</p>

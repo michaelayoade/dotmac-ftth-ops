@@ -141,9 +141,9 @@ const ticketingApi = {
     search?: string;
   }): Promise<TicketSummary[]> => {
     const params: Record<string, unknown> = {};
-    if (filters?.status) params['status'] = filters.status;
-    if (filters?.priority) params['priority'] = filters.priority;
-    if (filters?.search) params['search'] = filters.search;
+    if (filters?.status) params["status"] = filters.status;
+    if (filters?.priority) params["priority"] = filters.priority;
+    if (filters?.search) params["search"] = filters.search;
 
     const response = await apiClient.get<TicketSummary[]>("/tickets", { params });
     return response.data;
@@ -294,7 +294,9 @@ export function useCreateTicket() {
       if (context?.previousTickets) {
         queryClient.setQueryData(ticketingKeys.lists(), context.previousTickets);
       }
-      logger.error("Failed to create ticket", toError(error), { targetType: newTicket.target_type });
+      logger.error("Failed to create ticket", toError(error), {
+        targetType: newTicket.target_type,
+      });
     },
     onSuccess: (data, variables, context) => {
       if (context?.optimisticTicket) {
@@ -338,8 +340,17 @@ export function useUpdateTicket() {
       const previousTicket = queryClient.getQueryData(ticketingKeys.detail(ticketId));
       const previousTickets = queryClient.getQueryData(ticketingKeys.lists());
 
-      optimisticHelpers.updateItem(queryClient, ticketingKeys.detail(ticketId), data as Record<string, unknown>);
-      optimisticHelpers.updateInList(queryClient, ticketingKeys.lists(), ticketId, data as Record<string, unknown>);
+      optimisticHelpers.updateItem(
+        queryClient,
+        ticketingKeys.detail(ticketId),
+        data as Record<string, unknown>,
+      );
+      optimisticHelpers.updateInList(
+        queryClient,
+        ticketingKeys.lists(),
+        ticketId,
+        data as Record<string, unknown>,
+      );
 
       logger.info("Updating ticket optimistically", { ticketId, updates: data });
 
@@ -403,17 +414,14 @@ export function useAddMessage() {
         updated_at: new Date().toISOString(),
       };
 
-      queryClient.setQueryData<TicketDetail>(
-        ticketingKeys.detail(ticketId) as any,
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            messages: [...(old.messages || []), optimisticMessage],
-            status: data.new_status || old.status,
-          };
-        },
-      );
+      queryClient.setQueryData<TicketDetail>(ticketingKeys.detail(ticketId) as any, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          messages: [...(old.messages || []), optimisticMessage],
+          status: data.new_status || old.status,
+        };
+      });
 
       logger.info("Adding message optimistically", { ticketId, message: optimisticMessage });
 
@@ -421,12 +429,11 @@ export function useAddMessage() {
     },
     onError: (error, variables, context) => {
       if (context?.previousTicket) {
-        queryClient.setQueryData(
-          ticketingKeys.detail(context.ticketId),
-          context.previousTicket,
-        );
+        queryClient.setQueryData(ticketingKeys.detail(context.ticketId), context.previousTicket);
       }
-      logger.error("Failed to add ticket message", toError(error), { ticketId: variables.ticketId });
+      logger.error("Failed to add ticket message", toError(error), {
+        ticketId: variables.ticketId,
+      });
     },
     onSuccess: (data, variables) => {
       queryClient.setQueryData(ticketingKeys.detail(variables.ticketId), data);
@@ -441,8 +448,7 @@ export function useAddMessage() {
   });
 
   return {
-    addMessage: (ticketId: string, data: AddMessageRequest) =>
-      mutation.mutate({ ticketId, data }),
+    addMessage: (ticketId: string, data: AddMessageRequest) => mutation.mutate({ ticketId, data }),
     addMessageAsync: (ticketId: string, data: AddMessageRequest) =>
       mutation.mutateAsync({ ticketId, data }),
     loading: mutation.isPending,

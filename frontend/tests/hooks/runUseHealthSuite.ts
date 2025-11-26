@@ -237,7 +237,9 @@ export function runUseHealthSuite(useHealth: UseHealthHook, apiClient: any) {
         const { result } = renderUseHealth();
 
         const health = await waitForHealthData(result);
-        expect(getHealthErrorMessage(health, result.current.error)).toBe("Database connection failed");
+        expect(getHealthErrorMessage(health, result.current.error)).toBe(
+          "Database connection failed",
+        );
         expect(health).toMatchObject({
           status: "degraded",
           healthy: false,

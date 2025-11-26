@@ -948,7 +948,9 @@ async def compliance_report(
             ComplianceIssue(
                 severity=ActivitySeverity.CRITICAL,
                 description="Critical events detected",
-                event_ids=[str(a.id) for a in activities if a.severity == ActivitySeverity.CRITICAL],
+                event_ids=[
+                    str(a.id) for a in activities if a.severity == ActivitySeverity.CRITICAL
+                ],
             )
         )
 
