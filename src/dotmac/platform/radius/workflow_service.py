@@ -80,8 +80,8 @@ class RADIUSService:
             # Try to get from customer record
             from ..customer_management.models import Customer
 
-            stmt = select(Customer).where(Customer.id == customer_id_str)
-            result = await self.db.execute(stmt)
+            customer_stmt = select(Customer).where(Customer.id == customer_id_str)
+            result = await self.db.execute(customer_stmt)
             customer = result.scalar_one_or_none()
             if customer:
                 tenant_id = customer.tenant_id
@@ -89,21 +89,21 @@ class RADIUSService:
                 raise ValueError(f"Customer {customer_id} not found and tenant_id not provided")
 
         # Check if username already exists
-        stmt = select(RadCheck).where(
+        username_stmt = select(RadCheck).where(
             RadCheck.username == username, RadCheck.tenant_id == tenant_id
         )
-        result = await self.db.execute(stmt)
+        result = await self.db.execute(username_stmt)
         existing = result.scalar_one_or_none()
 
         if existing:
             raise ValueError(f"RADIUS username '{username}' already exists for tenant {tenant_id}")
 
         # Fetch bandwidth profile
-        stmt = select(RadiusBandwidthProfile).where(
+        profile_stmt = select(RadiusBandwidthProfile).where(
             RadiusBandwidthProfile.name == bandwidth_profile,
             RadiusBandwidthProfile.tenant_id == tenant_id,
         )
-        result = await self.db.execute(stmt)
+        result = await self.db.execute(profile_stmt)
         profile = result.scalar_one_or_none()
 
         if not profile:

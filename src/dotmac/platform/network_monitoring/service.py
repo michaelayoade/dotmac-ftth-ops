@@ -498,6 +498,10 @@ class NetworkMonitoringService:
                 device_name=f"Device {device_id}",
                 device_type=resolved_type or DeviceType.OTHER,
                 status=DeviceStatus.UNKNOWN,
+                management_ipv4=None,
+                management_ipv6=None,
+                data_plane_ipv4=None,
+                data_plane_ipv6=None,
                 tenant_id=self.tenant_id,
             )
 
@@ -525,6 +529,10 @@ class NetworkMonitoringService:
                     else DeviceStatus.OFFLINE
                 ),
                 last_seen=datetime.utcnow(),
+                management_ipv4=None,
+                management_ipv6=None,
+                data_plane_ipv4=None,
+                data_plane_ipv6=None,
                 # Optical metrics
                 temperature_celsius=onu_payload.get("temperature"),
                 firmware_version=onu_payload.get("software_version"),
@@ -570,6 +578,9 @@ class NetworkMonitoringService:
                 device_type=DeviceType.CPE,
                 status=status,
                 management_ipv4=wan_ipv4,
+                management_ipv6=None,
+                data_plane_ipv4=None,
+                data_plane_ipv6=None,
                 last_seen=last_inform_dt.replace(tzinfo=None) if last_inform_dt else None,
                 cpu_usage_percent=cpe_data.get("Device", {})
                 .get("DeviceInfo", {})
@@ -624,6 +635,8 @@ class NetworkMonitoringService:
             status=status,
             management_ipv4=management_ipv4,
             management_ipv6=management_ipv6,
+            data_plane_ipv4=None,
+            data_plane_ipv6=None,
             last_seen=last_seen,
             cpu_usage_percent=cpu_usage,
             memory_usage_percent=memory_usage,
@@ -641,6 +654,10 @@ class NetworkMonitoringService:
             device_name=f"Device {device_id}",
             device_type=DeviceType.OTHER,
             status=DeviceStatus.UNKNOWN,
+            management_ipv4=None,
+            management_ipv6=None,
+            data_plane_ipv4=None,
+            data_plane_ipv6=None,
             tenant_id=self.tenant_id,
         )
 
@@ -792,6 +809,10 @@ class NetworkMonitoringService:
                 device_name=f"Device {device_id}",
                 device_type=resolved_type,
                 status=DeviceStatus.UNKNOWN,
+                management_ipv4=None,
+                management_ipv6=None,
+                data_plane_ipv4=None,
+                data_plane_ipv6=None,
             )
         else:
             health = cast(DeviceHealthResponse, health_result)
@@ -861,6 +882,8 @@ class NetworkMonitoringService:
                 mac_address=cpe_data.get("_deviceId", {}).get("_SerialNumber", cpe_id),
                 wifi_enabled=wifi_data.get("Radio", {}).get("1", {}).get("Enable", False),
                 connected_clients=connected_clients,
+                wan_ipv4=None,
+                wan_ipv6=None,
                 last_inform=(
                     datetime.fromisoformat(
                         cpe_data.get("_lastInform", "").replace("Z", "+00:00")

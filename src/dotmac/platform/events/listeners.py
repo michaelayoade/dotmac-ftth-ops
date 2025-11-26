@@ -16,7 +16,7 @@ logger = structlog.get_logger(__name__)
 # Analytics Integration Listeners
 
 
-@subscribe("billing.invoice.created")  # type: ignore[misc]
+@subscribe("billing.invoice.created")
 async def track_invoice_analytics(event: Event) -> None:
     """
     Track invoice creation in analytics.
@@ -41,7 +41,7 @@ async def track_invoice_analytics(event: Event) -> None:
     # )
 
 
-@subscribe("billing.payment.succeeded")  # type: ignore[misc]
+@subscribe("billing.payment.succeeded")
 async def track_payment_analytics(event: Event) -> None:
     """
     Track successful payment in analytics.
@@ -59,7 +59,7 @@ async def track_payment_analytics(event: Event) -> None:
     )
 
 
-@subscribe("customer.created")  # type: ignore[misc]
+@subscribe("customer.created")
 async def track_customer_signup(event: Event) -> None:
     """
     Track customer signup in analytics.
@@ -79,7 +79,7 @@ async def track_customer_signup(event: Event) -> None:
 # Notification Integration Listeners
 
 
-@subscribe("billing.invoice.created")  # type: ignore[misc]
+@subscribe("billing.invoice.created")
 async def send_invoice_notification(event: Event) -> None:
     """
     Send invoice notification to customer.
@@ -109,7 +109,7 @@ async def send_invoice_notification(event: Event) -> None:
     # )
 
 
-@subscribe("billing.payment.succeeded")  # type: ignore[misc]
+@subscribe("billing.payment.succeeded")
 async def send_payment_confirmation(event: Event) -> None:
     """
     Send payment confirmation email.
@@ -127,7 +127,7 @@ async def send_payment_confirmation(event: Event) -> None:
     )
 
 
-@subscribe("billing.payment.failed")  # type: ignore[misc]
+@subscribe("billing.payment.failed")
 async def send_payment_failure_notification(event: Event) -> None:
     """
     Send payment failure notification.
@@ -145,7 +145,7 @@ async def send_payment_failure_notification(event: Event) -> None:
     )
 
 
-@subscribe("auth.password.reset")  # type: ignore[misc]
+@subscribe("auth.password.reset")
 async def send_password_reset_email(event: Event) -> None:
     """
     Send password reset email.
@@ -166,7 +166,7 @@ async def send_password_reset_email(event: Event) -> None:
 # Webhook Integration Listeners
 
 
-@subscribe("billing.invoice.created")  # type: ignore[misc]
+@subscribe("billing.invoice.created")
 async def trigger_invoice_webhook(event: Event) -> None:
     """
     Trigger webhook for invoice creation.
@@ -191,7 +191,7 @@ async def trigger_invoice_webhook(event: Event) -> None:
     # )
 
 
-@subscribe("billing.payment.succeeded")  # type: ignore[misc]
+@subscribe("billing.payment.succeeded")
 async def trigger_payment_webhook(event: Event) -> None:
     """
     Trigger webhook for successful payment.
@@ -208,7 +208,7 @@ async def trigger_payment_webhook(event: Event) -> None:
     )
 
 
-@subscribe("customer.created")  # type: ignore[misc]
+@subscribe("customer.created")
 async def trigger_customer_webhook(event: Event) -> None:
     """
     Trigger webhook for customer creation.
@@ -228,7 +228,7 @@ async def trigger_customer_webhook(event: Event) -> None:
 # Audit Logging Listeners
 
 
-@subscribe("billing.invoice.created")  # type: ignore[misc]
+@subscribe("billing.invoice.created")
 async def audit_invoice_creation(event: Event) -> None:
     """
     Audit log invoice creation.
@@ -258,7 +258,7 @@ async def audit_invoice_creation(event: Event) -> None:
     # )
 
 
-@subscribe("auth.user.login")  # type: ignore[misc]
+@subscribe("auth.user.login")
 async def audit_user_login(event: Event) -> None:
     """
     Audit log user login.
@@ -277,7 +277,7 @@ async def audit_user_login(event: Event) -> None:
     )
 
 
-@subscribe("customer.updated")  # type: ignore[misc]
+@subscribe("customer.updated")
 async def audit_customer_update(event: Event) -> None:
     """
     Audit log customer updates.
@@ -301,7 +301,7 @@ async def audit_customer_update(event: Event) -> None:
 # File Processing Listeners
 
 
-@subscribe("file.uploaded")  # type: ignore[misc]
+@subscribe("file.uploaded")
 async def process_uploaded_file(event: Event) -> None:
     """
     Process uploaded file.
@@ -329,7 +329,7 @@ async def process_uploaded_file(event: Event) -> None:
     #     await thumbnail_service.generate_thumbnail(file_id)
 
 
-@subscribe("file.uploaded")  # type: ignore[misc]
+@subscribe("file.uploaded")
 async def index_uploaded_file(event: Event) -> None:
     """
     Index uploaded file for search.
@@ -359,7 +359,7 @@ async def index_uploaded_file(event: Event) -> None:
 # Cache Invalidation Listeners
 
 
-@subscribe("customer.updated")  # type: ignore[misc]
+@subscribe("customer.updated")
 async def invalidate_customer_cache(event: Event) -> None:
     """
     Invalidate customer cache on update.
@@ -382,7 +382,7 @@ async def invalidate_customer_cache(event: Event) -> None:
     # redis.delete(cache_key)
 
 
-@subscribe("billing.invoice.updated")  # type: ignore[misc]
+@subscribe("billing.invoice.updated")
 async def invalidate_invoice_cache(event: Event) -> None:
     """
     Invalidate invoice cache on update.
@@ -402,7 +402,7 @@ async def invalidate_invoice_cache(event: Event) -> None:
 # Metrics Collection Listeners
 
 
-@subscribe("*")  # type: ignore[misc]
+@subscribe("*")
 async def collect_event_metrics(event: Event) -> None:
     """
     Collect metrics for all events.
@@ -429,7 +429,7 @@ async def collect_event_metrics(event: Event) -> None:
 # Error Handling Listeners
 
 
-@subscribe("system.error")  # type: ignore[misc]
+@subscribe("system.error")
 async def alert_on_system_error(event: Event) -> None:
     """
     Send alerts on system errors.
@@ -456,7 +456,7 @@ async def alert_on_system_error(event: Event) -> None:
     #     )
 
 
-@subscribe("webhook.failed")  # type: ignore[misc]
+@subscribe("webhook.failed")
 async def retry_failed_webhook(event: Event) -> None:
     """
     Retry failed webhook delivery.

@@ -66,7 +66,7 @@ class APIKeyMetricsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(  # type: ignore[misc]  # Untyped decorator
+@cached_result(
     ttl=API_KEYS_STATS_CACHE_TTL,
     key_prefix="api_keys:metrics",
     key_params=["period_days", "tenant_id"],

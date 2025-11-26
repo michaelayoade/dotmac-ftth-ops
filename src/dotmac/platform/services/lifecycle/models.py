@@ -166,7 +166,7 @@ def _enum[EnumT: Enum](enum_cls: type[EnumT], *, name: str) -> SQLEnum:
     )
 
 
-class ServiceInstance(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+class ServiceInstance(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
     """
     Service instance representing a provisioned service for a customer.
 
@@ -464,7 +464,7 @@ class ServiceInstance(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, A
     )
 
 
-class LifecycleEvent(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class LifecycleEvent(BaseModel, TimestampMixin, TenantMixin):
     """
     Lifecycle event tracking for service instances.
 
@@ -610,7 +610,7 @@ class LifecycleEvent(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[mi
     )
 
 
-class ProvisioningWorkflow(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class ProvisioningWorkflow(BaseModel, TimestampMixin, TenantMixin):
     """
     Tracks multi-step provisioning workflows.
 

@@ -4,6 +4,7 @@ ISP Internet Service Plan API Router
 REST API endpoints for internet service plan management.
 """
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -251,7 +252,7 @@ async def get_plan_statistics(
     plan_id: UUID,
     _: UserInfo = Depends(require_permission("isp.plans.read")),
     service: InternetPlanService = Depends(get_plan_service),
-) -> dict:
+) -> dict[str, Any]:
     """Get plan statistics."""
     return await service.get_plan_statistics(plan_id)
 

@@ -460,7 +460,7 @@ async def process_subscription_overage(
     }
 
 
-@celery_app.task(name="services.process_usage_billing", bind=True, max_retries=3)
+@celery_app.task(name="services.process_usage_billing", bind=True, max_retries=3)  # type: ignore[misc]
 def process_usage_billing(self: Any, batch_size: int = 100) -> dict[str, Any]:
     """
     Process usage-based billing for ISP plan subscriptions.
@@ -483,8 +483,8 @@ def process_usage_billing(self: Any, batch_size: int = 100) -> dict[str, Any]:
 
     logger.info("usage_billing.task_started", batch_size=batch_size)
 
-    async def run_billing():
-        results = {
+    async def run_billing() -> dict[str, int]:
+        results: dict[str, int] = {
             "total_processed": 0,
             "invoices_created": 0,
             "skipped": 0,

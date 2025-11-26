@@ -46,7 +46,7 @@ if TYPE_CHECKING:
     pass
 
 
-class RadCheck(Base):  # type: ignore[misc]
+class RadCheck(Base):
     """
     RADIUS Check Table - Authentication attributes
 
@@ -85,7 +85,7 @@ class RadCheck(Base):  # type: ignore[misc]
         return f"<RadCheck(id={self.id}, username={self.username}, attribute={self.attribute})>"
 
 
-class RadReply(Base):  # type: ignore[misc]
+class RadReply(Base):
     """
     RADIUS Reply Table - Authorization attributes
 
@@ -124,7 +124,7 @@ class RadReply(Base):  # type: ignore[misc]
         return f"<RadReply(id={self.id}, username={self.username}, attribute={self.attribute})>"
 
 
-class RadAcct(Base):  # type: ignore[misc]
+class RadAcct(Base):
     """
     RADIUS Accounting Table
 
@@ -207,7 +207,7 @@ class RadAcct(Base):  # type: ignore[misc]
         return upload + download
 
 
-class RadPostAuth(Base):  # type: ignore[misc]
+class RadPostAuth(Base):
     """
     RADIUS Post-Auth Table
 
@@ -242,7 +242,7 @@ class RadPostAuth(Base):  # type: ignore[misc]
         return f"<RadPostAuth(id={self.id}, username={self.username}, reply={self.reply})>"
 
 
-class NAS(Base):  # type: ignore[misc]
+class NAS(Base):
     """
     NAS (Network Access Server) Table
 
@@ -299,7 +299,7 @@ class NAS(Base):  # type: ignore[misc]
         return f"<NAS(id={self.id}, name={self.shortname}, vendor={self.vendor}, nasname={self.nasname})>"
 
 
-class RadiusBandwidthProfile(Base):  # type: ignore[misc]
+class RadiusBandwidthProfile(Base):
     """
     Bandwidth Profile Table
 

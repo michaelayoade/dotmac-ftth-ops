@@ -7,6 +7,8 @@ from collections.abc import Callable
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from typing import cast
+
 from dotmac.platform.db import AsyncSessionLocal
 from dotmac.platform.settings import settings
 from dotmac.platform.user_management.service import UserService
@@ -26,7 +28,7 @@ async def ensure_default_admin_user(session_factory: SessionFactory | None = Non
     email = settings.auth.default_admin_email
     password = settings.auth.default_admin_password
 
-    factory: SessionFactory = session_factory or AsyncSessionLocal  # type: ignore[assignment]
+    factory: SessionFactory = cast(SessionFactory, session_factory or AsyncSessionLocal)
 
     async with factory() as session:
         service = UserService(session)

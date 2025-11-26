@@ -69,7 +69,7 @@ class AuthMetricsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(  # type: ignore[misc]  # Untyped decorator
+@cached_result(
     ttl=AUTH_METRICS_CACHE_TTL,
     key_prefix="auth:metrics",
     key_params=["period_days", "tenant_id"],
