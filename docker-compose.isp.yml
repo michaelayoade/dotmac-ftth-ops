@@ -96,7 +96,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - dotmac-network
+      - default
 
   # ISP-only GenieACS (TR-069 ACS for CPE management)
   # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
@@ -128,7 +128,7 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - dotmac-network
+      - default
 
   # ISP-only RADIUS (FreeRADIUS)
   # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
@@ -156,7 +156,7 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - dotmac-network
+      - default
 
 volumes:
   isp_storage:
