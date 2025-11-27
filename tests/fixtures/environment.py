@@ -525,9 +525,10 @@ def _should_run_integration(config: pytest.Config) -> bool:
     explicit_args = getattr(config, "args", []) or []
     for arg in (*invocation_args, *explicit_args):
         arg_str = str(arg)
-        if "tests/integration" in arg_str:
+        # Only match explicit integration test directories, not files with "integration" in name
+        if "tests/integration/" in arg_str or arg_str.endswith("tests/integration"):
             return True
-        if "integration" in Path(arg_str).name:
+        if "tests/integrations/" in arg_str or arg_str.endswith("tests/integrations"):
             return True
 
     env_async_url = os.getenv("DOTMAC_DATABASE_URL_ASYNC", "").strip()
