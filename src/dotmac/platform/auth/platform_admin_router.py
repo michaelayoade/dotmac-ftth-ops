@@ -8,13 +8,12 @@ Provides endpoints for SaaS platform administrators to:
 - Manage platform-level configurations
 """
 
-import os
 from typing import Any
 
 import structlog
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.db import get_async_session

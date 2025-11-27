@@ -830,7 +830,10 @@ class TenantService:
         updates = branding_update.branding.model_dump(exclude_unset=True)
         branding_data.update({k: v for k, v in updates.items() if v is not None})
 
-        tenant.custom_metadata["branding"] = branding_data
+        # Create new dict to ensure SQLAlchemy detects the change (mutable JSON tracking)
+        new_metadata = dict(tenant.custom_metadata)
+        new_metadata["branding"] = branding_data
+        tenant.custom_metadata = new_metadata
         tenant.updated_at = datetime.now(UTC)
 
         await self.db.commit()

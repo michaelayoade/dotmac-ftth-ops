@@ -166,8 +166,9 @@ jobs:
           - name: "Core"
             paths: "tests/contacts tests/customer_management tests/secrets tests/communications tests/core"
           - name: "Webhooks"
-            # Note: tests/integration requires PostgreSQL and runs in backend-integration-tests job
-            paths: "tests/integrations tests/webhooks tests/data_transfer tests/data_import"
+            # Note: tests/integrations triggers PostgreSQL detection due to name containing "integration"
+            # Those tests run via the integration job. Only run webhooks, data_transfer, data_import here.
+            paths: "tests/webhooks tests/data_transfer tests/data_import"
           - name: "Infrastructure"
             paths: "tests/radius tests/network tests/network_monitoring tests/netbox tests/orchestration"
           # Smaller modules - group together (excluding partner_management which requires DB)
