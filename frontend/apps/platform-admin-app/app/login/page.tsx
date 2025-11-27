@@ -39,12 +39,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Auto-complete login in bypass mode without user interaction for e2e/local dev
+    // Note: tenant_id is set by login() in loginService.ts for bypass mode
     if (authBypassEnabled) {
-      try {
-        localStorage.setItem("tenant_id", "default-tenant");
-      } catch {
-        // ignore storage failures
-      }
       window.location.replace("/dashboard");
     }
   }, []);
@@ -63,11 +59,7 @@ export default function LoginPage() {
     try {
       if (authBypassEnabled) {
         logger.info("Auth bypass enabled - skipping authentication", { email: data.email });
-        try {
-          localStorage.setItem("tenant_id", "default-tenant");
-        } catch {
-          // ignore storage failures
-        }
+        // Note: tenant_id is set by login() in loginService.ts for bypass mode
         window.location.href = "/dashboard";
         return;
       }

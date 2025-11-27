@@ -540,7 +540,7 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const getInitials = (firstName?: string | null, lastName?: string | null) => {
+  const getInitials = (firstName?: string | null | undefined, lastName?: string | null | undefined) => {
     if (!firstName || !lastName) return "U";
     return `${firstName[0]}${lastName[0]}`.toUpperCase();
   };
