@@ -212,14 +212,14 @@ class TestTenantCRUDCoverage:
         update = TenantBrandingUpdate(
             branding=TenantBrandingConfig(
                 product_name="Custom ISP",
-                support_email="support@custom-isp.test",
+                support_email="support@custom-isp.com",
             )
         )
         branding = await tenant_service.update_tenant_branding(sample_tenant.id, update)
         assert branding.branding.product_name == "Custom ISP"
 
         branding_after = await tenant_service.get_tenant_branding(sample_tenant.id)
-        assert branding_after.branding.support_email == "support@custom-isp.test"
+        assert branding_after.branding.support_email == "support@custom-isp.com"
 
     async def test_restore_tenant(self, tenant_service: TenantService, sample_tenant: Tenant):
         """Test restoring soft-deleted tenant."""

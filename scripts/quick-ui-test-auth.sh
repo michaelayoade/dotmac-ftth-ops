@@ -31,9 +31,9 @@ pkill -f "next-server.*3001" || true
 sleep 2
 
 # Start ISP app with auth bypass
-echo "Starting ISP app with NEXT_PUBLIC_SKIP_BETTER_AUTH=true..."
+echo "Starting ISP app with NEXT_PUBLIC_AUTH_BYPASS_ENABLED=true..."
 cd frontend
-NEXT_PUBLIC_SKIP_BETTER_AUTH=true \
+NEXT_PUBLIC_AUTH_BYPASS_ENABLED=true \
 NEXT_PUBLIC_MSW_ENABLED=false \
 pnpm --filter @dotmac/isp-ops-app dev > /tmp/isp-app-auth-bypass.log 2>&1 &
 
@@ -207,7 +207,7 @@ cat > "$OUTPUT_DIR/index.html" << 'EOF'
         
         <div class="notice">
             <strong>ℹ️ Note:</strong> These screenshots were captured with authentication bypassed 
-            (NEXT_PUBLIC_SKIP_BETTER_AUTH=true) to show the actual page content instead of login redirects.
+            (NEXT_PUBLIC_AUTH_BYPASS_ENABLED=true) to show the actual page content instead of login redirects.
         </div>
         
         <div class="grid">

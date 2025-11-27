@@ -4,7 +4,7 @@
  * Auth Context
  *
  * Provides authentication state and actions to the application.
- * Replaces Better Auth's useSession hook.
+ * Uses JWT cookie-based authentication with the FastAPI backend.
  */
 
 import React, {
@@ -192,8 +192,7 @@ export function useAuth(): AuthContextValue {
 }
 
 /**
- * Compatibility hook that returns session-like object.
- * This helps with migration from Better Auth's useSession.
+ * Hook that returns session-like object.
  *
  * Returns a simpler interface focused on what components actually need:
  * - user: The current user or null

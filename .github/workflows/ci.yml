@@ -165,16 +165,14 @@ jobs:
           # Medium modules - group together
           - name: "Core"
             paths: "tests/contacts tests/customer_management tests/secrets tests/communications tests/core"
-          - name: "Integrations"
-            paths: "tests/integration tests/integrations tests/webhooks tests/data_transfer tests/data_import"
+          - name: "Webhooks"
+            # Note: tests/integration requires PostgreSQL and runs in backend-integration-tests job
+            paths: "tests/integrations tests/webhooks tests/data_transfer tests/data_import"
           - name: "Infrastructure"
             paths: "tests/radius tests/network tests/network_monitoring tests/netbox tests/orchestration"
-          # Smaller modules - group together
+          # Smaller modules - group together (excluding partner_management which requires DB)
           - name: "Other"
-            paths: "tests/access tests/admin tests/analytics tests/api tests/audit tests/cache tests/config tests/crm tests/customer_portal tests/deployment tests/diagnostics tests/error_handling tests/events tests/fault_management tests/feature_flags tests/fiber tests/field_service tests/file_storage tests/fixtures tests/genieacs tests/geo tests/graphql tests/helpers tests/infra tests/infrastructure tests/ip_management tests/jobs tests/journeys tests/licensing tests/metrics tests/middleware tests/notifications tests/observability tests/oss tests/partner_management tests/performance tests/platform_admin tests/plugins tests/project_management tests/rate_limit tests/realtime tests/resilience tests/routers tests/sales tests/search tests/security tests/service_registry tests/services tests/subscribers tests/ticketing tests/unit tests/user_management tests/utils tests/versioning tests/voltha tests/wireguard tests/wireless tests/workflows"
-          # Root-level test files
-          - name: "Root"
-            paths: "tests/test_*.py"
+            paths: "tests/access tests/admin tests/analytics tests/api tests/audit tests/cache tests/config tests/crm tests/customer_portal tests/deployment tests/diagnostics tests/error_handling tests/events tests/fault_management tests/feature_flags tests/fiber tests/field_service tests/file_storage tests/fixtures tests/genieacs tests/geo tests/graphql tests/helpers tests/infra tests/infrastructure tests/ip_management tests/jobs tests/journeys tests/licensing tests/metrics tests/middleware tests/notifications tests/observability tests/oss tests/performance tests/platform_admin tests/plugins tests/project_management tests/rate_limit tests/realtime tests/resilience tests/routers tests/sales tests/search tests/security tests/service_registry tests/services tests/subscribers tests/ticketing tests/unit tests/user_management tests/utils tests/versioning tests/voltha tests/wireguard tests/wireless tests/workflows"
 
     steps:
       - uses: actions/checkout@v4
@@ -625,14 +623,12 @@ jobs:
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
-          BETTER_AUTH_BYPASS: "true"
         run: pnpm --filter @dotmac/isp-ops-app build
 
       - name: Build Platform Admin App
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
-          BETTER_AUTH_BYPASS: "true"
         run: pnpm --filter @dotmac/platform-admin-app build
         continue-on-error: true
 

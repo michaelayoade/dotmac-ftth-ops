@@ -67,9 +67,7 @@ services:
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
       INTERNAL_API_URL: ${INTERNAL_API_URL:-http://isp-backend:8000}
       DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:dev_local_pg_password_123@dotmac-postgres:5432/dotmac}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-better-auth-secret-change-me-min-32-chars}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key-change-me-min-32-chars}
-      BETTER_AUTH_DISABLED: ${BETTER_AUTH_DISABLED:-false}
     ports:
       - "${ISP_FRONTEND_PORT:-3001}:3000"
     depends_on:

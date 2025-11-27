@@ -71,7 +71,7 @@ export function useWebSocketTechnicianLocations(
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Get WebSocket URL (Better Auth uses cookies; no token param needed unless backend requires it)
+   * Get WebSocket URL (auth cookies are sent automatically; no token param needed)
    */
   const getWebSocketUrl = useCallback(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";

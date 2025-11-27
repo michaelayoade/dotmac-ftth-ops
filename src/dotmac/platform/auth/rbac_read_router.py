@@ -104,8 +104,8 @@ async def get_my_permissions(
             )
 
     # Convert permission names to PermissionInfo objects.
-    # Support both legacy "category.resource.action" and Better Auth style "category.action"
-    # (and older "category:action") so the frontend always receives consistent category/action.
+    # Support multiple formats: "category.resource.action", "category.action", and "category:action"
+    # so the frontend always receives consistent category/action.
     permissions = []
     for perm_name in current_user.permissions or []:
         category = ""

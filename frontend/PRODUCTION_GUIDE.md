@@ -29,7 +29,7 @@ Each app has its own `.env.local.example`. Required variables:
 | ISP Ops        | `apps/isp-ops-app/.env.local`        | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=isp-ops`, `NEXT_PUBLIC_FEATURES=…`                      |
 | Platform Admin | `apps/platform-admin-app/.env.local` | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=platform-admin`, `NEXT_PUBLIC_REQUIRE_SUPER_ADMIN=true` |
 
-Set `NEXT_PUBLIC_API_BASE_URL` to the backend ingress (`https://api.dotmac.com` in production). Both apps inherit auth cookies from the Better Auth backend.
+Set `NEXT_PUBLIC_API_BASE_URL` to the backend ingress (`https://api.dotmac.com` in production). Both apps use HttpOnly cookies for JWT authentication.
 
 ## 3. Build, Health & Tests
 

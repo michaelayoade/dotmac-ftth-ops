@@ -2,7 +2,7 @@
  * Auth Module
  *
  * Main entry point for authentication functionality.
- * Replaces @dotmac/better-auth imports.
+ * Provides JWT cookie-based authentication with the FastAPI backend.
  */
 
 // Context and hooks
@@ -45,5 +45,5 @@ export type {
   AuthContextValue,
 } from "./types";
 
-// Re-export ExtendedUser as alias for UserInfo (Better Auth compatibility)
+// Re-export ExtendedUser as alias for UserInfo (legacy compatibility)
 export type { UserInfo as ExtendedUser } from "./types";

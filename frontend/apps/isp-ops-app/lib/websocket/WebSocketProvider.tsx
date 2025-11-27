@@ -84,7 +84,7 @@ export function WebSocketProvider({
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
 
-        // Better Auth uses cookies; if a token handshake is needed, update here.
+        // Auth cookies are sent automatically. Add token handshake here if needed.
       };
 
       ws.onmessage = (event) => {

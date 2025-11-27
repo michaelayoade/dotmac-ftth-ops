@@ -121,12 +121,12 @@ class TestErrorTrackingMiddleware:
             call_kwargs = mock_track.call_args[1]
             assert call_kwargs["tenant_id"] == "tenant-123"
 
-    def test_tenant_id_none_when_not_in_state(self, client):
-        """Test tenant ID is None when not in request state."""
+    def test_tenant_id_unknown_when_not_in_state(self, client):
+        """Test tenant ID is 'unknown' when not in request state."""
         with patch("dotmac.platform.monitoring.error_middleware.track_http_error") as mock_track:
             response = client.get("/not-found")
             assert response.status_code == 404
 
-            # Verify tenant_id is None
+            # Verify tenant_id falls back to 'unknown' when not set
             call_kwargs = mock_track.call_args[1]
-            assert call_kwargs["tenant_id"] is None
+            assert call_kwargs["tenant_id"] == "unknown"

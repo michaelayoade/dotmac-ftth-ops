@@ -17,12 +17,12 @@ export interface UniversalProviderProps {
   children: React.ReactNode;
   portal: PortalType;
   features?: FeatureFlags;
-  // Note: authVariant removed - Better Auth configuration handled at app level
+  // Note: authVariant removed - Auth is handled by AuthProvider at app level
   tenantVariant?: TenantVariant;
   queryClient?: QueryClient;
   enableDevtools?: boolean;
   config?: {
-    // Note: auth config removed - Better Auth configured separately
+    // Note: auth config removed - Auth handled by AuthProvider
     apiConfig?: {
       baseUrl?: string;
       timeout?: number;
@@ -53,7 +53,7 @@ export interface FeatureFlags {
   devtools?: boolean;
 }
 
-// Note: AuthVariant removed - Better Auth configured at app level
+// Note: AuthVariant removed - Auth is handled by AuthProvider at app level
 export type TenantVariant = "single" | "multi" | "isp";
 
 const defaultFeatures: FeatureFlags = {
@@ -107,7 +107,7 @@ export function UniversalProviders({
     <ErrorBoundary portal={portal} fallback={portalConfig.errorFallback}>
       <QueryClientProvider client={client}>
         <ThemeProvider portal={portal} theme={portalConfig.theme}>
-          {/* Note: AuthProvider removed - Better Auth is hook-based, no provider needed */}
+          {/* Note: AuthProvider is included at app level, not here */}
           <TenantProvider variant={tenantVariant} portal={portal}>
             <FeatureProvider features={mergedFeatures}>
               {mergedFeatures.notifications && (
@@ -130,10 +130,10 @@ export function UniversalProviders({
 
 /**
  * Portal-specific configuration
- * Note: Auth configuration removed - Better Auth is configured at app level
+ * Note: Auth configuration removed - Auth is configured at app level via AuthProvider
  */
 function getPortalConfig(portal: PortalType, config: any = {}) {
-  // Note: baseAuthConfigs removed - Better Auth configured separately
+  // Note: baseAuthConfigs are reference only, not used for runtime auth
   // Keeping this structure for reference if needed in the future
   const baseAuthConfigs = {
     admin: {

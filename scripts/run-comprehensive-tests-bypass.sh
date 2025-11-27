@@ -26,7 +26,7 @@ sleep 2
 # 2. Start ISP Ops App with Auth Bypass
 echo -e "${YELLOW}Starting ISP Ops App with authentication bypass...${NC}"
 cd frontend
-NEXT_PUBLIC_SKIP_BETTER_AUTH=true \
+NEXT_PUBLIC_AUTH_BYPASS_ENABLED=true \
 NEXT_PUBLIC_MSW_ENABLED=false \
 pnpm --filter @dotmac/isp-ops-app dev > /tmp/isp-app-test.log 2>&1 &
 ISP_PID=$!

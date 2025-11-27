@@ -30,7 +30,7 @@ export const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      // Preserve multi-tenant header from storage (set at login from Better Auth user)
+      // Preserve multi-tenant header from storage (set at login)
       const tenantId = window.localStorage?.getItem("tenant_id");
       if (tenantId && config["headers"]) {
         config["headers"]["X-Tenant-ID"] = tenantId;
