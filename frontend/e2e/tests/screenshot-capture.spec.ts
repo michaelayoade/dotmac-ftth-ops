@@ -529,10 +529,10 @@ const unauthenticatedPages = [...ispOpsUnauthenticatedPages, ...platformAdminUna
 
 test.describe("Authenticated Screenshot Capture", () => {
   test.beforeEach(async ({ context, page, browserName }) => {
-    // Set auth cookies for SSR
+    // Set auth cookies for SSR (FastAPI JWT auth uses access_token cookie)
     await context.addCookies([
       {
-        name: "better-auth.session_token",
+        name: "access_token",
         value: "dev-token",
         domain: "localhost",
         path: "/",

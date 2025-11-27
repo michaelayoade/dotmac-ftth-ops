@@ -19,7 +19,7 @@ jest.mock("@/lib/services/dunning-service", () => ({
   },
 }));
 
-// Mock useRealtime to avoid better-auth import issues
+// Mock useRealtime to isolate tests
 jest.mock("../useRealtime", () => ({
   useCampaignWebSocket: jest.fn(),
 }));

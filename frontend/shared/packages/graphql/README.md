@@ -160,7 +160,7 @@ pnpm lint
 
 ## Dependencies
 
-- `@dotmac/better-auth`: Authentication hooks and session management
+- `@shared/lib/auth`: Authentication hooks and session management
 - `@dotmac/http-client`: HTTP client with auth, tenant resolution, retries
 - `@tanstack/react-query`: React Query integration
 - `graphql`: GraphQL core library

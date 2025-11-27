@@ -32,7 +32,7 @@ jest.mock("@/lib/api/response-helpers", () => ({
   extractDataOrThrow: jest.fn((response) => response.data),
 }));
 
-// Mock useRealtime to avoid better-auth import
+// Mock useRealtime to isolate tests
 jest.mock("../useRealtime", () => ({
   useCampaignWebSocket: jest.fn(),
 }));

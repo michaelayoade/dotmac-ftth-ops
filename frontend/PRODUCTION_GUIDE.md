@@ -87,21 +87,21 @@ Treat any new lint/type errors as blockers—CI enforces zero warnings.
 
 ## 5. Authentication
 
-Better Auth powers the session across both apps. Use the exported hooks (`useSession` or the thin `useAuth` wrapper) for any authentication-aware UI.
+FastAPI JWT authentication powers the session across both apps. Use the `useSession` hook from `@shared/lib/auth` for any authentication-aware UI.
 
 ```ts
-import { useSession } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
 import { apiClient } from "@dotmac/headless/api";
 
 export function useAuthedApi() {
-  const { data: session, isPending } = useSession();
-  const token = session?.accessToken;
+  const { user, isLoading, isAuthenticated } = useSession();
 
   return {
-    user: session?.user ?? null,
-    isLoading: isPending,
+    user,
+    isLoading,
+    isAuthenticated,
+    // Cookies are sent automatically with withCredentials: true
     client: apiClient.extend({
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
       withCredentials: true,
     }),
   };

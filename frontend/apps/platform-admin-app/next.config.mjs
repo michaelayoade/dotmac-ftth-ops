@@ -77,9 +77,7 @@ const nextConfig = {
   webpack: (config, { isServer, dir }) => {
     config.resolve.alias = config.resolve.alias || {};
 
-    // Add local file-based alias for better-auth (client-side only)
     const path = require('path');
-    config.resolve.alias['@dotmac/better-auth'] = path.resolve(dir, '../../shared/lib/better-auth/index.ts');
 
     for (const [pkg, relativePath] of Object.entries(sharedPackageAliases)) {
       config.resolve.alias[pkg] = path.resolve(dir, relativePath);
