@@ -10,7 +10,7 @@ import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { handleError } from "@/lib/utils/error-handler";
 import { useToast } from "@dotmac/ui";
-import { isAuthBypassEnabled } from "@dotmac/better-auth";
+import { isAuthBypassEnabled } from "@shared/lib/auth";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:

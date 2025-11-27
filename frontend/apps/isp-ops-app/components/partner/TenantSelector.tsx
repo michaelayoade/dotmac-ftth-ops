@@ -3,12 +3,12 @@
 import { Building2, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { usePartnerTenant } from "@/contexts/PartnerTenantContext";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 
 export function TenantSelector() {
-  const { data: session } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const { user: sessionUser } = useSession();
+  const user = sessionUser as UserInfo | undefined;
   const { activeTenantId, managedTenants, loading, error, setActiveTenant, isPartnerUser } =
     usePartnerTenant();
 

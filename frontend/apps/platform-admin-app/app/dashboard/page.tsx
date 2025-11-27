@@ -33,10 +33,10 @@ import {
 } from "@/types/audit";
 import { useSystemHealth, type SystemHealth } from "@/hooks/useOperations";
 import { ROUTES } from "@/lib/routes";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 
-type DisplayUser = Pick<ExtendedUser, "email" | "roles">;
+type DisplayUser = Pick<UserInfo, "email" | "roles">;
 
 const TENANT_STATUS_LABELS: Record<TenantDetails["status"], string> = {
   active: "Active",
@@ -91,8 +91,8 @@ const QUICK_LINKS = [
 
 export default function PlatformAdminDashboardPage() {
   const router = useRouter();
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as DisplayUser | undefined;
+  const { user: sessionUser, isLoading: authLoading, isAuthenticated } = useSession();
+  const user = sessionUser as DisplayUser | undefined;
 
   const { data: tenantData, isLoading: tenantsLoading } = usePlatformTenants({
     page: 1,
@@ -102,10 +102,10 @@ export default function PlatformAdminDashboardPage() {
   const { data: systemHealth, isLoading: systemLoading } = useSystemHealth();
 
   useEffect(() => {
-    if (!authLoading && !session) {
+    if (!authLoading && !isAuthenticated) {
       router.replace(ROUTES.LOGIN);
     }
-  }, [authLoading, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   if (authLoading) {
     return (

@@ -35,8 +35,8 @@ import {
   X,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import {
   useUpdateProfile,
   useChangePassword,
@@ -54,7 +54,7 @@ import {
 import { logger } from "@/lib/logger";
 
 type DisplayUser = Pick<
-  ExtendedUser,
+  UserInfo,
   | "id"
   | "email"
   | "username"
@@ -72,8 +72,8 @@ type DisplayUser = Pick<
 
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
-  const { data: session, refetch: refreshSession } = useSession();
-  const user = session?.user as DisplayUser | undefined;
+  const { user: sessionUser, refreshUser } = useSession();
+  const user = sessionUser as DisplayUser | undefined;
   const { data: sessionsData, isLoading: sessionsLoading } = useListSessions();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();
@@ -230,7 +230,7 @@ export default function ProfileSettingsPage() {
 
       // Update profile
       await updateProfile.mutateAsync(formData);
-      await refreshSession();
+      await refreshUser();
 
       // Reset avatar state
       setAvatarFile(null);
@@ -380,7 +380,7 @@ export default function ProfileSettingsPage() {
       });
       setMfaEnabled(true);
       setIsSetup2FAOpen(false);
-      await refreshSession();
+      await refreshUser();
     } catch (error) {
       logger.error(
         "Failed to verify 2FA",
@@ -420,7 +420,7 @@ export default function ProfileSettingsPage() {
       });
       setMfaEnabled(false);
       setIsDisable2FAOpen(false);
-      await refreshSession();
+      await refreshUser();
     } catch (error) {
       logger.error(
         "Failed to disable 2FA",
@@ -465,7 +465,7 @@ export default function ProfileSettingsPage() {
     try {
       logger.info("Verifying phone number", { phone: formData["phone"] });
       await verifyPhone.mutateAsync(formData["phone"]);
-      await refreshSession();
+      await refreshUser();
       toast({
         title: "Success",
         description: "Phone number verified successfully",
@@ -540,7 +540,7 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const getInitials = (firstName?: string, lastName?: string) => {
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
     if (!firstName || !lastName) return "U";
     return `${firstName[0]}${lastName[0]}`.toUpperCase();
   };

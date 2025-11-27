@@ -45,13 +45,10 @@ export class SSEClient {
     this.status = ConnectionStatus.CONNECTING;
 
     try {
-      // EventSource doesn't support custom headers, so we rely on cookies
-      // withCredentials: true automatically sends HttpOnly cookies with the request.
-      // Include token as query param when provided for backends that require it.
+      // EventSource doesn't support custom headers, so we rely on cookies.
+      // withCredentials: true automatically sends httpOnly cookies with the request.
+      // No token query param needed - cookies handle authentication.
       const url = new URL(this.config.endpoint, window.location.origin);
-      if (this.config.token) {
-        url.searchParams.set("token", this.config.token);
-      }
 
       this.eventSource = new EventSource(url.toString(), {
         withCredentials: true, // Send cookies automatically
@@ -242,14 +239,15 @@ export function createSSEClient(config: SSEConfig): SSEClient {
 
 /**
  * SSE endpoint factory
+ *
+ * Authentication is handled via httpOnly cookies (withCredentials: true).
+ * No token parameter needed - cookies are sent automatically.
  */
 export class SSEEndpoints {
   private baseUrl: string;
-  private token: string;
 
-  constructor(baseUrl: string, token: string) {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    this.token = token;
   }
 
   /**
@@ -258,7 +256,6 @@ export class SSEEndpoints {
   onuStatus(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/onu-status`,
-      token: this.token,
       ...config,
     });
   }
@@ -269,7 +266,6 @@ export class SSEEndpoints {
   alerts(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/alerts`,
-      token: this.token,
       ...config,
     });
   }
@@ -280,7 +276,6 @@ export class SSEEndpoints {
   tickets(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/tickets`,
-      token: this.token,
       ...config,
     });
   }
@@ -291,7 +286,6 @@ export class SSEEndpoints {
   subscribers(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/subscribers`,
-      token: this.token,
       ...config,
     });
   }
@@ -302,7 +296,6 @@ export class SSEEndpoints {
   radiusSessions(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/radius-sessions`,
-      token: this.token,
       ...config,
     });
   }

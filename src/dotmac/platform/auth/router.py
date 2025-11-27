@@ -2067,6 +2067,8 @@ async def get_current_user_endpoint(
 ) -> dict[str, Any]:
     """
     Get current user information from Bearer token or HttpOnly cookie.
+
+    Includes activeOrganization for multi-tenant context.
     """
     try:
         user_service = UserService(session)
@@ -2092,6 +2094,29 @@ async def get_current_user_endpoint(
                     "Failed to fetch remaining backup codes", user_id=str(user.id), error=str(exc)
                 )
 
+        # Build activeOrganization for multi-tenant context
+        active_organization = None
+        if user.tenant_id:
+            try:
+                tenant_service = TenantService(session)
+                tenant = await tenant_service.get_tenant(str(user.tenant_id))
+                # Determine primary role for this tenant
+                primary_role = user.roles[0] if user.roles else None
+                active_organization = {
+                    "id": str(tenant.id),
+                    "name": tenant.name,
+                    "slug": getattr(tenant, "slug", None),
+                    "role": primary_role,
+                    "permissions": user_info.permissions or [],
+                }
+            except Exception as exc:
+                logger.warning(
+                    "Failed to fetch tenant for activeOrganization",
+                    user_id=str(user.id),
+                    tenant_id=str(user.tenant_id),
+                    error=str(exc),
+                )
+
         return {
             "id": str(user.id),
             "username": user.username,
@@ -2105,11 +2130,17 @@ async def get_current_user_endpoint(
             "language": getattr(user, "language", None),
             "bio": getattr(user, "bio", None),
             "website": getattr(user, "website", None),
+            "avatar_url": getattr(user, "avatar_url", None),
             "roles": user.roles or [],
+            "permissions": user_info.permissions or [],
             "is_active": user.is_active,
-            "tenant_id": user.tenant_id,
+            "is_platform_admin": user_info.is_platform_admin,
+            "tenant_id": str(user.tenant_id) if user.tenant_id else None,
+            "partner_id": getattr(user_info, "partner_id", None),
+            "managed_tenant_ids": getattr(user_info, "managed_tenant_ids", None),
             "mfa_enabled": bool(getattr(user, "mfa_enabled", False)),
             "mfa_backup_codes_remaining": backup_codes_remaining,
+            "activeOrganization": active_organization,
         }
     except HTTPException:
         raise

@@ -20,6 +20,7 @@ import {
   KeyboardShortcuts,
 } from "@/lib/design-system/accessibility";
 import { ConfirmDialogProvider } from "@dotmac/ui";
+import { AuthProvider } from "@shared/lib/auth";
 import { useRuntimeConfigState } from "@shared/runtime/RuntimeConfigContext";
 import { setupApiFetchInterceptor } from "@/lib/api/fetch-interceptor";
 
@@ -68,9 +69,11 @@ export function ClientProviders({ children }: { children: ReactNode }) {
           <AccessibilityProvider>
             <QueryClientProvider client={queryClient}>
               <ApolloProvider>
-                <TenantProvider>
-                  {shouldWrapWithRBAC ? <RBACProvider>{appProviders}</RBACProvider> : appProviders}
-                </TenantProvider>
+                <AuthProvider>
+                  <TenantProvider>
+                    {shouldWrapWithRBAC ? <RBACProvider>{appProviders}</RBACProvider> : appProviders}
+                  </TenantProvider>
+                </AuthProvider>
               </ApolloProvider>
             </QueryClientProvider>
           </AccessibilityProvider>

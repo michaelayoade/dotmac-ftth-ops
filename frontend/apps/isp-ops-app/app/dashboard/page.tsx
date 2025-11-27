@@ -14,11 +14,11 @@ import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useFeatureFlag } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
-import { isAuthBypassEnabled, useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { isAuthBypassEnabled, useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import { useSubscriberDashboardGraphQL } from "@/hooks/useSubscriberDashboardGraphQL";
 
-type DisplayUser = Pick<ExtendedUser, "email" | "roles">;
+type DisplayUser = Pick<UserInfo, "email" | "roles">;
 
 function formatDate(value?: string | null): string {
   if (!value) {
@@ -34,8 +34,8 @@ function formatDate(value?: string | null): string {
 export default function DashboardPage() {
   const router = useRouter();
   const { hasPermission } = useRBAC();
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as DisplayUser | undefined;
+  const { user: sessionUser, isLoading: authLoading, isAuthenticated } = useSession();
+  const user = sessionUser as DisplayUser | undefined;
   const authBypassEnabled = isAuthBypassEnabled();
 
   // Feature flags
@@ -85,10 +85,10 @@ export default function DashboardPage() {
   const { data: systemHealth } = useSystemHealth({ enabled: allowNetworkCalls });
 
   useEffect(() => {
-    if (!authLoading && !session) {
+    if (!authLoading && !isAuthenticated) {
       router.replace(ROUTES.LOGIN);
     }
-  }, [authLoading, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat("en-US"), []);
 

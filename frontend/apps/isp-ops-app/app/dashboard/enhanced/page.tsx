@@ -24,14 +24,14 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import { useRADIUSSubscribers, useRADIUSSessions } from "@/hooks/useRADIUS";
 import { useServiceStatistics } from "@/hooks/useServiceLifecycle";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useRBAC } from "@/contexts/RBACContext";
 
-type DashboardUser = Pick<ExtendedUser, "id" | "name" | "email" | "roles" | "role">;
+type DashboardUser = Pick<UserInfo, "id" | "email" | "roles" | "full_name">;
 
 type IconRendererProps = {
   className?: string;
@@ -39,19 +39,18 @@ type IconRendererProps = {
 
 export default function EnhancedDashboardPage() {
   const router = useRouter();
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as DashboardUser | undefined;
+  const { user: sessionUser, isLoading: authLoading, isAuthenticated } = useSession();
+  const user = sessionUser as DashboardUser | undefined;
   const { hasPermission } = useRBAC();
   const { features } = useAppConfig();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const dashboardUser = (() => {
     if (user) {
-      const enrichedUser = user as typeof user & { role?: string; roles?: string[] };
       return {
         id: user.id,
-        name: user.name || user.email,
+        name: user.full_name || user.email,
         email: user.email ?? "unknown@dotmac",
-        role: enrichedUser.roles?.[0] || enrichedUser.role || "operator",
+        role: user.roles?.[0] || "operator",
       };
     }
     return {
@@ -85,10 +84,10 @@ export default function EnhancedDashboardPage() {
   } = useServiceStatistics({});
 
   useEffect(() => {
-    if (!authLoading && !session) {
+    if (!authLoading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [authLoading, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

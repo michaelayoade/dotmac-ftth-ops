@@ -2,6 +2,6 @@
  * Store exports
  */
 
-// Note: authStore removed - Better Auth is now used (@dotmac/better-auth)
+// Note: authStore removed - use @shared/lib/auth instead
 export * from "./tenantStore";
 export * from "./appStore";

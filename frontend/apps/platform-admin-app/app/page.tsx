@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useBranding } from "@/hooks/useBranding";
 import { useAppConfig } from "@/providers/AppConfigContext";
-import { useSession } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
 
 const showTestCredentials = process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] === "true";
 
@@ -12,8 +12,8 @@ export default function HomePage() {
   const { branding } = useBranding();
   const config = useAppConfig();
   const apiBaseUrl = config.api.baseUrl || "/api/v1";
-  const { data: session, isPending: authLoading } = useSession();
-  const isLoggedIn = Boolean(session?.user);
+  const { isLoading: authLoading, isAuthenticated } = useSession();
+  const isLoggedIn = isAuthenticated;
 
   if (authLoading) {
     return (

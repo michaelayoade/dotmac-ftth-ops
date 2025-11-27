@@ -725,6 +725,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check for auth bypass flags
+        run: |
+          echo "Checking for auth bypass flags that should not be enabled in production..."
+          if [ "${NEXT_PUBLIC_AUTH_BYPASS_ENABLED:-}" = "true" ]; then
+            echo "::error::SECURITY: NEXT_PUBLIC_AUTH_BYPASS_ENABLED is set to true!"
+            echo "This flag disables authentication and must NEVER be enabled in production."
+            exit 1
+          fi
+          echo "✅ Auth bypass flag is not enabled"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

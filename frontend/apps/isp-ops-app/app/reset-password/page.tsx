@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { resetPassword } from "@dotmac/better-auth";
+import { confirmPasswordReset } from "@shared/lib/auth";
 
 const resetPasswordSchema = z
   .object({
@@ -53,13 +53,10 @@ function ResetPasswordForm() {
       setLoading(true);
 
       try {
-        const result = await resetPassword({
-          newPassword: data.password,
-          token,
-        });
+        const result = await confirmPasswordReset(token, data.password);
 
-        if (result.error) {
-          setError(result.error.message || "Failed to reset password");
+        if (!result.success) {
+          setError(result.error || "Failed to reset password");
           return;
         }
 

@@ -33,8 +33,8 @@ import {
 import type { TaskAssignment, TimeEntry } from "@/types/field-service";
 import { TimeEntryType } from "@/types/field-service";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import { useToast } from "@dotmac/ui";
 
 // ============================================================================
@@ -367,8 +367,8 @@ function AssignedResources({ technicianId }: AssignedResourcesProps) {
 // ============================================================================
 
 export default function TechnicianDashboard() {
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const { user: sessionUser, isLoading: authLoading } = useSession();
+  const user = sessionUser as UserInfo | undefined;
   const technicianId = user?.technician_id ?? null;
   const todayString = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
   const { toast } = useToast();

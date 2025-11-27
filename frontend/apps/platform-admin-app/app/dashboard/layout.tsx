@@ -39,9 +39,8 @@ import { useBranding } from "@/hooks/useBranding";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
 import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
-import { signOut } from "@dotmac/better-auth";
+import { useSession, logout } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import { clearOperatorAuthTokens } from "../../../../shared/utils/operatorAuth";
 
 interface NavItem {
@@ -63,7 +62,7 @@ interface NavSection {
   portals?: PortalType[];
 }
 
-type DisplayUser = Pick<ExtendedUser, "email" | "username" | "full_name" | "roles">;
+type DisplayUser = Pick<UserInfo, "email" | "username" | "full_name" | "roles">;
 
 const platformAdminSectionIds = new Set<string>([
   "overview",
@@ -217,8 +216,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { hasPermission, hasAnyPermission } = useRBAC();
   const { branding } = useBranding();
   const portalType = getPortalType();
-  const { data: session, isPending: authLoading } = useSession();
-  const userData = session?.user as DisplayUser | undefined;
+  const { user, isLoading: authLoading, isAuthenticated } = useSession();
+  const userData = user as DisplayUser | undefined;
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const navLabelMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -230,10 +229,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-    if (!authLoading && !session) {
+    if (!authLoading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [authLoading, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const portalScopedSections = useMemo(
     () =>
@@ -380,7 +379,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [sidebarOpen]);
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
     clearOperatorAuthTokens();
     router.push("/login");
   };

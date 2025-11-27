@@ -4,27 +4,26 @@ import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn, isAuthBypassEnabled } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { login, isAuthBypassEnabled } from "@shared/lib/auth";
+import type { LoginResult } from "@shared/lib/auth";
+import { TwoFactorChallenge } from "../../../../shared/components/auth/TwoFactorChallenge";
 import { logger } from "@/lib/logger";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
-import {
-  clearOperatorAuthTokens,
-  setOperatorAccessToken,
-} from "../../../../shared/utils/operatorAuth";
 
 const showTestCredentials = false;
 const authBypassEnabled = isAuthBypassEnabled();
-const bypassTenantId = "default-tenant";
-const bypassToken = "dev-mock-token";
 
-// Default branding for bypass mode (avoids useSession call that hangs in E2E)
+// Default branding for bypass mode
 const defaultBranding = { productName: "DotMac" };
 
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  // Skip branding hook in bypass mode - it calls useSession which hangs without auth
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+  const [twoFAError, setTwoFAError] = useState<string | null>(null);
+
+  // Skip branding hook in bypass mode
   const branding = authBypassEnabled ? defaultBranding : { productName: "DotMac" };
 
   const {
@@ -40,8 +39,7 @@ export default function LoginPage() {
     // Auto-complete login in bypass mode without user interaction for e2e/local dev
     if (authBypassEnabled) {
       try {
-        setOperatorAccessToken(bypassToken);
-        localStorage.setItem("tenant_id", bypassTenantId);
+        localStorage.setItem("tenant_id", "default-tenant");
       } catch {
         // ignore storage failures
       }
@@ -49,16 +47,22 @@ export default function LoginPage() {
     }
   }, []);
 
+  const handleLoginSuccess = useCallback(() => {
+    logger.info("Login successful, redirecting to dashboard");
+    window.location.href = "/dashboard";
+  }, []);
+
   const onSubmit = useCallback(async (data: LoginFormData) => {
     setError("");
     setLoading(true);
+    setRequires2FA(false);
+    setPendingUserId(null);
 
     try {
       if (authBypassEnabled) {
-        logger.info("Auth bypass enabled - skipping Better Auth", { email: data.email });
-        setOperatorAccessToken(bypassToken);
+        logger.info("Auth bypass enabled - skipping authentication", { email: data.email });
         try {
-          localStorage.setItem("tenant_id", bypassTenantId);
+          localStorage.setItem("tenant_id", "default-tenant");
         } catch {
           // ignore storage failures
         }
@@ -66,81 +70,88 @@ export default function LoginPage() {
         return;
       }
 
-      // Use Better Auth for authentication
-      logger.info("Starting Better Auth login process", { email: data.email });
+      logger.info("Starting login process", { email: data.email });
 
-      const result = await signIn.email({
-        email: data.email,
-        password: data.password,
-        callbackURL: "/dashboard",
-      });
+      const result: LoginResult = await login(data.email, data.password);
 
-      if (result.error) {
-        logger.error("Better Auth login failed", { error: result.error });
-        setError(result.error.message || "Login failed");
+      if (result.success) {
+        handleLoginSuccess();
         return;
       }
 
-      const sessionData = result.data;
-      const tokenFromData =
-        sessionData && typeof sessionData === "object" && "token" in sessionData
-          ? (sessionData as { token?: string }).token
-          : undefined;
-      const sessionToken =
-        tokenFromData ??
-        (sessionData &&
-        typeof sessionData === "object" &&
-        "session" in sessionData &&
-        typeof sessionData.session === "object"
-          ? (sessionData.session as { token?: string } | null)?.token
-          : undefined);
-      const tenantId =
-        (result.data?.user as ExtendedUser | undefined)?.tenant_id ||
-        (result.data?.user as ExtendedUser | undefined)?.activeOrganization?.id;
-
-      if (sessionToken) {
-        setOperatorAccessToken(sessionToken);
-      } else {
-        clearOperatorAuthTokens();
+      if (result.requires2FA && result.userId) {
+        logger.info("2FA required", { userId: result.userId });
+        setRequires2FA(true);
+        setPendingUserId(result.userId);
+        return;
       }
 
-      if (tenantId) {
-        try {
-          localStorage.setItem("tenant_id", tenantId);
-        } catch {
-          // ignore storage failures
-        }
-      } else {
-        try {
-          localStorage.removeItem("tenant_id");
-        } catch {
-          // ignore storage failures
-        }
-      }
-
-      logger.info("Better Auth login successful");
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      window.location.href = "/dashboard";
-    } catch (err: any) {
+      logger.error("Login failed", { error: result.error });
+      setError(result.error || "Login failed");
+    } catch (err: unknown) {
       logger.error(
         "Login request threw an error",
-        err instanceof Error ? err : new Error(String(err)),
+        err instanceof Error ? err : new Error(String(err))
       );
 
-      // Extract error message from various possible locations
-      let errorMessage = "Login failed";
-      if (err?.message) {
-        errorMessage = err.message;
-      }
-
-      logger.error("Login failed", {
-        message: errorMessage,
-      });
+      const errorMessage = err instanceof Error ? err.message : "Login failed";
+      logger.error("Login failed", { message: errorMessage });
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  }, [handleLoginSuccess]);
+
+  const handle2FAVerify = useCallback(
+    async (code: string, isBackupCode: boolean) => {
+      if (!pendingUserId) return;
+
+      setTwoFAError(null);
+      setLoading(true);
+
+      try {
+        // Import verify2FA dynamically to avoid circular deps
+        const { verify2FA } = await import("@shared/lib/auth");
+        const result = await verify2FA(pendingUserId, code, isBackupCode);
+
+        if (result.success) {
+          handleLoginSuccess();
+        } else {
+          setTwoFAError(result.error || "Verification failed");
+        }
+      } catch (err) {
+        setTwoFAError(err instanceof Error ? err.message : "Verification failed");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pendingUserId, handleLoginSuccess]
+  );
+
+  const handle2FACancel = useCallback(() => {
+    setRequires2FA(false);
+    setPendingUserId(null);
+    setTwoFAError(null);
   }, []);
+
+  // Show 2FA challenge if required
+  if (requires2FA && pendingUserId) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6 py-12 bg-background">
+        <div className="w-full max-w-md">
+          <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-8">
+            <TwoFactorChallenge
+              userId={pendingUserId}
+              onVerify={handle2FAVerify}
+              onCancel={handle2FACancel}
+              isLoading={loading}
+              error={twoFAError}
+            />
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-12 bg-background">
@@ -275,7 +286,7 @@ export default function LoginPage() {
                   },
                   (validationErrors) => {
                     logger.warn("[E2E] Form validation failed", { validationErrors });
-                  },
+                  }
                 )();
                 logger.debug("[E2E] Submit result", { result });
               }}

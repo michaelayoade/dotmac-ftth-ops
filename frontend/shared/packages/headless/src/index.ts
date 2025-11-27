@@ -18,7 +18,7 @@ export * from "./config/framework.config";
 export * from "./config/ThemeProvider";
 export * from "./config/theme.config";
 // Hooks (excluding conflict-prone exports)
-// Note: Auth hooks removed - use Better Auth's useSession() from @dotmac/better-auth
+// Note: Auth hooks removed - use useSession() from @shared/lib/auth
 export {
   useApiData,
   useCachedData,
@@ -158,7 +158,7 @@ export {
 export * from "./stores";
 
 // Explicitly export store hooks for clarity
-// Note: useAuthStore removed - use Better Auth's useSession() from @dotmac/better-auth
+// Note: useAuthStore removed - use useSession() from @shared/lib/auth
 export { useTenantStore } from "@dotmac/headless/stores";
 export { useAppStore } from "@dotmac/headless/stores";
 // Types (exclude conflicting types that are exported from hooks)

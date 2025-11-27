@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { useAppConfig } from "./AppConfigContext";
 import { applyBrandingConfig } from "@/lib/theme";
 import { useTenantBrandingQuery, type TenantBrandingConfigDto } from "@/hooks/useTenantBranding";
-import { isAuthBypassEnabled } from "@dotmac/better-auth";
+import { isAuthBypassEnabled } from "@shared/lib/auth";
 
 // Skip auth/session calls in bypass mode to avoid hangs during E2E tests
 const authBypassEnabled = isAuthBypassEnabled();

@@ -110,18 +110,16 @@ export class WebSocketClient {
 
   /**
    * Build WebSocket URL with authentication
+   *
+   * Note: Cookies ARE sent during the WebSocket HTTP upgrade handshake
+   * (same-origin policy). No token query param needed - httpOnly cookies
+   * are automatically included in the upgrade request headers.
    */
   private buildWebSocketUrl(): string {
     // Convert HTTP(S) URL to WS(S)
-    let wsUrl = this.config.endpoint.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
-
-    // Add token as query parameter if provided (backward compatibility)
-    // Cookies are NOT automatically sent by WebSocket API, so we need query param
+    const wsUrl = this.config.endpoint.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
     const url = new URL(wsUrl, window.location.origin);
-    if (this.config.token) {
-      url.searchParams.set("token", this.config.token);
-    }
-
+    // No token param needed - cookies sent with upgrade request
     return url.toString();
   }
 
@@ -342,14 +340,15 @@ export function createWebSocketClient(config: WebSocketConfig): WebSocketClient 
 
 /**
  * WebSocket endpoint factory
+ *
+ * Authentication is handled via httpOnly cookies sent during the
+ * WebSocket HTTP upgrade handshake. No token parameter needed.
  */
 export class WebSocketEndpoints {
   private baseUrl: string;
-  private token: string;
 
-  constructor(baseUrl: string, token: string) {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    this.token = token;
   }
 
   /**
@@ -358,7 +357,6 @@ export class WebSocketEndpoints {
   sessions(config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/ws/sessions`,
-      token: this.token,
       ...config,
     });
   }
@@ -369,7 +367,6 @@ export class WebSocketEndpoints {
   job(jobId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/ws/jobs/${jobId}`,
-      token: this.token,
       ...config,
     });
   }
@@ -380,7 +377,6 @@ export class WebSocketEndpoints {
   campaign(campaignId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
       endpoint: `${this.baseUrl}/api/v1/realtime/ws/campaigns/${campaignId}`,
-      token: this.token,
       ...config,
     });
   }

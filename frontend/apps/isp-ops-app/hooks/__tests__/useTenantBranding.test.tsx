@@ -14,7 +14,7 @@ import {
   type TenantBrandingResponseDto,
 } from "../useTenantBranding";
 import { apiClient } from "@/lib/api/client";
-import * as betterAuth from "@dotmac/better-auth";
+import * as sharedAuth from "@shared/lib/auth";
 
 // Mock dependencies
 jest.mock("@/lib/api/client", () => ({
@@ -26,13 +26,13 @@ jest.mock("@/lib/api/client", () => ({
   },
 }));
 
-jest.mock("@dotmac/better-auth", () => ({
+jest.mock("@shared/lib/auth", () => ({
   useSession: jest.fn(),
   isAuthBypassEnabled: jest.fn(() => false),
 }));
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
-const mockUseSession = betterAuth.useSession as jest.MockedFunction<typeof betterAuth.useSession>;
+const mockUseSession = sharedAuth.useSession as jest.MockedFunction<typeof sharedAuth.useSession>;
 
 // Test wrapper with QueryClient
 const createWrapper = () => {
@@ -82,18 +82,18 @@ const createMockBrandingResponse = (
   ...overrides,
 });
 
-const createMockSession = (tenantId?: string) => ({
-  user: {
-    id: "user-001",
-    tenant_id: tenantId || "tenant-001",
-    email: "user@example.com",
-    name: "Test User",
-  },
-  session: {
-    id: "session-001",
-    userId: "user-001",
-    expiresAt: new Date(Date.now() + 86400000),
-  },
+const createMockUser = (tenantId?: string) => ({
+  id: "user-001",
+  tenant_id: tenantId || "tenant-001",
+  email: "user@example.com",
+  username: "testuser",
+  full_name: "Test User",
+  roles: ["user"],
+  permissions: [],
+  is_active: true,
+  is_platform_admin: false,
+  mfa_enabled: false,
+  activeOrganization: null,
 });
 
 describe("useTenantBranding", () => {
@@ -106,10 +106,10 @@ describe("useTenantBranding", () => {
       const mockBranding = createMockBrandingResponse();
 
       mockUseSession.mockReturnValue({
-        data: createMockSession(),
-        isPending: false,
-        error: null,
-      });
+        user: createMockUser(),
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
       mockApiClient.get.mockResolvedValue({
         data: mockBranding,
@@ -133,21 +133,22 @@ describe("useTenantBranding", () => {
 
     it("should not fetch when user has no tenant_id", () => {
       mockUseSession.mockReturnValue({
-        data: {
-          user: {
-            id: "user-001",
-            email: "user@example.com",
-            name: "Test User",
-          },
-          session: {
-            id: "session-001",
-            userId: "user-001",
-            expiresAt: new Date(Date.now() + 86400000),
-          },
-        } as any,
-        isPending: false,
-        error: null,
-      });
+        user: {
+          id: "user-001",
+          email: "user@example.com",
+          username: "testuser",
+          full_name: "Test User",
+          roles: ["user"],
+          permissions: [],
+          is_active: true,
+          is_platform_admin: false,
+          mfa_enabled: false,
+          activeOrganization: null,
+          tenant_id: null,
+        },
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
       const { result } = renderHook(() => useTenantBrandingQuery(), {
         wrapper: createWrapper(),
@@ -159,10 +160,10 @@ describe("useTenantBranding", () => {
 
     it("should not fetch when session is not available", () => {
       mockUseSession.mockReturnValue({
-        data: null,
-        isPending: false,
-        error: null,
-      });
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      } as any);
 
       const { result } = renderHook(() => useTenantBrandingQuery(), {
         wrapper: createWrapper(),
@@ -174,10 +175,10 @@ describe("useTenantBranding", () => {
 
     it("should handle errors when fetching branding", async () => {
       mockUseSession.mockReturnValue({
-        data: createMockSession(),
-        isPending: false,
-        error: null,
-      });
+        user: createMockUser(),
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
       mockApiClient.get.mockRejectedValue(new Error("Failed to load branding configuration"));
 
@@ -201,10 +202,10 @@ describe("useTenantBranding", () => {
       });
 
       mockUseSession.mockReturnValue({
-        data: createMockSession(),
-        isPending: false,
-        error: null,
-      });
+        user: createMockUser(),
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
       mockApiClient.get.mockResolvedValue({
         data: mockBranding,

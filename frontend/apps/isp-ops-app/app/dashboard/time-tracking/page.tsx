@@ -35,8 +35,8 @@ import {
 import type { TimeEntry, TimeEntryStatus, TimeEntryFilter } from "@/types/field-service";
 import { TimeEntryType } from "@/types/field-service";
 import { format, formatDuration, intervalToDuration } from "date-fns";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 
 // ============================================================================
 // Clock In/Out Component
@@ -435,8 +435,8 @@ export default function TimeTrackingPage() {
     dateTo: format(new Date(), "yyyy-MM-dd"),
   });
 
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const { user: sessionUser, isLoading: authLoading } = useSession();
+  const user = sessionUser as UserInfo | undefined;
   const technicianId = user?.technician_id ?? null;
   const queryFilter = useMemo(() => {
     if (!technicianId) {

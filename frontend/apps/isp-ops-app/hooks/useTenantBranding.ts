@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
-import { isAuthBypassEnabled, useSession } from "@dotmac/better-auth";
+import { isAuthBypassEnabled, useSession } from "@shared/lib/auth";
 
 // Skip auth/session calls in bypass mode to avoid hangs during E2E tests
 const authBypassEnabled = isAuthBypassEnabled();
@@ -62,10 +62,7 @@ type BrandingQueryOptions = Omit<
 >;
 
 export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
-  const { data: session } = useSession();
-  const user = session?.user as
-    | { tenant_id?: string; activeOrganization?: { id?: string } }
-    | undefined;
+  const { user } = useSession();
   const tenantId = user?.tenant_id || user?.activeOrganization?.id;
   const hasTenant = Boolean(tenantId);
 

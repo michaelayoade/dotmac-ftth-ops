@@ -8,11 +8,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TimeTrackingPage from "../page";
 import { TimeEntryType } from "@/types/field-service";
 import * as useFieldServiceHooks from "@/hooks/useFieldService";
-import { useSession } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
 
 // Mock the hooks
 jest.mock("@/hooks/useFieldService");
-jest.mock("@dotmac/better-auth", () => ({
+jest.mock("@shared/lib/auth", () => ({
   useSession: jest.fn(),
 }));
 
@@ -38,12 +38,11 @@ describe("TimeTrackingPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useSession as jest.Mock).mockReturnValue({
-      data: {
-        user: {
-          technician_id: mockTechnicianId,
-        },
+      user: {
+        technician_id: mockTechnicianId,
       },
-      isPending: false,
+      isLoading: false,
+      isAuthenticated: true,
     });
 
     // Mock useTimeEntries

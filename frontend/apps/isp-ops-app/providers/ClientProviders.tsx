@@ -21,6 +21,7 @@ import {
   KeyboardShortcuts,
 } from "@/lib/design-system/accessibility";
 import { ConfirmDialogProvider } from "@dotmac/ui";
+import { AuthProvider } from "@shared/lib/auth";
 // import { useRuntimeConfigState } from "@shared/runtime/RuntimeConfigContext";
 
 export function ClientProviders({ children }: { children: ReactNode }) {
@@ -64,15 +65,17 @@ export function ClientProviders({ children }: { children: ReactNode }) {
           <AccessibilityProvider>
             <QueryClientProvider client={queryClient}>
               <ApolloProvider>
-                <PartnerTenantProvider>
-                  <TenantProvider>
-                    {shouldWrapWithRBAC ? (
-                      <RBACProvider>{appProviders}</RBACProvider>
-                    ) : (
-                      appProviders
-                    )}
-                  </TenantProvider>
-                </PartnerTenantProvider>
+                <AuthProvider>
+                  <PartnerTenantProvider>
+                    <TenantProvider>
+                      {shouldWrapWithRBAC ? (
+                        <RBACProvider>{appProviders}</RBACProvider>
+                      ) : (
+                        appProviders
+                      )}
+                    </TenantProvider>
+                  </PartnerTenantProvider>
+                </AuthProvider>
               </ApolloProvider>
             </QueryClientProvider>
           </AccessibilityProvider>

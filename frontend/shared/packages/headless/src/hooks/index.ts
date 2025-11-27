@@ -3,7 +3,7 @@
 // ========================================
 
 // Core unified systems (NEW - consolidated)
-// Note: Auth is now handled by Better Auth (@dotmac/better-auth)
+// Note: Auth is now handled by @shared/lib/auth
 // Note: usePermissions removed - deprecated hook that depended on authStore
 export * from "./useDataManagement"; // Unified data management
 export * from "./useNotifications"; // Consolidated notifications

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { forgetPassword } from "@dotmac/better-auth";
+import { requestPasswordReset } from "@shared/lib/auth";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -32,13 +32,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const result = await forgetPassword({
-        email: data.email,
-        redirectTo: "/reset-password",
-      });
+      const result = await requestPasswordReset(data.email);
 
-      if (result.error) {
-        setError(result.error.message || "Failed to send reset email");
+      if (!result.success) {
+        setError(result.error || "Failed to send reset email");
         return;
       }
 
