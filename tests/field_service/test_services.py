@@ -1,9 +1,12 @@
 """Tests for field service services."""
 
 from unittest.mock import AsyncMock
-from uuid import uuid4
 
 import pytest
+
+from dotmac.platform.field_service.assignment_service import TechnicianAssignmentService
+from dotmac.platform.field_service.geofencing_service import GeofencingService
+from dotmac.platform.field_service.websocket_manager import TechnicianLocationWebSocketManager
 
 pytestmark = pytest.mark.unit
 
@@ -11,45 +14,44 @@ pytestmark = pytest.mark.unit
 @pytest.mark.asyncio
 async def test_assignment_service_assign_technician():
     """Test assigning a technician to a job."""
-    from dotmac.platform.field_service.assignment_service import AssignmentService
-
     # Create mocked dependencies
     mock_db = AsyncMock()
-    service = AssignmentService(mock_db)
-
-    # Create test IDs (unused but kept for future test expansion)
-    _job_id = uuid4()
-    _technician_id = uuid4()
+    service = TechnicianAssignmentService(mock_db)
 
     # Mock database query results
     mock_db.execute = AsyncMock()
     mock_db.commit = AsyncMock()
 
     # Test assignment logic exists
-    assert hasattr(service, 'assign_technician') or hasattr(service, 'assign')
+    assert hasattr(service, "assign_technician_to_job")
+    assert hasattr(service, "find_best_technician")
 
 
 @pytest.mark.asyncio
 async def test_geofencing_service_check_proximity():
     """Test geofencing proximity check."""
-    from dotmac.platform.field_service.geofencing_service import GeofencingService
-
-    service = GeofencingService()
-
-    # Test coordinates (unused but kept for future test expansion)
-    _tech_lat, _tech_lng = 40.7128, -74.0060  # New York
-    _job_lat, _job_lng = 40.7614, -73.9776    # Times Square
+    mock_db = AsyncMock()
+    service = GeofencingService(mock_db)
 
     # Service should have proximity checking capability
-    assert hasattr(service, 'check_geofence') or hasattr(service, 'check_proximity')
+    assert hasattr(service, "check_geofence")
+    assert hasattr(service, "calculate_distance")
+
+    # Test static distance calculation method
+    # Distance between two points in NYC (should be roughly 5.4 km)
+    tech_lat, tech_lng = 40.7128, -74.0060  # NYC downtown
+    job_lat, job_lng = 40.7614, -73.9776  # Times Square
+
+    distance = GeofencingService.calculate_distance(tech_lat, tech_lng, job_lat, job_lng)
+    assert 5000 < distance < 6000  # ~5.4 km in meters
 
 
 def test_websocket_manager_connection_handling():
     """Test WebSocket manager connection handling."""
-    from dotmac.platform.field_service.websocket_manager import WebSocketManager
-
-    manager = WebSocketManager()
+    manager = TechnicianLocationWebSocketManager()
 
     # Manager should have connection methods
-    assert hasattr(manager, 'connect') or hasattr(manager, 'add_connection')
-    assert hasattr(manager, 'disconnect') or hasattr(manager, 'remove_connection')
+    assert hasattr(manager, "connect")
+    assert hasattr(manager, "disconnect")
+    assert hasattr(manager, "broadcast_to_tenant")
+    assert hasattr(manager, "get_active_connection_count")

@@ -5,57 +5,58 @@ from uuid import uuid4
 
 import pytest
 
+from dotmac.platform.field_service.models import (
+    Technician,
+    TechnicianLocationHistory,
+    TechnicianStatus,
+)
+
 pytestmark = pytest.mark.unit
 
 
 def test_technician_model_creation():
     """Test basic Technician model instantiation."""
-    from dotmac.platform.field_service.models import Technician
-
     technician = Technician(
         id=uuid4(),
-        tenant_id=uuid4(),
-        name="John Doe",
+        tenant_id="test-tenant",
+        employee_id="EMP001",
+        first_name="John",
+        last_name="Doe",
         email="john.doe@example.com",
         phone="+1234567890",
-        status="available",
+        status=TechnicianStatus.AVAILABLE,
     )
 
-    assert technician.name == "John Doe"
+    assert technician.full_name == "John Doe"
     assert technician.email == "john.doe@example.com"
-    assert technician.status == "available"
+    assert technician.status == TechnicianStatus.AVAILABLE
 
 
-def test_job_model_creation():
-    """Test basic Job model instantiation."""
-    from dotmac.platform.field_service.models import Job
-
-    job = Job(
+def test_technician_model_full_name_property():
+    """Test Technician full_name property."""
+    technician = Technician(
         id=uuid4(),
-        tenant_id=uuid4(),
-        title="Fiber Installation",
-        description="Install fiber for customer",
-        priority="high",
-        status="pending",
+        tenant_id="test-tenant",
+        employee_id="EMP002",
+        first_name="Jane",
+        last_name="Smith",
+        email="jane.smith@example.com",
     )
 
-    assert job.title == "Fiber Installation"
-    assert job.priority == "high"
-    assert job.status == "pending"
+    assert technician.full_name == "Jane Smith"
 
 
-def test_location_tracking_model():
-    """Test LocationTracking model instantiation."""
-    from dotmac.platform.field_service.models import LocationTracking
-
-    location = LocationTracking(
+def test_technician_location_history_model():
+    """Test TechnicianLocationHistory model instantiation."""
+    location = TechnicianLocationHistory(
         id=uuid4(),
+        tenant_id="test-tenant",
         technician_id=uuid4(),
         latitude=40.7128,
         longitude=-74.0060,
-        timestamp=datetime.now(UTC),
+        recorded_at=datetime.now(UTC),
     )
 
     assert location.latitude == 40.7128
     assert location.longitude == -74.0060
-    assert isinstance(location.timestamp, datetime)
+    assert isinstance(location.recorded_at, datetime)

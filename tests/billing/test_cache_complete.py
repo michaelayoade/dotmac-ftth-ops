@@ -450,10 +450,16 @@ class TestBillingCache:
         assert cache._get_from_memory("billing:product:tenant1:456") is None
         assert cache._get_from_memory("billing:pricing:tenant1:789") is not None
 
+    @patch("dotmac.platform.billing.cache.get_redis")
+    @patch("dotmac.platform.billing.cache.cache_set")
     @pytest.mark.asyncio
-    async def test_invalidate_by_tags(self):
+    async def test_invalidate_by_tags(self, mock_cache_set, mock_get_redis):
         """Test invalidating cache by tags."""
         cache = BillingCache()
+
+        # Mock Redis delete to return successfully
+        mock_redis = Mock()
+        mock_get_redis.return_value = mock_redis
 
         # Set values with tags
         await cache.set("key1", "value1", tags=["tag1", "tag2"])

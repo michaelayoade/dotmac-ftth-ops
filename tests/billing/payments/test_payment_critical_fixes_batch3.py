@@ -375,12 +375,12 @@ class TestBankAccountsRouter:
     """Tests for bank_accounts router fixes"""
 
     def test_bank_accounts_router_has_correct_prefix(self):
-        """Test that bank_accounts router has /bank-accounts prefix, not /billing/bank-accounts"""
+        """Test that bank_accounts router has empty prefix - parent billing router adds path"""
         from dotmac.platform.billing.bank_accounts.router import router
 
-        # Should be /bank-accounts (not /billing/bank-accounts)
-        # because parent billing router adds /billing prefix
-        assert router.prefix == "/bank-accounts"
+        # Router has empty prefix - the parent billing router includes it at the correct path
+        # This avoids duplicate /billing/bank-accounts when included under /billing
+        assert router.prefix == ""
         assert router.prefix != "/billing/bank-accounts"
 
     def test_bank_accounts_router_uses_async_session_dependency(self):

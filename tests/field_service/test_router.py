@@ -7,16 +7,15 @@ pytestmark = pytest.mark.unit
 
 
 def test_router_health_check(test_app):
-    """Test field service router health check."""
+    """Test field service router can be included."""
     from dotmac.platform.field_service.router import router
 
-    test_app.include_router(router, prefix="/api/v1/field-service")
+    test_app.include_router(router, prefix="/api/v1")
     # Create test client to verify app can be instantiated
     _ = TestClient(test_app)
 
-    # This is a placeholder - actual health endpoint would need to be implemented
-    # Just verify the router can be included without errors
-    assert router.prefix == ""
+    # Router has /field-service prefix
+    assert router.prefix == "/field-service"
 
 
 def test_technician_list_endpoint_structure(test_app):

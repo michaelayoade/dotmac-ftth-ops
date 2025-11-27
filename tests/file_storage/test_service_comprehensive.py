@@ -346,12 +346,15 @@ class TestFileStorageService:
         assert service.backend_type == StorageBackend.MEMORY
         assert isinstance(service.backend, MemoryFileStorage)
 
-    def test_service_initialization_local(self):
+    def test_service_initialization_local(self, tmp_path):
         """Test initializing service with local backend."""
-        service = FileStorageService(backend=StorageBackend.LOCAL)
+        # Mock settings to use temp directory instead of /var/lib/dotmac
+        with patch("dotmac.platform.file_storage.service.settings") as mock_settings:
+            mock_settings.storage.local_path = str(tmp_path)
+            service = FileStorageService(backend=StorageBackend.LOCAL)
 
-        assert service.backend_type == StorageBackend.LOCAL
-        assert isinstance(service.backend, LocalFileStorage)
+            assert service.backend_type == StorageBackend.LOCAL
+            assert isinstance(service.backend, LocalFileStorage)
 
     @pytest.mark.asyncio
     async def test_store_file_via_service(self):

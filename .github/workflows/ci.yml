@@ -145,9 +145,36 @@ jobs:
         run: poetry run ruff format --check src/
 
   backend-unit-tests:
-    name: "1. Backend Unit Tests"
+    name: "1. Unit Tests (${{ matrix.group.name }})"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          # Large modules - run separately
+          - name: "Billing"
+            paths: "tests/billing"
+          - name: "Auth"
+            paths: "tests/auth"
+          - name: "Tenant"
+            paths: "tests/tenant"
+          - name: "Monitoring"
+            paths: "tests/monitoring"
+          # Medium modules - group together
+          - name: "Core"
+            paths: "tests/contacts tests/customer_management tests/secrets tests/communications tests/core"
+          - name: "Integrations"
+            paths: "tests/integration tests/integrations tests/webhooks tests/data_transfer tests/data_import"
+          - name: "Infrastructure"
+            paths: "tests/radius tests/network tests/network_monitoring tests/netbox tests/orchestration"
+          # Smaller modules - group together
+          - name: "Other"
+            paths: "tests/access tests/admin tests/analytics tests/api tests/audit tests/cache tests/config tests/crm tests/customer_portal tests/deployment tests/diagnostics tests/error_handling tests/events tests/fault_management tests/feature_flags tests/fiber tests/field_service tests/file_storage tests/fixtures tests/genieacs tests/geo tests/graphql tests/helpers tests/infra tests/infrastructure tests/ip_management tests/jobs tests/journeys tests/licensing tests/metrics tests/middleware tests/notifications tests/observability tests/oss tests/partner_management tests/performance tests/platform_admin tests/plugins tests/project_management tests/rate_limit tests/realtime tests/resilience tests/routers tests/sales tests/search tests/security tests/service_registry tests/services tests/subscribers tests/ticketing tests/unit tests/user_management tests/utils tests/versioning tests/voltha tests/wireguard tests/wireless tests/workflows"
+          # Root-level test files
+          - name: "Root"
+            paths: "tests/test_*.py"
 
     steps:
       - uses: actions/checkout@v4
@@ -171,16 +198,17 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev --no-interaction
 
-      - name: Run unit tests
+      - name: Run unit tests - ${{ matrix.group.name }}
         env:
           PYTHONPATH: "${{ github.workspace }}/src"
           DOTMAC_AUTOSTART_SERVICES: "0"
         run: |
-          poetry run pytest tests/ -m unit \
+          poetry run pytest ${{ matrix.group.paths }} -m unit \
             --tb=short \
             -n auto \
             -q \
-            --maxfail=10
+            --maxfail=10 \
+            --ignore=tests/e2e
 
   backend-integration-tests:
     name: "1. Backend Integration Tests"
