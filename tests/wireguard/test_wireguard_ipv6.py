@@ -152,12 +152,17 @@ class TestWireGuardPeerDualStack:
             mock_select.return_value = mock_query
             mock_query.where.return_value = mock_query
 
-            # Mock database query results
+            # Mock database query results for all execute calls:
+            # 1. Check existing public key
+            mock_pubkey_result = MagicMock()
+            mock_pubkey_result.first.return_value = None
+            # 2. Get used IPv4 addresses (no peer_ipv4 provided, so auto-allocate)
             mock_ipv4_result = MagicMock()
             mock_ipv4_result.all.return_value = []
+            # 3. Get used IPv6 addresses (no peer_ipv6 provided, so auto-allocate)
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = []
-            mock_session.execute.side_effect = [mock_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [mock_pubkey_result, mock_ipv4_result, mock_ipv6_result]
 
             # Mock IP allocation
             mock_client.allocate_peer_ip.side_effect = ["10.8.0.2/32", "fd00:8::2/128"]
@@ -263,11 +268,17 @@ class TestWireGuardPeerDualStack:
             mock_select.return_value = mock_query
             mock_query.where.return_value = mock_query
 
+            # Mock database query results for all execute calls:
+            # 1. Check existing public key
+            mock_pubkey_result = MagicMock()
+            mock_pubkey_result.first.return_value = None
+            # 2. Check if IPv4 already exists (peer_ipv4 provided)
             existing_ipv4_result = MagicMock()
             existing_ipv4_result.first.return_value = None
+            # 3. Check if IPv6 already exists (peer_ipv6 provided)
             existing_ipv6_result = MagicMock()
             existing_ipv6_result.first.return_value = None
-            mock_session.execute.side_effect = [existing_ipv4_result, existing_ipv6_result]
+            mock_session.execute.side_effect = [mock_pubkey_result, existing_ipv4_result, existing_ipv6_result]
 
             mock_peer_instance = MagicMock()
             MockPeer.return_value = mock_peer_instance
@@ -316,12 +327,17 @@ class TestWireGuardPeerDualStack:
             mock_select.return_value = mock_query
             mock_query.where.return_value = mock_query
 
-            # Mock database queries
+            # Mock database query results for all execute calls:
+            # 1. Check existing public key
+            mock_pubkey_result = MagicMock()
+            mock_pubkey_result.first.return_value = None
+            # 2. Get used IPv4 addresses (no peer_ipv4 provided)
             mock_ipv4_result = MagicMock()
             mock_ipv4_result.all.return_value = []
+            # 3. Get used IPv6 addresses (no peer_ipv6 provided)
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = []
-            mock_session.execute.side_effect = [mock_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [mock_pubkey_result, mock_ipv4_result, mock_ipv6_result]
 
             mock_client.allocate_peer_ip.side_effect = ["10.8.0.2/32", "fd00:8::2/128"]
 
@@ -438,10 +454,14 @@ class TestWireGuardIPAllocationEdgeCases:
             mock_select.return_value = mock_query
             mock_query.where.return_value = mock_query
 
-            # Mock existing addresses
+            # Mock database query results for all execute calls:
+            # 1. Check existing public key
+            mock_pubkey_result = MagicMock()
+            mock_pubkey_result.first.return_value = None
+            # 2. Get used IPv4 addresses (no peer_ipv4 provided)
             mock_ipv4_result = MagicMock()
             mock_ipv4_result.all.return_value = [("10.8.0.2/32",), ("10.8.0.3/32",)]
-
+            # 3. Get used IPv6 addresses (no peer_ipv6 provided)
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = [
                 ("fd00:8::2/128",),
@@ -449,7 +469,7 @@ class TestWireGuardIPAllocationEdgeCases:
                 ("fd00:8::4/128",),
             ]
 
-            mock_session.execute.side_effect = [mock_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [mock_pubkey_result, mock_ipv4_result, mock_ipv6_result]
 
             mock_client.allocate_peer_ip.side_effect = ["10.8.0.4/32", "fd00:8::5/128"]
 
@@ -499,12 +519,17 @@ class TestWireGuardIPAllocationEdgeCases:
             mock_select.return_value = mock_query
             mock_query.where.return_value = mock_query
 
+            # Mock database query results for all execute calls:
+            # 1. Check existing public key
+            mock_pubkey_result = MagicMock()
+            mock_pubkey_result.first.return_value = None
+            # 2. Check if IPv4 already exists (peer_ipv4 provided)
             existing_ipv4_result = MagicMock()
             existing_ipv4_result.first.return_value = None
-            # Mock database query
+            # 3. Get used IPv6 addresses (peer_ipv6 not provided, so auto-allocate)
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = []
-            mock_session.execute.side_effect = [existing_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [mock_pubkey_result, existing_ipv4_result, mock_ipv6_result]
 
             # Mock IPv6 allocation (IPv4 already provided)
             mock_client.allocate_peer_ip.return_value = "fd00:8::2/128"
