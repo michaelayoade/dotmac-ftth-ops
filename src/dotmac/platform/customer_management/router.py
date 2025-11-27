@@ -46,16 +46,24 @@ router = APIRouter(prefix="", tags=["Customer Management"])
 
 def _convert_customer_to_response(customer: Any) -> CustomerResponse:
     """Convert a customer ORM/dict object into a response schema."""
+    # Always build a clean mapping of fields to avoid picking up SQLAlchemy's
+    # Base.metadata attribute (MetaData instance) which clashes with our JSON metadata.
     if isinstance(customer, dict):
-        response = CustomerResponse.model_validate(customer)
-        metadata = customer.get("metadata")
-    else:
-        response = CustomerResponse.model_validate(customer, from_attributes=True)
-        metadata = getattr(customer, "metadata_", None)
+        data = {**customer}
+        data["metadata"] = customer.get("metadata") or customer.get("metadata_", {}) or {}
+        data["custom_fields"] = customer.get("custom_fields") or {}
+        data["tags"] = customer.get("tags") or []
+        return CustomerResponse.model_validate(data)
 
-    if metadata is not None:
-        response.metadata = metadata if isinstance(metadata, dict) else {}
-    return response
+    field_names = CustomerResponse.model_fields.keys()
+    mapped: dict[str, Any] = {}
+    for field in field_names:
+        if field == "metadata":
+            mapped[field] = getattr(customer, "metadata_", {}) or {}
+        else:
+            mapped[field] = getattr(customer, field, None)
+
+    return CustomerResponse.model_validate(mapped)
 
 
 # Dependency for customer service
@@ -658,15 +666,19 @@ async def add_customer_activity(
 def _convert_activity_to_response(activity: Any) -> CustomerActivityResponse:
     """Convert customer activity model/dict to response schema."""
     if isinstance(activity, dict):
-        response = CustomerActivityResponse.model_validate(activity)
-        metadata = activity.get("metadata")
-    else:
-        response = CustomerActivityResponse.model_validate(activity, from_attributes=True)
-        metadata = getattr(activity, "metadata_", None)
+        data = {**activity}
+        data["metadata"] = activity.get("metadata") or activity.get("metadata_", {}) or {}
+        return CustomerActivityResponse.model_validate(data)
 
-    if metadata is not None:
-        response.metadata = metadata
-    return response
+    field_names = CustomerActivityResponse.model_fields.keys()
+    mapped: dict[str, Any] = {}
+    for field in field_names:
+        if field == "metadata":
+            mapped[field] = getattr(activity, "metadata_", {}) or {}
+        else:
+            mapped[field] = getattr(activity, field, None)
+
+    return CustomerActivityResponse.model_validate(mapped)
 
 
 @router.get("/{customer_id}/activities", response_model=list[CustomerActivityResponse])

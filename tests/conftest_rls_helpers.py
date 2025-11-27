@@ -104,6 +104,11 @@ async def auto_bypass_rls_for_all_tests(request):
             # RLS is active in this test
             ...
     """
+    # Skip for E2E tests to avoid interfering with their isolated DB fixtures
+    if hasattr(request.node, "nodeid") and "tests/e2e/" in request.node.nodeid:
+        yield
+        return
+
     # Check if test wants RLS enabled
     if request.node.get_closest_marker("rls_enabled"):
         # Don't bypass RLS for this test

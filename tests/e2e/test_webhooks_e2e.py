@@ -19,10 +19,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import httpx
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
-from dotmac.platform.db import Base
 from dotmac.platform.webhooks.delivery import WebhookDeliveryService
 from dotmac.platform.webhooks.events import get_event_bus
 from dotmac.platform.webhooks.models import (
@@ -42,41 +39,10 @@ os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-e2e-tests"
 # ==================== Fixtures ====================
 
 
-@pytest_asyncio.fixture(scope="function")
-async def db_engine():
-    """Create test database engine."""
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        echo=False,
-    )
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    yield engine
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-    await engine.dispose()
-
-
 @pytest_asyncio.fixture
-async def db_session(db_engine):
-    """Create test database session."""
-    async_session_maker = async_sessionmaker(
-        db_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
-
-    session = async_session_maker()
-    try:
-        yield session
-    finally:
-        await session.close()
+async def db_session(e2e_db_session):
+    """Use shared async session from per-test E2E engine."""
+    yield e2e_db_session
 
 
 # Note: Use shared fixtures from tests/e2e/conftest.py

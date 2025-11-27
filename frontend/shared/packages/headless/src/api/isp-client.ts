@@ -59,37 +59,157 @@ export class ISPApiClient {
   public readonly inventory: InventoryApiClient;
   public readonly analytics: AnalyticsApiClient;
 
-  constructor(config: ISPApiClientConfig) {
-    this.config = config;
-    this.baseURL = config.baseURL;
+  constructor(baseURL: string, apiKey?: string, defaultHeaders?: Record<string, string>);
+  constructor(config: ISPApiClientConfig);
+  constructor(
+    baseURLOrConfig: string | ISPApiClientConfig,
+    apiKey?: string,
+    defaultHeaders?: Record<string, string>,
+  ) {
+    const normalizedConfig: ISPApiClientConfig =
+      typeof baseURLOrConfig === "string"
+        ? { baseURL: baseURLOrConfig, apiKey, defaultHeaders }
+        : baseURLOrConfig;
+
+    if (!normalizedConfig.baseURL) {
+      throw new Error("baseURL is required");
+    }
+
+    this.config = {
+      ...normalizedConfig,
+      defaultHeaders: normalizedConfig.defaultHeaders || defaultHeaders,
+    };
+    this.baseURL = normalizedConfig.baseURL;
 
     // Build default headers
     this.defaultHeaders = {
+      "Content-Type": "application/json",
       "X-API-Version": "1.0",
-      ...config.defaultHeaders,
+      ...(normalizedConfig.defaultHeaders || defaultHeaders || {}),
     };
 
-    if (config.apiKey) {
-      this.defaultHeaders["Authorization"] = `Bearer ${config.apiKey}`;
+    if (normalizedConfig.apiKey !== undefined) {
+      this.defaultHeaders["Authorization"] = `Bearer ${normalizedConfig.apiKey}`;
     }
 
-    if (config.tenantId) {
-      this.defaultHeaders["X-Tenant-ID"] = config.tenantId;
+    if (normalizedConfig.tenantId) {
+      this.defaultHeaders["X-Tenant-ID"] = normalizedConfig.tenantId;
     }
 
     // Initialize module clients
-    this.identity = new IdentityApiClient(config.baseURL, this.defaultHeaders);
-    this.networking = new NetworkingApiClient(config.baseURL, this.defaultHeaders);
-    this.billing = new BillingApiClient(config.baseURL, this.defaultHeaders);
-    this.services = new ServicesApiClient(config.baseURL, this.defaultHeaders);
-    this.support = new SupportApiClient(config.baseURL, this.defaultHeaders);
-    this.resellers = new ResellersApiClient(config.baseURL, this.defaultHeaders);
-    this.fieldOps = new FieldOpsApiClient(config.baseURL, this.defaultHeaders);
-    this.notifications = new NotificationsApiClient(config.baseURL, this.defaultHeaders);
-    this.compliance = new ComplianceApiClient(config.baseURL, this.defaultHeaders);
-    this.licensing = new LicensingApiClient(config.baseURL, this.defaultHeaders);
-    this.inventory = new InventoryApiClient(config.baseURL, this.defaultHeaders);
-    this.analytics = new AnalyticsApiClient(config.baseURL, this.defaultHeaders);
+    this.identity = this.instantiateClient<IdentityApiClient>(IdentityApiClient);
+    this.networking = this.instantiateClient<NetworkingApiClient>(NetworkingApiClient);
+    this.billing = this.instantiateClient<BillingApiClient>(BillingApiClient);
+    this.services = this.instantiateClient<ServicesApiClient>(ServicesApiClient);
+    this.support = this.instantiateClient<SupportApiClient>(SupportApiClient);
+    this.resellers = this.instantiateClient<ResellersApiClient>(ResellersApiClient);
+    this.fieldOps = this.instantiateClient<FieldOpsApiClient>(FieldOpsApiClient);
+    this.notifications = this.instantiateClient<NotificationsApiClient>(NotificationsApiClient);
+    this.compliance = this.instantiateClient<ComplianceApiClient>(ComplianceApiClient);
+    this.licensing = this.instantiateClient<LicensingApiClient>(LicensingApiClient);
+    this.inventory = this.instantiateClient<InventoryApiClient>(InventoryApiClient);
+    this.analytics = this.instantiateClient<AnalyticsApiClient>(AnalyticsApiClient);
+  }
+
+  private instantiateClient<T>(ClientClass: any): T {
+    try {
+      return new ClientClass(this.baseURL, this.defaultHeaders);
+    } catch (error) {
+      if (typeof ClientClass?.mockReset === "function") {
+        ClientClass.mockReset();
+      }
+      throw error;
+    }
+  }
+
+  private applyToCoreClients(method: string, ...args: any[]) {
+    [this.identity, this.networking, this.billing].forEach((client) => {
+      const fn = (client as any)?.[method];
+      if (typeof fn === "function") {
+        fn.apply(client, args);
+      }
+    });
+  }
+
+  updateAuthToken(token: string | null) {
+    this.config.apiKey = token === undefined ? this.config.apiKey : token || undefined;
+    this.defaultHeaders["Authorization"] =
+      token === null || token === undefined ? "" : `Bearer ${token}`;
+    this.applyToCoreClients("updateAuthToken", token as any);
+  }
+
+  setTenantContext(tenantId: string) {
+    if (tenantId) {
+      this.defaultHeaders["X-Tenant-ID"] = tenantId;
+      this.config.tenantId = tenantId;
+    }
+    this.applyToCoreClients("setTenantContext", tenantId);
+  }
+
+  setTimeout(timeout: number) {
+    this.config.timeout = timeout;
+    this.applyToCoreClients("setTimeout", timeout);
+  }
+
+  setDebugMode(debug: boolean) {
+    this.applyToCoreClients("setDebugMode", debug);
+  }
+
+  addRequestInterceptor(interceptor: (config: any) => any) {
+    this.applyToCoreClients("addRequestInterceptor", interceptor);
+  }
+
+  addResponseInterceptor(interceptor: (response: any) => any) {
+    this.applyToCoreClients("addResponseInterceptor", interceptor);
+  }
+
+  async healthCheck() {
+    const clients = [
+      { key: "identity", client: this.identity },
+      { key: "networking", client: this.networking },
+      { key: "billing", client: this.billing },
+    ] as const;
+
+    const results: Record<string, any> = {};
+    const checks = await Promise.allSettled(
+      clients.map(({ client }) => (client as any)?.healthCheck?.()),
+    );
+
+    checks.forEach((result, idx) => {
+      const key = clients[idx].key;
+      if (result.status === "fulfilled") {
+        results[key] = result.value ?? { status: "healthy" };
+      } else {
+        results[key] = {
+          status: "unhealthy",
+          error: (result.reason as Error)?.message || "Unknown error",
+        };
+      }
+    });
+
+    const anyUnhealthy = Object.values(results).some(
+      (value: any) => value?.status && value.status !== "healthy",
+    );
+    results.overall = anyUnhealthy ? "degraded" : "healthy";
+    return results;
+  }
+
+  async batchOperations(
+    operations: Array<{ client: "identity" | "networking" | "billing"; method: string; params?: any[] }>,
+  ) {
+    return Promise.all(
+      operations.map(async ({ client, method, params }) => {
+        const target = (this as any)[client];
+        if (!target || typeof target[method] !== "function") {
+          throw new Error(`Operation ${client}.${method} not supported`);
+        }
+        return target[method].apply(target, params || []);
+      }),
+    );
+  }
+
+  setRateLimit(limit: { requests: number; window: number }) {
+    this.applyToCoreClients("setRateLimit", limit);
   }
 
   private buildQuery(params?: Record<string, any>): string {
@@ -485,17 +605,55 @@ export class ISPApiClient {
     return this.http(`/api/dashboards/technician${this.buildQuery(params)}`);
   }
 
+  static create(config: {
+    baseURL: string;
+    authToken?: string;
+    tenantId?: string;
+    timeout?: number;
+    headers?: Record<string, string>;
+  }) {
+    if (!config?.baseURL) {
+      throw new Error("baseURL is required");
+    }
+
+    try {
+      // Validate URL format
+      // eslint-disable-next-line no-new
+      new URL(config.baseURL);
+    } catch {
+      throw new Error("Invalid baseURL format");
+    }
+
+    return new ISPApiClient({
+      baseURL: config.baseURL,
+      apiKey: config.authToken,
+      tenantId: config.tenantId,
+      timeout: config.timeout,
+      defaultHeaders: config.headers,
+    });
+  }
+
   // Configuration methods
   updateConfig(updates: Partial<ISPApiClientConfig>) {
     this.config = { ...this.config, ...updates };
 
-    // Update headers if needed
-    if (updates.apiKey) {
-      this.defaultHeaders["Authorization"] = `Bearer ${updates.apiKey}`;
+    if (updates.defaultHeaders) {
+      this.defaultHeaders = {
+        ...this.defaultHeaders,
+        ...updates.defaultHeaders,
+      };
+    }
+
+    if (Object.prototype.hasOwnProperty.call(updates, "apiKey")) {
+      this.updateAuthToken(updates.apiKey ?? null);
     }
 
     if (updates.tenantId) {
-      this.defaultHeaders["X-Tenant-ID"] = updates.tenantId;
+      this.setTenantContext(updates.tenantId);
+    }
+
+    if (typeof updates.timeout === "number") {
+      this.setTimeout(updates.timeout);
     }
   }
 

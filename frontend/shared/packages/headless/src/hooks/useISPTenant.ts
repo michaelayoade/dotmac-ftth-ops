@@ -144,7 +144,7 @@ export function createISPTenantContextValue(): ISPTenantContextValue {
 export { ISPTenantContext };
 
 // Legacy support - alias for provider compatibility
-export const useISPTenantProvider = useISPTenant;
+export const useISPTenantProvider = createISPTenantContextValue;
 
 // Legacy support - re-export types
 export type {

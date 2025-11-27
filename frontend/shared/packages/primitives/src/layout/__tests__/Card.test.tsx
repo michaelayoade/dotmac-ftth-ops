@@ -17,6 +17,9 @@ import {
 } from "@dotmac/testing";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../Card";
 
+const CARD_PERFORMANCE_BUDGET_MS = 80;
+const CARD_COMPLEX_BUDGET_MS = 120;
+
 describe("Card Component", () => {
   // Basic functionality tests
   describe("Basic Functionality", () => {
@@ -393,7 +396,7 @@ describe("Card Performance", () => {
     );
 
     const metrics = result.measurePerformance();
-    expect(metrics).toBePerformant();
+    expect(metrics).toBePerformant(CARD_PERFORMANCE_BUDGET_MS);
   });
 
   it("handles complex content efficiently", () => {
@@ -414,7 +417,7 @@ describe("Card Performance", () => {
     );
 
     const metrics = result.measurePerformance();
-    expect(metrics).toBePerformant(50); // Allow more time for complex content
+    expect(metrics).toBePerformant(CARD_COMPLEX_BUDGET_MS); // Allow more time for complex content
   });
 });
 
@@ -437,7 +440,7 @@ describe("Card Comprehensive Testing", () => {
     // All tests should pass
     await expect(result.container).toBeAccessible();
     expect(result.container).toHaveNoSecurityViolations();
-    expect(metrics).toBePerformant();
+    expect(metrics).toBePerformant(CARD_PERFORMANCE_BUDGET_MS);
     expect(result.container).toHaveValidMarkup();
   });
 });

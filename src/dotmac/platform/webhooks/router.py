@@ -31,6 +31,24 @@ logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
 
+def _validate_subscription_events(events: list[str]) -> None:
+    """Ensure requested events are registered before creating/updating subscriptions."""
+    if not events:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="At least one event type is required",
+        )
+
+    registered = get_event_bus().get_registered_events()
+    invalid = [evt for evt in events if evt not in registered]
+
+    if invalid:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Unsupported event types: {', '.join(invalid)}",
+        )
+
+
 class WebhookTestRequest(BaseModel):
     """Request payload for testing a webhook subscription."""
 
@@ -220,6 +238,8 @@ async def create_webhook_subscription(
         )
 
     try:
+        _validate_subscription_events(subscription_data.events)
+
         service = WebhookSubscriptionService(db)
         subscription = await service.create_subscription(
             tenant_id=current_user.tenant_id,
@@ -239,6 +259,8 @@ async def create_webhook_subscription(
             secret=subscription.secret,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("Failed to create webhook subscription", error=str(e))
         raise HTTPException(
@@ -339,6 +361,9 @@ async def update_webhook_subscription(
         )
 
     try:
+        if update_data.events is not None:
+            _validate_subscription_events(update_data.events)
+
         service = WebhookSubscriptionService(db)
         subscription = await service.update_subscription(
             subscription_id=subscription_id,

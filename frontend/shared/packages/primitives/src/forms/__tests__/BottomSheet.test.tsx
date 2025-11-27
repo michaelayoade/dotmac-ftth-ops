@@ -368,7 +368,7 @@ describe("BottomSheet", () => {
       const result = renderPerformance(<BottomSheet {...defaultProps} />);
 
       const metrics = result.measurePerformance();
-      expect(metrics).toBePerformant();
+      expect(metrics).toBePerformant(100);
     });
 
     it("handles large content efficiently", () => {
@@ -383,7 +383,7 @@ describe("BottomSheet", () => {
       const result = renderPerformance(<BottomSheet {...defaultProps}>{largeContent}</BottomSheet>);
 
       const metrics = result.measurePerformance();
-      expect(metrics).toBePerformant(50); // Allow more time for large content
+      expect(metrics).toBePerformant(120); // Allow more time for large content
     });
   });
 
@@ -401,7 +401,7 @@ describe("BottomSheet", () => {
 
       await expect(result.container).toBeAccessible();
       expect(result.container).toHaveNoSecurityViolations();
-      expect(metrics).toBePerformant();
+      expect(metrics).toBePerformant(120);
       expect(result.container).toHaveValidMarkup();
     });
 

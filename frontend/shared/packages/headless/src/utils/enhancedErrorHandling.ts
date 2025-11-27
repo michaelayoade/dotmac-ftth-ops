@@ -29,6 +29,12 @@ export enum ErrorCode {
   VALIDATION_OUT_OF_RANGE = "VAL_003",
   VALIDATION_DUPLICATE_VALUE = "VAL_004",
   VALIDATION_BUSINESS_RULE = "VAL_005",
+  VALIDATION_FIELD_INVALID = "VAL_006",
+  BUSINESS_RULE_VIOLATION = "VAL_007",
+  CONFIGURATION_ERROR = "CFG_001",
+  BILLING_ERROR = "BILL_999",
+  WORKFLOW_ERROR = "WF_001",
+  SECURITY_VIOLATION = "SEC_001",
 
   // Customer Management
   CUSTOMER_NOT_FOUND = "CUST_001",
@@ -163,22 +169,24 @@ export class EnhancedISPError extends ISPError {
     workaround?: string;
     technicalDetails?: Record<string, any>;
   }) {
+    const errorCode = params.code || ErrorCode.UNKNOWN_ERROR;
     // Map error code to category and severity if not provided
-    const { category, severity } = mapCodeToProperties(params.code);
+    const { category, severity } = mapCodeToProperties(errorCode);
 
     super({
       message: params.message,
       category: params.category || category,
       severity: params.severity || severity,
-      status: params.status || mapCodeToHttpStatus(params.code),
+      status: params.status || mapCodeToHttpStatus(errorCode),
+      code: errorCode,
       context: params.context.operation,
-      retryable: params.retryable ?? isRetryableByCode(params.code),
-      userMessage: params.userMessage || generateContextualUserMessage(params.code, params.context),
+      retryable: params.retryable ?? isRetryableByCode(errorCode),
+      userMessage: params.userMessage || generateContextualUserMessage(errorCode, params.context),
       technicalDetails: params.technicalDetails,
       correlationId: params.context.correlationId,
     });
 
-    this.errorCode = params.code;
+    this.errorCode = errorCode;
     this.enhancedContext = params.context;
     this.userActions = params.userActions || generateUserActions(params.code);
     this.supportContact = params.supportContact;
@@ -217,6 +225,16 @@ export class EnhancedISPError extends ISPError {
       },
     };
   }
+
+  override toJSON() {
+    const base = super.toJSON();
+    return {
+      ...base,
+      code: this.errorCode,
+      context: this.enhancedContext,
+      timestamp: this.timestamp.toISOString(),
+    };
+  }
 }
 
 // Error code mapping utilities
@@ -224,9 +242,15 @@ function mapCodeToProperties(code: ErrorCode): {
   category: ErrorCategory;
   severity: ErrorSeverity;
 } {
+  if (!code) {
+    return { category: "system", severity: "medium" };
+  }
   const mappings: Record<string, { category: ErrorCategory; severity: ErrorSeverity }> = {
     // Network
     NET_: { category: "network", severity: "medium" },
+    CFG_: { category: "system", severity: "medium" },
+    WF_: { category: "business", severity: "medium" },
+    SEC_: { category: "authorization", severity: "high" },
 
     // Authentication
     AUTH_: { category: "authentication", severity: "high" },
@@ -275,6 +299,8 @@ function mapCodeToHttpStatus(code: ErrorCode): number {
     VALIDATION_OUT_OF_RANGE: 400,
     VALIDATION_DUPLICATE_VALUE: 409,
     VALIDATION_BUSINESS_RULE: 422,
+    VALIDATION_FIELD_INVALID: 400,
+    BUSINESS_RULE_VIOLATION: 422,
 
     // Not Found
     CUSTOMER_NOT_FOUND: 404,
@@ -285,6 +311,10 @@ function mapCodeToHttpStatus(code: ErrorCode): number {
 
     // Rate Limiting
     NETWORK_RATE_LIMITED: 429,
+    CONFIGURATION_ERROR: 500,
+    WORKFLOW_ERROR: 500,
+    SECURITY_VIOLATION: 403,
+    BILLING_ERROR: 500,
 
     // Service Unavailable
     SYSTEM_MAINTENANCE: 503,
@@ -344,6 +374,7 @@ function generateContextualUserMessage(code: ErrorCode, context: ErrorContext): 
     [ErrorCode.VALIDATION_DUPLICATE_VALUE]:
       "This value already exists. Please choose a different one.",
     [ErrorCode.VALIDATION_BUSINESS_RULE]: "This action violates business rules.",
+    [ErrorCode.VALIDATION_FIELD_INVALID]: "One or more fields need your attention. Please review the highlighted inputs.",
 
     // Customer
     [ErrorCode.CUSTOMER_NOT_FOUND]: "Customer not found. Please verify the customer information.",
@@ -480,7 +511,7 @@ export const EnhancedErrorFactory = {
         resourceId: customerId,
         businessProcess: "service_management",
         customerImpact: "high",
-        metadata: { suspensionReason: reason },
+        metadata: { suspensionReason: reason, ...(context.metadata || {}) },
         ...context,
       },
       userActions: [
@@ -505,7 +536,7 @@ export const EnhancedErrorFactory = {
         resource: "payment",
         businessProcess: "billing",
         customerImpact: "high",
-        metadata: { amount, paymentMethod, failureReason: reason },
+        metadata: { amount, paymentMethod, failureReason: reason, ...(context.metadata || {}) },
         ...context,
       },
     }),
@@ -521,7 +552,7 @@ export const EnhancedErrorFactory = {
         resourceId: deviceId,
         businessProcess: "network_management",
         customerImpact: "medium",
-        metadata: { deviceType },
+        metadata: { deviceType, ...(context.metadata || {}) },
         ...context,
       },
       escalationRequired: true,
@@ -542,7 +573,7 @@ export const EnhancedErrorFactory = {
         resource: "service",
         businessProcess: "service_provisioning",
         customerImpact: "high",
-        metadata: { serviceType, customerId, failureReason: reason },
+        metadata: { serviceType, customerId, failureReason: reason, ...(context.metadata || {}) },
         ...context,
       },
       escalationRequired: true,
@@ -551,7 +582,7 @@ export const EnhancedErrorFactory = {
   // Validation Errors with Field Context
   validationError: (field: string, value: any, rule: string, context: Partial<ErrorContext> = {}) =>
     new EnhancedISPError({
-      code: ErrorCode.VALIDATION_BUSINESS_RULE,
+      code: ErrorCode.VALIDATION_FIELD_INVALID,
       message: `Validation failed for field ${field}: ${rule}`,
       context: {
         operation: "validate_input",
@@ -559,7 +590,7 @@ export const EnhancedErrorFactory = {
         resourceId: field,
         businessProcess: context.businessProcess || "data_entry",
         customerImpact: "low",
-        metadata: { field, value, rule },
+        metadata: { field, value, rule, ...(context.metadata || {}) },
         ...context,
       },
       userActions: [`Please correct the ${field} field`, "Review input requirements"],
@@ -641,6 +672,120 @@ export const EnhancedErrorFactory = {
       escalationRequired: true,
       retryable: true,
     }),
+
+  businessRuleViolation: (message: string, context: Partial<ErrorContext> = {}) =>
+    new EnhancedISPError({
+      code: ErrorCode.BUSINESS_RULE_VIOLATION,
+      message,
+      context: {
+        operation: "business_rule_validation",
+        businessProcess: "policy_enforcement",
+        customerImpact: "medium",
+        metadata: context.metadata || {},
+        ...context,
+      },
+      retryable: false,
+    }),
+
+  configurationError: (message: string, configKey: string, context: Partial<ErrorContext> = {}) =>
+    new EnhancedISPError({
+      code: ErrorCode.CONFIGURATION_ERROR,
+      message,
+      context: {
+        operation: "configuration_update",
+        resource: "configuration",
+        resourceId: configKey,
+        businessProcess: "network_management",
+        customerImpact: "medium",
+        metadata: context.metadata || {},
+        ...context,
+      },
+    }),
+
+  billingError: (message: string, billingCode: string, context: Partial<ErrorContext> = {}) =>
+    new EnhancedISPError({
+      code: ErrorCode.BILLING_ERROR,
+      message,
+      context: {
+        operation: "billing_processing",
+        resource: "invoice",
+        resourceId: billingCode,
+        businessProcess: "billing",
+        customerImpact: "high",
+        metadata: context.metadata || {},
+        ...context,
+      },
+    }),
+
+  workflowError: (
+    message: string,
+    workflowCode: string,
+    process: string,
+    context: Partial<ErrorContext> = {},
+  ) =>
+    new EnhancedISPError({
+      code: ErrorCode.WORKFLOW_ERROR,
+      message,
+      context: {
+        operation: process,
+        resource: "workflow",
+        resourceId: workflowCode,
+        businessProcess: process,
+        customerImpact: "medium",
+        metadata: context.metadata || {},
+        ...context,
+      },
+    }),
+
+  securityViolation: (message: string, violationCode: string, context: Partial<ErrorContext> = {}) =>
+    new EnhancedISPError({
+      code: ErrorCode.SECURITY_VIOLATION,
+      message,
+      context: {
+        operation: "security_violation",
+        resource: "tenant",
+        resourceId: violationCode,
+        businessProcess: "security",
+        customerImpact: "high",
+        metadata: context.metadata || {},
+        ...context,
+      },
+      escalationRequired: true,
+    }),
+};
+
+// Helper to upgrade legacy error objects to enhanced errors
+export const ErrorMigrationHelper = {
+  upgradeError: (legacyError: any, context: Partial<ErrorContext> = {}): EnhancedISPError => {
+    const category = legacyError.category || "unknown";
+    let code: ErrorCode = ErrorCode.UNKNOWN_ERROR;
+
+    if (category === "network" && legacyError.status === 429) code = ErrorCode.NETWORK_RATE_LIMITED;
+    else if (category === "network") code = ErrorCode.NETWORK_CONNECTION_FAILED;
+    else if (category === "authentication") code = ErrorCode.AUTH_TOKEN_EXPIRED;
+    else if (category === "authorization") code = ErrorCode.AUTHZ_INSUFFICIENT_PERMISSIONS;
+    else if (category === "validation") code = ErrorCode.VALIDATION_BUSINESS_RULE;
+    else if (category === "system" && legacyError.status === 503) code = ErrorCode.SYSTEM_MAINTENANCE;
+
+    return new EnhancedISPError({
+      code,
+      message: legacyError.message || "Unknown error",
+      context: {
+        operation: context.operation || "legacy_error",
+        businessProcess: context.businessProcess || "migration",
+        ...context,
+        correlationId: legacyError.correlationId,
+      } as ErrorContext,
+      correlationId: legacyError.correlationId,
+      status: legacyError.status,
+      userMessage: legacyError.userMessage,
+      retryable: legacyError.retryable,
+      technicalDetails: legacyError.technicalDetails,
+    });
+  },
+
+  upgradeBatch: (legacyErrors: any[], contextProvider: (err: any) => Partial<ErrorContext>) =>
+    legacyErrors.map((err) => ErrorMigrationHelper.upgradeError(err, contextProvider(err))),
 };
 
 // Enhanced error handler for API responses
@@ -695,3 +840,35 @@ export function handleApiError(error: any, context: ErrorContext): EnhancedISPEr
 }
 
 export default EnhancedISPError;
+
+// Simple hook facade for enhanced error handling in tests
+export function useEnhancedErrorHandler() {
+  const handleError = (error: any, context: Partial<ErrorContext>) => {
+    const normalizedContext: ErrorContext = {
+      operation: context.operation || "unknown_operation",
+      resource: context.resource,
+      resourceId: context.resourceId,
+      userId: context.userId,
+      tenantId: context.tenantId,
+      businessProcess: context.businessProcess || "general",
+      customerImpact: context.customerImpact || "medium",
+      metadata: context.metadata || {},
+      correlationId: context.correlationId,
+    };
+
+    return handleApiError(error, normalizedContext);
+  };
+
+  return {
+    handleError,
+    handleApiError: (error: any, operation: string, resource?: string) =>
+      handleApiError(error, {
+        operation,
+        resource,
+        businessProcess: "api_request",
+        customerImpact: "medium",
+        metadata: {},
+      }),
+    recover: () => {},
+  };
+}

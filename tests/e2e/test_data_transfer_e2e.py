@@ -20,6 +20,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.data_transfer.core import TransferStatus
 from dotmac.platform.data_transfer.models import TransferType
@@ -29,6 +30,12 @@ from dotmac.platform.data_transfer.repository import TransferJobRepository
 
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+
+
+@pytest_asyncio.fixture
+async def db_session(e2e_db_session):
+    """Use the per-test E2E database session."""
+    yield e2e_db_session
 
 
 @pytest.fixture(autouse=True)
@@ -624,46 +631,49 @@ class TestJobCancellationE2E:
     async def test_cancel_job_success(self, client, create_transfer_job, db_session, tenant_id):
         """Test successfully cancelling a job."""
         job = await create_transfer_job()
+        job_id = job.id
 
-        response = await client.delete(f"/api/v1/data-transfer/jobs/{job.id}")
+        response = await client.delete(f"/api/v1/data-transfer/jobs/{job_id}")
 
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
-        assert str(job.id) in data["message"]
+        assert str(job_id) in data["message"]
         assert "cancelled" in data["message"]
 
         db_session.expire_all()
         repo = TransferJobRepository(db_session)
-        stored = await repo.get_job(job.id, tenant_id)
+        stored = await repo.get_job(job_id, tenant_id)
         assert stored.status == TransferStatus.CANCELLED.value
 
     @pytest.mark.asyncio
     async def test_cancel_running_job(self, client, create_transfer_job, db_session, tenant_id):
         """Test cancelling a currently running job."""
         job = await create_transfer_job(status=TransferStatus.RUNNING)
+        job_id = job.id
 
-        response = await client.delete(f"/api/v1/data-transfer/jobs/{job.id}")
+        response = await client.delete(f"/api/v1/data-transfer/jobs/{job_id}")
 
         assert response.status_code == 200
         data = response.json()
         assert "cancelled" in data["message"]
         db_session.expire_all()
         repo = TransferJobRepository(db_session)
-        stored = await repo.get_job(job.id, tenant_id)
+        stored = await repo.get_job(job_id, tenant_id)
         assert stored.status == TransferStatus.CANCELLED.value
 
     @pytest.mark.asyncio
     async def test_cancel_pending_job(self, client, create_transfer_job, db_session, tenant_id):
         """Test cancelling a pending job."""
         job = await create_transfer_job(status=TransferStatus.PENDING)
+        job_id = job.id
 
-        response = await client.delete(f"/api/v1/data-transfer/jobs/{job.id}")
+        response = await client.delete(f"/api/v1/data-transfer/jobs/{job_id}")
 
         assert response.status_code == 200
         db_session.expire_all()
         repo = TransferJobRepository(db_session)
-        stored = await repo.get_job(job.id, tenant_id)
+        stored = await repo.get_job(job_id, tenant_id)
         assert stored.status == TransferStatus.CANCELLED.value
 
 

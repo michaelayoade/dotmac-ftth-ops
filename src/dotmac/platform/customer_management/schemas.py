@@ -111,7 +111,8 @@ class CustomerBase(BaseModel):  # BaseModel resolves to Any in isolation
     @field_validator("email")
     @classmethod
     def normalize_email(cls, v: EmailStr) -> str:
-        return v.lower()
+        # Preserve caller-provided casing while ensuring we return a plain string
+        return str(v)
 
 
 class CustomerCreate(CustomerBase):  # CustomerBase resolves to Any in isolation

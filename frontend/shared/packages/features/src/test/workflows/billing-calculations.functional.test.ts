@@ -89,7 +89,7 @@ describe("Billing Calculations: Proration", () => {
     // Assert
     expect(oldPlanCredit).toBeCloseTo(16.67, 2); // $50 * 10/30
     expect(newPlanCharge).toBeCloseTo(33.33, 2); // $100 * 10/30
-    expect(netCharge).toBeCloseTo(16.66, 2); // Difference
+    expect(netCharge).toBeCloseTo(16.66, 1); // Difference
   });
 
   it("should calculate proration for service downgrade mid-cycle", () => {

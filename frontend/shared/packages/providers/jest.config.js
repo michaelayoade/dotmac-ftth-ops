@@ -2,7 +2,7 @@
 const config = {
   displayName: "@dotmac/providers",
   testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["<rootDir>/__tests__/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/__tests__/setup.tsx"],
   testMatch: [
     "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
     "<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}",

@@ -269,7 +269,7 @@ class TransferJobRequest(BaseModel):  # BaseModel resolves to Any in isolation
 class TransferJobResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Transfer job response."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
     job_id: UUID = Field(default_factory=uuid4, description="Unique job ID")
     name: str = Field(..., description="Job name")

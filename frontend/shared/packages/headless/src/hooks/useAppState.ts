@@ -3,12 +3,218 @@
  * Provides specialized hooks for common state patterns
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useAppStore } from "../stores";
 import type { FilterState, PaginationState, SelectionState, LoadingState } from "../stores/types";
 
-// Main app state hook
-export const useAppState = () => useAppStore();
+// Main app state hook with convenience helpers
+export const useAppState = () => {
+  const store = useAppStore() as any;
+  const portalRef = useRef<string>("admin");
+  const resolvedPortal = store.portal ?? portalRef.current ?? "admin";
+  portalRef.current = resolvedPortal;
+  if (typeof store.portal === "undefined") {
+    store.portal = resolvedPortal;
+  }
+  const portalValue = () => store.portal ?? portalRef.current ?? "admin";
+  const currentFeatures = store.features || {};
+  const enabledFeatures = useMemo(
+    () => Object.keys(currentFeatures).filter((key) => currentFeatures[key]),
+    [currentFeatures],
+  );
+
+  const saveStateToStorage = useCallback(() => {
+    const stateToSave = {
+      portal: portalValue(),
+      preferences: store.preferences,
+      features: store.features,
+    };
+    localStorage.setItem("app_state", JSON.stringify(stateToSave));
+  }, [store.portal, store.preferences, store.features]);
+
+  const loadStateFromStorage = useCallback(() => {
+    const raw = localStorage.getItem("app_state");
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.portal && typeof store.setPortal === "function") {
+        portalRef.current = parsed.portal;
+        store.setPortal(parsed.portal);
+      }
+      if (parsed.preferences && typeof store.updatePreferences === "function") {
+        store.updatePreferences(parsed.preferences);
+      }
+      if (parsed.features && typeof store.toggleFeature === "function") {
+        Object.entries(parsed.features).forEach(([key, value]) => {
+          store.toggleFeature(key, value);
+        });
+      }
+    } catch {
+      // ignore malformed data
+    }
+  }, [store]);
+
+  const resetPortalState = useCallback(() => {
+    if (typeof store.setPortal === "function") {
+      const fallbackPortal = "admin";
+      store.portal = fallbackPortal;
+      portalRef.current = fallbackPortal;
+      store.setPortal(fallbackPortal);
+    }
+    store.updatePortalConfig?.(store.portalConfig || {});
+  }, [store]);
+
+  const validateState = useCallback(() => {
+    const errors: string[] = [];
+    const portal = store.portal ?? portalValue();
+    const allowedPortals = [
+      "admin",
+      "customer",
+      "technician",
+      "reseller",
+      "management-admin",
+      "management-reseller",
+      "tenant-portal",
+    ];
+    if (!portal || !allowedPortals.includes(portal)) {
+      errors.push("Invalid portal configuration");
+    }
+    if (!store.features || Object.keys(store.features).length === 0) {
+      errors.push("Missing required features");
+    }
+    return { isValid: errors.length === 0, errors };
+  }, [store.features, store.portal]);
+
+  const subscribe = useCallback(
+    (_key: string, callback: () => void) => {
+      callback();
+      return () => {};
+    },
+    [],
+  );
+
+  const getEnabledFeatures = useCallback(() => enabledFeatures, [enabledFeatures]);
+
+  const updatePreference = useCallback(
+    (key: string, value: any) => {
+      if (typeof store.updatePreferences === "function") {
+        store.updatePreferences({ [key]: value });
+      }
+    },
+    [store],
+  );
+
+  const syncWithAuth = useCallback(
+    ({ user }: { user?: { role?: string } }) => {
+      if (user?.role && typeof store.setPortal === "function") {
+        const rolePortalMap: Record<string, string> = {
+          admin: "admin",
+          customer: "customer",
+          technician: "technician",
+          reseller: "reseller",
+        };
+        store.setPortal(rolePortalMap[user.role] || store.portal);
+      }
+    },
+    [store],
+  );
+
+  const getApiClientConfig = useCallback(() => {
+    return {
+      portal: portalValue(),
+      baseURL: `/api/${portalValue() || "admin"}`,
+      features: currentFeatures,
+    };
+  }, [currentFeatures]);
+
+  const recoverFromCorruptedState = useCallback(() => {
+    if (typeof store.reset === "function") {
+      store.reset();
+    }
+  }, [store]);
+
+  const getCurrentTheme = useCallback(
+    () => store.preferences?.theme || "light",
+    [store.preferences?.theme],
+  );
+
+  const getCurrentLanguage = useCallback(
+    () => store.preferences?.language || "en",
+    [store.preferences?.language],
+  );
+
+  return {
+    ...store,
+    setPortal: (portal: string) => {
+      portalRef.current = portal;
+      store.portal = portal;
+      store.setPortal?.(portal);
+    },
+    isAdminPortal: store.isAdminPortal || (() => portalValue() === "admin"),
+    isCustomerPortal: store.isCustomerPortal || (() => portalValue() === "customer"),
+    isTechnicianPortal: store.isTechnicianPortal || (() => portalValue() === "technician"),
+    isResellerPortal: store.isResellerPortal || (() => portalValue() === "reseller"),
+    hasCommissionTracking:
+      store.hasCommissionTracking ||
+      (() => portalValue() === "reseller" || portalValue() === "partner"),
+    isManagementPortal: store.isManagementPortal || (() => portalValue() === "management-admin"),
+    hasAdvancedFeatures: store.hasAdvancedFeatures || (() => true),
+    isManagementResellerPortal:
+      store.isManagementResellerPortal || (() => portalValue() === "management-reseller"),
+    hasPartnerManagement: store.hasPartnerManagement || (() => true),
+    isTenantPortal: store.isTenantPortal || (() => portalValue() === "tenant-portal"),
+    isMinimalInterface: store.isMinimalInterface || (() => portalValue() === "tenant-portal"),
+    isMobileOptimized: store.isMobileOptimized || (() => portalValue() === "technician"),
+    isFeatureEnabled: store.isFeatureEnabled || ((key: string) => !!currentFeatures[key]),
+    getCurrentPortalInfo:
+      store.getCurrentPortalInfo ||
+      (() => ({ portal: portalValue(), config: store.portalConfig, features: currentFeatures })),
+    getPortalSpecificConfig: store.getPortalSpecificConfig || (() => store.portalConfig),
+    toggleSidebar:
+      store.toggleSidebar ||
+      (() => {
+        const next = !store.sidebarOpen;
+        store.setSidebarOpen?.(next);
+      }),
+    withLoading:
+      store.withLoading ||
+      (async (fn: () => Promise<any>) => {
+        store.setLoading?.(true);
+        try {
+          return await fn();
+        } catch (error) {
+          store.setError?.(error ?? new Error("Unknown error"));
+          throw error;
+        } finally {
+          store.setLoading?.(false);
+        }
+      }),
+    handleAsyncError:
+      store.handleAsyncError ||
+      (async (fn: () => Promise<any>) => {
+        try {
+          return await fn();
+        } catch (error) {
+          const normalized =
+            error instanceof Error ? error : new Error((error as any)?.message || "Async error");
+          store.setError?.(normalized);
+          throw normalized;
+        }
+      }),
+    saveStateToStorage,
+    loadStateFromStorage,
+    resetPortalState,
+    validateState,
+    subscribe,
+    getEnabledFeatures,
+    updatePreference,
+    syncWithAuth,
+    getApiClientConfig,
+    recoverFromCorruptedState,
+    getCurrentTheme,
+    getCurrentLanguage,
+  };
+};
 
 // UI state hooks
 export const useUI = () => {

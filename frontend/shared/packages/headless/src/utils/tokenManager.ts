@@ -107,11 +107,19 @@ class SecureTokenManager {
       if (!payload) {
         return null;
       }
-      const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+      const decoded = this.decodeBase64(payload);
       return JSON.parse(decoded) as TokenPayload;
     } catch (_error) {
       return null;
     }
+  }
+
+  private decodeBase64(value: string): string {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    if (typeof atob === "function") {
+      return atob(normalized);
+    }
+    return Buffer.from(normalized, "base64").toString("binary");
   }
 
   // Token validation composition helpers
@@ -129,7 +137,11 @@ class SecureTokenManager {
           return null;
         }
         const headerB64 = header.replace(/-/g, "+").replace(/_/g, "/");
-        return JSON.parse(atob(headerB64));
+        const decoded =
+          typeof atob === "function"
+            ? atob(headerB64)
+            : Buffer.from(headerB64, "base64").toString("binary");
+        return JSON.parse(decoded);
       } catch {
         return null;
       }
@@ -175,15 +187,18 @@ class SecureTokenManager {
   validateTokenFormat(token: string): boolean {
     try {
       // Validate token structure
-      if (!TokenManager.TokenValidationHelpers.validateTokenParts(token)) {
+      if (!SecureTokenManager.TokenValidationHelpers.validateTokenParts(token)) {
         return false;
       }
 
       // Validate algorithm
-      const header = TokenManager.TokenValidationHelpers.decodeTokenHeader(token);
+      const header = SecureTokenManager.TokenValidationHelpers.decodeTokenHeader(token);
       if (
         !header ||
-        !TokenManager.TokenValidationHelpers.validateAlgorithm(header.alg, this.VALID_ALGORITHMS)
+        !SecureTokenManager.TokenValidationHelpers.validateAlgorithm(
+          header.alg,
+          this.VALID_ALGORITHMS,
+        )
       ) {
         return false;
       }
@@ -196,9 +211,9 @@ class SecureTokenManager {
 
       // Run all payload validations
       return (
-        TokenManager.TokenValidationHelpers.validateRequiredFields(payload) &&
-        TokenManager.TokenValidationHelpers.validateIssuer(payload.iss) &&
-        TokenManager.TokenValidationHelpers.validateAudience(payload.aud)
+        SecureTokenManager.TokenValidationHelpers.validateRequiredFields(payload) &&
+        SecureTokenManager.TokenValidationHelpers.validateIssuer(payload.iss) &&
+        SecureTokenManager.TokenValidationHelpers.validateAudience(payload.aud)
       );
     } catch (_error) {
       return false;

@@ -54,6 +54,8 @@ export const EnhancedErrorDisplay: React.FC<EnhancedErrorDisplayProps> = ({
   return (
     <div
       className={`rounded-lg border-2 p-4 ${severityColors[errorData.error.severity]} ${className}`}
+      role="alert"
+      aria-live="polite"
     >
       {/* Error Header */}
       <div className="flex items-start justify-between">
@@ -76,34 +78,37 @@ export const EnhancedErrorDisplay: React.FC<EnhancedErrorDisplayProps> = ({
           </div>
         </div>
 
-        {onDismiss && (
-          <button
-            onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Dismiss error"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-        )}
+        <button
+          onClick={onDismiss || (() => {})}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Dismiss error"
+        >
+          <span className="sr-only">Dismiss error</span>
+          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
       </div>
 
       {/* User Message */}
       <div className="mt-3">
-        <p className="text-base font-medium">{errorData.userMessage}</p>
+        <p className="text-base font-medium">
+          {errorData.error.message || errorData.userMessage}
+        </p>
+        {errorData.userMessage && errorData.userMessage !== errorData.error.message && (
+          <p className="text-sm opacity-80 mt-1">{errorData.userMessage}</p>
+        )}
 
         {/* Context Information */}
         {(errorData.context.operation || errorData.context.resource) && (
           <div className="mt-2 text-sm opacity-75">
             {errorData.context.operation && <span>Operation: {errorData.context.operation}</span>}
             {errorData.context.resource && (
-              <span>
-                {errorData.context.operation && " • "}
+              <span className={errorData.context.operation ? "ml-2" : ""}>
                 Resource: {errorData.context.resource}
                 {errorData.context.resourceId && ` (${errorData.context.resourceId})`}
               </span>
@@ -133,12 +138,12 @@ export const EnhancedErrorDisplay: React.FC<EnhancedErrorDisplayProps> = ({
               <p className="font-medium text-sm">
                 Customer Impact: {errorData.context.customerImpact}
               </p>
-              {errorData.context.customerImpact === "high" ||
-                (errorData.context.customerImpact === "critical" && (
-                  <p className="text-xs mt-1">
-                    This error may significantly impact customer experience.
-                  </p>
-                ))}
+              {(errorData.context.customerImpact === "high" ||
+                errorData.context.customerImpact === "critical") && (
+                <p className="text-xs mt-1">
+                  This error may significantly impact customer experience.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -151,7 +156,7 @@ export const EnhancedErrorDisplay: React.FC<EnhancedErrorDisplayProps> = ({
             onClick={onRetry}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
           >
-            {retryAfter ? `Retry in ${retryAfter}s` : "Try Again"}
+            {retryAfter ? `Try Again (${retryAfter}s)` : "Try Again"}
           </button>
         )}
 
@@ -199,32 +204,21 @@ export const EnhancedErrorDisplay: React.FC<EnhancedErrorDisplayProps> = ({
       {/* Technical Details (Collapsible) */}
       {showTechnicalDetails &&
         (errorData.details.technicalMessage || errorData.details.debugInfo) && (
-          <details className="mt-4">
+          <details className="mt-4" open>
             <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-800">
               Technical Details
             </summary>
             <div className="mt-2 p-3 bg-gray-100 rounded text-xs font-mono">
-              <p>
-                <strong>Error ID:</strong> {errorData.error.id}
-              </p>
-              <p>
-                <strong>Timestamp:</strong> {errorData.error.timestamp}
-              </p>
-              {errorData.details.requestId && (
-                <p>
-                  <strong>Request ID:</strong> {errorData.details.requestId}
-                </p>
-              )}
+              <p>{`Error ID: ${errorData.error.id}`}</p>
+              <p>{`Timestamp: ${errorData.error.timestamp}`}</p>
+              {errorData.details.requestId && <p>{`Request ID: ${errorData.details.requestId}`}</p>}
               {errorData.context.correlationId && (
-                <p>
-                  <strong>Correlation ID:</strong> {errorData.context.correlationId}
-                </p>
+                <p>{`Correlation ID: ${errorData.context.correlationId}`}</p>
               )}
-              {errorData.details.technicalMessage && (
-                <p className="mt-2">
-                  <strong>Technical Message:</strong> {errorData.details.technicalMessage}
-                </p>
-              )}
+              {errorData.details.technicalMessage &&
+                errorData.details.technicalMessage !== errorData.error.message && (
+                  <p className="mt-2">{`Technical Message: ${errorData.details.technicalMessage}`}</p>
+                )}
               {errorData.details.debugInfo && (
                 <div className="mt-2">
                   <strong>Debug Information:</strong>
@@ -369,6 +363,7 @@ export interface EnhancedErrorBoundaryProps {
 interface EnhancedErrorBoundaryState {
   hasError: boolean;
   error: EnhancedISPError | null;
+  awaitingRecovery: boolean;
 }
 
 export class EnhancedErrorBoundary extends React.Component<
@@ -377,7 +372,7 @@ export class EnhancedErrorBoundary extends React.Component<
 > {
   constructor(props: EnhancedErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, awaitingRecovery: false };
   }
 
   static getDerivedStateFromError(error: Error): EnhancedErrorBoundaryState {
@@ -390,6 +385,7 @@ export class EnhancedErrorBoundary extends React.Component<
         businessProcess: "ui_rendering",
         customerImpact: "medium",
       },
+      retryable: true,
       technicalDetails: {
         stack: error.stack,
         name: error.name,
@@ -399,6 +395,7 @@ export class EnhancedErrorBoundary extends React.Component<
     return {
       hasError: true,
       error: enhancedError,
+      awaitingRecovery: false,
     };
   }
 
@@ -408,10 +405,23 @@ export class EnhancedErrorBoundary extends React.Component<
     }
   }
 
+  override componentDidUpdate(prevProps: Readonly<EnhancedErrorBoundaryProps>): void {
+    if (
+      this.state.awaitingRecovery &&
+      (prevProps.children !== this.props.children || prevProps.fallback !== this.props.fallback)
+    ) {
+      this.setState({ awaitingRecovery: false });
+    }
+  }
+
   override render(): ReactNode {
+    if (this.state.awaitingRecovery) {
+      return null;
+    }
+
     if (this.state.hasError && this.state.error) {
       const resetError = () => {
-        this.setState({ hasError: false, error: null });
+        this.setState({ hasError: false, error: null, awaitingRecovery: true });
       };
 
       if (this.props.fallback) {
@@ -422,7 +432,7 @@ export class EnhancedErrorBoundary extends React.Component<
         <EnhancedErrorDisplay
           error={this.state.error}
           onRetry={resetError}
-          showTechnicalDetails={true}
+          showTechnicalDetails={false}
           className="m-4"
         />
       );

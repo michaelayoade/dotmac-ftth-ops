@@ -9,12 +9,9 @@ const config = {
   ],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^@dotmac/headless/(.*)$": "<rootDir>/src/$1",
+    "^@dotmac/headless$": "<rootDir>/src",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-    // Mock React Query for data fetching hooks
-    "^@tanstack/react-query$": "<rootDir>/__tests__/mocks/react-query.js",
-    // Mock Zustand for state management hooks
-    "^zustand$": "<rootDir>/__tests__/mocks/zustand.js",
-    "^zustand/middleware$": "<rootDir>/__tests__/mocks/zustand-middleware.js",
     // Provide shared testing utilities + MSW server
     "^@dotmac/testing$": "<rootDir>/../primitives/src/testing/index.ts",
   },

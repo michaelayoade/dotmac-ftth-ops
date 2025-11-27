@@ -59,8 +59,21 @@ export class IdentityApiClient extends BaseApiClient {
     return this.put(`/api/identity/users/${userId}`, data);
   }
 
+  async updateUserPermissions(userId: string, permissions: string[]): Promise<{ data: UserData }> {
+    return this.put(`/api/identity/users/${userId}/permissions`, { permissions });
+  }
+
   async deleteUser(userId: string): Promise<{ success: boolean }> {
     return this.delete(`/api/identity/users/${userId}`);
+  }
+
+  // Portal ID operations
+  async generatePortalId(customerId: string): Promise<{ data: any }> {
+    return this.post(`/api/identity/customers/${customerId}/portal-id`);
+  }
+
+  async validatePortalId(portalId: string): Promise<{ data: any }> {
+    return this.get(`/api/identity/portal-id/${portalId}/validate`);
   }
 
   // Authentication operations
@@ -75,6 +88,13 @@ export class IdentityApiClient extends BaseApiClient {
   async refreshToken(refreshToken: string): Promise<{ data: any }> {
     return this.post("/api/identity/auth/refresh", {
       refresh_token: refreshToken,
+    });
+  }
+
+  async loginWithPortalId(portalId: string, password: string): Promise<{ data: any }> {
+    return this.post("/api/identity/auth/portal-login", {
+      portal_id: portalId,
+      password,
     });
   }
 }

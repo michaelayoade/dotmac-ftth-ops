@@ -106,12 +106,19 @@ export interface CommissionResult {
   auditTrail: string[];
 }
 
+export interface CommissionEngineConfig {
+  enableCaching?: boolean;
+}
+
 export class CommissionEngine {
   private tiers: CommissionTier[];
   private auditLog: string[] = [];
+  private cache: Map<string, CommissionResult> | null;
+  private history: Record<string, Array<Record<string, any>>> = {};
 
-  constructor(customTiers?: CommissionTier[]) {
+  constructor(customTiers?: CommissionTier[], config: CommissionEngineConfig = {}) {
     this.tiers = customTiers || DEFAULT_COMMISSION_TIERS;
+    this.cache = config.enableCaching ? new Map() : null;
   }
 
   private addAudit(message: string): void {
@@ -330,7 +337,157 @@ export class CommissionEngine {
       revenueNeeded,
     };
   }
+
+  calculateWithCaching(input: unknown): CommissionResult {
+    const key = JSON.stringify(input);
+    if (this.cache && this.cache.has(key)) {
+      const cached = this.cache.get(key)!;
+      return { ...cached, auditTrail: [...cached.auditTrail] };
+    }
+
+    const result = this.calculateCommission(input);
+    if (this.cache) {
+      this.cache.set(key, result);
+    }
+    return result;
+  }
+
+  generateChecksum(data: Record<string, unknown>): string {
+    const payload = JSON.stringify(data);
+    let hash = 0;
+    for (let i = 0; i < payload.length; i++) {
+      hash = (hash << 5) - hash + payload.charCodeAt(i);
+      hash |= 0;
+    }
+    return `chk_${Math.abs(hash)}`;
+  }
+
+  recordCalculation(calculation: Record<string, any>) {
+    const partnerId = calculation.partnerId || "unknown";
+    if (!this.history[partnerId]) {
+      this.history[partnerId] = [];
+    }
+    this.history[partnerId].push(calculation);
+  }
+
+  getCalculationHistory(partnerId: string, period?: string) {
+    const records = this.history[partnerId] || [];
+    if (!period) return records;
+    return records.filter((entry) => {
+      const timestamp = entry.date || entry.timestamp || entry.period || "";
+      return typeof timestamp === "string" && timestamp.includes(period);
+    });
+  }
 }
 
 // Global commission engine instance
 export const commissionEngine = new CommissionEngine();
+
+interface TierCommissionInput {
+  revenue: number;
+  tier: CommissionTier;
+  productType: string;
+  applyBonusRate?: boolean;
+}
+
+export function calculateTierCommission({
+  revenue,
+  tier,
+  productType,
+  applyBonusRate = false,
+}: TierCommissionInput) {
+  if (revenue < 0) {
+    return {
+      eligible: false,
+      reason: "Commission cannot be calculated for negative revenue",
+      total: 0,
+      baseCommission: 0,
+      productBonus: 0,
+      bonusCommission: 0,
+      tier: tier.id,
+      inputRevenue: revenue,
+    };
+  }
+
+  const eligible = revenue >= (tier.minimumRevenue ?? 0);
+  if (!eligible) {
+    return {
+      eligible,
+      reason: "Revenue below tier minimum",
+      total: 0,
+      baseCommission: 0,
+      productBonus: 0,
+      bonusCommission: 0,
+      tier: tier.id,
+      inputRevenue: revenue,
+    };
+  }
+
+  const baseCommission = revenue * (tier.baseRate || 0);
+  const multiplier = tier.productMultipliers?.[productType] ?? 1;
+  const productBonus = baseCommission * (multiplier - 1);
+  const bonusCommission = applyBonusRate && tier.bonusRate ? revenue * tier.bonusRate : 0;
+  const total = baseCommission * multiplier + bonusCommission;
+
+  return {
+    eligible: true,
+    reason: undefined,
+    baseCommission,
+    productBonus,
+    bonusCommission,
+    total,
+    tier: tier.id,
+    inputRevenue: revenue,
+  };
+}
+
+export function calculateTotalCommission({
+  sales,
+  tier,
+  period,
+}: {
+  sales: Array<{ revenue: number; productType: string; partnerId: string }>;
+  tier: CommissionTier;
+  period: string;
+}) {
+  const breakdown = sales.map((sale) => ({
+    partnerId: sale.partnerId,
+    ...calculateTierCommission({ revenue: sale.revenue, tier, productType: sale.productType }),
+  }));
+
+  const total = breakdown.reduce((sum, item) => sum + (item.total || 0), 0);
+
+  return { total, breakdown, period };
+}
+
+export function validateCommissionData(data: Record<string, any>) {
+  if (!data.partnerId || typeof data.revenue !== "number" || data.revenue < 0) {
+    throw new Error("Invalid commission data");
+  }
+  if (data.revenue > 1_000_000_000) {
+    throw new Error("Revenue exceeds maximum allowed");
+  }
+  const validProducts = [
+    "residential_basic",
+    "residential_premium",
+    "business_pro",
+    "enterprise",
+  ];
+  if (data.productType && !validProducts.includes(data.productType)) {
+    throw new Error("Invalid commission data");
+  }
+  if (data.partnerId?.startsWith("SUSPENDED")) {
+    throw new Error("Partner not eligible for commissions");
+  }
+  return true;
+}
+
+export function auditCommissionCalculation(inputData: Record<string, any>) {
+  return {
+    partnerId: inputData.partnerId,
+    calculationType: "tier_commission",
+    inputData,
+    timestamp: new Date().toISOString(),
+    checksum: commissionEngine.generateChecksum(inputData),
+  };
+}

@@ -532,6 +532,8 @@ def _should_run_integration(config: pytest.Config) -> bool:
     print(f"[DEBUG] _should_run_integration: invocation_args={invocation_args}, explicit_args={explicit_args}")  # noqa: T201
     for arg in (*invocation_args, *explicit_args):
         arg_str = str(arg)
+        if arg_str.startswith("-"):
+            continue
         # Only match explicit integration test directories, not files with "integration" in name
         if "tests/integration/" in arg_str or arg_str.endswith("tests/integration"):
             print(f"[DEBUG] _should_run_integration: True (tests/integration/ in arg={arg_str})")  # noqa: T201
@@ -607,6 +609,8 @@ def _import_base_and_models():
         "dotmac.platform.contacts.models",
         "dotmac.platform.genieacs.models",
         "dotmac.platform.customer_management.models",
+        "dotmac.platform.data_transfer.db_models",
+        "dotmac.platform.communications.models",
         "dotmac.platform.partner_management.models",
         "dotmac.platform.billing.models",
         "dotmac.platform.billing.bank_accounts.entities",
@@ -624,6 +628,7 @@ def _import_base_and_models():
         "dotmac.platform.deployment.models",
         "dotmac.platform.sales.models",
         "dotmac.platform.wireless.models",
+        "dotmac.platform.webhooks.models",
     ]
 
     for module_path in model_modules:

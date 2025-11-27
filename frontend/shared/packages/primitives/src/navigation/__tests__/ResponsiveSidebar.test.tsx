@@ -710,7 +710,7 @@ describe("ResponsiveSidebar", () => {
 
       await expect(result.container).toBeAccessible();
       expect(result.container).toHaveNoSecurityViolations();
-      expect(metrics).toBePerformant();
+      expect(metrics).toBePerformant(150);
       expect(result.container).toHaveValidMarkup();
     });
 

@@ -135,6 +135,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           event.preventDefault();
         }
 
+        if (showAsyncLoading && isAsyncLoading) {
+          return;
+        }
+
         // Handle secure click if provided
         if (onSecureClick) {
           if (showAsyncLoading) {
@@ -172,7 +176,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           }
         }
       },
-      [onClick, onSecureClick, preventFormSubmission, showAsyncLoading],
+      [isAsyncLoading, onClick, onSecureClick, preventFormSubmission, showAsyncLoading],
     );
 
     // Determine what to show inside button

@@ -7,21 +7,60 @@ import os
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-
-# Import after environment is set
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from dotmac.platform.db import Base
+from tests.fixtures.environment import _import_base_and_models
+
+# Ensure all ORM models are registered before creating tables
+_import_base_and_models()
 
 
 @pytest.fixture(autouse=True)
 def e2e_test_environment(monkeypatch):
     """Ensure E2E tests run with consistent environment configuration."""
     monkeypatch.setenv("TESTING", "1")
+    # Force lightweight, local dependencies for e2e runs
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    monkeypatch.setenv("STORAGE__PROVIDER", "local")
+    monkeypatch.setenv("STORAGE__LOCAL_PATH", "/tmp/dotmac-e2e-storage")
+    monkeypatch.setenv("DOTMAC_STORAGE_LOCAL_PATH", "/tmp/dotmac-e2e-storage")
     monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
     monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-for-e2e-tests")
     monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/15")
+
+
+@pytest_asyncio.fixture(scope="function")
+async def e2e_db_engine():
+    """Per-test async database engine using in-memory SQLite."""
+    engine = create_async_engine(
+        os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///:memory:"),
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    try:
+        yield engine
+    finally:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+        await engine.dispose()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def e2e_db_session(e2e_db_engine) -> AsyncSession:
+    """Async session bound to the per-test E2E engine."""
+    session_maker = async_sessionmaker(
+        e2e_db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    async with session_maker() as session:
+        yield session
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -58,45 +97,6 @@ def e2e_tenant_config(request):
     set_tenant_config(TenantConfiguration())
 
 
-@pytest_asyncio.fixture(scope="function")
-async def db_engine():
-    """Create test database engine for E2E tests."""
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        echo=False,
-    )
-
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    yield engine
-
-    # Cleanup
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-    await engine.dispose()
-
-
-@pytest_asyncio.fixture
-async def db_session(db_engine):
-    """Create test database session for E2E tests."""
-    async_session_maker = async_sessionmaker(
-        db_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
-
-    session = async_session_maker()
-    try:
-        yield session
-    finally:
-        await session.close()
-
-
 @pytest.fixture
 def tenant_id():
     """Standard tenant ID for E2E tests."""
@@ -111,7 +111,7 @@ def user_id():
 
 
 @pytest_asyncio.fixture
-async def async_client(db_engine, tenant_id, user_id):
+async def async_client(e2e_db_engine, tenant_id, user_id):
     """
     Create async HTTP client with dependency overrides for E2E tests.
 
@@ -120,16 +120,27 @@ async def async_client(db_engine, tenant_id, user_id):
     """
     from dotmac.platform.auth.core import UserInfo
     from dotmac.platform.auth.dependencies import get_current_user
+    from dotmac.platform.database import get_async_session as get_database_async_session
     from dotmac.platform.db import get_async_session
     from dotmac.platform.main import app
     from dotmac.platform.tenant import get_current_tenant_id
 
     # Create a session maker for the test engine
     test_session_maker = async_sessionmaker(
-        db_engine,
+        e2e_db_engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
+
+    # Ensure helper context managers inside the app use the per-test session maker
+    import dotmac.platform._db_legacy as legacy_db
+    import dotmac.platform.db as platform_db
+
+    original_session_maker = legacy_db._async_session_maker
+    original_session_maker_alias = legacy_db.async_session_maker
+    legacy_db._async_session_maker = test_session_maker
+    legacy_db.async_session_maker = test_session_maker
+    platform_db.async_session_maker = test_session_maker
 
     # Create mock user with tenant admin permissions for e2e tests
     # NOTE: Explicitly NOT granting "platform:*" or "*" to avoid making all users platform admins
@@ -234,6 +245,7 @@ async def async_client(db_engine, tenant_id, user_id):
     app.dependency_overrides[get_session_dependency] = (
         override_get_async_session  # Auth router uses this
     )
+    app.dependency_overrides[get_database_async_session] = override_get_async_session
     app.dependency_overrides[get_current_tenant_id] = lambda: tenant_id
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
@@ -263,6 +275,10 @@ async def async_client(db_engine, tenant_id, user_id):
         router_tenant_patch.stop()
         # Clear overrides after test
         app.dependency_overrides.clear()
+        # Restore global session makers
+        legacy_db._async_session_maker = original_session_maker
+        legacy_db.async_session_maker = original_session_maker_alias
+        platform_db.async_session_maker = original_session_maker_alias
 
 
 @pytest_asyncio.fixture

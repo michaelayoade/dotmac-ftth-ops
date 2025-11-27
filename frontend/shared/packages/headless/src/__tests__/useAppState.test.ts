@@ -57,6 +57,18 @@ describe("useAppState Hook", () => {
         (mockAppStateStore[key as keyof typeof mockAppStateStore] as jest.Mock).mockClear();
       }
     });
+    mockAppStateStore.portal = "admin";
+    mockAppStateStore.portalConfig = createMockPortalConfig("admin");
+    mockAppStateStore.features = createMockFeatureFlags();
+    mockAppStateStore.preferences = {
+      theme: "light",
+      language: "en",
+      timezone: "UTC",
+      notifications: true,
+    };
+    mockAppStateStore.sidebarOpen = true;
+    mockAppStateStore.loading = false;
+    mockAppStateStore.error = null;
   });
 
   describe("Initial State", () => {

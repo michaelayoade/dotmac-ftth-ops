@@ -61,7 +61,7 @@ def platform_admin_headers(platform_admin_id, platform_admin_tenant):
 
 
 @pytest_asyncio.fixture
-async def platform_admin_client(db_engine, platform_admin_id, platform_admin_tenant):
+async def platform_admin_client(e2e_db_engine, platform_admin_id, platform_admin_tenant):
     """
     Create async HTTP client for platform admin user.
 
@@ -69,7 +69,7 @@ async def platform_admin_client(db_engine, platform_admin_id, platform_admin_ten
     """
     # Create a session maker for the test engine
     test_session_maker = async_sessionmaker(
-        db_engine,
+        e2e_db_engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
@@ -115,7 +115,7 @@ async def platform_admin_client(db_engine, platform_admin_id, platform_admin_ten
 
 
 @pytest_asyncio.fixture
-async def seed_multi_tenant_data(db_engine):
+async def seed_multi_tenant_data(e2e_db_engine):
     """
     Seed database with multiple tenants for testing platform admin features.
 
@@ -123,7 +123,7 @@ async def seed_multi_tenant_data(db_engine):
     - 3 tenants with users and customers
     - Platform admin user
 
-    Note: Uses db_engine directly to avoid circular dependency with platform_admin_client fixture.
+    Note: Uses e2e_db_engine directly to avoid circular dependency with platform_admin_client fixture.
     """
     from datetime import datetime, timedelta
 
@@ -133,7 +133,7 @@ async def seed_multi_tenant_data(db_engine):
 
     # Create a session from the engine directly
     test_session_maker = async_sessionmaker(
-        db_engine,
+        e2e_db_engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )

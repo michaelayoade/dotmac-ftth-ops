@@ -47,6 +47,13 @@ from .template_service import (
 logger = structlog.get_logger(__name__)
 
 
+def queue_bulk_emails(
+    job_name: str, messages: list[EmailMessage], metadata: dict[str, Any] | None = None
+):
+    """Compatibility wrapper for bulk email queuing used in tests."""
+    return queue_bulk_emails_with_meta(job_name, messages, metadata)
+
+
 def _safe_user_context(user: Any | None) -> tuple[str | None, str | None]:
     """Return (user_id, tenant_id) tuples even when dependency injection is bypassed."""
     if user is None:
@@ -166,6 +173,7 @@ class SendEmailResponseSchema(BaseModel):  # BaseModel resolves to Any in isolat
 
     model_config = ConfigDict()
 
+    id: str | None = None  # Compatibility alias for message_id
     message_id: str
     status: str
     accepted: list[str]
@@ -234,8 +242,7 @@ async def send_email_endpoint(
         # Update communication status if we have a log entry
         if log_entry:
             try:
-                session_ctx = get_async_session_context()
-                async for db in session_ctx:
+                async with get_async_session_context() as db:
                     metrics_service = get_metrics_service(db)
                     status = (
                         CommunicationStatus.SENT
@@ -247,7 +254,6 @@ async def send_email_endpoint(
                         status=status,
                         provider_message_id=response.id,
                     )
-                    break
             except (SQLAlchemyError, RuntimeError) as db_error:
                 logger.warning("Could not update communication status", error=str(db_error))
 
@@ -261,6 +267,7 @@ async def send_email_endpoint(
         )
 
         return {
+            "id": response.id,
             "message_id": response.id,
             "status": CommunicationStatus.SENT.value,
             "accepted": to_list,
@@ -362,6 +369,7 @@ class TemplateResponse(BaseModel):  # BaseModel resolves to Any in isolation
     description: str | None = None
     channel: str | None = None
     subject: str | None = None
+    subject_template: str | None = None
     body_html: str | None = None
     body_text: str | None = None
     variables: list[dict[str, Any]] | list[str] = Field(default_factory=list)
@@ -426,6 +434,7 @@ async def create_template_endpoint(
                     description=obj.description,
                     channel="email",
                     subject=obj.subject_template,
+                    subject_template=obj.subject_template,
                     body_text=obj.text_template,
                     body_html=obj.html_template,
                     variables=obj.variables,
@@ -454,6 +463,7 @@ async def create_template_endpoint(
             description=request.description,
             channel=request.channel or "email",
             subject=template.subject_template,
+            subject_template=template.subject_template,
             body_text=template.text_template,
             body_html=template.html_template,
             variables=request.variables or [],
@@ -474,7 +484,7 @@ async def create_template_endpoint(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.get("/templates", response_model=TemplateListResponse)
+@router.get("/templates", response_model=list[TemplateResponse])
 async def list_templates_endpoint(
     channel: str | None = None,
     is_active: bool | None = None,
@@ -527,6 +537,7 @@ async def list_templates_endpoint(
                     description=tpl.description,
                     channel=tpl.type.value if hasattr(tpl, "type") else "email",
                     subject=tpl.subject_template,
+                    subject_template=tpl.subject_template,
                     body_text=tpl.text_template,
                     body_html=tpl.html_template,
                     variables=tpl.variables,
@@ -542,12 +553,7 @@ async def list_templates_endpoint(
                 for tpl in templates_db
             ]
 
-            return TemplateListResponse(
-                templates=resp_templates,
-                total=int(total),
-                page=page,
-                page_size=page_size,
-            )
+            return resp_templates
     except Exception as exc:
         logger.warning("DB template list failed, falling back to in-memory", error=str(exc))
 
@@ -577,6 +583,7 @@ async def list_templates_endpoint(
                 description=None,
                 channel="email",
                 subject=template.subject_template,
+                subject_template=template.subject_template,
                 body_text=template.text_template,
                 body_html=template.html_template,
                 variables=template.variables,
@@ -590,12 +597,7 @@ async def list_templates_endpoint(
             )
         )
 
-    return TemplateListResponse(
-        templates=resp_templates,
-        total=len(filtered),
-        page=page,
-        page_size=page_size,
-    )
+    return resp_templates
 
 
 @router.get("/templates/{template_id}", response_model=TemplateResponse)
@@ -623,6 +625,7 @@ async def get_template_endpoint(
                     description=obj.description,
                     channel=obj.type.value if hasattr(obj, "type") else "email",
                     subject=obj.subject_template,
+                    subject_template=obj.subject_template,
                     body_text=obj.text_template,
                     body_html=obj.html_template,
                     variables=obj.variables,
@@ -652,6 +655,7 @@ async def get_template_endpoint(
         description=None,
         channel="email",
         subject=template.subject_template,
+        subject_template=template.subject_template,
         body_text=template.text_template,
         body_html=template.html_template,
         variables=template.variables,
@@ -718,6 +722,7 @@ async def update_template_endpoint(
                     description=obj.description,
                     channel=obj.type.value if hasattr(obj, "type") else "email",
                     subject=obj.subject_template,
+                    subject_template=obj.subject_template,
                     body_text=obj.text_template,
                     body_html=obj.html_template,
                     variables=obj.variables,
@@ -751,6 +756,7 @@ async def update_template_endpoint(
         description=request.description,
         channel=request.channel or "email",
         subject=updated.subject_template,
+        subject_template=updated.subject_template,
         body_text=updated.text_template,
         body_html=updated.html_template,
         variables=request.variables or template.variables,
@@ -808,7 +814,14 @@ async def render_template_endpoint(
                         html_body=obj.html_template,
                         data=request.data,
                     )
-                    return rendered
+                    return RenderedTemplate(
+                        template_id=str(obj.id),
+                        subject=rendered.get("subject", ""),
+                        text_body=rendered.get("text_body"),
+                        html_body=rendered.get("html_body"),
+                        variables_used=[],
+                        missing_variables=[],
+                    )
         except Exception:
             logger.warning("DB render fallback to in-memory template_service")
 
@@ -967,11 +980,15 @@ async def queue_bulk_email_job(
             for msg in request.messages
         ]
 
-        job_id, task_id = queue_bulk_emails_with_meta(
+        queue_result = queue_bulk_emails(
             request.job_name,
             messages,
             metadata={"tenant_id": tenant_id, "job_name": request.job_name},
         )
+        if isinstance(queue_result, tuple):
+            job_id, task_id = queue_result
+        else:
+            job_id, task_id = queue_result, None
 
         result = {
             "job_id": job_id,
@@ -1394,11 +1411,9 @@ async def get_communication_stats(
     stats_data: dict[str, Any] = {}
     # Try to get real stats from database if available
     try:
-        session_ctx = get_async_session_context()
-        async for db in session_ctx:
+        async with get_async_session_context() as db:
             metrics_service = get_metrics_service(db)
             stats_data = await metrics_service.get_stats(tenant_id=tenant_id)
-            break
     except (SQLAlchemyError, RuntimeError) as db_error:
         logger.warning("Database not available, returning mock stats", error=str(db_error))
         stats_data = {
@@ -1415,11 +1430,16 @@ async def get_communication_stats(
     total_failed = stats_data.get("failed", 0)
     total_opened = stats_data.get("opened", 0)
     total_clicked = stats_data.get("clicked", 0)
+    pending = stats_data.get("pending", stats_data.get("queued", 0))
     delivery_rate = (total_delivered / total_sent) if total_sent else 0
     open_rate = (total_opened / total_sent) if total_sent else 0
     click_rate = (total_clicked / total_sent) if total_sent else 0
 
     return {
+        "sent": total_sent,
+        "delivered": total_delivered,
+        "failed": total_failed,
+        "pending": pending,
         "total_sent": total_sent,
         "total_delivered": total_delivered,
         "total_failed": total_failed,
@@ -1642,7 +1662,7 @@ async def get_communications_metrics(
     )
 
 
-@router.get("/activity", response_model=ActivityTimeline)
+@router.get("/activity", response_model=list[CommunicationActivity])
 async def get_recent_activity(
     limit: int = 10,
     offset: int = 0,
@@ -1650,13 +1670,12 @@ async def get_recent_activity(
     days: int | None = None,
     channel: str | None = None,
     current_user: UserInfo = Depends(get_current_user),
-) -> ActivityTimeline:
+) -> list[CommunicationActivity]:
     """Get recent communication activity."""
     user_id, tenant_id = _safe_user_context(current_user)
     # Try to get real activity from database if available
     try:
-        session_ctx = get_async_session_context()
-        async for db in session_ctx:
+        async with get_async_session_context() as db:
             metrics_service = get_metrics_service(db)
 
             # Parse type filter if provided
@@ -1689,22 +1708,7 @@ async def get_recent_activity(
                 count=len(activities),
                 tenant_id=tenant_id,
             )
-            points = [
-                ActivityPoint(
-                    date=activity.timestamp.date().isoformat(),
-                    sent=1,
-                    delivered=1 if activity.status == "delivered" else 0,
-                    failed=1 if activity.status == "failed" else 0,
-                    opened=0,
-                    clicked=0,
-                )
-                for activity in activities
-            ]
-            return ActivityTimeline(
-                activity=points,
-                start_date=(datetime.now(UTC) - timedelta(days=days or 30)).date().isoformat(),
-                end_date=datetime.now(UTC).date().isoformat(),
-            )
+            return activities
     except (SQLAlchemyError, RuntimeError) as db_error:
         logger.warning("Database not available, returning mock activity", error=str(db_error))
 
@@ -1767,11 +1771,7 @@ async def get_recent_activity(
         user_id=user_id or "unknown",
         tenant_id=tenant_id,
     )
-    return ActivityTimeline(
-        activity=points,
-        start_date=(datetime.now(UTC) - timedelta(days=days or 30)).date().isoformat(),
-        end_date=datetime.now(UTC).date().isoformat(),
-    )
+    return activities
 
 
 class BulkJobListResponse(BaseModel):  # BaseModel resolves to Any in isolation

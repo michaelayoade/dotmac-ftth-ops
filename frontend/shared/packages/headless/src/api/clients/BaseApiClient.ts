@@ -45,7 +45,13 @@ export class BaseApiClient {
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
+          const encoded =
+            typeof value === "object"
+              ? JSON.stringify(value)
+              : Array.isArray(value)
+                ? JSON.stringify(value)
+                : value;
+          searchParams.append(key, String(encoded));
         }
       });
     }
@@ -59,7 +65,7 @@ export class BaseApiClient {
         ...this.defaultHeaders,
         ...headers,
       },
-      signal: AbortSignal.timeout(timeout),
+      signal: this.createTimeoutSignal(timeout),
     };
 
     if (data && method !== "GET" && method !== "HEAD") {
@@ -70,15 +76,23 @@ export class BaseApiClient {
       const response = await fetch(finalUrl, requestOptions);
 
       if (!response.ok) {
-        throw this.createHttpError(response, endpoint, method);
+        throw await this.createHttpError(response, endpoint, method);
       }
 
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        return await response.json();
+      const responseHeaders = this.normalizeHeaders((response as any)?.headers);
+      const contentType = responseHeaders?.get?.("content-type");
+      if (response && typeof (response as any).json === "function") {
+        try {
+          return await (response as any).json();
+        } catch {
+          // fall through to raw response
+        }
+      }
+      if (contentType && contentType.includes("application/json") && (response as any)?.json) {
+        return await (response as any).json();
       }
 
-      return response as T;
+      return (response as unknown) as T;
     } catch (error) {
       if (error instanceof ISPError) {
         throw error;
@@ -118,9 +132,10 @@ export class BaseApiClient {
     method: string,
   ): Promise<ISPError> {
     let errorDetails: any = {};
+    const responseHeaders = this.normalizeHeaders((response as any)?.headers);
 
     try {
-      const contentType = response.headers.get("content-type");
+      const contentType = responseHeaders?.get?.("content-type");
       if (contentType?.includes("application/json")) {
         errorDetails = await response.json();
       } else {
@@ -131,7 +146,11 @@ export class BaseApiClient {
     }
 
     const baseMessage = `${method} ${endpoint} failed with status ${response.status}`;
-    const userMessage = errorDetails.message || response.statusText || "Request failed";
+    const userMessage =
+      errorDetails.message ||
+      response.statusText ||
+      this.getStandardStatusText(response.status) ||
+      "Request failed";
 
     return new ISPError({
       message: `${baseMessage}: ${userMessage}`,
@@ -150,6 +169,23 @@ export class BaseApiClient {
         responseBody: errorDetails,
       },
     });
+  }
+
+  private createTimeoutSignal(timeoutMs: number | undefined): AbortSignal | undefined {
+    const duration = typeof timeoutMs === "number" ? timeoutMs : 0;
+    if (typeof AbortSignal !== "undefined" && typeof (AbortSignal as any).timeout === "function") {
+      return (AbortSignal as any).timeout(duration);
+    }
+
+    if (typeof AbortController !== "undefined") {
+      const controller = new AbortController();
+      if (duration > 0) {
+        setTimeout(() => controller.abort(), duration);
+      }
+      return controller.signal;
+    }
+
+    return undefined;
   }
 
   private categorizeHttpError(
@@ -204,6 +240,42 @@ export class BaseApiClient {
         return "Service temporarily unavailable. Please try again later.";
       default:
         return serverMessage || "Something went wrong. Please try again.";
+    }
+  }
+
+  private getStandardStatusText(status: number): string | undefined {
+    const lookup: Record<number, string> = {
+      400: "Bad Request",
+      401: "Unauthorized",
+      403: "Forbidden",
+      404: "Not Found",
+      408: "Request Timeout",
+      409: "Conflict",
+      422: "Unprocessable Entity",
+      429: "Too Many Requests",
+      500: "Internal Server Error",
+      502: "Bad Gateway",
+      503: "Service Unavailable",
+      504: "Gateway Timeout",
+    };
+    return lookup[status];
+  }
+
+  private normalizeHeaders(
+    headers: Headers | Record<string, string> | undefined,
+  ): Headers | undefined {
+    if (!headers) {
+      return new Headers();
+    }
+
+    if (headers instanceof Headers) {
+      return headers;
+    }
+
+    try {
+      return new Headers(headers as Record<string, string>);
+    } catch (_e) {
+      return undefined;
     }
   }
 

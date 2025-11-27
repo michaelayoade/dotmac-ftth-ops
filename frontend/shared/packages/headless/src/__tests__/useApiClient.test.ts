@@ -5,6 +5,7 @@
 
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useApiClient } from "../hooks/useApiClient";
+import { useAuthStore } from "../auth/store";
 import {
   createMockUser,
   createMockTokens,
@@ -24,10 +25,27 @@ jest.mock("../auth/store", () => ({
   useAuthStore: jest.fn(() => mockAuthStore),
 }));
 
+const OriginalAbortController = global.AbortController;
+
 describe("useApiClient Hook", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (global.fetch as jest.Mock).mockClear();
+    mockAuthStore.tokens = createMockTokens();
+    mockAuthStore.user = createMockUser();
+    mockAuthStore.isAuthenticated = true;
+    mockAuthStore.refreshToken = jest.fn();
+    (useAuthStore as jest.Mock).mockImplementation(() => mockAuthStore);
+    global.AbortController = OriginalAbortController;
+    (global.fetch as jest.Mock).mockReset();
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      json: jest.fn().mockResolvedValue({}),
+      text: jest.fn().mockResolvedValue("{}"),
+      headers: new Headers({
+        "content-type": "application/json",
+      }),
+    });
   });
 
   describe("Basic API Requests", () => {
@@ -42,14 +60,17 @@ describe("useApiClient Hook", () => {
         response = await result.current.get("/api/test");
       });
 
-      expect(global.fetch).toHaveBeenCalledWith("/api/test", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
-          "Content-Type": "application/json",
-          "X-Tenant-ID": mockAuthStore.user.tenantId,
-        },
-      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/test",
+        expect.objectContaining({
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
+            "Content-Type": "application/json",
+            "X-Tenant-ID": mockAuthStore.user.tenantId,
+          },
+        }),
+      );
       expect(response).toEqual(mockData);
     });
 
@@ -65,15 +86,18 @@ describe("useApiClient Hook", () => {
         response = await result.current.post("/api/items", postData);
       });
 
-      expect(global.fetch).toHaveBeenCalledWith("/api/items", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
-          "Content-Type": "application/json",
-          "X-Tenant-ID": mockAuthStore.user.tenantId,
-        },
-        body: JSON.stringify(postData),
-      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/items",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
+            "Content-Type": "application/json",
+            "X-Tenant-ID": mockAuthStore.user.tenantId,
+          },
+          body: JSON.stringify(postData),
+        }),
+      );
       expect(response).toEqual(responseData);
     });
 
@@ -88,15 +112,18 @@ describe("useApiClient Hook", () => {
         response = await result.current.put("/api/items/1", updateData);
       });
 
-      expect(global.fetch).toHaveBeenCalledWith("/api/items/1", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
-          "Content-Type": "application/json",
-          "X-Tenant-ID": mockAuthStore.user.tenantId,
-        },
-        body: JSON.stringify(updateData),
-      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/items/1",
+        expect.objectContaining({
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
+            "Content-Type": "application/json",
+            "X-Tenant-ID": mockAuthStore.user.tenantId,
+          },
+          body: JSON.stringify(updateData),
+        }),
+      );
       expect(response).toEqual(updateData);
     });
 
@@ -109,14 +136,17 @@ describe("useApiClient Hook", () => {
         await result.current.delete("/api/items/1");
       });
 
-      expect(global.fetch).toHaveBeenCalledWith("/api/items/1", {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
-          "Content-Type": "application/json",
-          "X-Tenant-ID": mockAuthStore.user.tenantId,
-        },
-      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/items/1",
+        expect.objectContaining({
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${mockAuthStore.tokens.accessToken}`,
+            "Content-Type": "application/json",
+            "X-Tenant-ID": mockAuthStore.user.tenantId,
+          },
+        }),
+      );
     });
   });
 
@@ -460,6 +490,9 @@ describe("useApiClient Hook", () => {
     });
 
     afterEach(() => {
+      // Ensure no timers leak into subsequent tests
+      jest.runOnlyPendingTimers();
+      jest.clearAllTimers();
       jest.useRealTimers();
     });
 
@@ -599,13 +632,13 @@ describe("useApiClient Hook", () => {
     it("should allow manual request cancellation", async () => {
       const { result } = renderHook(() => useApiClient());
 
-      const requestPromise = act(async () => {
-        const request = result.current.get("/api/test");
+      let request: Promise<any>;
+      act(() => {
+        request = result.current.get("/api/test");
         result.current.cancelRequest("/api/test");
-        return request;
       });
 
-      await expect(requestPromise).rejects.toThrow(/aborted/i);
+      await expect(request!).rejects.toThrow(/aborted/i);
     });
   });
 });

@@ -458,7 +458,7 @@ export class ISPTestDataFactory {
         status: "online",
         uptime: 99.95,
         load: 12.8,
-        location: { lat: 40.713, lng: -74.0065 },
+        location: { lat: 40.713, lng: -74.006 },
       },
       ap: {
         id: "ap_001",
@@ -467,7 +467,7 @@ export class ISPTestDataFactory {
         status: "online",
         uptime: 99.92,
         connectedDevices: 23,
-        location: { lat: 40.7125, lng: -74.007 },
+        location: { lat: 40.7128, lng: -74.006 },
       },
     };
 
@@ -584,3 +584,14 @@ export class ISPTestDataFactory {
 }
 
 export default BusinessLogicTestFactory;
+
+// Expose ISP test data factory through the main factory for convenience in other suites
+(BusinessLogicTestFactory as any).ISPTestDataFactory = ISPTestDataFactory;
+
+// Provide a minimal test so Jest doesn't treat this helper file as an empty suite
+describe("BusinessLogicTestFactory helpers", () => {
+  it("makes portal and ISP factories available", () => {
+    expect(BusinessLogicTestFactory.createPortalConfig).toBeInstanceOf(Function);
+    expect((BusinessLogicTestFactory as any).ISPTestDataFactory).toBe(ISPTestDataFactory);
+  });
+});

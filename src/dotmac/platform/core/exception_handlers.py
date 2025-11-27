@@ -54,10 +54,13 @@ async def dotmac_error_handler(request: Request, exc: DotMacError) -> JSONRespon
 
     # Convert to standard response
     error_response = exc.to_standard_response()
+    content = error_response.to_dict()
+    # Preserve FastAPI-style detail for compatibility with tests/clients
+    content.setdefault("detail", error_response.message)
 
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response.to_dict(),
+        content=content,
         headers={"X-Correlation-ID": error_response.correlation_id},
     )
 
@@ -100,10 +103,14 @@ async def validation_error_handler(request: Request, exc: PydanticValidationErro
     )
 
     error_response = validation_error.to_standard_response()
+    content = error_response.to_dict()
+    content.setdefault("detail", error_response.message)
+    if validation_error.details:
+        content.setdefault("errors", validation_error.details)
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=error_response.to_dict(),
+        content=content,
         headers={"X-Correlation-ID": correlation_id},
     )
 
@@ -168,10 +175,12 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             ),
         },
     )
+    content = error_response.to_dict()
+    content.setdefault("detail", error_response.message)
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content=error_response.to_dict(),
+        content=content,
         headers={"X-Correlation-ID": correlation_id},
     )
 
@@ -221,6 +230,7 @@ async def http_exception_handler(request: Request, exc: Any) -> JSONResponse:
                 "path": request.url.path,
                 "method": request.method,
                 "status_code": status_code,
+                "detail": detail,
             },
         )
     else:
@@ -231,12 +241,17 @@ async def http_exception_handler(request: Request, exc: Any) -> JSONResponse:
                 "path": request.url.path,
                 "method": request.method,
                 "status_code": status_code,
+                "detail": detail,
             },
         )
 
+    content = error_response.to_dict()
+    # Add FastAPI-style detail for compatibility
+    content.setdefault("detail", detail)
+
     return JSONResponse(
         status_code=status_code,
-        content=error_response.to_dict(),
+        content=content,
         headers={"X-Correlation-ID": correlation_id},
     )
 

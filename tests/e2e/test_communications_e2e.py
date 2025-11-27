@@ -14,6 +14,7 @@ and database logging.
 from unittest.mock import patch
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy import select
 
@@ -21,6 +22,12 @@ from dotmac.platform.communications.email_service import EmailResponse
 from dotmac.platform.communications.models import CommunicationLog, CommunicationStatus
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+
+
+@pytest_asyncio.fixture
+async def db_session(e2e_db_session):
+    """Use the per-test E2E session instead of the global sync fixture."""
+    yield e2e_db_session
 
 
 class TestEmailSendingE2E:

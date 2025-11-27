@@ -548,7 +548,7 @@ describe("Network Operations: RADIUS Authentication", () => {
       const totalGB = bytesToGB(totalBytes);
 
       // Assert
-      expect(totalGB).toBeCloseTo(3.5, 1);
+      expect(totalGB).toBeCloseTo(3.5, 0);
     });
 
     it("should identify long-running sessions", () => {

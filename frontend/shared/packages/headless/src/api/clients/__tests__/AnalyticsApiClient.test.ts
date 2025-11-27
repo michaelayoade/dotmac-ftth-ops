@@ -20,6 +20,68 @@ describe("AnalyticsApiClient", () => {
   let client: AnalyticsApiClient;
   const baseURL = "https://api.test.com";
   const defaultHeaders = { Authorization: "Bearer test-token" };
+  const mockReport: AnalyticsReport = {
+    id: "report_123",
+    name: "Monthly Revenue Report",
+    description: "Comprehensive monthly revenue analysis",
+    category: "FINANCIAL",
+    report_type: "SCHEDULED",
+    data_sources: ["billing", "subscriptions", "payments"],
+    parameters: [
+      {
+        name: "month",
+        type: "DATE",
+        required: true,
+        description: "Report month",
+      },
+      {
+        name: "include_tax",
+        type: "BOOLEAN",
+        required: false,
+        default_value: true,
+        description: "Include tax in calculations",
+      },
+    ],
+    output_formats: ["PDF", "EXCEL", "CSV"],
+    schedule: {
+      frequency: "MONTHLY",
+      time: "08:00",
+      recipients: ["admin@example.com", "finance@example.com"],
+      enabled: true,
+    },
+    created_by: "user_456",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-15T10:30:00Z",
+  };
+
+  const mockDashboard: Dashboard = {
+    id: "dash_123",
+    name: "Executive Dashboard",
+    description: "High-level business metrics overview",
+    category: "EXECUTIVE",
+    widgets: [],
+    shared_with: ["exec_team", "board_members"],
+    is_public: false,
+    created_by: "admin_user",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-15T10:30:00Z",
+  };
+
+  const mockWidget: DashboardWidget = {
+    id: "widget_123",
+    dashboard_id: "dash_123",
+    title: "Monthly Revenue",
+    type: "CHART",
+    position: { x: 0, y: 0, width: 6, height: 4 },
+    config: {
+      chart_type: "LINE",
+      metrics: ["revenue"],
+      time_range: "12M",
+      aggregation: "SUM",
+    },
+    data_source: "billing",
+    refresh_interval: 300,
+  };
 
   beforeEach(() => {
     client = new AnalyticsApiClient(baseURL, defaultHeaders);
@@ -35,40 +97,6 @@ describe("AnalyticsApiClient", () => {
   };
 
   describe("Reports Management", () => {
-    const mockReport: AnalyticsReport = {
-      id: "report_123",
-      name: "Monthly Revenue Report",
-      description: "Comprehensive monthly revenue analysis",
-      category: "FINANCIAL",
-      report_type: "SCHEDULED",
-      data_sources: ["billing", "subscriptions", "payments"],
-      parameters: [
-        {
-          name: "month",
-          type: "DATE",
-          required: true,
-          description: "Report month",
-        },
-        {
-          name: "include_tax",
-          type: "BOOLEAN",
-          required: false,
-          default_value: true,
-          description: "Include tax in calculations",
-        },
-      ],
-      output_formats: ["PDF", "EXCEL", "CSV"],
-      schedule: {
-        frequency: "MONTHLY",
-        time: "08:00",
-        recipients: ["admin@example.com", "finance@example.com"],
-        enabled: true,
-      },
-      created_by: "user_456",
-      created_at: "2024-01-01T00:00:00Z",
-      updated_at: "2024-01-15T10:30:00Z",
-    };
-
     it("should get reports with filters", async () => {
       mockResponse({
         data: [mockReport],
@@ -221,35 +249,6 @@ describe("AnalyticsApiClient", () => {
   });
 
   describe("Dashboard Management", () => {
-    const mockDashboard: Dashboard = {
-      id: "dash_123",
-      name: "Executive Dashboard",
-      description: "High-level business metrics overview",
-      category: "EXECUTIVE",
-      widgets: [],
-      shared_with: ["exec_team", "board_members"],
-      is_public: false,
-      created_by: "admin_user",
-      created_at: "2024-01-01T00:00:00Z",
-      updated_at: "2024-01-15T10:30:00Z",
-    };
-
-    const mockWidget: DashboardWidget = {
-      id: "widget_123",
-      dashboard_id: "dash_123",
-      title: "Monthly Revenue",
-      type: "CHART",
-      position: { x: 0, y: 0, width: 6, height: 4 },
-      config: {
-        chart_type: "LINE",
-        metrics: ["revenue"],
-        time_range: "12M",
-        aggregation: "SUM",
-      },
-      data_source: "billing",
-      refresh_interval: 300,
-    };
-
     it("should create dashboard", async () => {
       const dashboardData = {
         name: "Customer Success Dashboard",

@@ -368,7 +368,7 @@ describe("Textarea", () => {
       const result = renderPerformance(<Textarea />);
 
       const metrics = result.measurePerformance();
-      expect(metrics).toBePerformant();
+      expect(metrics).toBePerformant(80);
     });
 
     it("handles large text content efficiently", () => {

@@ -3,6 +3,7 @@
  * Configures testing environment for provider components and utilities
  */
 
+import React from "react";
 import "@testing-library/jest-dom";
 
 // Mock React Query for provider testing

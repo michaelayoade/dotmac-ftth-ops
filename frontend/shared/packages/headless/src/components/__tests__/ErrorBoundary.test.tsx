@@ -4,10 +4,12 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { axe } from "jest-axe";
+import { axe, toHaveNoViolations } from "jest-axe";
 import React from "react";
 
 import { ErrorBoundary } from "../ErrorBoundary";
+
+expect.extend(toHaveNoViolations);
 
 // Mock the useErrorBoundary hook since it has dependencies
 jest.mock("../../hooks/useErrorHandler", () => ({

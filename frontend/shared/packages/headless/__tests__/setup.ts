@@ -50,16 +50,18 @@ jest.mock("@tanstack/react-query", () => ({
   })),
 }));
 
-// Mock Zustand for state management
-jest.mock("zustand", () => ({
-  create: jest.fn((fn) => fn),
-  subscribeWithSelector: jest.fn((fn) => fn),
-  persist: jest.fn((fn) => fn),
-  devtools: jest.fn((fn) => fn),
-}));
-
-// Mock fetch for API calls
-global.fetch = jest.fn();
+// Mock fetch for API calls with a safe default response
+const defaultFetch = jest.fn().mockResolvedValue({
+  ok: true,
+  status: 200,
+  statusText: "OK",
+  json: jest.fn().mockResolvedValue({}),
+  text: jest.fn().mockResolvedValue("{}"),
+  headers: new Headers({
+    "content-type": "application/json",
+  }),
+});
+global.fetch = defaultFetch as unknown as typeof fetch;
 
 // Mock localStorage and sessionStorage
 const localStorageMock = {
@@ -140,7 +142,9 @@ beforeEach(() => {
   sessionStorageMock.removeItem.mockClear();
 
   // Reset fetch mock
-  (global.fetch as jest.Mock).mockClear();
+  const impl = (defaultFetch as jest.Mock).getMockImplementation();
+  (global.fetch as jest.Mock).mockReset?.();
+  (global.fetch as jest.Mock).mockImplementation(impl || defaultFetch);
 
   // Mock console methods (can be overridden in individual tests)
   console.error = jest.fn();
@@ -412,9 +416,6 @@ Object.defineProperty(process.env, "NODE_ENV", {
   value: "test",
   writable: true,
 });
-
-// Mock timers for hook testing
-jest.useFakeTimers();
 
 // Mock ResizeObserver and IntersectionObserver for component testing
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
