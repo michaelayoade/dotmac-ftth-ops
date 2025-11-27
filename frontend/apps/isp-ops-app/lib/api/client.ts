@@ -30,16 +30,16 @@ export const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      // Preserve multi-tenant header from storage (set at login from Better Auth user)
+      // Preserve multi-tenant header from storage (set at login)
       const tenantId = window.localStorage?.getItem("tenant_id");
-      if (tenantId && config['headers']) {
-        config['headers']["X-Tenant-ID"] = tenantId;
+      if (tenantId && config["headers"]) {
+        config["headers"]["X-Tenant-ID"] = tenantId;
       }
 
       // Add X-Active-Tenant-Id header for partner multi-tenant access
       const activeManagedTenantId = localStorage.getItem("active_managed_tenant_id");
-      if (activeManagedTenantId && config['headers']) {
-        config['headers']["X-Active-Tenant-Id"] = activeManagedTenantId;
+      if (activeManagedTenantId && config["headers"]) {
+        config["headers"]["X-Active-Tenant-Id"] = activeManagedTenantId;
       }
     }
 
@@ -54,9 +54,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error['response']) {
+    if (error["response"]) {
       // Server responded with error status
-      const { status, data } = error['response'];
+      const { status, data } = error["response"];
 
       if (status === 401) {
         if (process.env["NODE_ENV"] !== "production") {
@@ -81,9 +81,9 @@ apiClient.interceptors.response.use(
       // Enhance error with API error details
       error.apiError = {
         status,
-        message: data?.['message'] || data?.['detail'] || "An error occurred",
-        code: data?.['error'] || data?.['code'],
-        details: data?.['details'],
+        message: data?.["message"] || data?.["detail"] || "An error occurred",
+        code: data?.["error"] || data?.["code"],
+        details: data?.["details"],
       };
     }
 

@@ -51,7 +51,7 @@ describe("graphql-client", () => {
             "X-Portal-Type": "ispAdmin",
             Authorization: "Bearer test-token",
           }),
-        })
+        }),
       );
 
       expect(result).toEqual(mockResponse.data);
@@ -92,7 +92,7 @@ describe("graphql-client", () => {
           headers: expect.objectContaining({
             Authorization: "Bearer test-token",
           }),
-        })
+        }),
       );
     });
 
@@ -118,7 +118,7 @@ describe("graphql-client", () => {
       });
 
       await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "GraphQL request failed: 500 Internal Server Error"
+        "GraphQL request failed: 500 Internal Server Error",
       );
     });
 
@@ -132,9 +132,7 @@ describe("graphql-client", () => {
         json: async () => mockResponse,
       });
 
-      await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "User not found"
-      );
+      await expect(graphqlClient.request("query { test }")).rejects.toThrow("User not found");
     });
 
     it("should throw error when response is missing data", async () => {
@@ -146,7 +144,7 @@ describe("graphql-client", () => {
       });
 
       await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "GraphQL response missing data"
+        "GraphQL response missing data",
       );
     });
 
@@ -162,7 +160,7 @@ describe("graphql-client", () => {
         expect.any(String),
         expect.objectContaining({
           credentials: "include",
-        })
+        }),
       );
     });
 
@@ -180,7 +178,7 @@ describe("graphql-client", () => {
           headers: expect.objectContaining({
             "X-Portal-Type": "ispAdmin",
           }),
-        })
+        }),
       );
     });
   });
@@ -189,9 +187,7 @@ describe("graphql-client", () => {
     it("should handle network errors", async () => {
       mockFetch.mockRejectedValue(new Error("Network error"));
 
-      await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "Network error"
-      );
+      await expect(graphqlClient.request("query { test }")).rejects.toThrow("Network error");
     });
 
     it("should handle malformed JSON response", async () => {
@@ -202,9 +198,7 @@ describe("graphql-client", () => {
         },
       });
 
-      await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "Invalid JSON"
-      );
+      await expect(graphqlClient.request("query { test }")).rejects.toThrow("Invalid JSON");
     });
 
     it("should handle multiple errors in response", async () => {
@@ -218,9 +212,7 @@ describe("graphql-client", () => {
       });
 
       // Should throw first error
-      await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "First error"
-      );
+      await expect(graphqlClient.request("query { test }")).rejects.toThrow("First error");
     });
 
     it("should handle error without message", async () => {
@@ -234,7 +226,7 @@ describe("graphql-client", () => {
       });
 
       await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "GraphQL request failed"
+        "GraphQL request failed",
       );
     });
   });
@@ -255,9 +247,7 @@ describe("graphql-client", () => {
         json: async () => mockResponse,
       });
 
-      const result = await graphqlClient.request<{ users: User[] }>(
-        "query { users { id name } }"
-      );
+      const result = await graphqlClient.request<{ users: User[] }>("query { users { id name } }");
 
       expect(result.users).toHaveLength(1);
       expect(result.users[0].id).toBe("1");
@@ -300,7 +290,7 @@ describe("graphql-client", () => {
 
       // Should throw because data is null (falsy)
       await expect(graphqlClient.request("query { test }")).rejects.toThrow(
-        "GraphQL response missing data"
+        "GraphQL response missing data",
       );
     });
 

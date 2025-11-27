@@ -510,9 +510,9 @@ export default function WorkflowHistoryPage() {
           {selectedIds.size > 0 && (
             <>
               <button
-              onClick={() => {
-                void handleBulkDelete();
-              }}
+                onClick={() => {
+                  void handleBulkDelete();
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
                 <Trash2 className="h-4 w-4" />

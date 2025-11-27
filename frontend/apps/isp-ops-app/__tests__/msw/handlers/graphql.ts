@@ -112,7 +112,7 @@
  * ```
  */
 
-import { graphql, HttpResponse } from 'msw';
+import { graphql, HttpResponse } from "msw";
 
 // ============================================================================
 // In-Memory Storage for GraphQL Data
@@ -272,7 +272,7 @@ export function createPaginatedResponse<T>(
   items: T[],
   totalCount: number,
   limit: number,
-  offset: number
+  offset: number,
 ) {
   const hasNextPage = offset + items.length < totalCount;
 
@@ -289,7 +289,7 @@ export function createPaginatedResponse<T>(
 function paginateList<T>(
   list: T[],
   limit: number = 50,
-  offset: number = 0
+  offset: number = 0,
 ): { items: T[]; totalCount: number; hasNextPage: boolean } {
   const totalCount = list.length;
   const items = list.slice(offset, offset + limit);
@@ -312,15 +312,15 @@ export function seedFiberData(data: {
       const id = cable.id || `cable-${index + 1}`;
       fiberCables.set(id, {
         id,
-        cableId: cable.cableId || `CABLE-${String(index + 1).padStart(6, '0')}`,
+        cableId: cable.cableId || `CABLE-${String(index + 1).padStart(6, "0")}`,
         name: cable.name || `Fiber Cable ${index + 1}`,
-        status: cable.status || 'active',
+        status: cable.status || "active",
         isActive: cable.isActive ?? true,
-        fiberType: cable.fiberType || 'single_mode',
+        fiberType: cable.fiberType || "single_mode",
         totalStrands: cable.totalStrands || 12,
         availableStrands: cable.availableStrands ?? 8,
         usedStrands: cable.usedStrands ?? 4,
-        installationType: cable.installationType || 'underground',
+        installationType: cable.installationType || "underground",
         lengthMeters: cable.lengthMeters || 1000,
         capacityUtilizationPercent: cable.capacityUtilizationPercent ?? 33.3,
         bandwidthCapacityGbps: cable.bandwidthCapacityGbps || 100,
@@ -339,8 +339,8 @@ export function seedFiberData(data: {
         id,
         siteId: point.siteId || `site-${index + 1}`,
         name: point.name || `Distribution Point ${index + 1}`,
-        pointType: point.pointType || 'fdt',
-        status: point.status || 'active',
+        pointType: point.pointType || "fdt",
+        status: point.status || "active",
         isActive: point.isActive ?? true,
         totalCapacity: point.totalCapacity || 48,
         availableCapacity: point.availableCapacity ?? 24,
@@ -360,14 +360,14 @@ export function seedFiberData(data: {
       const id = area.id || `area-${index + 1}`;
       serviceAreas.set(id, {
         id,
-        areaId: area.areaId || `AREA-${String(index + 1).padStart(4, '0')}`,
+        areaId: area.areaId || `AREA-${String(index + 1).padStart(4, "0")}`,
         name: area.name || `Service Area ${index + 1}`,
-        areaType: area.areaType || 'residential',
+        areaType: area.areaType || "residential",
         isActive: area.isActive ?? true,
         isServiceable: area.isServiceable ?? true,
         areaSqkm: area.areaSqkm || 5.0,
-        city: area.city || 'City',
-        stateProvince: area.stateProvince || 'State',
+        city: area.city || "City",
+        stateProvince: area.stateProvince || "State",
         homesPassed: area.homesPassed || 1000,
         homesConnected: area.homesConnected || 500,
         penetrationRatePercent: area.penetrationRatePercent ?? 50,
@@ -390,15 +390,15 @@ export function seedWirelessData(data: {
       accessPoints.set(id, {
         id,
         name: ap.name || `AP-${index + 1}`,
-        macAddress: ap.macAddress || `00:11:22:33:44:${String(index).padStart(2, '0')}`,
+        macAddress: ap.macAddress || `00:11:22:33:44:${String(index).padStart(2, "0")}`,
         ipAddress: ap.ipAddress || `10.0.0.${index + 1}`,
-        serialNumber: ap.serialNumber || `SN-${String(index + 1).padStart(8, '0')}`,
-        status: ap.status || 'online',
+        serialNumber: ap.serialNumber || `SN-${String(index + 1).padStart(8, "0")}`,
+        status: ap.status || "online",
         isOnline: ap.isOnline ?? true,
-        model: ap.model || 'UAP-AC-PRO',
-        manufacturer: ap.manufacturer || 'Ubiquiti',
-        ssid: ap.ssid || 'Corporate-WiFi',
-        frequencyBand: ap.frequencyBand || '5ghz',
+        model: ap.model || "UAP-AC-PRO",
+        manufacturer: ap.manufacturer || "Ubiquiti",
+        ssid: ap.ssid || "Corporate-WiFi",
+        frequencyBand: ap.frequencyBand || "5ghz",
         channel: ap.channel || 36,
         transmitPower: ap.transmitPower || 20,
         maxClients: ap.maxClients || 50,
@@ -414,14 +414,14 @@ export function seedWirelessData(data: {
       const id = client.id || `client-${index + 1}`;
       wirelessClients.set(id, {
         id,
-        macAddress: client.macAddress || `AA:BB:CC:DD:EE:${String(index).padStart(2, '0')}`,
+        macAddress: client.macAddress || `AA:BB:CC:DD:EE:${String(index).padStart(2, "0")}`,
         hostname: client.hostname || `device-${index + 1}`,
         ipAddress: client.ipAddress || `192.168.1.${index + 1}`,
-        accessPointId: client.accessPointId || 'ap-1',
-        accessPointName: client.accessPointName || 'AP-1',
-        ssid: client.ssid || 'Corporate-WiFi',
-        connectionType: client.connectionType || 'wifi',
-        frequencyBand: client.frequencyBand || '5ghz',
+        accessPointId: client.accessPointId || "ap-1",
+        accessPointName: client.accessPointName || "AP-1",
+        ssid: client.ssid || "Corporate-WiFi",
+        connectionType: client.connectionType || "wifi",
+        frequencyBand: client.frequencyBand || "5ghz",
         channel: client.channel || 36,
         isAuthenticated: client.isAuthenticated ?? true,
         isAuthorized: client.isAuthorized ?? true,
@@ -436,19 +436,17 @@ export function seedWirelessData(data: {
   }
 }
 
-export function seedSubscriberData(data: {
-  subscribers?: Partial<Subscriber>[];
-}) {
+export function seedSubscriberData(data: { subscribers?: Partial<Subscriber>[] }) {
   if (data.subscribers) {
     data.subscribers.forEach((sub, index) => {
       const id = sub.id || `sub-${index + 1}`;
       subscribers.set(id, {
         id,
-        subscriberId: sub.subscriberId || `SUB-${String(index + 1).padStart(6, '0')}`,
+        subscriberId: sub.subscriberId || `SUB-${String(index + 1).padStart(6, "0")}`,
         username: sub.username || `user${index + 1}`,
         email: sub.email || `user${index + 1}@example.com`,
-        status: sub.status || 'active',
-        planName: sub.planName || 'Basic Plan',
+        status: sub.status || "active",
+        planName: sub.planName || "Basic Plan",
         ipAddress: sub.ipAddress || `10.1.0.${index + 1}`,
         dataUsageMB: sub.dataUsageMB || 1024,
         createdAt: sub.createdAt || new Date().toISOString(),
@@ -489,8 +487,14 @@ export const graphqlHandlers = [
   // Fiber Infrastructure Queries
   // ============================================================================
 
-  graphql.query('FiberCableList', ({ variables }) => {
-    const { limit = 50, offset = 0, status, fiberType, search } = getVariables<{
+  graphql.query("FiberCableList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      status,
+      fiberType,
+      search,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       status?: string;
@@ -502,16 +506,17 @@ export const graphqlHandlers = [
 
     // Apply filters
     if (status) {
-      cables = cables.filter(c => c.status === status);
+      cables = cables.filter((c) => c.status === status);
     }
     if (fiberType) {
-      cables = cables.filter(c => c.fiberType === fiberType);
+      cables = cables.filter((c) => c.fiberType === fiberType);
     }
     if (search) {
       const searchLower = search.toLowerCase();
-      cables = cables.filter(c =>
-        c.name.toLowerCase().includes(searchLower) ||
-        c.cableId.toLowerCase().includes(searchLower)
+      cables = cables.filter(
+        (c) =>
+          c.name.toLowerCase().includes(searchLower) ||
+          c.cableId.toLowerCase().includes(searchLower),
       );
     }
 
@@ -526,12 +531,12 @@ export const graphqlHandlers = [
     });
   }),
 
-  graphql.query('FiberCableDetail', ({ variables }) => {
+  graphql.query("FiberCableDetail", ({ variables }) => {
     const { id } = getVariables<{ id?: string }>(variables);
     const cable = fiberCables.get(id);
 
     if (!cable) {
-      return respondWithErrors([createGraphQLError('Fiber cable not found', 'NOT_FOUND')]);
+      return respondWithErrors([createGraphQLError("Fiber cable not found", "NOT_FOUND")]);
     }
 
     return respondWithData({
@@ -539,8 +544,13 @@ export const graphqlHandlers = [
     });
   }),
 
-  graphql.query('DistributionPointList', ({ variables }) => {
-    const { limit = 50, offset = 0, pointType, status } = getVariables<{
+  graphql.query("DistributionPointList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      pointType,
+      status,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       pointType?: string;
@@ -551,25 +561,30 @@ export const graphqlHandlers = [
 
     // Apply filters
     if (pointType) {
-      points = points.filter(p => p.pointType === pointType);
+      points = points.filter((p) => p.pointType === pointType);
     }
     if (status) {
-      points = points.filter(p => p.status === status);
+      points = points.filter((p) => p.status === status);
     }
 
     const paginated = paginateList(points, limit, offset);
 
     return respondWithData({
-        distributionPoints: {
-          distributionPoints: paginated.items,
-          totalCount: paginated.totalCount,
-          hasNextPage: paginated.hasNextPage,
-        },
-      });
+      distributionPoints: {
+        distributionPoints: paginated.items,
+        totalCount: paginated.totalCount,
+        hasNextPage: paginated.hasNextPage,
+      },
+    });
   }),
 
-  graphql.query('ServiceAreaList', ({ variables }) => {
-    const { limit = 50, offset = 0, areaType, isServiceable } = getVariables<{
+  graphql.query("ServiceAreaList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      areaType,
+      isServiceable,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       areaType?: string;
@@ -580,24 +595,24 @@ export const graphqlHandlers = [
 
     // Apply filters
     if (areaType) {
-      areas = areas.filter(a => a.areaType === areaType);
+      areas = areas.filter((a) => a.areaType === areaType);
     }
-    if (typeof isServiceable === 'boolean') {
-      areas = areas.filter(a => a.isServiceable === isServiceable);
+    if (typeof isServiceable === "boolean") {
+      areas = areas.filter((a) => a.isServiceable === isServiceable);
     }
 
     const paginated = paginateList(areas, limit, offset);
 
     return respondWithData({
-        serviceAreas: {
-          serviceAreas: paginated.items,
-          totalCount: paginated.totalCount,
-          hasNextPage: paginated.hasNextPage,
-        },
-      });
+      serviceAreas: {
+        serviceAreas: paginated.items,
+        totalCount: paginated.totalCount,
+        hasNextPage: paginated.hasNextPage,
+      },
+    });
   }),
 
-  graphql.query('FiberDashboard', ({ variables }) => {
+  graphql.query("FiberDashboard", ({ variables }) => {
     const cables = Array.from(fiberCables.values());
     const points = Array.from(distributionPoints.values());
     const areas = Array.from(serviceAreas.values());
@@ -608,9 +623,10 @@ export const graphqlHandlers = [
       totalStrands: cables.reduce((sum, c) => sum + c.totalStrands, 0),
       totalDistributionPoints: points.length,
       totalSplicePoints: 0,
-      capacityUtilizationPercent: cables.length > 0
-        ? cables.reduce((sum, c) => sum + c.capacityUtilizationPercent, 0) / cables.length
-        : 0,
+      capacityUtilizationPercent:
+        cables.length > 0
+          ? cables.reduce((sum, c) => sum + c.capacityUtilizationPercent, 0) / cables.length
+          : 0,
       networkHealthScore: 85,
       homesPassed: areas.reduce((sum, a) => sum + a.homesPassed, 0),
       homesConnected: areas.reduce((sum, a) => sum + a.homesConnected, 0),
@@ -622,29 +638,35 @@ export const graphqlHandlers = [
     }
 
     return respondWithData({
-        fiberDashboard: {
-          analytics,
-          topCablesByUtilization: cables.slice(0, 5),
-          topDistributionPointsByCapacity: points.slice(0, 5),
-          topServiceAreasByPenetration: areas.slice(0, 5),
-          cablesRequiringAttention: [],
-          recentTestResults: [],
-          distributionPointsNearCapacity: [],
-          serviceAreasExpansionCandidates: [],
-          newConnectionsTrend: [],
-          capacityUtilizationTrend: [],
-          networkHealthTrend: [],
-          generatedAt: new Date().toISOString(),
-        },
-      });
+      fiberDashboard: {
+        analytics,
+        topCablesByUtilization: cables.slice(0, 5),
+        topDistributionPointsByCapacity: points.slice(0, 5),
+        topServiceAreasByPenetration: areas.slice(0, 5),
+        cablesRequiringAttention: [],
+        recentTestResults: [],
+        distributionPointsNearCapacity: [],
+        serviceAreasExpansionCandidates: [],
+        newConnectionsTrend: [],
+        capacityUtilizationTrend: [],
+        networkHealthTrend: [],
+        generatedAt: new Date().toISOString(),
+      },
+    });
   }),
 
   // ============================================================================
   // Wireless Infrastructure Queries
   // ============================================================================
 
-  graphql.query('AccessPointList', ({ variables }) => {
-    const { limit = 50, offset = 0, status, frequencyBand, search } = getVariables<{
+  graphql.query("AccessPointList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      status,
+      frequencyBand,
+      search,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       status?: string;
@@ -656,32 +678,38 @@ export const graphqlHandlers = [
 
     // Apply filters
     if (status) {
-      aps = aps.filter(ap => ap.status === status);
+      aps = aps.filter((ap) => ap.status === status);
     }
     if (frequencyBand) {
-      aps = aps.filter(ap => ap.frequencyBand === frequencyBand);
+      aps = aps.filter((ap) => ap.frequencyBand === frequencyBand);
     }
     if (search) {
       const searchLower = search.toLowerCase();
-      aps = aps.filter(ap =>
-        ap.name.toLowerCase().includes(searchLower) ||
-        ap.macAddress.toLowerCase().includes(searchLower)
+      aps = aps.filter(
+        (ap) =>
+          ap.name.toLowerCase().includes(searchLower) ||
+          ap.macAddress.toLowerCase().includes(searchLower),
       );
     }
 
     const paginated = paginateList(aps, limit, offset);
 
     return respondWithData({
-        accessPoints: {
-          accessPoints: paginated.items,
-          totalCount: paginated.totalCount,
-          hasNextPage: paginated.hasNextPage,
-        },
-      });
+      accessPoints: {
+        accessPoints: paginated.items,
+        totalCount: paginated.totalCount,
+        hasNextPage: paginated.hasNextPage,
+      },
+    });
   }),
 
-  graphql.query('WirelessClientList', ({ variables }) => {
-    const { limit = 50, offset = 0, accessPointId, frequencyBand } = getVariables<{
+  graphql.query("WirelessClientList", ({ variables }) => {
+    const {
+      limit = 50,
+      offset = 0,
+      accessPointId,
+      frequencyBand,
+    } = getVariables<{
       limit?: number;
       offset?: number;
       accessPointId?: string;
@@ -692,47 +720,46 @@ export const graphqlHandlers = [
 
     // Apply filters
     if (accessPointId) {
-      clients = clients.filter(c => c.accessPointId === accessPointId);
+      clients = clients.filter((c) => c.accessPointId === accessPointId);
     }
     if (frequencyBand) {
-      clients = clients.filter(c => c.frequencyBand === frequencyBand);
+      clients = clients.filter((c) => c.frequencyBand === frequencyBand);
     }
 
     const paginated = paginateList(clients, limit, offset);
 
     return respondWithData({
-        wirelessClients: {
-          clients: paginated.items,
-          totalCount: paginated.totalCount,
-          hasNextPage: paginated.hasNextPage,
-        },
-      });
+      wirelessClients: {
+        clients: paginated.items,
+        totalCount: paginated.totalCount,
+        hasNextPage: paginated.hasNextPage,
+      },
+    });
   }),
 
   // ============================================================================
   // Subscriber Queries
   // ============================================================================
 
-  graphql.query('SubscriberDashboard', ({ variables }) => {
+  graphql.query("SubscriberDashboard", ({ variables }) => {
     const subs = Array.from(subscribers.values());
 
     const analytics = {
       totalSubscribers: subs.length,
-      activeSubscribers: subs.filter(s => s.status === 'active').length,
-      suspendedSubscribers: subs.filter(s => s.status === 'suspended').length,
+      activeSubscribers: subs.filter((s) => s.status === "active").length,
+      suspendedSubscribers: subs.filter((s) => s.status === "suspended").length,
       totalDataUsageGB: subs.reduce((sum, s) => sum + s.dataUsageMB, 0) / 1024,
-      averageDataUsageGB: subs.length > 0
-        ? (subs.reduce((sum, s) => sum + s.dataUsageMB, 0) / 1024) / subs.length
-        : 0,
+      averageDataUsageGB:
+        subs.length > 0 ? subs.reduce((sum, s) => sum + s.dataUsageMB, 0) / 1024 / subs.length : 0,
     };
 
     return respondWithData({
-        subscriberDashboard: {
-          analytics,
-          recentSubscribers: subs.slice(0, 10),
-          topDataUsers: subs.sort((a, b) => b.dataUsageMB - a.dataUsageMB).slice(0, 10),
-          generatedAt: new Date().toISOString(),
-        },
-      });
+      subscriberDashboard: {
+        analytics,
+        recentSubscribers: subs.slice(0, 10),
+        topDataUsers: subs.sort((a, b) => b.dataUsageMB - a.dataUsageMB).slice(0, 10),
+        generatedAt: new Date().toISOString(),
+      },
+    });
   }),
 ];

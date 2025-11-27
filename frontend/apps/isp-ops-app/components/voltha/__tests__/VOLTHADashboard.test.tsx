@@ -50,11 +50,7 @@ const createTestQueryClient = () =>
 // Helper to render component with QueryClientProvider
 const renderWithQueryClient = (component: React.ReactElement) => {
   const testQueryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={testQueryClient}>
-      {component}
-    </QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={testQueryClient}>{component}</QueryClientProvider>);
 };
 
 describe("VOLTHADashboard", () => {

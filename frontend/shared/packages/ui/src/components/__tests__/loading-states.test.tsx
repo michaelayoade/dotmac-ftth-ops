@@ -88,7 +88,7 @@ describe("LoadingOverlay", () => {
   });
 
   it("has fixed positioning", () => {
-    const { container} = render(<LoadingOverlay show={true} />);
+    const { container } = render(<LoadingOverlay show={true} />);
 
     const overlay = container.querySelector(".fixed");
     expect(overlay).toBeInTheDocument();
@@ -206,7 +206,7 @@ describe("LoadingState", () => {
     render(
       <LoadingState loading={true} error={null} empty={false}>
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     const spinner = document.querySelector(".animate-spin");
@@ -217,7 +217,7 @@ describe("LoadingState", () => {
     render(
       <LoadingState loading={false} error={null} empty={false}>
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     expect(screen.getByText("Content")).toBeInTheDocument();
@@ -229,7 +229,7 @@ describe("LoadingState", () => {
     render(
       <LoadingState loading={false} error={error} empty={false}>
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
@@ -239,7 +239,7 @@ describe("LoadingState", () => {
     render(
       <LoadingState loading={false} error={null} empty={true}>
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     expect(screen.getByText("No data available")).toBeInTheDocument();
@@ -247,9 +247,14 @@ describe("LoadingState", () => {
 
   it("accepts custom loading component", () => {
     render(
-      <LoadingState loading={true} error={null} empty={false} loadingComponent={<div>Custom loading</div>}>
+      <LoadingState
+        loading={true}
+        error={null}
+        empty={false}
+        loadingComponent={<div>Custom loading</div>}
+      >
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     expect(screen.getByText("Custom loading")).toBeInTheDocument();
@@ -259,9 +264,14 @@ describe("LoadingState", () => {
     const error = new Error("Test");
 
     render(
-      <LoadingState loading={false} error={error} empty={false} errorComponent={<div>Custom error</div>}>
+      <LoadingState
+        loading={false}
+        error={error}
+        empty={false}
+        errorComponent={<div>Custom error</div>}
+      >
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     expect(screen.getByText("Custom error")).toBeInTheDocument();
@@ -269,9 +279,14 @@ describe("LoadingState", () => {
 
   it("accepts custom empty component", () => {
     render(
-      <LoadingState loading={false} error={null} empty={true} emptyComponent={<div>Custom empty</div>}>
+      <LoadingState
+        loading={false}
+        error={null}
+        empty={true}
+        emptyComponent={<div>Custom empty</div>}
+      >
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     expect(screen.getByText("Custom empty")).toBeInTheDocument();
@@ -281,7 +296,7 @@ describe("LoadingState", () => {
     render(
       <LoadingState loading={false} error={null} empty={true} emptyMessage="No items found">
         {children}
-      </LoadingState>
+      </LoadingState>,
     );
 
     expect(screen.getByText("No items found")).toBeInTheDocument();
@@ -293,7 +308,7 @@ describe("AsyncState", () => {
     render(
       <AsyncState data={undefined} loading={true} error={null}>
         {(data) => <div>{data}</div>}
-      </AsyncState>
+      </AsyncState>,
     );
 
     const spinner = document.querySelector(".animate-spin");
@@ -306,7 +321,7 @@ describe("AsyncState", () => {
     render(
       <AsyncState data={undefined} loading={false} error={error}>
         {(data) => <div>{data}</div>}
-      </AsyncState>
+      </AsyncState>,
     );
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
@@ -316,7 +331,7 @@ describe("AsyncState", () => {
     render(
       <AsyncState data={undefined} loading={false} error={null}>
         {(data) => <div>{data}</div>}
-      </AsyncState>
+      </AsyncState>,
     );
 
     const emptyIcon = document.querySelector("svg");
@@ -327,7 +342,7 @@ describe("AsyncState", () => {
     render(
       <AsyncState data="Test data" loading={false} error={null}>
         {(data) => <div>{data}</div>}
-      </AsyncState>
+      </AsyncState>,
     );
 
     expect(screen.getByText("Test data")).toBeInTheDocument();
@@ -339,7 +354,7 @@ describe("AsyncState", () => {
     render(
       <AsyncState data={data} loading={false} error={null} isEmpty={(d) => d.length === 0}>
         {(data) => <div>{data.length} items</div>}
-      </AsyncState>
+      </AsyncState>,
     );
 
     const emptyIcon = document.querySelector("svg");
@@ -362,7 +377,11 @@ describe("ButtonLoading", () => {
   });
 
   it("shows loading text when provided", () => {
-    render(<ButtonLoading loading={true} loadingText="Submitting...">Submit</ButtonLoading>);
+    render(
+      <ButtonLoading loading={true} loadingText="Submitting...">
+        Submit
+      </ButtonLoading>,
+    );
 
     expect(screen.getByText("Submitting...")).toBeInTheDocument();
   });
@@ -427,14 +446,18 @@ describe("ProgressIndicator", () => {
   });
 
   it("shows check icon for completed steps", () => {
-    const { container } = render(<ProgressIndicator steps={[{ label: "Done", status: "completed" }]} />);
+    const { container } = render(
+      <ProgressIndicator steps={[{ label: "Done", status: "completed" }]} />,
+    );
 
     const checkIcon = container.querySelector("svg");
     expect(checkIcon).toBeInTheDocument();
   });
 
   it("shows spinner for active steps", () => {
-    const { container } = render(<ProgressIndicator steps={[{ label: "Active", status: "active" }]} />);
+    const { container } = render(
+      <ProgressIndicator steps={[{ label: "Active", status: "active" }]} />,
+    );
 
     const spinner = container.querySelector(".animate-spin");
     expect(spinner).toBeInTheDocument();
@@ -447,14 +470,16 @@ describe("ProgressIndicator", () => {
   });
 
   it("shows error icon for error steps", () => {
-    const { container } = render(<ProgressIndicator steps={[{ label: "Error", status: "error" }]} />);
+    const { container } = render(
+      <ProgressIndicator steps={[{ label: "Error", status: "error" }]} />,
+    );
 
     const errorIcon = container.querySelector("svg");
     expect(errorIcon).toBeInTheDocument();
   });
 
-    it("applies correct styles to step states", () => {
-      render(<ProgressIndicator steps={steps} />);
+  it("applies correct styles to step states", () => {
+    render(<ProgressIndicator steps={steps} />);
 
     const completedStep = screen.getByText("Step 1").previousSibling;
     expect(completedStep).toHaveClass("bg-green-500");
@@ -477,7 +502,7 @@ describe("Real-World Usage Patterns", () => {
       <div>
         <LoadingCard lines={2} showAvatar={true} />
         <LoadingTable rows={5} columns={3} />
-      </div>
+      </div>,
     );
 
     const card = document.querySelector(".bg-card");
@@ -496,7 +521,7 @@ describe("Real-World Usage Patterns", () => {
             ))}
           </ul>
         )}
-      </AsyncState>
+      </AsyncState>,
     );
 
     expect(screen.getByText("Item 1")).toBeInTheDocument();

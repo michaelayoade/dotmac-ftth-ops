@@ -3,14 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   CheckCircle2,
   XCircle,

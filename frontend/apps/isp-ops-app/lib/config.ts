@@ -173,7 +173,8 @@ export function applyPlatformRuntimeConfig(runtimeConfig: RuntimeConfig | null |
     platformConfig.deployment.tenantId =
       runtimeConfig.deployment.tenantId ?? platformConfig.deployment.tenantId;
     platformConfig.deployment.platformRoutesEnabled =
-      runtimeConfig.deployment.platformRoutesEnabled ?? platformConfig.deployment.platformRoutesEnabled;
+      runtimeConfig.deployment.platformRoutesEnabled ??
+      platformConfig.deployment.platformRoutesEnabled;
   }
 
   if (runtimeConfig.license) {
@@ -287,8 +288,10 @@ function buildBrandingConfig() {
     productTagline: process.env["NEXT_PUBLIC_PRODUCT_TAGLINE"] || "Ready to Deploy",
     logoUrl: process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
     logo: {
-      light: process.env["NEXT_PUBLIC_LOGO_LIGHT"] || process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
-      dark: process.env["NEXT_PUBLIC_LOGO_DARK"] || process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
+      light:
+        process.env["NEXT_PUBLIC_LOGO_LIGHT"] || process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
+      dark:
+        process.env["NEXT_PUBLIC_LOGO_DARK"] || process.env["NEXT_PUBLIC_LOGO_URL"] || "/logo.svg",
     },
     supportEmail,
     successEmail,
@@ -434,16 +437,13 @@ function combineApiUrl(
   options: BuildApiUrlOptions = {},
 ): string {
   const normalizedPath = ensureLeadingSlash(path);
-  const normalizedPrefix = prefix
-    ? ensureLeadingSlash(prefix).replace(/\/+$/, "")
-    : "";
+  const normalizedPrefix = prefix ? ensureLeadingSlash(prefix).replace(/\/+$/, "") : "";
 
   const shouldApplyPrefix = !options.skipPrefix && Boolean(normalizedPrefix);
   const hasPrefix =
     normalizedPath &&
     normalizedPrefix &&
-    (normalizedPath === normalizedPrefix ||
-      normalizedPath.startsWith(`${normalizedPrefix}/`));
+    (normalizedPath === normalizedPrefix || normalizedPath.startsWith(`${normalizedPrefix}/`));
 
   let pathWithPrefix: string;
 
@@ -451,9 +451,7 @@ function combineApiUrl(
     pathWithPrefix = shouldApplyPrefix ? normalizedPrefix : "/";
   } else if (shouldApplyPrefix && !hasPrefix) {
     pathWithPrefix =
-      normalizedPath === "/"
-        ? normalizedPrefix || "/"
-        : `${normalizedPrefix}${normalizedPath}`;
+      normalizedPath === "/" ? normalizedPrefix || "/" : `${normalizedPrefix}${normalizedPath}`;
   } else {
     pathWithPrefix = normalizedPath;
   }

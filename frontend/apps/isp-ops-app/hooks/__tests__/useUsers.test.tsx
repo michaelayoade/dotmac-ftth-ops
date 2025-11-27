@@ -82,8 +82,18 @@ describe("useUsers (Jest)", () => {
   describe("useUsers - fetch users", () => {
     it("should fetch users successfully", async () => {
       const mockUsers = [
-        createMockUser({ id: "user-1", username: "johndoe", email: "john@example.com", full_name: "John Doe" }),
-        createMockUser({ id: "user-2", username: "janedoe", email: "jane@example.com", full_name: "Jane Doe" }),
+        createMockUser({
+          id: "user-1",
+          username: "johndoe",
+          email: "john@example.com",
+          full_name: "John Doe",
+        }),
+        createMockUser({
+          id: "user-2",
+          username: "janedoe",
+          email: "jane@example.com",
+          full_name: "Jane Doe",
+        }),
       ];
 
       mockApiClient.get.mockResolvedValue({
@@ -232,7 +242,7 @@ describe("useUsers (Jest)", () => {
             userId: "user-1",
             data: { full_name: "Updated" },
           });
-        })
+        }),
       ).rejects.toBeTruthy();
     });
   });
@@ -262,7 +272,7 @@ describe("useUsers (Jest)", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("user-1");
-        })
+        }),
       ).rejects.toBeTruthy();
     });
   });
@@ -292,7 +302,7 @@ describe("useUsers (Jest)", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("user-1");
-        })
+        }),
       ).rejects.toBeTruthy();
     });
   });
@@ -322,7 +332,7 @@ describe("useUsers (Jest)", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("user-1");
-        })
+        }),
       ).rejects.toBeTruthy();
     });
   });
@@ -434,10 +444,7 @@ describe("useUsers (Jest)", () => {
 
   describe("Real-world scenarios", () => {
     it("should handle concurrent user fetches", async () => {
-      const users = [
-        createMockUser({ id: "user-1" }),
-        createMockUser({ id: "user-2" }),
-      ];
+      const users = [createMockUser({ id: "user-1" }), createMockUser({ id: "user-2" })];
 
       const user1 = createMockUser({ id: "user-1" });
 

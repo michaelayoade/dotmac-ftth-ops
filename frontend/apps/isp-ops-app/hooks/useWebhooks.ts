@@ -258,7 +258,6 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
     refetchOnWindowFocus: true,
   });
 
-
   // Fetch available events query
   const eventsQuery = useQuery({
     queryKey: webhooksKeys.events(),
@@ -351,7 +350,10 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       // Optimistically update cache
       queryClient.setQueryData<WebhookSubscription[]>(
         webhooksKeys.subscription(buildSubscriptionFilters(page, limit, eventFilter, activeOnly)),
-        (old) => (old ? old.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh)) : [updatedWebhook]),
+        (old) =>
+          old
+            ? old.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh))
+            : [updatedWebhook],
       );
     },
     onError: (err) => {
@@ -413,7 +415,9 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
           };
         }
       } catch (error) {
-        throw error instanceof Error ? error : new Error(formatErrorMessage(error, "Test execution failed"));
+        throw error instanceof Error
+          ? error
+          : new Error(formatErrorMessage(error, "Test execution failed"));
       }
     },
   });
@@ -551,7 +555,10 @@ export function useWebhookDeliveries(
       setDeliveriesError(null);
       return enriched;
     } catch (err) {
-      logger.error("Failed to fetch deliveries", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to fetch deliveries",
+        err instanceof Error ? err : new Error(String(err)),
+      );
       const message = formatErrorMessage(err, "Failed to fetch deliveries");
       setDeliveriesError(message);
       throw new Error(message);
@@ -574,7 +581,6 @@ export function useWebhookDeliveries(
     staleTime: 10000, // 10 seconds
     refetchOnWindowFocus: true,
   });
-
 
   // Retry delivery mutation
   const retryMutation = useMutation({

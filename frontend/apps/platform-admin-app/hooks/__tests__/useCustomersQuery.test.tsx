@@ -101,7 +101,16 @@ describe("Platform Admin useCustomersQuery hooks", () => {
   });
 
   it("fetches customer lists and detail records", async () => {
-    (apiClient.get as jest.Mock).mockResolvedValueOnce({ data: [{ id: "cust-1", status: "active", created_at: new Date().toISOString(), lifetime_value: 1000 }] });
+    (apiClient.get as jest.Mock).mockResolvedValueOnce({
+      data: [
+        {
+          id: "cust-1",
+          status: "active",
+          created_at: new Date().toISOString(),
+          lifetime_value: 1000,
+        },
+      ],
+    });
     (apiClient.get as jest.Mock).mockResolvedValueOnce({ data: { id: "cust-1" } });
 
     const { wrapper } = createWrapper();
@@ -198,8 +207,18 @@ describe("Platform Admin useCustomersQuery hooks", () => {
   it("exposes aggregated metrics in useCustomersQuery", async () => {
     (apiClient.get as jest.Mock).mockResolvedValue({
       data: [
-        { id: "cust-1", status: "active", created_at: new Date().toISOString(), lifetime_value: 500 },
-        { id: "cust-2", status: "inactive", created_at: new Date().toISOString(), lifetime_value: 300 },
+        {
+          id: "cust-1",
+          status: "active",
+          created_at: new Date().toISOString(),
+          lifetime_value: 500,
+        },
+        {
+          id: "cust-2",
+          status: "inactive",
+          created_at: new Date().toISOString(),
+          lifetime_value: 300,
+        },
       ],
     });
 

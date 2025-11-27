@@ -8,8 +8,20 @@ jest.mock("@/components/auth/PermissionGuard", () => ({
 }));
 
 const mockSessions = [
-  { session_id: "s1", user_agent: "Chrome", ip_address: "1.1.1.1", last_accessed: new Date().toISOString(), is_current: true },
-  { session_id: "s2", user_agent: "Safari", ip_address: "2.2.2.2", last_accessed: new Date().toISOString(), is_current: false },
+  {
+    session_id: "s1",
+    user_agent: "Chrome",
+    ip_address: "1.1.1.1",
+    last_accessed: new Date().toISOString(),
+    is_current: true,
+  },
+  {
+    session_id: "s2",
+    user_agent: "Safari",
+    ip_address: "2.2.2.2",
+    last_accessed: new Date().toISOString(),
+    is_current: false,
+  },
 ];
 
 const mockGet = jest.fn();

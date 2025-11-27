@@ -3,9 +3,9 @@
  *
  * Utilities to normalize TanStack Query results to Apollo-compatible shapes,
  * making page-level integrations trivial.
-*/
+ */
 
-import type { UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from "@tanstack/react-query";
 
 /**
  * Apollo-compatible query result shape
@@ -98,8 +98,7 @@ export const loadingHelpers = {
   /**
    * Check if any loading state is active
    */
-  isAnyLoading: (result: UseQueryResult<unknown, unknown>) =>
-    result.isLoading || result.isFetching,
+  isAnyLoading: (result: UseQueryResult<unknown, unknown>) => result.isLoading || result.isFetching,
 };
 
 /**

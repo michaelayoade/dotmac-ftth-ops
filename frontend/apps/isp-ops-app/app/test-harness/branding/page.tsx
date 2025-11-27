@@ -39,8 +39,8 @@ export default function BrandingHarnessPage() {
       <div className="rounded-md border border-dashed border-muted bg-muted/20 p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">Branding Form Test Harness</p>
         <p>
-          The form below uses in-memory data so E2E tests can exercise save flows without calling the
-          real API.
+          The form below uses in-memory data so E2E tests can exercise save flows without calling
+          the real API.
         </p>
         {lastSavedTimestamp && (
           <p className="mt-2 text-foreground" data-testid="branding-save-confirmation">
@@ -48,11 +48,7 @@ export default function BrandingHarnessPage() {
           </p>
         )}
       </div>
-      <BrandingForm
-        initialValues={formValues}
-        isSubmitting={isSaving}
-        onSubmit={handleSubmit}
-      />
+      <BrandingForm initialValues={formValues} isSubmitting={isSaving} onSubmit={handleSubmit} />
     </main>
   );
 }

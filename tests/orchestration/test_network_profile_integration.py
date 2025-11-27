@@ -14,6 +14,8 @@ from uuid import uuid4
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.network.models import IPv6AssignmentMode
 from dotmac.platform.orchestration.workflows.deprovision_subscriber import (
     delete_network_profile_handler,

@@ -3,7 +3,7 @@
  * Mocks plugin registry, instances, configuration, and health checks
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   PluginConfig,
   PluginInstance,
@@ -43,7 +43,8 @@ function createMockPlugin(data: Partial<PluginConfig> = {}): PluginConfig {
 
 function createMockInstance(data: Partial<PluginInstance> = {}): PluginInstance {
   const pluginName = data.plugin_name || "test-plugin";
-  const pluginConfig = availablePlugins.find((p) => p.name === pluginName) || createMockPlugin({ name: pluginName });
+  const pluginConfig =
+    availablePlugins.find((p) => p.name === pluginName) || createMockPlugin({ name: pluginName });
 
   return {
     id: data.id || `instance-${nextInstanceId++}`,
@@ -133,9 +134,9 @@ export const pluginsHandlers = [
     const instance = instances.find((i) => i.plugin_name === pluginName);
 
     return HttpResponse.json({
-        schema: plugin,
-        instance_id: instance?.id || null,
-      });
+      schema: plugin,
+      instance_id: instance?.id || null,
+    });
   }),
 
   // GET /api/v1/plugins/instances/:instanceId/health - Health check
@@ -151,9 +152,7 @@ export const pluginsHandlers = [
       plugin_instance_id: instanceId as string,
       status: instance.status === "active" ? "healthy" : "unhealthy",
       message:
-        instance.status === "active"
-          ? "Plugin is operating normally"
-          : "Plugin is not active",
+        instance.status === "active" ? "Plugin is operating normally" : "Plugin is not active",
       details: {
         instance_status: instance.status,
         has_configuration: instance.has_configuration,
@@ -269,7 +268,8 @@ export const pluginsHandlers = [
 
     const testResult: PluginTestResult = {
       success: instance.status !== "error",
-      message: instance.status !== "error" ? "Connection test successful" : "Connection test failed",
+      message:
+        instance.status !== "error" ? "Connection test successful" : "Connection test failed",
       details: {
         plugin_name: instance.plugin_name,
         instance_status: instance.status,
@@ -284,8 +284,8 @@ export const pluginsHandlers = [
   // POST /api/v1/plugins/refresh - Refresh plugins
   http.post("*/api/v1/plugins/refresh", (req) => {
     return HttpResponse.json({
-        message: "Plugins refreshed successfully",
-        available_plugins: availablePlugins.length,
-      });
+      message: "Plugins refreshed successfully",
+      available_plugins: availablePlugins.length,
+    });
   }),
 ];

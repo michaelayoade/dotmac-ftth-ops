@@ -74,7 +74,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           subtitle="Total this month"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("Total this month")).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           trend={{ value: 15, isPositive: true }}
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("15% from last month")).toBeInTheDocument();
@@ -135,7 +135,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           trend={{ value: 10, isPositive: false }}
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("10% from last month")).toBeInTheDocument();
@@ -148,7 +148,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           trend={{ value: 15, isPositive: true }}
           icon={DollarSign}
-        />
+        />,
       );
 
       const trendText = screen.getByText("15% from last month");
@@ -162,7 +162,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           trend={{ value: 10, isPositive: false }}
           icon={DollarSign}
-        />
+        />,
       );
 
       const trendText = screen.getByText("10% from last month");
@@ -176,7 +176,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           trend={{ value: -15, isPositive: false }}
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("15% from last month")).toBeInTheDocument();
@@ -192,7 +192,7 @@ describe("MetricCardEnhanced", () => {
   describe("Loading State", () => {
     it("displays loading skeleton when loading is true", () => {
       const { container } = render(
-        <MetricCardEnhanced title="Revenue" value={1000} loading icon={DollarSign} />
+        <MetricCardEnhanced title="Revenue" value={1000} loading icon={DollarSign} />,
       );
 
       const skeletons = container.querySelectorAll(".animate-pulse");
@@ -213,7 +213,7 @@ describe("MetricCardEnhanced", () => {
           subtitle="Total this month"
           loading
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.queryByText("Total this month")).not.toBeInTheDocument();
@@ -227,7 +227,7 @@ describe("MetricCardEnhanced", () => {
           trend={{ value: 15, isPositive: true }}
           loading
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.queryByText(/from last month/)).not.toBeInTheDocument();
@@ -235,7 +235,7 @@ describe("MetricCardEnhanced", () => {
 
     it("disables AnimatedCard when loading", () => {
       const { container } = render(
-        <MetricCardEnhanced title="Revenue" value={1000} loading icon={DollarSign} />
+        <MetricCardEnhanced title="Revenue" value={1000} loading icon={DollarSign} />,
       );
 
       const card = container.querySelector("[data-disabled='true']");
@@ -246,12 +246,7 @@ describe("MetricCardEnhanced", () => {
   describe("Error State", () => {
     it("displays error message when error is provided", () => {
       render(
-        <MetricCardEnhanced
-          title="Revenue"
-          value={1000}
-          error="Network error"
-          icon={DollarSign}
-        />
+        <MetricCardEnhanced title="Revenue" value={1000} error="Network error" icon={DollarSign} />,
       );
 
       expect(screen.getByText("Failed to load")).toBeInTheDocument();
@@ -260,12 +255,7 @@ describe("MetricCardEnhanced", () => {
 
     it("does not display value when error is present", () => {
       render(
-        <MetricCardEnhanced
-          title="Revenue"
-          value={1000}
-          error="Network error"
-          icon={DollarSign}
-        />
+        <MetricCardEnhanced title="Revenue" value={1000} error="Network error" icon={DollarSign} />,
       );
 
       expect(screen.queryByTestId("animated-counter")).not.toBeInTheDocument();
@@ -273,12 +263,7 @@ describe("MetricCardEnhanced", () => {
 
     it("applies error border class", () => {
       const { container } = render(
-        <MetricCardEnhanced
-          title="Revenue"
-          value={1000}
-          error="Network error"
-          icon={DollarSign}
-        />
+        <MetricCardEnhanced title="Revenue" value={1000} error="Network error" icon={DollarSign} />,
       );
 
       const card = container.querySelector(".border-red-200");
@@ -287,12 +272,7 @@ describe("MetricCardEnhanced", () => {
 
     it("disables AnimatedCard when error is present", () => {
       const { container } = render(
-        <MetricCardEnhanced
-          title="Revenue"
-          value={1000}
-          error="Network error"
-          icon={DollarSign}
-        />
+        <MetricCardEnhanced title="Revenue" value={1000} error="Network error" icon={DollarSign} />,
       );
 
       const card = container.querySelector("[data-disabled='true']");
@@ -308,7 +288,7 @@ describe("MetricCardEnhanced", () => {
           value={0}
           emptyStateMessage="No revenue this month"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("No revenue this month")).toBeInTheDocument();
@@ -321,7 +301,7 @@ describe("MetricCardEnhanced", () => {
           value="0"
           emptyStateMessage="No revenue this month"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("No revenue this month")).toBeInTheDocument();
@@ -335,7 +315,7 @@ describe("MetricCardEnhanced", () => {
           subtitle="Total this month"
           emptyStateMessage="No revenue"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.queryByText("Total this month")).not.toBeInTheDocument();
@@ -350,7 +330,7 @@ describe("MetricCardEnhanced", () => {
           trend={{ value: 15, isPositive: true }}
           emptyStateMessage="No revenue"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.queryByText(/from last month/)).not.toBeInTheDocument();
@@ -364,7 +344,7 @@ describe("MetricCardEnhanced", () => {
           emptyStateMessage="No revenue"
           loading
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.queryByText("No revenue")).not.toBeInTheDocument();
@@ -378,7 +358,7 @@ describe("MetricCardEnhanced", () => {
           emptyStateMessage="No revenue"
           error="Network error"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.queryByText("No revenue")).not.toBeInTheDocument();
@@ -387,9 +367,7 @@ describe("MetricCardEnhanced", () => {
 
   describe("Link Wrapper", () => {
     it("renders as link when href is provided", () => {
-      render(
-        <MetricCardEnhanced title="Revenue" value={1000} href="/revenue" icon={DollarSign} />
-      );
+      render(<MetricCardEnhanced title="Revenue" value={1000} href="/revenue" icon={DollarSign} />);
 
       const link = screen.getByRole("link");
       expect(link).toBeInTheDocument();
@@ -404,7 +382,13 @@ describe("MetricCardEnhanced", () => {
 
     it("does not render as link when loading", () => {
       render(
-        <MetricCardEnhanced title="Revenue" value={1000} href="/revenue" loading icon={DollarSign} />
+        <MetricCardEnhanced
+          title="Revenue"
+          value={1000}
+          href="/revenue"
+          loading
+          icon={DollarSign}
+        />,
       );
 
       expect(screen.queryByRole("link")).not.toBeInTheDocument();
@@ -418,7 +402,7 @@ describe("MetricCardEnhanced", () => {
           href="/revenue"
           error="Network error"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.queryByRole("link")).not.toBeInTheDocument();
@@ -433,7 +417,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           className="custom-metric-card"
           icon={DollarSign}
-        />
+        />,
       );
 
       const card = container.querySelector(".custom-metric-card");
@@ -447,7 +431,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           className="custom-metric-card"
           icon={DollarSign}
-        />
+        />,
       );
 
       const card = container.querySelector(".custom-metric-card");
@@ -476,12 +460,7 @@ describe("MetricCardEnhanced", () => {
 
     it("does not use animated counter when error is present", () => {
       render(
-        <MetricCardEnhanced
-          title="Revenue"
-          value={1000}
-          error="Network error"
-          icon={DollarSign}
-        />
+        <MetricCardEnhanced title="Revenue" value={1000} error="Network error" icon={DollarSign} />,
       );
 
       expect(screen.queryByTestId("animated-counter")).not.toBeInTheDocument();
@@ -527,7 +506,7 @@ describe("MetricCardEnhanced", () => {
           currency
           trend={{ value: 12, isPositive: true }}
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("Total Revenue")).toBeInTheDocument();
@@ -545,7 +524,7 @@ describe("MetricCardEnhanced", () => {
           value={350}
           subtitle="Online now"
           icon={TrendingUp}
-        />
+        />,
       );
 
       expect(screen.getByText("Active Users")).toBeInTheDocument();
@@ -560,7 +539,7 @@ describe("MetricCardEnhanced", () => {
           currency
           href="/analytics/revenue"
           icon={DollarSign}
-        />
+        />,
       );
 
       const link = screen.getByRole("link");
@@ -568,13 +547,11 @@ describe("MetricCardEnhanced", () => {
     });
 
     it("renders loading revenue card", () => {
-      render(
-        <MetricCardEnhanced title="Total Revenue" value={0} loading icon={DollarSign} />
-      );
+      render(<MetricCardEnhanced title="Total Revenue" value={0} loading icon={DollarSign} />);
 
       expect(screen.getByText("Total Revenue")).toBeInTheDocument();
       const { container } = render(
-        <MetricCardEnhanced title="Total Revenue" value={0} loading icon={DollarSign} />
+        <MetricCardEnhanced title="Total Revenue" value={0} loading icon={DollarSign} />,
       );
       const skeletons = container.querySelectorAll(".animate-pulse");
       expect(skeletons.length).toBeGreaterThan(0);
@@ -587,7 +564,7 @@ describe("MetricCardEnhanced", () => {
           value={0}
           error="Failed to fetch data from API"
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("Failed to load")).toBeInTheDocument();
@@ -601,7 +578,7 @@ describe("MetricCardEnhanced", () => {
           value={0}
           emptyStateMessage="No new signups this month"
           icon={TrendingUp}
-        />
+        />,
       );
 
       expect(screen.getByText("No new signups this month")).toBeInTheDocument();
@@ -630,7 +607,7 @@ describe("MetricCardEnhanced", () => {
           value={1000}
           trend={{ value: 0, isPositive: true }}
           icon={DollarSign}
-        />
+        />,
       );
 
       expect(screen.getByText("0% from last month")).toBeInTheDocument();

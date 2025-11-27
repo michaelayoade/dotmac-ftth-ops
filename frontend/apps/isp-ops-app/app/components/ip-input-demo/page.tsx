@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 
 const validateIp = (value: string) => {
   // Simple IPv4 validator; enough for demo purposes
-  const ipv4Regex =
-    /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+  const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
   return ipv4Regex.test(value.trim());
 };
 

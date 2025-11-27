@@ -3,7 +3,7 @@
  * Mocks customer portal operations for customer self-service
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // In-memory storage
 let profile: any = null;
@@ -56,7 +56,8 @@ function createMockService(data: Partial<any> = {}): any {
 function createMockInvoice(data: Partial<any> = {}): any {
   return {
     invoice_id: data.invoice_id || `inv-${Date.now()}`,
-    invoice_number: data.invoice_number || `INV-${String(Math.floor(Math.random() * 1000)).padStart(6, "0")}`,
+    invoice_number:
+      data.invoice_number || `INV-${String(Math.floor(Math.random() * 1000)).padStart(6, "0")}`,
     amount: data.amount ?? 49.99,
     amount_due: data.amount_due ?? data.amount ?? 49.99,
     amount_paid: data.amount_paid ?? 0,
@@ -171,10 +172,11 @@ export function seedCustomerPortalUsage(data: any): void {
 export function seedCustomerPortalTickets(data: any[]): void {
   tickets = data.map(createMockTicket);
   if (tickets.length > 0) {
-    nextTicketId = tickets.reduce((max, t) => {
-      const num = parseInt(t.id.replace("ticket-", ""));
-      return isNaN(num) ? max : Math.max(max, num);
-    }, 0) + 1;
+    nextTicketId =
+      tickets.reduce((max, t) => {
+        const num = parseInt(t.id.replace("ticket-", ""));
+        return isNaN(num) ? max : Math.max(max, num);
+      }, 0) + 1;
   }
 }
 
@@ -185,10 +187,11 @@ export function seedCustomerPortalSettings(data: any): void {
 export function seedCustomerPortalPaymentMethods(data: any[]): void {
   paymentMethods = data.map(createMockPaymentMethod);
   if (paymentMethods.length > 0) {
-    nextPaymentMethodId = paymentMethods.reduce((max, pm) => {
-      const num = parseInt(pm.payment_method_id.replace("pm-", ""));
-      return isNaN(num) ? max : Math.max(max, num);
-    }, 0) + 1;
+    nextPaymentMethodId =
+      paymentMethods.reduce((max, pm) => {
+        const num = parseInt(pm.payment_method_id.replace("pm-", ""));
+        return isNaN(num) ? max : Math.max(max, num);
+      }, 0) + 1;
   }
 }
 
@@ -353,7 +356,7 @@ export const customerPortalHandlers = [
     const { id } = req.params;
     const { enabled } = await req.json<any>();
     paymentMethods = paymentMethods.map((pm) =>
-      pm.payment_method_id === id ? { ...pm, auto_pay_enabled: enabled } : pm
+      pm.payment_method_id === id ? { ...pm, auto_pay_enabled: enabled } : pm,
     );
     return new HttpResponse(null, { status: 200 });
   }),

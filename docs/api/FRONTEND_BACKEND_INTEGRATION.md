@@ -13,7 +13,7 @@ This guide demonstrates how to integrate the DotMac frontend packages (`frontend
 | **Service Registry** | `@dotmac/headless` (useWebSocket) | Real-time service status, health monitoring |
 | **Audit Trail** | `@dotmac/analytics`, `@dotmac/dashboard` | Compliance dashboards, event visualization |
 | **Distributed Locks** | `@dotmac/headless` (useRealTimeSync) | Optimistic UI updates, conflict resolution |
-| **Authentication** | `@dotmac/headless` (useAuth, useMFA) | Login flows, session management |
+| **Authentication** | `@shared/lib/auth` (AuthProvider, useSession, 2FA helpers) | Login flows, session management |
 | **API Gateway** | `@dotmac/http-client` | Request routing, tenant resolution |
 | **Multi-tenant** | `@dotmac/headless` (useISPTenant) | Tenant switching, context |
 
@@ -215,23 +215,20 @@ export function AuditDashboard() {
 Integrate frontend auth hooks with backend authentication services:
 
 ```typescript
-import { useSession } from '@dotmac/better-auth';
+import { useSession } from '@shared/lib/auth';
 import { apiClient } from '@dotmac/headless/api';
 
 export function useAuthenticatedApi() {
-  const { data: session, isPending } = useSession();
-  const token = session?.accessToken;
+  const { user, isLoading, isAuthenticated } = useSession();
 
   return {
-    user: session?.user ?? null,
-    isLoading: isPending,
+    user,
+    isLoading,
+    isAuthenticated,
+    // Cookies are sent automatically with withCredentials: true
     client: apiClient.extend({
-      headers: {
-        Authorization: token ? `Bearer ${token}` : undefined,
-      },
       withCredentials: true,
     }),
-    logout: session?.logout,
   };
 }
 ```

@@ -46,10 +46,9 @@ describe("Platform Admin useWireGuard hooks", () => {
     });
 
     const { wrapper } = createWrapper();
-    const { result } = renderHook(
-      () => useWireGuardServers({ status: "active", limit: 5 }),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useWireGuardServers({ status: "active", limit: 5 }), {
+      wrapper,
+    });
 
     await waitFor(() => expect(result.current.data).toBeDefined());
     expect(mockedApi.get).toHaveBeenCalledWith("/wireguard/servers?status=active&limit=5");

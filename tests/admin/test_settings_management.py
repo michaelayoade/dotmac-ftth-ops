@@ -16,7 +16,7 @@ from dotmac.platform.admin.settings.models import (
 from dotmac.platform.admin.settings.service import SettingsManagementService
 
 pytestmark = [
-    pytest.mark.unit,
+    pytest.mark.integration,
     pytest.mark.asyncio,
 ]
 

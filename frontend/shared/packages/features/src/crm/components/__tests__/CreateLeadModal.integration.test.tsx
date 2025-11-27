@@ -37,11 +37,7 @@ vi.mock("@dotmac/ui", async () => {
     ),
     Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,
     Textarea: ({ value, onChange, placeholder }: any) => (
-      <textarea
-        value={value}
-        onChange={(e) => onChange?.(e)}
-        placeholder={placeholder}
-      />
+      <textarea value={value} onChange={(e) => onChange?.(e)} placeholder={placeholder} />
     ),
     Tabs: ({ children, value, onValueChange }: any) => (
       <div data-active-tab={value}>{children}</div>
@@ -77,7 +73,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={undefined}
-        />
+        />,
       );
 
       // Assert
@@ -93,7 +89,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={undefined}
-        />
+        />,
       );
 
       // Assert
@@ -109,7 +105,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={undefined}
-        />
+        />,
       );
 
       // Assert
@@ -130,7 +126,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={onCreate}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - navigate using Next buttons to reach the submit button
@@ -163,7 +159,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={onCreate}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - fill first name only
@@ -199,7 +195,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={onCreate}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - enter invalid email
@@ -237,7 +233,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={onSuccess}
           onCreate={onCreate}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - fill valid form data
@@ -276,7 +272,7 @@ describe("CreateLeadModal Integration Tests", () => {
             last_name: "Doe",
             email: "john.doe@example.com",
             phone: "+1234567890",
-          })
+          }),
         );
       });
     });
@@ -292,7 +288,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - click on different tabs
@@ -323,7 +319,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={onCreate}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - switch to details & requirements tab
@@ -366,7 +362,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={onCreate}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - fill contact info fields
@@ -412,7 +408,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={true}
-        />
+        />,
       );
 
       // Act - navigate using Next buttons to reach submit button
@@ -445,7 +441,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={onSuccess}
           onCreate={onCreate}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - fill contact info fields
@@ -496,7 +492,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - fill some data
@@ -510,7 +506,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={false}
-        />
+        />,
       );
 
       rerender(
@@ -520,7 +516,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Assert - form should be reset (implementation dependent)
@@ -540,7 +536,7 @@ describe("CreateLeadModal Integration Tests", () => {
           onSuccess={undefined}
           onCreate={vi.fn()}
           isSubmitting={false}
-        />
+        />,
       );
 
       // Act - find and click close button

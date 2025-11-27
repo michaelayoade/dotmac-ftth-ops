@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Card, CardContent } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";

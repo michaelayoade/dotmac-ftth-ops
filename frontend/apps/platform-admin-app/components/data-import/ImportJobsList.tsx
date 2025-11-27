@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
@@ -106,9 +99,7 @@ export function ImportJobsList({ onViewDetails }: ImportJobsListProps) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2">
         <p className="text-sm text-muted-foreground">No import jobs found</p>
-        <p className="text-xs text-muted-foreground">
-          Start by uploading a CSV or JSON file
-        </p>
+        <p className="text-xs text-muted-foreground">Start by uploading a CSV or JSON file</p>
       </div>
     );
   }
@@ -191,9 +182,7 @@ export function ImportJobsList({ onViewDetails }: ImportJobsListProps) {
                 </TableCell>
 
                 <TableCell className="text-sm text-muted-foreground">
-                  {job.started_at
-                    ? format(new Date(job.started_at), "MMM d, HH:mm")
-                    : "-"}
+                  {job.started_at ? format(new Date(job.started_at), "MMM d, HH:mm") : "-"}
                 </TableCell>
 
                 <TableCell className="text-right">

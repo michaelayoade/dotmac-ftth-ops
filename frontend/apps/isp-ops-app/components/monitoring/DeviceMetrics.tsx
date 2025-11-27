@@ -101,13 +101,17 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
               <TabsTrigger value="ipv4" disabled={!hasIPv4}>
                 IPv4{" "}
                 {hasIPv4 && (
-                  <ConnectivityIndicator connected={metrics.connectivity.ipv4?.reachable ?? undefined} />
+                  <ConnectivityIndicator
+                    connected={metrics.connectivity.ipv4?.reachable ?? undefined}
+                  />
                 )}
               </TabsTrigger>
               <TabsTrigger value="ipv6" disabled={!hasIPv6}>
                 IPv6{" "}
                 {hasIPv6 && (
-                  <ConnectivityIndicator connected={metrics.connectivity.ipv6?.reachable ?? undefined} />
+                  <ConnectivityIndicator
+                    connected={metrics.connectivity.ipv6?.reachable ?? undefined}
+                  />
                 )}
               </TabsTrigger>
             </TabsList>
@@ -149,8 +153,16 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
           unit="%"
           threshold={{ warning: 80, critical: 95 }}
         />
-        <MetricCard title="Bandwidth In" value={metrics.bandwidth_in_mbps ?? undefined} unit="Mbps" />
-        <MetricCard title="Bandwidth Out" value={metrics.bandwidth_out_mbps ?? undefined} unit="Mbps" />
+        <MetricCard
+          title="Bandwidth In"
+          value={metrics.bandwidth_in_mbps ?? undefined}
+          unit="Mbps"
+        />
+        <MetricCard
+          title="Bandwidth Out"
+          value={metrics.bandwidth_out_mbps ?? undefined}
+          unit="Mbps"
+        />
       </div>
 
       {/* Interface Status */}

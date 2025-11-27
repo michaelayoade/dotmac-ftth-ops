@@ -72,7 +72,9 @@ export default function MFAPage() {
   const regenerate = async () => {
     setError(null);
     try {
-      const res = await apiClient.post<{ backup_codes: string[] }>("/auth/2fa/regenerate-backup-codes");
+      const res = await apiClient.post<{ backup_codes: string[] }>(
+        "/auth/2fa/regenerate-backup-codes",
+      );
       setBackupCodes(res.data?.backup_codes || []);
       setStatusMessage("Backup codes regenerated");
     } catch {
@@ -91,7 +93,9 @@ export default function MFAPage() {
           <ShieldCheck className="h-6 w-6 text-blue-500" />
           <div>
             <h1 className="text-2xl font-semibold">MFA / 2FA</h1>
-            <p className="text-sm text-muted-foreground">Protect your account with TOTP and backup codes.</p>
+            <p className="text-sm text-muted-foreground">
+              Protect your account with TOTP and backup codes.
+            </p>
           </div>
         </div>
 
@@ -129,12 +133,22 @@ export default function MFAPage() {
             </div>
             {setupData ? (
               <>
-                <p className="text-sm text-muted-foreground">Scan the QR code in your authenticator app.</p>
-                <Image src={setupData.qr_code} alt="MFA QR code" width={192} height={192} className="border rounded" />
+                <p className="text-sm text-muted-foreground">
+                  Scan the QR code in your authenticator app.
+                </p>
+                <Image
+                  src={setupData.qr_code}
+                  alt="MFA QR code"
+                  width={192}
+                  height={192}
+                  className="border rounded"
+                />
                 <p className="text-sm">Secret: {setupData.secret}</p>
               </>
             ) : (
-              <p className="text-muted-foreground text-sm">Click start to generate a TOTP secret.</p>
+              <p className="text-muted-foreground text-sm">
+                Click start to generate a TOTP secret.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -174,7 +188,9 @@ export default function MFAPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Generate backup codes after enabling MFA.</p>
+              <p className="text-sm text-muted-foreground">
+                Generate backup codes after enabling MFA.
+              </p>
             )}
           </CardContent>
         </Card>

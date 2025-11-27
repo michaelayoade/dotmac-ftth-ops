@@ -45,7 +45,7 @@ export interface UseManagedTenantsParams {
  * Hook to fetch managed tenants for the authenticated partner
  */
 export function useManagedTenants(
-  params: UseManagedTenantsParams = {}
+  params: UseManagedTenantsParams = {},
 ): UseQueryResult<ManagedTenantsResponse, Error> {
   const { status, offset = 0, limit = 50 } = params;
 
@@ -87,7 +87,7 @@ export interface ManagedTenantDetail extends ManagedTenant {
  * Hook to fetch detailed information for a specific managed tenant
  */
 export function useManagedTenantDetail(
-  tenantId: string | null
+  tenantId: string | null,
 ): UseQueryResult<ManagedTenantDetail, Error> {
   return useQuery({
     queryKey: ["partner", "managed-tenant", tenantId],
@@ -96,9 +96,7 @@ export function useManagedTenantDetail(
         throw new Error("Tenant ID is required");
       }
 
-      const response = await apiClient.get<ManagedTenantDetail>(
-        `/partner/customers/${tenantId}`
-      );
+      const response = await apiClient.get<ManagedTenantDetail>(`/partner/customers/${tenantId}`);
 
       logger.info("Fetched managed tenant detail", {
         tenantId,

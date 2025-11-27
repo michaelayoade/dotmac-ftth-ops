@@ -65,7 +65,7 @@ export const createMockLeads = (count: number = 5) => {
     createMockLead({
       lead_id: `lead_${i + 1}`,
       email: `lead${i + 1}@example.com`,
-    })
+    }),
   );
 };
 
@@ -156,9 +156,7 @@ export const createMeetingActivity = (overrides?: Partial<any>) => {
     type: "meeting",
     subject: "Site survey scheduled",
     description: "Scheduled site survey for next week",
-    scheduled_date: new Date(
-      Date.now() + 7 * 24 * 60 * 60 * 1000
-    ).toISOString(),
+    scheduled_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     ...overrides,
   });
 };
@@ -170,7 +168,7 @@ export const createMockActivities = (count: number = 5) => {
   return Array.from({ length: count }, (_, i) =>
     createMockActivity({
       activity_id: `activity_${i + 1}`,
-    })
+    }),
   );
 };
 

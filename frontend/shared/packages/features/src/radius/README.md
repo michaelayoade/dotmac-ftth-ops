@@ -9,9 +9,11 @@ The RADIUS module provides components for managing RADIUS-based network access c
 ## Components
 
 ### RadiusSessionMonitor
+
 **Purpose**: Monitor active RADIUS sessions in real-time
 
 **Props**:
+
 ```typescript
 interface RadiusSessionMonitorProps {
   apiClient: RadiusSessionMonitorApiClient;
@@ -21,6 +23,7 @@ interface RadiusSessionMonitorProps {
 ```
 
 **Features**:
+
 - Real-time session list with auto-refresh
 - Session details:
   - Username/subscriber
@@ -39,6 +42,7 @@ interface RadiusSessionMonitorProps {
 **Dependencies**: apiClient, useToast
 
 **Usage**:
+
 ```typescript
 import { RadiusSessionMonitor } from "@/components/radius/RadiusSessionMonitor";
 
@@ -48,6 +52,7 @@ import { RadiusSessionMonitor } from "@/components/radius/RadiusSessionMonitor";
 ```
 
 **Session States**:
+
 - 🟢 Active: Session is active and passing traffic
 - 🟡 Idle: Session connected but no traffic
 - 🔴 Stale: Session hasn't updated in >5 minutes (may be zombie)
@@ -55,9 +60,11 @@ import { RadiusSessionMonitor } from "@/components/radius/RadiusSessionMonitor";
 ---
 
 ### BandwidthProfileDialog
+
 **Purpose**: Create and edit bandwidth profiles
 
 **Props**:
+
 ```typescript
 interface BandwidthProfileDialogProps {
   open: boolean;
@@ -70,6 +77,7 @@ interface BandwidthProfileDialogProps {
 ```
 
 **Features**:
+
 - Profile name and description
 - Download/upload rate limits (Mbps or Kbps)
 - Burst settings:
@@ -88,6 +96,7 @@ interface BandwidthProfileDialogProps {
 **Dependencies**: apiClient, useToast
 
 **Usage**:
+
 ```typescript
 import { BandwidthProfileDialog } from "@/components/radius/BandwidthProfileDialog";
 
@@ -105,6 +114,7 @@ import { BandwidthProfileDialog } from "@/components/radius/BandwidthProfileDial
 **Profile Examples**:
 
 Basic Profile:
+
 ```typescript
 {
   name: "50/10 Mbps",
@@ -114,6 +124,7 @@ Basic Profile:
 ```
 
 Profile with Burst:
+
 ```typescript
 {
   name: "100/20 with Burst",
@@ -127,6 +138,7 @@ Profile with Burst:
 ```
 
 Profile with FUP:
+
 ```typescript
 {
   name: "Unlimited with FUP",
@@ -140,6 +152,7 @@ Profile with FUP:
 ```
 
 Time-based Profile:
+
 ```typescript
 {
   name: "Day/Night Rates",
@@ -167,9 +180,11 @@ Time-based Profile:
 ---
 
 ### NASDeviceDialog
+
 **Purpose**: Manage NAS (Network Access Server) devices
 
 **Props**:
+
 ```typescript
 interface NASDeviceDialogProps {
   open: boolean;
@@ -182,6 +197,7 @@ interface NASDeviceDialogProps {
 ```
 
 **Features**:
+
 - Device name and shortname
 - IP address (with validation)
 - RADIUS shared secret
@@ -197,6 +213,7 @@ interface NASDeviceDialogProps {
 **Dependencies**: apiClient, useToast
 
 **Usage**:
+
 ```typescript
 import { NASDeviceDialog } from "@/components/radius/NASDeviceDialog";
 
@@ -215,6 +232,7 @@ import { NASDeviceDialog } from "@/components/radius/NASDeviceDialog";
 ```
 
 **NAS Types**:
+
 - `bng`: Broadband Network Gateway
 - `cpe`: Customer Premises Equipment
 - `wifi`: WiFi Access Point/Controller
@@ -227,6 +245,7 @@ import { NASDeviceDialog } from "@/components/radius/NASDeviceDialog";
 ## Types
 
 ### RadiusSession
+
 ```typescript
 interface RadiusSession {
   id: string;
@@ -256,6 +275,7 @@ interface RadiusSession {
 ```
 
 ### BandwidthProfile
+
 ```typescript
 interface BandwidthProfile {
   id: string;
@@ -300,6 +320,7 @@ interface BandwidthSchedule {
 ```
 
 ### NASDevice
+
 ```typescript
 interface NASDevice {
   id: string;
@@ -329,6 +350,7 @@ interface NASDevice {
 ```
 
 ### CoARequest
+
 ```typescript
 interface CoARequest {
   session_id: string;
@@ -340,12 +362,14 @@ interface CoARequest {
 ## API Endpoints
 
 ### Sessions
+
 - `GET /api/v1/radius/sessions` - List active sessions
 - `GET /api/v1/radius/sessions/{id}` - Get session details
 - `POST /api/v1/radius/sessions/{id}/disconnect` - Disconnect session (CoA)
 - `POST /api/v1/radius/sessions/{id}/coa` - Send CoA request
 
 ### Bandwidth Profiles
+
 - `GET /api/v1/radius/bandwidth-profiles` - List profiles
 - `POST /api/v1/radius/bandwidth-profiles` - Create profile
 - `GET /api/v1/radius/bandwidth-profiles/{id}` - Get profile
@@ -353,6 +377,7 @@ interface CoARequest {
 - `DELETE /api/v1/radius/bandwidth-profiles/{id}` - Delete profile
 
 ### NAS Devices
+
 - `GET /api/v1/radius/nas-devices` - List devices
 - `POST /api/v1/radius/nas-devices` - Create device
 - `GET /api/v1/radius/nas-devices/{id}` - Get device
@@ -460,11 +485,13 @@ const changeBandwidth = async (sessionId: string, profileId: string) => {
 ## Bandwidth Rate Limits
 
 ### Units
+
 - **Kbps**: Kilobits per second (1000 bits/sec)
 - **Mbps**: Megabits per second (1000 Kbps)
 - **Gbps**: Gigabits per second (1000 Mbps)
 
 ### Conversion
+
 ```typescript
 // Display conversion
 function formatBandwidth(kbps: number): string {
@@ -492,6 +519,7 @@ function parseBandwidth(value: number, unit: "Kbps" | "Mbps" | "Gbps"): number {
 ```
 
 ### Typical Profiles
+
 - Residential Basic: 10/2 Mbps
 - Residential Standard: 50/10 Mbps
 - Residential Premium: 100/20 Mbps
@@ -503,24 +531,25 @@ function parseBandwidth(value: number, unit: "Kbps" | "Mbps" | "Gbps"): number {
 CoA allows real-time session updates without reconnection.
 
 ### Supported Actions
+
 1. **Disconnect**: Terminate session immediately
 2. **Change Bandwidth**: Update rate limits
 3. **Reauthenticate**: Force re-auth without disconnect
 4. **Update Attributes**: Change other RADIUS attributes
 
 ### CoA Requirements
+
 1. NAS device must support CoA (RFC 5176)
 2. NAS device configured with CoA port (default 3799)
 3. Shared secret must match
 
 ### CoA Testing
+
 ```typescript
 // Test CoA connectivity
 const testCoA = async (nasDeviceId: string) => {
   try {
-    const response = await apiClient.post(
-      `/api/v1/radius/nas-devices/${nasDeviceId}/test-coa`
-    );
+    const response = await apiClient.post(`/api/v1/radius/nas-devices/${nasDeviceId}/test-coa`);
     if (response.data.success) {
       toast({
         title: "Success",
@@ -542,6 +571,7 @@ const testCoA = async (nasDeviceId: string) => {
 ### Issue: Session not appearing in monitor
 
 **Check**:
+
 1. RADIUS server receiving accounting packets
 2. NAS device properly configured
 3. Accounting port correct (1813)
@@ -549,6 +579,7 @@ const testCoA = async (nasDeviceId: string) => {
 5. Database connection working
 
 **Debug**:
+
 ```bash
 # Check RADIUS logs
 tail -f /var/log/radius/radius.log
@@ -563,6 +594,7 @@ SELECT * FROM radacct WHERE acctstoptime IS NULL;
 ### Issue: CoA disconnect not working
 
 **Check**:
+
 1. NAS device supports CoA
 2. CoA port enabled (3799)
 3. Firewall allows UDP 3799
@@ -570,6 +602,7 @@ SELECT * FROM radacct WHERE acctstoptime IS NULL;
 5. Session still active
 
 **Test**:
+
 ```bash
 # Test CoA manually
 echo "User-Name=testuser,Acct-Session-Id=12345" | \
@@ -579,6 +612,7 @@ echo "User-Name=testuser,Acct-Session-Id=12345" | \
 ### Issue: Bandwidth not applying
 
 **Check**:
+
 1. NAS device supports rate limiting
 2. RADIUS attributes correct:
    - `Mikrotik-Rate-Limit` (MikroTik)
@@ -590,6 +624,7 @@ echo "User-Name=testuser,Acct-Session-Id=12345" | \
 ## Integration with Other Modules
 
 ### With Subscribers Module
+
 ```typescript
 // Assign bandwidth profile during provisioning
 import { SubscriberProvisionForm } from "@dotmac/features/provisioning";
@@ -603,6 +638,7 @@ import { SubscriberProvisionForm } from "@dotmac/features/provisioning";
 ```
 
 ### With Monitoring Module
+
 ```typescript
 // Monitor bandwidth usage
 import { NetworkMonitoringDashboard } from "@dotmac/features/monitoring";
@@ -613,6 +649,7 @@ import { NetworkMonitoringDashboard } from "@dotmac/features/monitoring";
 ```
 
 ### With Billing Module
+
 ```typescript
 // Link usage to billing
 const calculateUsage = (session: RadiusSession) => {
@@ -625,11 +662,13 @@ const calculateUsage = (session: RadiusSession) => {
 ## Performance Considerations
 
 ### Session Monitoring
+
 - Default refresh: 10 seconds
 - Large deployments: increase to 30-60 seconds
 - Consider pagination for >1000 sessions
 
 ### Database Optimization
+
 - Index on `acctstoptime IS NULL` for active sessions
 - Archive old sessions (>30 days)
 - Partition accounting table by date

@@ -50,9 +50,7 @@ describe("Platform: Quota Enforcement", () => {
       });
 
       // Starter plan includes 100 customers
-      const customerQuota = starterPlan.quotas?.find(
-        q => q.quota_id === "quota_customers"
-      );
+      const customerQuota = starterPlan.quotas?.find((q) => q.quota_id === "quota_customers");
 
       expect(customerQuota).toBeDefined();
       expect(customerQuota?.included_quantity).toBe(100);
@@ -66,7 +64,7 @@ describe("Platform: Quota Enforcement", () => {
       const professionalQuota = professionalPlan.quotas?.[0];
 
       expect(professionalQuota?.included_quantity).toBeGreaterThan(
-        starterQuota?.included_quantity || 0
+        starterQuota?.included_quantity || 0,
       );
     });
 
@@ -166,8 +164,7 @@ describe("Platform: Quota Enforcement", () => {
         current_usage: 12,
       });
 
-      const totalOverageCharges =
-        quotaUsage1.overage_charges + quotaUsage2.overage_charges;
+      const totalOverageCharges = quotaUsage1.overage_charges + quotaUsage2.overage_charges;
 
       expect(totalOverageCharges).toBeGreaterThan(0);
     });
@@ -312,7 +309,7 @@ describe("Platform: Quota Enforcement", () => {
         createQuotaUsageAtLimit({ allocated_quantity: 10 }), // At limit
       ];
 
-      const allQuotasOk = quotaUsages.every(q => !isQuotaExceeded(q));
+      const allQuotasOk = quotaUsages.every((q) => !isQuotaExceeded(q));
       expect(allQuotasOk).toBe(false);
     });
 
@@ -330,7 +327,7 @@ describe("Platform: Quota Enforcement", () => {
         }),
       ];
 
-      const summary = quotas.map(q => ({
+      const summary = quotas.map((q) => ({
         quota_id: q.quota_id,
         utilization: getQuotaUtilization(q),
         remaining: getQuotaRemaining(q),

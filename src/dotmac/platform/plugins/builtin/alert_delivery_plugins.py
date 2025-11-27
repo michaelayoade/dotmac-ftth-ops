@@ -12,7 +12,6 @@ alerts to external systems when network issues are detected.
 
 from __future__ import annotations
 
-import json
 import logging
 import smtplib
 import ssl
@@ -566,7 +565,9 @@ class SlackAlertPlugin(AlertDeliveryProvider):
                             },
                             {
                                 "title": "Device",
-                                "value": alert.get("device_name", alert.get("device_id", "Unknown")),
+                                "value": alert.get(
+                                    "device_name", alert.get("device_id", "Unknown")
+                                ),
                                 "short": True,
                             },
                             {
@@ -700,7 +701,7 @@ class EmailAlertPlugin(AlertDeliveryProvider):
                 ),
                 FieldSpec(
                     name="smtp_port",
-                    field_type=FieldType.NUMBER,
+                    field_type=FieldType.INTEGER,
                     label="SMTP Port",
                     description="SMTP port number",
                     required=False,
@@ -892,23 +893,23 @@ class EmailAlertPlugin(AlertDeliveryProvider):
         <body>
             <div class="alert-box">
                 <span class="severity">{severity}</span>
-                <h2>{alert.get('title', 'Network Alert')}</h2>
-                <p>{alert.get('description', '')}</p>
+                <h2>{alert.get("title", "Network Alert")}</h2>
+                <p>{alert.get("description", "")}</p>
             </div>
 
             <div class="details">
                 <table>
                     <tr>
                         <td>Alert ID</td>
-                        <td>{alert.get('alert_id', 'N/A')}</td>
+                        <td>{alert.get("alert_id", "N/A")}</td>
                     </tr>
                     <tr>
                         <td>Device</td>
-                        <td>{alert.get('device_name', alert.get('device_id', 'Unknown'))}</td>
+                        <td>{alert.get("device_name", alert.get("device_id", "Unknown"))}</td>
                     </tr>
                     <tr>
                         <td>Triggered At</td>
-                        <td>{alert.get('triggered_at', datetime.now(UTC).isoformat())}</td>
+                        <td>{alert.get("triggered_at", datetime.now(UTC).isoformat())}</td>
                     </tr>
                 </table>
             </div>
@@ -957,15 +958,15 @@ class EmailAlertPlugin(AlertDeliveryProvider):
 
             # Plain text version
             text_body = f"""
-Network Alert: {alert.get('title', 'Alert')}
+Network Alert: {alert.get("title", "Alert")}
 
 Severity: {severity.upper()}
-Device: {alert.get('device_name', alert.get('device_id', 'Unknown'))}
-Alert ID: {alert.get('alert_id', 'N/A')}
-Triggered: {alert.get('triggered_at', 'Unknown')}
+Device: {alert.get("device_name", alert.get("device_id", "Unknown"))}
+Alert ID: {alert.get("alert_id", "N/A")}
+Triggered: {alert.get("triggered_at", "Unknown")}
 
 Description:
-{alert.get('description', 'No description provided')}
+{alert.get("description", "No description provided")}
 
 ---
 DotMac Network Monitor
@@ -979,9 +980,7 @@ DotMac Network Monitor
             # Send email
             if self.smtp_port == 465:
                 context = ssl.create_default_context()
-                with smtplib.SMTP_SSL(
-                    self.smtp_host, self.smtp_port, context=context
-                ) as server:
+                with smtplib.SMTP_SSL(self.smtp_host, self.smtp_port, context=context) as server:
                     if self.smtp_user and self.smtp_password:
                         server.login(self.smtp_user, self.smtp_password)
                     server.sendmail(self.from_email, to_addresses, msg.as_string())

@@ -181,7 +181,7 @@ describe("Customer Lifecycle: Lead to Customer", () => {
     it("should apply promotional discount to monthly charge", () => {
       // Arrange
       const basePrice = 79.99;
-      const promoDiscount = 20.00;
+      const promoDiscount = 20.0;
       const promoMonths = 3;
 
       // Act
@@ -194,7 +194,7 @@ describe("Customer Lifecycle: Lead to Customer", () => {
       const effectiveMonthlyRate = basePrice - promoDiscount;
 
       // Assert
-      expect(quote.promo_monthly_discount).toBe(20.00);
+      expect(quote.promo_monthly_discount).toBe(20.0);
       expect(quote.promo_discount_months).toBe(3);
       expect(effectiveMonthlyRate).toBeCloseTo(59.99, 2);
     });
@@ -451,7 +451,9 @@ describe("Customer Lifecycle: Lead to Customer", () => {
       expect(upgradedCustomer.service_plan_name).toBe("Premium 500Mbps");
       expect(upgradedCustomer.bandwidth_mbps).toBe(500);
       expect(upgradedCustomer.monthly_recurring_charge).toBe(79.99);
-      expect(upgradedCustomer.monthly_recurring_charge).toBeGreaterThan(customer.monthly_recurring_charge);
+      expect(upgradedCustomer.monthly_recurring_charge).toBeGreaterThan(
+        customer.monthly_recurring_charge,
+      );
     });
 
     it("should downgrade customer to lower tier plan", () => {
@@ -475,7 +477,9 @@ describe("Customer Lifecycle: Lead to Customer", () => {
       expect(downgradedCustomer.service_plan_name).toBe("Basic 100Mbps");
       expect(downgradedCustomer.bandwidth_mbps).toBe(100);
       expect(downgradedCustomer.monthly_recurring_charge).toBe(49.99);
-      expect(downgradedCustomer.monthly_recurring_charge).toBeLessThan(customer.monthly_recurring_charge);
+      expect(downgradedCustomer.monthly_recurring_charge).toBeLessThan(
+        customer.monthly_recurring_charge,
+      );
     });
   });
 

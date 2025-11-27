@@ -207,7 +207,7 @@ export function runUseFeatureFlagsSuite(useFeatureFlags: UseFeatureFlagsHook, ap
           expect.objectContaining({
             enabled: false,
             context: { rollout: 10 },
-          })
+          }),
         );
       });
 

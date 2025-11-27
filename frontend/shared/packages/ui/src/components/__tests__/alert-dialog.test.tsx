@@ -35,7 +35,7 @@ describe("AlertDialog", () => {
             <AlertDialogAction>Continue</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog>,
     );
   };
 
@@ -171,7 +171,7 @@ describe("AlertDialog", () => {
           "border",
           "bg-card",
           "p-6",
-          "shadow-lg"
+          "shadow-lg",
         );
       });
     });
@@ -185,7 +185,7 @@ describe("AlertDialog", () => {
           <AlertDialogContent className="custom-dialog">
             <AlertDialogTitle>Title</AlertDialogTitle>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -296,7 +296,7 @@ describe("AlertDialog", () => {
           <AlertDialogContent>
             <AlertDialogTitle className="custom-title">Custom Title</AlertDialogTitle>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -342,7 +342,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogDescription className="custom-desc">Description</AlertDialogDescription>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -389,7 +389,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogAction onClick={handleClick}>Confirm</AlertDialogAction>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -412,7 +412,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogAction className="custom-action">Action</AlertDialogAction>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -461,7 +461,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogCancel onClick={handleClick}>Cancel</AlertDialogCancel>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -484,7 +484,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogCancel className="custom-cancel">Cancel</AlertDialogCancel>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -507,7 +507,7 @@ describe("AlertDialog", () => {
           <AlertDialogContent>
             <AlertDialogTitle>Title</AlertDialogTitle>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
@@ -521,7 +521,7 @@ describe("AlertDialog", () => {
           <AlertDialogContent>
             <AlertDialogTitle>Title</AlertDialogTitle>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await waitFor(() => {
@@ -538,7 +538,7 @@ describe("AlertDialog", () => {
           <AlertDialogContent>
             <AlertDialogTitle>Title</AlertDialogTitle>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await waitFor(() => {
@@ -681,13 +681,17 @@ describe("AlertDialog", () => {
               <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Delete Account"));
 
       await waitFor(() => {
-        expect(screen.getByText("This will permanently delete your account. This action cannot be undone.")).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            "This will permanently delete your account. This action cannot be undone.",
+          ),
+        ).toBeInTheDocument();
       });
 
       await user.click(screen.getByText("Delete"));
@@ -712,7 +716,7 @@ describe("AlertDialog", () => {
               <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByRole("button", { name: "Logout" }));
@@ -756,7 +760,7 @@ describe("AlertDialog", () => {
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Delete All Data"));
@@ -789,13 +793,17 @@ describe("AlertDialog", () => {
               <AlertDialogAction onClick={handleCancel}>Cancel subscription</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Cancel Subscription"));
 
       await waitFor(() => {
-        expect(screen.getByText("Your subscription will remain active until the end of the billing period.")).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            "Your subscription will remain active until the end of the billing period.",
+          ),
+        ).toBeInTheDocument();
       });
     });
 
@@ -809,7 +817,8 @@ describe("AlertDialog", () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Remove User</AlertDialogTitle>
               <AlertDialogDescription>
-                This will remove the user from your organization. They will no longer have access to any resources.
+                This will remove the user from your organization. They will no longer have access to
+                any resources.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="text-sm">
@@ -821,7 +830,7 @@ describe("AlertDialog", () => {
               <AlertDialogAction>Remove</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Remove User"));
@@ -844,7 +853,7 @@ describe("AlertDialog", () => {
           <AlertDialogContent ref={ref}>
             <AlertDialogTitle>Title</AlertDialogTitle>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -865,7 +874,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogAction ref={ref}>Action</AlertDialogAction>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -886,7 +895,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogCancel ref={ref}>Cancel</AlertDialogCancel>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -906,7 +915,7 @@ describe("AlertDialog", () => {
           <AlertDialogContent>
             <AlertDialogTitle ref={ref}>Title</AlertDialogTitle>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -927,7 +936,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogDescription ref={ref}>Description</AlertDialogDescription>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -993,7 +1002,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             {null}
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -1016,7 +1025,7 @@ describe("AlertDialog", () => {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -1036,7 +1045,7 @@ describe("AlertDialog", () => {
             <AlertDialogTitle>Title</AlertDialogTitle>
             <AlertDialogDescription>Description</AlertDialogDescription>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -1068,7 +1077,9 @@ describe("AlertDialog", () => {
 
       await waitFor(() => {
         // Find overlay by its fixed inset-0 bg-black classes
-        const overlay = container.querySelector('[class*="fixed"][class*="inset-0"][class*="bg-black"]');
+        const overlay = container.querySelector(
+          '[class*="fixed"][class*="inset-0"][class*="bg-black"]',
+        );
         expect(overlay).toBeInTheDocument();
         expect(overlay).toHaveClass("data-[state=open]:animate-in");
       });

@@ -10,7 +10,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Receipt, DollarSign, AlertTriangle } from "lucide-react";
@@ -37,15 +43,31 @@ interface TaxSettingsProps {
 }
 
 const TAX_TYPES = [
-  { value: "vat", label: "VAT (Value Added Tax)", description: "Common in EU, UK, and many other countries" },
-  { value: "gst", label: "GST (Goods and Services Tax)", description: "Used in Canada, Australia, India, etc." },
+  {
+    value: "vat",
+    label: "VAT (Value Added Tax)",
+    description: "Common in EU, UK, and many other countries",
+  },
+  {
+    value: "gst",
+    label: "GST (Goods and Services Tax)",
+    description: "Used in Canada, Australia, India, etc.",
+  },
   { value: "sales_tax", label: "Sales Tax", description: "Common in US states" },
   { value: "custom", label: "Custom Tax Type", description: "Define your own tax type" },
 ];
 
 const TAX_CALCULATION_METHODS = [
-  { value: "inclusive", label: "Tax Inclusive", description: "Tax is included in the displayed price" },
-  { value: "exclusive", label: "Tax Exclusive", description: "Tax is added to the price at checkout" },
+  {
+    value: "inclusive",
+    label: "Tax Inclusive",
+    description: "Tax is included in the displayed price",
+  },
+  {
+    value: "exclusive",
+    label: "Tax Exclusive",
+    description: "Tax is added to the price at checkout",
+  },
   { value: "compound", label: "Compound Tax", description: "Tax calculated on tax (rare)" },
 ];
 
@@ -76,14 +98,20 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
     updateSetting("regional_tax_rates", rest);
   };
 
-  const selectedTaxType = TAX_TYPES.find(t => t.value === settings.default_tax_type);
-  const selectedCalculationMethod = TAX_CALCULATION_METHODS.find(m => m.value === settings.tax_calculation_method);
+  const selectedTaxType = TAX_TYPES.find((t) => t.value === settings.default_tax_type);
+  const selectedCalculationMethod = TAX_CALCULATION_METHODS.find(
+    (m) => m.value === settings.tax_calculation_method,
+  );
 
   const formatTaxRate = (rate: number): string => {
     return `${rate.toFixed(2)}%`;
   };
 
-  const calculateTaxAmount = (price: number, rate: number, method: string): { tax: number; total: number } => {
+  const calculateTaxAmount = (
+    price: number,
+    rate: number,
+    method: string,
+  ): { tax: number; total: number } => {
     if (method === "inclusive") {
       const taxAmount = (price * rate) / (100 + rate);
       return { tax: taxAmount, total: price };
@@ -94,32 +122,32 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
   };
 
   const examplePrice = 100;
-  const exampleCalculation = calculateTaxAmount(examplePrice, settings.default_tax_rate, settings.tax_calculation_method);
+  const exampleCalculation = calculateTaxAmount(
+    examplePrice,
+    settings.default_tax_rate,
+    settings.tax_calculation_method,
+  );
 
   return (
     <div className="space-y-6">
       <Alert>
         <Receipt className="h-4 w-4" />
         <AlertDescription>
-          Tax settings apply to all invoices and billing.
-          Consult with your accountant or tax advisor for compliance requirements.
+          Tax settings apply to all invoices and billing. Consult with your accountant or tax
+          advisor for compliance requirements.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>Tax Configuration</CardTitle>
-          <CardDescription>
-            Configure tax types and calculation methods
-          </CardDescription>
+          <CardDescription>Configure tax types and calculation methods</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="tax_enabled">Enable Tax Calculations</Label>
-              <p className="text-sm text-muted-foreground">
-                Apply tax to invoices and billing
-              </p>
+              <p className="text-sm text-muted-foreground">Apply tax to invoices and billing</p>
             </div>
             <Switch
               id="tax_enabled"
@@ -147,9 +175,7 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-muted-foreground">
-                  {selectedTaxType?.description}
-                </p>
+                <p className="text-sm text-muted-foreground">{selectedTaxType?.description}</p>
               </div>
 
               <div className="space-y-2">
@@ -199,7 +225,8 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                 <AlertDescription>
                   <strong>Example calculation:</strong> Price ${examplePrice.toFixed(2)}
                   <br />
-                  Tax ({formatTaxRate(settings.default_tax_rate)}): ${exampleCalculation.tax.toFixed(2)}
+                  Tax ({formatTaxRate(settings.default_tax_rate)}): $
+                  {exampleCalculation.tax.toFixed(2)}
                   <br />
                   Total: ${exampleCalculation.total.toFixed(2)}
                 </AlertDescription>
@@ -244,7 +271,8 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                       placeholder="e.g., VAT Number, GST Number, Tax ID"
                     />
                     <p className="text-sm text-muted-foreground">
-                      Label shown to customers (e.g., &quot;VAT Number&quot; for EU, &quot;GST Number&quot; for India)
+                      Label shown to customers (e.g., &quot;VAT Number&quot; for EU, &quot;GST
+                      Number&quot; for India)
                     </p>
                   </div>
 
@@ -258,7 +286,9 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                     <Switch
                       id="validate_format"
                       checked={settings.validate_tax_id_format}
-                      onCheckedChange={(checked) => updateSetting("validate_tax_id_format", checked)}
+                      onCheckedChange={(checked) =>
+                        updateSetting("validate_tax_id_format", checked)
+                      }
                     />
                   </div>
                 </>
@@ -299,7 +329,9 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                   <Switch
                     id="require_certificate"
                     checked={settings.require_exemption_certificate}
-                    onCheckedChange={(checked) => updateSetting("require_exemption_certificate", checked)}
+                    onCheckedChange={(checked) =>
+                      updateSetting("require_exemption_certificate", checked)
+                    }
                   />
                 </div>
               )}
@@ -308,8 +340,8 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertDescription>
-                    Tax-exempt customers will not be charged tax on invoices.
-                    Ensure proper documentation is maintained for compliance.
+                    Tax-exempt customers will not be charged tax on invoices. Ensure proper
+                    documentation is maintained for compliance.
                   </AlertDescription>
                 </Alert>
               )}
@@ -329,7 +361,10 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                   <Label>Current Regional Rates</Label>
                   <div className="space-y-2">
                     {Object.entries(settings.regional_tax_rates).map(([code, rate]) => (
-                      <div key={code} className="flex items-center justify-between p-2 bg-muted rounded">
+                      <div
+                        key={code}
+                        className="flex items-center justify-between p-2 bg-muted rounded"
+                      >
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary">{code}</Badge>
                           <span className="text-sm">{formatTaxRate(rate)}</span>
@@ -364,10 +399,7 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                     max="100"
                     step="0.01"
                   />
-                  <Button
-                    onClick={addRegionalTaxRate}
-                    disabled={!newRegionCode || !newRegionRate}
-                  >
+                  <Button onClick={addRegionalTaxRate} disabled={!newRegionCode || !newRegionRate}>
                     Add Rate
                   </Button>
                 </div>
@@ -379,7 +411,8 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Regional rates override the default rate when customer address matches the region code.
+                  Regional rates override the default rate when customer address matches the region
+                  code.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -388,9 +421,7 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
           <Card>
             <CardHeader>
               <CardTitle>Tax Reporting</CardTitle>
-              <CardDescription>
-                Configure tax reporting and compliance features
-              </CardDescription>
+              <CardDescription>Configure tax reporting and compliance features</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
@@ -413,7 +444,9 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                   <Input
                     id="tax_reg_number"
                     value={settings.tax_registration_number || ""}
-                    onChange={(e) => updateSetting("tax_registration_number", e.target.value || null)}
+                    onChange={(e) =>
+                      updateSetting("tax_registration_number", e.target.value || null)
+                    }
                     placeholder="Your company's tax registration number"
                   />
                   <p className="text-sm text-muted-foreground">
@@ -428,9 +461,7 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
           <Card>
             <CardHeader>
               <CardTitle>Tax Configuration Summary</CardTitle>
-              <CardDescription>
-                Overview of current tax settings
-              </CardDescription>
+              <CardDescription>Overview of current tax settings</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -449,7 +480,9 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                     <h4 className="font-medium mb-2">Tax ID Requirements:</h4>
                     <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                       <li>Label: {settings.tax_id_label}</li>
-                      <li>Validation: {settings.validate_tax_id_format ? "Enabled" : "Disabled"}</li>
+                      <li>
+                        Validation: {settings.validate_tax_id_format ? "Enabled" : "Disabled"}
+                      </li>
                     </ul>
                   </div>
                 )}
@@ -459,7 +492,10 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                     <h4 className="font-medium mb-2">Exemptions:</h4>
                     <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                       <li>Exemptions allowed: Yes</li>
-                      <li>Certificate required: {settings.require_exemption_certificate ? "Yes" : "No"}</li>
+                      <li>
+                        Certificate required:{" "}
+                        {settings.require_exemption_certificate ? "Yes" : "No"}
+                      </li>
                     </ul>
                   </div>
                 )}
@@ -469,7 +505,9 @@ export function TaxSettings({ settings, onChange }: TaxSettingsProps) {
                     <h4 className="font-medium mb-2">Regional Rates:</h4>
                     <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                       {Object.entries(settings.regional_tax_rates).map(([code, rate]) => (
-                        <li key={code}>{code}: {formatTaxRate(rate)}</li>
+                        <li key={code}>
+                          {code}: {formatTaxRate(rate)}
+                        </li>
                       ))}
                     </ul>
                   </div>

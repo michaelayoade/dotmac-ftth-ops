@@ -8,12 +8,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  WifiOff,
-  RefreshCw,
-  CheckCircle2,
-  Server,
-} from "lucide-react";
+import { WifiOff, RefreshCw, CheckCircle2, Server } from "lucide-react";
 import { usePWA } from "@/components/pwa/PWAProvider";
 
 export default function OfflinePage() {
@@ -89,12 +84,7 @@ export default function OfflinePage() {
 
           {/* Actions */}
           <div className="space-y-2 pt-2">
-            <Button
-              onClick={handleRetry}
-              disabled={isChecking}
-              className="w-full"
-              size="lg"
-            >
+            <Button onClick={handleRetry} disabled={isChecking} className="w-full" size="lg">
               {isChecking ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -108,20 +98,14 @@ export default function OfflinePage() {
               )}
             </Button>
 
-            <Button
-              onClick={() => window.history.back()}
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={() => window.history.back()} variant="outline" className="w-full">
               Go Back
             </Button>
           </div>
 
           {/* Help Text */}
           <div className="text-xs text-center text-muted-foreground pt-2 border-t">
-            <p>
-              This page will automatically reload when your connection is restored.
-            </p>
+            <p>This page will automatically reload when your connection is restored.</p>
           </div>
         </CardContent>
       </Card>

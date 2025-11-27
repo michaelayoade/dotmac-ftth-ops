@@ -152,7 +152,8 @@ export function PerformanceMonitor({
     if (navigation) {
       const rawStart =
         "navigationStart" in navigation
-          ? (navigation as PerformanceNavigationTiming & { navigationStart: number }).navigationStart
+          ? (navigation as PerformanceNavigationTiming & { navigationStart: number })
+              .navigationStart
           : navigation.startTime;
       const navStart = typeof rawStart === "number" ? rawStart : 0;
       newMetrics.ttfb = navigation.responseStart - navigation.requestStart;
@@ -284,66 +285,66 @@ export function PerformanceMonitor({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h4 className="text-md font-semibold text-gray-900 mb-3">Loading Performance</h4>
-            <div className="space-y-3">
-              <MetricRow
-                label="First Contentful Paint"
-                unit="ms"
-                threshold={mergedThresholds.fcp}
-                {...(metrics.fcp !== undefined ? { value: metrics.fcp } : {})}
-              />
-              <MetricRow
-                label="Time to First Byte"
-                unit="ms"
-                threshold={mergedThresholds.ttfb}
-                {...(metrics.ttfb !== undefined ? { value: metrics.ttfb } : {})}
-              />
-              <MetricRow
-                label="DOM Content Loaded"
-                unit="ms"
-                {...(metrics.domContentLoaded !== undefined
-                  ? { value: metrics.domContentLoaded }
-                  : {})}
-              />
-              <MetricRow
-                label="Load Complete"
-                unit="ms"
-                {...(metrics.loadComplete !== undefined ? { value: metrics.loadComplete } : {})}
-              />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h4 className="text-md font-semibold text-gray-900 mb-3">React Performance</h4>
-            <div className="space-y-3">
-              <MetricRow
-                label="Render Time"
-                unit="ms"
-                {...(metrics.renderTime !== undefined ? { value: metrics.renderTime } : {})}
-              />
-              <MetricRow
-                label="Commit Time"
-                unit="ms"
-                {...(metrics.commitTime !== undefined ? { value: metrics.commitTime } : {})}
-              />
-              <MetricRow
-                label="Memory Usage"
-                unit="MB"
-                precision={1}
-                {...(metrics.usedJSHeapSize !== undefined
-                  ? { value: metrics.usedJSHeapSize / 1024 / 1024 }
-                  : {})}
-              />
-              <MetricRow
-                label="Total Memory"
-                unit="MB"
-                precision={1}
-                {...(metrics.totalJSHeapSize !== undefined
-                  ? { value: metrics.totalJSHeapSize / 1024 / 1024 }
-                  : {})}
-              />
-            </div>
+          <div className="space-y-3">
+            <MetricRow
+              label="First Contentful Paint"
+              unit="ms"
+              threshold={mergedThresholds.fcp}
+              {...(metrics.fcp !== undefined ? { value: metrics.fcp } : {})}
+            />
+            <MetricRow
+              label="Time to First Byte"
+              unit="ms"
+              threshold={mergedThresholds.ttfb}
+              {...(metrics.ttfb !== undefined ? { value: metrics.ttfb } : {})}
+            />
+            <MetricRow
+              label="DOM Content Loaded"
+              unit="ms"
+              {...(metrics.domContentLoaded !== undefined
+                ? { value: metrics.domContentLoaded }
+                : {})}
+            />
+            <MetricRow
+              label="Load Complete"
+              unit="ms"
+              {...(metrics.loadComplete !== undefined ? { value: metrics.loadComplete } : {})}
+            />
           </div>
         </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-3">React Performance</h4>
+          <div className="space-y-3">
+            <MetricRow
+              label="Render Time"
+              unit="ms"
+              {...(metrics.renderTime !== undefined ? { value: metrics.renderTime } : {})}
+            />
+            <MetricRow
+              label="Commit Time"
+              unit="ms"
+              {...(metrics.commitTime !== undefined ? { value: metrics.commitTime } : {})}
+            />
+            <MetricRow
+              label="Memory Usage"
+              unit="MB"
+              precision={1}
+              {...(metrics.usedJSHeapSize !== undefined
+                ? { value: metrics.usedJSHeapSize / 1024 / 1024 }
+                : {})}
+            />
+            <MetricRow
+              label="Total Memory"
+              unit="MB"
+              precision={1}
+              {...(metrics.totalJSHeapSize !== undefined
+                ? { value: metrics.totalJSHeapSize / 1024 / 1024 }
+                : {})}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Performance Trends */}
       {showDetails && history.length > 5 && (

@@ -20,10 +20,7 @@ export default function IPCalculatorPage() {
     return Number(cidr);
   }, [value]);
 
-  const error =
-    touched && !parsed
-      ? "Enter a valid IPv4 CIDR (e.g., 192.0.2.0/24)"
-      : "";
+  const error = touched && !parsed ? "Enter a valid IPv4 CIDR (e.g., 192.0.2.0/24)" : "";
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-10 space-y-4">

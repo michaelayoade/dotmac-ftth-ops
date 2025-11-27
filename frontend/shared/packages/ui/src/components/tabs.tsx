@@ -34,7 +34,10 @@ interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
-  ({ children, defaultValue, value: controlledValue, onValueChange, orientation, ...props }, ref) => {
+  (
+    { children, defaultValue, value: controlledValue, onValueChange, orientation, ...props },
+    ref,
+  ) => {
     const [internalValue, setInternalValue] = React.useState(defaultValue || "");
     const value = controlledValue !== undefined ? controlledValue : internalValue;
 

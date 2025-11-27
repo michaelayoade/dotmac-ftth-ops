@@ -3,7 +3,7 @@
  * Mocks admin settings management operations
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // In-memory storage
 let categories: any[] = [];
@@ -70,7 +70,8 @@ export function seedCategorySettings(category: string, settings: any): void {
 
 export function seedAuditLogs(logs: any[]): void {
   auditLogs = logs;
-  nextAuditId = logs.reduce((max, log) => Math.max(max, parseInt(log.id.replace("audit-", ""))), 0) + 1;
+  nextAuditId =
+    logs.reduce((max, log) => Math.max(max, parseInt(log.id.replace("audit-", ""))), 0) + 1;
 }
 
 export function clearSettingsData(): void {
@@ -117,7 +118,7 @@ export const settingsHandlers = [
 
       settings = createMockSettings(
         category as string,
-        displayNames[category as string] || category as string
+        displayNames[category as string] || (category as string),
       );
       categorySettings.set(category as string, settings);
     }
@@ -141,10 +142,9 @@ export const settingsHandlers = [
     const { category } = req.params;
     const body = await req.json<any>();
 
-    let settings = categorySettings.get(category as string) || createMockSettings(
-      category as string,
-      category as string
-    );
+    let settings =
+      categorySettings.get(category as string) ||
+      createMockSettings(category as string, category as string);
 
     // Apply updates
     if (body.updates) {
@@ -206,11 +206,11 @@ export const settingsHandlers = [
     const valid = Object.keys(errors).length === 0;
 
     return HttpResponse.json({
-        valid,
-        errors,
-        warnings,
-        restart_required: restartRequired,
-      });
+      valid,
+      errors,
+      warnings,
+      restart_required: restartRequired,
+    });
   }),
 
   // GET /api/v1/admin/settings/audit-logs - Get audit logs

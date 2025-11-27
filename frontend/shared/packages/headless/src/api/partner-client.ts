@@ -85,12 +85,9 @@ export class PartnerApiClient {
 
     const response = await this.client.request<
       ApiResponse<{ customers: Customer[]; total: number; pagination: any }>
-    >(
-      `/api/v1/partners/${sanitizedPartnerId}/customers?${searchParams.toString()}`,
-      {
-        method: "GET",
-      },
-    );
+    >(`/api/v1/partners/${sanitizedPartnerId}/customers?${searchParams.toString()}`, {
+      method: "GET",
+    });
 
     // Validate customer data
     if (response.data?.customers) {
@@ -187,12 +184,9 @@ export class PartnerApiClient {
 
     return this.client.request<
       ApiResponse<{ commissions: CommissionRecord[]; total: number; summary: any }>
-    >(
-      `/api/v1/partners/${partnerId}/commissions?${searchParams.toString()}`,
-      {
-        method: "GET",
-      },
-    );
+    >(`/api/v1/partners/${partnerId}/commissions?${searchParams.toString()}`, {
+      method: "GET",
+    });
   }
 
   async getAnalytics(

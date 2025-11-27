@@ -3,14 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import {
@@ -349,9 +342,7 @@ export default function PaymentMethodsPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getPaymentMethodIcon(method.method_type)}
-                        <span className="capitalize">
-                          {method.method_type.replace("_", " ")}
-                        </span>
+                        <span className="capitalize">{method.method_type.replace("_", " ")}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -379,8 +370,7 @@ export default function PaymentMethodsPage() {
                     </TableCell>
                     <TableCell>
                       <span className="font-mono">
-                        ****{" "}
-                        {method.card_last4 || method.bank_account_last4 || "****"}
+                        **** {method.card_last4 || method.bank_account_last4 || "****"}
                       </span>
                     </TableCell>
                     <TableCell>

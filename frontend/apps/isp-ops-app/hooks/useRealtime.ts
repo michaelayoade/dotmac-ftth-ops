@@ -6,8 +6,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
 import { SSEClient, SSEEndpoints } from "../lib/realtime/sse-client";
 import {
   WebSocketClient,
@@ -42,25 +41,18 @@ export function useSSE<T extends BaseEvent>(
   handler: EventHandler<T>,
   enabled = true,
 ) {
-  const { data: session } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
-  const authToken = session?.session?.token;
+  const { user, isAuthenticated } = useSession();
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<SSEClient | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    // Don't connect if disabled or not authenticated
+    if (!enabled || !isAuthenticated) return;
 
-    if (!authToken) {
-      setError("Missing auth token");
-      return;
-    }
-
-    // Create SSE client
+    // Create SSE client - cookies sent automatically via withCredentials
     const client = new SSEClient({
       endpoint,
-      token: authToken,
       onOpen: () => setStatus(ConnectionStatus.CONNECTED),
       onError: () => {
         setStatus(ConnectionStatus.ERROR);
@@ -84,7 +76,7 @@ export function useSSE<T extends BaseEvent>(
       client.close();
       clientRef.current = null;
     };
-  }, [endpoint, eventType, handler, enabled, user, authToken]);
+  }, [endpoint, eventType, handler, enabled, user, isAuthenticated]);
 
   const reconnect = useCallback(() => {
     if (clientRef.current) {
@@ -143,23 +135,18 @@ export function useRADIUSSessionEvents(handler: EventHandler<RADIUSSessionEvent>
  * Base WebSocket hook
  */
 export function useWebSocket(endpoint: string, enabled = true) {
-  const { data: session } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const { user, isAuthenticated } = useSession();
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<WebSocketClient | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    // Don't connect if disabled or not authenticated
+    if (!enabled || !isAuthenticated) return;
 
-    if (!session?.session?.token) {
-      setError("Missing auth token");
-      return;
-    }
-
+    // Create WebSocket client - cookies sent with HTTP upgrade handshake
     const client = new WebSocketClient({
       endpoint,
-      token: session.session.token,
       onOpen: () => setStatus(ConnectionStatus.CONNECTED),
       onError: () => {
         setStatus(ConnectionStatus.ERROR);
@@ -180,7 +167,7 @@ export function useWebSocket(endpoint: string, enabled = true) {
       client.close();
       clientRef.current = null;
     };
-  }, [endpoint, enabled, user, session?.session?.token]);
+  }, [endpoint, enabled, user, isAuthenticated]);
 
   const subscribe = useCallback(
     <T extends BaseEvent>(eventType: EventType | string, handler: EventHandler<T>) => {

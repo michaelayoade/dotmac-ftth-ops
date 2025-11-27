@@ -11,6 +11,7 @@ import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 import structlog
@@ -354,9 +355,7 @@ class TicketService:
                 "in_progress"
             ),
             func.sum(case((Ticket.status == TicketStatus.WAITING, 1), else_=0)).label("waiting"),
-            func.sum(case((Ticket.status == TicketStatus.RESOLVED, 1), else_=0)).label(
-                "resolved"
-            ),
+            func.sum(case((Ticket.status == TicketStatus.RESOLVED, 1), else_=0)).label("resolved"),
             func.sum(case((Ticket.status == TicketStatus.CLOSED, 1), else_=0)).label("closed"),
         )
 

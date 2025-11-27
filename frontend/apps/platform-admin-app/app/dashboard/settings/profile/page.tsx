@@ -35,8 +35,8 @@ import {
   X,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import {
   useUpdateProfile,
   useChangePassword,
@@ -54,7 +54,7 @@ import {
 import { logger } from "@/lib/logger";
 
 type DisplayUser = Pick<
-  ExtendedUser,
+  UserInfo,
   | "id"
   | "email"
   | "username"
@@ -72,8 +72,8 @@ type DisplayUser = Pick<
 
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
-  const { data: session, refetch: refreshSession } = useSession();
-  const user = session?.user as DisplayUser | undefined;
+  const { user: sessionUser, refreshUser } = useSession();
+  const user = sessionUser as DisplayUser | undefined;
   const { data: sessionsData, isLoading: sessionsLoading } = useListSessions();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();
@@ -176,7 +176,7 @@ export default function ProfileSettingsPage() {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file",
         description: "Please select an image file (JPG, PNG, or GIF)",
@@ -216,7 +216,10 @@ export default function ProfileSettingsPage() {
           await uploadAvatar.mutateAsync(avatarFile);
           logger.info("Avatar uploaded successfully");
         } catch (avatarError) {
-          logger.error("Failed to upload avatar", avatarError instanceof Error ? avatarError : new Error(String(avatarError)));
+          logger.error(
+            "Failed to upload avatar",
+            avatarError instanceof Error ? avatarError : new Error(String(avatarError)),
+          );
           toast({
             title: "Avatar upload failed",
             description: "Your profile was updated but the avatar upload failed. Please try again.",
@@ -227,7 +230,7 @@ export default function ProfileSettingsPage() {
 
       // Update profile
       await updateProfile.mutateAsync(formData);
-      await refreshSession();
+      await refreshUser();
 
       // Reset avatar state
       setAvatarFile(null);
@@ -377,7 +380,7 @@ export default function ProfileSettingsPage() {
       });
       setMfaEnabled(true);
       setIsSetup2FAOpen(false);
-      await refreshSession();
+      await refreshUser();
     } catch (error) {
       logger.error(
         "Failed to verify 2FA",
@@ -417,7 +420,7 @@ export default function ProfileSettingsPage() {
       });
       setMfaEnabled(false);
       setIsDisable2FAOpen(false);
-      await refreshSession();
+      await refreshUser();
     } catch (error) {
       logger.error(
         "Failed to disable 2FA",
@@ -460,9 +463,9 @@ export default function ProfileSettingsPage() {
 
   const handleVerifyPhone = async () => {
     try {
-      logger.info("Verifying phone number", { phone: formData['phone'] });
-      await verifyPhone.mutateAsync(formData['phone']);
-      await refreshSession();
+      logger.info("Verifying phone number", { phone: formData["phone"] });
+      await verifyPhone.mutateAsync(formData["phone"]);
+      await refreshUser();
       toast({
         title: "Success",
         description: "Phone number verified successfully",
@@ -537,7 +540,7 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const getInitials = (firstName?: string, lastName?: string) => {
+  const getInitials = (firstName?: string | null | undefined, lastName?: string | null | undefined) => {
     if (!firstName || !lastName) return "U";
     return `${firstName[0]}${lastName[0]}`.toUpperCase();
   };
@@ -615,11 +618,11 @@ export default function ProfileSettingsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                      onClick={() => document.getElementById("avatar-upload")?.click()}
                       type="button"
                     >
                       <Camera className="h-4 w-4 mr-2" />
-                      {avatarPreview ? 'Change Photo' : 'Upload Photo'}
+                      {avatarPreview ? "Change Photo" : "Upload Photo"}
                     </Button>
                     <p className="text-xs text-muted-foreground">JPG, PNG or GIF, max 2MB</p>
                   </div>
@@ -662,7 +665,7 @@ export default function ProfileSettingsPage() {
                   <Input
                     id="email"
                     type="email"
-                    value={formData['email']}
+                    value={formData["email"]}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     disabled={!isEditing}
                   />
@@ -679,12 +682,12 @@ export default function ProfileSettingsPage() {
                       <Input
                         id="phone"
                         type="tel"
-                        value={formData['phone']}
+                        value={formData["phone"]}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         disabled={!isEditing}
                         placeholder="Enter phone number"
                       />
-                      {isEditing && formData['phone'] && (
+                      {isEditing && formData["phone"] && (
                         <Button size="sm" variant="outline" onClick={handleVerifyPhone}>
                           Verify
                         </Button>

@@ -10,7 +10,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Shield } from "lucide-react";
@@ -72,17 +78,15 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          These settings apply as defaults for <strong>new subscribers only</strong>.
-          Existing subscribers retain their current settings unless manually updated.
+          These settings apply as defaults for <strong>new subscribers only</strong>. Existing
+          subscribers retain their current settings unless manually updated.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>Authentication Settings</CardTitle>
-          <CardDescription>
-            Configure password hashing and authentication defaults
-          </CardDescription>
+          <CardDescription>Configure password hashing and authentication defaults</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Password Hash Method */}
@@ -151,9 +155,7 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Session Settings</CardTitle>
-          <CardDescription>
-            Configure session and idle timeouts
-          </CardDescription>
+          <CardDescription>Configure session and idle timeouts</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -205,7 +207,8 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
               onChange={(e) => updateSetting("acct_interim_interval", parseInt(e.target.value))}
             />
             <p className="text-sm text-muted-foreground">
-              Seconds ({formatSeconds(settings.acct_interim_interval)}) - How often usage updates are sent
+              Seconds ({formatSeconds(settings.acct_interim_interval)}) - How often usage updates
+              are sent
             </p>
           </div>
         </CardContent>
@@ -214,9 +217,7 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
       <Card>
         <CardHeader>
           <CardTitle>Bandwidth Settings</CardTitle>
-          <CardDescription>
-            Default bandwidth limits for new subscribers
-          </CardDescription>
+          <CardDescription>Default bandwidth limits for new subscribers</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -252,8 +253,8 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Bandwidth limits are applied via RADIUS reply attributes.
-              Ensure your NAS supports the configured format (Mikrotik-Rate-Limit, Cisco-AVPair, etc.)
+              Bandwidth limits are applied via RADIUS reply attributes. Ensure your NAS supports the
+              configured format (Mikrotik-Rate-Limit, Cisco-AVPair, etc.)
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -274,12 +275,10 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
               <div className="space-y-2">
                 {Object.entries(settings.custom_attributes).map(([key, value]) => (
                   <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
-                    <code className="flex-1 text-sm">{key} = {value}</code>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeCustomAttribute(key)}
-                    >
+                    <code className="flex-1 text-sm">
+                      {key} = {value}
+                    </code>
+                    <Button variant="ghost" size="sm" onClick={() => removeCustomAttribute(key)}>
                       Remove
                     </Button>
                   </div>
@@ -302,10 +301,7 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
                 value={newAttrValue}
                 onChange={(e) => setNewAttrValue(e.target.value)}
               />
-              <Button
-                onClick={addCustomAttribute}
-                disabled={!newAttrKey || !newAttrValue}
-              >
+              <Button onClick={addCustomAttribute} disabled={!newAttrKey || !newAttrValue}>
                 Add Attribute
               </Button>
             </div>
@@ -327,8 +323,8 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Vendor-specific settings are configured at the NAS level.
-              This section is for advanced users only.
+              Vendor-specific settings are configured at the NAS level. This section is for advanced
+              users only.
             </AlertDescription>
           </Alert>
           <div className="mt-4">
@@ -348,7 +344,8 @@ export function RADIUSSettings({ settings, onChange }: RADIUSSettingsProps) {
               }}
             />
             <p className="text-sm text-muted-foreground mt-2">
-              Example: {`{"mikrotik": {"rate_limit": "100M/50M"}, "cisco": {"qos_policy": "premium"}}`}
+              Example:{" "}
+              {`{"mikrotik": {"rate_limit": "100M/50M"}, "cisco": {"qos_policy": "premium"}}`}
             </p>
           </div>
         </CardContent>

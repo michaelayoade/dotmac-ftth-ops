@@ -287,8 +287,8 @@ export default function CommunicationsDashboard() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Badge className={getStatusColor(log['status'] as CommunicationStatus)}>
-                        {getStatusLabel(log['status'] as CommunicationStatus)}
+                      <Badge className={getStatusColor(log["status"] as CommunicationStatus)}>
+                        {getStatusLabel(log["status"] as CommunicationStatus)}
                       </Badge>
                       <span className="text-xs text-muted-foreground">{log.channel}</span>
                     </div>

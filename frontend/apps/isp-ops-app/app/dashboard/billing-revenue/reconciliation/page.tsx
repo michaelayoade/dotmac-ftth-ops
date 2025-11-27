@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import {
   Plus,
   Filter,
@@ -19,21 +19,14 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { RouteGuard } from '@/components/auth/PermissionGuard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dotmac/ui';
-import { Button } from '@dotmac/ui';
-import { Badge } from '@dotmac/ui';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@dotmac/ui';
+import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -42,20 +35,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@dotmac/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@dotmac/ui';
-import { Input } from '@dotmac/ui';
-import { Label } from '@dotmac/ui';
-import { Textarea } from '@dotmac/ui';
-import { useAppConfig } from '@/providers/AppConfigContext';
-import { useToast } from '@dotmac/ui';
-import { useConfirmDialog } from '@dotmac/ui';
+} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { useAppConfig } from "@/providers/AppConfigContext";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 // Types
 interface ReconciliationSession {
@@ -72,7 +59,7 @@ interface ReconciliationSession {
   total_withdrawals: number;
   unreconciled_count: number;
   discrepancy_amount: number;
-  status: 'in_progress' | 'completed' | 'approved';
+  status: "in_progress" | "completed" | "approved";
   completed_by?: string;
   completed_at?: string;
   approved_by?: string;
@@ -123,36 +110,41 @@ interface ReconciliationListResponse {
 // API Functions
 const buildApiBase = (apiBaseUrl: string) => `${apiBaseUrl}/api/v1/billing/reconciliations`;
 
-const fetchReconciliations = async (apiBaseUrl: string, params: {
-  page?: number;
-  page_size?: number;
-  bank_account_id?: number;
-  status?: string;
-  start_date?: string;
-  end_date?: string;
-  search?: string;
-}): Promise<ReconciliationListResponse> => {
+const fetchReconciliations = async (
+  apiBaseUrl: string,
+  params: {
+    page?: number;
+    page_size?: number;
+    bank_account_id?: number;
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+    search?: string;
+  },
+): Promise<ReconciliationListResponse> => {
   const queryParams = new URLSearchParams();
-  if (params.page) queryParams.append('page', params.page.toString());
-  if (params.page_size) queryParams.append('page_size', params.page_size.toString());
-  if (params.bank_account_id) queryParams.append('bank_account_id', params.bank_account_id.toString());
-  if (params['status'] && params['status'] !== 'all') queryParams.append('status', params['status']);
-  if (params.start_date) queryParams.append('start_date', params.start_date);
-  if (params.end_date) queryParams.append('end_date', params.end_date);
-  if (params.search) queryParams.append('search', params.search);
+  if (params.page) queryParams.append("page", params.page.toString());
+  if (params.page_size) queryParams.append("page_size", params.page_size.toString());
+  if (params.bank_account_id)
+    queryParams.append("bank_account_id", params.bank_account_id.toString());
+  if (params["status"] && params["status"] !== "all")
+    queryParams.append("status", params["status"]);
+  if (params.start_date) queryParams.append("start_date", params.start_date);
+  if (params.end_date) queryParams.append("end_date", params.end_date);
+  if (params.search) queryParams.append("search", params.search);
 
   const response = await fetch(`${buildApiBase(apiBaseUrl)}?${queryParams.toString()}`, {
-    credentials: 'include',
+    credentials: "include",
   });
-  if (!response.ok) throw new Error('Failed to fetch reconciliations');
+  if (!response.ok) throw new Error("Failed to fetch reconciliations");
   return response.json();
 };
 
 const fetchReconciliationSummary = async (apiBaseUrl: string): Promise<ReconciliationSummary> => {
   const response = await fetch(`${buildApiBase(apiBaseUrl)}/summary`, {
-    credentials: 'include',
+    credentials: "include",
   });
-  if (!response.ok) throw new Error('Failed to fetch reconciliation summary');
+  if (!response.ok) throw new Error("Failed to fetch reconciliation summary");
   return response.json();
 };
 
@@ -161,12 +153,12 @@ const createReconciliation = async (
   data: ReconciliationStart,
 ): Promise<ReconciliationSession> => {
   const response = await fetch(buildApiBase(apiBaseUrl), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error('Failed to create reconciliation');
+  if (!response.ok) throw new Error("Failed to create reconciliation");
   return response.json();
 };
 
@@ -175,10 +167,10 @@ const completeReconciliation = async (
   id: number,
 ): Promise<ReconciliationSession> => {
   const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}/complete`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   });
-  if (!response.ok) throw new Error('Failed to complete reconciliation');
+  if (!response.ok) throw new Error("Failed to complete reconciliation");
   return response.json();
 };
 
@@ -187,10 +179,10 @@ const approveReconciliation = async (
   id: number,
 ): Promise<ReconciliationSession> => {
   const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}/approve`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   });
-  if (!response.ok) throw new Error('Failed to approve reconciliation');
+  if (!response.ok) throw new Error("Failed to approve reconciliation");
   return response.json();
 };
 
@@ -201,12 +193,24 @@ const formatMoney = (amountInCents: number): string => {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case 'in_progress':
-      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">In Progress</Badge>;
-    case 'completed':
-      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">Completed</Badge>;
-    case 'approved':
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Approved</Badge>;
+    case "in_progress":
+      return (
+        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+          In Progress
+        </Badge>
+      );
+    case "completed":
+      return (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+          Completed
+        </Badge>
+      );
+    case "approved":
+      return (
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+          Approved
+        </Badge>
+      );
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -214,9 +218,9 @@ const getStatusBadge = (status: string) => {
 
 const getDiscrepancyColor = (amount: number): string => {
   const absAmount = Math.abs(amount);
-  if (absAmount === 0) return 'text-green-600';
-  if (absAmount > 10000) return 'text-red-600 font-semibold'; // > $100
-  return 'text-orange-600';
+  if (absAmount === 0) return "text-green-600";
+  if (absAmount > 10000) return "text-red-600 font-semibold"; // > $100
+  return "text-orange-600";
 };
 
 // Main Component
@@ -231,40 +235,45 @@ export default function ReconciliationPage() {
   const [pageSize] = useState(10);
   const [filters, setFilters] = useState({
     bank_account_id: undefined as number | undefined,
-    status: 'all',
-    start_date: '',
-    end_date: '',
-    search: '',
+    status: "all",
+    start_date: "",
+    end_date: "",
+    search: "",
   });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createFormData, setCreateFormData] = useState<ReconciliationStart>({
     bank_account_id: 1,
-    period_start: '',
-    period_end: '',
+    period_start: "",
+    period_end: "",
     opening_balance: 0,
     statement_balance: 0,
-    statement_file_url: '',
-    notes: '',
+    statement_file_url: "",
+    notes: "",
   });
 
   // Queries
   const { data: summary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['reconciliation-summary', apiBaseUrl],
+    queryKey: ["reconciliation-summary", apiBaseUrl],
     queryFn: () => fetchReconciliationSummary(apiBaseUrl),
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
-  const { data: reconciliations, isLoading: listLoading, refetch } = useQuery({
-    queryKey: ['reconciliations', apiBaseUrl, page, pageSize, filters],
-    queryFn: () => fetchReconciliations(apiBaseUrl, {
-      page,
-      page_size: pageSize,
-      ...(filters.bank_account_id !== undefined && { bank_account_id: filters.bank_account_id }),
-      ...(filters.status !== 'all' && { status: filters.status }),
-      ...(filters.start_date && { start_date: filters.start_date }),
-      ...(filters.end_date && { end_date: filters.end_date }),
-      ...(filters.search && { search: filters.search }),
-    }),
+  const {
+    data: reconciliations,
+    isLoading: listLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["reconciliations", apiBaseUrl, page, pageSize, filters],
+    queryFn: () =>
+      fetchReconciliations(apiBaseUrl, {
+        page,
+        page_size: pageSize,
+        ...(filters.bank_account_id !== undefined && { bank_account_id: filters.bank_account_id }),
+        ...(filters.status !== "all" && { status: filters.status }),
+        ...(filters.start_date && { start_date: filters.start_date }),
+        ...(filters.end_date && { end_date: filters.end_date }),
+        ...(filters.search && { search: filters.search }),
+      }),
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
@@ -272,50 +281,56 @@ export default function ReconciliationPage() {
   const createMutation = useMutation({
     mutationFn: (data: ReconciliationStart) => createReconciliation(apiBaseUrl, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast({ title: 'Reconciliation session created successfully' });
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation-summary"] });
+      toast({ title: "Reconciliation session created successfully" });
       setIsCreateDialogOpen(false);
       resetCreateForm();
     },
     onError: (error: Error) => {
-      toast({ title: `Failed to create reconciliation: ${error.message}`, variant: 'destructive' });
+      toast({ title: `Failed to create reconciliation: ${error.message}`, variant: "destructive" });
     },
   });
 
   const completeMutation = useMutation({
     mutationFn: (id: number) => completeReconciliation(apiBaseUrl, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast({ title: 'Reconciliation completed successfully' });
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation-summary"] });
+      toast({ title: "Reconciliation completed successfully" });
     },
     onError: (error: Error) => {
-      toast({ title: `Failed to complete reconciliation: ${error.message}`, variant: 'destructive' });
+      toast({
+        title: `Failed to complete reconciliation: ${error.message}`,
+        variant: "destructive",
+      });
     },
   });
 
   const approveMutation = useMutation({
     mutationFn: (id: number) => approveReconciliation(apiBaseUrl, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast({ title: 'Reconciliation approved successfully' });
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation-summary"] });
+      toast({ title: "Reconciliation approved successfully" });
     },
     onError: (error: Error) => {
-      toast({ title: `Failed to approve reconciliation: ${error.message}`, variant: 'destructive' });
+      toast({
+        title: `Failed to approve reconciliation: ${error.message}`,
+        variant: "destructive",
+      });
     },
   });
 
   const resetCreateForm = () => {
     setCreateFormData({
       bank_account_id: 1,
-      period_start: '',
-      period_end: '',
+      period_start: "",
+      period_end: "",
       opening_balance: 0,
       statement_balance: 0,
-      statement_file_url: '',
-      notes: '',
+      statement_file_url: "",
+      notes: "",
     });
   };
 
@@ -325,9 +340,9 @@ export default function ReconciliationPage() {
 
   const handleComplete = async (id: number) => {
     const confirmed = await confirmDialog({
-      title: 'Complete reconciliation',
-      description: 'Are you sure you want to complete this reconciliation?',
-      confirmText: 'Complete',
+      title: "Complete reconciliation",
+      description: "Are you sure you want to complete this reconciliation?",
+      confirmText: "Complete",
     });
     if (confirmed) {
       completeMutation.mutate(id);
@@ -336,9 +351,9 @@ export default function ReconciliationPage() {
 
   const handleApprove = async (id: number) => {
     const confirmed = await confirmDialog({
-      title: 'Approve reconciliation',
-      description: 'Are you sure you want to approve this reconciliation?',
-      confirmText: 'Approve',
+      title: "Approve reconciliation",
+      description: "Are you sure you want to approve this reconciliation?",
+      confirmText: "Approve",
     });
     if (confirmed) {
       approveMutation.mutate(id);
@@ -346,7 +361,7 @@ export default function ReconciliationPage() {
   };
 
   return (
-    <RouteGuard permission={['billing:write']}>
+    <RouteGuard permission={["billing:write"]}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -608,11 +623,11 @@ export default function ReconciliationPage() {
               <div className="grid gap-2">
                 <Label htmlFor="filter_bank_account">Bank Account</Label>
                 <Select
-                  value={filters.bank_account_id?.toString() || 'all'}
+                  value={filters.bank_account_id?.toString() || "all"}
                   onValueChange={(value) =>
                     setFilters({
                       ...filters,
-                      bank_account_id: value === 'all' ? undefined : parseInt(value),
+                      bank_account_id: value === "all" ? undefined : parseInt(value),
                     })
                   }
                 >
@@ -719,11 +734,11 @@ export default function ReconciliationPage() {
                       <TableRow key={session.id}>
                         <TableCell className="font-medium">#{session.id}</TableCell>
                         <TableCell>
-                          {format(new Date(session.reconciliation_date), 'MMM dd, yyyy')}
+                          {format(new Date(session.reconciliation_date), "MMM dd, yyyy")}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {format(new Date(session.period_start), 'MMM dd')} -{' '}
-                          {format(new Date(session.period_end), 'MMM dd, yyyy')}
+                          {format(new Date(session.period_start), "MMM dd")} -{" "}
+                          {format(new Date(session.period_end), "MMM dd, yyyy")}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">Account #{session.bank_account_id}</Badge>
@@ -739,7 +754,7 @@ export default function ReconciliationPage() {
                         </TableCell>
                         <TableCell
                           className={`text-right font-mono ${getDiscrepancyColor(
-                            session.discrepancy_amount
+                            session.discrepancy_amount,
                           )}`}
                         >
                           {formatMoney(session.discrepancy_amount)}
@@ -755,7 +770,7 @@ export default function ReconciliationPage() {
                             <div>
                               <div className="font-medium">{session.completed_by}</div>
                               <div className="text-muted-foreground text-xs">
-                                {format(new Date(session.completed_at), 'MMM dd, HH:mm')}
+                                {format(new Date(session.completed_at), "MMM dd, HH:mm")}
                               </div>
                             </div>
                           ) : (
@@ -767,7 +782,7 @@ export default function ReconciliationPage() {
                             <div>
                               <div className="font-medium">{session.approved_by}</div>
                               <div className="text-muted-foreground text-xs">
-                                {format(new Date(session.approved_at), 'MMM dd, HH:mm')}
+                                {format(new Date(session.approved_at), "MMM dd, HH:mm")}
                               </div>
                             </div>
                           ) : (
@@ -780,12 +795,14 @@ export default function ReconciliationPage() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                router.push(`/dashboard/billing-revenue/reconciliation/${session.id}`)
+                                router.push(
+                                  `/dashboard/billing-revenue/reconciliation/${session.id}`,
+                                )
                               }
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {session.status === 'in_progress' && (
+                            {session.status === "in_progress" && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -799,7 +816,7 @@ export default function ReconciliationPage() {
                                 )}
                               </Button>
                             )}
-                            {session.status === 'completed' && (
+                            {session.status === "completed" && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -824,8 +841,8 @@ export default function ReconciliationPage() {
                 {reconciliations && reconciliations.total_pages > 1 && (
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
-                      Showing {(page - 1) * pageSize + 1} to{' '}
-                      {Math.min(page * pageSize, reconciliations.total)} of {reconciliations.total}{' '}
+                      Showing {(page - 1) * pageSize + 1} to{" "}
+                      {Math.min(page * pageSize, reconciliations.total)} of {reconciliations.total}{" "}
                       results
                     </div>
                     <div className="flex gap-2">
@@ -853,7 +870,7 @@ export default function ReconciliationPage() {
                                 <span className="px-2">...</span>
                               )}
                               <Button
-                                variant={p === page ? 'default' : 'outline'}
+                                variant={p === page ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => setPage(p)}
                               >

@@ -11,7 +11,11 @@ import userEvent from "@testing-library/user-event";
 import { IPCIDRInput } from "../IPCIDRInput";
 
 // Controlled wrapper component for testing validation
-function ControlledIPCIDRInput(props: Omit<React.ComponentProps<typeof IPCIDRInput>, 'value' | 'onChange'> & { initialValue?: string }) {
+function ControlledIPCIDRInput(
+  props: Omit<React.ComponentProps<typeof IPCIDRInput>, "value" | "onChange"> & {
+    initialValue?: string;
+  },
+) {
   const { initialValue = "", ...restProps } = props;
   const [value, setValue] = useState(initialValue);
 
@@ -74,7 +78,7 @@ describe("IPCIDRInput", () => {
       render(<IPCIDRInput {...defaultProps} />);
 
       expect(
-        screen.getByPlaceholderText("Enter CIDR notation (e.g., 192.168.1.0/24)")
+        screen.getByPlaceholderText("Enter CIDR notation (e.g., 192.168.1.0/24)"),
       ).toBeInTheDocument();
     });
 
@@ -91,9 +95,7 @@ describe("IPCIDRInput", () => {
     });
 
     it("renders with initial value", () => {
-      render(
-        <IPCIDRInput {...defaultProps} value="192.168.1.0/24" label="Network" />
-      );
+      render(<IPCIDRInput {...defaultProps} value="192.168.1.0/24" label="Network" />);
 
       const input = screen.getByLabelText("Network") as HTMLInputElement;
       expect(input.value).toBe("192.168.1.0/24");
@@ -126,9 +128,7 @@ describe("IPCIDRInput", () => {
       await user.tab(); // Trigger blur
 
       await waitFor(() => {
-        expect(screen.getByRole("alert")).toHaveTextContent(
-          "Invalid CIDR notation format"
-        );
+        expect(screen.getByRole("alert")).toHaveTextContent("Invalid CIDR notation format");
       });
     });
 
@@ -148,57 +148,35 @@ describe("IPCIDRInput", () => {
     it("shows error when IPv4 not allowed", async () => {
       const user = userEvent.setup();
 
-      render(
-        <ControlledIPCIDRInput
-          label="CIDR"
-          allowIPv4={false}
-          allowIPv6={true}
-        />
-      );
+      render(<ControlledIPCIDRInput label="CIDR" allowIPv4={false} allowIPv6={true} />);
 
       const input = screen.getByLabelText("CIDR");
       await user.type(input, "192.168.1.0/24");
       await user.tab(); // Trigger blur
 
       await waitFor(() => {
-        expect(screen.getByRole("alert")).toHaveTextContent(
-          "IPv4 CIDR is not allowed"
-        );
+        expect(screen.getByRole("alert")).toHaveTextContent("IPv4 CIDR is not allowed");
       });
     });
 
     it("shows error when IPv6 not allowed", async () => {
       const user = userEvent.setup();
 
-      render(
-        <ControlledIPCIDRInput
-          label="CIDR"
-          allowIPv4={true}
-          allowIPv6={false}
-        />
-      );
+      render(<ControlledIPCIDRInput label="CIDR" allowIPv4={true} allowIPv6={false} />);
 
       const input = screen.getByLabelText("CIDR");
       await user.type(input, "2001:db8::/64");
       await user.tab(); // Trigger blur
 
       await waitFor(() => {
-        expect(screen.getByRole("alert")).toHaveTextContent(
-          "IPv6 CIDR is not allowed"
-        );
+        expect(screen.getByRole("alert")).toHaveTextContent("IPv6 CIDR is not allowed");
       });
     });
 
     it("shows IPv4-specific error message when only IPv4 allowed", async () => {
       const user = userEvent.setup();
 
-      render(
-        <ControlledIPCIDRInput
-          label="CIDR"
-          allowIPv4={true}
-          allowIPv6={false}
-        />
-      );
+      render(<ControlledIPCIDRInput label="CIDR" allowIPv4={true} allowIPv6={false} />);
 
       const input = screen.getByLabelText("CIDR");
       await user.type(input, "invalid");
@@ -206,7 +184,7 @@ describe("IPCIDRInput", () => {
 
       await waitFor(() => {
         expect(screen.getByRole("alert")).toHaveTextContent(
-          "Invalid IPv4 CIDR format (e.g., 192.168.1.0/24)"
+          "Invalid IPv4 CIDR format (e.g., 192.168.1.0/24)",
         );
       });
     });
@@ -214,13 +192,7 @@ describe("IPCIDRInput", () => {
     it("shows IPv6-specific error message when only IPv6 allowed", async () => {
       const user = userEvent.setup();
 
-      render(
-        <ControlledIPCIDRInput
-          label="CIDR"
-          allowIPv4={false}
-          allowIPv6={true}
-        />
-      );
+      render(<ControlledIPCIDRInput label="CIDR" allowIPv4={false} allowIPv6={true} />);
 
       const input = screen.getByLabelText("CIDR");
       await user.type(input, "invalid");
@@ -228,7 +200,7 @@ describe("IPCIDRInput", () => {
 
       await waitFor(() => {
         expect(screen.getByRole("alert")).toHaveTextContent(
-          "Invalid IPv6 CIDR format (e.g., 2001:db8::/64)"
+          "Invalid IPv6 CIDR format (e.g., 2001:db8::/64)",
         );
       });
     });
@@ -250,12 +222,7 @@ describe("IPCIDRInput", () => {
   describe("Network Info Display (Lines 92-100, 135-150)", () => {
     it("displays network info for valid IPv4 CIDR", () => {
       render(
-        <IPCIDRInput
-          value="192.168.1.0/24"
-          onChange={jest.fn()}
-          label="CIDR"
-          showInfo={true}
-        />
+        <IPCIDRInput value="192.168.1.0/24" onChange={jest.fn()} label="CIDR" showInfo={true} />,
       );
 
       expect(screen.getByText("Network:")).toBeInTheDocument();
@@ -267,14 +234,7 @@ describe("IPCIDRInput", () => {
     });
 
     it("calculates large network correctly", () => {
-      render(
-        <IPCIDRInput
-          value="10.0.0.0/8"
-          onChange={jest.fn()}
-          label="CIDR"
-          showInfo={true}
-        />
-      );
+      render(<IPCIDRInput value="10.0.0.0/8" onChange={jest.fn()} label="CIDR" showInfo={true} />);
 
       expect(screen.getByText("10.0.0.0")).toBeInTheDocument();
       expect(screen.getByText("10.255.255.255")).toBeInTheDocument();
@@ -283,12 +243,7 @@ describe("IPCIDRInput", () => {
 
     it("does not show network info for IPv6", () => {
       render(
-        <IPCIDRInput
-          value="2001:db8::/64"
-          onChange={jest.fn()}
-          label="CIDR"
-          showInfo={true}
-        />
+        <IPCIDRInput value="2001:db8::/64" onChange={jest.fn()} label="CIDR" showInfo={true} />,
       );
 
       // IPv6 doesn't show network info
@@ -298,12 +253,7 @@ describe("IPCIDRInput", () => {
 
     it("hides network info when showInfo is false", () => {
       render(
-        <IPCIDRInput
-          value="192.168.1.0/24"
-          onChange={jest.fn()}
-          label="CIDR"
-          showInfo={false}
-        />
+        <IPCIDRInput value="192.168.1.0/24" onChange={jest.fn()} label="CIDR" showInfo={false} />,
       );
 
       expect(screen.queryByText("Network:")).not.toBeInTheDocument();
@@ -317,7 +267,7 @@ describe("IPCIDRInput", () => {
           label="CIDR"
           error="Custom error"
           showInfo={true}
-        />
+        />,
       );
 
       expect(screen.queryByText("Network:")).not.toBeInTheDocument();
@@ -327,17 +277,13 @@ describe("IPCIDRInput", () => {
 
   describe("Badge Display", () => {
     it("shows IPv4 badge for valid IPv4 CIDR", () => {
-      render(
-        <IPCIDRInput value="192.168.1.0/24" onChange={jest.fn()} label="CIDR" />
-      );
+      render(<IPCIDRInput value="192.168.1.0/24" onChange={jest.fn()} label="CIDR" />);
 
       expect(screen.getByText("IPv4 /24")).toBeInTheDocument();
     });
 
     it("shows IPv6 badge for valid IPv6 CIDR", () => {
-      render(
-        <IPCIDRInput value="2001:db8::/64" onChange={jest.fn()} label="CIDR" />
-      );
+      render(<IPCIDRInput value="2001:db8::/64" onChange={jest.fn()} label="CIDR" />);
 
       expect(screen.getByText("IPv6 /64")).toBeInTheDocument();
     });
@@ -365,9 +311,7 @@ describe("IPCIDRInput", () => {
     it("calls onBlur when input loses focus", () => {
       const onBlur = jest.fn();
 
-      render(
-        <IPCIDRInput value="" onChange={jest.fn()} onBlur={onBlur} label="CIDR" />
-      );
+      render(<IPCIDRInput value="" onChange={jest.fn()} onBlur={onBlur} label="CIDR" />);
 
       const input = screen.getByLabelText("CIDR");
       fireEvent.blur(input);
@@ -379,12 +323,7 @@ describe("IPCIDRInput", () => {
   describe("Error Display", () => {
     it("displays custom error prop", () => {
       render(
-        <IPCIDRInput
-          value=""
-          onChange={jest.fn()}
-          label="CIDR"
-          error="Custom error message"
-        />
+        <IPCIDRInput value="" onChange={jest.fn()} label="CIDR" error="Custom error message" />,
       );
 
       expect(screen.getByRole("alert")).toHaveTextContent("Custom error message");
@@ -394,14 +333,7 @@ describe("IPCIDRInput", () => {
       const onChange = jest.fn();
       const user = userEvent.setup();
 
-      render(
-        <IPCIDRInput
-          value=""
-          onChange={onChange}
-          label="CIDR"
-          error="Custom error"
-        />
-      );
+      render(<IPCIDRInput value="" onChange={onChange} label="CIDR" error="Custom error" />);
 
       const input = screen.getByLabelText("CIDR");
       await user.type(input, "invalid");
@@ -411,42 +343,21 @@ describe("IPCIDRInput", () => {
     });
 
     it("applies error styling to input", () => {
-      render(
-        <IPCIDRInput
-          value=""
-          onChange={jest.fn()}
-          label="CIDR"
-          error="Error"
-        />
-      );
+      render(<IPCIDRInput value="" onChange={jest.fn()} label="CIDR" error="Error" />);
 
       const input = screen.getByLabelText("CIDR");
       expect(input).toHaveClass("border-red-500");
     });
 
     it("sets aria-invalid when error exists", () => {
-      render(
-        <IPCIDRInput
-          value=""
-          onChange={jest.fn()}
-          label="CIDR"
-          error="Error"
-        />
-      );
+      render(<IPCIDRInput value="" onChange={jest.fn()} label="CIDR" error="Error" />);
 
       const input = screen.getByLabelText("CIDR");
       expect(input).toHaveAttribute("aria-invalid", "true");
     });
 
     it("sets aria-describedby to error id when error exists", () => {
-      render(
-        <IPCIDRInput
-          value=""
-          onChange={jest.fn()}
-          label="Network"
-          error="Error"
-        />
-      );
+      render(<IPCIDRInput value="" onChange={jest.fn()} label="Network" error="Error" />);
 
       const input = screen.getByLabelText("Network");
       expect(input).toHaveAttribute("aria-describedby", "Network-error");
@@ -461,7 +372,7 @@ describe("IPCIDRInput", () => {
           onChange={jest.fn()}
           label="CIDR"
           helpText="Enter the network range"
-        />
+        />,
       );
 
       expect(screen.getByText("Enter the network range")).toBeInTheDocument();
@@ -475,7 +386,7 @@ describe("IPCIDRInput", () => {
           label="CIDR"
           helpText="Help text"
           error="Error message"
-        />
+        />,
       );
 
       expect(screen.queryByText("Help text")).not.toBeInTheDocument();
@@ -490,7 +401,7 @@ describe("IPCIDRInput", () => {
           label="CIDR"
           helpText="Help text"
           showInfo={true}
-        />
+        />,
       );
 
       expect(screen.queryByText("Help text")).not.toBeInTheDocument();
@@ -500,14 +411,7 @@ describe("IPCIDRInput", () => {
 
   describe("Disabled State", () => {
     it("disables input when disabled prop is true", () => {
-      render(
-        <IPCIDRInput
-          value=""
-          onChange={jest.fn()}
-          label="CIDR"
-          disabled={true}
-        />
-      );
+      render(<IPCIDRInput value="" onChange={jest.fn()} label="CIDR" disabled={true} />);
 
       expect(screen.getByLabelText("CIDR")).toBeDisabled();
     });
@@ -516,14 +420,7 @@ describe("IPCIDRInput", () => {
       const onChange = jest.fn();
       const user = userEvent.setup();
 
-      render(
-        <IPCIDRInput
-          value=""
-          onChange={onChange}
-          label="CIDR"
-          disabled={true}
-        />
-      );
+      render(<IPCIDRInput value="" onChange={onChange} label="CIDR" disabled={true} />);
 
       const input = screen.getByLabelText("CIDR");
       await user.type(input, "192.168.1.0/24");
@@ -534,23 +431,14 @@ describe("IPCIDRInput", () => {
 
   describe("Accessibility", () => {
     it("associates label with input", () => {
-      render(
-        <IPCIDRInput value="" onChange={jest.fn()} label="Network Range" />
-      );
+      render(<IPCIDRInput value="" onChange={jest.fn()} label="Network Range" />);
 
       const input = screen.getByLabelText("Network Range");
       expect(input).toBeInTheDocument();
     });
 
     it("error has role=alert", () => {
-      render(
-        <IPCIDRInput
-          value=""
-          onChange={jest.fn()}
-          label="CIDR"
-          error="Error message"
-        />
-      );
+      render(<IPCIDRInput value="" onChange={jest.fn()} label="CIDR" error="Error message" />);
 
       expect(screen.getByRole("alert")).toHaveTextContent("Error message");
     });
@@ -567,12 +455,7 @@ describe("IPCIDRInput", () => {
   describe("Custom Styling", () => {
     it("applies custom className", () => {
       const { container } = render(
-        <IPCIDRInput
-          value=""
-          onChange={jest.fn()}
-          label="CIDR"
-          className="custom-class"
-        />
+        <IPCIDRInput value="" onChange={jest.fn()} label="CIDR" className="custom-class" />,
       );
 
       expect(container.firstChild).toHaveClass("custom-class");
@@ -584,13 +467,7 @@ describe("IPCIDRInput", () => {
       const onBlur = jest.fn();
       const user = userEvent.setup();
 
-      render(
-        <ControlledIPCIDRInput
-          onBlur={onBlur}
-          label="Network"
-          showInfo={true}
-        />
-      );
+      render(<ControlledIPCIDRInput onBlur={onBlur} label="Network" showInfo={true} />);
 
       const input = screen.getByLabelText("Network");
 

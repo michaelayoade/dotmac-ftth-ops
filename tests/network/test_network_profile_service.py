@@ -4,6 +4,8 @@ from dotmac.platform.network.models import IPv6AssignmentMode, Option82Policy
 from dotmac.platform.network.profile_service import SubscriberNetworkProfileService
 from dotmac.platform.network.schemas import NetworkProfileUpdate
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_upsert_creates_profile(async_db_session, subscriber_factory):

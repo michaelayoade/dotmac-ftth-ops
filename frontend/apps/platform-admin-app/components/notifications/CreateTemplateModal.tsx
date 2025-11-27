@@ -7,28 +7,14 @@
 "use client";
 
 import { useState } from "react";
-import {
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 import type { TemplateCreateRequest, CommunicationType } from "@/hooks/useNotifications";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 
 interface CreateTemplateModalProps {

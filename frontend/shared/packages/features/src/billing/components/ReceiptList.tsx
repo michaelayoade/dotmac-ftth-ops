@@ -115,29 +115,32 @@ export default function ReceiptList({
     fetchReceipts();
   }, [fetchReceipts]);
 
-  const handleDownloadPDF = useCallback(async (receipt: Receipt) => {
-    try {
-      const response = await apiClient.get(`/billing/receipts/${receipt.receipt_id}/pdf`, {
-        responseType: "blob",
-      });
+  const handleDownloadPDF = useCallback(
+    async (receipt: Receipt) => {
+      try {
+        const response = await apiClient.get(`/billing/receipts/${receipt.receipt_id}/pdf`, {
+          responseType: "blob",
+        });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `receipt_${receipt.receipt_number}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      logger.error(
-        "Failed to download receipt",
-        err instanceof Error ? err : new Error(String(err)),
-        { receiptId: receipt.receipt_id },
-      );
-      alert("Failed to download receipt. Please try again.");
-    }
-  }, [apiClient, logger]);
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `receipt_${receipt.receipt_number}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        logger.error(
+          "Failed to download receipt",
+          err instanceof Error ? err : new Error(String(err)),
+          { receiptId: receipt.receipt_id },
+        );
+        alert("Failed to download receipt. Please try again.");
+      }
+    },
+    [apiClient, logger],
+  );
 
   const handleViewReceipt = useCallback((receipt: Receipt) => {
     window.open(`/billing/receipts/${receipt.receipt_id}/html`, "_blank");
@@ -152,69 +155,78 @@ export default function ReceiptList({
     }
   }, []);
 
-  const handleEmailReceipt = useCallback(async (receipt: Receipt) => {
-    try {
-      await apiClient.post(`/billing/receipts/${receipt.receipt_id}/email`);
-      alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
-    } catch (err) {
-      logger.error(
-        "Failed to email receipt",
-        err instanceof Error ? err : new Error(String(err)),
-        { receiptId: receipt.receipt_id },
-      );
-      alert("Failed to email receipt. Please try again.");
-    }
-  }, [apiClient, logger]);
+  const handleEmailReceipt = useCallback(
+    async (receipt: Receipt) => {
+      try {
+        await apiClient.post(`/billing/receipts/${receipt.receipt_id}/email`);
+        alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
+      } catch (err) {
+        logger.error(
+          "Failed to email receipt",
+          err instanceof Error ? err : new Error(String(err)),
+          { receiptId: receipt.receipt_id },
+        );
+        alert("Failed to email receipt. Please try again.");
+      }
+    },
+    [apiClient, logger],
+  );
 
-  const handleBulkDownload = useCallback(async (selected: Receipt[]) => {
-    setBulkLoading(true);
-    try {
-      const receiptIds = selected.map((r) => r.receipt_id);
-      const response = await apiClient.post(
-        "/billing/receipts/bulk-download",
-        { receipt_ids: receiptIds },
-        { responseType: "blob" },
-      );
+  const handleBulkDownload = useCallback(
+    async (selected: Receipt[]) => {
+      setBulkLoading(true);
+      try {
+        const receiptIds = selected.map((r) => r.receipt_id);
+        const response = await apiClient.post(
+          "/billing/receipts/bulk-download",
+          { receipt_ids: receiptIds },
+          { responseType: "blob" },
+        );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `receipts-${new Date().toISOString().split("T")[0]}.zip`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      logger.error(
-        "Failed to download receipts",
-        err instanceof Error ? err : new Error(String(err)),
-        { receiptCount: selected.length },
-      );
-      alert("Failed to download receipts. Please try again.");
-    } finally {
-      setBulkLoading(false);
-    }
-  }, [apiClient, logger]);
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `receipts-${new Date().toISOString().split("T")[0]}.zip`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        logger.error(
+          "Failed to download receipts",
+          err instanceof Error ? err : new Error(String(err)),
+          { receiptCount: selected.length },
+        );
+        alert("Failed to download receipts. Please try again.");
+      } finally {
+        setBulkLoading(false);
+      }
+    },
+    [apiClient, logger],
+  );
 
-  const handleBulkEmail = useCallback(async (selected: Receipt[]) => {
-    setBulkLoading(true);
-    try {
-      const receiptIds = selected.map((r) => r.receipt_id);
-      await apiClient.post("/billing/receipts/bulk-email", {
-        receipt_ids: receiptIds,
-      });
-      alert(`Successfully sent ${receiptIds.length} receipt(s)`);
-    } catch (err) {
-      logger.error(
-        "Failed to email receipts",
-        err instanceof Error ? err : new Error(String(err)),
-        { receiptCount: selected.length },
-      );
-      alert("Failed to email receipts. Please try again.");
-    } finally {
-      setBulkLoading(false);
-    }
-  }, [apiClient, logger]);
+  const handleBulkEmail = useCallback(
+    async (selected: Receipt[]) => {
+      setBulkLoading(true);
+      try {
+        const receiptIds = selected.map((r) => r.receipt_id);
+        await apiClient.post("/billing/receipts/bulk-email", {
+          receipt_ids: receiptIds,
+        });
+        alert(`Successfully sent ${receiptIds.length} receipt(s)`);
+      } catch (err) {
+        logger.error(
+          "Failed to email receipts",
+          err instanceof Error ? err : new Error(String(err)),
+          { receiptCount: selected.length },
+        );
+        alert("Failed to email receipts. Please try again.");
+      } finally {
+        setBulkLoading(false);
+      }
+    },
+    [apiClient, logger],
+  );
 
   const columns: ColumnDef<Receipt>[] = useMemo(
     () => [

@@ -33,8 +33,7 @@ interface GraphQLResponse<T = any> {
  * Create a lightweight GraphQL client
  */
 function createGraphQLClient(): GraphQLClient {
-  const graphqlUrl =
-    platformConfig.api.graphqlEndpoint ?? platformConfig.api.buildUrl("/graphql");
+  const graphqlUrl = platformConfig.api.graphqlEndpoint ?? platformConfig.api.buildUrl("/graphql");
 
   return {
     async request<T = any>(query: string, variables?: Record<string, any>): Promise<T> {

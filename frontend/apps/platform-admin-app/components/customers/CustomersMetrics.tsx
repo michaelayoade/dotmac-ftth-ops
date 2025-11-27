@@ -17,12 +17,8 @@ interface CustomersMetricsWrapperProps {
 
 export function CustomersMetrics({ metrics, loading }: CustomersMetricsWrapperProps) {
   // Map app-specific type to shared type
-  const sharedMetrics: SharedCustomerMetrics | null = metrics as unknown as SharedCustomerMetrics | null;
+  const sharedMetrics: SharedCustomerMetrics | null =
+    metrics as unknown as SharedCustomerMetrics | null;
 
-  return (
-    <CustomersMetricsComponent
-      metrics={sharedMetrics}
-      loading={loading}
-    />
-  );
+  return <CustomersMetricsComponent metrics={sharedMetrics} loading={loading} />;
 }

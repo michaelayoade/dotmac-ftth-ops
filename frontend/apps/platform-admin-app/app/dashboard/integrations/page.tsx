@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import type { LucideIcon } from "lucide-react";
 import {
   AlertCircle,
@@ -86,11 +80,12 @@ function IntegrationsPageContent() {
   // Calculate statistics
   const stats: IntegrationStats = {
     total_integrations: integrations.length,
-    healthy_integrations: integrations.filter(i => i.status === "healthy").length,
-    degraded_integrations: integrations.filter(i => i.status === "degraded").length,
-    error_integrations: integrations.filter(i => i.status === "error" || i.status === "unknown").length,
-    enabled_integrations: integrations.filter(i => i.enabled).length,
-    disabled_integrations: integrations.filter(i => !i.enabled).length,
+    healthy_integrations: integrations.filter((i) => i.status === "healthy").length,
+    degraded_integrations: integrations.filter((i) => i.status === "degraded").length,
+    error_integrations: integrations.filter((i) => i.status === "error" || i.status === "unknown")
+      .length,
+    enabled_integrations: integrations.filter((i) => i.enabled).length,
+    disabled_integrations: integrations.filter((i) => !i.enabled).length,
   };
 
   const filteredIntegrations = integrations.filter((integration) => {
@@ -100,17 +95,18 @@ function IntegrationsPageContent() {
       integration.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
       integration.type.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "all" || integration.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || integration.status === statusFilter;
 
-    const matchesType =
-      typeFilter === "all" || integration.type === typeFilter;
+    const matchesType = typeFilter === "all" || integration.type === typeFilter;
 
     return matchesSearch && matchesStatus && matchesType;
   });
 
   const getStatusBadge = (status: IntegrationStatus) => {
-    const statusConfig: Record<IntegrationStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      IntegrationStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       healthy: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Healthy" },
       degraded: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Degraded" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
@@ -308,14 +304,15 @@ function IntegrationsPageContent() {
                             {integration.name}
                           </Link>
                         </CardTitle>
-                        <CardDescription>
-                          {integration.provider}
-                        </CardDescription>
+                        <CardDescription>{integration.provider}</CardDescription>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {getStatusBadge(integration.status)}
-                      <Badge variant={integration.enabled ? "default" : "outline"} className="text-xs">
+                      <Badge
+                        variant={integration.enabled ? "default" : "outline"}
+                        className="text-xs"
+                      >
                         {integration.enabled ? "Enabled" : "Disabled"}
                       </Badge>
                     </div>
@@ -328,13 +325,15 @@ function IntegrationsPageContent() {
                   </div>
 
                   {integration.message && (
-                    <div className={`p-3 rounded-lg text-sm ${
-                      integration.status === "healthy"
-                        ? "bg-green-50 border border-green-200 text-green-800"
-                        : integration.status === "degraded"
-                        ? "bg-yellow-50 border border-yellow-200 text-yellow-800"
-                        : "bg-red-50 border border-red-200 text-red-800"
-                    }`}>
+                    <div
+                      className={`p-3 rounded-lg text-sm ${
+                        integration.status === "healthy"
+                          ? "bg-green-50 border border-green-200 text-green-800"
+                          : integration.status === "degraded"
+                            ? "bg-yellow-50 border border-yellow-200 text-yellow-800"
+                            : "bg-red-50 border border-red-200 text-red-800"
+                      }`}
+                    >
                       {integration.message}
                     </div>
                   )}
@@ -342,7 +341,9 @@ function IntegrationsPageContent() {
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1">
                       <Settings className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{integration.settings_count} settings</span>
+                      <span className="text-muted-foreground">
+                        {integration.settings_count} settings
+                      </span>
                     </div>
                     {integration.has_secrets && (
                       <div className="flex items-center gap-1">
@@ -368,14 +369,17 @@ function IntegrationsPageContent() {
                   {integration.last_check && (
                     <div className="pt-3 border-t">
                       <p className="text-xs text-muted-foreground">
-                        Last checked {formatDistanceToNow(new Date(integration.last_check), { addSuffix: true })}
+                        Last checked{" "}
+                        {formatDistanceToNow(new Date(integration.last_check), { addSuffix: true })}
                       </p>
                     </div>
                   )}
 
                   <div className="pt-3 border-t">
                     <Button variant="outline" size="sm" asChild className="w-full">
-                      <Link href={`/dashboard/integrations/${encodeURIComponent(integration.name)}`}>
+                      <Link
+                        href={`/dashboard/integrations/${encodeURIComponent(integration.name)}`}
+                      >
                         <Eye className="h-3 w-3 mr-1" />
                         View Details
                       </Link>

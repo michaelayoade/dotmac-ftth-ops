@@ -250,8 +250,10 @@ class TestOrderProcessingService:
 
         mock_email_service.send_email.assert_called_once()
         call_args = mock_email_service.send_email.call_args
-        assert call_args[1]["to_email"] == sample_order.customer_email
-        assert "Confirmation" in call_args[1]["subject"]
+        # The EmailMessage is passed as the first positional argument
+        email_message = call_args[0][0] if call_args[0] else call_args[1].get("message")
+        assert sample_order.customer_email in email_message.to
+        assert "Confirmation" in email_message.subject
 
     def test_validate_order_success(
         self,

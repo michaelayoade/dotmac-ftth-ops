@@ -61,7 +61,7 @@ export function GlobalCommandPalette() {
   // Debounced search results
   const { data: results, isLoading } = useDebouncedSearch(searchQuery);
 
-    // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
+  // eslint-disable-next-line no-restricted-globals -- secure storage not available in this context
   // Recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 

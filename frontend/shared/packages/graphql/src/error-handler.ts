@@ -149,7 +149,10 @@ function normalizeGraphQLError(error: unknown): NormalizedGraphQLError {
     // ApolloError & similar shapes
     if (Array.isArray((error as any).graphQLErrors)) {
       const el = extractFirstError((error as any).graphQLErrors);
-      const errorMsg = typeof (error as any)['message'] === "string" ? (error as any)['message'] : DEFAULT_FALLBACK_MESSAGE;
+      const errorMsg =
+        typeof (error as any)["message"] === "string"
+          ? (error as any)["message"]
+          : DEFAULT_FALLBACK_MESSAGE;
       return {
         message: el?.message ?? errorMsg,
         ...(el?.code ? { code: el.code } : {}),
@@ -165,10 +168,10 @@ function normalizeGraphQLError(error: unknown): NormalizedGraphQLError {
       }
     }
 
-    if (typeof (error as any)['message'] === "string") {
+    if (typeof (error as any)["message"] === "string") {
       return {
-        message: (error as any)['message'],
-        ...(typeof (error as any)['code'] === "string" ? { code: (error as any)['code'] } : {}),
+        message: (error as any)["message"],
+        ...(typeof (error as any)["code"] === "string" ? { code: (error as any)["code"] } : {}),
       };
     }
   }
@@ -222,7 +225,7 @@ function buildToastPayload(
  * @param error - The unknown GraphQL error thrown by a query or mutation
  * @param options - Toast/logger configuration
  */
-const SKIP_TOAST_CODES = new Set<string>(['UNAUTHENTICATED', 'SESSION_EXPIRED']);
+const SKIP_TOAST_CODES = new Set<string>(["UNAUTHENTICATED", "SESSION_EXPIRED"]);
 
 export enum ErrorSeverity {
   INFO = "info",
@@ -284,10 +287,7 @@ function getErrorSeverity(code?: string): ErrorSeverity {
   return ErrorSeverity.ERROR;
 }
 
-export function handleGraphQLError(
-  error: unknown,
-  options: GraphQLErrorHandlerOptions,
-): void;
+export function handleGraphQLError(error: unknown, options: GraphQLErrorHandlerOptions): void;
 export function handleGraphQLError(
   error: unknown,
   context?: ErrorHandlerContext,
@@ -315,15 +315,15 @@ export function handleGraphQLError(
       };
 
       if (normalized.code) {
-        logContext['code'] = normalized.code;
+        logContext["code"] = normalized.code;
       }
 
       if (normalized.path) {
-        logContext['path'] = normalized.path;
+        logContext["path"] = normalized.path;
       }
 
       if (operationName) {
-        logContext['operationName'] = operationName;
+        logContext["operationName"] = operationName;
       }
 
       const errorObject = error instanceof Error ? error : new Error(String(error));

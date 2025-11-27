@@ -9,13 +9,7 @@
 import { useState, useEffect } from "react";
 import { X, Trash2 } from "lucide-react";
 import type { CommunicationTemplate, TemplateUpdateRequest } from "@/hooks/useNotifications";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";

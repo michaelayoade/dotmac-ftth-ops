@@ -372,7 +372,9 @@ export function CreateApiKeyModal<TApiKey = any>({
                   <div className="flex-1">
                     <div className="font-medium text-white">{scope}</div>
                     <div className="text-sm text-slate-400">{info.description}</div>
-                    {info.category && <div className="text-xs text-sky-400 font-mono mt-1">{info.category}</div>}
+                    {info.category && (
+                      <div className="text-xs text-sky-400 font-mono mt-1">{info.category}</div>
+                    )}
                   </div>
                 </label>
               ))}

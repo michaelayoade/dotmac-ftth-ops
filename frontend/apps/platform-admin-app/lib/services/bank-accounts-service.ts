@@ -207,9 +207,12 @@ class BankAccountsService {
     const params = new URLSearchParams();
     if (includeInactive) params.append("include_inactive", "true");
 
-    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts?${params.toString()}`), {
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      platformConfig.api.buildUrl(`/billing/bank-accounts?${params.toString()}`),
+      {
+        headers: this.getAuthHeaders(),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -220,9 +223,12 @@ class BankAccountsService {
   }
 
   async getBankAccount(accountId: number): Promise<CompanyBankAccountResponse> {
-    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`), {
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`),
+      {
+        headers: this.getAuthHeaders(),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -252,11 +258,14 @@ class BankAccountsService {
     accountId: number,
     data: CompanyBankAccountUpdate,
   ): Promise<CompanyBankAccountResponse> {
-    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`), {
-      method: "PUT",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`),
+      {
+        method: "PUT",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -271,7 +280,9 @@ class BankAccountsService {
     if (notes) params.append("notes", notes);
 
     const response = await fetch(
-      platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}/verify?${params.toString()}`),
+      platformConfig.api.buildUrl(
+        `/billing/bank-accounts/${accountId}/verify?${params.toString()}`,
+      ),
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -287,10 +298,13 @@ class BankAccountsService {
   }
 
   async deactivateBankAccount(accountId: number): Promise<CompanyBankAccountResponse> {
-    const response = await fetch(platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`), {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      platformConfig.api.buildUrl(`/billing/bank-accounts/${accountId}`),
+      {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -424,12 +438,14 @@ class BankAccountsService {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(platformConfig.api.buildUrl(`/billing/payments/${paymentId}/attachments`), {
-      method: "POST",
-      headers: {
+    const response = await fetch(
+      platformConfig.api.buildUrl(`/billing/payments/${paymentId}/attachments`),
+      {
+        method: "POST",
+        headers: {},
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));

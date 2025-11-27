@@ -67,11 +67,7 @@ type QueryOptions<TData, TKey extends QueryKey> = Omit<
 
 const isTestEnv = process.env.NODE_ENV === "test";
 
-async function testRequest<T>(
-  path: string,
-  init: RequestInit,
-  errorMessage: string,
-): Promise<T> {
+async function testRequest<T>(path: string, init: RequestInit, errorMessage: string): Promise<T> {
   if (typeof fetch === "undefined") {
     throw new Error(errorMessage);
   }
@@ -161,7 +157,10 @@ export function useHealthCheck() {
 
   return useMutation({
     mutationFn: async (integrationName: string) =>
-      postIntegration(`/integrations/${integrationName}/health-check`, "Failed to trigger health check"),
+      postIntegration(
+        `/integrations/${integrationName}/health-check`,
+        "Failed to trigger health check",
+      ),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
       queryClient.invalidateQueries({ queryKey: ["integrations", data.name] });

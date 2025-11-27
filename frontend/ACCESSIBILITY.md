@@ -36,13 +36,13 @@ Our accessibility infrastructure provides:
 Handle keyboard navigation for lists, menus, and grids.
 
 ```tsx
-import { useKeyboardNavigation } from '@dotmac/hooks';
+import { useKeyboardNavigation } from "@dotmac/hooks";
 
 function CustomerList({ customers }) {
   const { activeIndex, handleKeyDown } = useKeyboardNavigation({
     itemCount: customers.length,
     onSelect: (index) => selectCustomer(customers[index]),
-    orientation: 'vertical',
+    orientation: "vertical",
     loop: true,
   });
 
@@ -64,6 +64,7 @@ function CustomerList({ customers }) {
 ```
 
 **Supported Keys:**
+
 - Arrow Up/Down: Vertical navigation
 - Arrow Left/Right: Horizontal navigation
 - Home: Jump to first item
@@ -75,7 +76,7 @@ function CustomerList({ customers }) {
 Trap focus within a container (modals, dialogs, dropdowns).
 
 ```tsx
-import { useFocusTrap } from '@dotmac/hooks';
+import { useFocusTrap } from "@dotmac/hooks";
 
 function Modal({ isOpen, onClose, children }) {
   const modalRef = useFocusTrap<HTMLDivElement>(isOpen, {
@@ -86,12 +87,7 @@ function Modal({ isOpen, onClose, children }) {
   if (!isOpen) return null;
 
   return (
-    <div
-      ref={modalRef}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-    >
+    <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <h2 id="modal-title">Modal Title</h2>
       {children}
       <button onClick={onClose}>Close</button>
@@ -105,7 +101,7 @@ function Modal({ isOpen, onClose, children }) {
 Detect if user prefers reduced motion.
 
 ```tsx
-import { useReducedMotion } from '@dotmac/hooks';
+import { useReducedMotion } from "@dotmac/hooks";
 
 function AnimatedComponent() {
   const prefersReducedMotion = useReducedMotion();
@@ -128,14 +124,14 @@ function AnimatedComponent() {
 Announce dynamic content changes to screen readers.
 
 ```tsx
-import { useAriaLive } from '@dotmac/hooks';
+import { useAriaLive } from "@dotmac/hooks";
 
 function SaveButton() {
   const announce = useAriaLive();
 
   const handleSave = async () => {
     await saveData();
-    announce('Changes saved successfully', 'polite');
+    announce("Changes saved successfully", "polite");
   };
 
   return <button onClick={handleSave}>Save</button>;
@@ -143,6 +139,7 @@ function SaveButton() {
 ```
 
 **Priorities:**
+
 - `polite`: Announces when screen reader is idle (default)
 - `assertive`: Announces immediately, interrupting current speech
 
@@ -151,7 +148,7 @@ function SaveButton() {
 Handle Escape key press for closing modals/dropdowns.
 
 ```tsx
-import { useEscapeKey } from '@dotmac/hooks';
+import { useEscapeKey } from "@dotmac/hooks";
 
 function Dropdown({ isOpen, onClose }) {
   useEscapeKey(onClose, isOpen);
@@ -165,14 +162,14 @@ function Dropdown({ isOpen, onClose }) {
 Track media query matches for responsive accessibility.
 
 ```tsx
-import { useMediaQuery } from '@dotmac/hooks';
+import { useMediaQuery } from "@dotmac/hooks";
 
 function ResponsiveComponent() {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const prefersHighContrast = useMediaQuery('(prefers-contrast: high)');
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const prefersHighContrast = useMediaQuery("(prefers-contrast: high)");
 
   return (
-    <div className={prefersHighContrast ? 'high-contrast' : ''}>
+    <div className={prefersHighContrast ? "high-contrast" : ""}>
       {isMobile ? <MobileNav /> : <DesktopNav />}
     </div>
   );
@@ -188,16 +185,14 @@ function ResponsiveComponent() {
 Allow keyboard users to skip navigation.
 
 ```tsx
-import { SkipLink } from '@dotmac/ui';
+import { SkipLink } from "@dotmac/ui";
 
 export function Layout({ children }) {
   return (
     <>
       <SkipLink href="#main-content" />
 
-      <nav>
-        {/* Navigation */}
-      </nav>
+      <nav>{/* Navigation */}</nav>
 
       <main id="main-content" tabIndex={-1}>
         {children}
@@ -208,12 +203,13 @@ export function Layout({ children }) {
 ```
 
 **Multiple Skip Links:**
+
 ```tsx
 <SkipLinks
   links={[
-    { href: '#main-content', label: 'Skip to main content' },
-    { href: '#search', label: 'Skip to search' },
-    { href: '#footer', label: 'Skip to footer' },
+    { href: "#main-content", label: "Skip to main content" },
+    { href: "#search", label: "Skip to search" },
+    { href: "#footer", label: "Skip to footer" },
   ]}
 />
 ```
@@ -223,7 +219,7 @@ export function Layout({ children }) {
 Hide content visually but keep for screen readers.
 
 ```tsx
-import { VisuallyHidden } from '@dotmac/ui';
+import { VisuallyHidden } from "@dotmac/ui";
 
 function IconButton({ onClick }) {
   return (
@@ -240,14 +236,14 @@ function IconButton({ onClick }) {
 Announce dynamic content to screen readers.
 
 ```tsx
-import { LiveRegion } from '@dotmac/ui';
+import { LiveRegion } from "@dotmac/ui";
 
 function FormStatus() {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   const handleSave = async () => {
     await saveData();
-    setMessage('Changes saved successfully');
+    setMessage("Changes saved successfully");
   };
 
   return (
@@ -260,11 +256,12 @@ function FormStatus() {
 ```
 
 **StatusAnnouncer (Higher-level):**
+
 ```tsx
-import { StatusAnnouncer } from '@dotmac/ui';
+import { StatusAnnouncer } from "@dotmac/ui";
 
 function LoadingComponent() {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   return (
     <>
@@ -272,9 +269,9 @@ function LoadingComponent() {
       <StatusAnnouncer
         status={status}
         messages={{
-          loading: 'Submitting form...',
-          success: 'Form submitted successfully',
-          error: 'Failed to submit form',
+          loading: "Submitting form...",
+          success: "Form submitted successfully",
+          error: "Failed to submit form",
         }}
         priority="assertive"
       />
@@ -292,8 +289,8 @@ All ARIA utilities integrate with i18n for multi-language support.
 ### Status Labels
 
 ```tsx
-import { useTranslations } from 'next-intl';
-import { getStatusAriaLabel } from '@/lib/accessibility/aria';
+import { useTranslations } from "next-intl";
+import { getStatusAriaLabel } from "@/lib/accessibility/aria";
 
 function JobBadge({ job }) {
   const t = useTranslations();
@@ -301,9 +298,9 @@ function JobBadge({ job }) {
   return (
     <Badge
       variant={JobStatusVariants[job.status]}
-      aria-label={getStatusAriaLabel(t, job.status, 'jobs')}
+      aria-label={getStatusAriaLabel(t, job.status, "jobs")}
     >
-      {getStatusLabel(t, job.status, 'jobs')}
+      {getStatusLabel(t, job.status, "jobs")}
     </Badge>
   );
 }
@@ -312,17 +309,17 @@ function JobBadge({ job }) {
 ### Action Buttons
 
 ```tsx
-import { getActionAriaLabel } from '@/lib/accessibility/aria';
+import { getActionAriaLabel } from "@/lib/accessibility/aria";
 
 function CustomerActions({ customer }) {
   const t = useTranslations();
 
   return (
     <div>
-      <button aria-label={getActionAriaLabel(t, 'edit', customer.name)}>
+      <button aria-label={getActionAriaLabel(t, "edit", customer.name)}>
         <EditIcon />
       </button>
-      <button aria-label={getActionAriaLabel(t, 'delete', customer.name)}>
+      <button aria-label={getActionAriaLabel(t, "delete", customer.name)}>
         <TrashIcon />
       </button>
     </div>
@@ -333,7 +330,7 @@ function CustomerActions({ customer }) {
 ### Sortable Tables
 
 ```tsx
-import { getSortAriaLabel } from '@/lib/accessibility/aria';
+import { getSortAriaLabel } from "@/lib/accessibility/aria";
 
 function SortableHeader({ column, sortOrder, onSort }) {
   const t = useTranslations();
@@ -341,9 +338,9 @@ function SortableHeader({ column, sortOrder, onSort }) {
   return (
     <th
       onClick={onSort}
-      aria-sort={sortOrder === 'asc' ? 'ascending' : sortOrder === 'desc' ? 'descending' : 'none'}
+      aria-sort={sortOrder === "asc" ? "ascending" : sortOrder === "desc" ? "descending" : "none"}
       aria-label={getSortAriaLabel(t, column, sortOrder)}
-      style={{ cursor: 'pointer' }}
+      style={{ cursor: "pointer" }}
     >
       {column}
       {sortOrder && <SortIcon direction={sortOrder} />}
@@ -355,27 +352,22 @@ function SortableHeader({ column, sortOrder, onSort }) {
 ### Form Fields
 
 ```tsx
-import { getFieldDescription } from '@/lib/accessibility/aria';
-import { useId } from '@dotmac/hooks';
+import { getFieldDescription } from "@/lib/accessibility/aria";
+import { useId } from "@dotmac/hooks";
 
 function EmailField() {
   const t = useTranslations();
-  const id = useId('email');
+  const id = useId("email");
   const descriptionId = `${id}-description`;
 
   return (
     <div>
-      <label htmlFor={id}>{t('customers.fields.email')}</label>
-      <input
-        id={id}
-        type="email"
-        aria-describedby={descriptionId}
-        required
-      />
+      <label htmlFor={id}>{t("customers.fields.email")}</label>
+      <input id={id} type="email" aria-describedby={descriptionId} required />
       <span id={descriptionId} className="sr-only">
-        {getFieldDescription(t, 'email', {
+        {getFieldDescription(t, "email", {
           required: true,
-          format: 'email',
+          format: "email",
         })}
       </span>
     </div>
@@ -386,7 +378,7 @@ function EmailField() {
 ### Progress Indicators
 
 ```tsx
-import { getProgressAriaLabel } from '@/lib/accessibility/aria';
+import { getProgressAriaLabel } from "@/lib/accessibility/aria";
 
 function UploadProgress({ progress }) {
   const t = useTranslations();
@@ -397,7 +389,7 @@ function UploadProgress({ progress }) {
       aria-valuenow={progress}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={getProgressAriaLabel(t, 'upload', progress)}
+      aria-label={getProgressAriaLabel(t, "upload", progress)}
     >
       <div style={{ width: `${progress}%` }} />
     </div>
@@ -475,12 +467,14 @@ button:focus {
 
 ```tsx
 // ✅ GOOD: Announce loading states
-{isLoading && (
-  <div role="status" aria-live="polite">
-    <Spinner />
-    <VisuallyHidden>Loading customers...</VisuallyHidden>
-  </div>
-)}
+{
+  isLoading && (
+    <div role="status" aria-live="polite">
+      <Spinner />
+      <VisuallyHidden>Loading customers...</VisuallyHidden>
+    </div>
+  );
+}
 ```
 
 ### 7. Error Messages
@@ -490,13 +484,15 @@ button:focus {
 <input
   id="email"
   aria-invalid={hasError}
-  aria-describedby={hasError ? 'email-error' : undefined}
-/>
-{hasError && (
-  <span id="email-error" role="alert">
-    {error}
-  </span>
-)}
+  aria-describedby={hasError ? "email-error" : undefined}
+/>;
+{
+  hasError && (
+    <span id="email-error" role="alert">
+      {error}
+    </span>
+  );
+}
 ```
 
 ### 8. Modal Dialogs
@@ -523,12 +519,12 @@ button:focus {
 ### Automated Testing
 
 ```tsx
-import { render, screen } from '@testing-library/react';
-import { axe, toHaveNoViolations } from 'jest-axe';
+import { render, screen } from "@testing-library/react";
+import { axe, toHaveNoViolations } from "jest-axe";
 
 expect.extend(toHaveNoViolations);
 
-test('component is accessible', async () => {
+test("component is accessible", async () => {
   const { container } = render(<MyComponent />);
   const results = await axe(container);
   expect(results).toHaveNoViolations();
@@ -549,6 +545,7 @@ test('component is accessible', async () => {
 ### Screen Reader Testing
 
 **VoiceOver (Mac):**
+
 ```bash
 # Enable: Cmd + F5
 # Navigate: VO + Arrow keys
@@ -556,6 +553,7 @@ test('component is accessible', async () => {
 ```
 
 **NVDA (Windows):**
+
 ```bash
 # Navigate: Arrow keys
 # Forms mode: Insert + Space
@@ -597,17 +595,20 @@ test('component is accessible', async () => {
 ## Resources
 
 ### Tools
+
 - [axe DevTools](https://www.deque.com/axe/devtools/) - Browser extension for accessibility testing
 - [WAVE](https://wave.webaim.org/) - Web accessibility evaluation tool
 - [Lighthouse](https://developers.google.com/web/tools/lighthouse) - Chrome DevTools audits
 
 ### Documentation
+
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
 - [MDN Accessibility](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
 - [A11y Project](https://www.a11yproject.com/)
 
 ### Testing
+
 - [Screen Reader Testing](https://www.accessibility-developer-guide.com/knowledge/screen-readers/testing/)
 - [Keyboard Testing](https://webaim.org/articles/keyboard/)
 - [Color Contrast Checker](https://webaim.org/resources/contrastchecker/)

@@ -129,7 +129,7 @@ describe("PortalBadge", () => {
         "items-center",
         "rounded-full",
         "font-medium",
-        "transition-colors"
+        "transition-colors",
       );
     });
 
@@ -140,7 +140,7 @@ describe("PortalBadge", () => {
       expect(badge).toHaveClass(
         "bg-portal-primary/10",
         "text-portal-primary",
-        "border-portal-primary/20"
+        "border-portal-primary/20",
       );
     });
   });
@@ -445,7 +445,7 @@ describe("PortalBadgeCompact", () => {
       expect(badge).toHaveClass(
         "bg-portal-primary/10",
         "text-portal-primary",
-        "border-portal-primary/20"
+        "border-portal-primary/20",
       );
     });
 
@@ -561,7 +561,7 @@ describe("PortalUserTypeBadge", () => {
         "py-1",
         "rounded-md",
         "text-xs",
-        "font-medium"
+        "font-medium",
       );
     });
 
@@ -753,7 +753,7 @@ describe("Portal Badge Integration", () => {
         <PortalBadgeCompact />
         <PortalUserTypeBadge />
         <PortalIndicatorDot />
-      </div>
+      </div>,
     );
 
     // Verify all components render

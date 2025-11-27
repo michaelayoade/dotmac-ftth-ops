@@ -11,20 +11,10 @@ import {
 } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Checkbox } from "@dotmac/ui";
-import {
-  Upload,
-  FileText,
-  AlertCircle,
-} from "lucide-react";
+import { Upload, FileText, AlertCircle } from "lucide-react";
 import { useDataImport, type ImportJobType } from "@/hooks/useDataImport";
 
 interface FileUploadDialogProps {
@@ -116,7 +106,7 @@ export function FileUploadDialog({ open, onOpenChange }: FileUploadDialogProps) 
           setError(null);
           onOpenChange(false);
         },
-      }
+      },
     );
   };
 
@@ -140,7 +130,10 @@ export function FileUploadDialog({ open, onOpenChange }: FileUploadDialogProps) 
           {/* Entity Type Selection */}
           <div className="space-y-2">
             <Label htmlFor="entity-type">Data Type</Label>
-            <Select value={entityType} onValueChange={(value) => setEntityType(value as ImportJobType)}>
+            <Select
+              value={entityType}
+              onValueChange={(value) => setEntityType(value as ImportJobType)}
+            >
               <SelectTrigger id="entity-type">
                 <SelectValue />
               </SelectTrigger>
@@ -220,10 +213,7 @@ export function FileUploadDialog({ open, onOpenChange }: FileUploadDialogProps) 
                 onChange={(event) => setDryRun(event.target.checked)}
                 disabled={isUploading}
               />
-              <Label
-                htmlFor="dry-run"
-                className="text-sm font-normal cursor-pointer"
-              >
+              <Label htmlFor="dry-run" className="text-sm font-normal cursor-pointer">
                 Dry run (validate only, don&apos;t save)
               </Label>
             </div>
@@ -235,10 +225,7 @@ export function FileUploadDialog({ open, onOpenChange }: FileUploadDialogProps) 
                 onChange={(event) => setUseAsync(event.target.checked)}
                 disabled={isUploading}
               />
-              <Label
-                htmlFor="use-async"
-                className="text-sm font-normal cursor-pointer"
-              >
+              <Label htmlFor="use-async" className="text-sm font-normal cursor-pointer">
                 Process asynchronously (recommended for large files)
               </Label>
             </div>
@@ -246,11 +233,7 @@ export function FileUploadDialog({ open, onOpenChange }: FileUploadDialogProps) 
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isUploading}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
             Cancel
           </Button>
           <Button onClick={handleUpload} disabled={isUploading || !selectedFile}>

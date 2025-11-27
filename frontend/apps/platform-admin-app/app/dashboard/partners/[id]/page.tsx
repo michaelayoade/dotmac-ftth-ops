@@ -14,7 +14,7 @@ import CommissionTrackingView from "@/components/partners/CommissionTrackingView
 
 export default function PartnerDetailPage() {
   const params = useParams();
-  const partnerId = params['id'] as string;
+  const partnerId = params["id"] as string;
   const { data: partner, isLoading, error } = usePartner(partnerId);
   const [showEditModal, setShowEditModal] = useState(false);
   type PartnerTab = "overview" | "customers" | "commissions" | "referrals" | "quota";

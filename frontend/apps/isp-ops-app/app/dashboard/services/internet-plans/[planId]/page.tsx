@@ -74,16 +74,20 @@ interface Subscription {
 
 function PlanDetailsPageContent() {
   const params = useParams();
-  const planId = params['planId'] as string;
+  const planId = params["planId"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: plan, isLoading, refetch } = useQuery<InternetPlan>({
+  const {
+    data: plan,
+    isLoading,
+    refetch,
+  } = useQuery<InternetPlan>({
     queryKey: ["internet-plan", planId],
     queryFn: async () => {
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/services/internet-plans/${planId}`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch plan");
       return response.json();
@@ -95,7 +99,7 @@ function PlanDetailsPageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/services/internet-plans/${planId}/statistics`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch statistics");
       return response.json();
@@ -107,7 +111,7 @@ function PlanDetailsPageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/services/internet-plans/${planId}/subscriptions`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch subscriptions");
       return response.json();
@@ -145,7 +149,7 @@ function PlanDetailsPageContent() {
     };
     const config = badges[type as keyof typeof badges] || {
       color: "bg-gray-100 text-gray-800",
-      label: type
+      label: type,
     };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
@@ -211,7 +215,9 @@ function PlanDetailsPageContent() {
             <CardTitle className="text-sm">Monthly Price</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${plan.monthly_price.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">
+              ${plan.monthly_price.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -255,11 +261,15 @@ function PlanDetailsPageContent() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
                       <span className="text-sm text-muted-foreground">Download Speed</span>
-                      <span className="font-bold text-lg">{formatSpeed(plan.download_speed_mbps)}</span>
+                      <span className="font-bold text-lg">
+                        {formatSpeed(plan.download_speed_mbps)}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
                       <span className="text-sm text-muted-foreground">Upload Speed</span>
-                      <span className="font-bold text-lg">{formatSpeed(plan.upload_speed_mbps)}</span>
+                      <span className="font-bold text-lg">
+                        {formatSpeed(plan.upload_speed_mbps)}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
                       <span className="text-sm text-muted-foreground">Data Cap</span>
@@ -279,7 +289,9 @@ function PlanDetailsPageContent() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Monthly Price</span>
-                      <span className="font-bold text-green-600">${plan.monthly_price.toFixed(2)}</span>
+                      <span className="font-bold text-green-600">
+                        ${plan.monthly_price.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Setup Fee</span>
@@ -303,7 +315,9 @@ function PlanDetailsPageContent() {
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span>Promo Price</span>
-                          <span className="font-bold text-amber-700">${plan.promotional_price.toFixed(2)}/mo</span>
+                          <span className="font-bold text-amber-700">
+                            ${plan.promotional_price.toFixed(2)}/mo
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Promo Period</span>
@@ -330,12 +344,8 @@ function PlanDetailsPageContent() {
               )}
 
               <div className="flex gap-2 flex-wrap pt-4 border-t">
-                {plan.is_public && (
-                  <Badge variant="outline">Public Plan</Badge>
-                )}
-                {!plan.is_public && (
-                  <Badge variant="outline">Private Plan</Badge>
-                )}
+                {plan.is_public && <Badge variant="outline">Public Plan</Badge>}
+                {!plan.is_public && <Badge variant="outline">Private Plan</Badge>}
                 <Badge variant="outline">
                   Created {new Date(plan.created_at).toLocaleDateString()}
                 </Badge>
@@ -370,18 +380,28 @@ function PlanDetailsPageContent() {
                           <div className="font-medium">{sub.customer_name}</div>
                           <div className="text-xs text-muted-foreground">ID: {sub.customer_id}</div>
                         </div>
-                        <Badge className={sub.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                        <Badge
+                          className={
+                            sub.is_active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }
+                        >
                           {sub.status}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">Start Date</p>
-                          <p className="font-medium">{new Date(sub.start_date).toLocaleDateString()}</p>
+                          <p className="font-medium">
+                            {new Date(sub.start_date).toLocaleDateString()}
+                          </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Download Usage</p>
-                          <p className="font-medium">{sub.current_download_usage_gb.toFixed(2)} GB</p>
+                          <p className="font-medium">
+                            {sub.current_download_usage_gb.toFixed(2)} GB
+                          </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Upload Usage</p>
@@ -408,7 +428,8 @@ function PlanDetailsPageContent() {
                   {statistics?.total_subscriptions.toLocaleString() || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {statistics?.active_subscriptions || 0} active, {statistics?.inactive_subscriptions || 0} inactive
+                  {statistics?.active_subscriptions || 0} active,{" "}
+                  {statistics?.inactive_subscriptions || 0} inactive
                 </p>
               </CardContent>
             </Card>
@@ -453,19 +474,27 @@ function PlanDetailsPageContent() {
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="flex justify-between p-3 bg-accent rounded-lg">
                   <span className="text-muted-foreground">Monthly Recurring Revenue</span>
-                  <span className="font-bold text-green-600">${(statistics?.mrr || 0).toLocaleString()}</span>
+                  <span className="font-bold text-green-600">
+                    ${(statistics?.mrr || 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between p-3 bg-accent rounded-lg">
                   <span className="text-muted-foreground">Annual Recurring Revenue</span>
-                  <span className="font-bold text-green-600">${(statistics?.arr || 0).toLocaleString()}</span>
+                  <span className="font-bold text-green-600">
+                    ${(statistics?.arr || 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between p-3 bg-accent rounded-lg">
                   <span className="text-muted-foreground">Active Subscribers</span>
-                  <span className="font-bold">{statistics?.active_subscriptions.toLocaleString() || 0}</span>
+                  <span className="font-bold">
+                    {statistics?.active_subscriptions.toLocaleString() || 0}
+                  </span>
                 </div>
                 <div className="flex justify-between p-3 bg-accent rounded-lg">
                   <span className="text-muted-foreground">Churn Rate</span>
-                  <span className="font-bold">{((statistics?.churn_rate || 0) * 100).toFixed(2)}%</span>
+                  <span className="font-bold">
+                    {((statistics?.churn_rate || 0) * 100).toFixed(2)}%
+                  </span>
                 </div>
               </div>
             </CardContent>

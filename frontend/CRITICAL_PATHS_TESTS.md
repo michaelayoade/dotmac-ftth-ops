@@ -7,59 +7,72 @@ This test suite covers the most important user journeys in the ISP Operations pl
 ## Test Coverage
 
 ### 🔐 Authentication (3 tests)
+
 - ✅ User can access login page
 - ✅ Login form has proper validation
 - ✅ User can navigate to login from home
 
 ### 📊 Dashboard Access (3 tests)
+
 - ✅ Dashboard page loads
 - ✅ Dashboard has navigation
 - ✅ Dashboard shows content or login prompt
 
 ### 👥 Customer Management (2 tests)
+
 - ✅ Customers page is accessible
 - ✅ Customers page has expected structure
 
 ### 💰 Billing Operations (2 tests)
+
 - ✅ Billing page is accessible
 - ✅ Billing page loads without errors
 
 ### 🌐 Network Monitoring (2 tests)
+
 - ✅ Network monitoring page is accessible
 - ✅ RADIUS dashboard is accessible
 
 ### ⚙️ Settings & Configuration (3 tests)
+
 - ✅ Settings page is accessible
 - ✅ Users management page is accessible
 - ✅ Integrations page is accessible
 
 ### 📈 Analytics & Reporting (1 test)
+
 - ✅ Analytics dashboard is accessible
 
 ### 🏗️ Infrastructure Management (2 tests)
+
 - ✅ Infrastructure page is accessible
 - ✅ Provisioning page is accessible
 
 ### 🏪 Customer Portal (2 tests)
+
 - ✅ Customer portal home is accessible
 - ✅ Customer portal billing is accessible
 
 ### ⚡ Performance (2 tests)
+
 - ✅ Dashboard loads within acceptable time (< 10s)
 - ✅ Page navigation is responsive (< 5s)
 
 ### 🛡️ Error Handling (2 tests)
+
 - ✅ 404 page handles gracefully
 - ✅ Application handles network errors gracefully
 
 ## Running the Tests
 
 ### Run all critical path tests:
+
 ```bash
 E2E_USE_DEV_SERVER=true pnpm e2e e2e/tests/critical-paths.spec.ts
 ```
 
 ### Run specific test group:
+
 ```bash
 # Authentication tests only
 E2E_USE_DEV_SERVER=true pnpm e2e e2e/tests/critical-paths.spec.ts --grep "Authentication"
@@ -72,6 +85,7 @@ E2E_USE_DEV_SERVER=true pnpm e2e e2e/tests/critical-paths.spec.ts --grep "Custom
 ```
 
 ### Run all E2E tests (smoke + critical paths):
+
 ```bash
 E2E_USE_DEV_SERVER=true pnpm e2e e2e/tests/smoke.spec.ts e2e/tests/critical-paths.spec.ts
 ```

@@ -484,7 +484,7 @@ class TestTransferJobResponse:
             records_processed=0,
             records_failed=0,
             records_total=None,
-            metadata=metadata,
+            metadata_=metadata,  # Use validation_alias
         )
 
         assert response.job_id == job_id
@@ -1073,8 +1073,8 @@ class TestModelSerialization:
             records_total=1000,
         )
 
-        # Serialize to dict
-        data = original.model_dump()
+        # Serialize to dict (use by_alias for proper field name handling)
+        data = original.model_dump(by_alias=True, exclude_none=True)
         assert isinstance(data, dict)
         assert data["job_id"] == job_id  # UUID objects are preserved in model_dump by default
         assert data["name"] == "Test Job"

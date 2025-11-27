@@ -407,7 +407,9 @@ describe("Platform Admin useDataTransfer hooks", () => {
 
       expect(mockedApi.delete).toHaveBeenCalledWith("/data-transfer/jobs/job-123");
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["data-transfer", "jobs"] });
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["data-transfer", "jobs", "job-123"] });
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ["data-transfer", "jobs", "job-123"],
+      });
       expect(mockToast).toHaveBeenCalledWith({
         title: "Job cancelled",
         description: "Transfer job has been cancelled successfully.",

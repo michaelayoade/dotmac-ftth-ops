@@ -82,7 +82,7 @@ export default function ReferralSubmissionForm({
       await submitMutation.mutateAsync(formData);
     } catch (error) {
       console.error("Failed to submit referral:", error);
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert("Failed to submit referral");
     }
   };

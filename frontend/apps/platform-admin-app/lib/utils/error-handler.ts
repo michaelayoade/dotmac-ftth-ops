@@ -88,7 +88,8 @@ export function handleValidationError(
   const errorDetails = parseError(error);
 
   // Extract field-level validation errors if available
-  const fieldErrors: Record<string, string[]> = (errorDetails.details?.['fields'] as Record<string, string[]>) || {};
+  const fieldErrors: Record<string, string[]> =
+    (errorDetails.details?.["fields"] as Record<string, string[]>) || {};
 
   if (showAlert && Object.keys(fieldErrors).length === 0) {
     alertService.error(errorDetails.message, "Validation Error");

@@ -5,14 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -41,13 +34,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
@@ -168,12 +155,9 @@ function CampaignManagementContent() {
   const { data: stats, isLoading: statsLoading } = useQuery<DunningCampaignStats>({
     queryKey: ["dunning", "campaigns", "stats", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch campaigns");
       }
@@ -188,9 +172,7 @@ function CampaignManagementContent() {
         totalExecutions > 0
           ? campaigns.reduce((sum, c) => {
               const rate =
-                c.total_executions > 0
-                  ? (c.successful_executions / c.total_executions) * 100
-                  : 0;
+                c.total_executions > 0 ? (c.successful_executions / c.total_executions) * 100 : 0;
               return sum + rate;
             }, 0) / campaigns.length
           : 0;
@@ -210,12 +192,9 @@ function CampaignManagementContent() {
   const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<DunningCampaign[]>({
     queryKey: ["dunning", "campaigns", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch campaigns");
       }
@@ -227,21 +206,18 @@ function CampaignManagementContent() {
   // Create campaign mutation
   const createCampaignMutation = useMutation({
     mutationFn: async (data: CampaignFormValues) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...data,
-            actions: [],
-            exclusion_rules: {},
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...data,
+          actions: [],
+          exclusion_rules: {},
+        }),
+      });
       if (!response.ok) {
         throw new Error("Failed to create campaign");
       }
@@ -268,13 +244,10 @@ function CampaignManagementContent() {
   // Delete campaign mutation
   const deleteCampaignMutation = useMutation({
     mutationFn: async (campaignId: string) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to delete campaign");
       }
@@ -299,24 +272,15 @@ function CampaignManagementContent() {
 
   // Toggle active status mutation
   const toggleActiveMutation = useMutation({
-    mutationFn: async ({
-      campaignId,
-      isActive,
-    }: {
-      campaignId: string;
-      isActive: boolean;
-    }) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ is_active: isActive }),
-        }
-      );
+    mutationFn: async ({ campaignId, isActive }: { campaignId: string; isActive: boolean }) => {
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_active: isActive }),
+      });
       if (!response.ok) {
         throw new Error("Failed to update campaign");
       }
@@ -365,7 +329,7 @@ function CampaignManagementContent() {
   const filteredCampaigns = campaigns.filter((campaign) => {
     const matchesSearch =
       campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      campaign['description']?.toLowerCase().includes(searchTerm.toLowerCase());
+      campaign["description"]?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "active" && campaign.is_active) ||
@@ -382,17 +346,10 @@ function CampaignManagementContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dunning Campaigns</h1>
-          <p className="text-muted-foreground">
-            Manage automated payment recovery campaigns
-          </p>
+          <p className="text-muted-foreground">Manage automated payment recovery campaigns</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={campaignsLoading}
-          >
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={campaignsLoading}>
             <RefreshCw className={`h-4 w-4 ${campaignsLoading ? "animate-spin" : ""}`} />
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -432,10 +389,7 @@ function CampaignManagementContent() {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Campaign description..."
-                            {...field}
-                          />
+                          <Textarea placeholder="Campaign description..." {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -452,9 +406,7 @@ function CampaignManagementContent() {
                           <FormControl>
                             <Input type="number" min="1" {...field} />
                           </FormControl>
-                          <FormDescription>
-                            Days after payment failure to trigger
-                          </FormDescription>
+                          <FormDescription>Days after payment failure to trigger</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -515,15 +467,10 @@ function CampaignManagementContent() {
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
                           <FormLabel className="text-base">Active</FormLabel>
-                          <FormDescription>
-                            Enable this campaign immediately
-                          </FormDescription>
+                          <FormDescription>Enable this campaign immediately</FormDescription>
                         </div>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -537,10 +484,7 @@ function CampaignManagementContent() {
                     >
                       Cancel
                     </Button>
-                    <Button
-                      type="submit"
-                      disabled={createCampaignMutation.isPending}
-                    >
+                    <Button type="submit" disabled={createCampaignMutation.isPending}>
                       {createCampaignMutation.isPending ? "Creating..." : "Create Campaign"}
                     </Button>
                   </DialogFooter>
@@ -560,9 +504,7 @@ function CampaignManagementContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_campaigns ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.active_campaigns ?? 0} active
-            </p>
+            <p className="text-xs text-muted-foreground">{stats?.active_campaigns ?? 0} active</p>
           </CardContent>
         </Card>
 
@@ -698,9 +640,7 @@ function CampaignManagementContent() {
                       <TableCell>{campaign.retry_interval_days} days</TableCell>
                       <TableCell>{campaign.total_executions}</TableCell>
                       <TableCell>{successRate}%</TableCell>
-                      <TableCell>
-                        {formatMoney(campaign.total_recovered_amount)}
-                      </TableCell>
+                      <TableCell>{formatMoney(campaign.total_recovered_amount)}</TableCell>
                       <TableCell>
                         <Switch
                           checked={campaign.is_active}

@@ -313,9 +313,7 @@ describe("Form Components", () => {
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
-                    <FormDescription className="custom-desc">
-                      Custom description
-                    </FormDescription>
+                    <FormDescription className="custom-desc">Custom description</FormDescription>
                   </FormItem>
                 )}
               />

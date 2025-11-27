@@ -11,13 +11,7 @@ import {
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Save, X } from "lucide-react";
 import React, { useState, useEffect } from "react";
@@ -29,7 +23,11 @@ export interface NASDeviceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   nasDevice?: NASDevice | null | undefined;
-  onSubmit: (data: NASDeviceFormData, isEdit: boolean, deviceId?: number | undefined) => Promise<void>;
+  onSubmit: (
+    data: NASDeviceFormData,
+    isEdit: boolean,
+    deviceId?: number | undefined,
+  ) => Promise<void>;
   isPending?: boolean;
 }
 
@@ -119,8 +117,7 @@ export function NASDeviceDialog({
     if (formData.description) apiData.description = formData.description;
     if (formData.vendor) apiData.vendor = formData.vendor;
     if (formData.model) apiData.model = formData.model;
-    if (formData.firmware_version)
-      apiData.firmware_version = formData.firmware_version;
+    if (formData.firmware_version) apiData.firmware_version = formData.firmware_version;
 
     try {
       await onSubmit(apiData, isEdit, nasDevice?.id);
@@ -133,9 +130,7 @@ export function NASDeviceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "Edit NAS Device" : "Add NAS Device"}
-          </DialogTitle>
+          <DialogTitle>{isEdit ? "Edit NAS Device" : "Add NAS Device"}</DialogTitle>
           <DialogDescription>
             {isEdit
               ? "Update the NAS device configuration. Leave secret empty to keep existing secret."
@@ -163,9 +158,7 @@ export function NASDeviceDialog({
                   <Input
                     id="nasname"
                     value={formData.nasname}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nasname: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, nasname: e.target.value })}
                     placeholder="e.g., 192.168.1.1 or router.example.com"
                     required
                   />
@@ -181,9 +174,7 @@ export function NASDeviceDialog({
                   <Input
                     id="shortname"
                     value={formData.shortname}
-                    onChange={(e) =>
-                      setFormData({ ...formData, shortname: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, shortname: e.target.value })}
                     placeholder="e.g., router01"
                     required
                   />
@@ -196,9 +187,7 @@ export function NASDeviceDialog({
                   <Label htmlFor="type">Device Type</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, type: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, type: value })}
                   >
                     <SelectTrigger id="type">
                       <SelectValue />
@@ -217,9 +206,7 @@ export function NASDeviceDialog({
                   <Label htmlFor="vendor">Vendor</Label>
                   <Select
                     value={formData.vendor || "generic"}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, vendor: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, vendor: value })}
                   >
                     <SelectTrigger id="vendor">
                       <SelectValue />
@@ -250,9 +237,7 @@ export function NASDeviceDialog({
                   id="secret"
                   type="password"
                   value={formData.secret}
-                  onChange={(e) =>
-                    setFormData({ ...formData, secret: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, secret: e.target.value })}
                   placeholder={
                     isEdit
                       ? "Leave empty to keep existing secret"
@@ -277,9 +262,7 @@ export function NASDeviceDialog({
                   <Input
                     id="model"
                     value={formData.model || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, model: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                     placeholder="e.g., CCR1036-12G-4S"
                   />
                 </div>
@@ -314,9 +297,7 @@ export function NASDeviceDialog({
                     placeholder="e.g., 48"
                     min="1"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Number of available ports
-                  </p>
+                  <p className="text-xs text-muted-foreground">Number of available ports</p>
                 </div>
 
                 <div className="space-y-2">
@@ -324,9 +305,7 @@ export function NASDeviceDialog({
                   <Input
                     id="server"
                     value={formData.server || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, server: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, server: e.target.value })}
                     placeholder="e.g., management.example.com"
                   />
                 </div>
@@ -341,9 +320,7 @@ export function NASDeviceDialog({
                 <Input
                   id="community"
                   value={formData.community || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, community: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, community: e.target.value })}
                   placeholder="e.g., public"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -358,9 +335,7 @@ export function NASDeviceDialog({
               <Textarea
                 id="description"
                 value={formData.description || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="e.g., Main router at headquarters building"
                 rows={3}
               />
@@ -379,11 +354,7 @@ export function NASDeviceDialog({
             </Button>
             <Button type="submit" disabled={isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {isPending
-                ? "Saving..."
-                : isEdit
-                  ? "Update Device"
-                  : "Create Device"}
+              {isPending ? "Saving..." : isEdit ? "Update Device" : "Create Device"}
             </Button>
           </DialogFooter>
         </form>

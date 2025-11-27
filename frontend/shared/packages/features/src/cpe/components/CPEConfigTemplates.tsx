@@ -16,13 +16,7 @@ import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
 import {

@@ -55,7 +55,6 @@ const SampleTable = ({ variant = "default", size = "md", density = "comfortable"
 );
 
 describe("Table Components", () => {
-
   describe("Table", () => {
     it("renders table with correct structure", () => {
       render(<SampleTable />);
@@ -542,9 +541,7 @@ describe("Table Security", () => {
   });
 
   it("sanitizes user-provided data", async () => {
-    const userData = [
-      { name: 'User<script>alert(1)</script>', email: 'test@test.com' },
-    ];
+    const userData = [{ name: "User<script>alert(1)</script>", email: "test@test.com" }];
 
     const UserTable = () => (
       <Table data-testid="table">

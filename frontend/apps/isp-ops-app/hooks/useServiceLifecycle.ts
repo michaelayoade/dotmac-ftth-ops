@@ -7,4 +7,4 @@
  * All logic now in shared/hooks/useServiceLifecycle.ts
  */
 
-export * from '../../../shared/hooks/useServiceLifecycle';
+export * from "../../../shared/hooks/useServiceLifecycle";

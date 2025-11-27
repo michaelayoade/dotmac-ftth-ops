@@ -2,7 +2,7 @@
  * Shared utility functions for licensing framework
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger";
 
 /**
  * Convert any error to Error instance
@@ -12,14 +12,14 @@ import { logger } from '@/lib/logger';
  * @param fallbackMessage - Message to use if error cannot be converted
  * @returns Error instance
  */
-export function toError(err: unknown, fallbackMessage = 'Unknown error'): Error {
+export function toError(err: unknown, fallbackMessage = "Unknown error"): Error {
   if (err instanceof Error) {
     return err;
   }
-  if (typeof err === 'string') {
+  if (typeof err === "string") {
     return new Error(err);
   }
-  if (err && typeof err === 'object' && 'message' in err) {
+  if (err && typeof err === "object" && "message" in err) {
     return new Error(String(err.message));
   }
   return new Error(fallbackMessage);
@@ -62,12 +62,12 @@ export function logAndReturn<T>(message: string, err: unknown, defaultValue: T):
  */
 export function formatSubscriptionStatus(status: string): string {
   const statusMap: Record<string, string> = {
-    TRIAL: 'Trial',
-    ACTIVE: 'Active',
-    PAST_DUE: 'Past Due',
-    CANCELED: 'Canceled',
-    EXPIRED: 'Expired',
-    SUSPENDED: 'Suspended',
+    TRIAL: "Trial",
+    ACTIVE: "Active",
+    PAST_DUE: "Past Due",
+    CANCELED: "Canceled",
+    EXPIRED: "Expired",
+    SUSPENDED: "Suspended",
   };
   return statusMap[status] || status;
 }
@@ -80,8 +80,8 @@ export function formatSubscriptionStatus(status: string): string {
  */
 export function formatBillingCycle(cycle: string): string {
   const cycleMap: Record<string, string> = {
-    MONTHLY: 'Monthly',
-    ANNUAL: 'Annual',
+    MONTHLY: "Monthly",
+    ANNUAL: "Annual",
   };
   return cycleMap[cycle] || cycle;
 }
@@ -107,14 +107,10 @@ export function calculateAnnualSavings(monthlyPrice: number, annualPrice: number
  * @param inCents - Whether price is in cents
  * @returns Formatted price string
  */
-export function formatPrice(
-  price: number,
-  currency = 'USD',
-  inCents = false
-): string {
+export function formatPrice(price: number, currency = "USD", inCents = false): string {
   const actualPrice = inCents ? price / 100 : price;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -128,7 +124,7 @@ export function formatPrice(
  * @returns True if in trial period
  */
 export function isInTrial(subscription: any): boolean {
-  if (subscription.status === 'TRIAL') return true;
+  if (subscription.status === "TRIAL") return true;
   if (!subscription.trial_end) return false;
   return new Date(subscription.trial_end) > new Date();
 }
@@ -167,11 +163,7 @@ export function calculateQuotaUtilization(used: number, allocated: number): numb
  * @param threshold - Warning threshold (0-1)
  * @returns True if usage is above threshold
  */
-export function isQuotaNearLimit(
-  used: number,
-  allocated: number,
-  threshold = 0.8
-): boolean {
+export function isQuotaNearLimit(used: number, allocated: number, threshold = 0.8): boolean {
   if (allocated === 0) return false;
   return used / allocated >= threshold;
 }

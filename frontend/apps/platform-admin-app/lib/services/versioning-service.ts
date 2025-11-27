@@ -397,14 +397,11 @@ class VersioningService {
    * @returns Breaking change details
    */
   async getBreakingChange(changeId: string): Promise<BreakingChange> {
-    const response = await fetch(
-      this.buildUrl(`/admin/versions/breaking-changes/${changeId}`),
-      {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      },
-    );
+    const response = await fetch(this.buildUrl(`/admin/versions/breaking-changes/${changeId}`), {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     return this.handleResponse<BreakingChange>(response);
   }
@@ -437,15 +434,12 @@ class VersioningService {
     changeId: string,
     data: BreakingChangeUpdate,
   ): Promise<BreakingChange> {
-    const response = await fetch(
-      this.buildUrl(`/admin/versions/breaking-changes/${changeId}`),
-      {
-        method: "PATCH",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-        body: JSON.stringify(data),
-      },
-    );
+    const response = await fetch(this.buildUrl(`/admin/versions/breaking-changes/${changeId}`), {
+      method: "PATCH",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
 
     return this.handleResponse<BreakingChange>(response);
   }
@@ -456,14 +450,11 @@ class VersioningService {
    * @param changeId - Change UUID
    */
   async deleteBreakingChange(changeId: string): Promise<void> {
-    const response = await fetch(
-      this.buildUrl(`/admin/versions/breaking-changes/${changeId}`),
-      {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      },
-    );
+    const response = await fetch(this.buildUrl(`/admin/versions/breaking-changes/${changeId}`), {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     if (!response.ok && response.status !== 204) {
       const error = await response.text();
@@ -482,14 +473,11 @@ class VersioningService {
    * @returns Adoption metrics
    */
   async getAdoptionMetrics(days: number = 30): Promise<VersionAdoptionMetrics> {
-    const response = await fetch(
-      this.buildUrl(`/admin/versions/metrics/adoption?days=${days}`),
-      {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      },
-    );
+    const response = await fetch(this.buildUrl(`/admin/versions/metrics/adoption?days=${days}`), {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     return this.handleResponse<VersionAdoptionMetrics>(response);
   }
@@ -502,14 +490,11 @@ class VersioningService {
    * @returns Usage statistics
    */
   async getVersionUsageStats(version: string, days: number = 30): Promise<VersionUsageStats> {
-    const response = await fetch(
-      this.buildUrl(`/admin/versions/${version}/usage?days=${days}`),
-      {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      },
-    );
+    const response = await fetch(this.buildUrl(`/admin/versions/${version}/usage?days=${days}`), {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     return this.handleResponse<VersionUsageStats>(response);
   }

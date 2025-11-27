@@ -5,26 +5,26 @@
  * with a single GraphQL query. Tests polling, metrics calculation, and helper functions.
  */
 
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { createApolloWrapper } from '@/__tests__/test-utils';
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { createApolloWrapper } from "@/__tests__/test-utils";
 import {
   useSubscriberDashboardGraphQL,
   getSubscriberSessions,
   formatDataUsage,
-} from '../useSubscriberDashboardGraphQL';
-import * as generatedHooks from '@/lib/graphql/generated';
-import * as serviceLifecycleHooks from '../useServiceLifecycle';
+} from "../useSubscriberDashboardGraphQL";
+import * as generatedHooks from "@/lib/graphql/generated";
+import * as serviceLifecycleHooks from "../useServiceLifecycle";
 
 // Mock dependencies
-jest.mock('@/lib/graphql/generated', () => ({
+jest.mock("@/lib/graphql/generated", () => ({
   useSubscriberDashboardQuery: jest.fn(),
 }));
 
-jest.mock('../useServiceLifecycle', () => ({
+jest.mock("../useServiceLifecycle", () => ({
   useServiceStatistics: jest.fn(),
 }));
 
-jest.mock('@/lib/logger', () => ({
+jest.mock("@/lib/logger", () => ({
   logger: {
     error: jest.fn(),
     warn: jest.fn(),
@@ -35,8 +35,8 @@ jest.mock('@/lib/logger', () => ({
 
 // Test data factories
 const createMockSubscriber = (overrides: any = {}) => ({
-  id: 'sub-001',
-  username: 'user001',
+  id: "sub-001",
+  username: "user001",
   enabled: true,
   dataUsageMb: 1024,
   sessions: [],
@@ -44,12 +44,12 @@ const createMockSubscriber = (overrides: any = {}) => ({
 });
 
 const createMockSession = (overrides: any = {}) => ({
-  id: 'session-001',
-  username: 'user001',
-  nasIpAddress: '192.168.1.1',
-  framedIpAddress: '10.0.0.1',
-  accSessionId: 'acc-001',
-  accStartTime: '2024-01-01T00:00:00Z',
+  id: "session-001",
+  username: "user001",
+  nasIpAddress: "192.168.1.1",
+  framedIpAddress: "10.0.0.1",
+  accSessionId: "acc-001",
+  accStartTime: "2024-01-01T00:00:00Z",
   inputOctets: 1024000,
   outputOctets: 2048000,
   ...overrides,
@@ -73,7 +73,7 @@ const createMockServiceStatistics = (overrides: any = {}) => ({
   ...overrides,
 });
 
-describe('useSubscriberDashboardGraphQL', () => {
+describe("useSubscriberDashboardGraphQL", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
@@ -84,17 +84,17 @@ describe('useSubscriberDashboardGraphQL', () => {
     jest.useRealTimers();
   });
 
-  describe('Basic Data Fetching', () => {
-    it('should fetch subscriber dashboard data successfully', async () => {
+  describe("Basic Data Fetching", () => {
+    it("should fetch subscriber dashboard data successfully", async () => {
       const mockSubscribers = [
         createMockSubscriber({
-          id: 'sub-001',
-          username: 'user001',
+          id: "sub-001",
+          username: "user001",
           sessions: [createMockSession()],
         }),
         createMockSubscriber({
-          id: 'sub-002',
-          username: 'user002',
+          id: "sub-002",
+          username: "user002",
           sessions: [],
         }),
       ];
@@ -108,7 +108,9 @@ describe('useSubscriberDashboardGraphQL', () => {
         },
         loading: false,
         error: undefined,
-        refetch: jest.fn().mockResolvedValue({ data: { subscribers: mockSubscribers, subscriberMetrics: mockMetrics } }),
+        refetch: jest.fn().mockResolvedValue({
+          data: { subscribers: mockSubscribers, subscriberMetrics: mockMetrics },
+        }),
       });
 
       (serviceLifecycleHooks.useServiceStatistics as jest.Mock).mockReturnValue({
@@ -132,7 +134,7 @@ describe('useSubscriberDashboardGraphQL', () => {
       expect(result.current.metrics.activeSessions).toBe(50);
     });
 
-    it('should handle empty subscriber data', async () => {
+    it("should handle empty subscriber data", async () => {
       const emptyMetrics = createMockMetrics({ totalCount: 0 });
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
         data: {
@@ -141,7 +143,9 @@ describe('useSubscriberDashboardGraphQL', () => {
         },
         loading: false,
         error: undefined,
-        refetch: jest.fn().mockResolvedValue({ data: { subscribers: [], subscriberMetrics: emptyMetrics } }),
+        refetch: jest
+          .fn()
+          .mockResolvedValue({ data: { subscribers: [], subscriberMetrics: emptyMetrics } }),
       });
 
       (serviceLifecycleHooks.useServiceStatistics as jest.Mock).mockReturnValue({
@@ -162,8 +166,8 @@ describe('useSubscriberDashboardGraphQL', () => {
       expect(result.current.sessionsCount).toBe(0);
     });
 
-    it('should handle GraphQL errors', async () => {
-      const mockError = new Error('GraphQL query failed');
+    it("should handle GraphQL errors", async () => {
+      const mockError = new Error("GraphQL query failed");
 
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
         data: undefined,
@@ -182,13 +186,13 @@ describe('useSubscriberDashboardGraphQL', () => {
       });
 
       await waitFor(() => {
-        expect(result.current.error).toBe('GraphQL query failed');
+        expect(result.current.error).toBe("GraphQL query failed");
       });
     });
   });
 
-  describe('Query Options', () => {
-    it('should respect the limit option', async () => {
+  describe("Query Options", () => {
+    it("should respect the limit option", async () => {
       const mockRefetch = jest.fn().mockResolvedValue({ data: undefined });
 
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
@@ -213,11 +217,11 @@ describe('useSubscriberDashboardGraphQL', () => {
             limit: 100,
             search: undefined,
           },
-        })
+        }),
       );
     });
 
-    it('should respect the search option', async () => {
+    it("should respect the search option", async () => {
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
         data: { subscribers: [], subscriberMetrics: createMockMetrics() },
         loading: false,
@@ -230,7 +234,7 @@ describe('useSubscriberDashboardGraphQL', () => {
         error: undefined,
       });
 
-      renderHook(() => useSubscriberDashboardGraphQL({ search: 'user001' }), {
+      renderHook(() => useSubscriberDashboardGraphQL({ search: "user001" }), {
         wrapper: createApolloWrapper(),
       });
 
@@ -238,13 +242,13 @@ describe('useSubscriberDashboardGraphQL', () => {
         expect.objectContaining({
           variables: {
             limit: 50,
-            search: 'user001',
+            search: "user001",
           },
-        })
+        }),
       );
     });
 
-    it('should respect the enabled option', () => {
+    it("should respect the enabled option", () => {
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
         data: undefined,
         loading: false,
@@ -264,13 +268,13 @@ describe('useSubscriberDashboardGraphQL', () => {
       expect(generatedHooks.useSubscriberDashboardQuery).toHaveBeenCalledWith(
         expect.objectContaining({
           skip: true,
-        })
+        }),
       );
     });
   });
 
-  describe('Lifecycle Metrics Integration', () => {
-    it('should fetch lifecycle statistics when enabled', async () => {
+  describe("Lifecycle Metrics Integration", () => {
+    it("should fetch lifecycle statistics when enabled", async () => {
       const mockServiceStats = createMockServiceStatistics({ active_count: 60 });
 
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
@@ -290,7 +294,7 @@ describe('useSubscriberDashboardGraphQL', () => {
 
       const { result } = renderHook(
         () => useSubscriberDashboardGraphQL({ lifecycleMetricsEnabled: true }),
-        { wrapper: createApolloWrapper() }
+        { wrapper: createApolloWrapper() },
       );
 
       await waitFor(() => {
@@ -303,13 +307,13 @@ describe('useSubscriberDashboardGraphQL', () => {
       expect(result.current.metrics.activeServices).toBe(60);
     });
 
-    it('should fall back to session-based active services count when lifecycle stats unavailable', async () => {
+    it("should fall back to session-based active services count when lifecycle stats unavailable", async () => {
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
         data: {
           subscribers: [
-            createMockSubscriber({ id: 'sub-001', sessions: [createMockSession()] }),
-            createMockSubscriber({ id: 'sub-002', sessions: [] }),
-            createMockSubscriber({ id: 'sub-003', sessions: [createMockSession()] }),
+            createMockSubscriber({ id: "sub-001", sessions: [createMockSession()] }),
+            createMockSubscriber({ id: "sub-002", sessions: [] }),
+            createMockSubscriber({ id: "sub-003", sessions: [createMockSession()] }),
           ],
           subscriberMetrics: createMockMetrics(),
         },
@@ -336,8 +340,8 @@ describe('useSubscriberDashboardGraphQL', () => {
     });
   });
 
-  describe('Polling Functionality', () => {
-    it('should poll at the specified interval when enabled', async () => {
+  describe("Polling Functionality", () => {
+    it("should poll at the specified interval when enabled", async () => {
       const mockRefetch = jest.fn(() => Promise.resolve({ data: {} }));
 
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
@@ -358,7 +362,7 @@ describe('useSubscriberDashboardGraphQL', () => {
             pollingEnabled: true,
             pollingIntervalMs: 10000,
           }),
-        { wrapper: createApolloWrapper() }
+        { wrapper: createApolloWrapper() },
       );
 
       // Fast-forward time by 10 seconds
@@ -372,7 +376,7 @@ describe('useSubscriberDashboardGraphQL', () => {
       });
     });
 
-    it('should not poll when pollingEnabled is false', async () => {
+    it("should not poll when pollingEnabled is false", async () => {
       const mockRefetch = jest.fn(() => Promise.resolve({ data: {} }));
 
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
@@ -399,7 +403,7 @@ describe('useSubscriberDashboardGraphQL', () => {
       expect(mockRefetch).not.toHaveBeenCalled();
     });
 
-    it('should not poll when enabled is false', async () => {
+    it("should not poll when enabled is false", async () => {
       const mockRefetch = jest.fn(() => Promise.resolve({ data: {} }));
 
       (generatedHooks.useSubscriberDashboardQuery as jest.Mock).mockReturnValue({
@@ -427,19 +431,19 @@ describe('useSubscriberDashboardGraphQL', () => {
     });
   });
 
-  describe('Sessions Aggregation', () => {
-    it('should flatten all sessions from subscribers', async () => {
+  describe("Sessions Aggregation", () => {
+    it("should flatten all sessions from subscribers", async () => {
       const mockSubscribers = [
         createMockSubscriber({
-          username: 'user001',
+          username: "user001",
           sessions: [
-            createMockSession({ id: 'session-001' }),
-            createMockSession({ id: 'session-002' }),
+            createMockSession({ id: "session-001" }),
+            createMockSession({ id: "session-002" }),
           ],
         }),
         createMockSubscriber({
-          username: 'user002',
-          sessions: [createMockSession({ id: 'session-003' })],
+          username: "user002",
+          sessions: [createMockSession({ id: "session-003" })],
         }),
       ];
 
@@ -469,64 +473,62 @@ describe('useSubscriberDashboardGraphQL', () => {
   });
 });
 
-describe('Helper Functions', () => {
-  describe('getSubscriberSessions', () => {
-    it('should return sessions for a specific subscriber', () => {
+describe("Helper Functions", () => {
+  describe("getSubscriberSessions", () => {
+    it("should return sessions for a specific subscriber", () => {
       const subscribers = [
         {
-          username: 'user001',
+          username: "user001",
           sessions: [
-            createMockSession({ id: 'session-001' }),
-            createMockSession({ id: 'session-002' }),
+            createMockSession({ id: "session-001" }),
+            createMockSession({ id: "session-002" }),
           ],
         },
         {
-          username: 'user002',
-          sessions: [createMockSession({ id: 'session-003' })],
+          username: "user002",
+          sessions: [createMockSession({ id: "session-003" })],
         },
       ];
 
-      const sessions = getSubscriberSessions(subscribers, 'user001');
+      const sessions = getSubscriberSessions(subscribers, "user001");
 
       expect(sessions).toHaveLength(2);
-      expect(sessions[0].id).toBe('session-001');
+      expect(sessions[0].id).toBe("session-001");
     });
 
-    it('should return empty array for non-existent subscriber', () => {
-      const subscribers = [
-        { username: 'user001', sessions: [createMockSession()] },
-      ];
+    it("should return empty array for non-existent subscriber", () => {
+      const subscribers = [{ username: "user001", sessions: [createMockSession()] }];
 
-      const sessions = getSubscriberSessions(subscribers, 'nonexistent');
+      const sessions = getSubscriberSessions(subscribers, "nonexistent");
 
       expect(sessions).toEqual([]);
     });
   });
 
-  describe('formatDataUsage', () => {
-    it('should format data usage in MB when less than 1024 MB', () => {
+  describe("formatDataUsage", () => {
+    it("should format data usage in MB when less than 1024 MB", () => {
       const result = formatDataUsage(512 * 1024 * 1024, 256 * 1024 * 1024);
-      expect(result).toBe('768.00 MB');
+      expect(result).toBe("768.00 MB");
     });
 
-    it('should format data usage in GB when 1024 MB or more', () => {
+    it("should format data usage in GB when 1024 MB or more", () => {
       const result = formatDataUsage(1024 * 1024 * 1024, 1024 * 1024 * 1024);
-      expect(result).toBe('2.00 GB');
+      expect(result).toBe("2.00 GB");
     });
 
-    it('should handle null values', () => {
+    it("should handle null values", () => {
       const result = formatDataUsage(null, null);
-      expect(result).toBe('0.00 MB');
+      expect(result).toBe("0.00 MB");
     });
 
-    it('should handle undefined values', () => {
+    it("should handle undefined values", () => {
       const result = formatDataUsage(undefined, undefined);
-      expect(result).toBe('0.00 MB');
+      expect(result).toBe("0.00 MB");
     });
 
-    it('should handle mixed null and valid values', () => {
+    it("should handle mixed null and valid values", () => {
       const result = formatDataUsage(512 * 1024 * 1024, null);
-      expect(result).toBe('512.00 MB');
+      expect(result).toBe("512.00 MB");
     });
   });
 });

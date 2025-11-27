@@ -201,7 +201,9 @@ describe("useFaults", () => {
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      expect(apiClient.get).toHaveBeenCalledWith("/faults/alarms?status=active&status=acknowledged");
+      expect(apiClient.get).toHaveBeenCalledWith(
+        "/faults/alarms?status=active&status=acknowledged",
+      );
     });
 
     it("should filter alarms by source", async () => {
@@ -262,7 +264,7 @@ describe("useFaults", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -832,9 +834,7 @@ describe("useFaults", () => {
 
   describe("useAlarmOperations", () => {
     it("should acknowledge alarms successfully", async () => {
-      (apiClient.post as jest.Mock)
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
+      (apiClient.post as jest.Mock).mockResolvedValueOnce({}).mockResolvedValueOnce({});
 
       const { result } = renderHook(() => useAlarmOperations(), {
         wrapper: createWrapper(),
@@ -854,7 +854,10 @@ describe("useFaults", () => {
         wrapper: createWrapper(),
       });
 
-      const acknowledgeResult = await result.current.acknowledgeAlarms(["alarm-1"], "Investigating");
+      const acknowledgeResult = await result.current.acknowledgeAlarms(
+        ["alarm-1"],
+        "Investigating",
+      );
 
       expect(acknowledgeResult).toBe(true);
       expect(apiClient.post).toHaveBeenCalledWith("/faults/alarms/alarm-1/acknowledge", {
@@ -877,9 +880,7 @@ describe("useFaults", () => {
     });
 
     it("should clear alarms successfully", async () => {
-      (apiClient.post as jest.Mock)
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
+      (apiClient.post as jest.Mock).mockResolvedValueOnce({}).mockResolvedValueOnce({});
 
       const { result } = renderHook(() => useAlarmOperations(), {
         wrapper: createWrapper(),
@@ -907,9 +908,7 @@ describe("useFaults", () => {
     });
 
     it("should create tickets successfully", async () => {
-      (apiClient.post as jest.Mock)
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
+      (apiClient.post as jest.Mock).mockResolvedValueOnce({}).mockResolvedValueOnce({});
 
       const { result } = renderHook(() => useAlarmOperations(), {
         wrapper: createWrapper(),

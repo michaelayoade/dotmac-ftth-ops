@@ -58,7 +58,9 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
       await qualifyLead(leadId);
       toast({
         title: "Lead Qualified",
-        description: lead ? `${lead.first_name} ${lead.last_name} is now qualified.` : "Lead qualified successfully.",
+        description: lead
+          ? `${lead.first_name} ${lead.last_name} is now qualified.`
+          : "Lead qualified successfully.",
       });
     } catch (error) {
       console.error("Failed to qualify lead:", error);
@@ -75,7 +77,9 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
       await disqualifyLead(leadId, reason);
       toast({
         title: "Lead Disqualified",
-        description: lead ? `${lead.first_name} ${lead.last_name} has been disqualified.` : "Lead disqualified successfully.",
+        description: lead
+          ? `${lead.first_name} ${lead.last_name} has been disqualified.`
+          : "Lead disqualified successfully.",
       });
     } catch (error) {
       console.error("Failed to disqualify lead:", error);
@@ -92,7 +96,9 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
       await convertToCustomer(leadId);
       toast({
         title: "Lead Converted",
-        description: lead ? `${lead.first_name} ${lead.last_name} is now a customer!` : "Lead converted successfully!",
+        description: lead
+          ? `${lead.first_name} ${lead.last_name} is now a customer!`
+          : "Lead converted successfully!",
       });
     } catch (error) {
       console.error("Failed to convert lead:", error);

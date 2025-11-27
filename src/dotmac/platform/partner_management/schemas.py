@@ -452,7 +452,9 @@ class PartnerCommissionRuleBase(BaseModel):  # BaseModel resolves to Any in isol
     )
 
 
-class PartnerCommissionRuleCreate(PartnerCommissionRuleBase):  # PartnerCommissionRuleBase resolves to Any in isolation
+class PartnerCommissionRuleCreate(
+    PartnerCommissionRuleBase
+):  # PartnerCommissionRuleBase resolves to Any in isolation
     """Schema for creating commission rule."""
 
     partner_id: UUID
@@ -481,7 +483,9 @@ class PartnerCommissionRuleUpdate(BaseModel):  # BaseModel resolves to Any in is
     priority: int | None = Field(None, ge=1)
 
 
-class PartnerCommissionRuleResponse(PartnerCommissionRuleBase):  # PartnerCommissionRuleBase resolves to Any in isolation
+class PartnerCommissionRuleResponse(
+    PartnerCommissionRuleBase
+):  # PartnerCommissionRuleBase resolves to Any in isolation
     """Schema for commission rule response."""
 
     id: UUID

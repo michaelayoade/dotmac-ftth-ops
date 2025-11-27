@@ -6,7 +6,14 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { useJobs, useFieldInstallationJobs, useCancelJob, type Job, type JobsResponse, type FieldInstallationJob } from "../useJobs";
+import {
+  useJobs,
+  useFieldInstallationJobs,
+  useCancelJob,
+  type Job,
+  type JobsResponse,
+  type FieldInstallationJob,
+} from "../useJobs";
 import { apiClient } from "@/lib/api/client";
 
 // Mock dependencies
@@ -52,7 +59,9 @@ const createMockJob = (overrides?: Partial<Job>): Job => ({
 });
 
 // Helper to create mock field installation job
-const createMockFieldInstallationJob = (overrides?: Partial<FieldInstallationJob>): FieldInstallationJob => ({
+const createMockFieldInstallationJob = (
+  overrides?: Partial<FieldInstallationJob>,
+): FieldInstallationJob => ({
   ...createMockJob({
     job_type: "field_installation",
     location_lat: 37.7749,
@@ -142,10 +151,7 @@ describe("useJobs (Jest Mocks)", () => {
     });
 
     it("should filter jobs by status", async () => {
-      const mockJobs = [
-        createMockJob({ status: "pending" }),
-        createMockJob({ status: "pending" }),
-      ];
+      const mockJobs = [createMockJob({ status: "pending" }), createMockJob({ status: "pending" })];
 
       const mockResponse: JobsResponse = {
         jobs: mockJobs,
@@ -166,9 +172,7 @@ describe("useJobs (Jest Mocks)", () => {
       expect(result.current.data?.jobs.every((j) => j.status === "pending")).toBe(true);
 
       // Verify API was called with correct params
-      expect(mockedApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("status=pending")
-      );
+      expect(mockedApiClient.get).toHaveBeenCalledWith(expect.stringContaining("status=pending"));
     });
 
     it("should filter jobs by job type", async () => {
@@ -197,13 +201,13 @@ describe("useJobs (Jest Mocks)", () => {
 
       // Verify API was called with correct params
       expect(mockedApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("job_type=bulk_notification")
+        expect.stringContaining("job_type=bulk_notification"),
       );
     });
 
     it("should handle pagination with limit", async () => {
       const mockJobs = Array.from({ length: 10 }, (_, i) =>
-        createMockJob({ id: `job-${i + 1}`, title: `Job ${i + 1}` })
+        createMockJob({ id: `job-${i + 1}`, title: `Job ${i + 1}` }),
       );
 
       const mockResponse: JobsResponse = {
@@ -227,14 +231,12 @@ describe("useJobs (Jest Mocks)", () => {
       expect(result.current.data?.offset).toBe(0);
 
       // Verify API was called with correct params
-      expect(mockedApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("limit=10")
-      );
+      expect(mockedApiClient.get).toHaveBeenCalledWith(expect.stringContaining("limit=10"));
     });
 
     it("should handle pagination with offset", async () => {
       const mockJobs = Array.from({ length: 10 }, (_, i) =>
-        createMockJob({ id: `job-${i + 11}`, title: `Job ${i + 11}` })
+        createMockJob({ id: `job-${i + 11}`, title: `Job ${i + 11}` }),
       );
 
       const mockResponse: JobsResponse = {
@@ -257,15 +259,11 @@ describe("useJobs (Jest Mocks)", () => {
       expect(result.current.data?.offset).toBe(10);
 
       // Verify API was called with correct params
-      expect(mockedApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("offset=10")
-      );
+      expect(mockedApiClient.get).toHaveBeenCalledWith(expect.stringContaining("offset=10"));
     });
 
     it("should handle combined filters", async () => {
-      const mockJobs = [
-        createMockJob({ status: "running", job_type: "bulk_notification" }),
-      ];
+      const mockJobs = [createMockJob({ status: "running", job_type: "bulk_notification" })];
 
       const mockResponse: JobsResponse = {
         jobs: mockJobs,
@@ -278,7 +276,7 @@ describe("useJobs (Jest Mocks)", () => {
 
       const { result } = renderHook(
         () => useJobs({ status: "running", jobType: "bulk_notification" }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.data).not.toBeUndefined());
@@ -289,7 +287,9 @@ describe("useJobs (Jest Mocks)", () => {
 
       // Verify API was called with both params
       expect(mockedApiClient.get).toHaveBeenCalledWith(
-        expect.stringMatching(/status=running.*job_type=bulk_notification|job_type=bulk_notification.*status=running/)
+        expect.stringMatching(
+          /status=running.*job_type=bulk_notification|job_type=bulk_notification.*status=running/,
+        ),
       );
     });
 

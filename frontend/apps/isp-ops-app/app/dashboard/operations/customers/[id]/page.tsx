@@ -14,20 +14,11 @@ import { Alert, AlertDescription } from "@dotmac/ui";
 import { AlertCircle } from "lucide-react";
 
 export default function CustomerDetailPage({ params }: { params: { id: string } }) {
-  const {
-    customer,
-    subscriptions,
-    network,
-    devices,
-    tickets,
-    billing,
-    isLoading,
-    error,
-    refetch,
-  } = useCustomer360ViewGraphQL({
-    customerId: params['id'],
-    enabled: true,
-  });
+  const { customer, subscriptions, network, devices, tickets, billing, isLoading, error, refetch } =
+    useCustomer360ViewGraphQL({
+      customerId: params["id"],
+      enabled: true,
+    });
 
   if (isLoading) {
     return <CustomerDetailSkeleton />;
@@ -38,9 +29,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
       <div className="p-6">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load customer details: {error}
-          </AlertDescription>
+          <AlertDescription>Failed to load customer details: {error}</AlertDescription>
         </Alert>
       </div>
     );
@@ -81,7 +70,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
 
       {/* Quick Actions Bar */}
       <QuickActionsCard
-        customerId={params['id']}
+        customerId={params["id"]}
         customerStatus={customer.status}
         onActionComplete={refetch}
       />
@@ -95,13 +84,13 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
           totalSubscriptions={subscriptions.total}
         />
 
-        <NetworkStatusCard network={network} customerId={params['id']} />
+        <NetworkStatusCard network={network} customerId={params["id"]} />
 
-        <DevicesSummaryCard devices={devices} customerId={params['id']} />
+        <DevicesSummaryCard devices={devices} customerId={params["id"]} />
 
-        <TicketsSummaryCard tickets={tickets} customerId={params['id']} />
+        <TicketsSummaryCard tickets={tickets} customerId={params["id"]} />
 
-        <BillingSummaryCard billing={billing} customerId={params['id']} />
+        <BillingSummaryCard billing={billing} customerId={params["id"]} />
       </div>
     </div>
   );

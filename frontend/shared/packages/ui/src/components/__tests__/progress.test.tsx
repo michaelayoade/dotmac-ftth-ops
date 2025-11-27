@@ -34,7 +34,7 @@ describe("Progress", () => {
         "w-full",
         "overflow-hidden",
         "rounded-full",
-        "bg-muted"
+        "bg-muted",
       );
     });
 
@@ -235,9 +235,7 @@ describe("Progress", () => {
     });
 
     it("supports aria-valuemin and aria-valuemax", () => {
-      render(
-        <Progress value={50} aria-valuemin={0} aria-valuemax={100} data-testid="progress" />
-      );
+      render(<Progress value={50} aria-valuemin={0} aria-valuemax={100} data-testid="progress" />);
 
       const progress = screen.getByTestId("progress");
       expect(progress).toHaveAttribute("aria-valuemin", "0");
@@ -254,7 +252,7 @@ describe("Progress", () => {
             <span>65%</span>
           </div>
           <Progress value={65} />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Uploading file.pdf")).toBeInTheDocument();
@@ -266,7 +264,7 @@ describe("Progress", () => {
         <div>
           <label htmlFor="download-progress">Download Progress</label>
           <Progress id="download-progress" value={80} aria-label="Download 80% complete" />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Download Progress")).toBeInTheDocument();
@@ -278,7 +276,7 @@ describe("Progress", () => {
           <h3>Task Progress</h3>
           <p className="text-sm text-muted-foreground">3 of 5 tasks completed</p>
           <Progress value={60} indicatorClassName="bg-green-500" />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Task Progress")).toBeInTheDocument();
@@ -290,7 +288,7 @@ describe("Progress", () => {
         <div>
           <p>Loading...</p>
           <Progress value={45} />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Loading...")).toBeInTheDocument();
@@ -304,8 +302,10 @@ describe("Progress", () => {
             <span className="text-sm text-muted-foreground">90%</span>
           </div>
           <Progress value={90} indicatorClassName="bg-blue-500" />
-          <p className="text-xs text-muted-foreground">Almost there! Add a profile picture to complete.</p>
-        </div>
+          <p className="text-xs text-muted-foreground">
+            Almost there! Add a profile picture to complete.
+          </p>
+        </div>,
       );
 
       expect(screen.getByText("Profile Completion")).toBeInTheDocument();
@@ -320,7 +320,7 @@ describe("Progress", () => {
             <span>50%</span>
           </div>
           <Progress value={50} />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Step 2 of 4")).toBeInTheDocument();
@@ -352,7 +352,7 @@ describe("Progress", () => {
 
     it("renders with gradient indicator", () => {
       const { container } = render(
-        <Progress value={75} indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500" />
+        <Progress value={75} indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500" />,
       );
 
       const indicator = container.querySelector(".h-full.transition-all");
@@ -414,7 +414,7 @@ describe("Progress", () => {
           aria-valuemax={100}
           aria-label="Upload progress"
           data-testid="progress"
-        />
+        />,
       );
 
       const progress = screen.getByTestId("progress");

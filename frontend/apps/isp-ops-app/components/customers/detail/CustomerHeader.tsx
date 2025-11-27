@@ -38,26 +38,20 @@ export function CustomerHeader({ customer, onRefresh }: CustomerHeaderProps) {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">
-            {customer.display_name || customer.email}
-          </h1>
+          <h1 className="text-3xl font-bold">{customer.display_name || customer.email}</h1>
           <p className="text-sm text-muted-foreground">{customer.email}</p>
         </div>
       </div>
       <div className="flex items-center gap-3">
         {customer.healthScore !== undefined && (
           <div className="text-center">
-            <div
-              className={`text-4xl font-bold ${healthScoreColor(customer.healthScore)}`}
-            >
+            <div className={`text-4xl font-bold ${healthScoreColor(customer.healthScore)}`}>
               {customer.healthScore}
             </div>
             <p className="text-xs text-muted-foreground">Health Score</p>
           </div>
         )}
-        <Badge variant={statusColors[customer.status] || "secondary"}>
-          {customer.status}
-        </Badge>
+        <Badge variant={statusColors[customer.status] || "secondary"}>{customer.status}</Badge>
         <Button variant="outline" size="sm" onClick={onRefresh}>
           <RefreshCw className="h-4 w-4" />
         </Button>

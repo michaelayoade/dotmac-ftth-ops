@@ -198,7 +198,7 @@ describe("TablePagination", () => {
 
     it("shows selection count when provided", () => {
       render(
-        <TablePagination {...defaultProps} selectedCount={5} filteredCount={50} totalItems={100} />
+        <TablePagination {...defaultProps} selectedCount={5} filteredCount={50} totalItems={100} />,
       );
 
       expect(screen.getByText("5 of 50 row(s) selected")).toBeInTheDocument();
@@ -221,7 +221,7 @@ describe("TablePagination", () => {
   describe("Styling", () => {
     it("applies custom className", () => {
       const { container } = render(
-        <TablePagination {...defaultProps} className="custom-pagination" />
+        <TablePagination {...defaultProps} className="custom-pagination" />,
       );
 
       const pagination = container.firstChild;

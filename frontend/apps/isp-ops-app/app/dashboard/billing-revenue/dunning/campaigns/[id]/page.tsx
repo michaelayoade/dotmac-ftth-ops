@@ -6,14 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Dialog,
@@ -195,7 +188,7 @@ const getActionIcon = (type: DunningActionType) => {
 };
 
 const getStatusBadgeVariant = (
-  status: DunningExecutionStatus
+  status: DunningExecutionStatus,
 ): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case "pending":
@@ -235,7 +228,7 @@ function CampaignDetailsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const campaignId = params['id'] as string;
+  const campaignId = params["id"] as string;
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl || "";
 
@@ -246,12 +239,9 @@ function CampaignDetailsContent() {
   const { data: campaign, isLoading: campaignLoading } = useQuery<DunningCampaign>({
     queryKey: ["dunning", "campaigns", campaignId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch campaign");
       }
@@ -268,7 +258,7 @@ function CampaignDetailsContent() {
         `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}/stats`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to fetch campaign stats");
@@ -286,7 +276,7 @@ function CampaignDetailsContent() {
         `${apiBaseUrl}/api/v1/billing/dunning/executions?campaign_id=${campaignId}`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to fetch executions");
@@ -314,17 +304,14 @@ function CampaignDetailsContent() {
   // Update campaign mutation
   const updateCampaignMutation = useMutation({
     mutationFn: async (data: CampaignFormValues) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
       if (!response.ok) {
         throw new Error("Failed to update campaign");
       }
@@ -351,13 +338,10 @@ function CampaignDetailsContent() {
   // Delete campaign mutation
   const deleteCampaignMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to delete campaign");
       }
@@ -381,17 +365,14 @@ function CampaignDetailsContent() {
   // Toggle active status mutation
   const toggleActiveMutation = useMutation({
     mutationFn: async (isActive: boolean) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ is_active: isActive }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/billing/dunning/campaigns/${campaignId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_active: isActive }),
+      });
       if (!response.ok) {
         throw new Error("Failed to update campaign");
       }
@@ -507,10 +488,7 @@ function CampaignDetailsContent() {
                 </>
               )}
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => setIsDeleteDialogOpen(true)}
-            >
+            <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>
@@ -558,9 +536,7 @@ function CampaignDetailsContent() {
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Created</div>
-                  <div className="font-medium">
-                    {format(new Date(campaign.created_at), "PPP")}
-                  </div>
+                  <div className="font-medium">{format(new Date(campaign.created_at), "PPP")}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Last Updated</div>
@@ -580,12 +556,8 @@ function CampaignDetailsContent() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">
-                    Trigger After Payment Failure
-                  </div>
-                  <div className="font-medium">
-                    {campaign.trigger_after_days} days
-                  </div>
+                  <div className="text-sm text-muted-foreground">Trigger After Payment Failure</div>
+                  <div className="font-medium">{campaign.trigger_after_days} days</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Maximum Retries</div>
@@ -593,14 +565,10 @@ function CampaignDetailsContent() {
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Retry Interval</div>
-                  <div className="font-medium">
-                    {campaign.retry_interval_days} days
-                  </div>
+                  <div className="font-medium">{campaign.retry_interval_days} days</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">
-                    Total Actions Configured
-                  </div>
+                  <div className="text-sm text-muted-foreground">Total Actions Configured</div>
                   <div className="font-medium">{campaign.actions.length}</div>
                 </div>
               </CardContent>
@@ -608,56 +576,49 @@ function CampaignDetailsContent() {
           </div>
 
           {/* Exclusion Rules */}
-          {campaign.exclusion_rules &&
-            Object.keys(campaign.exclusion_rules).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Exclusion Rules</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {campaign.exclusion_rules.min_lifetime_value && (
+          {campaign.exclusion_rules && Object.keys(campaign.exclusion_rules).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Exclusion Rules</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {campaign.exclusion_rules.min_lifetime_value && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Minimum Lifetime Value</div>
+                    <div className="font-medium">
+                      {formatMoney(campaign.exclusion_rules.min_lifetime_value)}
+                    </div>
+                  </div>
+                )}
+                {campaign.exclusion_rules.customer_tiers &&
+                  campaign.exclusion_rules.customer_tiers.length > 0 && (
                     <div>
-                      <div className="text-sm text-muted-foreground">
-                        Minimum Lifetime Value
-                      </div>
-                      <div className="font-medium">
-                        {formatMoney(campaign.exclusion_rules.min_lifetime_value)}
+                      <div className="text-sm text-muted-foreground">Excluded Customer Tiers</div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {campaign.exclusion_rules.customer_tiers.map((tier) => (
+                          <Badge key={tier} variant="outline">
+                            {tier}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   )}
-                  {campaign.exclusion_rules.customer_tiers &&
-                    campaign.exclusion_rules.customer_tiers.length > 0 && (
-                      <div>
-                        <div className="text-sm text-muted-foreground">
-                          Excluded Customer Tiers
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {campaign.exclusion_rules.customer_tiers.map((tier) => (
-                            <Badge key={tier} variant="outline">
-                              {tier}
-                            </Badge>
-                          ))}
-                        </div>
+                {campaign.exclusion_rules.customer_tags &&
+                  campaign.exclusion_rules.customer_tags.length > 0 && (
+                    <div>
+                      <div className="text-sm text-muted-foreground">Excluded Customer Tags</div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {campaign.exclusion_rules.customer_tags.map((tag) => (
+                          <Badge key={tag} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
                       </div>
-                    )}
-                  {campaign.exclusion_rules.customer_tags &&
-                    campaign.exclusion_rules.customer_tags.length > 0 && (
-                      <div>
-                        <div className="text-sm text-muted-foreground">
-                          Excluded Customer Tags
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {campaign.exclusion_rules.customer_tags.map((tag) => (
-                            <Badge key={tag} variant="outline">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                </CardContent>
-              </Card>
-            )}
+                    </div>
+                  )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Actions Tab */}
@@ -670,9 +631,7 @@ function CampaignDetailsContent() {
               {campaign.actions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No actions configured for this campaign
-                  </p>
+                  <p className="text-muted-foreground">No actions configured for this campaign</p>
                 </div>
               ) : (
                 <Table>
@@ -693,32 +652,25 @@ function CampaignDetailsContent() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getActionIcon(action.type)}
-                            <span className="capitalize">
-                              {action.type.replace(/_/g, " ")}
-                            </span>
+                            <span className="capitalize">{action.type.replace(/_/g, " ")}</span>
                           </div>
                         </TableCell>
                         <TableCell>{action.delay_days} days</TableCell>
                         <TableCell>
                           {action.template && (
                             <div className="text-sm">
-                              <span className="text-muted-foreground">
-                                Template:{" "}
-                              </span>
+                              <span className="text-muted-foreground">Template: </span>
                               {action.template}
                             </div>
                           )}
                           {action.webhook_url && (
-                            <div className="text-sm font-mono">
-                              {action.webhook_url}
+                            <div className="text-sm font-mono">{action.webhook_url}</div>
+                          )}
+                          {action.custom_config && Object.keys(action.custom_config).length > 0 && (
+                            <div className="text-sm text-muted-foreground">
+                              Custom configuration
                             </div>
                           )}
-                          {action.custom_config &&
-                            Object.keys(action.custom_config).length > 0 && (
-                              <div className="text-sm text-muted-foreground">
-                                Custom configuration
-                              </div>
-                            )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -735,15 +687,11 @@ function CampaignDetailsContent() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Executions
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Total Executions</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats?.total_executions ?? 0}
-                </div>
+                <div className="text-2xl font-bold">{stats?.total_executions ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
                   {stats?.active_executions ?? 0} active
                 </p>
@@ -752,15 +700,11 @@ function CampaignDetailsContent() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Success Rate
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats?.success_rate?.toFixed(1) ?? 0}%
-                </div>
+                <div className="text-2xl font-bold">{stats?.success_rate?.toFixed(1) ?? 0}%</div>
                 <p className="text-xs text-muted-foreground">
                   {stats?.completed_executions ?? 0} completed
                 </p>
@@ -769,9 +713,7 @@ function CampaignDetailsContent() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Recovered
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Total Recovered</CardTitle>
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -786,9 +728,7 @@ function CampaignDetailsContent() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Avg Completion Time
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Avg Completion Time</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -804,50 +744,36 @@ function CampaignDetailsContent() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Failed Executions
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Failed Executions</CardTitle>
                 <XCircle className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats?.failed_executions ?? 0}
-                </div>
+                <div className="text-2xl font-bold">{stats?.failed_executions ?? 0}</div>
                 <p className="text-xs text-muted-foreground">Failed to complete</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Canceled Executions
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Canceled Executions</CardTitle>
                 <Ban className="h-4 w-4 text-gray-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats?.canceled_executions ?? 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Manually canceled
-                </p>
+                <div className="text-2xl font-bold">{stats?.canceled_executions ?? 0}</div>
+                <p className="text-xs text-muted-foreground">Manually canceled</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Outstanding Amount
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Outstanding Amount</CardTitle>
                 <DollarSign className="h-4 w-4 text-orange-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {formatMoney(stats?.total_outstanding_amount ?? 0)}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Still outstanding
-                </p>
+                <p className="text-xs text-muted-foreground">Still outstanding</p>
               </CardContent>
             </Card>
           </div>
@@ -910,20 +836,15 @@ function CampaignDetailsContent() {
                                 className="h-full bg-blue-600"
                                 style={{
                                   width: `${
-                                    (execution.current_step / execution.total_steps) *
-                                    100
+                                    (execution.current_step / execution.total_steps) * 100
                                   }%`,
                                 }}
                               />
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {formatMoney(execution.outstanding_amount)}
-                        </TableCell>
-                        <TableCell>
-                          {formatMoney(execution.recovered_amount)}
-                        </TableCell>
+                        <TableCell>{formatMoney(execution.outstanding_amount)}</TableCell>
+                        <TableCell>{formatMoney(execution.recovered_amount)}</TableCell>
                         <TableCell>
                           <div className="text-sm">
                             {formatDistanceToNow(new Date(execution.started_at), {
@@ -1054,26 +975,17 @@ function CampaignDetailsContent() {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Active</FormLabel>
-                      <FormDescription>
-                        Enable or disable this campaign
-                      </FormDescription>
+                      <FormDescription>Enable or disable this campaign</FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateCampaignMutation.isPending}>
@@ -1091,8 +1003,7 @@ function CampaignDetailsContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this campaign? This action cannot be
-              undone.
+              Are you sure you want to delete this campaign? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { usePartners, useDeletePartner, Partner } from "@/hooks/usePartners";
-import {
-  Plus,
-  Users,
-} from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import PartnerMetrics from "@/components/partners/PartnerMetrics";
 import PartnersList from "@/components/partners/PartnersList";
 import CreatePartnerModal from "@/components/partners/CreatePartnerModal";
@@ -52,7 +49,7 @@ export function PartnerManagementView() {
         partnerId: partnerToDelete,
         error: err,
       });
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert("Failed to delete partner");
     } finally {
       setIsDeleting(false);

@@ -21,10 +21,7 @@ import { Input } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
-import {
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export interface AllocateIPDialogProps {
   open: boolean;
@@ -117,7 +114,10 @@ export function AllocateIPDialog({
           <DialogDescription>Allocate IP addresses from your prefixes</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "single" | "dual-stack" | "bulk")}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "single" | "dual-stack" | "bulk")}
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="single">Single IP</TabsTrigger>
             <TabsTrigger value="dual-stack" disabled={!ipv6PrefixId}>

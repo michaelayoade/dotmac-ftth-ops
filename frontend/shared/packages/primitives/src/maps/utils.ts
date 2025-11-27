@@ -1,6 +1,9 @@
 import type { LatLng } from "./types";
 
-export function projectPoint(point: LatLng, bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) {
+export function projectPoint(
+  point: LatLng,
+  bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number },
+) {
   const { lat, lng } = point;
   const width = bounds.maxLng - bounds.minLng || 1;
   const height = bounds.maxLat - bounds.minLat || 1;
@@ -10,7 +13,12 @@ export function projectPoint(point: LatLng, bounds: { minLat: number; maxLat: nu
   return { x, y };
 }
 
-export function calculateBounds(points: LatLng[]): { minLat: number; maxLat: number; minLng: number; maxLng: number } {
+export function calculateBounds(points: LatLng[]): {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+} {
   if (points.length === 0) {
     return { minLat: -90, maxLat: 90, minLng: -180, maxLng: 180 };
   }

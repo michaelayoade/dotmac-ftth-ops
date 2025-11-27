@@ -5,9 +5,9 @@ FastAPI router for communications services.
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
 from smtplib import SMTPException
 from typing import Any
+from uuid import UUID
 
 import structlog
 from celery.exceptions import CeleryError
@@ -18,27 +18,24 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from dotmac.platform.auth.dependencies import UserInfo, get_current_user
-from dotmac.platform.auth.rbac_dependencies import require_admin
 from dotmac.platform.db import get_async_session_context
 
-from .email_service import EmailMessage, EmailResponse, get_email_service
+from .email_service import EmailMessage, get_email_service
 from .metrics_service import get_metrics_service
 from .models import (
-    CommunicationLog,
     BulkJobMetadata,
+    CommunicationLog,
     CommunicationStatus,
     CommunicationTemplate,
     CommunicationType,
 )
 from .task_service import (
     get_task_service,
-    queue_bulk_emails,
     queue_bulk_emails_with_meta,
     queue_email,
 )
 from .template_service import (
     RenderedTemplate,
-    TemplateData,
     create_template,
     get_template_service,
     quick_render,
@@ -78,7 +75,9 @@ def _parse_datetime(value: str | None) -> datetime | None:
         return None
 
 
-def _render_from_strings(subject: str, text_body: str | None, html_body: str | None, data: dict[str, Any]) -> RenderedTemplate:
+def _render_from_strings(
+    subject: str, text_body: str | None, html_body: str | None, data: dict[str, Any]
+) -> dict[str, str]:
     """Render subject/text/html with quick_render for reuse."""
     result = quick_render(
         subject=subject or "",
@@ -89,7 +88,9 @@ def _render_from_strings(subject: str, text_body: str | None, html_body: str | N
     return result
 
 
-def _compute_progress(task_service: Any, task_id: str | None, recipient_count: int | None) -> int | None:
+def _compute_progress(
+    task_service: Any, task_id: str | None, recipient_count: int | None
+) -> int | None:
     """Best-effort progress computation using Celery task info."""
     if not task_service or not task_id:
         return None
@@ -106,7 +107,9 @@ def _compute_progress(task_service: Any, task_id: str | None, recipient_count: i
     return None
 
 
-def _progress_payload(task_service: Any, task_id: str | None, recipient_count: int | None) -> dict[str, Any] | None:
+def _progress_payload(
+    task_service: Any, task_id: str | None, recipient_count: int | None
+) -> dict[str, Any] | None:
     """Return detailed progress payload from Celery info."""
     if not task_service or not task_id:
         return None
@@ -175,7 +178,7 @@ class SendEmailResponseSchema(BaseModel):  # BaseModel resolves to Any in isolat
 async def send_email_endpoint(
     request: EmailRequest,
     current_user: UserInfo | None = Depends(get_current_user),
-) -> EmailResponse:
+) -> Any:
     """Send a single email immediately."""
     try:
         email_service = get_email_service()
@@ -200,7 +203,9 @@ async def send_email_endpoint(
                 # Log the communication attempt
                 log_entry = await metrics_service.log_communication(
                     type=CommunicationType.EMAIL,
-                    recipient=", ".join([addr for addr in ( _extract_email(a) or "" for a in request.to ) if addr]),
+                    recipient=", ".join(
+                        [addr for addr in (_extract_email(a) or "" for a in request.to) if addr]
+                    ),
                     subject=request.subject,
                     sender=request.from_email,
                     text_body=request.text_body,
@@ -563,7 +568,7 @@ async def list_templates_endpoint(
     end = start + page_size
     paged = filtered[start:end]
 
-    resp_templates: list[TemplateResponse] = []
+    resp_templates = []
     for template in paged:
         resp_templates.append(
             TemplateResponse(
@@ -846,10 +851,10 @@ async def render_template_by_id(
                         data=request.variables,
                     )
                     return {
-                        "subject": rendered.subject,
-                        "text": rendered.text_body,
-                        "html": rendered.html_body,
-                        "variables": rendered.variables_used,
+                        "subject": rendered["subject"],
+                        "text": rendered.get("text_body", ""),
+                        "html": rendered.get("html_body", ""),
+                        "variables": [],
                     }
         except Exception:
             logger.warning("DB render failed, fallback to in-memory")
@@ -859,7 +864,7 @@ async def render_template_by_id(
             "subject": result.subject,
             "text": result.text_body,
             "html": result.html_body,
-            "variables": result.variables,
+            "variables": result.variables_used,
         }
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -1047,7 +1052,9 @@ async def queue_bulk_job(
 
 
 @router.get("/bulk/{job_id}/status")
-async def get_bulk_status(job_id: str, current_user: UserInfo = Depends(get_current_user)) -> dict[str, Any]:
+async def get_bulk_status(
+    job_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> dict[str, Any]:
     """Get bulk job status (compat)."""
     tenant_id = getattr(current_user, "tenant_id", None)
     task_service = get_task_service()
@@ -1090,7 +1097,9 @@ async def get_bulk_status(job_id: str, current_user: UserInfo = Depends(get_curr
     operation = {
         "id": job_id,
         "tenant_id": tenant_id or "default",
-        "template_id": info.get("template_id") or meta.get("metadata", {}).get("template_id") or "template_1",
+        "template_id": info.get("template_id")
+        or meta.get("metadata", {}).get("template_id")
+        or "template_1",
         "recipient_count": total or 0,
         "status": info.get("status") or status.get("status", "processing"),
         "progress": progress,
@@ -1108,7 +1117,9 @@ async def get_bulk_status(job_id: str, current_user: UserInfo = Depends(get_curr
 
 
 @router.post("/bulk/{job_id}/cancel")
-async def cancel_bulk_job(job_id: str, current_user: UserInfo = Depends(get_current_user)) -> dict[str, Any]:
+async def cancel_bulk_job(
+    job_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> dict[str, Any]:
     """Cancel bulk job (compat)."""
     task_service = get_task_service()
     cancelled = task_service.cancel_task(job_id)
@@ -1580,7 +1591,7 @@ async def get_communications_metrics(
             except Exception as exc:
                 logger.warning("Bulk job summary unavailable", error=str(exc))
 
-            stats_block = {
+            stats_block: dict[str, Any] = {
                 "total_sent": raw_stats.get("sent", 0),
                 "total_delivered": raw_stats.get("delivered", 0),
                 "total_failed": raw_stats.get("failed", 0),
@@ -1603,7 +1614,9 @@ async def get_communications_metrics(
                 **({"bulk_jobs": bulk_summary} if bulk_summary else {}),
             )
     except Exception as exc:
-        logger.warning("Communications metrics unavailable; returning synthetic metrics.", error=str(exc))
+        logger.warning(
+            "Communications metrics unavailable; returning synthetic metrics.", error=str(exc)
+        )
 
     stats_block = {
         "total_sent": 100,
@@ -1836,9 +1849,7 @@ async def list_bulk_jobs(
 
             total = (await db.execute(count_query)).scalar() or 0
             result = await db.execute(
-                base_query.order_by(order_field)
-                .offset(offset)
-                .limit(page_size)
+                base_query.order_by(order_field).offset(offset).limit(page_size)
             )
             jobs = result.scalars().all()
 
@@ -1911,7 +1922,9 @@ async def get_bulk_job(
                     if tenant_id:
                         log_conditions.append(CommunicationLog.tenant_id == tenant_id)
 
-                    total_query = select(func.count(CommunicationLog.id)).where(and_(*log_conditions))
+                    total_query = select(func.count(CommunicationLog.id)).where(
+                        and_(*log_conditions)
+                    )
                     logs_total = (await db.execute(total_query)).scalar() or 0
 
                     offset = max(logs_page - 1, 0) * logs_page_size
@@ -2064,7 +2077,9 @@ async def list_logs(
 
 
 @router.get("/logs/{log_id}", response_model=CommunicationLogSchema)
-async def get_log(log_id: str, current_user: UserInfo = Depends(get_current_user)) -> CommunicationLogSchema:
+async def get_log(
+    log_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> CommunicationLogSchema:
     """Get single communication log."""
     tenant_id = getattr(current_user, "tenant_id", None)
     try:
@@ -2090,6 +2105,8 @@ async def get_log(log_id: str, current_user: UserInfo = Depends(get_current_user
 
 
 @router.post("/logs/{log_id}/retry")
-async def retry_log(log_id: str, current_user: UserInfo = Depends(get_current_user)) -> dict[str, Any]:
+async def retry_log(
+    log_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> dict[str, Any]:
     """Retry a failed communication (stub)."""
     return {"log_id": log_id, "status": "queued"}

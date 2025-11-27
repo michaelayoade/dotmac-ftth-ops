@@ -769,10 +769,9 @@ describe("useCommunications", () => {
       });
 
       // Check status
-      const { result: statusResult } = renderHook(
-        () => useBulkOperationStatus(bulkId!),
-        { wrapper: createQueryWrapper() }
-      );
+      const { result: statusResult } = renderHook(() => useBulkOperationStatus(bulkId!), {
+        wrapper: createQueryWrapper(),
+      });
 
       await waitFor(() => expect(statusResult.current.isLoading).toBe(false));
 

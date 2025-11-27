@@ -228,7 +228,7 @@ describe("useVersioning", () => {
 
     it("should set loading state correctly", async () => {
       (versioningService.listVersions as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve([]), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve([]), 100)),
       );
 
       const { result } = renderHook(() => useVersions(), {
@@ -512,7 +512,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect((versioningService.listVersions as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
+          initialCallCount,
         );
       });
     });
@@ -530,7 +530,7 @@ describe("useVersioning", () => {
           await result.current.mutateAsync({
             version: "v3",
           });
-        })
+        }),
       ).rejects.toThrow("Failed to create version");
     });
 
@@ -656,7 +656,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect((versioningService.listVersions as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
+          initialCallCount,
         );
       });
     });
@@ -675,7 +675,7 @@ describe("useVersioning", () => {
             version: "v1",
             data: { description: "Updated" },
           });
-        })
+        }),
       ).rejects.toThrow("Failed to update version");
     });
   });
@@ -760,7 +760,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect((versioningService.listVersions as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
+          initialCallCount,
         );
       });
     });
@@ -826,7 +826,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect((versioningService.listVersions as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
+          initialCallCount,
         );
       });
     });
@@ -892,7 +892,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect((versioningService.listVersions as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
+          initialCallCount,
         );
       });
     });
@@ -931,7 +931,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect((versioningService.listVersions as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
+          initialCallCount,
         );
       });
     });
@@ -947,7 +947,7 @@ describe("useVersioning", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("v1");
-        })
+        }),
       ).rejects.toThrow("Failed to remove version");
     });
   });
@@ -1003,7 +1003,7 @@ describe("useVersioning", () => {
         () => useBreakingChanges({ version: "v2", severity: "critical" }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -1146,7 +1146,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect(
-          (versioningService.listBreakingChanges as jest.Mock).mock.calls.length
+          (versioningService.listBreakingChanges as jest.Mock).mock.calls.length,
         ).toBeGreaterThan(initialCallCount);
       });
     });
@@ -1222,7 +1222,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect(
-          (versioningService.listBreakingChanges as jest.Mock).mock.calls.length
+          (versioningService.listBreakingChanges as jest.Mock).mock.calls.length,
         ).toBeGreaterThan(initialCallCount);
       });
     });
@@ -1262,7 +1262,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect(
-          (versioningService.listBreakingChanges as jest.Mock).mock.calls.length
+          (versioningService.listBreakingChanges as jest.Mock).mock.calls.length,
         ).toBeGreaterThan(initialCallCount);
       });
     });
@@ -1437,10 +1437,9 @@ describe("useVersioning", () => {
 
       const wrapper = createWrapper();
       const { result: configResult } = renderHook(() => useVersioningConfiguration(), { wrapper });
-      const { result: updateResult } = renderHook(
-        () => useUpdateVersioningConfiguration(),
-        { wrapper }
-      );
+      const { result: updateResult } = renderHook(() => useUpdateVersioningConfiguration(), {
+        wrapper,
+      });
 
       await waitFor(() => expect(configResult.current.isLoading).toBe(false));
 
@@ -1452,7 +1451,7 @@ describe("useVersioning", () => {
 
       await waitFor(() => {
         expect((versioningService.getConfiguration as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
+          initialCallCount,
         );
       });
     });
@@ -1593,7 +1592,7 @@ describe("useVersioning", () => {
 
     it("should track loading state correctly", async () => {
       (versioningService.deprecateVersion as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({}), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({}), 100)),
       );
 
       const { result } = renderHook(() => useVersioningOperations(), {

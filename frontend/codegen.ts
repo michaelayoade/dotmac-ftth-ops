@@ -1,4 +1,4 @@
-import type { CodegenConfig } from '@graphql-codegen/cli';
+import type { CodegenConfig } from "@graphql-codegen/cli";
 
 /**
  * GraphQL Code Generator Configuration
@@ -14,19 +14,19 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
  */
 const config: CodegenConfig = {
   // Use committed schema snapshot for deterministic builds (SDL format)
-  schema: './graphql-schema.graphql',
+  schema: "./graphql-schema.graphql",
 
   // Search for .graphql files in both apps
   documents: [
-    'apps/platform-admin-app/lib/graphql/**/*.graphql',
-    'apps/isp-ops-app/lib/graphql/**/*.graphql',
+    "apps/platform-admin-app/lib/graphql/**/*.graphql",
+    "apps/isp-ops-app/lib/graphql/**/*.graphql",
   ],
 
   // Output to shared package
   generates: {
-    './shared/packages/graphql/generated/': {
+    "./shared/packages/graphql/generated/": {
       // Use the client preset for optimal output
-      preset: 'client',
+      preset: "client",
 
       plugins: [],
 
@@ -37,11 +37,11 @@ const config: CodegenConfig = {
 
         // Scalar mappings (adjust based on backend)
         scalars: {
-          DateTime: 'string',
-          Date: 'string',
-          JSON: 'Record<string, any>',
-          UUID: 'string',
-          Decimal: 'string',
+          DateTime: "string",
+          Date: "string",
+          JSON: "Record<string, any>",
+          UUID: "string",
+          Decimal: "string",
         },
 
         // Don't generate unused types
@@ -53,17 +53,13 @@ const config: CodegenConfig = {
     },
 
     // Generate React Query hooks
-    './shared/packages/graphql/generated/react-query.ts': {
-      plugins: [
-        'typescript',
-        'typescript-operations',
-        'typescript-react-query',
-      ],
+    "./shared/packages/graphql/generated/react-query.ts": {
+      plugins: ["typescript", "typescript-operations", "typescript-react-query"],
 
       config: {
         // Use our shared fetcher (relative path from generated/ to src/)
         fetcher: {
-          func: '../src/client#graphqlFetcher',
+          func: "../src/client#graphqlFetcher",
           isReactHook: false,
         },
 
@@ -80,15 +76,15 @@ const config: CodegenConfig = {
         strictScalars: true,
 
         scalars: {
-          DateTime: 'string',
-          Date: 'string',
-          JSON: 'Record<string, any>',
-          UUID: 'string',
-          Decimal: 'string',
+          DateTime: "string",
+          Date: "string",
+          JSON: "Record<string, any>",
+          UUID: "string",
+          Decimal: "string",
         },
 
         // Hook naming
-        operationResultSuffix: 'Result',
+        operationResultSuffix: "Result",
         dedupeFragments: true,
       },
     },
@@ -97,7 +93,7 @@ const config: CodegenConfig = {
   // General settings
   config: {
     // Prevent optional fields from being nullable
-    maybeValue: 'T | null | undefined',
+    maybeValue: "T | null | undefined",
   },
 
   // Watch mode options
@@ -113,7 +109,7 @@ const config: CodegenConfig = {
   hooks: {
     afterAllFileWrite: [
       // Run prettier on generated files
-      'prettier --write',
+      "prettier --write",
     ],
   },
 };

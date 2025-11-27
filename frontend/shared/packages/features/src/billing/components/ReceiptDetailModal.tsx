@@ -9,14 +9,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Download, Mail, Printer, FileText, Calendar, CreditCard, User } from "lucide-react";
 
 import { Receipt } from "../types";

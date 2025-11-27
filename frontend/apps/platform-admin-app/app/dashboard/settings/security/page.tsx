@@ -7,14 +7,7 @@ import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -540,9 +533,7 @@ function SecuritySettingsContent() {
                           </div>
                         </TableCell>
                         <TableCell>{session.location}</TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {session.ip_address}
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{session.ip_address}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {new Date(session.last_active).toLocaleString()}
                         </TableCell>
@@ -619,11 +610,7 @@ function SecuritySettingsContent() {
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
             </div>

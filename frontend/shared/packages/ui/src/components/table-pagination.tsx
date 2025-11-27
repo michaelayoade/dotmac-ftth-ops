@@ -93,9 +93,10 @@ export function TablePagination({
 
   // Calculate displayed range
   const startItem = pageIndex * pageSize + 1;
-  const endItem = totalItems !== undefined
-    ? Math.min((pageIndex + 1) * pageSize, totalItems)
-    : (pageIndex + 1) * pageSize;
+  const endItem =
+    totalItems !== undefined
+      ? Math.min((pageIndex + 1) * pageSize, totalItems)
+      : (pageIndex + 1) * pageSize;
 
   return (
     <div className={cn("flex items-center justify-between", className)}>

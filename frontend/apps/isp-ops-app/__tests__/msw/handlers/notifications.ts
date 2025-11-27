@@ -2,7 +2,7 @@
  * MSW Handlers for Notification API Endpoints
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   Notification,
   NotificationListResponse,
@@ -13,11 +13,11 @@ import type {
   CommunicationLog,
   BulkNotificationRequest,
   BulkNotificationResponse,
-} from '../../../hooks/useNotifications';
+} from "../../../hooks/useNotifications";
 import {
   seedTemplates as seedCommunicationsTemplates,
   seedLogs as seedCommunicationsLogs,
-} from './communications';
+} from "./communications";
 
 // In-memory storage for test data
 let notifications: Notification[] = [];
@@ -43,15 +43,15 @@ export function resetNotificationStorage() {
 export function createMockNotification(overrides?: Partial<Notification>): Notification {
   return {
     id: `notif-${nextNotificationId++}`,
-    user_id: 'user-123',
-    tenant_id: 'tenant-123',
-    type: 'ticket_created',
-    priority: 'medium',
-    title: 'Test Notification',
-    message: 'This is a test notification',
+    user_id: "user-123",
+    tenant_id: "tenant-123",
+    type: "ticket_created",
+    priority: "medium",
+    title: "Test Notification",
+    message: "This is a test notification",
     is_read: false,
     is_archived: false,
-    channels: ['in_app', 'email'],
+    channels: ["in_app", "email"],
     email_sent: false,
     sms_sent: false,
     push_sent: false,
@@ -62,18 +62,20 @@ export function createMockNotification(overrides?: Partial<Notification>): Notif
 }
 
 // Helper to create a mock template
-export function createMockTemplate(overrides?: Partial<CommunicationTemplate>): CommunicationTemplate {
+export function createMockTemplate(
+  overrides?: Partial<CommunicationTemplate>,
+): CommunicationTemplate {
   return {
     id: `tpl-${nextTemplateId++}`,
-    tenant_id: 'tenant-123',
-    name: 'Test Template',
-    description: 'A test template',
-    type: 'email',
-    subject_template: 'Test Subject {{variable}}',
-    text_template: 'Test text {{variable}}',
-    html_template: '<p>Test HTML {{variable}}</p>',
-    variables: ['variable'],
-    required_variables: ['variable'],
+    tenant_id: "tenant-123",
+    name: "Test Template",
+    description: "A test template",
+    type: "email",
+    subject_template: "Test Subject {{variable}}",
+    text_template: "Test text {{variable}}",
+    html_template: "<p>Test HTML {{variable}}</p>",
+    variables: ["variable"],
+    required_variables: ["variable"],
     is_active: true,
     is_default: false,
     usage_count: 0,
@@ -87,13 +89,13 @@ export function createMockTemplate(overrides?: Partial<CommunicationTemplate>): 
 export function createMockLog(overrides?: Partial<CommunicationLog>): CommunicationLog {
   return {
     id: `log-${nextLogId++}`,
-    tenant_id: 'tenant-123',
-    type: 'email',
-    recipient: 'test@example.com',
-    sender: 'noreply@dotmac.com',
-    subject: 'Test Email',
-    text_body: 'Test body',
-    status: 'sent',
+    tenant_id: "tenant-123",
+    type: "email",
+    recipient: "test@example.com",
+    sender: "noreply@dotmac.com",
+    subject: "Test Email",
+    text_body: "Test body",
+    status: "sent",
     retry_count: 0,
     created_at: new Date().toISOString(),
     ...overrides,
@@ -104,7 +106,7 @@ export function createMockLog(overrides?: Partial<CommunicationLog>): Communicat
 export function seedNotificationData(
   notificationData: Notification[],
   templateData: CommunicationTemplate[],
-  logData: CommunicationLog[]
+  logData: CommunicationLog[],
 ) {
   notifications = [...notificationData];
   templates = [...templateData];
@@ -115,11 +117,11 @@ export function seedNotificationData(
 
 export const notificationHandlers = [
   // GET /api/v1/notifications - List notifications
-  http.get('*/api/v1/notifications', ({ request, params }) => {
+  http.get("*/api/v1/notifications", ({ request, params }) => {
     const url = new URL(request.url);
-    const unreadOnly = url.searchParams.get('unread_only') === 'true';
-    const priority = url.searchParams.get('priority');
-    const notificationType = url.searchParams.get('notification_type');
+    const unreadOnly = url.searchParams.get("unread_only") === "true";
+    const priority = url.searchParams.get("priority");
+    const notificationType = url.searchParams.get("notification_type");
 
     let filtered = notifications;
 
@@ -147,18 +149,18 @@ export const notificationHandlers = [
   }),
 
   // GET /api/v1/notifications/unread-count - Get unread count
-  http.get('*/api/v1/notifications/unread-count', ({ request, params }) => {
+  http.get("*/api/v1/notifications/unread-count", ({ request, params }) => {
     const unreadCount = notifications.filter((n) => !n.is_read).length;
     return HttpResponse.json({ unread_count: unreadCount });
   }),
 
   // POST /api/v1/notifications/:id/read - Mark as read
-  http.post('*/api/v1/notifications/:id/read', ({ request, params }) => {
+  http.post("*/api/v1/notifications/:id/read", ({ request, params }) => {
     const { id } = params;
     const notification = notifications.find((n) => n.id === id);
 
     if (!notification) {
-      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
     notification.is_read = true;
@@ -168,12 +170,12 @@ export const notificationHandlers = [
   }),
 
   // POST /api/v1/notifications/:id/unread - Mark as unread
-  http.post('*/api/v1/notifications/:id/unread', ({ request, params }) => {
+  http.post("*/api/v1/notifications/:id/unread", ({ request, params }) => {
     const { id } = params;
     const notification = notifications.find((n) => n.id === id);
 
     if (!notification) {
-      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
     notification.is_read = false;
@@ -183,7 +185,7 @@ export const notificationHandlers = [
   }),
 
   // POST /api/v1/notifications/mark-all-read - Mark all as read
-  http.post('*/api/v1/notifications/mark-all-read', ({ request, params }) => {
+  http.post("*/api/v1/notifications/mark-all-read", ({ request, params }) => {
     const now = new Date().toISOString();
     notifications.forEach((n) => {
       n.is_read = true;
@@ -194,12 +196,12 @@ export const notificationHandlers = [
   }),
 
   // POST /api/v1/notifications/:id/archive - Archive notification
-  http.post('*/api/v1/notifications/:id/archive', ({ request, params }) => {
+  http.post("*/api/v1/notifications/:id/archive", ({ request, params }) => {
     const { id } = params;
     const notification = notifications.find((n) => n.id === id);
 
     if (!notification) {
-      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
     notification.is_archived = true;
@@ -209,12 +211,12 @@ export const notificationHandlers = [
   }),
 
   // DELETE /api/v1/notifications/:id - Delete notification
-  http.delete('*/api/v1/notifications/:id', ({ request, params }) => {
+  http.delete("*/api/v1/notifications/:id", ({ request, params }) => {
     const { id } = params;
     const index = notifications.findIndex((n) => n.id === id);
 
     if (index === -1) {
-      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
     notifications.splice(index, 1);
@@ -222,10 +224,10 @@ export const notificationHandlers = [
   }),
 
   // GET /api/v1/communications/templates - List templates
-  http.get('*/api/v1/communications/templates', ({ request, params }) => {
+  http.get("*/api/v1/communications/templates", ({ request, params }) => {
     const url = new URL(request.url);
-    const type = url.searchParams.get('type');
-    const activeOnly = url.searchParams.get('active_only') === 'true';
+    const type = url.searchParams.get("type");
+    const activeOnly = url.searchParams.get("active_only") === "true";
 
     let filtered = templates;
 
@@ -241,8 +243,8 @@ export const notificationHandlers = [
   }),
 
   // POST /api/v1/communications/templates - Create template
-  http.post('*/api/v1/communications/templates', async ({ request, params }) => {
-    const data = await request.json() as TemplateCreateRequest;
+  http.post("*/api/v1/communications/templates", async ({ request, params }) => {
+    const data = (await request.json()) as TemplateCreateRequest;
 
     const newTemplate = createMockTemplate({
       ...data,
@@ -256,14 +258,14 @@ export const notificationHandlers = [
   }),
 
   // PATCH /api/v1/communications/templates/:id - Update template
-  http.patch('*/api/v1/communications/templates/:id', async ({ request, params }) => {
+  http.patch("*/api/v1/communications/templates/:id", async ({ request, params }) => {
     const { id } = params;
-    const updates = await request.json() as TemplateUpdateRequest;
+    const updates = (await request.json()) as TemplateUpdateRequest;
 
     const index = templates.findIndex((t) => t.id === id);
 
     if (index === -1) {
-      return HttpResponse.json({ error: 'Template not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Template not found" }, { status: 404 });
     }
 
     templates[index] = {
@@ -276,12 +278,12 @@ export const notificationHandlers = [
   }),
 
   // DELETE /api/v1/communications/templates/:id - Delete template
-  http.delete('*/api/v1/communications/templates/:id', ({ request, params }) => {
+  http.delete("*/api/v1/communications/templates/:id", ({ request, params }) => {
     const { id } = params;
     const index = templates.findIndex((t) => t.id === id);
 
     if (index === -1) {
-      return HttpResponse.json({ error: 'Template not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Template not found" }, { status: 404 });
     }
 
     templates.splice(index, 1);
@@ -289,21 +291,21 @@ export const notificationHandlers = [
   }),
 
   // POST /api/v1/communications/templates/:id/render - Render template preview
-  http.post('*/api/v1/communications/templates/:id/render', async ({ request, params }) => {
+  http.post("*/api/v1/communications/templates/:id/render", async ({ request, params }) => {
     const { id } = params;
-    const { data } = await request.json() as { data: Record<string, any> };
+    const { data } = (await request.json()) as { data: Record<string, any> };
 
     const template = templates.find((t) => t.id === id);
 
     if (!template) {
-      return HttpResponse.json({ error: 'Template not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Template not found" }, { status: 404 });
     }
 
     // Simple variable replacement for testing
     const renderText = (text: string, vars: Record<string, any>) => {
       let result = text;
       Object.entries(vars).forEach(([key, value]) => {
-        result = result.replace(new RegExp(`{{${key}}}`, 'g'), String(value));
+        result = result.replace(new RegExp(`{{${key}}}`, "g"), String(value));
       });
       return result;
     };
@@ -316,13 +318,13 @@ export const notificationHandlers = [
   }),
 
   // GET /api/v1/communications/logs - List communication logs
-  http.get('*/api/v1/communications/logs', ({ request, params }) => {
+  http.get("*/api/v1/communications/logs", ({ request, params }) => {
     const url = new URL(request.url);
-    const type = url.searchParams.get('type');
-    const status = url.searchParams.get('status');
-    const recipient = url.searchParams.get('recipient');
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const pageSize = parseInt(url.searchParams.get('page_size') || '20');
+    const type = url.searchParams.get("type");
+    const status = url.searchParams.get("status");
+    const recipient = url.searchParams.get("recipient");
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("page_size") || "20");
 
     let filtered = logs;
 
@@ -349,28 +351,28 @@ export const notificationHandlers = [
   }),
 
   // POST /api/v1/communications/logs/:id/retry - Retry failed communication
-  http.post('*/api/v1/communications/logs/:id/retry', ({ request, params }) => {
+  http.post("*/api/v1/communications/logs/:id/retry", ({ request, params }) => {
     const { id } = params;
     const log = logs.find((l) => l.id === id);
 
     if (!log) {
-      return HttpResponse.json({ error: 'Log not found' }, { status: 404 });
+      return HttpResponse.json({ error: "Log not found" }, { status: 404 });
     }
 
-    log.status = 'pending';
+    log.status = "pending";
     log.retry_count += 1;
 
     return HttpResponse.json(log);
   }),
 
   // POST /api/v1/notifications/bulk - Send bulk notification
-  http.post('*/api/v1/notifications/bulk', async ({ request, params }) => {
-    const data = await request.json() as BulkNotificationRequest;
+  http.post("*/api/v1/notifications/bulk", async ({ request, params }) => {
+    const data = (await request.json()) as BulkNotificationRequest;
 
     const response: BulkNotificationResponse = {
       job_id: `job-${nextJobId++}`,
       total_recipients: 100, // Mock value
-      status: 'queued',
+      status: "queued",
       scheduled_at: data.schedule_at,
     };
 
@@ -378,13 +380,13 @@ export const notificationHandlers = [
   }),
 
   // GET /api/v1/notifications/bulk/:jobId - Get bulk job status
-  http.get('*/api/v1/notifications/bulk/:jobId', ({ request, params }) => {
+  http.get("*/api/v1/notifications/bulk/:jobId", ({ request, params }) => {
     const { jobId } = params;
 
     const response: BulkNotificationResponse = {
       job_id: String(jobId),
       total_recipients: 100,
-      status: 'completed',
+      status: "completed",
     };
 
     return HttpResponse.json(response);

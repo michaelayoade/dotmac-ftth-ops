@@ -80,12 +80,14 @@ export default function OfflinePage() {
                   <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-1">
                     {pendingCount.timeEntries > 0 && (
                       <span className="block">
-                        {pendingCount.timeEntries} time {pendingCount.timeEntries === 1 ? "entry" : "entries"}
+                        {pendingCount.timeEntries} time{" "}
+                        {pendingCount.timeEntries === 1 ? "entry" : "entries"}
                       </span>
                     )}
                     {pendingCount.locations > 0 && (
                       <span className="block">
-                        {pendingCount.locations} location {pendingCount.locations === 1 ? "update" : "updates"}
+                        {pendingCount.locations} location{" "}
+                        {pendingCount.locations === 1 ? "update" : "updates"}
                       </span>
                     )}
                   </p>
@@ -118,12 +120,7 @@ export default function OfflinePage() {
 
           {/* Actions */}
           <div className="space-y-2 pt-2">
-            <Button
-              onClick={handleRetry}
-              disabled={isChecking}
-              className="w-full"
-              size="lg"
-            >
+            <Button onClick={handleRetry} disabled={isChecking} className="w-full" size="lg">
               {isChecking ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -137,20 +134,14 @@ export default function OfflinePage() {
               )}
             </Button>
 
-            <Button
-              onClick={() => window.history.back()}
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={() => window.history.back()} variant="outline" className="w-full">
               Go Back
             </Button>
           </div>
 
           {/* Help Text */}
           <div className="text-xs text-center text-muted-foreground pt-2 border-t">
-            <p>
-              This page will automatically reload when your connection is restored.
-            </p>
+            <p>This page will automatically reload when your connection is restored.</p>
           </div>
         </CardContent>
       </Card>

@@ -7,7 +7,21 @@ import { useApiKeys, APIKey } from "@/hooks/useApiKeys";
 import { CreateApiKeyModal } from "@/components/api-keys/CreateApiKeyModal";
 import { ApiKeyDetailModal } from "@/components/api-keys/ApiKeyDetailModal";
 import { RevokeConfirmModal } from "@/components/api-keys/RevokeConfirmModal";
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, Badge, Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@dotmac/ui";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Button,
+  Input,
+  Badge,
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@dotmac/ui";
 import { format } from "date-fns";
 
 export default function ApiKeysPage() {
@@ -104,7 +118,11 @@ export default function ApiKeysPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewApiKey(apiKey)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewApiKey(apiKey)}
+                        >
                           View
                         </Button>
                         <Button

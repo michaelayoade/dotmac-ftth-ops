@@ -125,7 +125,7 @@ class IPReservation:
     id: str
     tenant_id: str
     pool_id: str
-    subscriber_id: str
+    subscriber_id: str | None
     ip_address: str
     ip_type: str
     prefix_length: int | None

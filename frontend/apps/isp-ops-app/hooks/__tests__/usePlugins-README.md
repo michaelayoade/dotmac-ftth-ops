@@ -11,6 +11,7 @@ Plugin management functionality is tested using **Jest Mocks** for unit tests an
 ### The Problem with MSW + Axios
 
 MSW (Mock Service Worker) has compatibility issues with axios + React Query in jsdom test environments:
+
 - MSW intercepts requests successfully ✅
 - MSW returns mock data ✅
 - But React Query doesn't update hook state ❌
@@ -20,6 +21,7 @@ MSW (Mock Service Worker) has compatibility issues with axios + React Query in j
 ### The Solution: Jest Mocks
 
 Jest mocks work perfectly with axios-based hooks:
+
 - ✅ Direct control over API client responses
 - ✅ React Query receives and processes data correctly
 - ✅ All mutation states update properly
@@ -87,12 +89,14 @@ Jest mocks work perfectly with axios-based hooks:
    - Refresh plugins successfully
 
 #### **Utility Functions (6 tests)** ✅
+
 - getStatusColor
 - getHealthStatusColor
 - groupFields
 - formatTimestamp
 
 #### **Real-World Scenarios (1 test)** ✅
+
 - Complete plugin installation workflow (schema → create → test connection)
 
 ---
@@ -162,7 +166,7 @@ it("should fetch available plugins successfully", async () => {
   // IMPORTANT: Include status code!
   mockApiClient.get.mockResolvedValue({
     data: mockPlugins,
-    status: 200
+    status: 200,
   });
 
   const { result } = renderHook(() => useAvailablePlugins(), {
@@ -192,7 +196,7 @@ it("should create plugin instance successfully", async () => {
   // IMPORTANT: Include status code!
   mockApiClient.post.mockResolvedValue({
     data: mockInstance,
-    status: 200
+    status: 200,
   });
 
   const { result } = renderHook(() => useCreatePluginInstance(), {
@@ -228,7 +232,7 @@ it("should handle plugin not found", async () => {
       plugin_name: "nonexistent",
       instance_name: "Test",
       configuration: {},
-    })
+    }),
   ).rejects.toThrow();
 
   // IMPORTANT: Wait for error state to update!
@@ -254,9 +258,11 @@ mockApiClient.get.mockResolvedValue({ data: mockData }); // Missing status!
 ```
 
 **Why?** The `extractDataOrThrow` helper checks `response.status`:
+
 ```typescript
 export function extractDataOrThrow<T>(response: AxiosResponse<T>, errorMessage?: string): T {
-  if (response.status >= 400) {  // Needs status!
+  if (response.status >= 400) {
+    // Needs status!
     throw new Error(errorMessage || response.statusText || "Request failed");
   }
   return response.data;
@@ -304,20 +310,21 @@ describe("usePlugins", () => {
 
 ## Jest Mocks vs MSW Comparison
 
-| Feature | Jest Mocks | MSW |
-|---------|-----------|-----|
-| **Setup Complexity** | Simple | Complex |
-| **Axios Compatibility** | ✅ Perfect | ⚠️ Data flow issues |
-| **Fetch Compatibility** | ✅ Works | ✅ Works perfectly |
-| **Test Speed** | ✅ Fast (~7s) | ⚠️ Slower (~80s when failing) |
-| **Realism** | ⚠️ Mocks API client | ✅ Network-level mocking |
-| **Data Verification** | ✅ Full access to mutation data | ❌ Data doesn't populate |
-| **Maintenance** | ✅ Easy | ⚠️ Requires handlers |
-| **Best For** | axios-based hooks | fetch-based hooks |
+| Feature                 | Jest Mocks                      | MSW                           |
+| ----------------------- | ------------------------------- | ----------------------------- |
+| **Setup Complexity**    | Simple                          | Complex                       |
+| **Axios Compatibility** | ✅ Perfect                      | ⚠️ Data flow issues           |
+| **Fetch Compatibility** | ✅ Works                        | ✅ Works perfectly            |
+| **Test Speed**          | ✅ Fast (~7s)                   | ⚠️ Slower (~80s when failing) |
+| **Realism**             | ⚠️ Mocks API client             | ✅ Network-level mocking      |
+| **Data Verification**   | ✅ Full access to mutation data | ❌ Data doesn't populate      |
+| **Maintenance**         | ✅ Easy                         | ⚠️ Requires handlers          |
+| **Best For**            | axios-based hooks               | fetch-based hooks             |
 
 ### When to Use Jest Mocks
 
 ✅ **Use Jest Mocks when:**
+
 - Hook uses axios API client
 - You need to test mutation data flow
 - You want simple, fast tests
@@ -326,6 +333,7 @@ describe("usePlugins", () => {
 ### When to Use MSW
 
 ✅ **Use MSW when:**
+
 - Hook uses native fetch API (like useCustomerPortal)
 - You want realistic network-level testing
 - You're testing multiple hooks that share state
@@ -367,7 +375,7 @@ it("should create plugin instance", async () => {
 // Jest mock
 mockApiClient.post.mockResolvedValue({
   data: mockInstance,
-  status: 200
+  status: 200,
 });
 
 // Test
@@ -443,6 +451,7 @@ describe("usePlugins", () => {
 ## Test Quality Metrics
 
 ### Unit Tests
+
 - **30 tests passing**
 - **~7 seconds execution time**
 - **100% pass rate**
@@ -458,6 +467,7 @@ describe("usePlugins", () => {
 ## Continuous Integration
 
 ### Unit Tests
+
 - ✅ Run on every PR
 - ✅ Must pass before merge
 - ✅ Fast (~7 seconds)
@@ -474,10 +484,11 @@ describe("usePlugins", () => {
 **Cause:** Missing `status` in mock response
 
 **Fix:** Add `status: 200` to mock:
+
 ```typescript
 mockApiClient.post.mockResolvedValue({
   data: mockData,
-  status: 200  // ← Add this!
+  status: 200, // ← Add this!
 });
 ```
 
@@ -488,6 +499,7 @@ mockApiClient.post.mockResolvedValue({
 **Cause:** Not waiting for React Query state to update
 
 **Fix:** Use `waitFor`:
+
 ```typescript
 await act(async () => {
   await result.current.mutateAsync(data);
@@ -502,6 +514,7 @@ await waitFor(() => expect(result.current.isSuccess).toBe(true));
 **Cause:** Mocks not cleared between tests
 
 **Fix:** Add `beforeEach`:
+
 ```typescript
 beforeEach(() => {
   jest.clearAllMocks();

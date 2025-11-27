@@ -17,7 +17,9 @@
       "@dotmac/ui": ["../ui/src"],
       "@dotmac/ui/*": ["../ui/src/*"],
       "@dotmac/headless": ["../headless/src"],
-      "@dotmac/headless/*": ["../headless/src/*"]
+      "@dotmac/headless/*": ["../headless/src/*"],
+      "@dotmac/rbac": ["../rbac/src"],
+      "@dotmac/rbac/*": ["../rbac/src/*"]
     }
   },
   "include": ["src/**/*"],

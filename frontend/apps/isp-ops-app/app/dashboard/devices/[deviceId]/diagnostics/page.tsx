@@ -37,7 +37,7 @@ interface DiagnosticResult {
 
 function DiagnosticsPageContent() {
   const params = useParams();
-  const deviceId = params['deviceId'] as string;
+  const deviceId = params["deviceId"] as string;
 
   const [pingHost, setPingHost] = useState("8.8.8.8");
   const [pingCount, setPingCount] = useState("4");
@@ -63,7 +63,7 @@ function DiagnosticsPageContent() {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ host: pingHost, count: parseInt(pingCount) }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Ping test failed");
       return response.json();
@@ -87,7 +87,7 @@ function DiagnosticsPageContent() {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ host: tracerouteHost }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Traceroute failed");
       return response.json();
@@ -111,7 +111,7 @@ function DiagnosticsPageContent() {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ host: dnsHost }),
-        }
+        },
       );
       if (!response.ok) throw new Error("DNS lookup failed");
       return response.json();
@@ -135,7 +135,7 @@ function DiagnosticsPageContent() {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ duration: parseInt(speedTestDuration) }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Speed test failed");
       return response.json();
@@ -354,7 +354,9 @@ function DiagnosticsPageContent() {
               {tracerouteResult && (
                 <div className="space-y-3 p-4 rounded-lg bg-muted">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">Hops: {tracerouteResult.data?.hops?.length || 0}</p>
+                    <p className="text-sm font-medium">
+                      Hops: {tracerouteResult.data?.hops?.length || 0}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Duration: {tracerouteResult.duration}ms
                     </p>
@@ -362,7 +364,10 @@ function DiagnosticsPageContent() {
                   {tracerouteResult.data?.hops && (
                     <div className="space-y-2">
                       {tracerouteResult.data.hops.map((hop: any, index: number) => (
-                        <div key={index} className="flex items-center gap-3 p-2 rounded bg-background">
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 p-2 rounded bg-background"
+                        >
                           <Badge variant="outline" className="w-8 justify-center">
                             {hop.number}
                           </Badge>
@@ -427,7 +432,10 @@ function DiagnosticsPageContent() {
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Resolved Addresses:</p>
                       {dnsResult.data.addresses.map((addr: string, index: number) => (
-                        <div key={index} className="flex items-center gap-2 p-2 rounded bg-background">
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 rounded bg-background"
+                        >
                           <Badge variant="outline">IPv{addr.includes(":") ? "6" : "4"}</Badge>
                           <p className="font-mono text-sm">{addr}</p>
                         </div>
@@ -543,7 +551,10 @@ function DiagnosticsPageContent() {
             {[pingResult, tracerouteResult, dnsResult, speedTestResult]
               .filter(Boolean)
               .map((result, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
                   <div className="flex items-center gap-3">
                     {result?.success ? (
                       <CheckCircle className="h-4 w-4 text-green-600" />
@@ -555,10 +566,10 @@ function DiagnosticsPageContent() {
                         {result === pingResult
                           ? "Ping Test"
                           : result === tracerouteResult
-                          ? "Traceroute"
-                          : result === dnsResult
-                          ? "DNS Lookup"
-                          : "Speed Test"}
+                            ? "Traceroute"
+                            : result === dnsResult
+                              ? "DNS Lookup"
+                              : "Speed Test"}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(result!.timestamp).toLocaleString()}

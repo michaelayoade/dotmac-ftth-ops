@@ -27,9 +27,12 @@
  * Future: Replace with graphql-ws client that pushes to React Query cache
  */
 
-import { useSubscription, type DocumentNode, type OperationVariables } from '@apollo/client';
+import { useSubscription, type DocumentNode, type OperationVariables } from "@apollo/client";
 
-export interface SubscriptionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> {
+export interface SubscriptionOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+> {
   /**
    * GraphQL variables for the subscription
    */
@@ -83,7 +86,10 @@ export interface SubscriptionResult<TData = any> {
  * @param options - Subscription configuration
  * @returns Subscription result with data, loading, and error
  */
-export function useGraphQLSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
+export function useGraphQLSubscription<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
   subscription: DocumentNode,
   options: SubscriptionOptions<TData, TVariables> = {},
 ): SubscriptionResult<TData> {
@@ -93,13 +99,15 @@ export function useGraphQLSubscription<TData = any, TVariables extends Operation
   const result = useSubscription<TData, TVariables>(subscription, {
     variables: variables as any,
     ...(skip !== undefined ? { skip } : {}),
-    ...(onData ? {
-      onData: ({ data }) => {
-        // Apollo wraps the data in a nested structure
-        const actualData = data?.data || null;
-        onData({ data: actualData as TData | null });
-      }
-    } : {}),
+    ...(onData
+      ? {
+          onData: ({ data }) => {
+            // Apollo wraps the data in a nested structure
+            const actualData = data?.data || null;
+            onData({ data: actualData as TData | null });
+          },
+        }
+      : {}),
     ...(onError ? { onError } : {}),
     ...(onComplete ? { onComplete } : {}),
   });
@@ -134,9 +142,10 @@ export function hasSubscriptionData<TData>(
  * >(DEVICE_UPDATES_SUBSCRIPTION);
  * ```
  */
-export function createSubscriptionHook<TData = any, TVariables extends Record<string, any> = Record<string, any>>(
-  subscription: DocumentNode,
-) {
+export function createSubscriptionHook<
+  TData = any,
+  TVariables extends Record<string, any> = Record<string, any>,
+>(subscription: DocumentNode) {
   return (options?: SubscriptionOptions<TData, TVariables>) => {
     return useGraphQLSubscription<TData, TVariables>(subscription, options);
   };

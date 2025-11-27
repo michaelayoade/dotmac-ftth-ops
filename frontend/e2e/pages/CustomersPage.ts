@@ -34,36 +34,36 @@ export class CustomersPage {
     this.page = page;
 
     // Main elements
-    this.customersTable = page.locator(
-      '[data-testid="customers-table"], table, .customers-list'
-    ).first();
-    this.addCustomerButton = page.locator(
-      'button:has-text("Add Customer"), button:has-text("New Customer"), [data-testid="add-customer"]'
-    ).first();
-    this.searchInput = page.locator(
-      'input[placeholder*="Search"], input[name="search"], [data-testid="search-customers"]'
-    ).first();
-    this.filterDropdown = page.locator(
-      'select[name="filter"], [data-testid="filter-customers"]'
-    ).first();
+    this.customersTable = page
+      .locator('[data-testid="customers-table"], table, .customers-list')
+      .first();
+    this.addCustomerButton = page
+      .locator(
+        'button:has-text("Add Customer"), button:has-text("New Customer"), [data-testid="add-customer"]',
+      )
+      .first();
+    this.searchInput = page
+      .locator(
+        'input[placeholder*="Search"], input[name="search"], [data-testid="search-customers"]',
+      )
+      .first();
+    this.filterDropdown = page
+      .locator('select[name="filter"], [data-testid="filter-customers"]')
+      .first();
 
     // Table elements
     this.tableRows = this.customersTable.locator('tbody tr, [data-testid="customer-row"]');
-    this.tableHeaders = this.customersTable.locator('thead th');
+    this.tableHeaders = this.customersTable.locator("thead th");
     this.emptyState = page.locator(
-      '[data-testid="empty-state"], .empty-state, :text("No customers found")'
+      '[data-testid="empty-state"], .empty-state, :text("No customers found")',
     );
-    this.loadingSpinner = page.locator(
-      '[data-testid="loading"], .loading, .spinner'
-    );
+    this.loadingSpinner = page.locator('[data-testid="loading"], .loading, .spinner');
 
     // Pagination
-    this.nextPageButton = page.locator(
-      'button:has-text("Next"), [aria-label="Next page"]'
-    ).first();
-    this.prevPageButton = page.locator(
-      'button:has-text("Previous"), [aria-label="Previous page"]'
-    ).first();
+    this.nextPageButton = page.locator('button:has-text("Next"), [aria-label="Next page"]').first();
+    this.prevPageButton = page
+      .locator('button:has-text("Previous"), [aria-label="Previous page"]')
+      .first();
     this.pageInfo = page.locator('[data-testid="page-info"], .pagination-info');
 
     // Customer actions
@@ -82,7 +82,7 @@ export class CustomersPage {
     // Wait for either table or empty state to be visible
     await Promise.race([
       this.customersTable.waitFor({ state: "visible", timeout: 5000 }).catch(() => {}),
-      this.emptyState.waitFor({ state: "visible", timeout: 5000 }).catch(() => {})
+      this.emptyState.waitFor({ state: "visible", timeout: 5000 }).catch(() => {}),
     ]);
   }
 

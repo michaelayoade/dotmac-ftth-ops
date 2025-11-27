@@ -54,7 +54,7 @@ interface WorkflowExecution {
 
 function WorkflowDetailsPageContent() {
   const params = useParams();
-  const workflowId = params?.['workflowId'] as string;
+  const workflowId = params?.["workflowId"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { api } = useAppConfig();
@@ -64,10 +64,9 @@ function WorkflowDetailsPageContent() {
   const { data: workflow, isLoading } = useQuery<Workflow>({
     queryKey: ["workflow", workflowId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/workflows/${workflowId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/workflows/${workflowId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch workflow");
       return response.json();
     },
@@ -80,7 +79,7 @@ function WorkflowDetailsPageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/workflows/executions?workflow_id=${workflowId}&limit=20`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch executions");
       const data = await response.json();
@@ -89,7 +88,12 @@ function WorkflowDetailsPageContent() {
     enabled: !!workflowId,
     refetchInterval: (query) => {
       // Auto-refresh if there are running executions
-      if (query?.state?.data && query.state.data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
+      if (
+        query?.state?.data &&
+        query.state.data.some(
+          (e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING",
+        )
+      ) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -99,19 +103,16 @@ function WorkflowDetailsPageContent() {
   // Execute workflow mutation
   const executeMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/workflows/${workflowId}/execute`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            context: {},
-            trigger_type: "manual",
-            trigger_source: "ui",
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/workflows/${workflowId}/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          context: {},
+          trigger_type: "manual",
+          trigger_source: "ui",
+        }),
+      });
       if (!response.ok) throw new Error("Failed to execute workflow");
       return response.json();
     },
@@ -131,15 +132,12 @@ function WorkflowDetailsPageContent() {
   // Toggle active status mutation
   const toggleActiveMutation = useMutation({
     mutationFn: async (isActive: boolean) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/workflows/${workflowId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ is_active: isActive }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/workflows/${workflowId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ is_active: isActive }),
+      });
       if (!response.ok) throw new Error("Failed to update workflow");
       return response.json();
     },
@@ -189,7 +187,9 @@ function WorkflowDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Workflow Not Found</h2>
-        <p className="text-muted-foreground mb-4">The workflow you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The workflow you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/workflows">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -202,9 +202,9 @@ function WorkflowDetailsPageContent() {
 
   const executionStats = {
     total: executions.length,
-    completed: executions.filter(e => e.status === "COMPLETED").length,
-    failed: executions.filter(e => e.status === "FAILED").length,
-    running: executions.filter(e => e.status === "RUNNING" || e.status === "PENDING").length,
+    completed: executions.filter((e) => e.status === "COMPLETED").length,
+    failed: executions.filter((e) => e.status === "FAILED").length,
+    running: executions.filter((e) => e.status === "RUNNING" || e.status === "PENDING").length,
   };
 
   return (
@@ -324,18 +324,14 @@ function WorkflowDetailsPageContent() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Created At</p>
                   </div>
-                  <p className="font-medium">
-                    {format(new Date(workflow.created_at), "PPpp")}
-                  </p>
+                  <p className="font-medium">{format(new Date(workflow.created_at), "PPpp")}</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Last Updated</p>
                   </div>
-                  <p className="font-medium">
-                    {format(new Date(workflow.updated_at), "PPpp")}
-                  </p>
+                  <p className="font-medium">{format(new Date(workflow.updated_at), "PPpp")}</p>
                 </div>
               </div>
 

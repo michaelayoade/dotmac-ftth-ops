@@ -99,10 +99,10 @@ test.describe("Field Service Management - Complete Workflows", () => {
       await page.fill('textarea[name="description"]', "Fiber installation work");
       await page.locator('button:has-text("Clock In")').click();
 
-      await expect(page.locator('text=/Clocked in at \\d+:\\d+ [AP]M/')).toBeVisible({
+      await expect(page.locator("text=/Clocked in at \\d+:\\d+ [AP]M/")).toBeVisible({
         timeout: SELECTOR_TIMEOUT,
       });
-      await expect(page.locator('text=/Location: \\d+\\.\\d+, \\d+\\.\\d+/')).toBeVisible();
+      await expect(page.locator("text=/Location: \\d+\\.\\d+, \\d+\\.\\d+/")).toBeVisible();
 
       const elapsedLocator = page.locator('[data-testid="elapsed-time"]');
       const elapsed1 = await elapsedLocator.textContent();
@@ -154,10 +154,12 @@ test.describe("Field Service Management - Complete Workflows", () => {
       await page.check('input[name="skill_fiber_splicing"]');
 
       await page.click('button:has-text("Auto Assign")');
-      await expect(page.locator('[data-testid="assignment-list"]').locator("text=Scheduled")).toBeVisible({
+      await expect(
+        page.locator('[data-testid="assignment-list"]').locator("text=Scheduled"),
+      ).toBeVisible({
         timeout: NAV_TIMEOUT,
       });
-      await expect(page.locator('text=/Score: \\d+%/')).toBeVisible();
+      await expect(page.locator("text=/Score: \\d+%/")).toBeVisible();
 
       const viewCandidatesButton = page.locator('button:has-text("View Candidates")');
       if (await viewCandidatesButton.isVisible().catch(() => false)) {
@@ -176,7 +178,7 @@ test.describe("Field Service Management - Complete Workflows", () => {
       await page.fill('textarea[name="rescheduleReason"]', "Customer requested later time");
       await page.click('button:has-text("Confirm Reschedule")');
 
-      await expect(page.locator('text=/10:00 AM - 1:00 PM/')).toBeVisible({
+      await expect(page.locator("text=/10:00 AM - 1:00 PM/")).toBeVisible({
         timeout: SELECTOR_TIMEOUT,
       });
     });
@@ -238,9 +240,9 @@ test.describe("Field Service Management - Complete Workflows", () => {
         });
       }
 
-      await expect(page.locator('text=/Total: \\d+/')).toBeVisible();
-      await expect(page.locator('text=/Available: \\d+/')).toBeVisible();
-      await expect(page.locator('text=/In Use: \\d+/')).toBeVisible();
+      await expect(page.locator("text=/Total: \\d+/")).toBeVisible();
+      await expect(page.locator("text=/Available: \\d+/")).toBeVisible();
+      await expect(page.locator("text=/In Use: \\d+/")).toBeVisible();
     });
   });
 
@@ -340,7 +342,7 @@ test.describe("Field Service Management - Complete Workflows", () => {
       const ctx = page.context();
       await ctx.setOffline(true);
       await page.click('button:has-text("Clock Out")');
-      await expect(page.locator('text=/Error|Failed|Retry|Offline/')).toBeVisible({
+      await expect(page.locator("text=/Error|Failed|Retry|Offline/")).toBeVisible({
         timeout: SELECTOR_TIMEOUT,
       });
 
@@ -362,7 +364,7 @@ test.describe("Field Service Management - Complete Workflows", () => {
       await page.click('button:has-text("Clock In")');
       const result = await Promise.race([
         page.locator('button:has-text("Clock Out")').isVisible({ timeout: SELECTOR_TIMEOUT }),
-        page.locator('text=/GPS|Location|Permission/').isVisible({ timeout: SELECTOR_TIMEOUT }),
+        page.locator("text=/GPS|Location|Permission/").isVisible({ timeout: SELECTOR_TIMEOUT }),
       ]);
 
       expect(result).toBeTruthy();

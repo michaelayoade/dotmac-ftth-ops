@@ -34,19 +34,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@dotmac/ui";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   AlertCircle,
   Bell,
@@ -123,7 +112,9 @@ export default function UIShowcasePage() {
                   <Button size="sm">Small</Button>
                   <Button size="default">Default</Button>
                   <Button size="lg">Large</Button>
-                  <Button size="icon"><Plus className="h-4 w-4" /></Button>
+                  <Button size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
@@ -132,10 +123,22 @@ export default function UIShowcasePage() {
               <div className="space-y-2">
                 <Label>With Icons</Label>
                 <div className="flex flex-wrap gap-2">
-                  <Button><Mail className="h-4 w-4 mr-2" />Email</Button>
-                  <Button><Download className="h-4 w-4 mr-2" />Download</Button>
-                  <Button><Upload className="h-4 w-4 mr-2" />Upload</Button>
-                  <Button><Search className="h-4 w-4 mr-2" />Search</Button>
+                  <Button>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Email
+                  </Button>
+                  <Button>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload
+                  </Button>
+                  <Button>
+                    <Search className="h-4 w-4 mr-2" />
+                    Search
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -217,17 +220,13 @@ export default function UIShowcasePage() {
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertTitle>Information</AlertTitle>
-                <AlertDescription>
-                  This is an informational alert message.
-                </AlertDescription>
+                <AlertDescription>This is an informational alert message.</AlertDescription>
               </Alert>
 
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  Something went wrong. Please try again.
-                </AlertDescription>
+                <AlertDescription>Something went wrong. Please try again.</AlertDescription>
               </Alert>
             </CardContent>
           </Card>
@@ -363,9 +362,7 @@ export default function UIShowcasePage() {
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="outline">
-                        Hover me
-                      </Button>
+                      <Button variant="outline">Hover me</Button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>This is a tooltip</p>
@@ -392,9 +389,7 @@ export default function UIShowcasePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">$45,231</div>
-                    <p className="text-xs text-muted-foreground">
-                      +20.1% from last month
-                    </p>
+                    <p className="text-xs text-muted-foreground">+20.1% from last month</p>
                   </CardContent>
                 </Card>
 
@@ -404,9 +399,7 @@ export default function UIShowcasePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">2,345</div>
-                    <p className="text-xs text-muted-foreground">
-                      +12.5% from last month
-                    </p>
+                    <p className="text-xs text-muted-foreground">+12.5% from last month</p>
                   </CardContent>
                 </Card>
 
@@ -416,9 +409,7 @@ export default function UIShowcasePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">12.5%</div>
-                    <p className="text-xs text-muted-foreground">
-                      +2.1% from last month
-                    </p>
+                    <p className="text-xs text-muted-foreground">+2.1% from last month</p>
                   </CardContent>
                 </Card>
               </div>
@@ -440,9 +431,7 @@ export default function UIShowcasePage() {
                       </div>
                       <div>
                         <div className="font-medium">User {i + 1}</div>
-                        <div className="text-sm text-muted-foreground">
-                          user{i + 1}@example.com
-                        </div>
+                        <div className="text-sm text-muted-foreground">user{i + 1}@example.com</div>
                       </div>
                     </div>
                   ))}
@@ -465,8 +454,8 @@ export default function UIShowcasePage() {
                 Complete UI Library
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                All UI components are built with accessibility in mind, following ARIA patterns and best practices.
-                Components are fully customizable and theme-aware.
+                All UI components are built with accessibility in mind, following ARIA patterns and
+                best practices. Components are fully customizable and theme-aware.
               </p>
             </div>
           </div>

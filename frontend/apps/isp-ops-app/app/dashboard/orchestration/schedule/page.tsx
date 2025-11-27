@@ -7,13 +7,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-  Info,
-} from "lucide-react";
+import { Calendar, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import {
   useScheduledDeployments,
   getOperationDescription,
@@ -29,13 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Label } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { RadioGroup, RadioGroupItem } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
@@ -179,7 +167,8 @@ export default function ScheduledDeploymentPage() {
       logger.error("Failed to schedule deployment", err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to schedule deployment. Please try again.",
+        description:
+          err instanceof Error ? err.message : "Failed to schedule deployment. Please try again.",
         variant: "destructive",
       });
     }

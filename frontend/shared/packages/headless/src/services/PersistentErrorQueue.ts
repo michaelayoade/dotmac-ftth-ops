@@ -155,7 +155,7 @@ export class PersistentErrorQueue {
 
       // Separate errors that haven't exceeded retry limit
       const retryableErrors = validQueue.filter(
-        (item) => item.retry_count < this.config.maxRetries
+        (item) => item.retry_count < this.config.maxRetries,
       );
 
       if (retryableErrors.length === 0) {

@@ -40,15 +40,12 @@ export function CustomersList(props: CustomersListProps) {
   const handleUpdateCustomerStatus = async (customerId: string, status: string) => {
     logger.info("Updating customer status", { customerId, status });
 
-    const response = await fetch(
-      `${apiBaseUrl}/api/v1/customers/${customerId}/status`,
-      {
-        method: "PATCH",
-        credentials: "include",
-        headers: buildAuthHeaders(),
-        body: JSON.stringify({ status }),
-      },
-    );
+    const response = await fetch(`${apiBaseUrl}/api/v1/customers/${customerId}/status`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: buildAuthHeaders(),
+      body: JSON.stringify({ status }),
+    });
 
     if (!response.ok) throw new Error("Failed to update customer status");
   };
@@ -56,14 +53,11 @@ export function CustomersList(props: CustomersListProps) {
   const handleResetCustomerPassword = async (customerId: string) => {
     logger.info("Resetting customer password", { customerId });
 
-    const response = await fetch(
-      `${apiBaseUrl}/api/v1/customers/${customerId}/reset-password`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: buildAuthHeaders(),
-      },
-    );
+    const response = await fetch(`${apiBaseUrl}/api/v1/customers/${customerId}/reset-password`, {
+      method: "POST",
+      credentials: "include",
+      headers: buildAuthHeaders(),
+    });
 
     if (!response.ok) throw new Error("Failed to send reset password email");
   };

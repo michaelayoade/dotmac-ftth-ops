@@ -39,7 +39,6 @@ import { QuotePDFGenerator } from "../utils/quote-pdf";
 
 import { QuoteStatusBadge } from "./Badges";
 
-
 export interface QuoteDetailModalProps {
   isOpen: boolean;
   onClose: () => void;

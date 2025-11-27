@@ -4,8 +4,7 @@ import { useState } from "react";
 
 const ipv4Regex =
   /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}(\/([1-9]|[12]\d|3[0-2]))?$/;
-const ipv6Regex =
-  /^([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}(\/(\d|[1-9]\d|1[01]\d|12[0-8]))?$/i;
+const ipv6Regex = /^([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}(\/(\d|[1-9]\d|1[01]\d|12[0-8]))?$/i;
 
 export default function DualStackDemoPage() {
   const [ipv4, setIpv4] = useState("");

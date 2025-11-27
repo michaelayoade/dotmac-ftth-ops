@@ -4,14 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import {
@@ -36,13 +29,7 @@ import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Plus,
   Search,
@@ -152,7 +139,7 @@ export default function PricingPage() {
 
       const response = await apiClient.get<PricingRule[]>(
         `${apiBaseUrl}/api/v1/billing/pricing/rules`,
-        { params }
+        { params },
       );
       return response.data;
     },
@@ -168,7 +155,7 @@ export default function PricingPage() {
       const searchLower = searchQuery.toLowerCase();
       if (
         !rule.name.toLowerCase().includes(searchLower) &&
-        !rule['description']?.toLowerCase().includes(searchLower)
+        !rule["description"]?.toLowerCase().includes(searchLower)
       ) {
         return false;
       }
@@ -202,10 +189,7 @@ export default function PricingPage() {
   // Create rule mutation
   const createRuleMutation = useMutation({
     mutationFn: async (data: Partial<PricingRule>) => {
-      const response = await apiClient.post(
-        `${apiBaseUrl}/api/v1/billing/pricing/rules`,
-        data
-      );
+      const response = await apiClient.post(`${apiBaseUrl}/api/v1/billing/pricing/rules`, data);
       return response.data;
     },
     onSuccess: () => {
@@ -231,7 +215,7 @@ export default function PricingPage() {
     mutationFn: async ({ id, data }: { id: string; data: Partial<PricingRule> }) => {
       const response = await apiClient.patch(
         `${apiBaseUrl}/api/v1/billing/pricing/rules/${id}`,
-        data
+        data,
       );
       return response.data;
     },
@@ -257,9 +241,7 @@ export default function PricingPage() {
   // Delete rule mutation
   const deleteRuleMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.delete(
-        `${apiBaseUrl}/api/v1/billing/pricing/rules/${id}`
-      );
+      await apiClient.delete(`${apiBaseUrl}/api/v1/billing/pricing/rules/${id}`);
     },
     onSuccess: () => {
       toast({
@@ -284,7 +266,7 @@ export default function PricingPage() {
     mutationFn: async ({ id, activate }: { id: string; activate: boolean }) => {
       const endpoint = activate ? "activate" : "deactivate";
       const response = await apiClient.post(
-        `${apiBaseUrl}/api/v1/billing/pricing/rules/${id}/${endpoint}`
+        `${apiBaseUrl}/api/v1/billing/pricing/rules/${id}/${endpoint}`,
       );
       return response.data;
     },
@@ -324,8 +306,8 @@ export default function PricingPage() {
 
   const handleCreateRule = () => {
     const ruleData: Partial<PricingRule> = {
-      name: formData['name'],
-      ...(formData['description'] && { description: formData['description'] }),
+      name: formData["name"],
+      ...(formData["description"] && { description: formData["description"] }),
       applies_to_product_ids: formData.applies_to_product_ids
         ? formData.applies_to_product_ids.split(",").map((s) => s.trim())
         : [],
@@ -352,8 +334,8 @@ export default function PricingPage() {
     if (!selectedRule) return;
 
     const ruleData: Partial<PricingRule> = {
-      name: formData['name'],
-      ...(formData['description'] && { description: formData['description'] }),
+      name: formData["name"],
+      ...(formData["description"] && { description: formData["description"] }),
       applies_to_product_ids: formData.applies_to_product_ids
         ? formData.applies_to_product_ids.split(",").map((s) => s.trim())
         : [],
@@ -404,7 +386,11 @@ export default function PricingPage() {
         variant: "default" as const,
         className: "bg-green-500",
       },
-      fixed_price: { label: "Fixed Price", variant: "default" as const, className: "bg-purple-500" },
+      fixed_price: {
+        label: "Fixed Price",
+        variant: "default" as const,
+        className: "bg-purple-500",
+      },
     };
     const { label, variant, className } = config[type];
     return (
@@ -415,29 +401,10 @@ export default function PricingPage() {
   };
 
   const getPriorityBadge = (priority: number) => {
-    if (priority >= 500)
-      return (
-        <Badge className="bg-red-500">
-          Critical ({priority})
-        </Badge>
-      );
-    if (priority >= 300)
-      return (
-        <Badge className="bg-orange-500">
-          High ({priority})
-        </Badge>
-      );
-    if (priority >= 100)
-      return (
-        <Badge className="bg-yellow-500">
-          Medium ({priority})
-        </Badge>
-      );
-    return (
-      <Badge className="bg-gray-500">
-        Low ({priority})
-      </Badge>
-    );
+    if (priority >= 500) return <Badge className="bg-red-500">Critical ({priority})</Badge>;
+    if (priority >= 300) return <Badge className="bg-orange-500">High ({priority})</Badge>;
+    if (priority >= 100) return <Badge className="bg-yellow-500">Medium ({priority})</Badge>;
+    return <Badge className="bg-gray-500">Low ({priority})</Badge>;
   };
 
   const formatMoney = (amount: number) => {
@@ -458,7 +425,10 @@ export default function PricingPage() {
           <p className="text-muted-foreground">Manage pricing rules and discounts</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.push("/dashboard/billing-revenue/pricing/simulator")}>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/dashboard/billing-revenue/pricing/simulator")}
+          >
             <Calculator className="mr-2 h-4 w-4" />
             Price Simulator
           </Button>
@@ -654,7 +624,7 @@ export default function PricingPage() {
                               variant="ghost"
                               onClick={() =>
                                 router.push(
-                                  `/dashboard/billing-revenue/pricing/rules/${rule.rule_id}`
+                                  `/dashboard/billing-revenue/pricing/rules/${rule.rule_id}`,
                                 )
                               }
                             >
@@ -705,7 +675,9 @@ export default function PricingPage() {
                   Failed to load pricing rules. Please try again.
                 </div>
               ) : rules.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No pricing rules found.</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No pricing rules found.
+                </div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -800,7 +772,7 @@ export default function PricingPage() {
                               variant="ghost"
                               onClick={() =>
                                 router.push(
-                                  `/dashboard/billing-revenue/pricing/rules/${rule.rule_id}`
+                                  `/dashboard/billing-revenue/pricing/rules/${rule.rule_id}`,
                                 )
                               }
                             >
@@ -852,13 +824,15 @@ export default function PricingPage() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Pricing Rule</DialogTitle>
-            <DialogDescription>Define a new pricing rule with discounts and conditions</DialogDescription>
+            <DialogDescription>
+              Define a new pricing rule with discounts and conditions
+            </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Label>Rule Name*</Label>
               <Input
-                value={formData['name']}
+                value={formData["name"]}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Summer Sale 2024"
               />
@@ -866,7 +840,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Description</Label>
               <Textarea
-                value={formData['description']}
+                value={formData["description"]}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description of the rule"
                 rows={2}
@@ -1022,7 +996,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Rule Name*</Label>
               <Input
-                value={formData['name']}
+                value={formData["name"]}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Summer Sale 2024"
               />
@@ -1030,7 +1004,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Description</Label>
               <Textarea
-                value={formData['description']}
+                value={formData["description"]}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description of the rule"
                 rows={2}
@@ -1182,8 +1156,8 @@ export default function PricingPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Deactivate Pricing Rule</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate the rule &quot;{selectedRule?.name}&quot;? This will remove it from
-              active pricing calculations.
+              Are you sure you want to deactivate the rule &quot;{selectedRule?.name}&quot;? This
+              will remove it from active pricing calculations.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -24,14 +24,14 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import { useRADIUSSubscribers, useRADIUSSessions } from "@/hooks/useRADIUS";
 import { useServiceStatistics } from "@/hooks/useServiceLifecycle";
 import { useAppConfig } from "@/providers/AppConfigContext";
 import { useRBAC } from "@/contexts/RBACContext";
 
-type DashboardUser = Pick<ExtendedUser, "id" | "name" | "email" | "roles" | "role">;
+type DashboardUser = Pick<UserInfo, "id" | "email" | "roles" | "full_name">;
 
 type IconRendererProps = {
   className?: string;
@@ -39,19 +39,18 @@ type IconRendererProps = {
 
 export default function EnhancedDashboardPage() {
   const router = useRouter();
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as DashboardUser | undefined;
+  const { user: sessionUser, isLoading: authLoading, isAuthenticated } = useSession();
+  const user = sessionUser as DashboardUser | undefined;
   const { hasPermission } = useRBAC();
   const { features } = useAppConfig();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const dashboardUser = (() => {
     if (user) {
-      const enrichedUser = user as typeof user & { role?: string; roles?: string[] };
       return {
         id: user.id,
-        name: user.name || user.email,
+        name: user.full_name || user.email,
         email: user.email ?? "unknown@dotmac",
-        role: enrichedUser.roles?.[0] || enrichedUser.role || "operator",
+        role: user.roles?.[0] || "operator",
       };
     }
     return {
@@ -64,28 +63,36 @@ export default function EnhancedDashboardPage() {
 
   const hasRadiusAccess = features.enableRadius && hasPermission("isp.radius.read");
 
-  const { data: radiusSubscribers, isLoading: subscribersLoading, refetch: refetchSubscribers } = useRADIUSSubscribers(0, 100, {
+  const {
+    data: radiusSubscribers,
+    isLoading: subscribersLoading,
+    refetch: refetchSubscribers,
+  } = useRADIUSSubscribers(0, 100, {
     enabled: hasRadiusAccess,
   });
-  const { data: activeSessions, isLoading: sessionsLoading, refetch: refetchSessions } = useRADIUSSessions(0, 100, {
+  const {
+    data: activeSessions,
+    isLoading: sessionsLoading,
+    refetch: refetchSessions,
+  } = useRADIUSSessions(0, 100, {
     enabled: hasRadiusAccess,
   });
-  const { data: serviceStats, isLoading: serviceStatsLoading, refetch: refetchServices } = useServiceStatistics({});
+  const {
+    data: serviceStats,
+    isLoading: serviceStatsLoading,
+    refetch: refetchServices,
+  } = useServiceStatistics({});
 
   useEffect(() => {
-    if (!authLoading && !session) {
+    if (!authLoading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [authLoading, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([
-        refetchSubscribers?.(),
-        refetchSessions?.(),
-        refetchServices?.(),
-      ]);
+      await Promise.all([refetchSubscribers?.(), refetchSessions?.(), refetchServices?.()]);
     } finally {
       setIsRefreshing(false);
     }
@@ -98,12 +105,10 @@ export default function EnhancedDashboardPage() {
   const activeServices = serviceStats?.active_count ?? 0;
 
   // Calculate metrics
-  const subscriberActiveRate = totalSubscribers > 0
-    ? ((activeSubscribers / totalSubscribers) * 100).toFixed(1)
-    : 0;
-  const sessionRate = activeSubscribers > 0
-    ? ((activeSessionsCount / activeSubscribers) * 100).toFixed(1)
-    : 0;
+  const subscriberActiveRate =
+    totalSubscribers > 0 ? ((activeSubscribers / totalSubscribers) * 100).toFixed(1) : 0;
+  const sessionRate =
+    activeSubscribers > 0 ? ((activeSessionsCount / activeSubscribers) * 100).toFixed(1) : 0;
 
   // KPI Data
   const kpis: KPIItem[] = [
@@ -167,7 +172,12 @@ export default function EnhancedDashboardPage() {
         showPercentage: true,
       },
       status: {
-        type: Number(subscriberActiveRate) > 90 ? "success" : Number(subscriberActiveRate) > 70 ? "warning" : "error",
+        type:
+          Number(subscriberActiveRate) > 90
+            ? "success"
+            : Number(subscriberActiveRate) > 70
+              ? "warning"
+              : "error",
       },
     },
   ];

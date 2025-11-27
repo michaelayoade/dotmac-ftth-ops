@@ -259,7 +259,7 @@ const fetchProjects = async (filter?: ProjectFilter): Promise<ProjectListRespons
 
   return {
     projects: (data.projects ?? []).map(mapProjectFromApi),
-    total: data.total ?? (data.projects?.length ?? 0),
+    total: data.total ?? data.projects?.length ?? 0,
     limit: data.limit ?? filter?.limit ?? 50,
     offset: data.offset ?? filter?.offset ?? 0,
   };
@@ -321,7 +321,7 @@ const fetchTasks = async (filter?: TaskFilter): Promise<TaskListResponse> => {
 
   return {
     tasks: (data.tasks ?? []).map(mapTaskFromApi),
-    total: data.total ?? (data.tasks?.length ?? 0),
+    total: data.total ?? data.tasks?.length ?? 0,
     limit: data.limit ?? filter?.limit ?? 100,
     offset: data.offset ?? filter?.offset ?? 0,
   };
@@ -459,7 +459,10 @@ export const useProjects = (filter?: ProjectFilter) => {
   });
 };
 
-export const useProject = (id: string, options?: Omit<UseQueryOptions<Project>, "queryKey" | "queryFn">) => {
+export const useProject = (
+  id: string,
+  options?: Omit<UseQueryOptions<Project>, "queryKey" | "queryFn">,
+) => {
   return useQuery({
     queryKey: ["project", id],
     queryFn: () => fetchProject(id),

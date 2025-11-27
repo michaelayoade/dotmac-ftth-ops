@@ -126,13 +126,7 @@ export function ConnectionStatusIndicator({
 /**
  * Status Badge Component
  */
-const PulseWrapper = ({
-  active,
-  children,
-}: {
-  active: boolean;
-  children: ReactNode;
-}) => (
+const PulseWrapper = ({ active, children }: { active: boolean; children: ReactNode }) => (
   <div
     data-testid="pulse-indicator"
     data-active={String(active)}

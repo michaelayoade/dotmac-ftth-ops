@@ -111,7 +111,7 @@ export function useFieldInstallationJobs(options: { status?: string } = {}) {
         (job): job is FieldInstallationJob =>
           job.job_type === "field_installation" &&
           job.location_lat != null &&
-          job.location_lng != null
+          job.location_lng != null,
       );
 
       return {

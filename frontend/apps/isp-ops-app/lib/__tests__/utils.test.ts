@@ -3,14 +3,7 @@
  * Tests utility functions including formatters, debounce, and ID generation
  */
 
-import {
-  cn,
-  formatCurrency,
-  formatDate,
-  truncate,
-  debounce,
-  generateId,
-} from "../utils";
+import { cn, formatCurrency, formatDate, truncate, debounce, generateId } from "../utils";
 
 describe("utils", () => {
   describe("cn", () => {
@@ -332,14 +325,7 @@ describe("utils", () => {
 
   describe("Type safety", () => {
     it("should accept ClassValue types in cn", () => {
-      const result = cn(
-        "string",
-        ["array"],
-        { object: true },
-        undefined,
-        null,
-        false
-      );
+      const result = cn("string", ["array"], { object: true }, undefined, null, false);
       expect(typeof result).toBe("string");
     });
 

@@ -1,20 +1,11 @@
 "use client";
 
 import React from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@dotmac/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { AvailablePlan } from "@/hooks/useTenantSubscription";
-import {
-  Check,
-} from "lucide-react";
+import { Check } from "lucide-react";
 
 interface PlanComparisonProps {
   plans: AvailablePlan[];

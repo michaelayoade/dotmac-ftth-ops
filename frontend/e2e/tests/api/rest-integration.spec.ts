@@ -5,7 +5,6 @@
 import { test, expect } from "#e2e/fixtures";
 import type { Page, APIRequestContext } from "@playwright/test";
 
-
 test.describe("REST API Integration", () => {
   const BASE_URL = process.env.API_BASE_URL || "http://localhost:8000";
   const APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";

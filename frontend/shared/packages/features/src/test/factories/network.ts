@@ -64,7 +64,7 @@ export const createMockONUs = (count: number = 5) => {
     createMockONU({
       onu_id: `onu_${i + 1}`,
       serial_number: `ALCL${String(i + 1).padStart(8, "0")}`,
-    })
+    }),
   );
 };
 

@@ -4,9 +4,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Search, ChevronUp } from "lucide-react";
 
 // Define minimal components inline to avoid circular dependencies
-const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
-  <div className={`border rounded-lg p-4 ${className}`}>{children}</div>
-);
+const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({
+  children,
+  className = "",
+}) => <div className={`border rounded-lg p-4 ${className}`}>{children}</div>;
 
 const Skeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
   <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
@@ -130,9 +131,9 @@ export function VirtualizedDataTable<T = Record<string, unknown>>({
       return;
     }
     const handleScroll = () => {
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight - rowHeight) {
-          loadMore();
-        }
+      if (container.scrollTop + container.clientHeight >= container.scrollHeight - rowHeight) {
+        loadMore();
+      }
     };
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
@@ -199,7 +200,15 @@ export function VirtualizedDataTable<T = Record<string, unknown>>({
                   <span>{column.label}</span>
                   {column.sortable && (
                     <span className="text-xs text-gray-500">
-                      {isSorted ? (sortConfig?.direction === "asc" ? "↑" : "↓") : <ChevronUp className="h-3 w-3 opacity-40" />}
+                      {isSorted ? (
+                        sortConfig?.direction === "asc" ? (
+                          "↑"
+                        ) : (
+                          "↓"
+                        )
+                      ) : (
+                        <ChevronUp className="h-3 w-3 opacity-40" />
+                      )}
                     </span>
                   )}
                 </button>

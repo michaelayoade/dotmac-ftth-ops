@@ -12,14 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +33,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { useLicensing } from "../../../../hooks/useLicensing";
-import type { ModuleCategory as _ModuleCategory, PricingModel as _PricingModel } from "../../../../types/licensing";
+import type {
+  ModuleCategory as _ModuleCategory,
+  PricingModel as _PricingModel,
+} from "../../../../types/licensing";
 
 export default function PlatformAdminLicensingPage() {
   const { modules, modulesLoading, quotas, quotasLoading, plans, plansLoading } = useLicensing();
@@ -192,11 +188,8 @@ export default function PlatformAdminLicensingPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          ${ (module.base_price ?? 0).toFixed(2) }
-                          <span className="text-muted-foreground">
-                            {" "}
-                            ({module.pricing_model})
-                          </span>
+                          ${(module.base_price ?? 0).toFixed(2)}
+                          <span className="text-muted-foreground"> ({module.pricing_model})</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -390,7 +383,7 @@ export default function PlatformAdminLicensingPage() {
                           ${(plan.base_price_monthly ?? 0).toFixed(2)}/mo
                           {(plan.annual_discount_percent ?? 0) > 0 && (
                             <p className="text-xs text-muted-foreground">
-                              {(plan.annual_discount_percent ?? 0)}% annual discount
+                              {plan.annual_discount_percent ?? 0}% annual discount
                             </p>
                           )}
                         </div>

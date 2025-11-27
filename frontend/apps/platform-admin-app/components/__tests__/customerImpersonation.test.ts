@@ -13,9 +13,7 @@ jest.mock("../../../../shared/utils/operatorAuth", () => {
   };
 });
 
-const mockSetPortalAuthToken = setPortalAuthToken as jest.MockedFunction<
-  typeof setPortalAuthToken
->;
+const mockSetPortalAuthToken = setPortalAuthToken as jest.MockedFunction<typeof setPortalAuthToken>;
 
 describe("customer impersonation", () => {
   const baseUrl = "https://api.example.com";
@@ -44,10 +42,7 @@ describe("customer impersonation", () => {
       "https://api.example.com/api/v1/customers/cust-1/impersonate",
       expect.objectContaining({ method: "POST", credentials: "include" }),
     );
-    expect(mockSetPortalAuthToken).toHaveBeenCalledWith(
-      "token-123",
-      CUSTOMER_PORTAL_TOKEN_KEY,
-    );
+    expect(mockSetPortalAuthToken).toHaveBeenCalledWith("token-123", CUSTOMER_PORTAL_TOKEN_KEY);
   });
 
   it("throws when the response fails", async () => {

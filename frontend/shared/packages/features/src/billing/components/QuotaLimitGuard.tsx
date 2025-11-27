@@ -333,7 +333,7 @@ export function useQuotaLimit(quotaType: string) {
  * {!isQuotaExceeded("customers") && <AddCustomerButton />}
  */
 export function isQuotaExceeded(quotaType: string): boolean {
-    // This is a simplified version for inline checks
+  // This is a simplified version for inline checks
   return false;
 }
 
@@ -347,7 +347,7 @@ export function isQuotaExceeded(quotaType: string): boolean {
  */
 export function withQuotaGuard<P extends object>(
   Component: React.ComponentType<P>,
-  guardProps: Omit<QuotaLimitGuardProps, "children">
+  guardProps: Omit<QuotaLimitGuardProps, "children">,
 ) {
   return function QuotaGuardedComponent(props: P) {
     return (

@@ -176,10 +176,7 @@ export default function CustomerLoginPage() {
               </p>
               <p className="text-slate-400">
                 Need assistance?{" "}
-                <Link
-                  href={supportLink}
-                  className="text-primary hover:underline font-medium"
-                >
+                <Link href={supportLink} className="text-primary hover:underline font-medium">
                   Contact Support
                 </Link>
               </p>

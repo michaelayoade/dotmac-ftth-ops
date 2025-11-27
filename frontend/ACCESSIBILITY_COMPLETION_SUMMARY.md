@@ -26,22 +26,26 @@ Complete set of React hooks for accessible interactions:
 Created reusable accessible components:
 
 #### SkipLink.tsx
+
 - Skip to main content (WCAG 2.4.1)
 - Multiple skip links support
 - Keyboard-only visibility
 - Translated labels
 
 #### VisuallyHidden.tsx
+
 - Screen-reader-only content
 - Proper sr-only implementation
 - Icon button labels
 
 #### LiveRegion.tsx
+
 - ARIA live region for announcements
 - StatusAnnouncer for common patterns
 - Polite/assertive priorities
 
 #### FocusGuard.tsx
+
 - Focus boundary elements
 - Used internally by focus traps
 
@@ -51,39 +55,39 @@ Type-safe ARIA label generators integrated with i18n:
 
 ```typescript
 // Status badges
-getStatusAriaLabel(t, job.status, 'jobs')
+getStatusAriaLabel(t, job.status, "jobs");
 // "Status: Running" (EN) / "Estado: En Ejecución" (ES)
 
 // Action buttons
-getActionAriaLabel(t, 'delete', customer.name)
+getActionAriaLabel(t, "delete", customer.name);
 // "Delete John Doe" (EN) / "Eliminar John Doe" (ES)
 
 // Pagination
-getPaginationAriaLabel(t, 'next', 2)
+getPaginationAriaLabel(t, "next", 2);
 // "Go to page 2" (EN) / "Ir a la página 2" (ES)
 
 // Sortable tables
-getSortAriaLabel(t, 'Name', 'asc')
+getSortAriaLabel(t, "Name", "asc");
 // "Sorted by Name, ascending" (EN) / "Ordenado por Name, ascendente" (ES)
 
 // Search inputs
-getSearchAriaLabel(t, 'customers')
+getSearchAriaLabel(t, "customers");
 // "Search customers" (EN) / "Buscar customers" (ES)
 
 // Form fields
-getFieldDescription(t, 'email', { required: true, format: 'email' })
+getFieldDescription(t, "email", { required: true, format: "email" });
 // "This field is required. Must be a valid email address"
 
 // Progress bars
-getProgressAriaLabel(t, 'upload', 75)
+getProgressAriaLabel(t, "upload", 75);
 // "upload progress: 75%"
 
 // Modals
-getCloseAriaLabel(t, 'Edit Customer')
+getCloseAriaLabel(t, "Edit Customer");
 // "Close Edit Customer dialog"
 
 // Expand/collapse
-getExpandAriaLabel(t, isExpanded, 'Details')
+getExpandAriaLabel(t, isExpanded, "Details");
 // "Expand Details" / "Collapse Details"
 ```
 
@@ -94,6 +98,7 @@ Added `accessibility` namespace to all locale files:
 **New Keys Added:** 43 accessibility-specific translation keys
 
 **Coverage:**
+
 - Skip links
 - Status labels
 - Action buttons (edit, delete, view, cancel, retry)
@@ -109,6 +114,7 @@ Added `accessibility` namespace to all locale files:
 - Menu controls
 
 **Example (English):**
+
 ```json
 {
   "accessibility": {
@@ -123,6 +129,7 @@ Added `accessibility` namespace to all locale files:
 ```
 
 **Multi-Language:**
+
 - 🇺🇸 English (en)
 - 🇪🇸 Spanish (es)
 - 🇫🇷 French (fr)
@@ -132,6 +139,7 @@ Added `accessibility` namespace to all locale files:
 ### 5. Documentation
 
 **ACCESSIBILITY.md** (430+ lines)
+
 - Complete usage guide
 - All hooks documented with examples
 - All components documented
@@ -153,7 +161,7 @@ Full keyboard support for all interactive patterns:
 const { activeIndex, handleKeyDown } = useKeyboardNavigation({
   itemCount: items.length,
   onSelect: (index) => selectItem(items[index]),
-  orientation: 'vertical', // or 'horizontal' or 'grid'
+  orientation: "vertical", // or 'horizontal' or 'grid'
   loop: true,
 });
 
@@ -166,8 +174,8 @@ Automatic focus trapping for modals:
 
 ```tsx
 const modalRef = useFocusTrap<HTMLDivElement>(isOpen, {
-  initialFocus: true,  // Focus first element
-  returnFocus: true,   // Return focus on close
+  initialFocus: true, // Focus first element
+  returnFocus: true, // Return focus on close
 });
 
 // Automatically handles Tab/Shift+Tab cycling
@@ -182,7 +190,7 @@ const announce = useAriaLive();
 
 const handleSave = async () => {
   await saveData();
-  announce('Changes saved successfully', 'polite');
+  announce("Changes saved successfully", "polite");
 };
 
 // Screen reader announces: "Changes saved successfully"
@@ -200,7 +208,7 @@ const prefersReducedMotion = useReducedMotion();
   transition={{
     duration: prefersReducedMotion ? 0 : 0.3, // Skip animation
   }}
-/>
+/>;
 ```
 
 ### Multi-Language ARIA
@@ -257,14 +265,14 @@ messages/
 
 ### Code Metrics
 
-| Metric | Value |
-|--------|-------|
-| **Hooks Created** | 8 |
-| **Components Created** | 4 |
-| **ARIA Utilities** | 10 |
-| **Translation Keys** | 43 per locale (215 total) |
-| **Lines of Code** | ~1,200 |
-| **Documentation** | 450+ lines |
+| Metric                 | Value                     |
+| ---------------------- | ------------------------- |
+| **Hooks Created**      | 8                         |
+| **Components Created** | 4                         |
+| **ARIA Utilities**     | 10                        |
+| **Translation Keys**   | 43 per locale (215 total) |
+| **Lines of Code**      | ~1,200                    |
+| **Documentation**      | 450+ lines                |
 
 ---
 
@@ -273,9 +281,9 @@ messages/
 ### Example 1: Accessible Modal
 
 ```tsx
-import { useFocusTrap, useEscapeKey } from '@dotmac/hooks';
-import { useTranslations } from 'next-intl';
-import { getCloseAriaLabel } from '@/lib/accessibility/aria';
+import { useFocusTrap, useEscapeKey } from "@dotmac/hooks";
+import { useTranslations } from "next-intl";
+import { getCloseAriaLabel } from "@/lib/accessibility/aria";
 
 function ConfirmDialog({ isOpen, onClose, title, children }) {
   const t = useTranslations();
@@ -285,18 +293,10 @@ function ConfirmDialog({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
   return (
-    <div
-      ref={dialogRef}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dialog-title"
-    >
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="dialog-title">
       <h2 id="dialog-title">{title}</h2>
       {children}
-      <button
-        onClick={onClose}
-        aria-label={getCloseAriaLabel(t, title)}
-      >
+      <button onClick={onClose} aria-label={getCloseAriaLabel(t, title)}>
         <XIcon />
       </button>
     </div>
@@ -307,13 +307,13 @@ function ConfirmDialog({ isOpen, onClose, title, children }) {
 ### Example 2: Accessible Data Table
 
 ```tsx
-import { useKeyboardNavigation } from '@dotmac/hooks';
-import { getSortAriaLabel } from '@/lib/accessibility/aria';
+import { useKeyboardNavigation } from "@dotmac/hooks";
+import { getSortAriaLabel } from "@/lib/accessibility/aria";
 
 function DataTable({ data, columns }) {
   const t = useTranslations();
   const [sortColumn, setSortColumn] = useState(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
 
   const { activeIndex, handleKeyDown } = useKeyboardNavigation({
     itemCount: data.length,
@@ -329,9 +329,7 @@ function DataTable({ data, columns }) {
               key={col.key}
               onClick={() => handleSort(col.key)}
               aria-sort={
-                sortColumn === col.key
-                  ? sortOrder === 'asc' ? 'ascending' : 'descending'
-                  : 'none'
+                sortColumn === col.key ? (sortOrder === "asc" ? "ascending" : "descending") : "none"
               }
               aria-label={getSortAriaLabel(t, col.label, sortOrder)}
             >
@@ -359,43 +357,38 @@ function DataTable({ data, columns }) {
 ### Example 3: Accessible Form
 
 ```tsx
-import { useId } from '@dotmac/hooks';
-import { getFieldDescription } from '@/lib/accessibility/aria';
-import { LiveRegion } from '@dotmac/ui';
+import { useId } from "@dotmac/hooks";
+import { getFieldDescription } from "@/lib/accessibility/aria";
+import { LiveRegion } from "@dotmac/ui";
 
 function CustomerForm() {
   const t = useTranslations();
-  const emailId = useId('email');
-  const [status, setStatus] = useState('');
+  const emailId = useId("email");
+  const [status, setStatus] = useState("");
 
   const handleSubmit = async (data) => {
-    setStatus('Submitting form...');
+    setStatus("Submitting form...");
     await submitForm(data);
-    setStatus('Form submitted successfully');
+    setStatus("Form submitted successfully");
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <div>
         <label htmlFor={emailId}>
-          {t('customers.fields.email')}
+          {t("customers.fields.email")}
           <span aria-hidden="true">*</span>
         </label>
-        <input
-          id={emailId}
-          type="email"
-          required
-          aria-describedby={`${emailId}-description`}
-        />
+        <input id={emailId} type="email" required aria-describedby={`${emailId}-description`} />
         <span id={`${emailId}-description`} className="sr-only">
-          {getFieldDescription(t, 'email', {
+          {getFieldDescription(t, "email", {
             required: true,
-            format: 'email',
+            format: "email",
           })}
         </span>
       </div>
 
-      <button type="submit">{t('common.submit')}</button>
+      <button type="submit">{t("common.submit")}</button>
       <LiveRegion message={status} />
     </form>
   );
@@ -405,7 +398,7 @@ function CustomerForm() {
 ### Example 4: Accessible Skip Links
 
 ```tsx
-import { SkipLink } from '@dotmac/ui';
+import { SkipLink } from "@dotmac/ui";
 
 export function RootLayout({ children }) {
   return (
@@ -414,18 +407,14 @@ export function RootLayout({ children }) {
         <SkipLink href="#main-content" />
 
         <header>
-          <nav aria-label="Primary navigation">
-            {/* Navigation */}
-          </nav>
+          <nav aria-label="Primary navigation">{/* Navigation */}</nav>
         </header>
 
         <main id="main-content" tabIndex={-1}>
           {children}
         </main>
 
-        <footer>
-          {/* Footer */}
-        </footer>
+        <footer>{/* Footer */}</footer>
       </body>
     </html>
   );
@@ -530,17 +519,20 @@ export function RootLayout({ children }) {
 ## 📚 Resources
 
 ### Tools Used
+
 - **react-aria** - Foundation for accessible components
 - **next-intl** - i18n integration
 - **TypeScript** - Type-safe ARIA utilities
 
 ### Testing Tools
+
 - **axe DevTools** - Automated accessibility testing
 - **WAVE** - Web accessibility evaluation
 - **Lighthouse** - Chrome DevTools audits
 - **Screen Readers**: NVDA, VoiceOver, JAWS
 
 ### Documentation
+
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
 - [MDN Accessibility](https://developer.mozilla.org/en-US/docs/Web/Accessibility)

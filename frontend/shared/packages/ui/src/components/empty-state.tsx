@@ -214,7 +214,8 @@ EmptyState.Search = function EmptyStateSearch({
       description={
         searchTerm ? (
           <>
-            We couldn&apos;t find anything matching &quot;{searchTerm}&quot;. Try adjusting your search.
+            We couldn&apos;t find anything matching &quot;{searchTerm}&quot;. Try adjusting your
+            search.
           </>
         ) : (
           "Try adjusting your filters or search criteria."

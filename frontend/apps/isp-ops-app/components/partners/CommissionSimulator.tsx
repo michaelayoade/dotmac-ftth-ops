@@ -5,13 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Calculator, TrendingUp, DollarSign, Percent } from "lucide-react";
 
 type CommissionModel = "revenue_share" | "flat_fee" | "tiered" | "hybrid";
@@ -112,18 +106,13 @@ export function CommissionSimulator() {
             <Calculator className="h-5 w-5" />
             Commission Calculator
           </CardTitle>
-          <CardDescription>
-            Simulate commission earnings based on different models
-          </CardDescription>
+          <CardDescription>Simulate commission earnings based on different models</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Commission Model */}
           <div className="space-y-2">
             <Label>Commission Model</Label>
-            <Select
-              value={model}
-              onValueChange={(value) => setModel(value as CommissionModel)}
-            >
+            <Select value={model} onValueChange={(value) => setModel(value as CommissionModel)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -186,9 +175,7 @@ export function CommissionSimulator() {
                 onChange={(e) => setVolume(e.target.value)}
                 placeholder="5000"
               />
-              <p className="text-xs text-muted-foreground mt-2">
-                Tier structure:
-              </p>
+              <p className="text-xs text-muted-foreground mt-2">Tier structure:</p>
               <ul className="text-xs text-muted-foreground space-y-1">
                 {tierConfig.map((tier, idx) => (
                   <li key={idx}>
@@ -214,18 +201,14 @@ export function CommissionSimulator() {
             <TrendingUp className="h-5 w-5" />
             Calculation Results
           </CardTitle>
-          <CardDescription>
-            Commission breakdown and earnings estimate
-          </CardDescription>
+          <CardDescription>Commission breakdown and earnings estimate</CardDescription>
         </CardHeader>
         <CardContent>
           {result ? (
             <div className="space-y-6">
               {/* Commission Amount */}
               <div className="p-6 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="text-sm text-muted-foreground mb-2">
-                  Estimated Commission
-                </div>
+                <div className="text-sm text-muted-foreground mb-2">Estimated Commission</div>
                 <div className="text-4xl font-bold text-primary flex items-center gap-2">
                   <DollarSign className="h-8 w-8" />
                   {result.commissionAmount.toLocaleString(undefined, {
@@ -239,9 +222,7 @@ export function CommissionSimulator() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                   <span className="text-sm text-muted-foreground">Base Amount</span>
-                  <span className="text-sm font-medium">
-                    ${result.baseAmount.toLocaleString()}
-                  </span>
+                  <span className="text-sm font-medium">${result.baseAmount.toLocaleString()}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
@@ -249,9 +230,7 @@ export function CommissionSimulator() {
                     <Percent className="h-3 w-3" />
                     Effective Rate
                   </span>
-                  <span className="text-sm font-medium">
-                    {result.effectiveRate.toFixed(2)}%
-                  </span>
+                  <span className="text-sm font-medium">{result.effectiveRate.toFixed(2)}%</span>
                 </div>
 
                 {result.tier && (
@@ -276,7 +255,8 @@ export function CommissionSimulator() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">10 transactions/month:</span>
                     <span className="font-medium">
-                      ${(result.commissionAmount * 10).toLocaleString(undefined, {
+                      $
+                      {(result.commissionAmount * 10).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </span>
@@ -284,7 +264,8 @@ export function CommissionSimulator() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">25 transactions/month:</span>
                     <span className="font-medium">
-                      ${(result.commissionAmount * 25).toLocaleString(undefined, {
+                      $
+                      {(result.commissionAmount * 25).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </span>
@@ -292,7 +273,8 @@ export function CommissionSimulator() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">50 transactions/month:</span>
                     <span className="font-medium">
-                      ${(result.commissionAmount * 50).toLocaleString(undefined, {
+                      $
+                      {(result.commissionAmount * 50).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </span>

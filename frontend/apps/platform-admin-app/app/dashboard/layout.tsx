@@ -39,9 +39,8 @@ import { useBranding } from "@/hooks/useBranding";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
 import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
-import { signOut } from "@dotmac/better-auth";
+import { useSession, logout } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 import { clearOperatorAuthTokens } from "../../../../shared/utils/operatorAuth";
 
 interface NavItem {
@@ -63,7 +62,7 @@ interface NavSection {
   portals?: PortalType[];
 }
 
-type DisplayUser = Pick<ExtendedUser, "email" | "username" | "full_name" | "roles">;
+type DisplayUser = Pick<UserInfo, "email" | "username" | "full_name" | "roles">;
 
 const platformAdminSectionIds = new Set<string>([
   "overview",
@@ -132,9 +131,7 @@ const allSections: NavSection[] = [
     label: "Automation",
     icon: Activity,
     href: "/dashboard/jobs",
-    items: [
-      { name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity },
-    ],
+    items: [{ name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity }],
   },
   {
     id: "communications",
@@ -143,7 +140,11 @@ const allSections: NavSection[] = [
     href: "/dashboard/communications",
     items: [
       { name: "Campaigns", href: "/dashboard/communications", icon: Mail },
-      { name: "Notification Templates", href: "/dashboard/notifications/templates", icon: FileText },
+      {
+        name: "Notification Templates",
+        href: "/dashboard/notifications/templates",
+        icon: FileText,
+      },
       { name: "Support", href: "/dashboard/ticketing", icon: LifeBuoy },
     ],
   },
@@ -215,8 +216,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { hasPermission, hasAnyPermission } = useRBAC();
   const { branding } = useBranding();
   const portalType = getPortalType();
-  const { data: session, isPending: authLoading } = useSession();
-  const userData = session?.user as DisplayUser | undefined;
+  const { user, isLoading: authLoading, isAuthenticated } = useSession();
+  const userData = user as DisplayUser | undefined;
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const navLabelMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -228,10 +229,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-    if (!authLoading && !session) {
+    if (!authLoading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [authLoading, session, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const portalScopedSections = useMemo(
     () =>
@@ -378,16 +379,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [sidebarOpen]);
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
     clearOperatorAuthTokens();
     router.push("/login");
   };
 
   return (
     <div className="min-h-screen bg-background">
-        <SkipLink />
-        {/* Top Navigation Bar */}
-        <nav
+      <SkipLink />
+      {/* Top Navigation Bar */}
+      <nav
         className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border"
         aria-label="Main navigation"
       >
@@ -422,7 +423,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       alt={`${branding.productName} logo`}
                       width={160}
                       height={32}
-                      className={branding.logo.light ? "hidden h-6 w-auto dark:block" : "h-6 w-auto"}
+                      className={
+                        branding.logo.light ? "hidden h-6 w-auto dark:block" : "h-6 w-auto"
+                      }
                       priority
                       unoptimized
                     />
@@ -662,7 +665,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="min-h-screen p-4 sm:p-6 lg:p-8 bg-background"
           aria-label="Main content"
         >
-          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
+          <div
+            className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+            aria-label="Breadcrumb"
+          >
             <Link href="/dashboard" className="hover:text-foreground">
               Home
             </Link>
@@ -691,7 +697,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div
           className="fixed inset-0 z-30 bg-black/50 dark:bg-black/70 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.currentTarget.click(); } }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.currentTarget.click();
+            }
+          }}
           role="button"
           tabIndex={0}
         />

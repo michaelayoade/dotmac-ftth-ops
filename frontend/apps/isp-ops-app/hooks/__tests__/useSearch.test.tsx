@@ -128,7 +128,7 @@ describe("useSearch", () => {
 
       const { result } = renderHook(
         () => useSearch({ q: "test", type: "subscriber", limit: 10, page: 1 }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -230,7 +230,7 @@ describe("useSearch", () => {
 
       const { result: searchResult } = renderHook(
         () => useSearch({ q: "john", limit: 10, page: 1 }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(searchResult.current.isSuccess).toBe(true));
@@ -275,7 +275,7 @@ describe("useSearch", () => {
 
       const { result: searchAgainResult } = renderHook(
         () => useSearch({ q: "john", limit: 10, page: 1 }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(searchAgainResult.current.isSuccess).toBe(true));

@@ -2,13 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
-import {
-  Activity,
-  Building2,
-  Database,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Activity, Building2, Database, TrendingUp, Users } from "lucide-react";
 import { useToast } from "@dotmac/ui";
 import { platformAdminService, type PlatformStats } from "@/lib/services/platform-admin-service";
 

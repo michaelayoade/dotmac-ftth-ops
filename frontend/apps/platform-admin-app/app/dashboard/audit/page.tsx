@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Activity,
   AlertTriangle,
@@ -106,11 +100,11 @@ function AuditPageContent() {
   // Calculate statistics
   const stats: AuditStats = {
     total_activities: activities.length,
-    low_severity: activities.filter(a => a.severity === "low").length,
-    medium_severity: activities.filter(a => a.severity === "medium").length,
-    high_severity: activities.filter(a => a.severity === "high").length,
-    critical_severity: activities.filter(a => a.severity === "critical").length,
-    recent_24h: activities.filter(a => {
+    low_severity: activities.filter((a) => a.severity === "low").length,
+    medium_severity: activities.filter((a) => a.severity === "medium").length,
+    high_severity: activities.filter((a) => a.severity === "high").length,
+    critical_severity: activities.filter((a) => a.severity === "critical").length,
+    recent_24h: activities.filter((a) => {
       const activityDate = new Date(a.created_at);
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -124,13 +118,17 @@ function AuditPageContent() {
       activity.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
       activity.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (activity.username && activity.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (activity.resource_type && activity.resource_type.toLowerCase().includes(searchQuery.toLowerCase()));
+      (activity.resource_type &&
+        activity.resource_type.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return matchesSearch;
   });
 
   const getSeverityBadge = (severity: ActivitySeverity) => {
-    const severityConfig: Record<ActivitySeverity, { icon: LucideIcon; color: string; label: string }> = {
+    const severityConfig: Record<
+      ActivitySeverity,
+      { icon: LucideIcon; color: string; label: string }
+    > = {
       low: { icon: Info, color: "bg-blue-100 text-blue-800", label: "Low" },
       medium: { icon: AlertTriangle, color: "bg-yellow-100 text-yellow-800", label: "Medium" },
       high: { icon: XCircle, color: "bg-orange-100 text-orange-800", label: "High" },
@@ -346,9 +344,7 @@ function AuditPageContent() {
                             {getActivityTypeLabel(activity.activity_type)}
                           </Badge>
                         </div>
-                        <CardDescription className="mt-1">
-                          {activity.description}
-                        </CardDescription>
+                        <CardDescription className="mt-1">{activity.description}</CardDescription>
                       </div>
                     </div>
                     <div className="text-right text-sm text-muted-foreground">
@@ -371,7 +367,9 @@ function AuditPageContent() {
                     {activity.resource_id && (
                       <div>
                         <p className="text-muted-foreground">Resource ID</p>
-                        <p className="font-medium font-mono text-xs truncate">{activity.resource_id}</p>
+                        <p className="font-medium font-mono text-xs truncate">
+                          {activity.resource_id}
+                        </p>
                       </div>
                     )}
                     {activity.ip_address && (

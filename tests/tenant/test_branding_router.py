@@ -14,6 +14,8 @@ from dotmac.platform.tenant.branding_router import router as branding_router
 from dotmac.platform.tenant.schemas import TenantBrandingConfig, TenantBrandingResponse
 from dotmac.platform.tenant.service import TenantService
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def tenant_user() -> UserInfo:

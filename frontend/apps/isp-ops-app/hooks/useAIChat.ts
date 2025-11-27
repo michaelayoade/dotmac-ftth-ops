@@ -198,21 +198,25 @@ export function useAIChat() {
         context,
       });
     },
-    [currentSessionId, sendMessageMutation]
+    [currentSessionId, sendMessageMutation],
   );
 
   // Helper function to create a session
   const createSession = useCallback(
     async (
-      sessionType: "customer_support" | "admin_assistant" | "network_diagnostics" | "analytics" = "admin_assistant",
-      context?: Record<string, any>
+      sessionType:
+        | "customer_support"
+        | "admin_assistant"
+        | "network_diagnostics"
+        | "analytics" = "admin_assistant",
+      context?: Record<string, any>,
     ) => {
       return createSessionMutation.mutateAsync({
         session_type: sessionType,
         context,
       });
     },
-    [createSessionMutation]
+    [createSessionMutation],
   );
 
   // Helper function to submit feedback
@@ -228,7 +232,7 @@ export function useAIChat() {
         feedback,
       });
     },
-    [currentSessionId, submitFeedbackMutation]
+    [currentSessionId, submitFeedbackMutation],
   );
 
   // Helper function to escalate session
@@ -243,7 +247,7 @@ export function useAIChat() {
         reason,
       });
     },
-    [currentSessionId, escalateSessionMutation]
+    [currentSessionId, escalateSessionMutation],
   );
 
   return {

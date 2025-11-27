@@ -4,6 +4,7 @@ Fault Management Celery Tasks
 Background tasks for alarm correlation, SLA monitoring, and maintenance.
 """
 
+from collections.abc import Coroutine
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
@@ -36,13 +37,12 @@ from dotmac.platform.user_management.models import User
 
 logger = structlog.get_logger(__name__)
 
-
 # =============================================================================
 # Async/Sync Bridge for Celery Tasks
 # =============================================================================
 
 
-def _run_async_task(coro):
+def _run_async_task[T](coro: Coroutine[Any, Any, T]) -> T:
     """
     Run an async coroutine in a Celery task context.
 

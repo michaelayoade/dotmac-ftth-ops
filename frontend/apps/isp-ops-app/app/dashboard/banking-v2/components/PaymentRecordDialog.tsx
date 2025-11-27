@@ -13,13 +13,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Loader2, Upload, X } from "lucide-react";
 import {
   useRecordCashPayment,
@@ -148,7 +142,7 @@ export function PaymentRecordDialog({ open, onOpenChange, onSuccess }: PaymentRe
 
     const base: Omit<ManualPaymentBase, "payment_method"> = {
       customer_id: commonData.customer_id.trim(),
-      invoice_id: commonData['invoice_id']? commonData.invoice_id.trim() : null,
+      invoice_id: commonData["invoice_id"] ? commonData.invoice_id.trim() : null,
       amount: amountValue,
       payment_date: commonData.payment_date,
       notes: commonData.notes ? commonData.notes : null,

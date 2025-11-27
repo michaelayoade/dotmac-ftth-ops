@@ -349,9 +349,9 @@ export default function FilesPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                        onClick={() => {
-                          void handleDelete(file.file_id);
-                        }}
+                          onClick={() => {
+                            void handleDelete(file.file_id);
+                          }}
                           aria-label={`Delete ${file.file_name}`}
                         >
                           <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />

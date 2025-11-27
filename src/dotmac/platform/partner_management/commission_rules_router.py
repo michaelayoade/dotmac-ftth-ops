@@ -155,8 +155,7 @@ async def list_commission_rules(
 
     # Convert to response models
     rule_responses = [
-        PartnerCommissionRuleResponse.model_validate(r, from_attributes=True)
-        for r in rules
+        PartnerCommissionRuleResponse.model_validate(r, from_attributes=True) for r in rules
     ]
 
     return PartnerCommissionRuleListResponse(
@@ -285,7 +284,4 @@ async def get_applicable_rules(
         customer_id=customer_id,
     )
 
-    return [
-        PartnerCommissionRuleResponse.model_validate(r, from_attributes=True)
-        for r in rules
-    ]
+    return [PartnerCommissionRuleResponse.model_validate(r, from_attributes=True) for r in rules]

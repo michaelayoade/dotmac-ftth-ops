@@ -16,14 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,8 +46,7 @@ interface BandwidthProfile {
 export default function BandwidthProfilesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] =
-    useState<BandwidthProfile | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<BandwidthProfile | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const confirmDialog = useConfirmDialog();
@@ -64,12 +56,9 @@ export default function BandwidthProfilesPage() {
     queryKey: ["bandwidth-profiles"],
     queryFn: async () => {
       try {
-        const response = await apiClient.get(
-          "/radius/bandwidth-profiles",
-          {
-            params: { skip: 0, limit: 1000 },
-          }
-        );
+        const response = await apiClient.get("/radius/bandwidth-profiles", {
+          params: { skip: 0, limit: 1000 },
+        });
         return response.data;
       } catch (error) {
         logger.error("Failed to fetch bandwidth profiles", { error });
@@ -93,8 +82,7 @@ export default function BandwidthProfilesPage() {
     onError: (error: any) => {
       toast({
         title: "Error",
-        description:
-          error.response?.data?.detail || "Failed to delete bandwidth profile",
+        description: error.response?.data?.detail || "Failed to delete bandwidth profile",
         variant: "destructive",
       });
     },
@@ -102,7 +90,7 @@ export default function BandwidthProfilesPage() {
 
   // Filter profiles by search query
   const filteredProfiles = profiles?.filter((profile) =>
-    profile.name.toLowerCase().includes(searchQuery.toLowerCase())
+    profile.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleDelete = async (profile: BandwidthProfile) => {
@@ -158,9 +146,7 @@ export default function BandwidthProfilesPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Profiles
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Profiles</CardTitle>
             <Gauge className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -171,17 +157,13 @@ export default function BandwidthProfilesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Highest Download
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Highest Download</CardTitle>
             <Download className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {profiles && profiles.length > 0
-                ? formatRate(
-                    Math.max(...profiles.map((p) => p.download_rate))
-                  )
+                ? formatRate(Math.max(...profiles.map((p) => p.download_rate)))
                 : "N/A"}
             </div>
             <p className="text-xs text-muted-foreground">Maximum speed</p>
@@ -190,9 +172,7 @@ export default function BandwidthProfilesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Highest Upload
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Highest Upload</CardTitle>
             <Upload className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -257,26 +237,20 @@ export default function BandwidthProfilesPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Download className="h-3 w-3 text-muted-foreground" />
-                        <Badge variant="outline">
-                          {formatRate(profile.download_rate)}
-                        </Badge>
+                        <Badge variant="outline">{formatRate(profile.download_rate)}</Badge>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Upload className="h-3 w-3 text-muted-foreground" />
-                        <Badge variant="outline">
-                          {formatRate(profile.upload_rate)}
-                        </Badge>
+                        <Badge variant="outline">{formatRate(profile.upload_rate)}</Badge>
                       </div>
                     </TableCell>
                     <TableCell>
                       {profile.download_burst ? (
                         <div className="flex items-center gap-1">
                           <Zap className="h-3 w-3 text-muted-foreground" />
-                          <Badge variant="secondary">
-                            {formatRate(profile.download_burst)}
-                          </Badge>
+                          <Badge variant="secondary">{formatRate(profile.download_burst)}</Badge>
                         </div>
                       ) : (
                         <span className="text-muted-foreground">None</span>
@@ -286,9 +260,7 @@ export default function BandwidthProfilesPage() {
                       {profile.upload_burst ? (
                         <div className="flex items-center gap-1">
                           <Zap className="h-3 w-3 text-muted-foreground" />
-                          <Badge variant="secondary">
-                            {formatRate(profile.upload_burst)}
-                          </Badge>
+                          <Badge variant="secondary">{formatRate(profile.upload_burst)}</Badge>
                         </div>
                       ) : (
                         <span className="text-muted-foreground">None</span>
@@ -308,9 +280,9 @@ export default function BandwidthProfilesPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                    onClick={() => {
-                      void handleDelete(profile);
-                    }}
+                            onClick={() => {
+                              void handleDelete(profile);
+                            }}
                             className="text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -326,9 +298,7 @@ export default function BandwidthProfilesPage() {
           ) : (
             <div className="p-8 text-center">
               <Gauge className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                No bandwidth profiles found
-              </h3>
+              <h3 className="text-lg font-semibold mb-2">No bandwidth profiles found</h3>
               <p className="text-muted-foreground mb-4">
                 {searchQuery
                   ? "No profiles match your search criteria."

@@ -25,7 +25,7 @@ pnpm add next-intl
 ### 2. Update next.config.js
 
 ```javascript
-const withNextIntl = require('next-intl/plugin')('./i18n.ts');
+const withNextIntl = require("next-intl/plugin")("./i18n.ts");
 
 module.exports = withNextIntl({
   // Your existing Next.js config
@@ -195,21 +195,21 @@ const tCommon = useTranslations('common');
 ### Parameters & Pluralization
 
 ```typescript
-const t = useTranslations('forms.validation');
+const t = useTranslations("forms.validation");
 
 // With parameters
-t('minLength', { min: 8 })  // "Must be at least 8 characters"
+t("minLength", { min: 8 }); // "Must be at least 8 characters"
 
 // Pluralization (ICU MessageFormat)
-t('time.minutesAgo', { count: 1 })   // "1 minute ago"
-t('time.minutesAgo', { count: 5 })   // "5 minutes ago"
+t("time.minutesAgo", { count: 1 }); // "1 minute ago"
+t("time.minutesAgo", { count: 5 }); // "5 minutes ago"
 
 // Rich formatting
-t('pagination.showing', {
+t("pagination.showing", {
   start: 1,
   end: 10,
-  total: 100
-})  // "Showing 1 to 10 of 100 results"
+  total: 100,
+}); // "Showing 1 to 10 of 100 results"
 ```
 
 ---
@@ -462,12 +462,14 @@ export function LanguageSwitcher() {
 ### ✅ DO
 
 1. **Use namespaces** for organization
+
    ```typescript
-   const tCustomers = useTranslations('customers');
-   const tCommon = useTranslations('common');
+   const tCustomers = useTranslations("customers");
+   const tCommon = useTranslations("common");
    ```
 
 2. **Extract reusable translations to common**
+
    ```json
    {
      "common": {
@@ -479,11 +481,13 @@ export function LanguageSwitcher() {
    ```
 
 3. **Use parameters for dynamic content**
+
    ```typescript
-   t('pagination.showing', { start: 1, end: 10, total: 100 })
+   t("pagination.showing", { start: 1, end: 10, total: 100 });
    ```
 
 4. **Use ICU MessageFormat for plurals**
+
    ```json
    {
      "items": "{count, plural, =0 {no items} =1 {1 item} other {# items}}"
@@ -503,6 +507,7 @@ export function LanguageSwitcher() {
 ### ❌ DON'T
 
 1. **Don't hardcode strings**
+
    ```typescript
    // ❌ WRONG
    <button>Save Changes</button>
@@ -512,15 +517,17 @@ export function LanguageSwitcher() {
    ```
 
 2. **Don't concatenate translations**
+
    ```typescript
    // ❌ WRONG
-   t('hello') + ' ' + t('world')
+   t("hello") + " " + t("world");
 
    // ✅ RIGHT
-   t('helloWorld')
+   t("helloWorld");
    ```
 
 3. **Don't use enum values directly as labels**
+
    ```typescript
    // ❌ WRONG
    <span>{customer.status}</span>
@@ -530,6 +537,7 @@ export function LanguageSwitcher() {
    ```
 
 4. **Don't nest too deeply**
+
    ```json
    // ❌ TOO DEEP
    {
@@ -575,22 +583,22 @@ Edit `messages/fr.json` and translate all strings.
 Update `i18n.ts`:
 
 ```typescript
-export const locales = ['en', 'es', 'fr', 'de', 'pt'] as const;
+export const locales = ["en", "es", "fr", "de", "pt"] as const;
 
 export const localeNames: Record<Locale, string> = {
-  en: 'English',
-  es: 'Español',
-  fr: 'Français',  // ✅ Add French
-  de: 'Deutsch',
-  pt: 'Português',
+  en: "English",
+  es: "Español",
+  fr: "Français", // ✅ Add French
+  de: "Deutsch",
+  pt: "Português",
 };
 
 export const localeFlags: Record<Locale, string> = {
-  en: '🇺🇸',
-  es: '🇪🇸',
-  fr: '🇫🇷',  // ✅ Add flag
-  de: '🇩🇪',
-  pt: '🇧🇷',
+  en: "🇺🇸",
+  es: "🇪🇸",
+  fr: "🇫🇷", // ✅ Add flag
+  de: "🇩🇪",
+  pt: "🇧🇷",
 };
 ```
 
@@ -634,12 +642,12 @@ next-intl provides full TypeScript support:
 
 ```typescript
 // Auto-completion for translation keys
-t('customers.title')  // ✅ Autocomplete works
-t('customers.invalid') // ❌ TypeScript error
+t("customers.title"); // ✅ Autocomplete works
+t("customers.invalid"); // ❌ TypeScript error
 
 // Type-safe parameters
-t('forms.validation.minLength', { min: 8 })  // ✅ Correct
-t('forms.validation.minLength', { max: 8 })  // ❌ TypeScript error (wrong param)
+t("forms.validation.minLength", { min: 8 }); // ✅ Correct
+t("forms.validation.minLength", { max: 8 }); // ❌ TypeScript error (wrong param)
 ```
 
 ---
@@ -662,7 +670,7 @@ Each locale's messages are code-split:
 
 ```typescript
 // Only loads current locale
-messages: (await import(`./messages/${locale}.json`)).default
+messages: (await import(`./messages/${locale}.json`)).default;
 ```
 
 ---

@@ -81,7 +81,10 @@ export function SubscriberAlertsBanner({ alerts }: SubscriberAlertsBannerProps) 
                   </Badge>
                 )}
                 {alertsBySeverity.warning.length > 0 && (
-                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                  <Badge
+                    variant="outline"
+                    className="bg-yellow-100 text-yellow-800 border-yellow-200"
+                  >
                     <AlertTriangle className="h-3 w-3 mr-1" />
                     {alertsBySeverity.warning.length} Warning
                   </Badge>

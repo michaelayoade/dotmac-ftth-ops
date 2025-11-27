@@ -170,7 +170,9 @@ const createDefaultPreferences = (): NotificationPreferences => ({
   },
 });
 
-const normalizePreferences = (data?: Partial<NotificationPreferences> | null): NotificationPreferences => {
+const normalizePreferences = (
+  data?: Partial<NotificationPreferences> | null,
+): NotificationPreferences => {
   const defaults = createDefaultPreferences();
   return {
     pauseAll: data?.pauseAll ?? defaults.pauseAll,
@@ -307,9 +309,7 @@ export default function NotificationSettingsPage() {
       await apiClient.put("/users/me/notification-preferences", preferences);
       const channelKeys = ["email", "push", "inApp", "sms", "slack"] as const;
       logger.info("Notification preferences saved", {
-        channels: channelKeys.filter(
-          (k) => preferences[k]?.enabled === true
-        ),
+        channels: channelKeys.filter((k) => preferences[k]?.enabled === true),
       });
       setHasChanges(false);
       toast({

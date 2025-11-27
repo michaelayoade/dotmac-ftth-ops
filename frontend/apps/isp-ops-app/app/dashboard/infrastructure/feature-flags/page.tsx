@@ -25,14 +25,7 @@ import { Badge } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -107,7 +100,8 @@ export default function FeatureFlagsPage() {
     environment: "production",
     targeting: "all",
     rolloutPercentage: flag.enabled ? 100 : 0,
-    createdAt: flag['created_at']? new Date(flag.created_at * 1000).toISOString()
+    createdAt: flag["created_at"]
+      ? new Date(flag.created_at * 1000).toISOString()
       : new Date().toISOString(),
     updatedAt: new Date(flag.updated_at * 1000).toISOString(),
     lastModifiedBy: "system",
@@ -612,8 +606,8 @@ export default function FeatureFlagsPage() {
                             <Button
                               variant="ghost"
                               className="h-8 w-8 p-0"
-                              aria-label={`Open actions for ${flag['name']?? "feature flag"}`}
-                              title={`Open actions for ${flag['name']?? "feature flag"}`}
+                              aria-label={`Open actions for ${flag["name"] ?? "feature flag"}`}
+                              title={`Open actions for ${flag["name"] ?? "feature flag"}`}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>

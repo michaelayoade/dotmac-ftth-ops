@@ -7,24 +7,12 @@
 
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { formatDistanceToNow } from "date-fns";
@@ -45,7 +33,6 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
-
 
 import { type Lead, type Quote, type SiteSurvey } from "../types";
 
@@ -164,7 +151,7 @@ export function LeadDetailModal({
   const handleConvert = async () => {
     if (!onConvert) return;
     const confirmed = confirm(
-      `Convert ${lead.first_name} ${lead.last_name} to a customer? This action cannot be undone.`
+      `Convert ${lead.first_name} ${lead.last_name} to a customer? This action cannot be undone.`,
     );
     if (!confirmed) return;
     await onConvert(lead.id);

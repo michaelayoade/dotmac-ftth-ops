@@ -79,8 +79,6 @@ describe("Platform Admin useFiberMaps hooks", () => {
       cable_name: "Spur",
     });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: fiberMapsKeys.cables({}) });
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Cable Created" }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Cable Created" }));
   });
 });

@@ -58,7 +58,7 @@ export function formatDate(date: string | Date, format: string = "short"): strin
  */
 export function truncate(text: string, length: number = 50): string {
   if (text.length <= length) return text;
-  return `${text.substring(0, length)  }...`;
+  return `${text.substring(0, length)}...`;
 }
 
 /**

@@ -19,13 +19,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { ScrollArea } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";

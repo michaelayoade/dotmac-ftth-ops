@@ -130,13 +130,10 @@ export interface UseCustomerMetricsOptions {
 export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {}) {
   const { enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const { data, isLoading, error, refetch } = useCustomerMetricsQuery(
-    undefined,
-    {
-      enabled,
-      refetchInterval: pollInterval,
-    },
-  );
+  const { data, isLoading, error, refetch } = useCustomerMetricsQuery(undefined, {
+    enabled,
+    refetchInterval: pollInterval,
+  });
 
   const metrics = data?.customerMetrics;
 
@@ -367,11 +364,11 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
   const deviceData = data?.customerDevices ?? null;
 
   return {
-    devices: deviceData?.['devices'] ?? [],
-    totalDevices: deviceData?.['totalDevices'] ?? 0,
-    onlineDevices: deviceData?.['onlineDevices'] ?? 0,
-    offlineDevices: deviceData?.['offlineDevices'] ?? 0,
-    needingUpdates: deviceData?.['needingUpdates'] ?? 0,
+    devices: deviceData?.["devices"] ?? [],
+    totalDevices: deviceData?.["totalDevices"] ?? 0,
+    onlineDevices: deviceData?.["onlineDevices"] ?? 0,
+    offlineDevices: deviceData?.["offlineDevices"] ?? 0,
+    needingUpdates: deviceData?.["needingUpdates"] ?? 0,
     isLoading,
     error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,

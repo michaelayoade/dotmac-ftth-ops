@@ -61,14 +61,17 @@ export function ConfirmDialogProvider({ children }: { children: React.ReactNode 
     }
   }, []);
 
-  const closeDialog = useCallback((result: boolean) => {
-    closingRef.current = true;
-    resolverRef.current?.(result);
-    resolverRef.current = undefined;
-    setOpen(false);
-    setOptions(null);
-    restoreTrigger();
-  }, [restoreTrigger]);
+  const closeDialog = useCallback(
+    (result: boolean) => {
+      closingRef.current = true;
+      resolverRef.current?.(result);
+      resolverRef.current = undefined;
+      setOpen(false);
+      setOptions(null);
+      restoreTrigger();
+    },
+    [restoreTrigger],
+  );
 
   const handleConfirm = useCallback(() => {
     closeDialog(true);

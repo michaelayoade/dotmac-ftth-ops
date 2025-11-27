@@ -89,7 +89,7 @@ export function useTechnicians(options: UseTechniciansOptions = {}) {
       params.append("offset", String(offset));
 
       const response = await apiClient.get<TechniciansResponse>(
-        `/field-service/technicians?${params.toString()}`
+        `/field-service/technicians?${params.toString()}`,
       );
       return extractDataOrThrow(response);
     },
@@ -107,7 +107,7 @@ export function useTechnician(technicianId: string | null) {
       if (!technicianId) return null;
 
       const response = await apiClient.get<Technician>(
-        `/field-service/technicians/${technicianId}`
+        `/field-service/technicians/${technicianId}`,
       );
       return extractDataOrThrow(response);
     },
@@ -127,7 +127,7 @@ export function useActiveTechnicianLocations() {
     queryKey: ["technician-locations", "active"],
     queryFn: async () => {
       const response = await apiClient.get<TechnicianLocation[]>(
-        "/field-service/technicians/locations/active"
+        "/field-service/technicians/locations/active",
       );
       return extractDataOrThrow(response);
     },
@@ -146,7 +146,7 @@ export function useTechnicianLocationHistory(
     startTime?: string;
     endTime?: string;
     limit?: number;
-  } = {}
+  } = {},
 ) {
   const { startTime, endTime, limit = 100 } = options;
 
@@ -161,7 +161,7 @@ export function useTechnicianLocationHistory(
       params.append("limit", String(limit));
 
       const response = await apiClient.get(
-        `/field-service/technicians/${technicianId}/location-history?${params.toString()}`
+        `/field-service/technicians/${technicianId}/location-history?${params.toString()}`,
       );
       return extractDataOrThrow(response);
     },

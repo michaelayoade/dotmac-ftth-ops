@@ -19,10 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@dotmac/ui";
-import {
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useLicensing } from "../../../hooks/useLicensing";
 import { SubscriptionDashboard } from "../../../components/licensing/SubscriptionDashboard";
 import { PlanSelector } from "../../../components/licensing/PlanSelector";
@@ -144,11 +141,7 @@ export default function TenantSubscriptionPage() {
           id: module.id,
           module_id: module.module_id,
           source:
-            module.source === "ADDON"
-              ? "ADDON"
-              : module.source === "TRIAL"
-                ? "TRIAL"
-                : "PLAN",
+            module.source === "ADDON" ? "ADDON" : module.source === "TRIAL" ? "TRIAL" : "PLAN",
         };
 
         if (module.addon_price !== undefined) {

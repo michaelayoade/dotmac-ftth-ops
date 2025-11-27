@@ -59,7 +59,9 @@ function createMockApiCreditNote(overrides: Record<string, any> = {}) {
   };
 }
 
-function createMockCreditNoteSummary(overrides: Partial<CreditNoteSummary> = {}): CreditNoteSummary {
+function createMockCreditNoteSummary(
+  overrides: Partial<CreditNoteSummary> = {},
+): CreditNoteSummary {
   return {
     id: "cn-123",
     number: "CN-001",
@@ -191,7 +193,7 @@ describe("useCreditNotes", () => {
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
           "http://localhost:8000/api/v1/billing/credit-notes?limit=20",
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
@@ -214,7 +216,7 @@ describe("useCreditNotes", () => {
             headers: {
               "Content-Type": "application/json",
             },
-          })
+          }),
         );
       });
     });
@@ -241,7 +243,7 @@ describe("useCreditNotes", () => {
         expect(customBuildUrl).toHaveBeenCalledWith("/billing/credit-notes?limit=5");
         expect(mockFetch).toHaveBeenCalledWith(
           "https://custom.com/billing/credit-notes?limit=5",
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
@@ -465,7 +467,7 @@ describe("useCreditNotes", () => {
       });
 
       expect(result.current.data?.[0].downloadUrl).toBe(
-        "/api/v1/billing/credit-notes/cn-download-test/download"
+        "/api/v1/billing/credit-notes/cn-download-test/download",
       );
     });
 
@@ -753,10 +755,7 @@ describe("useCreditNotes", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          credit_notes: [
-            { completely: "wrong", structure: true },
-            createMockApiCreditNote(),
-          ],
+          credit_notes: [{ completely: "wrong", structure: true }, createMockApiCreditNote()],
         }),
       });
 

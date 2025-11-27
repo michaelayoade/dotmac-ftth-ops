@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   NetworkOverview,
   DeviceHealth,
@@ -18,7 +18,7 @@ import type {
   AlertSeverity,
   AcknowledgeAlertRequest,
   CreateAlertRuleRequest,
-} from '../../../types/network-monitoring';
+} from "../../../types/network-monitoring";
 
 // In-memory storage for test data
 let networkOverview: NetworkOverview | null = null;
@@ -43,11 +43,9 @@ export function resetNetworkMonitoringStorage() {
 }
 
 // Helper to create a mock network overview
-export function createMockNetworkOverview(
-  overrides?: Partial<NetworkOverview>
-): NetworkOverview {
+export function createMockNetworkOverview(overrides?: Partial<NetworkOverview>): NetworkOverview {
   return {
-    tenant_id: 'tenant-123',
+    tenant_id: "tenant-123",
     timestamp: new Date().toISOString(),
     total_devices: 10,
     online_devices: 8,
@@ -73,9 +71,9 @@ export function createMockDevice(overrides?: Partial<DeviceHealth>): DeviceHealt
   return {
     device_id: id,
     device_name: `Device ${id}`,
-    device_type: 'olt' as DeviceType,
-    status: 'online' as DeviceStatus,
-    ip_address: '192.168.1.1',
+    device_type: "olt" as DeviceType,
+    status: "online" as DeviceStatus,
+    ip_address: "192.168.1.1",
     last_seen: new Date().toISOString(),
     uptime_seconds: 86400,
     cpu_usage_percent: 45,
@@ -83,10 +81,10 @@ export function createMockDevice(overrides?: Partial<DeviceHealth>): DeviceHealt
     temperature_celsius: 55,
     ping_latency_ms: 10,
     packet_loss_percent: 0,
-    firmware_version: '1.0.0',
-    model: 'Model X',
-    location: 'Data Center A',
-    tenant_id: 'tenant-123',
+    firmware_version: "1.0.0",
+    model: "Model X",
+    location: "Data Center A",
+    tenant_id: "tenant-123",
     ...overrides,
   };
 }
@@ -94,12 +92,12 @@ export function createMockDevice(overrides?: Partial<DeviceHealth>): DeviceHealt
 // Helper to create mock device metrics
 export function createMockDeviceMetrics(
   deviceId: string,
-  overrides?: Partial<DeviceMetrics>
+  overrides?: Partial<DeviceMetrics>,
 ): DeviceMetrics {
   return {
     device_id: deviceId,
     device_name: `Device ${deviceId}`,
-    device_type: 'olt' as DeviceType,
+    device_type: "olt" as DeviceType,
     timestamp: new Date().toISOString(),
     health: createMockDevice({ device_id: deviceId }),
     ...overrides,
@@ -109,7 +107,7 @@ export function createMockDeviceMetrics(
 // Helper to create mock traffic stats
 export function createMockTrafficStats(
   deviceId: string,
-  overrides?: Partial<TrafficStats>
+  overrides?: Partial<TrafficStats>,
 ): TrafficStats {
   return {
     device_id: deviceId,
@@ -133,16 +131,16 @@ export function createMockTrafficStats(
 export function createMockAlert(overrides?: Partial<NetworkAlert>): NetworkAlert {
   return {
     alert_id: `alert-${nextAlertId++}`,
-    severity: 'warning' as AlertSeverity,
-    title: 'Test Alert',
-    description: 'This is a test alert',
-    device_id: 'device-1',
-    device_name: 'Device 1',
-    device_type: 'olt' as DeviceType,
+    severity: "warning" as AlertSeverity,
+    title: "Test Alert",
+    description: "This is a test alert",
+    device_id: "device-1",
+    device_name: "Device 1",
+    device_type: "olt" as DeviceType,
     triggered_at: new Date().toISOString(),
     is_active: true,
     is_acknowledged: false,
-    tenant_id: 'tenant-123',
+    tenant_id: "tenant-123",
     ...overrides,
   };
 }
@@ -151,14 +149,14 @@ export function createMockAlert(overrides?: Partial<NetworkAlert>): NetworkAlert
 export function createMockAlertRule(overrides?: Partial<AlertRule>): AlertRule {
   return {
     rule_id: `rule-${nextRuleId++}`,
-    tenant_id: 'tenant-123',
-    name: 'Test Alert Rule',
-    description: 'This is a test alert rule',
-    device_type: 'olt' as DeviceType,
-    metric_name: 'cpu_usage_percent',
-    condition: 'gt',
+    tenant_id: "tenant-123",
+    name: "Test Alert Rule",
+    description: "This is a test alert rule",
+    device_type: "olt" as DeviceType,
+    metric_name: "cpu_usage_percent",
+    condition: "gt",
     threshold: 80,
-    severity: 'warning' as AlertSeverity,
+    severity: "warning" as AlertSeverity,
     enabled: true,
     created_at: new Date().toISOString(),
     ...overrides,
@@ -170,7 +168,7 @@ export function seedNetworkMonitoringData(
   overview: NetworkOverview | null,
   devicesData: DeviceHealth[],
   alertsData: NetworkAlert[],
-  rulesData: AlertRule[]
+  rulesData: AlertRule[],
 ) {
   networkOverview = overview;
   devices = [...devicesData];
@@ -180,8 +178,8 @@ export function seedNetworkMonitoringData(
 
 export const networkMonitoringHandlers = [
   // GET /api/v1/network/overview - Get network overview
-  http.get('*/api/v1/network/overview', ({ request, params }) => {
-    console.log('[MSW] GET /network/overview');
+  http.get("*/api/v1/network/overview", ({ request, params }) => {
+    console.log("[MSW] GET /network/overview");
 
     if (!networkOverview) {
       networkOverview = createMockNetworkOverview();
@@ -191,12 +189,16 @@ export const networkMonitoringHandlers = [
   }),
 
   // GET /api/v1/network/devices - List network devices
-  http.get('*/api/v1/network/devices', ({ request, params }) => {
+  http.get("*/api/v1/network/devices", ({ request, params }) => {
     const url = new URL(request.url);
-    const device_type = url.searchParams.get('device_type');
-    const status = url.searchParams.get('status');
+    const device_type = url.searchParams.get("device_type");
+    const status = url.searchParams.get("status");
 
-    console.log('[MSW] GET /network/devices', { device_type, status, totalDevices: devices.length });
+    console.log("[MSW] GET /network/devices", {
+      device_type,
+      status,
+      totalDevices: devices.length,
+    });
 
     let filtered = devices;
 
@@ -208,34 +210,31 @@ export const networkMonitoringHandlers = [
       filtered = filtered.filter((d) => d.status === status);
     }
 
-    console.log('[MSW] Returning', filtered.length, 'devices');
+    console.log("[MSW] Returning", filtered.length, "devices");
 
     return HttpResponse.json(filtered);
   }),
 
   // GET /api/v1/network/devices/:deviceId/health - Get device health
-  http.get('*/api/v1/network/devices/:deviceId/health', ({ request, params }) => {
+  http.get("*/api/v1/network/devices/:deviceId/health", ({ request, params }) => {
     const { deviceId } = params;
 
-    console.log('[MSW] GET /network/devices/:deviceId/health', { deviceId });
+    console.log("[MSW] GET /network/devices/:deviceId/health", { deviceId });
 
     const device = devices.find((d) => d.device_id === deviceId);
 
     if (!device) {
-      return HttpResponse.json(
-        { error: 'Device not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "Device not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     return HttpResponse.json(device);
   }),
 
   // GET /api/v1/network/devices/:deviceId/metrics - Get device metrics
-  http.get('*/api/v1/network/devices/:deviceId/metrics', ({ request, params }) => {
+  http.get("*/api/v1/network/devices/:deviceId/metrics", ({ request, params }) => {
     const { deviceId } = params;
 
-    console.log('[MSW] GET /network/devices/:deviceId/metrics', { deviceId });
+    console.log("[MSW] GET /network/devices/:deviceId/metrics", { deviceId });
 
     let metrics = deviceMetrics.get(deviceId as string);
 
@@ -249,20 +248,17 @@ export const networkMonitoringHandlers = [
     }
 
     if (!metrics) {
-      return HttpResponse.json(
-        { error: 'Device not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "Device not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     return HttpResponse.json(metrics);
   }),
 
   // GET /api/v1/network/devices/:deviceId/traffic - Get device traffic
-  http.get('*/api/v1/network/devices/:deviceId/traffic', ({ request, params }) => {
+  http.get("*/api/v1/network/devices/:deviceId/traffic", ({ request, params }) => {
     const { deviceId } = params;
 
-    console.log('[MSW] GET /network/devices/:deviceId/traffic', { deviceId });
+    console.log("[MSW] GET /network/devices/:deviceId/traffic", { deviceId });
 
     let traffic = deviceTraffic.get(deviceId as string);
 
@@ -276,24 +272,21 @@ export const networkMonitoringHandlers = [
     }
 
     if (!traffic) {
-      return HttpResponse.json(
-        { error: 'Device not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "Device not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     return HttpResponse.json(traffic);
   }),
 
   // GET /api/v1/network/alerts - List network alerts
-  http.get('*/api/v1/network/alerts', ({ request, params }) => {
+  http.get("*/api/v1/network/alerts", ({ request, params }) => {
     const url = new URL(request.url);
-    const severity = url.searchParams.get('severity');
-    const active_only = url.searchParams.get('active_only');
-    const device_id = url.searchParams.get('device_id');
-    const limit = url.searchParams.get('limit');
+    const severity = url.searchParams.get("severity");
+    const active_only = url.searchParams.get("active_only");
+    const device_id = url.searchParams.get("device_id");
+    const limit = url.searchParams.get("limit");
 
-    console.log('[MSW] GET /network/alerts', {
+    console.log("[MSW] GET /network/alerts", {
       severity,
       active_only,
       device_id,
@@ -307,7 +300,7 @@ export const networkMonitoringHandlers = [
       filtered = filtered.filter((a) => a.severity === severity);
     }
 
-    if (active_only === 'true') {
+    if (active_only === "true") {
       filtered = filtered.filter((a) => a.is_active);
     }
 
@@ -319,25 +312,22 @@ export const networkMonitoringHandlers = [
       filtered = filtered.slice(0, parseInt(limit));
     }
 
-    console.log('[MSW] Returning', filtered.length, 'alerts');
+    console.log("[MSW] Returning", filtered.length, "alerts");
 
     return HttpResponse.json(filtered);
   }),
 
   // POST /api/v1/network/alerts/:alertId/acknowledge - Acknowledge alert
-  http.post('*/api/v1/network/alerts/:alertId/acknowledge', async ({ request, params }) => {
+  http.post("*/api/v1/network/alerts/:alertId/acknowledge", async ({ request, params }) => {
     const { alertId } = params;
-    const data = await request.json() as AcknowledgeAlertRequest;
+    const data = (await request.json()) as AcknowledgeAlertRequest;
 
-    console.log('[MSW] POST /network/alerts/:alertId/acknowledge', { alertId, data });
+    console.log("[MSW] POST /network/alerts/:alertId/acknowledge", { alertId, data });
 
     const alertIndex = alerts.findIndex((a) => a.alert_id === alertId);
 
     if (alertIndex === -1) {
-      return HttpResponse.json(
-        { error: 'Alert not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "Alert not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     alerts[alertIndex] = {
@@ -350,17 +340,17 @@ export const networkMonitoringHandlers = [
   }),
 
   // GET /api/v1/network/alert-rules - List alert rules
-  http.get('*/api/v1/network/alert-rules', ({ request, params }) => {
-    console.log('[MSW] GET /network/alert-rules', { totalRules: alertRules.length });
+  http.get("*/api/v1/network/alert-rules", ({ request, params }) => {
+    console.log("[MSW] GET /network/alert-rules", { totalRules: alertRules.length });
 
     return HttpResponse.json(alertRules);
   }),
 
   // POST /api/v1/network/alert-rules - Create alert rule
-  http.post('*/api/v1/network/alert-rules', async ({ request, params }) => {
-    const data = await request.json() as CreateAlertRuleRequest;
+  http.post("*/api/v1/network/alert-rules", async ({ request, params }) => {
+    const data = (await request.json()) as CreateAlertRuleRequest;
 
-    console.log('[MSW] POST /network/alert-rules', { data });
+    console.log("[MSW] POST /network/alert-rules", { data });
 
     const newRule = createMockAlertRule({
       name: data.name,

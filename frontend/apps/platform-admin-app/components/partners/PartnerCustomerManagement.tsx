@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { useCreatePartnerCustomer, PartnerCustomerInput } from "@/hooks/usePartners";
-import {
-  UserPlus,
-  X,
-} from "lucide-react";
+import { UserPlus, X } from "lucide-react";
 import { Button } from "@dotmac/ui";
 
 interface PartnerCustomerManagementProps {
@@ -45,7 +42,7 @@ export default function PartnerCustomerManagement({
         ...(tenantId && { tenantId }),
       });
 
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert(
         `Customer created successfully!\nCustomer ID: ${result.customer_id}\nQuota remaining: ${result.quota_remaining}`,
       );
@@ -277,7 +274,7 @@ export default function PartnerCustomerManagement({
                     e.target.value ? parseFloat(e.target.value) / 100 : undefined,
                   )
                 }
-                placeholder="Leave empty to use partner&apos;s default rate"
+                placeholder="Leave empty to use partner's default rate"
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <p className="text-xs text-muted-foreground mt-1">

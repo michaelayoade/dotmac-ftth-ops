@@ -5,7 +5,15 @@
  * Initializes service worker, manages offline status, and handles push notifications
  */
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   registerServiceWorker,
   subscribeToPushNotifications,
@@ -97,7 +105,14 @@ export default function PWAProvider({ children }: PWAProviderProps) {
       requestNotifications,
       subscribeToPush,
     }),
-    [isInstalled, isOnline, notificationPermission, requestNotifications, serviceWorkerRegistration, subscribeToPush],
+    [
+      isInstalled,
+      isOnline,
+      notificationPermission,
+      requestNotifications,
+      serviceWorkerRegistration,
+      subscribeToPush,
+    ],
   );
 
   return (

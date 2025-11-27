@@ -76,7 +76,7 @@ All enums are documented with their Python source location:
 ### Helper Functions
 
 ```typescript
-import { isEnumValue, getEnumValues, getEnumKeys } from '@dotmac/types';
+import { isEnumValue, getEnumValues, getEnumKeys } from "@dotmac/types";
 
 // Validate enum value
 if (isEnumValue(JobStatus, value)) {
@@ -113,12 +113,12 @@ import {
   extractFieldErrors,
   categorizeError,
   isRetryableError,
-} from '@dotmac/types';
+} from "@dotmac/types";
 
 // Convert any error to standardized AppError
 const appError = createAppError(error, {
-  component: 'MyComponent',
-  action: 'fetchData',
+  component: "MyComponent",
+  action: "fetchData",
 });
 
 // Extract message from various error formats
@@ -281,10 +281,10 @@ import { InlineError } from '@dotmac/ui';
 ```typescript
 // In React Query
 const { data, error } = useQuery({
-  queryKey: ['customers'],
+  queryKey: ["customers"],
   queryFn: fetchCustomers,
   onError: (error) => {
-    handleError(error, { query: 'customers' });
+    handleError(error, { query: "customers" });
   },
 });
 
@@ -292,7 +292,7 @@ const { data, error } = useQuery({
 const onSubmit = async (data) => {
   try {
     await api.createCustomer(data);
-    toast({ title: 'Customer created successfully' });
+    toast({ title: "Customer created successfully" });
   } catch (error) {
     handleError(error);
     // Field errors will be automatically extracted and can be used
@@ -313,7 +313,7 @@ const onSubmit = async (data) => {
 try {
   await api.getData();
 } catch (error) {
-  alert('Error!');
+  alert("Error!");
   console.log(error);
 }
 ```
@@ -323,6 +323,7 @@ try {
 Errors are automatically reported to the DotMac observability stack:
 
 **Stack Components:**
+
 - **OpenTelemetry Collector** - Receives logs, metrics, and traces
 - **Prometheus** - Stores error metrics
 - **Grafana Loki** - Stores error logs
@@ -363,11 +364,13 @@ OBSERVABILITY__OTEL_ENDPOINT=http://localhost:4318
 ```
 
 **Metrics Tracked:**
+
 - `frontend.errors.total` - Total error count by category/severity
 - `frontend.operation.duration` - Operation performance
 - Custom metrics via `recordMetric()`
 
 **Viewing Errors:**
+
 1. **Grafana Dashboard** - Real-time error monitoring
 2. **Prometheus Queries** - Error rate/count metrics
 3. **Loki Logs** - Detailed error logs with context
@@ -512,7 +515,7 @@ pnpm lint:a11y
 #### ✅ DO: Use Strong Types
 
 ```typescript
-import { Customer, CustomerStatus } from '@dotmac/types';
+import { Customer, CustomerStatus } from "@dotmac/types";
 
 // Fully typed
 interface UpdateCustomerParams {
@@ -596,40 +599,48 @@ pnpm format
 ### Replacing Magic Strings
 
 1. **Find all magic strings**:
+
    ```bash
    grep -r "status === 'running'" --include="*.tsx"
    ```
 
 2. **Replace with enum**:
+
    ```typescript
    // Before
-   job.status === 'running'
+   job.status === "running";
 
    // After
-   import { JobStatus } from '@dotmac/types';
-   job.status === JobStatus.RUNNING
+   import { JobStatus } from "@dotmac/types";
+   job.status === JobStatus.RUNNING;
    ```
 
 3. **Update labels**:
+
    ```typescript
    // Before
-   {job.status === 'running' ? 'Running' : 'Unknown'}
+   {
+     job.status === "running" ? "Running" : "Unknown";
+   }
 
    // After
-   import { JobStatusLabels } from '@dotmac/types';
-   {JobStatusLabels[job.status]}
+   import { JobStatusLabels } from "@dotmac/types";
+   {
+     JobStatusLabels[job.status];
+   }
    ```
 
 ### Standardizing Error Handling
 
 1. **Replace ad-hoc error handling**:
+
    ```typescript
    // Before
    try {
      await api.getData();
    } catch (error) {
      console.error(error);
-     toast({ title: 'Error', description: 'Something went wrong' });
+     toast({ title: "Error", description: "Something went wrong" });
    }
 
    // After
@@ -637,11 +648,12 @@ pnpm format
    try {
      await api.getData();
    } catch (error) {
-     handleError(error, { component: 'MyComponent', action: 'getData' });
+     handleError(error, { component: "MyComponent", action: "getData" });
    }
    ```
 
 2. **Replace error displays**:
+
    ```typescript
    // Before
    {error && <div className="error">{error.message}</div>}
@@ -667,18 +679,14 @@ pnpm format
 
 ```typescript
 // Shared constants
-import { JobStatus, JobStatusLabels } from '@dotmac/types';
+import { JobStatus, JobStatusLabels } from "@dotmac/types";
 
 // Error handling
-import { useErrorHandler, useApiError } from '@dotmac/hooks';
-import { ErrorAlert, FieldError } from '@dotmac/ui';
+import { useErrorHandler, useApiError } from "@dotmac/hooks";
+import { ErrorAlert, FieldError } from "@dotmac/ui";
 
 // Error utilities
-import {
-  createAppError,
-  isAuthError,
-  extractFieldErrors,
-} from '@dotmac/types';
+import { createAppError, isAuthError, extractFieldErrors } from "@dotmac/types";
 ```
 
 ---

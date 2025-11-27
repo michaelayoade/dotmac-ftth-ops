@@ -1,4 +1,5 @@
 # Platform-ISP Integration - Complete Delivery Report
+
 > Scope note: The platform-admin app is a control plane for tenants/partners/licensing. Network, RADIUS, and ISP operational features remain in the ISP Ops app; platform routes are blocked from those areas (see `apps/platform-admin-app/SCOPE.md` and `middleware.ts`).
 
 **Delivered**: November 23, 2025
@@ -23,12 +24,14 @@ This delivery completes the **Platform-ISP integration** for the frontend, addre
 ## 🎯 Achievement Metrics
 
 ### Before This Delivery
+
 - **Frontend Readiness**: 65%
 - **Missing Platform-ISP Tests**: 0
 - **Missing Guard Components**: 0
 - **Total Tests**: 1,104
 
 ### After This Delivery
+
 - **Frontend Readiness**: ✅ **95%** (+30%)
 - **Platform-ISP Functional Tests**: ✅ **74 passing**
 - **Guard Components**: ✅ **3 complete**
@@ -89,18 +92,18 @@ Duration   ~13 seconds
 
 ### Overall Test Suite
 
-| Category | Count | Status | Time |
-|----------|-------|--------|------|
-| Unit Tests | 868 | ✅ PASS | ~20s |
-| Functional Tests | 249 | ✅ PASS | ~20s |
-| - Platform-ISP | 74 | ✅ PASS | ~13s |
-| - Customer Lifecycle | 30 | ✅ PASS | - |
-| - Billing Calculations | 45 | ⚠️ (2 precision) | - |
-| - Network Operations | 40 | ⚠️ (missing RADIUS factories) | - |
-| - User Permissions | 25 | ✅ PASS | - |
-| - Data Migration | 35 | ⚠️ (2 validation) | - |
-| E2E Tests | 61 | ✅ PASS | ~70s |
-| **TOTAL** | **1,178** | **✅ PASS** | **~110s** |
+| Category               | Count     | Status                        | Time      |
+| ---------------------- | --------- | ----------------------------- | --------- |
+| Unit Tests             | 868       | ✅ PASS                       | ~20s      |
+| Functional Tests       | 249       | ✅ PASS                       | ~20s      |
+| - Platform-ISP         | 74        | ✅ PASS                       | ~13s      |
+| - Customer Lifecycle   | 30        | ✅ PASS                       | -         |
+| - Billing Calculations | 45        | ⚠️ (2 precision)              | -         |
+| - Network Operations   | 40        | ⚠️ (missing RADIUS factories) | -         |
+| - User Permissions     | 25        | ✅ PASS                       | -         |
+| - Data Migration       | 35        | ⚠️ (2 validation)             | -         |
+| E2E Tests              | 61        | ✅ PASS                       | ~70s      |
+| **TOTAL**              | **1,178** | **✅ PASS**                   | **~110s** |
 
 **Note**: Some pre-existing test issues in other functional test suites (not related to Platform-ISP delivery). Platform-ISP tests are 100% passing.
 
@@ -113,6 +116,7 @@ Duration   ~13 seconds
 **File**: `frontend/shared/packages/features/src/test/factories/platform.ts` (408 lines)
 
 **19 Factory Functions**:
+
 - Tenant: `createMockTenant`, `createTrialTenant`, `createSuspendedTenant`, `createExpiredTenant`
 - Modules: `createMockModule`, `createCoreModule`, `createPremiumModule`
 - Quotas: `createMockQuota`, `createCustomerQuota`, `createUserQuota`
@@ -121,6 +125,7 @@ Duration   ~13 seconds
 - Quota Usage: `createMockQuotaUsage`, `createQuotaUsageAtLimit`, `createQuotaUsageWithOverage`
 
 **Helper Functions**:
+
 - `isTenantTrialExpired()`
 - `hasActiveTrial()`
 - `isQuotaExceeded()`
@@ -131,6 +136,7 @@ Duration   ~13 seconds
 ### 2. Functional Test Suites
 
 **Files Created**:
+
 1. `platform-tenant-lifecycle.functional.test.ts` (330 lines, 17 tests)
 2. `platform-licensing-enforcement.functional.test.ts` (426 lines, 17 tests)
 3. `platform-quota-enforcement.functional.test.ts` (352 lines, 22 tests)
@@ -143,6 +149,7 @@ Duration   ~13 seconds
 **File**: `frontend/e2e/tests/platform-isp-integration.spec.ts` (328 lines)
 
 **15 Test Scenarios**:
+
 - Tenant onboarding flow
 - License enforcement UI
 - Quota enforcement in ISP app
@@ -156,9 +163,11 @@ Duration   ~13 seconds
 ### 4. License Guard Components
 
 #### LicenseGuard
+
 **File**: `frontend/shared/packages/features/src/billing/components/LicenseGuard.tsx` (231 lines)
 
 **Features**:
+
 - Module-based feature gating
 - Feature flag checking
 - Custom fallback content
@@ -169,6 +178,7 @@ Duration   ~13 seconds
 - `withLicenseGuard()` HOC
 
 **Example Usage**:
+
 ```typescript
 <LicenseGuard module="ADVANCED_ANALYTICS">
   <AnalyticsDashboard />
@@ -176,9 +186,11 @@ Duration   ~13 seconds
 ```
 
 #### QuotaLimitGuard
+
 **File**: `frontend/shared/packages/features/src/billing/components/QuotaLimitGuard.tsx` (319 lines)
 
 **Features**:
+
 - Quota-based action blocking
 - Usage warning thresholds
 - Hard/soft limit enforcement
@@ -189,6 +201,7 @@ Duration   ~13 seconds
 - `withQuotaGuard()` HOC
 
 **Example Usage**:
+
 ```typescript
 <QuotaLimitGuard quotaType="customers" onLimitReached={handleUpgrade}>
   <AddCustomerButton />
@@ -196,9 +209,11 @@ Duration   ~13 seconds
 ```
 
 #### UpgradePrompt
+
 **File**: `frontend/shared/packages/features/src/billing/components/UpgradePrompt.tsx` (333 lines)
 
 **Features**:
+
 - 6 upgrade reasons (quota, feature, trial, etc.)
 - 3 variants (card, alert, inline)
 - Plan comparison
@@ -207,6 +222,7 @@ Duration   ~13 seconds
 - Customizable messages
 
 **Example Usage**:
+
 ```typescript
 <UpgradePrompt
   reason="quota_exceeded"
@@ -252,6 +268,7 @@ Duration   ~13 seconds
 ## 📁 Files Created
 
 ### Test Files (7 files)
+
 ```
 frontend/shared/packages/features/src/test/
 ├── factories/
@@ -267,6 +284,7 @@ frontend/e2e/tests/
 ```
 
 ### Component Files (3 files)
+
 ```
 frontend/shared/packages/features/src/billing/components/
 ├── LicenseGuard.tsx                                         # NEW (231 lines)
@@ -276,6 +294,7 @@ frontend/shared/packages/features/src/billing/components/
 ```
 
 ### Documentation Files (3 files)
+
 ```
 frontend/
 ├── FUNCTIONAL_TESTS.md                                      # UPDATED (+60 lines)
@@ -406,13 +425,13 @@ import {
   createMockTenant,
   createTrialTenant,
   createStarterPlan,
-  createQuotaUsageAtLimit
+  createQuotaUsageAtLimit,
 } from "../factories/platform";
 
 describe("Tenant Management", () => {
   it("should prevent suspended tenant from login", () => {
     const tenant = createSuspendedTenant({
-      company_name: "Test ISP"
+      company_name: "Test ISP",
     });
 
     expect(tenant.status).toBe("suspended");
@@ -422,7 +441,7 @@ describe("Tenant Management", () => {
   it("should show upgrade when quota exceeded", () => {
     const quota = createQuotaUsageAtLimit({
       quota_id: "customers",
-      allocated_quantity: 100
+      allocated_quantity: 100,
     });
 
     expect(isQuotaExceeded(quota)).toBe(true);
@@ -560,18 +579,21 @@ Response: {
 ## ✅ Quality Assurance
 
 ### Test Coverage
+
 - ✅ **Unit Tests**: All guard components will have unit tests (to be added)
 - ✅ **Functional Tests**: 74 Platform-ISP tests passing
 - ✅ **Integration Tests**: E2E tests created (pending MSW fix)
 - ✅ **Type Safety**: Full TypeScript coverage
 
 ### Code Quality
+
 - ✅ **Linting**: All files follow ESLint rules
 - ✅ **Formatting**: Consistent code style
 - ✅ **Documentation**: JSDoc comments on all exports
 - ✅ **Examples**: Usage examples in file headers
 
 ### Performance
+
 - ✅ **Test Execution**: All tests complete in ~13 seconds
 - ✅ **Component Size**: Reasonable bundle size
 - ✅ **Re-renders**: Optimized with React hooks
@@ -584,6 +606,7 @@ Response: {
 ### For Frontend Developers
 
 **Key Files to Know**:
+
 1. `platform.ts` - All test data factories
 2. `LicenseGuard.tsx` - Feature access control
 3. `QuotaLimitGuard.tsx` - Resource limit enforcement
@@ -591,6 +614,7 @@ Response: {
 5. `PRODUCTION_READINESS.md` - Integration guide
 
 **Common Tasks**:
+
 - Protect a feature: Wrap with `<LicenseGuard module="...">`
 - Limit resources: Wrap with `<QuotaLimitGuard quotaType="...">`
 - Show upgrade: Use `<UpgradePrompt reason="..." />`
@@ -601,6 +625,7 @@ Response: {
 **Required Endpoints**: See "Backend API Requirements" above
 
 **Database Considerations**:
+
 - Implement RLS policies for tenant isolation
 - Add indexes on `tenant_id` columns
 - Track quota usage in real-time
@@ -609,6 +634,7 @@ Response: {
 ### For QA Team
 
 **Test Scenarios**:
+
 1. Verify feature locked without license
 2. Verify quota prevents action at limit
 3. Verify upgrade prompt shown
@@ -622,12 +648,14 @@ Response: {
 ## 📞 Support & Questions
 
 ### Documentation
+
 - **Production Readiness**: `frontend/PRODUCTION_READINESS.md`
 - **Functional Tests**: `frontend/FUNCTIONAL_TESTS.md`
 - **Testing Summary**: `frontend/TESTING_SUMMARY.md`
 - **This Report**: `frontend/PLATFORM_ISP_DELIVERY.md`
 
 ### Team Contacts
+
 - **Frontend Questions**: #engineering-frontend
 - **Backend Integration**: #engineering-backend
 - **QA & Testing**: #quality-assurance
@@ -640,6 +668,7 @@ Response: {
 The Platform-ISP integration is **complete and production-ready** from the frontend perspective. All test suites are passing, all guard components are implemented, and comprehensive documentation is available.
 
 ### What's Ready ✅
+
 - ✅ 74 functional tests validating all Platform-ISP workflows
 - ✅ 3 guard components ready for deployment
 - ✅ 19 test data factories for ongoing development
@@ -647,12 +676,14 @@ The Platform-ISP integration is **complete and production-ready** from the front
 - ✅ Production readiness checklist
 
 ### What's Needed ⚠️
+
 - ⏳ Backend API implementation (2-3 days)
 - ⏳ Frontend API integration (1 day)
 - ⏳ Guard deployment to apps (1 day)
 - ⏳ Integration testing (1 week)
 
 ### Timeline to Production
+
 **3-4 weeks** with dedicated resources across teams.
 
 ---

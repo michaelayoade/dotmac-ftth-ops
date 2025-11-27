@@ -31,13 +31,7 @@ const { logger } = jest.requireMock("@/lib/logger");
 const mockTeamNotificationResponse = {
   notifications_created: 5,
   target_count: 5,
-  team_members: [
-    "user-uuid-1",
-    "user-uuid-2",
-    "user-uuid-3",
-    "user-uuid-4",
-    "user-uuid-5",
-  ],
+  team_members: ["user-uuid-1", "user-uuid-2", "user-uuid-3", "user-uuid-4", "user-uuid-5"],
   notification_type: "system_announcement",
   priority: "high",
 };
@@ -199,9 +193,12 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        auto_send: false,
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          auto_send: false,
+        }),
+      );
     });
   });
 
@@ -270,10 +267,13 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        role_filter: "support_agent",
-        notification_type: "task_assignment",
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          role_filter: "support_agent",
+          notification_type: "task_assignment",
+        }),
+      );
     });
 
     it("should send notification to noc role with action url", async () => {
@@ -303,11 +303,14 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        role_filter: "noc",
-        action_url: "/dashboard/network/alerts",
-        action_label: "View Alert",
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          role_filter: "noc",
+          action_url: "/dashboard/network/alerts",
+          action_label: "View Alert",
+        }),
+      );
     });
   });
 
@@ -323,7 +326,7 @@ describe("useTeamNotifications", () => {
       };
 
       await expect(result.current.sendTeamNotification(request)).rejects.toThrow(
-        "Either team_members or role_filter must be provided"
+        "Either team_members or role_filter must be provided",
       );
 
       expect(apiClient.post).not.toHaveBeenCalled();
@@ -354,10 +357,13 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        team_members: ["user-uuid-1", "user-uuid-2"],
-        role_filter: "admin",
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          team_members: ["user-uuid-1", "user-uuid-2"],
+          role_filter: "admin",
+        }),
+      );
     });
 
     it("should validate required title field", async () => {
@@ -409,17 +415,11 @@ describe("useTeamNotifications", () => {
       };
 
       await expect(result.current.sendTeamNotification(request)).rejects.toThrow(
-        "Failed to send notifications"
+        "Failed to send notifications",
       );
 
-      expect(logger.error).toHaveBeenCalledWith(
-        "Failed to send team notification",
-        apiError
-      );
-      expect(logger.error).toHaveBeenCalledWith(
-        "Team notification mutation failed",
-        apiError
-      );
+      expect(logger.error).toHaveBeenCalledWith("Failed to send team notification", apiError);
+      expect(logger.error).toHaveBeenCalledWith("Team notification mutation failed", apiError);
     });
 
     it("should handle network errors", async () => {
@@ -437,7 +437,7 @@ describe("useTeamNotifications", () => {
       };
 
       await expect(result.current.sendTeamNotification(request)).rejects.toThrow(
-        "Network connection failed"
+        "Network connection failed",
       );
     });
 
@@ -459,7 +459,7 @@ describe("useTeamNotifications", () => {
 
       expect(logger.error).toHaveBeenCalledWith(
         "Failed to send team notification",
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -543,9 +543,12 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        notification_type: "alert",
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          notification_type: "alert",
+        }),
+      );
     });
 
     it("should handle task_assignment notification type", async () => {
@@ -564,9 +567,12 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        notification_type: "task_assignment",
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          notification_type: "task_assignment",
+        }),
+      );
     });
   });
 
@@ -587,9 +593,12 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        priority: "low",
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          priority: "low",
+        }),
+      );
     });
 
     it("should handle critical priority", async () => {
@@ -608,9 +617,12 @@ describe("useTeamNotifications", () => {
 
       await result.current.sendTeamNotification(request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/notifications/team", expect.objectContaining({
-        priority: "critical",
-      }));
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/notifications/team",
+        expect.objectContaining({
+          priority: "critical",
+        }),
+      );
     });
   });
 });

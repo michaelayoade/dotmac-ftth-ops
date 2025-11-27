@@ -16,8 +16,8 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.ip_management.models import IPReservation, IPReservationStatus
 from dotmac.platform.ip_management.ip_service import IPManagementService
+from dotmac.platform.ip_management.models import IPReservation, IPReservationStatus
 from dotmac.platform.network.lifecycle_protocol import (
     ActivationError,
     AllocationError,
@@ -373,12 +373,14 @@ class IPv4LifecycleService:
                 activated_at=reservation.lifecycle_activated_at,
                 metadata=reservation.lifecycle_metadata,
                 coa_result=coa_result,
-                netbox_ip_id=netbox_ip_id if netbox_ip_id is not None else None,
+                netbox_ip_id=int(netbox_ip_id) if netbox_ip_id is not None else None,
             )
 
         except InvalidTransitionError as exc:
             raise InvalidTransitionError(
-                current_state, LifecycleState.ACTIVE, message=f"Cannot activate from state: {current_state.value}"
+                current_state,
+                LifecycleState.ACTIVE,
+                message=f"Cannot activate from state: {current_state.value}",
             ) from exc
         except Exception as e:
             logger.error(

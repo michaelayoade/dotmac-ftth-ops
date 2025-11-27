@@ -16,10 +16,5 @@ interface AddSubscriberModalProps {
 }
 
 export function AddSubscriberModal(props: AddSubscriberModalProps) {
-  return (
-    <SharedAddSubscriberModal
-      {...props}
-      useSubscriberOperations={useSubscriberOperations}
-    />
-  );
+  return <SharedAddSubscriberModal {...props} useSubscriberOperations={useSubscriberOperations} />;
 }

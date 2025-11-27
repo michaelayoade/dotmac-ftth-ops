@@ -77,13 +77,16 @@ export function useTeamNotifications() {
       } catch (err) {
         logger.error(
           "Failed to send team notification",
-          err instanceof Error ? err : new Error(String(err))
+          err instanceof Error ? err : new Error(String(err)),
         );
         throw err;
       }
     },
     onError: (error) => {
-      logger.error("Team notification mutation failed", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Team notification mutation failed",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     },
   });
 

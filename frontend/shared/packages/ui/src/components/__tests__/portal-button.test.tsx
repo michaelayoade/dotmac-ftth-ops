@@ -59,7 +59,7 @@ describe("PortalButton", () => {
         "justify-center",
         "rounded-md",
         "font-medium",
-        "transition-all"
+        "transition-all",
       );
     });
 
@@ -83,7 +83,7 @@ describe("PortalButton", () => {
       expect(button).toHaveClass(
         "bg-destructive",
         "text-destructive-foreground",
-        "hover:bg-destructive/90"
+        "hover:bg-destructive/90",
       );
     });
 
@@ -96,7 +96,7 @@ describe("PortalButton", () => {
         "border-portal-primary",
         "text-portal-primary",
         "bg-transparent",
-        "hover:bg-portal-primary/10"
+        "hover:bg-portal-primary/10",
       );
     });
 
@@ -107,7 +107,7 @@ describe("PortalButton", () => {
       expect(button).toHaveClass(
         "bg-secondary",
         "text-secondary-foreground",
-        "hover:bg-secondary/80"
+        "hover:bg-secondary/80",
       );
     });
 
@@ -166,7 +166,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton size="icon" aria-label="Icon button">
           ⚙️
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByRole("button");
@@ -326,7 +326,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton disabled onClick={onClick}>
           Disabled
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByRole("button");
@@ -398,7 +398,7 @@ describe("PortalButton", () => {
         <div>
           <PortalButton aria-describedby="description">Click me</PortalButton>
           <div id="description">This button submits the form</div>
-        </div>
+        </div>,
       );
 
       const button = screen.getByRole("button");
@@ -431,7 +431,7 @@ describe("PortalButton", () => {
         "focus-visible:outline-none",
         "focus-visible:ring-2",
         "focus-visible:ring-ring",
-        "focus-visible:ring-offset-2"
+        "focus-visible:ring-offset-2",
       );
     });
 
@@ -473,7 +473,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton ref={ref} onClick={onClick}>
           Click me
-        </PortalButton>
+        </PortalButton>,
       );
 
       ref.current?.click();
@@ -487,7 +487,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton variant="destructive" size="sm">
           Delete
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByRole("button");
@@ -498,7 +498,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton variant="outline" size="lg">
           Large Outline
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByRole("button");
@@ -509,7 +509,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton variant="accent" size="sm">
           Small Accent
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByRole("button");
@@ -621,7 +621,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton size="icon" aria-label="Settings">
           ⚙️
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByLabelText("Settings");
@@ -634,7 +634,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton variant="default" size="lg">
           Create Account
-        </PortalButton>
+        </PortalButton>,
       );
 
       expect(screen.getByText("Create Account")).toBeInTheDocument();
@@ -644,7 +644,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton variant="destructive" size="sm">
           Delete Item
-        </PortalButton>
+        </PortalButton>,
       );
 
       expect(screen.getByText("Delete Item")).toBeInTheDocument();
@@ -654,7 +654,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton type="submit" variant="accent">
           Submit Form
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByText("Submit Form");
@@ -665,7 +665,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton size="icon" variant="ghost" aria-label="Close modal">
           ×
-        </PortalButton>
+        </PortalButton>,
       );
 
       expect(screen.getByLabelText("Close modal")).toBeInTheDocument();
@@ -676,7 +676,7 @@ describe("PortalButton", () => {
         <PortalButton disabled>
           <span className="spinner" />
           Loading...
-        </PortalButton>
+        </PortalButton>,
       );
 
       expect(screen.getByText("Loading...")).toBeInTheDocument();
@@ -697,7 +697,7 @@ describe("PortalButton", () => {
         <PortalButton>
           <span>Icon</span>
           <span>Text</span>
-        </PortalButton>
+        </PortalButton>,
       );
 
       expect(screen.getByText("Icon")).toBeInTheDocument();
@@ -713,7 +713,7 @@ describe("PortalButton", () => {
       render(
         <PortalButton onClick={onClick} onFocus={onFocus} onBlur={onBlur}>
           Click me
-        </PortalButton>
+        </PortalButton>,
       );
 
       const button = screen.getByRole("button");

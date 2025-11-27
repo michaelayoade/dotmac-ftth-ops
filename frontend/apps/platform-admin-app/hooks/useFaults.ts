@@ -127,7 +127,8 @@ export const faultsKeys = {
   statistics: () => [...faultsKeys.all, "statistics"] as const,
   slaCompliance: (params?: SLAComplianceQueryParams) =>
     [...faultsKeys.all, "sla-compliance", params] as const,
-  slaRollup: (days: number, target: number) => [...faultsKeys.all, "sla-rollup", days, target] as const,
+  slaRollup: (days: number, target: number) =>
+    [...faultsKeys.all, "sla-rollup", days, target] as const,
   alarmDetails: (id: string) => [...faultsKeys.all, "alarm-details", id] as const,
 };
 
@@ -222,7 +223,10 @@ export function useSLACompliance(params?: SLAComplianceQueryParams) {
 
         return (response.data || []) as SLACompliance[];
       } catch (err) {
-        logger.error("Failed to fetch SLA compliance", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch SLA compliance",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -249,7 +253,10 @@ export function useSLARollupStats(days: number = 30, targetPercentage: number = 
 
         return (response.data || null) as SLARollupStats | null;
       } catch (err) {
-        logger.error("Failed to fetch SLA rollup stats", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch SLA rollup stats",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -282,7 +289,10 @@ export function useAlarmDetails(alarmId: string | null) {
           notes: notesResponse.data || [],
         };
       } catch (err) {
-        logger.error("Failed to fetch alarm details", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch alarm details",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -333,7 +343,9 @@ export function useAlarmOperations() {
   // Acknowledge alarms mutation
   const acknowledgeMutation = useMutation({
     mutationFn: async ({ alarmIds, note }: { alarmIds: string[]; note?: string }) => {
-      const promises = alarmIds.map((id) => apiClient.post(`/faults/alarms/${id}/acknowledge`, { note }));
+      const promises = alarmIds.map((id) =>
+        apiClient.post(`/faults/alarms/${id}/acknowledge`, { note }),
+      );
       await Promise.all(promises);
     },
     onSuccess: () => {
@@ -341,7 +353,10 @@ export function useAlarmOperations() {
       queryClient.invalidateQueries({ queryKey: faultsKeys.all });
     },
     onError: (err) => {
-      logger.error("Failed to acknowledge alarms", err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to acknowledge alarms",
+        err instanceof Error ? err : new Error(String(err)),
+      );
     },
   });
 
@@ -362,7 +377,13 @@ export function useAlarmOperations() {
 
   // Create tickets mutation
   const createTicketsMutation = useMutation({
-    mutationFn: async ({ alarmIds, priority = "normal" }: { alarmIds: string[]; priority?: string }) => {
+    mutationFn: async ({
+      alarmIds,
+      priority = "normal",
+    }: {
+      alarmIds: string[];
+      priority?: string;
+    }) => {
       const promises = alarmIds.map((id) =>
         apiClient.post(`/faults/alarms/${id}/create-ticket`, { priority }),
       );
@@ -405,7 +426,6 @@ export function useAlarmOperations() {
     },
     isLoading:
       acknowledgeMutation.isPending || clearMutation.isPending || createTicketsMutation.isPending,
-    error:
-      acknowledgeMutation.error || clearMutation.error || createTicketsMutation.error || null,
+    error: acknowledgeMutation.error || clearMutation.error || createTicketsMutation.error || null,
   };
 }

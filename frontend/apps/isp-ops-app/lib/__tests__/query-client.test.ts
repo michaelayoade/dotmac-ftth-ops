@@ -33,16 +33,8 @@ describe("query-client", () => {
     it("should generate customer keys correctly", () => {
       expect(queryKeys.customers.all).toEqual(["customers"]);
       expect(queryKeys.customers.lists()).toEqual(["customers", "list"]);
-      expect(queryKeys.customers.list({ page: 1 })).toEqual([
-        "customers",
-        "list",
-        { page: 1 },
-      ]);
-      expect(queryKeys.customers.detail("123")).toEqual([
-        "customers",
-        "detail",
-        "123",
-      ]);
+      expect(queryKeys.customers.list({ page: 1 })).toEqual(["customers", "list", { page: 1 }]);
+      expect(queryKeys.customers.detail("123")).toEqual(["customers", "detail", "123"]);
     });
 
     it("should generate user keys correctly", () => {
@@ -71,10 +63,7 @@ describe("query-client", () => {
     it("should generate billing keys correctly", () => {
       expect(queryKeys.billing.all).toEqual(["billing"]);
       expect(queryKeys.billing.plans).toEqual(["billing", "plans"]);
-      expect(queryKeys.billing.subscriptions).toEqual([
-        "billing",
-        "subscriptions",
-      ]);
+      expect(queryKeys.billing.subscriptions).toEqual(["billing", "subscriptions"]);
       expect(queryKeys.billing.invoices).toEqual(["billing", "invoices"]);
     });
 
@@ -314,11 +303,7 @@ describe("query-client", () => {
       it("should invalidate specific detail query", async () => {
         const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
 
-        await invalidateHelpers.invalidateDetail(
-          queryClient,
-          ["customers"],
-          "123"
-        );
+        await invalidateHelpers.invalidateDetail(queryClient, ["customers"], "123");
 
         expect(invalidateSpy).toHaveBeenCalledWith({
           queryKey: ["customers", "detail", "123"],
@@ -330,10 +315,7 @@ describe("query-client", () => {
       it("should invalidate multiple related queries", async () => {
         const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
 
-        await invalidateHelpers.invalidateRelated(queryClient, [
-          ["customers"],
-          ["users"],
-        ]);
+        await invalidateHelpers.invalidateRelated(queryClient, [["customers"], ["users"]]);
 
         expect(invalidateSpy).toHaveBeenCalledTimes(2);
         expect(invalidateSpy).toHaveBeenCalledWith({
@@ -410,9 +392,7 @@ describe("query-client", () => {
       });
 
       // Verify optimistic updates
-      expect(queryClient.getQueryData(listKey)).toEqual([
-        { id: "123", name: "Optimistic" },
-      ]);
+      expect(queryClient.getQueryData(listKey)).toEqual([{ id: "123", name: "Optimistic" }]);
       expect(queryClient.getQueryData(detailKey)).toEqual({
         id: "123",
         name: "Optimistic",

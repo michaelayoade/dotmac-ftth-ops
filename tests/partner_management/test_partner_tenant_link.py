@@ -20,7 +20,7 @@ from dotmac.platform.partner_management.models import (
 )
 from dotmac.platform.tenant.models import Tenant, TenantStatus
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.integration
 
 
 @pytest_asyncio.fixture

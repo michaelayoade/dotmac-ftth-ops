@@ -8,8 +8,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { apiClient } from "@/lib/api/client";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 
 export interface Tenant {
   id: string;
@@ -45,8 +45,8 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
   const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const { user: sessionUser, isLoading: authLoading } = useSession();
+  const user = sessionUser as UserInfo | undefined;
 
   const hasTenantAssociation = Boolean(user?.tenant_id || user?.activeOrganization?.id);
 

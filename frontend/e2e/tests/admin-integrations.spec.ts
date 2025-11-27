@@ -14,7 +14,6 @@
 
 import { test, expect } from "#e2e/fixtures";
 
-
 test.describe("Admin Integrations Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to integrations page

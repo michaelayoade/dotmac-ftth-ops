@@ -213,7 +213,7 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
 
   const fetchSubscriptions = async (
     params: Required<Pick<UseWebhooksOptions, "page" | "limit">> &
-      Pick<UseWebhooksOptions, "eventFilter" | "activeOnly">
+      Pick<UseWebhooksOptions, "eventFilter" | "activeOnly">,
   ) => {
     const searchParams = new URLSearchParams();
     searchParams.append("limit", params.limit.toString());
@@ -298,13 +298,15 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
 
       const response = await apiClient.post("/webhooks/subscriptions", payload);
       const responseData = parseJsonData<unknown>(response.data, {});
-      return enrichSubscription(responseData as Record<string, unknown> & {
-        custom_metadata?: Record<string, unknown>;
-        description?: string;
-        success_count: number;
-        failure_count: number;
-        last_triggered_at: string | null;
-      });
+      return enrichSubscription(
+        responseData as Record<string, unknown> & {
+          custom_metadata?: Record<string, unknown>;
+          description?: string;
+          success_count: number;
+          failure_count: number;
+          last_triggered_at: string | null;
+        },
+      );
     },
     onSuccess: (newWebhook) => {
       // Optimistically add to cache
@@ -332,19 +334,24 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
     }): Promise<WebhookSubscription> => {
       const response = await apiClient.patch(`/webhooks/subscriptions/${id}`, data);
       const responseData = parseJsonData<unknown>(response.data, {});
-      return enrichSubscription(responseData as Record<string, unknown> & {
-        custom_metadata?: Record<string, unknown>;
-        description?: string;
-        success_count: number;
-        failure_count: number;
-        last_triggered_at: string | null;
-      });
+      return enrichSubscription(
+        responseData as Record<string, unknown> & {
+          custom_metadata?: Record<string, unknown>;
+          description?: string;
+          success_count: number;
+          failure_count: number;
+          last_triggered_at: string | null;
+        },
+      );
     },
     onSuccess: (updatedWebhook) => {
       // Optimistically update cache
       queryClient.setQueryData<WebhookSubscription[]>(
         webhooksKeys.subscription(queryParams),
-        (old) => (old ? old.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh)) : [updatedWebhook]),
+        (old) =>
+          old
+            ? old.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh))
+            : [updatedWebhook],
       );
       setLocalWebhooks((prev) =>
         prev.map((wh) => (wh.id === updatedWebhook.id ? updatedWebhook : wh)),
@@ -403,8 +410,12 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
         return {
           success: Boolean(responseData.success),
           status_code: responseData.status_code ?? response.status,
-          ...(responseData.response_body !== undefined && { response_body: responseData.response_body }),
-          ...(responseData.error_message !== undefined && { error_message: responseData.error_message }),
+          ...(responseData.response_body !== undefined && {
+            response_body: responseData.response_body,
+          }),
+          ...(responseData.error_message !== undefined && {
+            error_message: responseData.error_message,
+          }),
           delivery_time_ms: responseData.delivery_time_ms ?? 0,
         };
       } catch (err) {
@@ -427,7 +438,7 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       nextPage?: number,
       nextLimit?: number,
       nextEventFilter?: string,
-      nextActiveOnly?: boolean
+      nextActiveOnly?: boolean,
     ) => {
       const newParams = {
         page: nextPage ?? queryParams.page,
@@ -446,9 +457,7 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       updateMutation.mutateAsync({ id, data }),
     deleteWebhook: deleteMutation.mutateAsync,
     testWebhook: async (id: string, eventType: string, payload?: Record<string, unknown>) =>
-      testMutation.mutateAsync(
-        payload ? { id, eventType, payload } : { id, eventType }
-      ),
+      testMutation.mutateAsync(payload ? { id, eventType, payload } : { id, eventType }),
     getAvailableEvents: async () => eventsQuery.data ?? ({} as AvailableEvents),
   };
 }
@@ -486,7 +495,7 @@ export function useWebhookDeliveries(
 
   const fetchDeliveriesData = async (
     params: Required<Pick<UseWebhookDeliveriesOptions, "page" | "limit">> &
-      Pick<UseWebhookDeliveriesOptions, "statusFilter">
+      Pick<UseWebhookDeliveriesOptions, "statusFilter">,
   ) => {
     const searchParams = new URLSearchParams();
     searchParams.append("limit", params.limit.toString());

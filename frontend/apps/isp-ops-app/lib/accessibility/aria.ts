@@ -5,7 +5,7 @@
  * Integrated with i18n for multi-language support
  */
 
-import type { JobStatus, TicketStatus, CustomerStatus } from '@dotmac/types';
+import type { JobStatus, TicketStatus, CustomerStatus } from "@dotmac/types";
 
 /**
  * ARIA label generators for common patterns
@@ -25,10 +25,10 @@ import type { JobStatus, TicketStatus, CustomerStatus } from '@dotmac/types';
 export function getStatusAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
   status: JobStatus | TicketStatus | CustomerStatus,
-  namespace: 'jobs' | 'tickets' | 'customers'
+  namespace: "jobs" | "tickets" | "customers",
 ): string {
   const statusLabel = t(`${namespace}.status.${status}`);
-  return t('accessibility.statusLabel', { status: statusLabel });
+  return t("accessibility.statusLabel", { status: statusLabel });
 }
 
 /**
@@ -43,8 +43,8 @@ export function getStatusAriaLabel(
  */
 export function getActionAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
-  action: 'edit' | 'delete' | 'view' | 'cancel' | 'retry',
-  itemName: string
+  action: "edit" | "delete" | "view" | "cancel" | "retry",
+  itemName: string,
 ): string {
   return t(`accessibility.${action}Item`, { item: itemName });
 }
@@ -61,11 +61,11 @@ export function getActionAriaLabel(
  */
 export function getPaginationAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
-  type: 'first' | 'previous' | 'next' | 'last' | 'page',
-  page?: number
+  type: "first" | "previous" | "next" | "last" | "page",
+  page?: number,
 ): string {
-  if (type === 'page' && page !== undefined) {
-    return t('accessibility.goToPage', { page });
+  if (type === "page" && page !== undefined) {
+    return t("accessibility.goToPage", { page });
   }
   return t(`accessibility.${type}Page`);
 }
@@ -86,16 +86,14 @@ export function getPaginationAriaLabel(
 export function getSortAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
   columnName: string,
-  sortOrder: 'asc' | 'desc' | null
+  sortOrder: "asc" | "desc" | null,
 ): string {
   if (sortOrder === null) {
-    return t('accessibility.sortBy', { column: columnName });
+    return t("accessibility.sortBy", { column: columnName });
   }
   const direction =
-    sortOrder === 'asc'
-      ? t('accessibility.ascending')
-      : t('accessibility.descending');
-  return t('accessibility.sortedBy', { column: columnName, direction });
+    sortOrder === "asc" ? t("accessibility.ascending") : t("accessibility.descending");
+  return t("accessibility.sortedBy", { column: columnName, direction });
 }
 
 /**
@@ -112,9 +110,9 @@ export function getSortAriaLabel(
  */
 export function getSearchAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
-  entity: string
+  entity: string,
 ): string {
-  return t('accessibility.searchEntity', { entity });
+  return t("accessibility.searchEntity", { entity });
 }
 
 /**
@@ -130,15 +128,15 @@ export function getSearchAriaLabel(
 export function getFilterAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
   filterName: string,
-  activeCount?: number
+  activeCount?: number,
 ): string {
   if (activeCount !== undefined && activeCount > 0) {
-    return t('accessibility.filterByWithCount', {
+    return t("accessibility.filterByWithCount", {
       filter: filterName,
       count: activeCount,
     });
   }
-  return t('accessibility.filterBy', { filter: filterName });
+  return t("accessibility.filterBy", { filter: filterName });
 }
 
 /**
@@ -162,31 +160,27 @@ export function getFieldDescription(
     minLength?: number;
     maxLength?: number;
     format?: string;
-  }
+  },
 ): string {
   const parts: string[] = [];
 
   if (constraints?.required) {
-    parts.push(t('accessibility.requiredField'));
+    parts.push(t("accessibility.requiredField"));
   }
 
   if (constraints?.minLength) {
-    parts.push(
-      t('accessibility.minLength', { min: constraints.minLength })
-    );
+    parts.push(t("accessibility.minLength", { min: constraints.minLength }));
   }
 
   if (constraints?.maxLength) {
-    parts.push(
-      t('accessibility.maxLength', { max: constraints.maxLength })
-    );
+    parts.push(t("accessibility.maxLength", { max: constraints.maxLength }));
   }
 
   if (constraints?.format) {
     parts.push(t(`accessibility.format.${constraints.format}`));
   }
 
-  return parts.join('. ');
+  return parts.join(". ");
 }
 
 /**
@@ -206,9 +200,9 @@ export function getFieldDescription(
 export function getProgressAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
   action: string,
-  progress: number
+  progress: number,
 ): string {
-  return t('accessibility.progressLabel', { action, progress });
+  return t("accessibility.progressLabel", { action, progress });
 }
 
 /**
@@ -225,12 +219,12 @@ export function getProgressAriaLabel(
  */
 export function getLoadingAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
-  entity?: string
+  entity?: string,
 ): string {
   if (entity) {
-    return t('accessibility.loadingEntity', { entity });
+    return t("accessibility.loadingEntity", { entity });
   }
-  return t('common.loading');
+  return t("common.loading");
 }
 
 /**
@@ -248,12 +242,12 @@ export function getLoadingAriaLabel(
  */
 export function getCloseAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
-  dialogTitle?: string
+  dialogTitle?: string,
 ): string {
   if (dialogTitle) {
-    return t('accessibility.closeDialog', { title: dialogTitle });
+    return t("accessibility.closeDialog", { title: dialogTitle });
   }
-  return t('accessibility.close');
+  return t("accessibility.close");
 }
 
 /**
@@ -272,11 +266,9 @@ export function getCloseAriaLabel(
 export function getExpandAriaLabel(
   t: (key: string, values?: Record<string, unknown>) => string,
   isExpanded: boolean,
-  section?: string
+  section?: string,
 ): string {
-  const action = isExpanded
-    ? t('accessibility.collapse')
-    : t('accessibility.expand');
+  const action = isExpanded ? t("accessibility.collapse") : t("accessibility.expand");
 
   if (section) {
     return `${action} ${section}`;

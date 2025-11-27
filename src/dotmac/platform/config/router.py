@@ -4,7 +4,7 @@ Platform Configuration Router.
 Exposes public platform configuration for frontend consumption.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Response
@@ -143,7 +143,9 @@ async def get_runtime_frontend_config(
     if api_base:
         realtime_ws = _join_url(_as_websocket_url(api_base), "/realtime/ws")
     if not realtime_ws:
-        base_from_graphql = graphql_url.rsplit("/graphql", 1)[0] if "/graphql" in graphql_url else ""
+        base_from_graphql = (
+            graphql_url.rsplit("/graphql", 1)[0] if "/graphql" in graphql_url else ""
+        )
         websocket_base = _as_websocket_url(base_from_graphql or api_base)
         realtime_ws = _join_url(websocket_base, "/realtime/ws")
 
@@ -154,7 +156,7 @@ async def get_runtime_frontend_config(
 
     runtime_payload = {
         "version": settings.app_version,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "cache_ttl_seconds": _RUNTIME_CONFIG_CACHE_SECONDS,
         "tenant": {
             "id": settings.TENANT_ID or settings.tenant.default_tenant_id,

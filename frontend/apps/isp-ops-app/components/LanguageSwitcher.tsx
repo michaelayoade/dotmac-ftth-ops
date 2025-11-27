@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useLocale, useTranslations } from 'next-intl';
-import { usePathname, useRouter } from 'next/navigation';
-import { locales, localeNames, localeFlags, type Locale } from '../i18n';
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname, useRouter } from "next/navigation";
+import { locales, localeNames, localeFlags, type Locale } from "../i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   Button,
-} from '@dotmac/ui';
-import { Globe } from 'lucide-react';
+} from "@dotmac/ui";
+import { Globe } from "lucide-react";
 
 /**
  * LanguageSwitcher Component
@@ -38,7 +38,7 @@ export function LanguageSwitcher() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
-  const t = useTranslations('common');
+  const t = useTranslations("common");
 
   /**
    * Change locale by updating URL path
@@ -49,9 +49,9 @@ export function LanguageSwitcher() {
 
     // Replace current locale in path with new locale
     // e.g., /en/dashboard -> /es/dashboard
-    const segments = pathname.split('/');
+    const segments = pathname.split("/");
     segments[1] = newLocale;
-    const newPath = segments.join('/');
+    const newPath = segments.join("/");
 
     router.push(newPath);
   }
@@ -63,7 +63,7 @@ export function LanguageSwitcher() {
           variant="ghost"
           size="sm"
           className="gap-2"
-          aria-label={t('selectLanguage') || 'Select language'}
+          aria-label={t("selectLanguage") || "Select language"}
         >
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline-flex items-center gap-1">
@@ -83,9 +83,7 @@ export function LanguageSwitcher() {
           >
             <span>{localeFlags[loc]}</span>
             <span>{localeNames[loc]}</span>
-            {loc === locale && (
-              <span className="ml-auto text-primary">✓</span>
-            )}
+            {loc === locale && <span className="ml-auto text-primary">✓</span>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -105,9 +103,9 @@ export function LanguageSwitcherCompact() {
   function changeLocale(newLocale: Locale) {
     if (newLocale === locale) return;
 
-    const segments = pathname.split('/');
+    const segments = pathname.split("/");
     segments[1] = newLocale;
-    const newPath = segments.join('/');
+    const newPath = segments.join("/");
 
     router.push(newPath);
   }
@@ -115,11 +113,7 @@ export function LanguageSwitcherCompact() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Select language"
-        >
+        <Button variant="ghost" size="icon" aria-label="Select language">
           <span className="text-lg">{localeFlags[locale]}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -133,9 +127,7 @@ export function LanguageSwitcherCompact() {
           >
             <span>{localeFlags[loc]}</span>
             <span>{localeNames[loc]}</span>
-            {loc === locale && (
-              <span className="ml-auto text-primary">✓</span>
-            )}
+            {loc === locale && <span className="ml-auto text-primary">✓</span>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

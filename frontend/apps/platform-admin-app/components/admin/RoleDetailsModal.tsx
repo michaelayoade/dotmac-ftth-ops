@@ -25,7 +25,9 @@ export default function RoleDetailsModal(props: RoleDetailsModalProps) {
   const { role, permissions, ...rest } = props;
 
   const sharedRole = mapRoleToShared(role) as SharedRoleDetailsModalProps["role"];
-  const sharedPermissions = mapPermissionsToShared(permissions) as SharedRoleDetailsModalProps["permissions"];
+  const sharedPermissions = mapPermissionsToShared(
+    permissions,
+  ) as SharedRoleDetailsModalProps["permissions"];
 
   const toastAdapter = {
     success: (message: string) => toast({ title: "Success", description: message }),

@@ -22,7 +22,12 @@ import {
   Briefcase,
 } from "lucide-react";
 import { FiberNetworkMap } from "@/components/fibermaps/FiberNetworkMap";
-import { useFiberCables, useSplicePoints, useDistributionPoints, useServiceAreas } from "@/hooks/useFiberMaps";
+import {
+  useFiberCables,
+  useSplicePoints,
+  useDistributionPoints,
+  useServiceAreas,
+} from "@/hooks/useFiberMaps";
 import { useFieldInstallationJobs, type FieldInstallationJob } from "@/hooks/useJobs";
 import { useActiveTechnicianLocations, type TechnicianLocation } from "@/hooks/useTechnicians";
 import { useWebSocketTechnicianLocations } from "@/hooks/useWebSocketTechnicianLocations";
@@ -78,7 +83,13 @@ export default function FiberMapPage() {
   const jobs = jobsData?.jobs || [];
   const technicians = techniciansData || [];
 
-  const isLoading = cablesLoading || spliceLoading || distLoading || areasLoading || jobsLoading || techniciansLoading;
+  const isLoading =
+    cablesLoading ||
+    spliceLoading ||
+    distLoading ||
+    areasLoading ||
+    jobsLoading ||
+    techniciansLoading;
 
   // Calculate statistics
   const stats = {
@@ -91,7 +102,8 @@ export default function FiberMapPage() {
     totalCoverage: serviceAreas.length,
     activeJobs: jobs.filter((j) => ["pending", "assigned", "running"].includes(j.status)).length,
     completedJobs: jobs.filter((j) => j.status === "completed").length,
-    activeTechnicians: technicians.filter((t) => t.status === "available" || t.status === "on_job").length,
+    activeTechnicians: technicians.filter((t) => t.status === "available" || t.status === "on_job")
+      .length,
     totalTechnicians: technicians.length,
   };
 
@@ -227,9 +239,7 @@ export default function FiberMapPage() {
                   <Button
                     variant={showLayers.cables ? "default" : "outline"}
                     size="sm"
-                    onClick={() =>
-                      setShowLayers((prev) => ({ ...prev, cables: !prev.cables }))
-                    }
+                    onClick={() => setShowLayers((prev) => ({ ...prev, cables: !prev.cables }))}
                   >
                     <Cable className="h-4 w-4 mr-1" />
                     Cables
@@ -260,9 +270,7 @@ export default function FiberMapPage() {
                   <Button
                     variant={showLayers.jobs ? "default" : "outline"}
                     size="sm"
-                    onClick={() =>
-                      setShowLayers((prev) => ({ ...prev, jobs: !prev.jobs }))
-                    }
+                    onClick={() => setShowLayers((prev) => ({ ...prev, jobs: !prev.jobs }))}
                   >
                     <Briefcase className="h-4 w-4 mr-1" />
                     Jobs
@@ -323,7 +331,11 @@ export default function FiberMapPage() {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-4">
-                  {!selectedCable && !selectedSplicePoint && !selectedDistPoint && !selectedJob && !selectedTechnician ? (
+                  {!selectedCable &&
+                  !selectedSplicePoint &&
+                  !selectedDistPoint &&
+                  !selectedJob &&
+                  !selectedTechnician ? (
                     <div className="text-center py-8 text-gray-500">
                       <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p className="text-sm">Select an item on the map to view details</p>
@@ -358,7 +370,8 @@ export default function FiberMapPage() {
                             <div>
                               <span className="text-gray-600">Fibers:</span>
                               <span className="ml-2 font-medium">
-                                {selectedCable.available_fibers}/{selectedCable.fiber_count} available
+                                {selectedCable.available_fibers}/{selectedCable.fiber_count}{" "}
+                                available
                               </span>
                             </div>
                             <div>
@@ -445,9 +458,13 @@ export default function FiberMapPage() {
                               <Badge
                                 className="ml-2"
                                 variant={
-                                  selectedJob.status === "completed" ? "default" :
-                                  selectedJob.status === "failed" ? "destructive" :
-                                  selectedJob.status === "running" ? "default" : "secondary"
+                                  selectedJob.status === "completed"
+                                    ? "default"
+                                    : selectedJob.status === "failed"
+                                      ? "destructive"
+                                      : selectedJob.status === "running"
+                                        ? "default"
+                                        : "secondary"
                                 }
                               >
                                 {selectedJob.status.toUpperCase()}
@@ -508,9 +525,13 @@ export default function FiberMapPage() {
                               <Badge
                                 className="ml-2"
                                 variant={
-                                  selectedTechnician.status === "available" ? "default" :
-                                  selectedTechnician.status === "on_job" ? "default" :
-                                  selectedTechnician.status === "on_break" ? "secondary" : "outline"
+                                  selectedTechnician.status === "available"
+                                    ? "default"
+                                    : selectedTechnician.status === "on_job"
+                                      ? "default"
+                                      : selectedTechnician.status === "on_break"
+                                        ? "secondary"
+                                        : "outline"
                                 }
                               >
                                 {selectedTechnician.status.replace("_", " ").toUpperCase()}
@@ -520,7 +541,8 @@ export default function FiberMapPage() {
                               <div>
                                 <span className="text-gray-600">Location:</span>
                                 <span className="ml-2 font-medium text-xs">
-                                  {selectedTechnician.latitude.toFixed(4)}, {selectedTechnician.longitude.toFixed(4)}
+                                  {selectedTechnician.latitude.toFixed(4)},{" "}
+                                  {selectedTechnician.longitude.toFixed(4)}
                                 </span>
                               </div>
                             )}
@@ -594,8 +616,11 @@ export default function FiberMapPage() {
                           <div className="flex items-center gap-2 mt-1">
                             <Badge
                               variant={
-                                job.status === "completed" ? "default" :
-                                job.status === "failed" ? "destructive" : "outline"
+                                job.status === "completed"
+                                  ? "default"
+                                  : job.status === "failed"
+                                    ? "destructive"
+                                    : "outline"
                               }
                               className="text-xs"
                             >

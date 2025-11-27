@@ -95,9 +95,7 @@ export const createSimpleSelectMockComponents = () => {
       [value, internalValue, setValue, registerOption, unregisterOption, options],
     );
 
-    return (
-      <SelectContext.Provider value={contextValue}>{children}</SelectContext.Provider>
-    );
+    return <SelectContext.Provider value={contextValue}>{children}</SelectContext.Provider>;
   };
 
   const SelectTrigger = ({
@@ -133,13 +131,7 @@ export const createSimpleSelectMockComponents = () => {
   const SelectContent = ({ children }: { children: ReactNode }) => <>{children}</>;
   const SelectValue = () => null;
 
-  const SelectItem = ({
-    value,
-    children,
-  }: {
-    value: string;
-    children: ReactNode;
-  }) => {
+  const SelectItem = ({ value, children }: { value: string; children: ReactNode }) => {
     const context = useContext(SelectContext);
 
     useEffect(() => {

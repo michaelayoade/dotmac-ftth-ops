@@ -24,12 +24,7 @@ import { Checkbox } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { IPCIDRInput } from "@/components/forms/IPCIDRInput";
 import { Badge } from "@dotmac/ui";
-import {
-  Loader2,
-  AlertCircle,
-  Info,
-  Sparkles,
-} from "lucide-react";
+import { Loader2, AlertCircle, Info, Sparkles } from "lucide-react";
 import { wireguardPeerSchema, WireGuardPeer } from "@/lib/validations/ip-address";
 
 type FormData = WireGuardPeer;
@@ -123,7 +118,7 @@ export function WireGuardPeerForm({
               <Label htmlFor="name">
                 Peer Name <span className="text-red-500">*</span>
               </Label>
-              <Input id="name" {...register("name")} placeholder="John&apos;s Laptop" />
+              <Input id="name" {...register("name")} placeholder="John's Laptop" />
               {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
             </div>
 

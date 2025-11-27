@@ -5,8 +5,8 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { http, HttpResponse } from 'msw';
-import type { User, UserUpdateRequest, UserListResponse } from '../../../hooks/useUsers';
+import { http, HttpResponse } from "msw";
+import type { User, UserUpdateRequest, UserListResponse } from "../../../hooks/useUsers";
 
 // In-memory storage for test data
 let users: User[] = [];
@@ -29,13 +29,13 @@ export function createMockUser(overrides?: Partial<User>): User {
     is_verified: true,
     is_superuser: false,
     is_platform_admin: false,
-    roles: ['user'],
+    roles: ["user"],
     permissions: [],
     mfa_enabled: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     last_login: new Date().toISOString(),
-    tenant_id: 'tenant-1',
+    tenant_id: "tenant-1",
     phone_number: null,
     avatar_url: null,
     ...overrides,
@@ -49,8 +49,8 @@ export function seedUserData(usersData: User[]) {
 
 export const userHandlers = [
   // GET /users - List all users
-  http.get('*/users', ({ request, params }) => {
-    console.log('[MSW] GET /users', { totalUsers: users.length });
+  http.get("*/users", ({ request, params }) => {
+    console.log("[MSW] GET /users", { totalUsers: users.length });
 
     const response: UserListResponse = {
       users,
@@ -63,52 +63,49 @@ export const userHandlers = [
   }),
 
   // GET /users/me - Get current user
-  http.get('*/users/me', ({ request, params }) => {
-    console.log('[MSW] GET /users/me');
+  http.get("*/users/me", ({ request, params }) => {
+    console.log("[MSW] GET /users/me");
 
     // Return the first user or create a default current user
-    const currentUser = users.length > 0 ? users[0] : createMockUser({
-      id: 'current-user',
-      username: 'currentuser',
-      email: 'current@example.com',
-      full_name: 'Current User',
-    });
+    const currentUser =
+      users.length > 0
+        ? users[0]
+        : createMockUser({
+            id: "current-user",
+            username: "currentuser",
+            email: "current@example.com",
+            full_name: "Current User",
+          });
 
     return HttpResponse.json(currentUser);
   }),
 
   // GET /users/:id - Get single user
-  http.get('*/users/:id', ({ request, params }) => {
+  http.get("*/users/:id", ({ request, params }) => {
     const { id } = params;
 
-    console.log('[MSW] GET /users/:id', { id });
+    console.log("[MSW] GET /users/:id", { id });
 
     const user = users.find((u) => u.id === id);
 
     if (!user) {
-      return HttpResponse.json(
-        { error: 'User not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "User not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     return HttpResponse.json(user);
   }),
 
   // PUT /users/:id - Update user
-  http.put('*/users/:id', async ({ request, params }) => {
+  http.put("*/users/:id", async ({ request, params }) => {
     const { id } = params;
-    const updates = await request.json() as UserUpdateRequest;
+    const updates = (await request.json()) as UserUpdateRequest;
 
-    console.log('[MSW] PUT /users/:id', { id, updates });
+    console.log("[MSW] PUT /users/:id", { id, updates });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return HttpResponse.json(
-        { error: 'User not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "User not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     users[index] = {
@@ -121,18 +118,15 @@ export const userHandlers = [
   }),
 
   // DELETE /users/:id - Delete user
-  http.delete('*/users/:id', ({ request, params }) => {
+  http.delete("*/users/:id", ({ request, params }) => {
     const { id } = params;
 
-    console.log('[MSW] DELETE /users/:id', { id });
+    console.log("[MSW] DELETE /users/:id", { id });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return HttpResponse.json(
-        { error: 'User not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "User not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     users.splice(index, 1);
@@ -141,18 +135,15 @@ export const userHandlers = [
   }),
 
   // POST /users/:id/disable - Disable user
-  http.post('*/users/:id/disable', ({ request, params }) => {
+  http.post("*/users/:id/disable", ({ request, params }) => {
     const { id } = params;
 
-    console.log('[MSW] POST /users/:id/disable', { id });
+    console.log("[MSW] POST /users/:id/disable", { id });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return HttpResponse.json(
-        { error: 'User not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "User not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     users[index].is_active = false;
@@ -162,18 +153,15 @@ export const userHandlers = [
   }),
 
   // POST /users/:id/enable - Enable user
-  http.post('*/users/:id/enable', ({ request, params }) => {
+  http.post("*/users/:id/enable", ({ request, params }) => {
     const { id } = params;
 
-    console.log('[MSW] POST /users/:id/enable', { id });
+    console.log("[MSW] POST /users/:id/enable", { id });
 
     const index = users.findIndex((u) => u.id === id);
 
     if (index === -1) {
-      return HttpResponse.json(
-        { error: 'User not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ error: "User not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
     users[index].is_active = true;

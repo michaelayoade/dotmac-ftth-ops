@@ -4,15 +4,15 @@
  * Hooks for fetching RADIUS subscriber and session data
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { useAppConfig } from '@/providers/AppConfigContext';
-import { buildApiUrl, parseListResponse, handleApiError } from '../../../shared/utils/api-utils';
+import { useQuery } from "@tanstack/react-query";
+import { useAppConfig } from "@/providers/AppConfigContext";
+import { buildApiUrl, parseListResponse, handleApiError } from "../../../shared/utils/api-utils";
 import {
   RADIUSSubscriber,
   RADIUSSubscriberSchema,
   RADIUSSession,
   RADIUSSessionSchema,
-} from '../../../shared/utils/radius-schemas';
+} from "../../../shared/utils/radius-schemas";
 
 // Re-export types for convenience
 export type { RADIUSSubscriber, RADIUSSession };
@@ -25,20 +25,20 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
   const { api } = useAppConfig();
 
   return useQuery({
-    queryKey: ['radius-subscribers', offset, limit, api.baseUrl, api.prefix],
+    queryKey: ["radius-subscribers", offset, limit, api.baseUrl, api.prefix],
     queryFn: async () => {
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       };
 
-      const url = `${buildApiUrl('/radius/subscribers', api)}?offset=${offset}&limit=${limit}`;
+      const url = `${buildApiUrl("/radius/subscribers", api)}?offset=${offset}&limit=${limit}`;
       const response = await fetch(url, {
-        credentials: 'include',
+        credentials: "include",
         headers,
       });
 
       if (!response.ok) {
-        await handleApiError(response, 'Failed to fetch RADIUS subscribers');
+        await handleApiError(response, "Failed to fetch RADIUS subscribers");
       }
 
       return parseListResponse<RADIUSSubscriber>(response, RADIUSSubscriberSchema);
@@ -52,20 +52,20 @@ export function useRADIUSSessions(offset = 0, limit = 100, options?: UseRADIUSOp
   const { api } = useAppConfig();
 
   return useQuery({
-    queryKey: ['radius-sessions', offset, limit, api.baseUrl, api.prefix],
+    queryKey: ["radius-sessions", offset, limit, api.baseUrl, api.prefix],
     queryFn: async () => {
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       };
 
-      const url = `${buildApiUrl('/radius/sessions', api)}?offset=${offset}&limit=${limit}`;
+      const url = `${buildApiUrl("/radius/sessions", api)}?offset=${offset}&limit=${limit}`;
       const response = await fetch(url, {
-        credentials: 'include',
+        credentials: "include",
         headers,
       });
 
       if (!response.ok) {
-        await handleApiError(response, 'Failed to fetch RADIUS sessions');
+        await handleApiError(response, "Failed to fetch RADIUS sessions");
       }
 
       return parseListResponse<RADIUSSession>(response, RADIUSSessionSchema);

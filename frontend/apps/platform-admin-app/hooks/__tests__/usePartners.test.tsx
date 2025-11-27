@@ -125,7 +125,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners?page=1&page_size=50"),
         expect.objectContaining({
           credentials: "include",
-        })
+        }),
       );
     });
 
@@ -149,7 +149,7 @@ describe("usePartners", () => {
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
           expect.stringContaining("status=active"),
-          expect.anything()
+          expect.anything(),
         );
       });
     });
@@ -174,7 +174,7 @@ describe("usePartners", () => {
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
           expect.stringContaining("page=2&page_size=25"),
-          expect.anything()
+          expect.anything(),
         );
       });
     });
@@ -331,9 +331,9 @@ describe("usePartners", () => {
                     page_size: 50,
                   }),
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => usePartners(), {
@@ -385,7 +385,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/partner-1"),
         expect.objectContaining({
           credentials: "include",
-        })
+        }),
       );
     });
 
@@ -464,7 +464,7 @@ describe("usePartners", () => {
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify(createData),
-        })
+        }),
       );
     });
 
@@ -562,7 +562,7 @@ describe("usePartners", () => {
             company_name: "New Partner",
             primary_email: "new@partner.com",
           });
-        })
+        }),
       ).rejects.toThrow();
     });
 
@@ -576,9 +576,9 @@ describe("usePartners", () => {
                   ok: true,
                   json: async () => ({}),
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useCreatePartner(), {
@@ -648,7 +648,7 @@ describe("usePartners", () => {
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify(updateData),
-        })
+        }),
       );
     });
 
@@ -746,7 +746,7 @@ describe("usePartners", () => {
             partnerId: "partner-1",
             data: { company_name: "Updated Partner" },
           });
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -769,7 +769,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/partner-1"),
         expect.objectContaining({
           method: "DELETE",
-        })
+        }),
       );
     });
 
@@ -841,7 +841,7 @@ describe("usePartners", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("partner-1");
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -886,7 +886,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/partner-1/quota/check"),
         expect.objectContaining({
           credentials: "include",
-        })
+        }),
       );
     });
 
@@ -926,7 +926,7 @@ describe("usePartners", () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("tenant_id=tenant-1"),
-        expect.anything()
+        expect.anything(),
       );
     });
 
@@ -947,7 +947,7 @@ describe("usePartners", () => {
             partnerId: "partner-1",
             requestedLicenses: 1000,
           });
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -1000,7 +1000,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/partner-1/customers"),
         expect.objectContaining({
           method: "POST",
-        })
+        }),
       );
     });
 
@@ -1130,7 +1130,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/partner-1/licenses/allocate"),
         expect.objectContaining({
           method: "POST",
-        })
+        }),
       );
     });
 
@@ -1264,7 +1264,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/partner-1/tenants/provision"),
         expect.objectContaining({
           method: "POST",
-        })
+        }),
       );
     });
 
@@ -1327,7 +1327,7 @@ describe("usePartners", () => {
         expect.anything(),
         expect.objectContaining({
           body: expect.stringContaining("Custom Company"),
-        })
+        }),
       );
     });
   });
@@ -1375,7 +1375,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/partner-1/commissions"),
         expect.objectContaining({
           method: "POST",
-        })
+        }),
       );
     });
 
@@ -1543,7 +1543,7 @@ describe("usePartners", () => {
         expect.stringContaining("/api/v1/partners/onboarding/complete"),
         expect.objectContaining({
           method: "POST",
-        })
+        }),
       );
     });
 
@@ -1669,10 +1669,9 @@ describe("usePartners", () => {
         }),
       });
 
-      const { result: onboardingResult } = renderHook(
-        () => useCompletePartnerOnboarding(),
-        { wrapper }
-      );
+      const { result: onboardingResult } = renderHook(() => useCompletePartnerOnboarding(), {
+        wrapper,
+      });
 
       await act(async () => {
         await onboardingResult.current.mutateAsync({
@@ -1721,7 +1720,7 @@ describe("usePartners", () => {
             license_template_id: "tmpl-1",
             deployment_type: "dedicated",
           });
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -1795,9 +1794,9 @@ describe("usePartners", () => {
                     page_size: 50,
                   }),
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => usePartners(), {
@@ -1821,9 +1820,9 @@ describe("usePartners", () => {
                   ok: true,
                   json: async () => ({}),
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useCreatePartner(), {

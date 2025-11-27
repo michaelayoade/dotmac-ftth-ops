@@ -3,7 +3,7 @@
  * Mocks version management, breaking changes, usage tracking, and configuration
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // In-memory storage
 let versions: any[] = [];
@@ -110,7 +110,7 @@ export const versioningHandlers = [
 
     if (isSupported !== null) {
       filteredVersions = filteredVersions.filter(
-        (v) => v.is_supported === (isSupported === "true")
+        (v) => v.is_supported === (isSupported === "true"),
       );
     }
 
@@ -358,7 +358,7 @@ export const versioningHandlers = [
 
     configuration.deprecated_versions.push(version);
     configuration.supported_versions = configuration.supported_versions.filter(
-      (v: string) => v !== version
+      (v: string) => v !== version,
     );
 
     return HttpResponse.json(versions[versionIndex]);
@@ -383,7 +383,7 @@ export const versioningHandlers = [
     };
 
     configuration.deprecated_versions = configuration.deprecated_versions.filter(
-      (v: string) => v !== version
+      (v: string) => v !== version,
     );
     if (!configuration.supported_versions.includes(version)) {
       configuration.supported_versions.push(version as string);
@@ -426,10 +426,10 @@ export const versioningHandlers = [
 
     versions.splice(versionIndex, 1);
     configuration.supported_versions = configuration.supported_versions.filter(
-      (v: string) => v !== version
+      (v: string) => v !== version,
     );
     configuration.deprecated_versions = configuration.deprecated_versions.filter(
-      (v: string) => v !== version
+      (v: string) => v !== version,
     );
 
     return new HttpResponse(null, { status: 204 });

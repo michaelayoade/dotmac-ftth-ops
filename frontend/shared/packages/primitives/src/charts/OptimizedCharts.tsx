@@ -137,8 +137,7 @@ const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
         }
 
         const safeName = entry.name ? sanitizeText(String(entry.name)) : "Unknown";
-        const rawValue =
-          typeof entry.value === "number" ? entry.value : Number(entry.value) || 0;
+        const rawValue = typeof entry.value === "number" ? entry.value : Number(entry.value) || 0;
 
         let formattedValue: string | undefined;
         let formattedName: string | undefined;

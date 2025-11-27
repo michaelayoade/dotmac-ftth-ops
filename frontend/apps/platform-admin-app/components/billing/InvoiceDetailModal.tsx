@@ -110,7 +110,6 @@ export function InvoiceDetailModal({
     }
   }, [isOpen, invoice]);
 
-
   const handleSendEmail = async () => {
     if (!invoice) return;
     await sendInvoiceEmail.mutateAsync({

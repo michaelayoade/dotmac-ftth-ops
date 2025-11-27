@@ -3,6 +3,10 @@ Tests for Docker environment detection utilities.
 """
 
 import os
+
+import pytest
+
+pytestmark = pytest.mark.unit
 from pathlib import Path
 from unittest.mock import mock_open, patch
 

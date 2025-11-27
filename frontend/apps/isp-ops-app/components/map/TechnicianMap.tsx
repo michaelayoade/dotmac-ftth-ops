@@ -11,15 +11,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  MapPin,
-  Navigation,
-  Clock,
-  User,
-  Phone,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
+import { MapPin, Navigation, Clock, User, Phone, CheckCircle2, AlertCircle } from "lucide-react";
 import type { Technician, TaskAssignment } from "@/types/field-service";
 import { format, parseISO } from "date-fns";
 
@@ -134,7 +126,7 @@ export default function TechnicianMap({
         mapRef.current.flyTo(
           [selectedTech.currentLocationLat, selectedTech.currentLocationLng],
           15,
-          { duration: 1 }
+          { duration: 1 },
         );
       }
     }
@@ -146,7 +138,7 @@ export default function TechnicianMap({
       const bounds = L.latLngBounds(
         technicians
           .filter((t) => t.currentLocationLat && t.currentLocationLng)
-          .map((t) => [t.currentLocationLat!, t.currentLocationLng!])
+          .map((t) => [t.currentLocationLat!, t.currentLocationLng!]),
       );
 
       if (bounds.isValid()) {
@@ -193,9 +185,7 @@ export default function TechnicianMap({
                     <div className="flex items-center justify-between mb-2">
                       <div className="font-semibold text-base">{tech.fullName}</div>
                       {tech.isAvailable ? (
-                        <Badge className="bg-green-100 text-green-800 text-xs">
-                          Available
-                        </Badge>
+                        <Badge className="bg-green-100 text-green-800 text-xs">Available</Badge>
                       ) : (
                         <Badge className="bg-yellow-100 text-yellow-800 text-xs">Busy</Badge>
                       )}
@@ -232,16 +222,15 @@ export default function TechnicianMap({
                           </div>
                           <div>
                             Time:{" "}
-                            {format(
-                              parseISO(tech.currentAssignment.scheduledStart),
-                              "h:mm a"
-                            )}{" "}
-                            -{" "}
+                            {format(parseISO(tech.currentAssignment.scheduledStart), "h:mm a")} -{" "}
                             {format(parseISO(tech.currentAssignment.scheduledEnd), "h:mm a")}
                           </div>
                           {tech.distanceToTask && (
                             <div>
-                              Distance: <span className="font-medium">{tech.distanceToTask.toFixed(1)} km</span>
+                              Distance:{" "}
+                              <span className="font-medium">
+                                {tech.distanceToTask.toFixed(1)} km
+                              </span>
                             </div>
                           )}
                         </div>
@@ -254,7 +243,7 @@ export default function TechnicianMap({
                               onClick={() => {
                                 window.open(
                                   `https://www.google.com/maps/dir/?api=1&origin=${tech.currentLocationLat},${tech.currentLocationLng}&destination=${tech.currentAssignment!.taskLocationLat},${tech.currentAssignment!.taskLocationLng}`,
-                                  "_blank"
+                                  "_blank",
                                 );
                               }}
                             >
@@ -271,10 +260,7 @@ export default function TechnicianMap({
                         <div className="font-medium text-sm mb-1">Skills</div>
                         <div className="flex flex-wrap gap-1">
                           {tech.skills.slice(0, 3).map((skill, idx) => (
-                            <Badge
-                              key={idx}
-                              className="bg-blue-100 text-blue-800 text-xs"
-                            >
+                            <Badge key={idx} className="bg-blue-100 text-blue-800 text-xs">
                               {skill.skill.replace("_", " ")}
                             </Badge>
                           ))}
@@ -337,7 +323,7 @@ export default function TechnicianMap({
                             <div>
                               {format(
                                 parseISO(tech.currentAssignment.scheduledStart),
-                                "MMM d, h:mm a"
+                                "MMM d, h:mm a",
                               )}
                             </div>
                             {tech.currentAssignment.taskLocationAddress && (

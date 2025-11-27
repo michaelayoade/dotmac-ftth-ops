@@ -24,10 +24,10 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { logger } from "@/lib/logger";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 
-type DisplayUser = Pick<ExtendedUser, "email" | "username" | "full_name" | "tenant_id">;
+type DisplayUser = Pick<UserInfo, "email" | "username" | "full_name" | "tenant_id">;
 
 const toError = (error: unknown) =>
   error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
@@ -155,7 +155,7 @@ function SettingCard({ card }: { card: SettingCard }) {
     <Link
       href={card.href}
       className={`group relative rounded-lg border p-6 hover:border-border transition-all ${
-        card['status']? statusColors[card.status] : "border-border bg-card hover:bg-accent/50"
+        card["status"] ? statusColors[card.status] : "border-border bg-card hover:bg-accent/50"
       }`}
     >
       <div className="flex items-start gap-4">
@@ -175,7 +175,7 @@ function SettingCard({ card }: { card: SettingCard }) {
           {card.badge && (
             <span
               className={`inline-block mt-3 px-2 py-1 text-xs font-medium rounded-full ${
-                card['status']? badgeColors[card.status] : "bg-muted text-muted-foreground"
+                card["status"] ? badgeColors[card.status] : "bg-muted text-muted-foreground"
               }`}
             >
               {card.badge}
@@ -206,8 +206,8 @@ interface TenantStats {
 }
 
 function SettingsHubPageContent() {
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as DisplayUser | undefined;
+  const { user: sessionUser, isLoading: authLoading } = useSession();
+  const user = sessionUser as DisplayUser | undefined;
   const [tenantStats, setTenantStats] = useState<TenantStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
@@ -248,9 +248,7 @@ function SettingsHubPageContent() {
     return [
       {
         label: "Active Users",
-        value: tenantStats
-          ? `${tenantStats.active_users}/${tenantStats.total_users}`
-          : "—",
+        value: tenantStats ? `${tenantStats.active_users}/${tenantStats.total_users}` : "—",
         icon: Users,
       },
       {
@@ -315,8 +313,7 @@ function SettingsHubPageContent() {
                   <p className="text-sm text-muted-foreground">{user.email as string}</p>
                   <p className="text-xs text-foreground0 mt-1">
                     Organization: {user.tenant_id || "Personal"} • Plan:{" "}
-                    {tenantStats?.plan_type || "—"} • Users:{" "}
-                    {tenantStats?.total_users ?? "—"}
+                    {tenantStats?.plan_type || "—"} • Users: {tenantStats?.total_users ?? "—"}
                   </p>
                 </div>
               </div>

@@ -40,7 +40,7 @@ interface FeatureFlag {
 function FeatureFlagDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const flagName = decodeURIComponent(params?.['flagName'] as string);
+  const flagName = decodeURIComponent(params?.["flagName"] as string);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -50,12 +50,16 @@ function FeatureFlagDetailsPageContent() {
   const apiBaseUrl = api.baseUrl || "";
 
   // Fetch flag details
-  const { data: flag, isLoading, refetch } = useQuery<FeatureFlag>({
+  const {
+    data: flag,
+    isLoading,
+    refetch,
+  } = useQuery<FeatureFlag>({
     queryKey: ["feature-flag", flagName, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) {
         if (response.status === 404) {
@@ -84,7 +88,7 @@ function FeatureFlagDetailsPageContent() {
             description: flag?.description,
             context: flag?.context || {},
           }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to toggle flag");
       return response.json();
@@ -120,7 +124,7 @@ function FeatureFlagDetailsPageContent() {
             description,
             context: flag?.context || {},
           }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to update description");
       return response.json();
@@ -151,7 +155,7 @@ function FeatureFlagDetailsPageContent() {
         {
           method: "DELETE",
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to delete flag");
       return response.json();
@@ -201,7 +205,9 @@ function FeatureFlagDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <XCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Feature Flag Not Found</h2>
-        <p className="text-muted-foreground mb-4">The feature flag you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The feature flag you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/feature-flags">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -251,9 +257,7 @@ function FeatureFlagDetailsPageContent() {
               onCheckedChange={(checked) => toggleFlagMutation.mutate(checked)}
               disabled={toggleFlagMutation.isPending}
             />
-            <Label htmlFor="flag-enabled">
-              {flag.enabled ? "Enabled" : "Disabled"}
-            </Label>
+            <Label htmlFor="flag-enabled">{flag.enabled ? "Enabled" : "Disabled"}</Label>
           </div>
           <Button
             variant="destructive"
@@ -293,9 +297,7 @@ function FeatureFlagDetailsPageContent() {
                     <ToggleLeft className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Status</p>
                   </div>
-                  <p className="font-medium capitalize">
-                    {flag.enabled ? "Enabled" : "Disabled"}
-                  </p>
+                  <p className="font-medium capitalize">{flag.enabled ? "Enabled" : "Disabled"}</p>
                 </div>
               </div>
 
@@ -343,7 +345,9 @@ function FeatureFlagDetailsPageContent() {
                   </div>
                 ) : (
                   <p className="text-sm">
-                    {flag.description || <span className="text-muted-foreground">No description provided</span>}
+                    {flag.description || (
+                      <span className="text-muted-foreground">No description provided</span>
+                    )}
                   </p>
                 )}
               </div>
@@ -379,7 +383,9 @@ function FeatureFlagDetailsPageContent() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Context Rules</CardTitle>
-              <CardDescription>Conditional rules for when this flag should be enabled</CardDescription>
+              <CardDescription>
+                Conditional rules for when this flag should be enabled
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {Object.keys(flag.context).length === 0 ? (

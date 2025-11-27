@@ -16,6 +16,8 @@ from unittest.mock import AsyncMock
 from uuid import UUID, uuid4
 
 import pytest
+
+pytestmark = pytest.mark.integration
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

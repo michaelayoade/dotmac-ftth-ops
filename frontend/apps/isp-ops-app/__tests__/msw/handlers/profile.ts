@@ -3,7 +3,7 @@
  * Mocks user profile, password, 2FA, avatar, sessions, and account management
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // Types
 export interface MockSession {
@@ -103,10 +103,11 @@ export function seedProfileData(profile: Partial<MockUserData>): void {
 
 export function seedSessions(sessionList: MockSession[]): void {
   sessions = sessionList;
-  nextSessionId = sessionList.reduce((max, s) => {
-    const id = parseInt(s.session_id.replace("session-", ""));
-    return Math.max(max, isNaN(id) ? 0 : id);
-  }, 0) + 1;
+  nextSessionId =
+    sessionList.reduce((max, s) => {
+      const id = parseInt(s.session_id.replace("session-", ""));
+      return Math.max(max, isNaN(id) ? 0 : id);
+    }, 0) + 1;
 }
 
 export function seed2FAEnabled(enabled: boolean): void {
@@ -172,7 +173,10 @@ export const profileHandlers = [
       return HttpResponse.json({ error: "Phone number required" }, { status: 400 });
     }
 
-    return HttpResponse.json({ message: "Phone verification initiated", verification_id: "verify-123" });
+    return HttpResponse.json({
+      message: "Phone verification initiated",
+      verification_id: "verify-123",
+    });
   }),
 
   // POST /auth/2fa/enable - Enable 2FA
@@ -186,10 +190,10 @@ export const profileHandlers = [
     twoFactorSecret = `secret-${Date.now()}`;
 
     return HttpResponse.json({
-        secret: twoFactorSecret,
-        qr_code: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...`,
-        backup_codes: ["code1", "code2", "code3", "code4", "code5"],
-        provisioning_uri: `otpauth://totp/App:user@example.com?secret=${twoFactorSecret}`,
+      secret: twoFactorSecret,
+      qr_code: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...`,
+      backup_codes: ["code1", "code2", "code3", "code4", "code5"],
+      provisioning_uri: `otpauth://totp/App:user@example.com?secret=${twoFactorSecret}`,
     });
   }),
 
@@ -205,9 +209,9 @@ export const profileHandlers = [
     twoFactorEnabled = true;
 
     return HttpResponse.json({
-        message: "2FA enabled successfully",
-        mfa_enabled: true,
-      });
+      message: "2FA enabled successfully",
+      mfa_enabled: true,
+    });
   }),
 
   // POST /auth/2fa/disable - Disable 2FA
@@ -222,18 +226,18 @@ export const profileHandlers = [
     twoFactorSecret = null;
 
     return HttpResponse.json({
-        message: "2FA disabled successfully",
-        mfa_enabled: false,
-      });
+      message: "2FA disabled successfully",
+      mfa_enabled: false,
+    });
   }),
 
   // POST /auth/me/avatar - Upload avatar
   http.post("*/api/v1/auth/me/avatar", async (req) => {
     // Simulate file upload - in real API this would handle multipart/form-data
     return HttpResponse.json({
-        avatar_url: "https://example.com/avatars/user-123.jpg",
-        message: "Avatar uploaded successfully",
-      });
+      avatar_url: "https://example.com/avatars/user-123.jpg",
+      message: "Avatar uploaded successfully",
+    });
   }),
 
   // DELETE /auth/me - Delete account
@@ -277,9 +281,9 @@ export const profileHandlers = [
   // GET /auth/me/sessions - List sessions
   http.get("*/api/v1/auth/me/sessions", ({ request }) => {
     return HttpResponse.json({
-        sessions,
-        total: sessions.length,
-      });
+      sessions,
+      total: sessions.length,
+    });
   }),
 
   // DELETE /auth/me/sessions/:sessionId - Revoke specific session
@@ -302,8 +306,8 @@ export const profileHandlers = [
     sessions = [];
 
     return HttpResponse.json({
-        message: "All sessions revoked successfully",
-        sessions_revoked: sessionsRevoked,
-      });
+      message: "All sessions revoked successfully",
+      sessions_revoked: sessionsRevoked,
+    });
   }),
 ];

@@ -52,19 +52,19 @@ export function CustomerEditModal<TCustomer = any>({
 
     // Validate required fields
     const newErrors: Record<string, string> = {};
-    if (!formData['email']) {
-      newErrors['email'] = "Email is required";
+    if (!formData["email"]) {
+      newErrors["email"] = "Email is required";
     }
-    if (formData['customer_type'] === "individual") {
-      if (!formData['first_name']) {
-        newErrors['first_name'] = "First name is required";
+    if (formData["customer_type"] === "individual") {
+      if (!formData["first_name"]) {
+        newErrors["first_name"] = "First name is required";
       }
-      if (!formData['last_name']) {
-        newErrors['last_name'] = "Last name is required";
+      if (!formData["last_name"]) {
+        newErrors["last_name"] = "Last name is required";
       }
     } else {
-      if (!formData['company_name']) {
-        newErrors['company_name'] = "Company name is required";
+      if (!formData["company_name"]) {
+        newErrors["company_name"] = "Company name is required";
       }
     }
 

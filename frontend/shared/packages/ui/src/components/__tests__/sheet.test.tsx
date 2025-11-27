@@ -34,7 +34,7 @@ describe("Sheet", () => {
             <button>Action</button>
           </SheetFooter>
         </SheetContent>
-      </Sheet>
+      </Sheet>,
     );
   };
 
@@ -203,7 +203,7 @@ describe("Sheet", () => {
               <SheetTitle>Title</SheetTitle>
             </SheetHeader>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -236,7 +236,7 @@ describe("Sheet", () => {
           <SheetContent>
             <SheetTitle data-testid="title">Title</SheetTitle>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -269,7 +269,7 @@ describe("Sheet", () => {
           <SheetContent>
             <SheetDescription data-testid="description">Description</SheetDescription>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -305,7 +305,7 @@ describe("Sheet", () => {
               <button>Button</button>
             </SheetFooter>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -371,7 +371,7 @@ describe("Sheet", () => {
           <SheetContent>
             <SheetTitle>Title</SheetTitle>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       expect(screen.queryByText("Title")).not.toBeInTheDocument();
@@ -385,7 +385,7 @@ describe("Sheet", () => {
           <SheetContent>
             <SheetTitle>Title</SheetTitle>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await waitFor(() => {
@@ -402,7 +402,7 @@ describe("Sheet", () => {
           <SheetContent>
             <SheetTitle>Title</SheetTitle>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await waitFor(() => {
@@ -461,7 +461,7 @@ describe("Sheet", () => {
             <input placeholder="Input 1" />
             <input placeholder="Input 2" />
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -489,7 +489,7 @@ describe("Sheet", () => {
           <SheetContent ref={ref}>
             <SheetTitle>Title</SheetTitle>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -509,7 +509,7 @@ describe("Sheet", () => {
           <SheetContent>
             <SheetTitle ref={ref}>Title</SheetTitle>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -529,7 +529,7 @@ describe("Sheet", () => {
           <SheetContent>
             <SheetDescription ref={ref}>Description</SheetDescription>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -548,7 +548,7 @@ describe("Sheet", () => {
           <SheetTrigger>Open</SheetTrigger>
           <SheetOverlay ref={ref} />
           <SheetContent>Content</SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -602,7 +602,7 @@ describe("Sheet", () => {
               <a href="#contact">Contact</a>
             </nav>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Menu"));
@@ -633,7 +633,7 @@ describe("Sheet", () => {
               <button>Save</button>
             </SheetFooter>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Settings"));
@@ -664,7 +664,7 @@ describe("Sheet", () => {
               <button>Checkout</button>
             </SheetFooter>
           </SheetContent>
-        </Sheet>
+        </Sheet>,
       );
 
       await user.click(screen.getByText("Cart (3)"));

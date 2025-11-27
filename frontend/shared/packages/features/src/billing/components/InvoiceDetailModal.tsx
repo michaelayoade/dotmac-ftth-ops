@@ -7,23 +7,10 @@
 
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { formatDistanceToNow } from "date-fns";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -170,8 +157,11 @@ export function InvoiceDetailModal({
       },
     } satisfies Record<InvoiceStatus, { label: string; className: string; icon: LucideIcon }>;
 
-    const { label, className, icon: Icon } =
-      statusConfig[status] ?? statusConfig[InvoiceStatus.DRAFT];
+    const {
+      label,
+      className,
+      icon: Icon,
+    } = statusConfig[status] ?? statusConfig[InvoiceStatus.DRAFT];
 
     return (
       <Badge className={className}>
@@ -255,12 +245,7 @@ export function InvoiceDetailModal({
                 </Button>
               )}
             {onDownloadPDF && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onDownloadPDF}
-                disabled={isProcessing}
-              >
+              <Button size="sm" variant="outline" onClick={onDownloadPDF} disabled={isProcessing}>
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </Button>

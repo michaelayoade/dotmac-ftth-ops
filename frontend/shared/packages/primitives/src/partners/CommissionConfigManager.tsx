@@ -326,304 +326,312 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
           </ModalHeader>
           <ModalBody>
             <div className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <Input
-                value={formData.name || ""}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Standard Partner Commission"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Commission Structure *
-              </label>
-              <select
-                value={formData.commission_structure || "percentage"}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    commission_structure: e.target.value as any,
-                    rate_config: e.target.value === "percentage" ? { percentage: "10.0" } : {},
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="flat_rate">Flat Rate</option>
-                <option value="percentage">Percentage</option>
-                <option value="tiered">Tiered</option>
-                <option value="performance_based">Performance Based</option>
-                <option value="hybrid">Hybrid</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              value={formData.description || ""}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-              placeholder="Description of this commission structure..."
-            />
-          </div>
-
-          {/* Rate Configuration */}
-          <div className="border rounded-lg p-4">
-            <h3 className="font-medium mb-3">Rate Configuration</h3>
-
-            {formData.commission_structure === "percentage" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Commission Percentage *
-                </label>
-                <div className="relative">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                   <Input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    value={formData.rate_config?.percentage || ""}
+                    value={formData.name || ""}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Standard Partner Commission"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Commission Structure *
+                  </label>
+                  <select
+                    value={formData.commission_structure || "percentage"}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        rate_config: { percentage: e.target.value },
+                        commission_structure: e.target.value as any,
+                        rate_config: e.target.value === "percentage" ? { percentage: "10.0" } : {},
                       })
                     }
-                    placeholder="10.5"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <span className="text-gray-500">%</span>
-                  </div>
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="flat_rate">Flat Rate</option>
+                    <option value="percentage">Percentage</option>
+                    <option value="tiered">Tiered</option>
+                    <option value="performance_based">Performance Based</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
                 </div>
               </div>
-            )}
 
-            {formData.commission_structure === "flat_rate" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fixed Amount *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.rate_config?.amount || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        rate_config: { amount: e.target.value },
-                      })
-                    }
-                    className="pl-8"
-                    placeholder="100.00"
-                  />
-                </div>
-              </div>
-            )}
-
-            {formData.commission_structure === "tiered" && (
-              <div>
-                <p className="text-sm text-gray-600 mb-2">
-                  Tiered structure will be configured through advanced settings
-                </p>
-                <Button variant="outline" size="sm">
-                  Configure Tiers
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reseller Type</label>
-              <select
-                value={formData.reseller_type || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData((prev) => {
-                    if (!value) {
-                      const { reseller_type: _omit, ...rest } = prev;
-                      return rest;
-                    }
-                    return { ...prev, reseller_type: value };
-                  });
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Types</option>
-                <option value="authorized_dealer">Authorized Dealer</option>
-                <option value="value_added_reseller">Value Added Reseller</option>
-                <option value="system_integrator">System Integrator</option>
-                <option value="distributor">Distributor</option>
-                <option value="referral_partner">Referral Partner</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reseller Tier</label>
-              <select
-                value={formData.reseller_tier || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData((prev) => {
-                    if (!value) {
-                      const { reseller_tier: _omit, ...rest } = prev;
-                      return rest;
-                    }
-                    return { ...prev, reseller_tier: value };
-                  });
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Tiers</option>
-                <option value="bronze">Bronze</option>
-                <option value="silver">Silver</option>
-                <option value="gold">Gold</option>
-                <option value="platinum">Platinum</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
-              <Input
-                value={formData.territory || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData((prev) => {
-                    if (!value) {
-                      const { territory: _omit, ...rest } = prev;
-                      return rest;
-                    }
-                    return { ...prev, territory: value };
-                  });
-                }}
-                placeholder="e.g., North America"
-              />
-            </div>
-          </div>
-
-          {/* Settings */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Payment Frequency
-              </label>
-              <select
-                value={formData.payment_frequency || "monthly"}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    payment_frequency: e.target.value as any,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="annual">Annual</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Payout</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                  <span className="text-gray-500">$</span>
-                </div>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.minimum_payout || 50}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      minimum_payout: parseFloat(e.target.value),
-                    })
-                  }
-                  className="pl-8"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Description of this commission structure..."
                 />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Calculate On</label>
-              <select
-                value={formData.calculate_on || "revenue"}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    calculate_on: e.target.value as any,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="revenue">Revenue</option>
-                <option value="signup">Signup</option>
-                <option value="both">Both</option>
-              </select>
-            </div>
-          </div>
 
-          {/* Effective Period */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Effective From *
-              </label>
-              <Input
-                type="date"
-                value={formData.effective_from || ""}
-                onChange={(e) => setFormData({ ...formData, effective_from: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Effective Until
-              </label>
-                <Input
-                  type="date"
-                  value={formData.effective_until || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFormData((prev) => {
-                      if (!value) {
-                        const { effective_until: _omit, ...rest } = prev;
-                        return rest;
+              {/* Rate Configuration */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-3">Rate Configuration</h3>
+
+                {formData.commission_structure === "percentage" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Commission Percentage *
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="100"
+                        value={formData.rate_config?.percentage || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            rate_config: { percentage: e.target.value },
+                          })
+                        }
+                        placeholder="10.5"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <span className="text-gray-500">%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {formData.commission_structure === "flat_rate" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fixed Amount *
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.rate_config?.amount || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            rate_config: { amount: e.target.value },
+                          })
+                        }
+                        className="pl-8"
+                        placeholder="100.00"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {formData.commission_structure === "tiered" && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Tiered structure will be configured through advanced settings
+                    </p>
+                    <Button variant="outline" size="sm">
+                      Configure Tiers
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Reseller Type
+                  </label>
+                  <select
+                    value={formData.reseller_type || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => {
+                        if (!value) {
+                          const { reseller_type: _omit, ...rest } = prev;
+                          return rest;
+                        }
+                        return { ...prev, reseller_type: value };
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Types</option>
+                    <option value="authorized_dealer">Authorized Dealer</option>
+                    <option value="value_added_reseller">Value Added Reseller</option>
+                    <option value="system_integrator">System Integrator</option>
+                    <option value="distributor">Distributor</option>
+                    <option value="referral_partner">Referral Partner</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Reseller Tier
+                  </label>
+                  <select
+                    value={formData.reseller_tier || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => {
+                        if (!value) {
+                          const { reseller_tier: _omit, ...rest } = prev;
+                          return rest;
+                        }
+                        return { ...prev, reseller_tier: value };
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Tiers</option>
+                    <option value="bronze">Bronze</option>
+                    <option value="silver">Silver</option>
+                    <option value="gold">Gold</option>
+                    <option value="platinum">Platinum</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
+                  <Input
+                    value={formData.territory || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => {
+                        if (!value) {
+                          const { territory: _omit, ...rest } = prev;
+                          return rest;
+                        }
+                        return { ...prev, territory: value };
+                      });
+                    }}
+                    placeholder="e.g., North America"
+                  />
+                </div>
+              </div>
+
+              {/* Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Payment Frequency
+                  </label>
+                  <select
+                    value={formData.payment_frequency || "monthly"}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        payment_frequency: e.target.value as any,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="annual">Annual</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Minimum Payout
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                      <span className="text-gray-500">$</span>
+                    </div>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.minimum_payout || 50}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          minimum_payout: parseFloat(e.target.value),
+                        })
                       }
-                      return { ...prev, effective_until: value };
-                    });
-                  }}
-                />
-            </div>
-          </div>
+                      className="pl-8"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Calculate On
+                  </label>
+                  <select
+                    value={formData.calculate_on || "revenue"}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        calculate_on: e.target.value as any,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="revenue">Revenue</option>
+                    <option value="signup">Signup</option>
+                    <option value="both">Both</option>
+                  </select>
+                </div>
+              </div>
 
-          {/* Status */}
-          <div className="flex items-center space-x-6">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.is_active || false}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm">Active</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.is_default || false}
-                onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm">Set as Default</span>
-            </label>
-          </div>
+              {/* Effective Period */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Effective From *
+                  </label>
+                  <Input
+                    type="date"
+                    value={formData.effective_from || ""}
+                    onChange={(e) => setFormData({ ...formData, effective_from: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Effective Until
+                  </label>
+                  <Input
+                    type="date"
+                    value={formData.effective_until || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => {
+                        if (!value) {
+                          const { effective_until: _omit, ...rest } = prev;
+                          return rest;
+                        }
+                        return { ...prev, effective_until: value };
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center space-x-6">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_active || false}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm">Active</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_default || false}
+                    onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm">Set as Default</span>
+                </label>
+              </div>
             </div>
           </ModalBody>
           <ModalFooter>

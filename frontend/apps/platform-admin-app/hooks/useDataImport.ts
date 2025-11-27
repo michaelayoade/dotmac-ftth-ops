@@ -6,8 +6,21 @@ import { useToast } from "@dotmac/ui";
 import { useAppConfig } from "@/providers/AppConfigContext";
 
 // Types matching backend models
-export type ImportJobType = "customers" | "invoices" | "subscriptions" | "payments" | "products" | "mixed";
-export type ImportJobStatus = "pending" | "validating" | "in_progress" | "completed" | "failed" | "partially_completed" | "cancelled";
+export type ImportJobType =
+  | "customers"
+  | "invoices"
+  | "subscriptions"
+  | "payments"
+  | "products"
+  | "mixed";
+export type ImportJobStatus =
+  | "pending"
+  | "validating"
+  | "in_progress"
+  | "completed"
+  | "failed"
+  | "partially_completed"
+  | "cancelled";
 
 export interface ImportJob {
   id: string;
@@ -168,13 +181,13 @@ export function useDataImport() {
         return response.json() as Promise<ImportJob>;
       },
       enabled: !!jobId,
-    refetchInterval: (query) => {
-      const job = query.state.data;
-      // Poll more frequently for in-progress jobs
-      if (job?.status === "in_progress" || job?.status === "pending") {
-        return 2000;
-      }
-      return false;
+      refetchInterval: (query) => {
+        const job = query.state.data;
+        // Poll more frequently for in-progress jobs
+        if (job?.status === "in_progress" || job?.status === "pending") {
+          return 2000;
+        }
+        return false;
       },
     });
   };
@@ -198,12 +211,12 @@ export function useDataImport() {
         return response.json() as Promise<ImportStatus>;
       },
       enabled: !!jobId,
-    refetchInterval: (query) => {
-      const job = query.state.data;
-      if (job?.status === "in_progress" || job?.status === "pending") {
-        return 1000; // Poll every second for active jobs
-      }
-      return false;
+      refetchInterval: (query) => {
+        const job = query.state.data;
+        if (job?.status === "in_progress" || job?.status === "pending") {
+          return 1000; // Poll every second for active jobs
+        }
+        return false;
       },
     });
   };

@@ -213,9 +213,12 @@ export interface WebSocketServerMessage {
 // SSE Configuration
 // ============================================================================
 
+/**
+ * SSE connection configuration.
+ * Authentication is handled via httpOnly cookies (withCredentials: true).
+ */
 export interface SSEConfig {
   endpoint: string;
-  token?: string;
   onEvent?: (event: MessageEvent) => void;
   onError?: (error: Event) => void;
   onOpen?: () => void;
@@ -227,9 +230,12 @@ export interface SSEConfig {
 // WebSocket Configuration
 // ============================================================================
 
+/**
+ * WebSocket connection configuration.
+ * Authentication is handled via httpOnly cookies sent with the HTTP upgrade handshake.
+ */
 export interface WebSocketConfig {
   endpoint: string;
-  token?: string;
   protocols?: string[];
   reconnect?: boolean;
   reconnectInterval?: number;

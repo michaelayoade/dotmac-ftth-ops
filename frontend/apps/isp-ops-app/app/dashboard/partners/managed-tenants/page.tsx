@@ -33,9 +33,10 @@ export default function ManagedTenantsPage() {
   const { data, isLoading, error } = useManagedTenants(managedTenantParams);
 
   // Filter tenants by search query
-  const filteredTenants = data?.tenants.filter((tenant) =>
-    tenant.tenant_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.tenant_slug.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTenants = data?.tenants.filter(
+    (tenant) =>
+      tenant.tenant_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.tenant_slug.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (!isPartnerUser) {
@@ -231,9 +232,7 @@ function TenantCard({ tenant }: TenantCardProps) {
             <CardTitle className="text-lg line-clamp-1">{tenant.tenant_name}</CardTitle>
             <CardDescription className="text-xs">{tenant.tenant_slug}</CardDescription>
           </div>
-          <div className="flex flex-col gap-1 items-end">
-            {getStatusBadge()}
-          </div>
+          <div className="flex flex-col gap-1 items-end">{getStatusBadge()}</div>
         </div>
         <div className="pt-2">{getAccessRoleBadge()}</div>
       </CardHeader>
@@ -266,9 +265,7 @@ function TenantCard({ tenant }: TenantCardProps) {
                 <AlertCircle className="h-3.5 w-3.5" />
                 <span className="text-xs">Overdue</span>
               </div>
-              <p className="text-lg font-semibold">
-                {tenant.metrics.overdue_invoices_count}
-              </p>
+              <p className="text-lg font-semibold">{tenant.metrics.overdue_invoices_count}</p>
             </div>
 
             <div className="space-y-1">
@@ -276,9 +273,7 @@ function TenantCard({ tenant }: TenantCardProps) {
                 <Ticket className="h-3.5 w-3.5" />
                 <span className="text-xs">Open Tickets</span>
               </div>
-              <p className="text-lg font-semibold">
-                {tenant.metrics.open_tickets_count}
-              </p>
+              <p className="text-lg font-semibold">{tenant.metrics.open_tickets_count}</p>
             </div>
           </div>
         )}

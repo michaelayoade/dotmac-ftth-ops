@@ -65,9 +65,7 @@ describe("auth", () => {
         password: "wrong",
       };
 
-      (apiClient.post as jest.Mock).mockRejectedValue(
-        new Error("Invalid credentials")
-      );
+      (apiClient.post as jest.Mock).mockRejectedValue(new Error("Invalid credentials"));
 
       await expect(login(credentials)).rejects.toThrow("Invalid credentials");
     });
@@ -372,9 +370,7 @@ describe("auth", () => {
     });
 
     it("should return null on refresh error", async () => {
-      (apiClient.post as jest.Mock).mockRejectedValue(
-        new Error("Refresh token expired")
-      );
+      (apiClient.post as jest.Mock).mockRejectedValue(new Error("Refresh token expired"));
 
       const result = await refreshToken();
 
@@ -443,12 +439,12 @@ describe("auth", () => {
     });
 
     it("should handle API errors in auth functions", async () => {
-      (apiClient.post as jest.Mock).mockRejectedValue(
-        new Error("500 Internal Server Error")
-      );
+      (apiClient.post as jest.Mock).mockRejectedValue(new Error("500 Internal Server Error"));
 
       await expect(login({ email: "test", password: "test" })).rejects.toThrow();
-      await expect(register({ username: "test", email: "test", password: "test" })).rejects.toThrow();
+      await expect(
+        register({ username: "test", email: "test", password: "test" }),
+      ).rejects.toThrow();
     });
   });
 

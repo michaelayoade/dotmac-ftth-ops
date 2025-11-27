@@ -47,21 +47,21 @@ export function NetworkTopologyMap({
     degraded: "error",
   };
 
-const markerTypeMap: Record<string, MapMarker["type"]> = {
-  tower: "tower",
-  fiber_node: "fiber",
-  router: "fiber",
-  switch: "fiber",
-  server: "poi",
+  const markerTypeMap: Record<string, MapMarker["type"]> = {
+    tower: "tower",
+    fiber_node: "fiber",
+    router: "fiber",
+    switch: "fiber",
+    server: "poi",
   };
 
-const nodeTypeMap: Record<string, MapNetworkNode["type"]> = {
-  tower: "tower",
-  fiber_node: "fiber_node",
-  router: "router",
-  switch: "switch",
-  server: "server",
-};
+  const nodeTypeMap: Record<string, MapNetworkNode["type"]> = {
+    tower: "tower",
+    fiber_node: "fiber_node",
+    router: "router",
+    switch: "switch",
+    server: "server",
+  };
 
   const markers: MapMarker[] = nodeList.map((node) => ({
     id: node.id,

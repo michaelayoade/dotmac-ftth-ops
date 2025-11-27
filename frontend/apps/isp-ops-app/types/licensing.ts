@@ -27,7 +27,7 @@ import type {
   CheckEntitlementResponse as CheckEntitlementResponseType,
   CheckQuotaResponse as CheckQuotaResponseType,
   PlanPricing as PlanPricingType,
-} from '@shared/utils/licensing-schemas';
+} from "@shared/utils/licensing-schemas";
 
 // Re-export types
 export type ModuleCategory = ModuleCategoryType;
@@ -54,7 +54,7 @@ export {
   PricingModelSchema,
   SubscriptionStatusSchema,
   BillingCycleSchema,
-} from '@shared/utils/licensing-schemas';
+} from "@shared/utils/licensing-schemas";
 
 // ============================================================================
 // Event Types (not in Zod schemas)
@@ -276,7 +276,10 @@ export interface UseLicensingReturn {
   updatePlan: (id: string, data: Partial<ServicePlan>) => Promise<ServicePlan>;
   getPlan: (id: string) => Promise<ServicePlan>;
   duplicatePlan: (id: string) => Promise<ServicePlan>;
-  calculatePlanPrice: (id: string, params: { billing_period?: string; quantity?: number }) => Promise<PlanPricing>;
+  calculatePlanPrice: (
+    id: string,
+    params: { billing_period?: string; quantity?: number },
+  ) => Promise<PlanPricing>;
 
   // Subscriptions
   currentSubscription?: TenantSubscription;

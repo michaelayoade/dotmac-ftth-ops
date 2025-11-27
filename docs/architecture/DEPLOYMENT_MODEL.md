@@ -1220,7 +1220,6 @@ NEXT_PUBLIC_API_BASE_URL=https://api.dotmac.com
 NEXT_PUBLIC_GRAPHQL_URL=https://api.dotmac.com/graphql
 
 # Authentication
-NEXT_PUBLIC_AUTH_PROVIDER=better-auth
 NEXT_PUBLIC_SESSION_TIMEOUT=3600
 
 # Feature Flags (Global)

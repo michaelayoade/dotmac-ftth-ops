@@ -449,7 +449,7 @@ describe("MultiCombobox", () => {
       const onValueChange = jest.fn();
 
       render(
-        <MultiCombobox options={options} value={["react", "vue"]} onValueChange={onValueChange} />
+        <MultiCombobox options={options} value={["react", "vue"]} onValueChange={onValueChange} />,
       );
 
       await user.click(screen.getByRole("combobox"));
@@ -558,7 +558,7 @@ describe("MultiCombobox", () => {
       ];
 
       render(
-        <MultiCombobox options={languages} value={["en"]} placeholder="Select languages..." />
+        <MultiCombobox options={languages} value={["en"]} placeholder="Select languages..." />,
       );
 
       expect(screen.getByText("1 selected")).toBeInTheDocument();
@@ -608,12 +608,7 @@ describe("MultiCombobox", () => {
     });
 
     it("handles selection of all options", () => {
-      render(
-        <MultiCombobox
-          options={options}
-          value={["react", "vue", "angular", "svelte"]}
-        />
-      );
+      render(<MultiCombobox options={options} value={["react", "vue", "angular", "svelte"]} />);
 
       expect(screen.getByText("4 selected")).toBeInTheDocument();
     });

@@ -18,14 +18,7 @@ import { Skeleton } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { useDomainStatus, useDomainVerification } from "@/hooks/useDomainVerification";
 import { DomainVerificationWizard } from "./DomainVerificationWizard";
-import {
-  Globe,
-  CheckCircle2,
-  AlertCircle,
-  Trash2,
-  Plus,
-  Shield,
-} from "lucide-react";
+import { Globe, CheckCircle2, AlertCircle, Trash2, Plus, Shield } from "lucide-react";
 
 interface DomainVerificationCardProps {
   tenantId: string;

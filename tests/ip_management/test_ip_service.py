@@ -17,7 +17,7 @@ from dotmac.platform.ip_management.models import (
     IPReservationStatus,
 )
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 
 # ============================================================================

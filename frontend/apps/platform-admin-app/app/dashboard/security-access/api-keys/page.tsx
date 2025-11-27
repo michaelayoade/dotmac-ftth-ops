@@ -77,7 +77,7 @@ export default function ApiKeysPage() {
     const matchesSearch =
       searchQuery === "" ||
       apiKey.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      apiKey['description']?.toLowerCase().includes(searchQuery.toLowerCase());
+      apiKey["description"]?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesScope = scopeFilter === "all" || apiKey.scopes.includes(scopeFilter);
 

@@ -130,8 +130,8 @@ export interface LogicalDevice {
   };
   root_device_id?: string;
   switch_features?: Record<string, any>;
-   ports?: LogicalPort[];
-   flows?: Record<string, any>[];
+  ports?: LogicalPort[];
+  flows?: Record<string, any>[];
 }
 
 export interface LogicalDeviceListResponse {

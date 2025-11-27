@@ -24,7 +24,7 @@ from dotmac.platform.services.internet_plans.service import InternetPlanService
 from dotmac.platform.services.lifecycle.models import ServiceType
 from dotmac.platform.subscribers.models import Subscriber
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.integration
 
 
 @pytest_asyncio.fixture

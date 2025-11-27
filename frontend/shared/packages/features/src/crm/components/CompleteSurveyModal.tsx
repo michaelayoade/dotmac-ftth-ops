@@ -49,7 +49,6 @@ import { useState, useEffect } from "react";
 
 import type { SiteSurvey, Serviceability } from "../types";
 
-
 export interface PhotoUpload {
   id: string;
   file: File;
@@ -83,7 +82,9 @@ export interface CompleteSurveyModalProps {
   onSuccess: (() => void) | undefined;
 
   // Callback props
-  onCompleteSurvey: ((surveyId: string, data: SurveyCompletionData) => Promise<boolean>) | undefined;
+  onCompleteSurvey:
+    | ((surveyId: string, data: SurveyCompletionData) => Promise<boolean>)
+    | undefined;
   onUploadPhoto: ((photo: PhotoUpload) => Promise<string>) | undefined;
 
   // External state

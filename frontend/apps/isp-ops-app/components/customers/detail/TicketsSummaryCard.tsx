@@ -14,10 +14,7 @@ interface TicketsSummaryCardProps {
   customerId: string;
 }
 
-export function TicketsSummaryCard({
-  tickets,
-  customerId,
-}: TicketsSummaryCardProps) {
+export function TicketsSummaryCard({ tickets, customerId }: TicketsSummaryCardProps) {
   return (
     <Card>
       <CardHeader>

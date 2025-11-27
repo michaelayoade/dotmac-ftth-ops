@@ -10,12 +10,14 @@
 ### 1. Theme System Architecture
 
 **Primary Library:** `next-themes` (v0.x)
+
 - ✅ Industry-standard solution for Next.js
 - ✅ Handles SSR/hydration issues automatically
 - ✅ localStorage persistence built-in
 - ✅ System theme detection
 
 **Configuration:**
+
 ```tsx
 <ThemeProvider
   attribute="class"
@@ -31,6 +33,7 @@
 **Two Variants Available:**
 
 #### A. ThemeToggle (3-Way Selector)
+
 - **Location:** `shared/packages/ui/src/components/theme-toggle.tsx:9-52`
 - **Features:**
   - Three options: Light, Dark, System
@@ -41,6 +44,7 @@
   - ARIA labels: ✅ `aria-label="Switch to {theme} theme"`
 
 #### B. ThemeToggleButton (Simple Toggle)
+
 - **Location:** `shared/packages/ui/src/components/theme-toggle.tsx:54-87`
 - **Features:**
   - Binary toggle: Light ↔ Dark
@@ -50,6 +54,7 @@
   - ARIA labels: ✅ `aria-label="Switch to {theme} theme"`
 
 **Usage in App:**
+
 ```tsx
 // In app/dashboard/layout.tsx:59
 import { ThemeToggle } from "@dotmac/ui";
@@ -60,27 +65,30 @@ import { ThemeToggle } from "@dotmac/ui";
 **Location:** `apps/isp-ops-app/app/globals.css:8-99`
 
 #### Light Mode Variables (`:root`)
+
 ```css
---background: 0 0% 100%;           /* White */
---foreground: 222 47% 11%;         /* Dark blue-gray */
---primary: 199 89% 43%;            /* Sky blue (4.5:1 contrast) */
---card: 210 40% 98%;               /* Off-white */
---muted: 210 40% 96%;              /* Light gray */
---border: 214 32% 91%;             /* Border gray */
---destructive: 0 84% 60%;          /* Red */
+--background: 0 0% 100%; /* White */
+--foreground: 222 47% 11%; /* Dark blue-gray */
+--primary: 199 89% 43%; /* Sky blue (4.5:1 contrast) */
+--card: 210 40% 98%; /* Off-white */
+--muted: 210 40% 96%; /* Light gray */
+--border: 214 32% 91%; /* Border gray */
+--destructive: 0 84% 60%; /* Red */
 ```
 
 #### Dark Mode Variables (`.dark`)
+
 ```css
---background: 222 47% 11%;         /* Dark blue-gray */
---foreground: 210 40% 98%;         /* Light gray */
---primary: 199 89% 48%;            /* Brighter sky blue */
---card: 217 33% 17%;               /* Dark card */
---muted: 217 33% 17%;              /* Muted dark */
---border: 215 28% 32%;             /* Dark border */
+--background: 222 47% 11%; /* Dark blue-gray */
+--foreground: 210 40% 98%; /* Light gray */
+--primary: 199 89% 48%; /* Brighter sky blue */
+--card: 217 33% 17%; /* Dark card */
+--muted: 217 33% 17%; /* Muted dark */
+--border: 215 28% 32%; /* Dark border */
 ```
 
 **Coverage:** ✅ Comprehensive
+
 - Background/Foreground
 - Primary/Secondary/Accent
 - Muted/Border/Input
@@ -94,10 +102,11 @@ import { ThemeToggle } from "@dotmac/ui";
 **Configuration:** `apps/isp-ops-app/tailwind.config.ts:5`
 
 ```typescript
-darkMode: "class"  // ✅ Matches next-themes attribute
+darkMode: "class"; // ✅ Matches next-themes attribute
 ```
 
 **Color Definitions:**
+
 ```typescript
 colors: {
   background: "hsl(var(--background))",
@@ -117,6 +126,7 @@ colors: {
 **Location:** `shared/packages/ui/src/lib/design-system/portal-themes.tsx`
 
 **Purpose:** Portal-specific color customization
+
 - Platform Admin: Blue (#0ea5e9)
 - Partner Portal: Different colors
 - Tenant Portal: Different colors
@@ -125,6 +135,7 @@ colors: {
 - Customer Portal: Different colors
 
 **Implementation:**
+
 ```tsx
 <PortalThemeProvider>
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -140,6 +151,7 @@ colors: {
 **Location:** `apps/isp-ops-app/lib/theme.ts`
 
 **Functions:**
+
 - `applyTheme()` - Apply theme CSS variables
 - `getCurrentTheme()` - Get theme from localStorage
 - `setTheme()` - Set theme and update class
@@ -155,22 +167,26 @@ colors: {
 ### Color Contrast (WCAG 2.1)
 
 #### Light Mode
+
 - **Primary on White:** 4.5:1 ✅ (AA compliant)
 - **Foreground on Background:** >7:1 ✅ (AAA compliant)
 - **Muted foreground:** Checked and compliant ✅
 
 #### Dark Mode
+
 - **Primary on Dark:** Good contrast ✅
 - **Foreground on Background:** >7:1 ✅ (AAA compliant)
 - **All interactive elements:** Tested ✅
 
 ### Visual Consistency
+
 - ✅ Smooth transitions between themes
 - ✅ No flash of unstyled content (FOUC)
 - ✅ All components use CSS variables
 - ✅ Icons swap appropriately (Sun/Moon)
 
 ### User Experience
+
 - ✅ System theme preference detected
 - ✅ Theme persisted across sessions
 - ✅ Hydration mismatch prevented with loading states
@@ -184,15 +200,18 @@ colors: {
 ### 1. Redundant Theme Systems
 
 **Issue:** Two theme management systems exist:
+
 1. `next-themes` (modern, recommended)
 2. Custom utilities in `lib/theme.ts` (legacy)
 
 **Impact:**
+
 - Code duplication
 - Potential conflicts
 - Maintenance overhead
 
 **Recommendation:**
+
 ```typescript
 // REMOVE: Custom theme utilities in lib/theme.ts
 // Lines 54-114 (getCurrentTheme, setTheme, toggleTheme, initializeTheme)
@@ -213,12 +232,11 @@ export const theme = {
 **Issue:** Portal primary colors might not work well in both light and dark modes
 
 **Recommendation:**
+
 ```typescript
 // In portal-themes.tsx
 function generateCSSVars(portal: PortalType, isDark: boolean): Record<string, string> {
-  const colors = isDark
-    ? colorTokens[portal].dark
-    : colorTokens[portal].light;
+  const colors = isDark ? colorTokens[portal].dark : colorTokens[portal].light;
 
   return {
     "--portal-primary-500": colors.primary[500],
@@ -229,7 +247,7 @@ function generateCSSVars(portal: PortalType, isDark: boolean): Record<string, st
 // Update PortalThemeProvider to react to theme changes
 export function PortalThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme(); // from next-themes
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark";
 
   useEffect(() => {
     const cssVars = generateCSSVars(currentPortal, isDark);
@@ -243,6 +261,7 @@ export function PortalThemeProvider({ children }: { children: React.ReactNode })
 **Issue:** No visual indication that theme is being saved/loaded
 
 **Recommendation:** Add a test page:
+
 ```tsx
 // app/test/theme-persistence/page.tsx
 export default function ThemeTestPage() {
@@ -263,6 +282,7 @@ export default function ThemeTestPage() {
 **Issue:** `applyBrandingConfig()` allows overriding theme colors, which might break dark mode
 
 **Current Code:**
+
 ```typescript
 applyColor("--brand-primary", branding.primaryColor);
 ```
@@ -270,6 +290,7 @@ applyColor("--brand-primary", branding.primaryColor);
 **Problem:** This applies the same color in both light and dark modes, potentially causing contrast issues.
 
 **Recommendation:**
+
 ```typescript
 // Require separate light/dark branding colors
 export function applyBrandingConfig(branding: any, isDark: boolean): void {
@@ -284,6 +305,7 @@ export function applyBrandingConfig(branding: any, isDark: boolean): void {
 ### 5. Documentation
 
 **Missing:**
+
 - User guide for theme switching
 - Developer guide for theme-aware component development
 - Brand customization guidelines
@@ -330,6 +352,7 @@ export function applyBrandingConfig(branding: any, isDark: boolean): void {
 **File:** `apps/isp-ops-app/lib/theme.ts`
 
 **Action:**
+
 ```typescript
 // DELETE: Lines 54-114
 // getCurrentTheme, setTheme, toggleTheme, initializeTheme
@@ -342,6 +365,7 @@ export const theme = {
 ```
 
 **Impact:**
+
 - Reduces confusion
 - Single source of truth
 - Less maintenance
@@ -351,12 +375,13 @@ export const theme = {
 **File:** `apps/isp-ops-app/lib/theme.ts`
 
 **Action:**
+
 ```typescript
-import { useTheme } from 'next-themes';
+import { useTheme } from "next-themes";
 
 export function useBrandingWithTheme(branding: any) {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark";
 
   useEffect(() => {
     applyBrandingConfig(branding, isDark);
@@ -365,6 +390,7 @@ export function useBrandingWithTheme(branding: any) {
 ```
 
 **Impact:**
+
 - Branding respects theme mode
 - No contrast violations
 - Automatic updates on theme change
@@ -374,12 +400,13 @@ export function useBrandingWithTheme(branding: any) {
 **File:** `shared/packages/ui/src/lib/design-system/portal-themes.tsx`
 
 **Action:**
+
 ```typescript
 // Add dark mode support to portal themes
 export function PortalThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { theme } = useTheme(); // Add this
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark";
 
   const [currentPortal, setCurrentPortal] = useState<PortalType>(() =>
     detectPortalFromRoute(pathname || ""),
@@ -397,6 +424,7 @@ export function PortalThemeProvider({ children }: { children: React.ReactNode })
 ```
 
 **Impact:**
+
 - Portal colors adapt to theme mode
 - Better contrast in dark mode
 - Consistent UX
@@ -406,6 +434,7 @@ export function PortalThemeProvider({ children }: { children: React.ReactNode })
 **Create:** `frontend/THEMING_GUIDE.md`
 
 **Contents:**
+
 1. How to use ThemeToggle component
 2. How to create theme-aware components
 3. CSS variable naming conventions
@@ -417,18 +446,19 @@ export function PortalThemeProvider({ children }: { children: React.ReactNode })
 **Current:** Labels are hardcoded English
 
 **Action:**
+
 ```tsx
 // In theme-toggle.tsx
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const { theme, setTheme } = useTheme();
-  const t = useTranslations('theme');
+  const t = useTranslations("theme");
 
   const themes = [
-    { value: "light", icon: Sun, label: t('light') },
-    { value: "dark", icon: Moon, label: t('dark') },
-    { value: "system", icon: Monitor, label: t('system') },
+    { value: "light", icon: Sun, label: t("light") },
+    { value: "dark", icon: Moon, label: t("dark") },
+    { value: "system", icon: Monitor, label: t("system") },
   ];
 
   // ... rest of component
@@ -436,6 +466,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 ```
 
 **Add to locale files:**
+
 ```json
 {
   "theme": {
@@ -452,6 +483,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 ## 📋 Testing Checklist
 
 ### Visual Testing
+
 - [ ] Light mode displays correctly
 - [ ] Dark mode displays correctly
 - [ ] System mode follows OS preference
@@ -463,6 +495,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 - [ ] Branding overlays work in both themes
 
 ### Accessibility Testing
+
 - [ ] ThemeToggle keyboard navigation
 - [ ] Screen reader announces theme changes
 - [ ] All text meets WCAG AA contrast
@@ -470,12 +503,14 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 - [ ] ARIA labels present and accurate
 
 ### Cross-Browser Testing
+
 - [ ] Chrome/Edge (Chromium)
 - [ ] Firefox
 - [ ] Safari
 - [ ] Mobile browsers
 
 ### Integration Testing
+
 - [ ] Works with i18n (translations)
 - [ ] Works with portal routing
 - [ ] Works with branding system
@@ -488,6 +523,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 ### Overall Grade: A- (90/100)
 
 **Strengths (90 points):**
+
 - ✅ Excellent foundation with `next-themes`
 - ✅ Comprehensive CSS variable system
 - ✅ WCAG AA+ compliant contrast
@@ -497,6 +533,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 - ✅ Accessible implementation
 
 **Deductions (10 points):**
+
 - ⚠️ Redundant theme utilities (-3 points)
 - ⚠️ Portal themes don't react to theme mode (-3 points)
 - ⚠️ Branding system not theme-aware (-2 points)
@@ -506,6 +543,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 ### Critical Issues: None ✅
 
 ### Recommended Issues: 5
+
 1. Remove redundant theme utilities (Priority 1)
 2. Make portal themes theme-aware (Priority 3)
 3. Make branding system theme-aware (Priority 2)

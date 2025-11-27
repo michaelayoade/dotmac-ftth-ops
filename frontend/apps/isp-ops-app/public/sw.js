@@ -38,7 +38,7 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       console.log("[ServiceWorker] Precaching app shell");
       return cache.addAll(PRECACHE_ASSETS);
-    })
+    }),
   );
 
   // Force the waiting service worker to become the active service worker
@@ -58,17 +58,15 @@ self.addEventListener("activate", (event) => {
         cacheNames
           .filter((cacheName) => {
             return (
-              cacheName !== CACHE_NAME &&
-              cacheName !== RUNTIME_CACHE &&
-              cacheName !== DATA_CACHE
+              cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE && cacheName !== DATA_CACHE
             );
           })
           .map((cacheName) => {
             console.log("[ServiceWorker] Removing old cache:", cacheName);
             return caches.delete(cacheName);
-          })
+          }),
       );
-    })
+    }),
   );
 
   // Take control of all pages immediately
@@ -152,7 +150,7 @@ async function networkFirstStrategy(request) {
         status: 503,
         statusText: "Service Unavailable",
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }
@@ -311,12 +309,7 @@ self.addEventListener("push", (event) => {
     requireInteraction: data.requireInteraction || false,
   };
 
-  event.waitUntil(
-    self.registration.showNotification(
-      data.title || "dotmac Operations",
-      options
-    )
-  );
+  event.waitUntil(self.registration.showNotification(data.title || "dotmac Operations", options));
 });
 
 self.addEventListener("notificationclick", (event) => {
@@ -331,21 +324,19 @@ self.addEventListener("notificationclick", (event) => {
   const urlToOpen = event.notification.data?.url || "/dashboard/technician";
 
   event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        // Check if a window is already open
-        for (const client of clientList) {
-          if (client.url.includes(urlToOpen) && "focus" in client) {
-            return client.focus();
-          }
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // Check if a window is already open
+      for (const client of clientList) {
+        if (client.url.includes(urlToOpen) && "focus" in client) {
+          return client.focus();
         }
+      }
 
-        // Open new window if none exists
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
+      // Open new window if none exists
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    }),
   );
 });
 

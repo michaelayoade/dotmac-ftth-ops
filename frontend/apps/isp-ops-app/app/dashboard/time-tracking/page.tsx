@@ -35,8 +35,8 @@ import {
 import type { TimeEntry, TimeEntryStatus, TimeEntryFilter } from "@/types/field-service";
 import { TimeEntryType } from "@/types/field-service";
 import { format, formatDuration, intervalToDuration } from "date-fns";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 
 // ============================================================================
 // Clock In/Out Component
@@ -77,7 +77,7 @@ function ClockInOut({ technicianId, activeEntry }: ClockInOutProps) {
         (error) => {
           console.error("Error getting location:", error);
           reject(error);
-        }
+        },
       );
     });
   };
@@ -251,12 +251,21 @@ interface TimeEntryListProps {
   showActions?: boolean;
 }
 
-function TimeEntryList({ entries, onApprove, onReject, onSubmit, showActions = false }: TimeEntryListProps) {
+function TimeEntryList({
+  entries,
+  onApprove,
+  onReject,
+  onSubmit,
+  showActions = false,
+}: TimeEntryListProps) {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   const getStatusBadge = (status: TimeEntryStatus) => {
-    const variants: Record<TimeEntryStatus, { variant: "default" | "secondary" | "outline" | "destructive"; color: string }> = {
+    const variants: Record<
+      TimeEntryStatus,
+      { variant: "default" | "secondary" | "outline" | "destructive"; color: string }
+    > = {
       draft: { variant: "secondary", color: "gray" },
       submitted: { variant: "outline", color: "blue" },
       approved: { variant: "default", color: "green" },
@@ -265,7 +274,9 @@ function TimeEntryList({ entries, onApprove, onReject, onSubmit, showActions = f
     };
 
     const config = variants[status];
-    return <Badge variant={config.variant}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+    return (
+      <Badge variant={config.variant}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+    );
   };
 
   const formatDurationString = (minutes?: number) => {
@@ -293,16 +304,19 @@ function TimeEntryList({ entries, onApprove, onReject, onSubmit, showActions = f
 
                 <div className="flex items-center gap-6 text-sm text-gray-600">
                   <div>
-                    <span className="font-medium">In:</span> {format(new Date(entry.clockIn), "h:mm a")}
+                    <span className="font-medium">In:</span>{" "}
+                    {format(new Date(entry.clockIn), "h:mm a")}
                   </div>
                   {entry.clockOut && (
                     <div>
-                      <span className="font-medium">Out:</span> {format(new Date(entry.clockOut), "h:mm a")}
+                      <span className="font-medium">Out:</span>{" "}
+                      {format(new Date(entry.clockOut), "h:mm a")}
                     </div>
                   )}
                   {entry.durationMinutes && (
                     <div>
-                      <span className="font-medium">Duration:</span> {formatDurationString(entry.durationMinutes)}
+                      <span className="font-medium">Duration:</span>{" "}
+                      {formatDurationString(entry.durationMinutes)}
                     </div>
                   )}
                   {entry.totalCost && (
@@ -351,11 +365,7 @@ function TimeEntryList({ entries, onApprove, onReject, onSubmit, showActions = f
 
                   {entry.status === "submitted" && onApprove && (
                     <>
-                      <Button
-                        size="sm"
-                        variant="default"
-                        onClick={() => onApprove(entry.id)}
-                      >
+                      <Button size="sm" variant="default" onClick={() => onApprove(entry.id)}>
                         <CheckCircle2 className="mr-1 h-4 w-4" />
                         Approve
                       </Button>
@@ -425,8 +435,8 @@ export default function TimeTrackingPage() {
     dateTo: format(new Date(), "yyyy-MM-dd"),
   });
 
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
+  const { user: sessionUser, isLoading: authLoading } = useSession();
+  const user = sessionUser as UserInfo | undefined;
   const technicianId = user?.technician_id ?? null;
   const queryFilter = useMemo(() => {
     if (!technicianId) {
@@ -473,7 +483,9 @@ export default function TimeTrackingPage() {
     return (
       <div className="container mx-auto py-8">
         <Card>
-          <CardContent className="py-12 text-center text-gray-500">Loading time tracking…</CardContent>
+          <CardContent className="py-12 text-center text-gray-500">
+            Loading time tracking…
+          </CardContent>
         </Card>
       </div>
     );

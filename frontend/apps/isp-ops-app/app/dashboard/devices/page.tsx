@@ -74,13 +74,10 @@ function DevicesPageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (manufacturerFilter !== "all") params.append("manufacturer", manufacturerFilter);
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices?${params.toString()}`,
-        {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices?${params.toString()}`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
 
       if (!response.ok) throw new Error("Failed to fetch devices");
       return response.json();
@@ -92,13 +89,10 @@ function DevicesPageContent() {
   const { data: stats } = useQuery<DeviceStats>({
     queryKey: ["genieacs-stats", refreshKey],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/stats`,
-        {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/stats`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
     },
@@ -108,14 +102,11 @@ function DevicesPageContent() {
   // Refresh device
   const refreshMutation = useMutation({
     mutationFn: async (deviceId: string) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
       if (!response.ok) throw new Error("Failed to refresh device");
       return response.json();
     },
@@ -145,7 +136,7 @@ function DevicesPageContent() {
 
   // Get unique manufacturers
   const manufacturers = Array.from(
-    new Set(devices.map((d) => d._deviceId?._Manufacturer).filter(Boolean))
+    new Set(devices.map((d) => d._deviceId?._Manufacturer).filter(Boolean)),
   );
 
   const getDeviceStatusIcon = (online: boolean, lastContact?: string) => {
@@ -167,7 +158,11 @@ function DevicesPageContent() {
 
   const getDeviceStatusBadge = (online: boolean, lastContact?: string) => {
     if (online) {
-      return <Badge className="bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400">Online</Badge>;
+      return (
+        <Badge className="bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400">
+          Online
+        </Badge>
+      );
     }
 
     if (lastContact) {
@@ -175,11 +170,19 @@ function DevicesPageContent() {
       const hoursSinceContact = (Date.now() - lastContactDate.getTime()) / (1000 * 60 * 60);
 
       if (hoursSinceContact < 24) {
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400">Warning</Badge>;
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400">
+            Warning
+          </Badge>
+        );
       }
     }
 
-    return <Badge className="bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400">Offline</Badge>;
+    return (
+      <Badge className="bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400">
+        Offline
+      </Badge>
+    );
   };
 
   const formatLastContact = (lastContact?: string) => {
@@ -372,7 +375,9 @@ function DevicesPageContent() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium truncate">
-                            {device.summary?.serialNumber || device._deviceId?._SerialNumber || "Unknown"}
+                            {device.summary?.serialNumber ||
+                              device._deviceId?._SerialNumber ||
+                              "Unknown"}
                           </span>
                           {getDeviceStatusBadge(device.summary.online, device.summary.lastContact)}
                         </div>
@@ -386,7 +391,9 @@ function DevicesPageContent() {
                       {/* Software Version */}
                       <div className="hidden md:block text-sm">
                         <div className="text-muted-foreground">Software</div>
-                        <div className="font-medium">{device.summary?.softwareVersion || "N/A"}</div>
+                        <div className="font-medium">
+                          {device.summary?.softwareVersion || "N/A"}
+                        </div>
                       </div>
 
                       {/* Last Contact */}
@@ -395,7 +402,9 @@ function DevicesPageContent() {
                           <Clock className="h-3 w-3" />
                           Last Contact
                         </div>
-                        <div className="font-medium">{formatLastContact(device.summary?.lastContact)}</div>
+                        <div className="font-medium">
+                          {formatLastContact(device.summary?.lastContact)}
+                        </div>
                       </div>
                     </div>
 
@@ -410,7 +419,9 @@ function DevicesPageContent() {
                         }}
                         disabled={refreshMutation.isPending}
                       >
-                        <RefreshCw className={`h-4 w-4 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
+                        <RefreshCw
+                          className={`h-4 w-4 ${refreshMutation.isPending ? "animate-spin" : ""}`}
+                        />
                       </Button>
                       <Button variant="ghost" size="sm">
                         <Settings className="h-4 w-4" />

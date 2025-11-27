@@ -15,7 +15,12 @@ interface UseWebhooksResult {
   webhooks: any[];
   loading: boolean;
   error: string | null;
-  fetchWebhooks: (page?: number, limit?: number, eventFilter?: string, activeOnly?: boolean) => Promise<void>;
+  fetchWebhooks: (
+    page?: number,
+    limit?: number,
+    eventFilter?: string,
+    activeOnly?: boolean,
+  ) => Promise<void>;
   createWebhook: (data: Record<string, any>) => Promise<any>;
   updateWebhook: (id: string, data: Record<string, any>) => Promise<any>;
   deleteWebhook: (id: string) => Promise<void>;
@@ -103,20 +108,25 @@ export function runUseWebhooksTestSuite({
   apiClient,
 }: RunSuiteOptions) {
   const createWrapper = (customQueryClient?: QueryClient) => {
-    const queryClient = customQueryClient || new QueryClient({
-      defaultOptions: {
-        queries: { retry: false, cacheTime: 0, staleTime: 0 },
-        mutations: { retry: false },
-      },
-    });
-    return ({ children }: { children: React.ReactNode }) => (
-      React.createElement(QueryClientProvider, { client: queryClient }, children)
-    );
+    const queryClient =
+      customQueryClient ||
+      new QueryClient({
+        defaultOptions: {
+          queries: { retry: false, cacheTime: 0, staleTime: 0 },
+          mutations: { retry: false },
+        },
+      });
+    return ({ children }: { children: React.ReactNode }) =>
+      React.createElement(QueryClientProvider, { client: queryClient }, children);
   };
 
   describe(`${label} - useWebhooks`, () => {
     let testQueryClient: QueryClient;
-    let createTestWrapper: () => ({ children }: { children: React.ReactNode }) => React.ReactElement;
+    let createTestWrapper: () => ({
+      children,
+    }: {
+      children: React.ReactNode;
+    }) => React.ReactElement;
 
     beforeEach(() => {
       jest.clearAllMocks();
@@ -183,9 +193,7 @@ export function runUseWebhooksTestSuite({
 
       const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
 
-      await waitFor(() =>
-        expect(result.current.error?.includes(fetchError.message)).toBe(true),
-      );
+      await waitFor(() => expect(result.current.error?.includes(fetchError.message)).toBe(true));
       expect(result.current.webhooks).toHaveLength(0);
     });
 
@@ -284,16 +292,14 @@ export function runUseWebhooksTestSuite({
     });
 
     it("transforms available events into UI-friendly labels", async () => {
-      apiClient.get
-        .mockResolvedValueOnce({ data: [] })
-        .mockResolvedValueOnce({
-          data: {
-            events: [
-              { event_type: "customer.created", description: "Customer created event" },
-              { event_type: "subscription.paused", description: "Subscription paused" },
-            ],
-          },
-        });
+      apiClient.get.mockResolvedValueOnce({ data: [] }).mockResolvedValueOnce({
+        data: {
+          events: [
+            { event_type: "customer.created", description: "Customer created event" },
+            { event_type: "subscription.paused", description: "Subscription paused" },
+          ],
+        },
+      });
 
       const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
       await waitFor(() => expect(apiClient.get).toHaveBeenCalled());
@@ -345,9 +351,7 @@ export function runUseWebhooksTestSuite({
         .mockResolvedValueOnce({ data: [createSubscription({ id: "webhook-success" })] });
 
       const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
-      await waitFor(() =>
-        expect(result.current.error?.includes("Initial failure")).toBe(true),
-      );
+      await waitFor(() => expect(result.current.error?.includes("Initial failure")).toBe(true));
 
       await act(async () => {
         await expect(result.current.fetchWebhooks()).resolves.not.toThrow();
@@ -401,9 +405,7 @@ export function runUseWebhooksTestSuite({
       await waitFor(() => expect(result.current.webhooks).toHaveLength(1));
 
       await act(async () => {
-        await expect(result.current.deleteWebhook(existing.id)).rejects.toThrow(
-          "Delete failed",
-        );
+        await expect(result.current.deleteWebhook(existing.id)).rejects.toThrow("Delete failed");
       });
 
       expect(result.current.webhooks).toHaveLength(1);
@@ -444,10 +446,10 @@ export function runUseWebhooksTestSuite({
           mockPayload,
         );
 
-        expect(apiClient.post).toHaveBeenCalledWith(
-          "/webhooks/subscriptions/webhook-1/test",
-          { event_type: "customer.created", payload: mockPayload },
-        );
+        expect(apiClient.post).toHaveBeenCalledWith("/webhooks/subscriptions/webhook-1/test", {
+          event_type: "customer.created",
+          payload: mockPayload,
+        });
         expect(response).toEqual({
           success: true,
           status_code: 202,
@@ -480,16 +482,20 @@ export function runUseWebhooksTestSuite({
 
         const { result } = renderHook(() => useWebhooks(), { wrapper: createTestWrapper() });
 
-        await expect(
-          result.current.testWebhook("webhook-1", "customer.created"),
-        ).rejects.toThrow("random failure");
+        await expect(result.current.testWebhook("webhook-1", "customer.created")).rejects.toThrow(
+          "random failure",
+        );
       });
     });
   });
 
   describe(`${label} - useWebhookDeliveries`, () => {
     let testQueryClient: QueryClient;
-    let createTestWrapper: () => ({ children }: { children: React.ReactNode }) => React.ReactElement;
+    let createTestWrapper: () => ({
+      children,
+    }: {
+      children: React.ReactNode;
+    }) => React.ReactElement;
 
     beforeEach(() => {
       jest.clearAllMocks();
@@ -511,7 +517,9 @@ export function runUseWebhooksTestSuite({
       const rawDelivery = createDelivery({ attempt_number: 3 });
       apiClient.get.mockResolvedValueOnce({ data: [rawDelivery] });
 
-      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
+      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), {
+        wrapper: createTestWrapper(),
+      });
 
       await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
       await waitFor(() => expect(result.current.deliveries).toHaveLength(1));
@@ -524,7 +532,9 @@ export function runUseWebhooksTestSuite({
     it("handles delivery fetch failures", async () => {
       apiClient.get.mockRejectedValueOnce(new Error("Failed to fetch deliveries"));
 
-      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
+      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), {
+        wrapper: createTestWrapper(),
+      });
 
       await waitFor(() =>
         expect(result.current.error?.includes("Failed to fetch deliveries")).toBe(true),
@@ -534,7 +544,9 @@ export function runUseWebhooksTestSuite({
 
     it("retries a delivery and refetches the list", async () => {
       apiClient.post.mockResolvedValueOnce({});
-      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
+      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), {
+        wrapper: createTestWrapper(),
+      });
 
       await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
       apiClient.get.mockClear();
@@ -548,7 +560,9 @@ export function runUseWebhooksTestSuite({
     });
 
     it("supports pagination and status filters when fetching deliveries manually", async () => {
-      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
+      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), {
+        wrapper: createTestWrapper(),
+      });
       await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
       apiClient.get.mockClear();
 
@@ -556,10 +570,7 @@ export function runUseWebhooksTestSuite({
         await result.current.fetchDeliveries(3, 20, "failed");
       });
 
-      const callArgs = await waitForCallWithPrefix(
-        apiClient.get,
-        deliveriesEndpoint("webhook-1"),
-      );
+      const callArgs = await waitForCallWithPrefix(apiClient.get, deliveriesEndpoint("webhook-1"));
       expect(callArgs).toBeDefined();
       const [url] = callArgs!;
       expect(url).toContain("limit=20");
@@ -579,13 +590,13 @@ export function runUseWebhooksTestSuite({
       apiClient.get.mockResolvedValueOnce({ data: [rawDelivery] });
       apiClient.post.mockRejectedValueOnce(new Error("Retry failed"));
 
-      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), { wrapper: createTestWrapper() });
+      const { result } = renderHook(() => useWebhookDeliveries("webhook-1"), {
+        wrapper: createTestWrapper(),
+      });
       await waitFor(() => expect(result.current.deliveries).toHaveLength(1));
 
       await act(async () => {
-        await expect(result.current.retryDelivery("delivery-1")).rejects.toThrow(
-          "Retry failed",
-        );
+        await expect(result.current.retryDelivery("delivery-1")).rejects.toThrow("Retry failed");
       });
 
       expect(result.current.deliveries).toHaveLength(1);

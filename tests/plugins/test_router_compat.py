@@ -8,6 +8,8 @@ from dotmac.platform.plugins import schema
 from dotmac.platform.plugins.router import get_registry, router
 from dotmac.platform.auth.dependencies import get_current_user
 
+pytestmark = pytest.mark.integration
+
 
 class _StubRegistry:
     def __init__(self) -> None:

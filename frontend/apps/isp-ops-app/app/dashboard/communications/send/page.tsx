@@ -21,13 +21,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { ArrowLeft, Send, Loader2, Eye } from "lucide-react";
 import { useToast } from "@dotmac/ui";
@@ -89,13 +83,10 @@ export default function SendEmailPage() {
   const [enableTemplate, setEnableTemplate] = useState(false);
   const [templateVariables, setTemplateVariables] = useState<string[]>([]);
 
-  const selectedTemplate = useTemplate(formData['template_id'] || null);
-  const sanitizedPreviewHtml = useMemo(
-    () => sanitizeRichHtml(previewHtml),
-    [previewHtml],
-  );
+  const selectedTemplate = useTemplate(formData["template_id"] || null);
+  const sanitizedPreviewHtml = useMemo(() => sanitizeRichHtml(previewHtml), [previewHtml]);
   const selectedTemplateData = selectedTemplate.data;
-  const bodyText = formData['body_text'] || "";
+  const bodyText = formData["body_text"] || "";
   const bodyHtml = formData.body_html || "";
 
   // Extract variables when template or manual content changes
@@ -123,45 +114,45 @@ export default function SendEmailPage() {
     const newErrors: EmailFormErrors = {};
 
     // Validate recipients
-    const toEmails = parseEmails(formData['to']);
+    const toEmails = parseEmails(formData["to"]);
     if (toEmails.length === 0) {
       newErrors.to = "At least one valid recipient email is required";
     }
 
-    if (formData['cc']) {
-      const ccEmails = parseEmails(formData['cc']);
-      if (formData['cc'].trim() && ccEmails.length === 0) {
+    if (formData["cc"]) {
+      const ccEmails = parseEmails(formData["cc"]);
+      if (formData["cc"].trim() && ccEmails.length === 0) {
         newErrors.cc = "Invalid CC email addresses";
       }
     }
 
-    if (formData['bcc']) {
-      const bccEmails = parseEmails(formData['bcc']);
-      if (formData['bcc'].trim() && bccEmails.length === 0) {
+    if (formData["bcc"]) {
+      const bccEmails = parseEmails(formData["bcc"]);
+      if (formData["bcc"].trim() && bccEmails.length === 0) {
         newErrors.bcc = "Invalid BCC email addresses";
       }
     }
 
-    if (formData['reply_to'] && !isValidEmail(formData['reply_to'])) {
+    if (formData["reply_to"] && !isValidEmail(formData["reply_to"])) {
       newErrors.reply_to = "Invalid reply-to email address";
     }
 
     // Validate subject
-    if (!formData['subject'] || formData['subject'].trim().length === 0) {
+    if (!formData["subject"] || formData["subject"].trim().length === 0) {
       newErrors.subject = "Subject is required";
     }
 
     // Validate body
-    if (enableTemplate && !formData['template_id']) {
+    if (enableTemplate && !formData["template_id"]) {
       newErrors.template_id = "Please select a template";
-    } else if (!enableTemplate && !formData['body_text'] && !formData.body_html) {
+    } else if (!enableTemplate && !formData["body_text"] && !formData.body_html) {
       newErrors.body_text = "Email body is required";
     }
 
     // Validate template variables
     if (enableTemplate && templateVariables.length > 0) {
       const missingVars = templateVariables.filter(
-        (v) => !formData['variables']?.[v] || formData['variables'][v].trim() === "",
+        (v) => !formData["variables"]?.[v] || formData["variables"][v].trim() === "",
       );
       if (missingVars.length > 0) {
         newErrors.variables = `Missing required variables: ${missingVars.join(", ")}`;
@@ -175,18 +166,18 @@ export default function SendEmailPage() {
   const handlePreview = async () => {
     if (!validate()) return;
 
-    if (enableTemplate && formData['template_id'] && formData['variables']) {
+    if (enableTemplate && formData["template_id"] && formData["variables"]) {
       try {
         const result = await renderTemplate.mutateAsync({
-          id: formData['template_id'],
-          variables: formData['variables'],
+          id: formData["template_id"],
+          variables: formData["variables"],
         });
-        logger.info("Template preview rendered", { templateId: formData['template_id'] });
+        logger.info("Template preview rendered", { templateId: formData["template_id"] });
         setPreviewHtml(result.rendered_body_html || result.rendered_body_text || "");
         setShowPreview(true);
       } catch (error: any) {
         logger.error("Failed to render template preview", error, {
-          templateId: formData['template_id'],
+          templateId: formData["template_id"],
         });
         toast({
           title: "Preview Failed",
@@ -195,7 +186,7 @@ export default function SendEmailPage() {
         });
       }
     } else {
-      setPreviewHtml(formData.body_html || formData['body_text'] || "");
+      setPreviewHtml(formData.body_html || formData["body_text"] || "");
       setShowPreview(true);
     }
   };
@@ -212,13 +203,13 @@ export default function SendEmailPage() {
       return;
     }
 
-    const toRecipients = parseEmails(formData['to']);
-    const ccRecipients = formData['cc'] ? parseEmails(formData['cc']) : undefined;
-    const bccRecipients = formData['bcc'] ? parseEmails(formData['bcc']) : undefined;
+    const toRecipients = parseEmails(formData["to"]);
+    const ccRecipients = formData["cc"] ? parseEmails(formData["cc"]) : undefined;
+    const bccRecipients = formData["bcc"] ? parseEmails(formData["bcc"]) : undefined;
 
     const emailData: SendEmailRequest = {
       to: toRecipients,
-      subject: formData['subject'].trim(),
+      subject: formData["subject"].trim(),
     };
 
     if (ccRecipients?.length) {
@@ -227,18 +218,18 @@ export default function SendEmailPage() {
     if (bccRecipients?.length) {
       emailData.bcc = bccRecipients;
     }
-    if (formData['reply_to']?.trim()) {
-      emailData.reply_to = formData['reply_to'].trim();
+    if (formData["reply_to"]?.trim()) {
+      emailData.reply_to = formData["reply_to"].trim();
     }
 
-    if (enableTemplate && formData['template_id']) {
-      emailData.template_id = formData['template_id'];
-      if (formData['variables']) {
-        emailData.variables = formData['variables'];
+    if (enableTemplate && formData["template_id"]) {
+      emailData.template_id = formData["template_id"];
+      if (formData["variables"]) {
+        emailData.variables = formData["variables"];
       }
     } else {
-      if (formData['body_text']) {
-        emailData.body_text = formData['body_text'];
+      if (formData["body_text"]) {
+        emailData.body_text = formData["body_text"];
       }
       if (formData.body_html) {
         emailData.body_html = formData.body_html;
@@ -250,7 +241,7 @@ export default function SendEmailPage() {
         onSuccess: (data) => {
           logger.info("Email sent successfully", {
             recipientCount: data.accepted.length,
-            subject: formData['subject'],
+            subject: formData["subject"],
           });
           toast({
             title: "Email Sent",
@@ -260,7 +251,7 @@ export default function SendEmailPage() {
         },
         onError: (error: any) => {
           logger.error("Failed to send email", error, {
-            subject: formData['subject'],
+            subject: formData["subject"],
             recipientCount: toRecipients.length,
           });
           toast({
@@ -281,7 +272,7 @@ export default function SendEmailPage() {
         onSuccess: (data) => {
           logger.info("Email queued successfully", {
             taskId: data.task_id,
-            subject: formData['subject'],
+            subject: formData["subject"],
             priority: formData.priority,
             scheduledAt: formData.scheduled_at,
           });
@@ -293,7 +284,7 @@ export default function SendEmailPage() {
         },
         onError: (error: any) => {
           logger.error("Failed to queue email", error, {
-            subject: formData['subject'],
+            subject: formData["subject"],
             priority: formData.priority,
           });
           toast({
@@ -393,7 +384,7 @@ export default function SendEmailPage() {
                       Template <span className="text-red-500">*</span>
                     </Label>
                     <Select
-                      value={formData['template_id']}
+                      value={formData["template_id"]}
                       onValueChange={(value) => handleChange("template_id", value)}
                     >
                       <SelectTrigger id="template_id">
@@ -425,7 +416,7 @@ export default function SendEmailPage() {
                   </Label>
                   <Input
                     id="to"
-                    value={formData['to']}
+                    value={formData["to"]}
                     onChange={(e) => handleChange("to", e.target.value)}
                     placeholder="email@example.com, another@example.com"
                   />
@@ -439,7 +430,7 @@ export default function SendEmailPage() {
                     <Label htmlFor="cc">CC</Label>
                     <Input
                       id="cc"
-                      value={formData['cc']}
+                      value={formData["cc"]}
                       onChange={(e) => handleChange("cc", e.target.value)}
                       placeholder="cc@example.com"
                     />
@@ -449,7 +440,7 @@ export default function SendEmailPage() {
                     <Label htmlFor="bcc">BCC</Label>
                     <Input
                       id="bcc"
-                      value={formData['bcc']}
+                      value={formData["bcc"]}
                       onChange={(e) => handleChange("bcc", e.target.value)}
                       placeholder="bcc@example.com"
                     />
@@ -464,7 +455,7 @@ export default function SendEmailPage() {
                   </Label>
                   <Input
                     id="subject"
-                    value={formData['subject']}
+                    value={formData["subject"]}
                     onChange={(e) => handleChange("subject", e.target.value)}
                     placeholder="Email subject"
                   />
@@ -482,7 +473,7 @@ export default function SendEmailPage() {
                         </Label>
                         <Input
                           id={`var_${varName}`}
-                          value={formData['variables']?.[varName] || ""}
+                          value={formData["variables"]?.[varName] || ""}
                           onChange={(e) => handleVariableChange(varName, e.target.value)}
                           placeholder={`Enter ${varName}`}
                         />
@@ -505,7 +496,7 @@ export default function SendEmailPage() {
                       </Label>
                       <Textarea
                         id="body_text"
-                        value={formData['body_text']}
+                        value={formData["body_text"]}
                         onChange={(e) => handleChange("body_text", e.target.value)}
                         placeholder="Email body text..."
                         rows={12}
@@ -533,7 +524,7 @@ export default function SendEmailPage() {
                   <Label htmlFor="reply_to">Reply To (optional)</Label>
                   <Input
                     id="reply_to"
-                    value={formData['reply_to']}
+                    value={formData["reply_to"]}
                     onChange={(e) => handleChange("reply_to", e.target.value)}
                     placeholder="reply@example.com"
                   />

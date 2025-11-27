@@ -5,16 +5,8 @@ export const dynamicParams = true;
 
 import { useState } from "react";
 import { Skeleton } from "@dotmac/ui";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@dotmac/ui";
-import {
-  Database,
-  Settings,
-} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { Database, Settings } from "lucide-react";
 import { useAllOSSConfigurations, useOSSConfigStatistics } from "@/hooks/useOSSConfig";
 import { OSSConfigurationCard } from "./components/OSSConfigurationCard";
 import { OSSStatusOverview } from "./components/OSSStatusOverview";

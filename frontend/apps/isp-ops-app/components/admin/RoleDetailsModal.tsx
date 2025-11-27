@@ -10,7 +10,7 @@ import { RoleDetailsModal as RoleDetailsModalShared } from "@dotmac/features/rba
 import type {
   Role as SharedRole,
   Permission as SharedPermission,
-  RoleDetailsModalProps as SharedRoleDetailsModalProps
+  RoleDetailsModalProps as SharedRoleDetailsModalProps,
 } from "@dotmac/features/rbac";
 import { apiClient } from "@/lib/api/client";
 import { toast } from "@dotmac/ui";

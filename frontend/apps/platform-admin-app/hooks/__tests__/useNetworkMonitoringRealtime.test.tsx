@@ -190,12 +190,8 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
       });
     });
 
-    await waitFor(() =>
-      expect(result.current.data?.[0].status).toBe(DeviceStatusEnum.Online),
-    );
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Device Online" }),
-    );
+    await waitFor(() => expect(result.current.data?.[0].status).toBe(DeviceStatusEnum.Online));
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Device Online" }));
   });
 
   it("handles alert subscription updates and toast notifications", async () => {
@@ -245,9 +241,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     });
 
     await waitFor(() => expect(result.current.data).toHaveLength(2));
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Critical Alert" }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Critical Alert" }));
 
     await act(async () => {
       alertSubscription?.options?.onData?.({
@@ -269,9 +263,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
     });
 
     await waitFor(() => expect(result.current.data).toHaveLength(1));
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Alert Resolved" }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Alert Resolved" }));
   });
 
   it("aggregates dashboard data and refetches all sources", async () => {
@@ -335,9 +327,7 @@ describe("Platform Admin useNetworkMonitoringRealtime hooks", () => {
 
     await waitFor(() => expect(result.current.isConnected).toBe(false));
     expect(result.current.reconnectAttempts).toBeGreaterThan(0);
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Connection Lost" }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: "Connection Lost" }));
 
     unmount();
     jest.runOnlyPendingTimers();

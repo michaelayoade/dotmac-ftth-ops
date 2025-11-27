@@ -4,14 +4,18 @@ Customer Event Publisher for Real-Time Updates.
 Publishes customer-related events to Redis pub/sub for GraphQL subscriptions.
 """
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import structlog
-from redis.asyncio import Redis
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
 
 logger = structlog.get_logger(__name__)
 
@@ -370,7 +374,7 @@ class CustomerEventPublisher:
 # ============================================================================
 
 
-async def example_publish_network_status():
+async def example_publish_network_status() -> None:
     """Example: Publish network status update."""
     from dotmac.platform.redis_client import redis_manager
 
@@ -393,7 +397,7 @@ async def example_publish_network_status():
     )
 
 
-async def example_publish_device_status():
+async def example_publish_device_status() -> None:
     """Example: Publish device status change."""
     from dotmac.platform.redis_client import redis_manager
 
@@ -420,7 +424,7 @@ async def example_publish_device_status():
     )
 
 
-async def example_publish_ticket_created():
+async def example_publish_ticket_created() -> None:
     """Example: Publish ticket creation."""
     from dotmac.platform.redis_client import redis_manager
 

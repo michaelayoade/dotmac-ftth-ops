@@ -5,7 +5,6 @@
 import { test, expect } from "#e2e/fixtures";
 import type { APIRequestContext } from "@playwright/test";
 
-
 test.describe("GraphQL API Integration", () => {
   const BASE_URL = process.env.API_BASE_URL || "http://localhost:8000";
   const GRAPHQL_ENDPOINT = `${BASE_URL}/graphql`;
@@ -296,7 +295,7 @@ test.describe("GraphQL API Integration", () => {
     console.log("GraphQL Implementation Status:", results);
 
     // Check if endpoint is available
-    const endpointNotAvailable = results.some(r => r.status === "endpoint_not_found");
+    const endpointNotAvailable = results.some((r) => r.status === "endpoint_not_found");
     if (endpointNotAvailable) {
       test.skip(true, "GraphQL endpoint not deployed");
       return;
@@ -304,7 +303,7 @@ test.describe("GraphQL API Integration", () => {
 
     // Assert that all queries succeeded when endpoint is available
     const failedQueries = results.filter(
-      r => !r.status.includes("success") && r.status !== "endpoint_not_found"
+      (r) => !r.status.includes("success") && r.status !== "endpoint_not_found",
     );
     expect(failedQueries).toEqual([]);
   });

@@ -74,8 +74,7 @@ test.describe("Platform-ISP Integration", () => {
 
       // Look for table or list of tenants
       const tenantTable =
-        platformAdminPage.getByRole("table") ||
-        platformAdminPage.getByTestId("tenant-list");
+        platformAdminPage.getByRole("table") || platformAdminPage.getByTestId("tenant-list");
 
       // Verify some content is displayed
       const hasContent = await platformAdminPage.locator("body").textContent();
@@ -149,9 +148,7 @@ test.describe("Platform-ISP Integration", () => {
       await ispOpsPage.goto("/dashboard/customers");
 
       // Look for quota indicator or warning (may not exist with low usage)
-      const quotaIndicator =
-        ispOpsPage.getByText(/quota|limit/i) ||
-        ispOpsPage.getByRole("status");
+      const quotaIndicator = ispOpsPage.getByText(/quota|limit/i) || ispOpsPage.getByRole("status");
 
       // Verify page renders without errors
       await expect(ispOpsPage.locator("body")).toBeVisible();
@@ -206,7 +203,9 @@ test.describe("Platform-ISP Integration", () => {
       const pageText = await ispOpsPage.textContent("body");
 
       // Verify not successfully accessing platform admin features
-      expect(url.includes("/platform-admin/tenants") || pageText?.includes("Not Found")).toBeTruthy();
+      expect(
+        url.includes("/platform-admin/tenants") || pageText?.includes("Not Found"),
+      ).toBeTruthy();
     });
 
     test("should show platform admin has access to all tenant data", async () => {

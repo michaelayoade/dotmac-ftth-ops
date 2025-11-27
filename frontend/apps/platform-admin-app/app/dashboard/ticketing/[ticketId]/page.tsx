@@ -6,13 +6,7 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   AlertCircle,
   ArrowLeft,
@@ -39,7 +33,7 @@ import {
 
 function TicketDetailsPageContent() {
   const params = useParams();
-  const ticketId = params?.['ticketId'] as string;
+  const ticketId = params?.["ticketId"] as string;
   const { toast } = useToast();
   const [newMessage, setNewMessage] = useState("");
 
@@ -48,7 +42,10 @@ function TicketDetailsPageContent() {
   const { addMessageAsync, loading: addingMessage } = useAddMessage();
 
   const getStatusBadge = (status: TicketStatus) => {
-    const statusConfig: Record<TicketStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      TicketStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       open: { icon: AlertCircle, color: "bg-blue-100 text-blue-800", label: "Open" },
       in_progress: { icon: Loader, color: "bg-yellow-100 text-yellow-800", label: "In Progress" },
       waiting: { icon: Clock, color: "bg-orange-100 text-orange-800", label: "Waiting" },
@@ -95,7 +92,9 @@ function TicketDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Ticket Not Found</h2>
-        <p className="text-muted-foreground mb-4">The ticket you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The ticket you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/ticketing">
             <ArrowLeft className="h-4 w-4 mr-2" />

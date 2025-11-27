@@ -19,13 +19,7 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { Job, useCancelJob } from "@/hooks/useJobs";
-import {
-  AlertCircle,
-  Loader2,
-  PauseCircle,
-  PlayCircle,
-  XCircle,
-} from "lucide-react";
+import { AlertCircle, Loader2, PauseCircle, PlayCircle, XCircle } from "lucide-react";
 
 interface JobControlDialogProps {
   job: Job | null;

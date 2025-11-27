@@ -123,8 +123,9 @@ export const useHealth = () => {
   });
 
   // Determine error message: prioritize API error message, then fallback to status-based messages
-  const errorMessage = (query.data as any)?.apiErrorMessage
-    || (query.data?.status === "forbidden"
+  const errorMessage =
+    (query.data as any)?.apiErrorMessage ||
+    (query.data?.status === "forbidden"
       ? "You do not have permission to view service health."
       : query.data?.status === "degraded"
         ? "Service health is temporarily unavailable."

@@ -904,9 +904,7 @@ export class ApiClient {
   ): Promise<ApiResponse<PluginInstallationResponse>> {
     // Basic rate limiting - can be enhanced with actual rate limiter if needed
     if (this.rateLimiter) {
-      const limitResult = await this.rateLimiter.checkLimit(
-        `plugin-update:${installationId}`,
-      );
+      const limitResult = await this.rateLimiter.checkLimit(`plugin-update:${installationId}`);
       if (!limitResult.allowed) {
         throw new ISPError({
           message: "Rate limit exceeded. Please wait before making another plugin update request.",

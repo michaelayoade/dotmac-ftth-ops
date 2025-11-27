@@ -61,9 +61,7 @@ describe("BottomSheet", () => {
     });
 
     it("applies custom className to content", () => {
-      const { container } = render(
-        <BottomSheet {...defaultProps} className="custom-class" />
-      );
+      const { container } = render(<BottomSheet {...defaultProps} className="custom-class" />);
 
       const content = container.querySelector(".custom-class");
       expect(content).toBeInTheDocument();
@@ -80,9 +78,7 @@ describe("BottomSheet", () => {
   describe("Backdrop Click Handling", () => {
     it("calls onClose when backdrop is clicked", () => {
       const onClose = jest.fn();
-      const { container } = render(
-        <BottomSheet {...defaultProps} onClose={onClose} />
-      );
+      const { container } = render(<BottomSheet {...defaultProps} onClose={onClose} />);
 
       const overlay = container.querySelector('[role="dialog"]');
       fireEvent.click(overlay!);
@@ -102,9 +98,7 @@ describe("BottomSheet", () => {
 
     it("stops propagation when content area is clicked", () => {
       const onClose = jest.fn();
-      const { container } = render(
-        <BottomSheet {...defaultProps} onClose={onClose} />
-      );
+      const { container } = render(<BottomSheet {...defaultProps} onClose={onClose} />);
 
       const content = container.querySelector(".bg-white");
       const stopPropagationSpy = jest.fn();
@@ -234,7 +228,7 @@ describe("BottomSheet", () => {
         <BottomSheet {...defaultProps}>
           <h2>Title</h2>
           <p>Content</p>
-        </BottomSheet>
+        </BottomSheet>,
       );
     });
 
@@ -257,7 +251,7 @@ describe("BottomSheet", () => {
         <BottomSheet {...defaultProps}>
           <button>Action 1</button>
           <button>Action 2</button>
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       const button1 = screen.getByText("Action 1");
@@ -275,7 +269,7 @@ describe("BottomSheet", () => {
       const { container } = render(
         <BottomSheet {...defaultProps}>
           <div style={{ height: "2000px" }}>Very long content</div>
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       const content = container.querySelector(".overflow-auto");
@@ -292,7 +286,7 @@ describe("BottomSheet", () => {
       render(
         <BottomSheet {...defaultProps} onClose={onClose}>
           <button onClick={onButtonClick}>Click me</button>
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       const button = screen.getByText("Click me");
@@ -311,7 +305,7 @@ describe("BottomSheet", () => {
             <input type="text" placeholder="Name" />
             <button type="submit">Submit</button>
           </form>
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       const button = screen.getByText("Submit");
@@ -327,21 +321,21 @@ describe("BottomSheet", () => {
       const { rerender } = render(
         <BottomSheet isOpen={true} onClose={onClose}>
           <TestContent />
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       // Close
       rerender(
         <BottomSheet isOpen={false} onClose={onClose}>
           <TestContent />
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       // Reopen
       rerender(
         <BottomSheet isOpen={true} onClose={onClose}>
           <TestContent />
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       const input = screen.getByTestId("input") as HTMLInputElement;
@@ -361,7 +355,7 @@ describe("BottomSheet", () => {
       const result = await renderSecurity(
         <BottomSheet {...defaultProps}>
           <div>{maliciousContent}</div>
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       expect(result.container).toHaveNoSecurityViolations();
@@ -386,9 +380,7 @@ describe("BottomSheet", () => {
         </div>
       );
 
-      const result = renderPerformance(
-        <BottomSheet {...defaultProps}>{largeContent}</BottomSheet>
-      );
+      const result = renderPerformance(<BottomSheet {...defaultProps}>{largeContent}</BottomSheet>);
 
       const metrics = result.measurePerformance();
       expect(metrics).toBePerformant(50); // Allow more time for large content
@@ -398,17 +390,13 @@ describe("BottomSheet", () => {
   describe("Comprehensive Testing", () => {
     it("passes all comprehensive tests", async () => {
       const { result, metrics } = await renderComprehensive(
-        <BottomSheet
-          isOpen={true}
-          onClose={jest.fn()}
-          className="custom-sheet"
-        >
+        <BottomSheet isOpen={true} onClose={jest.fn()} className="custom-sheet">
           <div>
             <h2>Sheet Title</h2>
             <p>Sheet content with complex interactions</p>
             <button>Action Button</button>
           </div>
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       await expect(result.container).toBeAccessible();
@@ -424,7 +412,7 @@ describe("BottomSheet", () => {
           <h2>Confirm Action</h2>
           <p>Are you sure?</p>
           <button onClick={onClose}>Confirm</button>
-        </BottomSheet>
+        </BottomSheet>,
       );
 
       // Sheet should be visible

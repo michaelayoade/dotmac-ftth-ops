@@ -126,7 +126,7 @@ describe("Separator", () => {
           <section>Section 1</section>
           <Separator />
           <section>Section 2</section>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Section 1")).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe("Separator", () => {
           <div>Item 2</div>
           <Separator />
           <div>Item 3</div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Item 1")).toBeInTheDocument();
@@ -157,7 +157,7 @@ describe("Separator", () => {
           </header>
           <Separator className="my-4" />
           <main>Content goes here</main>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Title")).toBeInTheDocument();
@@ -174,7 +174,7 @@ describe("Separator", () => {
             <Separator orientation="vertical" className="mx-2" />
             <a href="#contact">Contact</a>
           </nav>
-        </aside>
+        </aside>,
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
@@ -189,7 +189,7 @@ describe("Separator", () => {
           <button>Copy</button>
           <Separator className="my-2" />
           <button className="text-destructive">Delete</button>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Edit")).toBeInTheDocument();
@@ -211,7 +211,7 @@ describe("Separator", () => {
           <div className="card-footer">
             <button>Action</button>
           </div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Card Title")).toBeInTheDocument();
@@ -260,9 +260,7 @@ describe("Separator", () => {
     });
 
     it("handles both orientation and className", () => {
-      render(
-        <Separator orientation="vertical" className="custom-class" data-testid="separator" />
-      );
+      render(<Separator orientation="vertical" className="custom-class" data-testid="separator" />);
 
       const separator = screen.getByTestId("separator");
       expect(separator).toHaveClass("custom-class", "h-full", "w-[1px]");
@@ -300,7 +298,7 @@ describe("Separator", () => {
           <span>Left</span>
           <Separator orientation="vertical" className="h-4 mx-2" />
           <span>Right</span>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Left")).toBeInTheDocument();
@@ -313,7 +311,7 @@ describe("Separator", () => {
           <div>Column 1</div>
           <Separator orientation="vertical" />
           <div>Column 2</div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Column 1")).toBeInTheDocument();
@@ -332,7 +330,7 @@ describe("Separator", () => {
               <p>Paragraph 2</p>
             </div>
           </div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Heading")).toBeInTheDocument();

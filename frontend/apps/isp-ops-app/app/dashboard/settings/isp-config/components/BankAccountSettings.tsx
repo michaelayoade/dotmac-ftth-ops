@@ -43,8 +43,18 @@ interface BankAccountSettingsProps {
 }
 
 const PAYMENT_METHODS = [
-  { value: "card", label: "Credit/Debit Card", icon: "💳", description: "Card payments via gateway" },
-  { value: "bank_transfer", label: "Bank Transfer", icon: "🏦", description: "Direct bank transfers" },
+  {
+    value: "card",
+    label: "Credit/Debit Card",
+    icon: "💳",
+    description: "Card payments via gateway",
+  },
+  {
+    value: "bank_transfer",
+    label: "Bank Transfer",
+    icon: "🏦",
+    description: "Direct bank transfers",
+  },
   { value: "check", label: "Check", icon: "✅", description: "Paper checks" },
   { value: "cash", label: "Cash", icon: "💵", description: "Cash payments" },
   { value: "crypto", label: "Cryptocurrency", icon: "₿", description: "Bitcoin, Ethereum, etc." },
@@ -56,28 +66,28 @@ const PAYMENT_GATEWAYS = [
     label: "Stripe",
     logo: "💳",
     description: "Global payment processing",
-    regions: ["Global"]
+    regions: ["Global"],
   },
   {
     key: "paypal",
     label: "PayPal",
     logo: "🅿️",
     description: "PayPal and credit cards",
-    regions: ["Global"]
+    regions: ["Global"],
   },
   {
     key: "paystack",
     label: "Paystack",
     logo: "📱",
     description: "African payment gateway",
-    regions: ["Nigeria", "Ghana", "South Africa", "Kenya"]
+    regions: ["Nigeria", "Ghana", "South Africa", "Kenya"],
   },
   {
     key: "flutterwave",
     label: "Flutterwave",
     logo: "🦋",
     description: "Pan-African payments",
-    regions: ["Africa", "34+ countries"]
+    regions: ["Africa", "34+ countries"],
   },
 ];
 
@@ -92,7 +102,10 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
   const togglePaymentMethod = (method: string) => {
     const current = settings.payment_methods_enabled || [];
     if (current.includes(method)) {
-      updateSetting("payment_methods_enabled", current.filter(m => m !== method));
+      updateSetting(
+        "payment_methods_enabled",
+        current.filter((m) => m !== method),
+      );
     } else {
       updateSetting("payment_methods_enabled", [...current, method]);
     }
@@ -116,17 +129,15 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
       <Alert>
         <Building2 className="h-4 w-4" />
         <AlertDescription>
-          Configure payment methods and bank accounts for receiving customer payments.
-          Payment gateway credentials are configured separately in integrations settings.
+          Configure payment methods and bank accounts for receiving customer payments. Payment
+          gateway credentials are configured separately in integrations settings.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle>Default Bank Account</CardTitle>
-          <CardDescription>
-            Configure default bank account for payment tracking
-          </CardDescription>
+          <CardDescription>Configure default bank account for payment tracking</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -155,14 +166,15 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
       <Card>
         <CardHeader>
           <CardTitle>Accepted Payment Methods</CardTitle>
-          <CardDescription>
-            Select which payment methods you accept from customers
-          </CardDescription>
+          <CardDescription>Select which payment methods you accept from customers</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-3">
             {PAYMENT_METHODS.map((method) => (
-              <div key={method.value} className="flex items-center justify-between p-3 border rounded">
+              <div
+                key={method.value}
+                className="flex items-center justify-between p-3 border rounded"
+              >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{method.icon}</span>
                   <div>
@@ -181,8 +193,9 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              {enabledPaymentMethodsCount} payment method{enabledPaymentMethodsCount !== 1 ? "s" : ""} enabled.
-              Customers can use any enabled method during checkout.
+              {enabledPaymentMethodsCount} payment method
+              {enabledPaymentMethodsCount !== 1 ? "s" : ""} enabled. Customers can use any enabled
+              method during checkout.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -191,9 +204,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
       <Card>
         <CardHeader>
           <CardTitle>Payment Gateways</CardTitle>
-          <CardDescription>
-            Enable payment gateway integrations for online payments
-          </CardDescription>
+          <CardDescription>Enable payment gateway integrations for online payments</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {PAYMENT_GATEWAYS.map((gateway) => (
@@ -204,7 +215,9 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
                   <div className="font-medium flex items-center gap-2">
                     {gateway.label}
                     {settings[`${gateway.key}_enabled` as keyof typeof settings] && (
-                      <Badge variant="default" className="text-xs">Active</Badge>
+                      <Badge variant="default" className="text-xs">
+                        Active
+                      </Badge>
                     )}
                   </div>
                   <div className="text-sm text-muted-foreground">{gateway.description}</div>
@@ -233,8 +246,8 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
             <Alert>
               <CheckCircle2 className="h-4 w-4" />
               <AlertDescription>
-                {enabledGatewaysCount} payment gateway{enabledGatewaysCount !== 1 ? "s" : ""} enabled.
-                Configure API credentials in Settings → Integrations.
+                {enabledGatewaysCount} payment gateway{enabledGatewaysCount !== 1 ? "s" : ""}{" "}
+                enabled. Configure API credentials in Settings → Integrations.
               </AlertDescription>
             </Alert>
           )}
@@ -273,9 +286,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
                   onChange={(e) => updateSetting("bank_name", e.target.value || null)}
                   placeholder="First National Bank"
                 />
-                <p className="text-sm text-muted-foreground">
-                  Name of your bank
-                </p>
+                <p className="text-sm text-muted-foreground">Name of your bank</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -287,9 +298,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
                     onChange={(e) => updateSetting("bank_account_number", e.target.value || null)}
                     placeholder="1234567890"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Bank account number
-                  </p>
+                  <p className="text-sm text-muted-foreground">Bank account number</p>
                 </div>
 
                 <div className="space-y-2">
@@ -300,9 +309,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
                     onChange={(e) => updateSetting("bank_routing_number", e.target.value || null)}
                     placeholder="021000021"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Routing/Sort code
-                  </p>
+                  <p className="text-sm text-muted-foreground">Routing/Sort code</p>
                 </div>
               </div>
 
@@ -315,9 +322,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
                     onChange={(e) => updateSetting("bank_iban", e.target.value || null)}
                     placeholder="GB82 WEST 1234 5698 7654 32"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    International Bank Account Number
-                  </p>
+                  <p className="text-sm text-muted-foreground">International Bank Account Number</p>
                 </div>
 
                 <div className="space-y-2">
@@ -328,17 +333,15 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
                     onChange={(e) => updateSetting("bank_swift_code", e.target.value || null)}
                     placeholder="BOFAUS3N"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Bank identifier code
-                  </p>
+                  <p className="text-sm text-muted-foreground">Bank identifier code</p>
                 </div>
               </div>
 
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  This information is displayed to customers on invoices and payment pages
-                  when they select bank transfer as payment method.
+                  This information is displayed to customers on invoices and payment pages when they
+                  select bank transfer as payment method.
                 </AlertDescription>
               </Alert>
             </>
@@ -349,9 +352,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
       <Card>
         <CardHeader>
           <CardTitle>Payment Reconciliation</CardTitle>
-          <CardDescription>
-            Configure automatic payment matching and reconciliation
-          </CardDescription>
+          <CardDescription>Configure automatic payment matching and reconciliation</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
@@ -399,7 +400,10 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Example reference: <strong>{settings.payment_reference_format.replace("{invoice_number}", "000123")}</strong>
+                Example reference:{" "}
+                <strong>
+                  {settings.payment_reference_format.replace("{invoice_number}", "000123")}
+                </strong>
                 <br />
                 Customers see this reference on invoices and payment instructions.
               </AlertDescription>
@@ -412,9 +416,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
       <Card>
         <CardHeader>
           <CardTitle>Payment Configuration Summary</CardTitle>
-          <CardDescription>
-            Overview of enabled payment options
-          </CardDescription>
+          <CardDescription>Overview of enabled payment options</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -422,7 +424,7 @@ export function BankAccountSettings({ settings, onChange }: BankAccountSettingsP
               <h4 className="font-medium mb-2">Payment Methods:</h4>
               <div className="flex flex-wrap gap-2">
                 {settings.payment_methods_enabled?.map((method) => {
-                  const methodInfo = PAYMENT_METHODS.find(m => m.value === method);
+                  const methodInfo = PAYMENT_METHODS.find((m) => m.value === method);
                   return (
                     <Badge key={method} variant="secondary">
                       {methodInfo?.icon} {methodInfo?.label}

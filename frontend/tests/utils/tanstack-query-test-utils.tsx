@@ -43,11 +43,7 @@ export function createQueryWrapper() {
   const testQueryClient = createTestQueryClient();
 
   return function QueryWrapper({ children }: { children: React.ReactNode }) {
-    return (
-      <QueryClientProvider client={testQueryClient}>
-        {children}
-      </QueryClientProvider>
-    );
+    return <QueryClientProvider client={testQueryClient}>{children}</QueryClientProvider>;
   };
 }
 
@@ -57,10 +53,6 @@ export function createQueryWrapper() {
  */
 export function createQueryWrapperWithClient(queryClient: QueryClient) {
   return function QueryWrapper({ children }: { children: React.ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }

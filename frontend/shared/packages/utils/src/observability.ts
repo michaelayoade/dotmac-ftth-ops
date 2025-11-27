@@ -5,7 +5,22 @@
  * (OpenTelemetry, Prometheus, Grafana)
  */
 
-import type { AppError } from '@dotmac/types';
+// Local type definition for AppError
+export interface AppError {
+  id: string;
+  message: string;
+  details?: string;
+  category?: string;
+  severity: string;
+  statusCode?: number;
+  code?: string;
+  fieldErrors?: Record<string, string[]>;
+  timestamp: Date;
+  retryable: boolean;
+  action?: string;
+  context?: Record<string, unknown>;
+  originalError?: Error;
+}
 
 /**
  * Get OpenTelemetry endpoint from environment
@@ -14,7 +29,7 @@ function getOtelEndpoint(): string {
   return (
     process.env.NEXT_PUBLIC_OTEL_ENDPOINT ||
     process.env.OBSERVABILITY__OTEL_ENDPOINT ||
-    'http://localhost:4318'
+    "http://localhost:4318"
   );
 }
 
@@ -30,8 +45,8 @@ export function reportErrorToObservability(error: AppError): void {
   try {
     // Skip reporting in development if configured
     if (
-      process.env.NODE_ENV === 'development' &&
-      process.env.NEXT_PUBLIC_SKIP_ERROR_REPORTING === 'true'
+      process.env.NODE_ENV === "development" &&
+      process.env.NEXT_PUBLIC_SKIP_ERROR_REPORTING === "true"
     ) {
       return;
     }
@@ -54,35 +69,35 @@ export function reportErrorToObservability(error: AppError): void {
         sessionId: getSessionId(),
       },
       attributes: {
-        'error.id': error.id,
-        'error.category': error.category,
-        'error.severity': error.severity,
-        'error.retryable': error.retryable,
-        'http.status_code': error.statusCode,
-        'component.name': error.context?.component,
-        'action.name': error.context?.action,
+        "error.id": error.id,
+        "error.category": error.category,
+        "error.severity": error.severity,
+        "error.retryable": error.retryable,
+        "http.status_code": error.statusCode,
+        "component.name": error.context?.component,
+        "action.name": error.context?.action,
       },
     };
 
     // Send to OpenTelemetry collector
     // Using fetch with keepalive to ensure delivery even on page unload
     fetch(`${endpoint}/v1/logs`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         resourceLogs: [
           {
             resource: {
               attributes: [
-                { key: 'service.name', value: { stringValue: 'dotmac-frontend' } },
-                { key: 'deployment.environment', value: { stringValue: process.env.NODE_ENV } },
+                { key: "service.name", value: { stringValue: "dotmac-frontend" } },
+                { key: "deployment.environment", value: { stringValue: process.env.NODE_ENV } },
               ],
             },
             scopeLogs: [
               {
-                scope: { name: 'error-handler' },
+                scope: { name: "error-handler" },
                 logRecords: [
                   {
                     timeUnixNano: BigInt(error.timestamp.getTime()) * BigInt(1000000),
@@ -103,14 +118,14 @@ export function reportErrorToObservability(error: AppError): void {
       keepalive: true,
     }).catch((err) => {
       // Silently fail - don't want error reporting to cause more errors
-      console.warn('Failed to report error to observability:', err);
+      console.warn("Failed to report error to observability:", err);
     });
 
     // Also increment error counter metric
     incrementErrorMetric(error);
   } catch (err) {
     // Silently fail
-    console.warn('Error in observability reporting:', err);
+    console.warn("Error in observability reporting:", err);
   }
 }
 
@@ -119,13 +134,13 @@ export function reportErrorToObservability(error: AppError): void {
  */
 function getSeverityNumber(severity: string): number {
   switch (severity) {
-    case 'info':
+    case "info":
       return 9; // INFO
-    case 'warning':
+    case "warning":
       return 13; // WARN
-    case 'error':
+    case "error":
       return 17; // ERROR
-    case 'critical':
+    case "critical":
       return 21; // FATAL
     default:
       return 0; // UNSPECIFIED
@@ -136,11 +151,11 @@ function getSeverityNumber(severity: string): number {
  * Get or create session ID for error correlation
  */
 function getSessionId(): string {
-  let sessionId = sessionStorage.getItem('observability_session_id');
+  let sessionId = sessionStorage.getItem("observability_session_id");
 
   if (!sessionId) {
     sessionId = crypto.randomUUID();
-    sessionStorage.setItem('observability_session_id', sessionId);
+    sessionStorage.setItem("observability_session_id", sessionId);
   }
 
   return sessionId;
@@ -155,35 +170,33 @@ function incrementErrorMetric(error: AppError): void {
   const endpoint = getOtelEndpoint();
 
   fetch(`${endpoint}/v1/metrics`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       resourceMetrics: [
         {
           resource: {
-            attributes: [
-              { key: 'service.name', value: { stringValue: 'dotmac-frontend' } },
-            ],
+            attributes: [{ key: "service.name", value: { stringValue: "dotmac-frontend" } }],
           },
           scopeMetrics: [
             {
-              scope: { name: 'error-handler' },
+              scope: { name: "error-handler" },
               metrics: [
                 {
-                  name: 'frontend.errors.total',
-                  description: 'Total number of frontend errors',
-                  unit: '1',
+                  name: "frontend.errors.total",
+                  description: "Total number of frontend errors",
+                  unit: "1",
                   sum: {
                     dataPoints: [
                       {
-                        asInt: '1',
+                        asInt: "1",
                         timeUnixNano: BigInt(Date.now()) * BigInt(1000000),
                         attributes: [
-                          { key: 'error.category', value: { stringValue: error.category } },
-                          { key: 'error.severity', value: { stringValue: error.severity } },
-                          { key: 'http.status_code', value: { intValue: error.statusCode || 0 } },
+                          { key: "error.category", value: { stringValue: error.category } },
+                          { key: "error.severity", value: { stringValue: error.severity } },
+                          { key: "http.status_code", value: { intValue: error.statusCode || 0 } },
                         ],
                       },
                     ],
@@ -211,17 +224,17 @@ function incrementErrorMetric(error: AppError): void {
 export function createErrorSpan(error: AppError): void {
   // This would integrate with your existing OpenTelemetry tracing
   // For now, just log to console in development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.groupCollapsed(
       `%c[Error Trace] ${error.category}`,
-      'color: #ef4444; font-weight: bold'
+      "color: #ef4444; font-weight: bold",
     );
-    console.log('Message:', error.message);
-    console.log('Severity:', error.severity);
-    console.log('Category:', error.category);
-    console.log('Status Code:', error.statusCode);
-    console.log('Context:', error.context);
-    console.log('Original Error:', error.originalError);
+    console.log("Message:", error.message);
+    console.log("Severity:", error.severity);
+    console.log("Category:", error.category);
+    console.log("Status Code:", error.statusCode);
+    console.log("Context:", error.context);
+    console.log("Original Error:", error.originalError);
     console.groupEnd();
   }
 }
@@ -232,31 +245,29 @@ export function createErrorSpan(error: AppError): void {
 export function recordMetric(
   name: string,
   value: number,
-  labels: Record<string, string | number> = {}
+  labels: Record<string, string | number> = {},
 ): void {
   const endpoint = getOtelEndpoint();
 
   fetch(`${endpoint}/v1/metrics`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       resourceMetrics: [
         {
           resource: {
-            attributes: [
-              { key: 'service.name', value: { stringValue: 'dotmac-frontend' } },
-            ],
+            attributes: [{ key: "service.name", value: { stringValue: "dotmac-frontend" } }],
           },
           scopeMetrics: [
             {
-              scope: { name: 'custom-metrics' },
+              scope: { name: "custom-metrics" },
               metrics: [
                 {
                   name,
                   description: `Custom metric: ${name}`,
-                  unit: '1',
+                  unit: "1",
                   gauge: {
                     dataPoints: [
                       {
@@ -265,7 +276,7 @@ export function recordMetric(
                         attributes: Object.entries(labels).map(([key, val]) => ({
                           key,
                           value:
-                            typeof val === 'number'
+                            typeof val === "number"
                               ? { intValue: val }
                               : { stringValue: String(val) },
                         })),
@@ -291,9 +302,9 @@ export function recordMetric(
 export function recordPerformance(
   operation: string,
   duration: number,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): void {
-  recordMetric('frontend.operation.duration', duration, {
+  recordMetric("frontend.operation.duration", duration, {
     operation,
     ...metadata,
   });

@@ -182,7 +182,7 @@ describe("StatusBadge", () => {
       const { container } = render(
         <StatusBadge variant="success" showDot={true}>
           Success
-        </StatusBadge>
+        </StatusBadge>,
       );
 
       const dot = container.querySelector(".bg-green-600");
@@ -193,7 +193,7 @@ describe("StatusBadge", () => {
       const { container } = render(
         <StatusBadge variant="error" showDot={true}>
           Error
-        </StatusBadge>
+        </StatusBadge>,
       );
 
       const dot = container.querySelector(".bg-red-600");
@@ -292,7 +292,7 @@ describe("StatusBadge", () => {
       render(
         <StatusBadge variant="active" showDot={true}>
           Subscribed
-        </StatusBadge>
+        </StatusBadge>,
       );
 
       expect(screen.getByText("Subscribed")).toBeInTheDocument();

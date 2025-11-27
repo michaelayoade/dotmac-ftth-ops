@@ -12,15 +12,7 @@ import { Button } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
 import { format } from "date-fns";
-import {
-  Calendar,
-  CreditCard,
-  TrendingUp,
-  AlertTriangle,
-  Check,
-  Plus,
-  X,
-} from "lucide-react";
+import { Calendar, CreditCard, TrendingUp, AlertTriangle, Check, Plus, X } from "lucide-react";
 import React from "react";
 
 import { TenantSubscription, SubscriptionStatus } from "../types";

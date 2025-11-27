@@ -5,7 +5,10 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type PropsWithChildren } from "react";
-import type { WorkflowStatistics, WorkflowType } from "../../apps/platform-admin-app/hooks/useOrchestration";
+import type {
+  WorkflowStatistics,
+  WorkflowType,
+} from "../../apps/platform-admin-app/hooks/useOrchestration";
 
 type UseOrchestrationStatsHook = () => {
   data: WorkflowStatistics | null | undefined;
@@ -16,12 +19,12 @@ type UseOrchestrationStatsHook = () => {
 
 export function runUseOrchestrationStatsSuite(
   useOrchestrationStats: UseOrchestrationStatsHook,
-  apiClient: any
+  apiClient: any,
 ) {
   const cleanupFns: Array<() => void> = [];
   const waitForStatsData = async (
     hookResult: { current: ReturnType<UseOrchestrationStatsHook> },
-    expectedStats: WorkflowStatistics
+    expectedStats: WorkflowStatistics,
   ) =>
     waitFor(() => {
       expect(hookResult.current.data).toBe(expectedStats);
@@ -69,7 +72,7 @@ export function runUseOrchestrationStatsSuite(
           running: 5,
           completed: 130,
           failed: 5,
-          success_rate: 96.30,
+          success_rate: 96.3,
           avg_duration_seconds: 45.2,
           by_type: {
             provision_subscriber: 50,

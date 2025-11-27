@@ -3,11 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import {
-  ArrowLeft,
-  AlertCircle,
-  ExternalLink,
-} from "lucide-react";
+import { ArrowLeft, AlertCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 function CreatePlaybookPageContent() {
@@ -42,16 +38,19 @@ function CreatePlaybookPageContent() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <p className="text-sm text-yellow-800">
-              For now, please create and manage playbook templates directly via the AWX/Ansible Tower interface.
+              For now, please create and manage playbook templates directly via the AWX/Ansible
+              Tower interface.
             </p>
             <p className="text-sm text-yellow-800">
-              Once you&apos;ve created a template in AWX, it will automatically appear in this dashboard
-              and you&apos;ll be able to launch it from here.
+              Once you&apos;ve created a template in AWX, it will automatically appear in this
+              dashboard and you&apos;ll be able to launch it from here.
             </p>
           </div>
 
           <div className="pt-4 border-t border-yellow-200">
-            <h3 className="text-sm font-semibold text-yellow-900 mb-2">How to create templates in AWX:</h3>
+            <h3 className="text-sm font-semibold text-yellow-900 mb-2">
+              How to create templates in AWX:
+            </h3>
             <ol className="list-decimal list-inside space-y-2 text-sm text-yellow-800">
               <li>Log in to your AWX interface</li>
               <li>Navigate to Resources → Templates</li>

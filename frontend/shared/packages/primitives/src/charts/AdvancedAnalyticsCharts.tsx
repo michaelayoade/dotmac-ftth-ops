@@ -370,7 +370,9 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
                   </div>
                   <div className="stat">
                     <label>Growth</label>
-                    <span className={`value ${revenueAnalysis.growth > 0 ? "positive" : "negative"}`}>
+                    <span
+                      className={`value ${revenueAnalysis.growth > 0 ? "positive" : "negative"}`}
+                    >
                       {revenueAnalysis.growth.toFixed(1)}%
                     </span>
                   </div>

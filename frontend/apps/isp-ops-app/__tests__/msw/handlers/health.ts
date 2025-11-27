@@ -6,7 +6,7 @@
  */
 
 import { http, HttpResponse } from "msw";
-import type { HealthSummary, ServiceHealth } from '../../../hooks/useHealth';
+import type { HealthSummary, ServiceHealth } from "../../../hooks/useHealth";
 
 // In-memory storage for test data
 let healthData: HealthSummary | null = null;
@@ -23,9 +23,9 @@ export function resetHealthStorage() {
 // Helper to create a service health object
 export function createMockServiceHealth(overrides?: Partial<ServiceHealth>): ServiceHealth {
   return {
-    name: 'test-service',
-    status: 'healthy',
-    message: 'Service is running',
+    name: "test-service",
+    status: "healthy",
+    message: "Service is running",
     required: true,
     uptime: 99.9,
     responseTime: 50,
@@ -37,15 +37,15 @@ export function createMockServiceHealth(overrides?: Partial<ServiceHealth>): Ser
 // Helper to create a health summary
 export function createMockHealthSummary(overrides?: Partial<HealthSummary>): HealthSummary {
   return {
-    status: 'healthy',
+    status: "healthy",
     healthy: true,
     services: [
-      createMockServiceHealth({ name: 'database', status: 'healthy' }),
-      createMockServiceHealth({ name: 'cache', status: 'healthy' }),
-      createMockServiceHealth({ name: 'queue', status: 'healthy' }),
+      createMockServiceHealth({ name: "database", status: "healthy" }),
+      createMockServiceHealth({ name: "cache", status: "healthy" }),
+      createMockServiceHealth({ name: "queue", status: "healthy" }),
     ],
     failed_services: [],
-    version: '1.0.0',
+    version: "1.0.0",
     timestamp: new Date().toISOString(),
     ...overrides,
   };
@@ -69,26 +69,29 @@ export function makeHealthCheckSucceed() {
 
 export const healthHandlers = [
   // GET /api/v1/ready - Get health status
-  http.get('*/api/v1/ready', (req, res, ctx) => {
-    console.log('[MSW] GET /api/v1/ready', { shouldFail, hasData: !!healthData });
+  http.get("*/api/v1/ready", (req, res, ctx) => {
+    console.log("[MSW] GET /api/v1/ready", { shouldFail, hasData: !!healthData });
 
     // Handle forced failure
     if (shouldFail) {
       if (failureStatus === 403) {
-        return HttpResponse.json({
+        return HttpResponse.json(
+          {
             error: {
-              message: 'You do not have permission to view service health.',
+              message: "You do not have permission to view service health.",
             },
-          }, { status: 403 });
+          },
+          { status: 403 },
+        );
       }
 
       return res(
         ctx.status(failureStatus),
         ctx.json({
           error: {
-            message: 'Service health check failed',
+            message: "Service health check failed",
           },
-        })
+        }),
       );
     }
 

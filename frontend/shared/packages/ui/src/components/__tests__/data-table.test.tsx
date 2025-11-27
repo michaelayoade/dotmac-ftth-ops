@@ -125,7 +125,7 @@ describe("DataTable", () => {
           searchable={true}
           searchColumn="name"
           searchPlaceholder="Search by name..."
-        />
+        />,
       );
 
       expect(screen.getByPlaceholderText("Search by name...")).toBeInTheDocument();
@@ -229,7 +229,14 @@ describe("DataTable", () => {
     });
 
     it("uses default page size", () => {
-      render(<DataTable columns={columns} data={testData} defaultPageSize={10} pageSizeOptions={[10, 20, 30]} />);
+      render(
+        <DataTable
+          columns={columns}
+          data={testData}
+          defaultPageSize={10}
+          pageSizeOptions={[10, 20, 30]}
+        />,
+      );
 
       const select = screen.getByLabelText("Select page size");
       expect(select).toHaveValue("10");
@@ -276,7 +283,7 @@ describe("DataTable", () => {
     it("makes rows clickable when onRowClick provided", () => {
       const onRowClick = jest.fn();
       const { container } = render(
-        <DataTable columns={columns} data={testData} onRowClick={onRowClick} />
+        <DataTable columns={columns} data={testData} onRowClick={onRowClick} />,
       );
 
       const rows = container.querySelectorAll("tbody tr");
@@ -300,7 +307,7 @@ describe("DataTable", () => {
   describe("Styling", () => {
     it("applies custom className", () => {
       const { container } = render(
-        <DataTable columns={columns} data={testData} className="custom-table" />
+        <DataTable columns={columns} data={testData} className="custom-table" />,
       );
 
       const wrapper = container.firstChild;
@@ -357,7 +364,7 @@ describe("DataTable", () => {
           searchPlaceholder="Search users..."
           paginated={true}
           defaultPageSize={3}
-        />
+        />,
       );
 
       // Search
@@ -385,7 +392,7 @@ describe("DataTable", () => {
           searchable={true}
           searchColumn="name"
           emptyMessage="No users found matching your search"
-        />
+        />,
       );
 
       const searchInput = screen.getByPlaceholderText("Search...");
@@ -480,7 +487,7 @@ describe("Integration Tests", () => {
         paginated={true}
         defaultPageSize={2}
         columnVisibility={true}
-      />
+      />,
     );
 
     // All features should be present
@@ -505,7 +512,7 @@ describe("Integration Tests", () => {
         paginated={true}
         defaultPageSize={2}
         onRowClick={onRowClick}
-      />
+      />,
     );
 
     // Click row on first page

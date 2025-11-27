@@ -46,10 +46,7 @@ export const BottomSheet = React.forwardRef<HTMLDivElement, BottomSheetProps>(
     return (
       <div
         ref={overlayRef}
-        className={clsx(
-          "fixed inset-0 z-50 bg-black/50 flex items-end",
-          !isOpen && "hidden",
-        )}
+        className={clsx("fixed inset-0 z-50 bg-black/50 flex items-end", !isOpen && "hidden")}
         onClick={handleBackdropClick}
         aria-modal="true"
         role="dialog"

@@ -44,7 +44,12 @@ interface InternetPlanFormProps {
   isSubmitting?: boolean;
 }
 
-export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = false }: InternetPlanFormProps) {
+export function InternetPlanForm({
+  plan,
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+}: InternetPlanFormProps) {
   const router = useRouter();
   const isEditing = !!plan;
 
@@ -67,13 +72,13 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
     plan_code: plan?.plan_code || "",
     name: plan?.name || "",
     description: plan?.description || "",
-    plan_type: plan?.plan_type || "residential" as PlanType,
-    status: plan?.status || "draft" as PlanStatus,
+    plan_type: plan?.plan_type || ("residential" as PlanType),
+    status: plan?.status || ("draft" as PlanStatus),
 
     // Speed configuration
     download_speed: plan?.download_speed || 100,
     upload_speed: plan?.upload_speed || 50,
-    speed_unit: plan?.speed_unit || "mbps" as SpeedUnit,
+    speed_unit: plan?.speed_unit || ("mbps" as SpeedUnit),
     burst_download_speed: plan?.burst_download_speed || null,
     burst_upload_speed: plan?.burst_upload_speed || null,
     burst_duration_seconds: plan?.burst_duration_seconds || null,
@@ -81,17 +86,17 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
     // Data cap
     has_data_cap: plan?.has_data_cap || false,
     data_cap_amount: plan?.data_cap_amount || null,
-    data_cap_unit: plan?.data_cap_unit || "GB" as DataUnit,
-    throttle_policy: plan?.throttle_policy || "no_throttle" as ThrottlePolicy,
+    data_cap_unit: plan?.data_cap_unit || ("GB" as DataUnit),
+    throttle_policy: plan?.throttle_policy || ("no_throttle" as ThrottlePolicy),
     throttled_download_speed: plan?.throttled_download_speed || null,
     throttled_upload_speed: plan?.throttled_upload_speed || null,
     overage_price_per_unit: plan?.overage_price_per_unit || null,
-    overage_unit: plan?.overage_unit || "GB" as DataUnit,
+    overage_unit: plan?.overage_unit || ("GB" as DataUnit),
 
     // FUP
     has_fup: plan?.has_fup || false,
     fup_threshold: plan?.fup_threshold || null,
-    fup_threshold_unit: plan?.fup_threshold_unit || "GB" as DataUnit,
+    fup_threshold_unit: plan?.fup_threshold_unit || ("GB" as DataUnit),
     fup_throttle_speed: plan?.fup_throttle_speed || null,
 
     // Time restrictions
@@ -109,7 +114,7 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
     monthly_price: plan?.monthly_price || 0,
     setup_fee: plan?.setup_fee || 0,
     currency: plan?.currency || "USD",
-    billing_cycle: plan?.billing_cycle || "monthly" as BillingCycle,
+    billing_cycle: plan?.billing_cycle || ("monthly" as BillingCycle),
 
     // Availability
     is_public: plan?.is_public || true,
@@ -150,7 +155,7 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
 
   const updateField = <K extends keyof InternetServicePlanCreate>(
     field: K,
-    value: InternetServicePlanCreate[K]
+    value: InternetServicePlanCreate[K],
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -190,7 +195,11 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             <Info className="h-5 w-5" />
             Basic Information
           </h3>
-          {expandedSections.basic ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.basic ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.basic && (
@@ -279,7 +288,11 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             <Zap className="h-5 w-5 text-blue-500" />
             Speed Configuration
           </h3>
-          {expandedSections.speed ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.speed ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.speed && (
@@ -341,7 +354,10 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                     type="number"
                     value={formData.burst_download_speed || ""}
                     onChange={(e) =>
-                      updateField("burst_download_speed", e.target.value ? Number(e.target.value) : null)
+                      updateField(
+                        "burst_download_speed",
+                        e.target.value ? Number(e.target.value) : null,
+                      )
                     }
                     className="w-full border rounded-md px-3 py-2"
                     min="0"
@@ -356,7 +372,10 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                     type="number"
                     value={formData.burst_upload_speed || ""}
                     onChange={(e) =>
-                      updateField("burst_upload_speed", e.target.value ? Number(e.target.value) : null)
+                      updateField(
+                        "burst_upload_speed",
+                        e.target.value ? Number(e.target.value) : null,
+                      )
                     }
                     className="w-full border rounded-md px-3 py-2"
                     min="0"
@@ -371,7 +390,10 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                     type="number"
                     value={formData.burst_duration_seconds || ""}
                     onChange={(e) =>
-                      updateField("burst_duration_seconds", e.target.value ? Number(e.target.value) : null)
+                      updateField(
+                        "burst_duration_seconds",
+                        e.target.value ? Number(e.target.value) : null,
+                      )
                     }
                     className="w-full border rounded-md px-3 py-2"
                     min="0"
@@ -398,7 +420,11 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             Data Cap & Throttling
             {formData.has_data_cap && <Badge variant="secondary">Enabled</Badge>}
           </h3>
-          {expandedSections.dataCap ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.dataCap ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.dataCap && (
@@ -425,7 +451,10 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                       type="number"
                       value={formData.data_cap_amount || ""}
                       onChange={(e) =>
-                        updateField("data_cap_amount", e.target.value ? Number(e.target.value) : null)
+                        updateField(
+                          "data_cap_amount",
+                          e.target.value ? Number(e.target.value) : null,
+                        )
                       }
                       className="w-full border rounded-md px-3 py-2"
                       min="0"
@@ -452,7 +481,9 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                   <label className="text-sm font-medium mb-2 block">Throttle Policy</label>
                   <select
                     value={formData.throttle_policy}
-                    onChange={(e) => updateField("throttle_policy", e.target.value as ThrottlePolicy)}
+                    onChange={(e) =>
+                      updateField("throttle_policy", e.target.value as ThrottlePolicy)
+                    }
                     className="w-full border rounded-md px-3 py-2"
                   >
                     <option value="no_throttle">No Throttle (informational only)</option>
@@ -465,12 +496,17 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                 {formData.throttle_policy === "throttle" && (
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Throttled Download Speed</label>
+                      <label className="text-sm font-medium mb-2 block">
+                        Throttled Download Speed
+                      </label>
                       <input
                         type="number"
                         value={formData.throttled_download_speed || ""}
                         onChange={(e) =>
-                          updateField("throttled_download_speed", e.target.value ? Number(e.target.value) : null)
+                          updateField(
+                            "throttled_download_speed",
+                            e.target.value ? Number(e.target.value) : null,
+                          )
                         }
                         className="w-full border rounded-md px-3 py-2"
                         min="0"
@@ -480,12 +516,17 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Throttled Upload Speed</label>
+                      <label className="text-sm font-medium mb-2 block">
+                        Throttled Upload Speed
+                      </label>
                       <input
                         type="number"
                         value={formData.throttled_upload_speed || ""}
                         onChange={(e) =>
-                          updateField("throttled_upload_speed", e.target.value ? Number(e.target.value) : null)
+                          updateField(
+                            "throttled_upload_speed",
+                            e.target.value ? Number(e.target.value) : null,
+                          )
                         }
                         className="w-full border rounded-md px-3 py-2"
                         min="0"
@@ -499,12 +540,17 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                 {formData.throttle_policy === "overage_charge" && (
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Overage Price (per unit)</label>
+                      <label className="text-sm font-medium mb-2 block">
+                        Overage Price (per unit)
+                      </label>
                       <input
                         type="number"
                         value={formData.overage_price_per_unit || ""}
                         onChange={(e) =>
-                          updateField("overage_price_per_unit", e.target.value ? Number(e.target.value) : null)
+                          updateField(
+                            "overage_price_per_unit",
+                            e.target.value ? Number(e.target.value) : null,
+                          )
                         }
                         className="w-full border rounded-md px-3 py-2"
                         min="0"
@@ -547,7 +593,11 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             Fair Usage Policy (FUP)
             {formData.has_fup && <Badge variant="secondary">Enabled</Badge>}
           </h3>
-          {expandedSections.fup ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.fup ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.fup && (
@@ -568,8 +618,9 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
               <p className="font-semibold mb-1">What is FUP?</p>
               <p className="text-muted-foreground">
-                FUP automatically throttles user speeds after they exceed a data threshold. Unlike data caps,
-              FUP doesn’t stop service – it just reduces speed to maintain network quality for all users.
+                FUP automatically throttles user speeds after they exceed a data threshold. Unlike
+                data caps, FUP doesn’t stop service – it just reduces speed to maintain network
+                quality for all users.
               </p>
             </div>
 
@@ -597,7 +648,9 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                     <label className="text-sm font-medium mb-2 block">FUP Threshold Unit</label>
                     <select
                       value={formData.fup_threshold_unit || "GB"}
-                      onChange={(e) => updateField("fup_threshold_unit", e.target.value as DataUnit)}
+                      onChange={(e) =>
+                        updateField("fup_threshold_unit", e.target.value as DataUnit)
+                      }
                       className="w-full border rounded-md px-3 py-2"
                     >
                       <option value="MB">MB</option>
@@ -613,7 +666,10 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                     type="number"
                     value={formData.fup_throttle_speed || ""}
                     onChange={(e) =>
-                      updateField("fup_throttle_speed", e.target.value ? Number(e.target.value) : null)
+                      updateField(
+                        "fup_throttle_speed",
+                        e.target.value ? Number(e.target.value) : null,
+                      )
                     }
                     className="w-full border rounded-md px-3 py-2"
                     min="0"
@@ -633,12 +689,20 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                       <span className="px-2 py-1 bg-green-500 text-white rounded">
                         {formData.download_speed} {formData.speed_unit}
                       </span>
-                      <span>→ After {formData.fup_threshold} {formData.fup_threshold_unit} →</span>
+                      <span>
+                        → After {formData.fup_threshold} {formData.fup_threshold_unit} →
+                      </span>
                       <span className="px-2 py-1 bg-orange-500 text-white rounded">
                         {formData.fup_throttle_speed} {formData.speed_unit}
                       </span>
                       <span className="ml-2 text-red-600 font-bold">
-                        ({(((Number(formData.download_speed) - Number(formData.fup_throttle_speed)) / Number(formData.download_speed)) * 100).toFixed(0)}% reduction)
+                        (
+                        {(
+                          ((Number(formData.download_speed) - Number(formData.fup_throttle_speed)) /
+                            Number(formData.download_speed)) *
+                          100
+                        ).toFixed(0)}
+                        % reduction)
                       </span>
                     </div>
                   </div>
@@ -689,11 +753,15 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
               <>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Unrestricted Start Time</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      Unrestricted Start Time
+                    </label>
                     <input
                       type="time"
                       value={formData.unrestricted_start_time || ""}
-                      onChange={(e) => updateField("unrestricted_start_time", e.target.value || null)}
+                      onChange={(e) =>
+                        updateField("unrestricted_start_time", e.target.value || null)
+                      }
                       className="w-full border rounded-md px-3 py-2"
                     />
                     <p className="text-xs text-muted-foreground mt-1">e.g., 23:00 (11 PM)</p>
@@ -726,14 +794,16 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Speed Multiplier (Optional)</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      Speed Multiplier (Optional)
+                    </label>
                     <input
                       type="number"
                       value={formData.unrestricted_speed_multiplier || ""}
                       onChange={(e) =>
                         updateField(
                           "unrestricted_speed_multiplier",
-                          e.target.value ? Number(e.target.value) : null
+                          e.target.value ? Number(e.target.value) : null,
                         )
                       }
                       className="w-full border rounded-md px-3 py-2"
@@ -765,15 +835,17 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             <Settings className="h-5 w-5" />
             QoS & Traffic Shaping
           </h3>
-          {expandedSections.qos ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.qos ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.qos && (
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">
-                QoS Priority (0-100)
-              </label>
+              <label className="text-sm font-medium mb-2 block">QoS Priority (0-100)</label>
               <input
                 type="range"
                 value={formData.qos_priority}
@@ -790,8 +862,12 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 {(formData.qos_priority ?? 0) >= 80 && "Critical priority - guaranteed bandwidth"}
-                {(formData.qos_priority ?? 0) >= 50 && (formData.qos_priority ?? 0) < 80 && "High priority - minimal throttling"}
-                {(formData.qos_priority ?? 0) >= 30 && (formData.qos_priority ?? 0) < 50 && "Medium priority - standard service"}
+                {(formData.qos_priority ?? 0) >= 50 &&
+                  (formData.qos_priority ?? 0) < 80 &&
+                  "High priority - minimal throttling"}
+                {(formData.qos_priority ?? 0) >= 30 &&
+                  (formData.qos_priority ?? 0) < 50 &&
+                  "Medium priority - standard service"}
                 {(formData.qos_priority ?? 0) < 30 && "Low priority - best effort service"}
               </p>
             </div>
@@ -825,7 +901,11 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             <DollarSign className="h-5 w-5 text-green-500" />
             Pricing & Contract
           </h3>
-          {expandedSections.pricing ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.pricing ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.pricing && (
@@ -964,7 +1044,11 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
             <Settings className="h-5 w-5" />
             Technical Specifications
           </h3>
-          {expandedSections.technical ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.technical ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.technical && (
@@ -1056,7 +1140,11 @@ export function InternetPlanForm({ plan, onSubmit, onCancel, isSubmitting = fals
           className="w-full flex items-center justify-between mb-4"
         >
           <h3 className="text-lg font-bold">Additional Services & Options</h3>
-          {expandedSections.additional ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          {expandedSections.additional ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
         </button>
 
         {expandedSections.additional && (

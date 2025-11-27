@@ -52,7 +52,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
           <button onClick={onClose}>Close</button>
           <button onClick={() => onCustomerUpdated?.(customer)}>Save</button>
         </div>
-      )
+      ),
     );
   });
 
@@ -62,7 +62,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         customer={mockCustomer}
         onClose={jest.fn()}
         onCustomerUpdated={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-customer")).toHaveTextContent("yes");
@@ -72,11 +72,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
     const onClose = jest.fn();
 
     renderQuick(
-      <CustomerEditModal
-        customer={mockCustomer}
-        onClose={onClose}
-        onCustomerUpdated={jest.fn()}
-      />
+      <CustomerEditModal customer={mockCustomer} onClose={onClose} onCustomerUpdated={jest.fn()} />,
     );
 
     expect(screen.getByTestId("has-close")).toHaveTextContent("yes");
@@ -94,7 +90,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         customer={mockCustomer}
         onClose={jest.fn()}
         onCustomerUpdated={onCustomerUpdated}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-updated")).toHaveTextContent("yes");
@@ -120,7 +116,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onCustomerUpdated={jest.fn()}
         updateCustomer={updateCustomer}
-      />
+      />,
     );
 
     expect(screen.getByTestId("has-update-fn")).toHaveTextContent("yes");
@@ -130,7 +126,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
       expect.objectContaining({
         updateCustomer,
       }),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -141,7 +137,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         onClose={jest.fn()}
         onCustomerUpdated={jest.fn()}
         loading={true}
-      />
+      />,
     );
 
     expect(screen.getByTestId("loading")).toHaveTextContent("yes");
@@ -149,11 +145,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
 
   it("handles missing customer prop", () => {
     renderQuick(
-      <CustomerEditModal
-        customer={null}
-        onClose={jest.fn()}
-        onCustomerUpdated={jest.fn()}
-      />
+      <CustomerEditModal customer={null} onClose={jest.fn()} onCustomerUpdated={jest.fn()} />,
     );
 
     expect(screen.getByTestId("has-customer")).toHaveTextContent("no");
@@ -166,7 +158,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         customer={mockCustomer}
         onClose={jest.fn()}
         onCustomerUpdated={jest.fn()}
-      />
+      />,
     );
 
     // Component should render fine without updateCustomer and loading
@@ -185,7 +177,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         onCustomerUpdated={onCustomerUpdated}
         updateCustomer={updateCustomer}
         loading={false}
-      />
+      />,
     );
 
     expect(mockSharedModal).toHaveBeenCalledWith(
@@ -195,7 +187,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         updateCustomer,
         loading: false,
       }),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -215,7 +207,7 @@ describe("CustomerEditModal (App Wrapper)", () => {
         customer={mockCustomer}
         onClose={jest.fn()}
         onCustomerUpdated={jest.fn()}
-      />
+      />,
     );
 
     screen.getByText("Save").click();

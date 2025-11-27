@@ -110,18 +110,16 @@ export class WebSocketClient {
 
   /**
    * Build WebSocket URL with authentication
+   *
+   * Note: Cookies ARE sent during the WebSocket HTTP upgrade handshake
+   * (same-origin policy). No token query param needed - httpOnly cookies
+   * are automatically included in the upgrade request headers.
    */
   private buildWebSocketUrl(): string {
     // Convert HTTP(S) URL to WS(S)
     const wsUrl = this.config.endpoint.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
-
-    // Add token as query parameter if provided (backward compatibility)
-    // Cookies are NOT automatically sent by WebSocket API, so we need query param
     const url = new URL(wsUrl, window.location.origin);
-    if (this.config.token) {
-      url.searchParams.set("token", this.config.token);
-    }
-
+    // No token param needed - cookies sent with upgrade request
     return url.toString();
   }
 
@@ -342,13 +340,14 @@ export function createWebSocketClient(config: WebSocketConfig): WebSocketClient 
 
 /**
  * WebSocket endpoint factory
+ *
+ * Authentication is handled via httpOnly cookies sent during the
+ * WebSocket HTTP upgrade handshake. No token parameter needed.
  */
 export class WebSocketEndpoints {
-  private readonly token: string;
   private readonly overrideBaseUrl: string | undefined;
 
-  constructor(token: string, overrideBaseUrl?: string) {
-    this.token = token;
+  constructor(overrideBaseUrl?: string) {
     this.overrideBaseUrl = overrideBaseUrl;
   }
 
@@ -367,7 +366,6 @@ export class WebSocketEndpoints {
   job(jobId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
       endpoint: this.buildEndpoint(`/realtime/ws/jobs/${jobId}`),
-      token: this.token,
       ...config,
     });
   }
@@ -378,7 +376,6 @@ export class WebSocketEndpoints {
   campaign(campaignId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
       endpoint: this.buildEndpoint(`/realtime/ws/campaigns/${campaignId}`),
-      token: this.token,
       ...config,
     });
   }

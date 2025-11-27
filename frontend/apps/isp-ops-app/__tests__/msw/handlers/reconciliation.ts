@@ -30,7 +30,7 @@ let circuitBreakerFailureCount = 0;
 // ============================================
 
 export function createMockReconciliation(
-  overrides: Partial<ReconciliationResponse> = {}
+  overrides: Partial<ReconciliationResponse> = {},
 ): ReconciliationResponse {
   const id = overrides.id || Math.floor(Math.random() * 10000);
   const openingBalance = overrides.opening_balance || 10000;
@@ -69,9 +69,7 @@ export function createMockReconciliation(
   };
 }
 
-export function createMockReconciledItem(
-  overrides: Partial<ReconciledItem> = {}
-): ReconciledItem {
+export function createMockReconciledItem(overrides: Partial<ReconciledItem> = {}): ReconciledItem {
   return {
     payment_id: Math.floor(Math.random() * 10000),
     payment_reference: `PAY-${Date.now()}`,
@@ -84,7 +82,7 @@ export function createMockReconciledItem(
 }
 
 export function createMockSummary(
-  overrides: Partial<ReconciliationSummary> = {}
+  overrides: Partial<ReconciliationSummary> = {},
 ): ReconciliationSummary {
   return {
     total_reconciliations: 10,
@@ -139,43 +137,34 @@ export const reconciliationHandlers = [
     // Filter by bank account if provided
     let filtered = [...reconciliations];
     if (bankAccountId) {
-      filtered = filtered.filter(
-        (r) => r.bank_account_id === parseInt(bankAccountId)
-      );
+      filtered = filtered.filter((r) => r.bank_account_id === parseInt(bankAccountId));
     }
 
     // Filter by days if provided
     if (days) {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
-      filtered = filtered.filter(
-        (r) => new Date(r.reconciliation_date) >= cutoffDate
-      );
+      filtered = filtered.filter((r) => new Date(r.reconciliation_date) >= cutoffDate);
     }
 
     // Build summary
     const summary: ReconciliationSummary = {
       total_reconciliations: filtered.length,
-      pending_reconciliations: filtered.filter((r) => r.status === "pending")
-        .length,
+      pending_reconciliations: filtered.filter((r) => r.status === "pending").length,
       completed_reconciliations: filtered.filter(
-        (r) => r.status === "completed" || r.status === "approved"
+        (r) => r.status === "completed" || r.status === "approved",
       ).length,
-      total_discrepancy: filtered.reduce(
-        (sum, r) => sum + Math.abs(r.discrepancy_amount),
-        0
-      ),
+      total_discrepancy: filtered.reduce((sum, r) => sum + Math.abs(r.discrepancy_amount), 0),
       avg_discrepancy:
         filtered.length > 0
-          ? filtered.reduce((sum, r) => sum + Math.abs(r.discrepancy_amount), 0) /
-            filtered.length
+          ? filtered.reduce((sum, r) => sum + Math.abs(r.discrepancy_amount), 0) / filtered.length
           : 0,
       last_reconciliation_date:
         filtered.length > 0
           ? filtered.sort(
               (a, b) =>
                 new Date(b.reconciliation_date).getTime() -
-                new Date(a.reconciliation_date).getTime()
+                new Date(a.reconciliation_date).getTime(),
             )[0].reconciliation_date
           : null,
     };
@@ -192,9 +181,7 @@ export const reconciliationHandlers = [
       state: circuitBreakerOpen ? "open" : "closed",
       failure_count: circuitBreakerFailureCount,
       last_failure_time: circuitBreakerOpen ? new Date().toISOString() : null,
-      next_retry_time: circuitBreakerOpen
-        ? new Date(Date.now() + 60000).toISOString()
-        : null,
+      next_retry_time: circuitBreakerOpen ? new Date(Date.now() + 60000).toISOString() : null,
     };
 
     console.log("[MSW] Circuit breaker status:", status);
@@ -215,7 +202,7 @@ export const reconciliationHandlers = [
     const response: PaymentRetryResponse = {
       payment_id: retryRequest.payment_id,
       success,
-      attempts: success ? 1 : (retryRequest.max_attempts || 3),
+      attempts: success ? 1 : retryRequest.max_attempts || 3,
       last_error: success ? null : "Payment gateway timeout",
       retry_at: success ? null : new Date(Date.now() + 300000).toISOString(),
     };
@@ -247,9 +234,7 @@ export const reconciliationHandlers = [
     let filtered = [...reconciliations];
 
     if (bankAccountId) {
-      filtered = filtered.filter(
-        (r) => r.bank_account_id === parseInt(bankAccountId)
-      );
+      filtered = filtered.filter((r) => r.bank_account_id === parseInt(bankAccountId));
     }
 
     if (status) {
@@ -257,15 +242,11 @@ export const reconciliationHandlers = [
     }
 
     if (startDate) {
-      filtered = filtered.filter(
-        (r) => new Date(r.period_start) >= new Date(startDate)
-      );
+      filtered = filtered.filter((r) => new Date(r.period_start) >= new Date(startDate));
     }
 
     if (endDate) {
-      filtered = filtered.filter(
-        (r) => new Date(r.period_end) <= new Date(endDate)
-      );
+      filtered = filtered.filter((r) => new Date(r.period_end) <= new Date(endDate));
     }
 
     // Pagination
@@ -401,7 +382,7 @@ export const reconciliationHandlers = [
     if (reconciliation.status !== "completed") {
       return HttpResponse.json(
         { detail: "Reconciliation must be completed before approval" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

@@ -312,8 +312,6 @@ pnpm --filter @dotmac/platform-admin-app analyze:server
 # .env.local.example defaults
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 NEXT_PUBLIC_WS_URL=ws://localhost:8000
-BETTER_AUTH_URL=http://localhost:3001/api/auth  # ISP
-BETTER_AUTH_URL=http://localhost:3002/api/auth  # Admin
 ```
 
 ### Docker Internal URLs

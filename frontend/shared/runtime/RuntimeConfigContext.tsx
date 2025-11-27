@@ -36,40 +36,35 @@ type RuntimeConfigProviderProps = {
 };
 
 export function RuntimeConfigProvider({ children }: RuntimeConfigProviderProps) {
-  const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(
-    () => getRuntimeConfigSnapshot(),
+  const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(() =>
+    getRuntimeConfigSnapshot(),
   );
   const runtimeConfigDisabled = isRuntimeConfigDisabled();
-  const [loading, setLoading] = useState<boolean>(
-    () => !runtimeConfig && !runtimeConfigDisabled,
-  );
+  const [loading, setLoading] = useState<boolean>(() => !runtimeConfig && !runtimeConfigDisabled);
   const [error, setError] = useState<string | null>(null);
 
-  const resolveRuntimeConfig = useCallback(
-    async (force = false) => {
-      if (runtimeConfigDisabled) {
-        setLoading(false);
-        setError(null);
-        return;
-      }
+  const resolveRuntimeConfig = useCallback(async (force = false) => {
+    if (runtimeConfigDisabled) {
+      setLoading(false);
+      setError(null);
+      return;
+    }
 
-      setLoading(true);
-      try {
-        const payload = await loadRuntimeConfig(force ? { force: true } : undefined);
-        setRuntimeConfig(payload);
-        setError(null);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load runtime config";
-        setError(message);
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[runtime-config]", err);
-        }
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      const payload = await loadRuntimeConfig(force ? { force: true } : undefined);
+      setRuntimeConfig(payload);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load runtime config";
+      setError(message);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[runtime-config]", err);
       }
-    },
-    [],
-  );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!runtimeConfig && !runtimeConfigDisabled) {
@@ -98,9 +93,7 @@ export function RuntimeConfigProvider({ children }: RuntimeConfigProviderProps) 
     [runtimeConfig, loading, error, refresh],
   );
 
-  return (
-    <RuntimeConfigContext.Provider value={value}>{children}</RuntimeConfigContext.Provider>
-  );
+  return <RuntimeConfigContext.Provider value={value}>{children}</RuntimeConfigContext.Provider>;
 }
 
 export function useRuntimeConfigState(): RuntimeConfigState {

@@ -30,7 +30,13 @@ jest.mock("axios", () => {
   };
 });
 
-import { useHealth, useHealthLegacy, healthKeys, type HealthSummary, type ServiceHealth } from "../useHealth";
+import {
+  useHealth,
+  useHealthLegacy,
+  healthKeys,
+  type HealthSummary,
+  type ServiceHealth,
+} from "../useHealth";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 
@@ -343,10 +349,7 @@ describe("useHealth", () => {
       expect(result.current.health?.status).toBe("forbidden");
       expect(result.current.health?.healthy).toBe(false);
       expect(result.current.error).toContain("permission");
-      expect(logger.error).toHaveBeenCalledWith(
-        "Failed to fetch health data",
-        expect.any(Object)
-      );
+      expect(logger.error).toHaveBeenCalledWith("Failed to fetch health data", expect.any(Object));
     });
 
     it("should handle 500 server error", async () => {
@@ -406,10 +409,7 @@ describe("useHealth", () => {
 
       expect(result.current.health?.status).toBe("degraded");
       expect(result.current.health?.healthy).toBe(false);
-      expect(logger.error).toHaveBeenCalledWith(
-        "Failed to fetch health data",
-        error
-      );
+      expect(logger.error).toHaveBeenCalledWith("Failed to fetch health data", error);
     });
 
     it("should handle network failure error", async () => {
@@ -438,10 +438,7 @@ describe("useHealth", () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(result.current.health?.status).toBe("degraded");
-      expect(logger.error).toHaveBeenCalledWith(
-        "Failed to fetch health data",
-        expect.any(Error)
-      );
+      expect(logger.error).toHaveBeenCalledWith("Failed to fetch health data", expect.any(Error));
     });
   });
 
@@ -542,7 +539,7 @@ describe("useHealth", () => {
 
     it("should have correct loading state during fetch", () => {
       (apiClient.get as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
+        () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
 
       const { result } = renderHook(() => useHealth(), {
@@ -734,14 +731,12 @@ describe("useHealth", () => {
 
       expect(result.current.health?.services).toHaveLength(4);
 
-      const healthyServices = result.current.health?.services.filter(
-        (s) => s.status === "healthy"
-      );
+      const healthyServices = result.current.health?.services.filter((s) => s.status === "healthy");
       const degradedServices = result.current.health?.services.filter(
-        (s) => s.status === "degraded"
+        (s) => s.status === "degraded",
       );
       const unhealthyServices = result.current.health?.services.filter(
-        (s) => s.status === "unhealthy"
+        (s) => s.status === "unhealthy",
       );
 
       expect(healthyServices).toHaveLength(2);

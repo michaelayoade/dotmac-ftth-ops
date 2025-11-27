@@ -15,7 +15,7 @@ describe("TabNavigation", () => {
         <TabNavigation>
           <TabItem>Tab 1</TabItem>
           <TabItem>Tab 2</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tablist = screen.getByRole("tablist");
@@ -28,7 +28,7 @@ describe("TabNavigation", () => {
           <TabItem>Tab 1</TabItem>
           <TabItem>Tab 2</TabItem>
           <TabItem>Tab 3</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       expect(screen.getByRole("tab", { name: "Tab 1" })).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe("TabNavigation", () => {
       const { container } = render(
         <TabNavigation className="custom-class">
           <TabItem>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tablist = container.querySelector(".custom-class");
@@ -53,7 +53,7 @@ describe("TabNavigation", () => {
       const { container } = render(
         <TabNavigation variant="default">
           <TabItem>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tablist = screen.getByRole("tablist");
@@ -64,7 +64,7 @@ describe("TabNavigation", () => {
       const { container } = render(
         <TabNavigation variant="pills">
           <TabItem>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tablist = screen.getByRole("tablist");
@@ -75,7 +75,7 @@ describe("TabNavigation", () => {
       const { container } = render(
         <TabNavigation variant="bordered">
           <TabItem>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tablist = screen.getByRole("tablist");
@@ -86,7 +86,7 @@ describe("TabNavigation", () => {
       const { container } = render(
         <TabNavigation>
           <TabItem>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tablist = screen.getByRole("tablist");
@@ -100,7 +100,7 @@ describe("TabNavigation", () => {
         <TabNavigation>
           <TabItem active>Active Tab</TabItem>
           <TabItem>Inactive Tab</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const activeTab = screen.getByRole("tab", { name: "Active Tab" });
@@ -111,7 +111,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation>
           <TabItem active={false}>Inactive Tab</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab", { name: "Inactive Tab" });
@@ -124,7 +124,7 @@ describe("TabNavigation", () => {
           <TabItem variant="default" active>
             Active
           </TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const activeTab = screen.getByRole("tab", { name: "Active" });
@@ -137,7 +137,7 @@ describe("TabNavigation", () => {
           <TabItem variant="pills" active>
             Active
           </TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const activeTab = screen.getByRole("tab", { name: "Active" });
@@ -150,11 +150,17 @@ describe("TabNavigation", () => {
           <TabItem variant="bordered" active>
             Active
           </TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const activeTab = screen.getByRole("tab", { name: "Active" });
-      expect(activeTab).toHaveClass("bg-white", "border", "shadow-sm", "text-gray-900", "rounded-md");
+      expect(activeTab).toHaveClass(
+        "bg-white",
+        "border",
+        "shadow-sm",
+        "text-gray-900",
+        "rounded-md",
+      );
     });
   });
 
@@ -165,7 +171,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation>
           <TabItem onClick={handleClick}>Clickable Tab</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab", { name: "Clickable Tab" });
@@ -182,7 +188,7 @@ describe("TabNavigation", () => {
           <TabItem onClick={handleClick} disabled>
             Disabled Tab
           </TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab", { name: "Disabled Tab" });
@@ -196,7 +202,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation>
           <TabItem className="custom-tab-class">Custom Tab</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab", { name: "Custom Tab" });
@@ -223,7 +229,7 @@ describe("TabNavigation", () => {
       const { container } = render(
         <TabPanel active className="custom-panel-class">
           Panel Content
-        </TabPanel>
+        </TabPanel>,
       );
 
       const panel = screen.getByRole("tabpanel");
@@ -319,7 +325,7 @@ describe("TabNavigation", () => {
         <TabNavigation>
           <TabItem active>Tab 1</TabItem>
           <TabItem>Tab 2</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       expect(screen.getByRole("tablist")).toBeInTheDocument();
@@ -331,7 +337,7 @@ describe("TabNavigation", () => {
         <TabNavigation>
           <TabItem active>Active Tab</TabItem>
           <TabItem active={false}>Inactive Tab</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const activeTab = screen.getByRole("tab", { name: "Active Tab" });
@@ -352,7 +358,7 @@ describe("TabNavigation", () => {
         <TabNavigation>
           <TabItem>Tab 1</TabItem>
           <TabItem>Tab 2</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab1 = screen.getByRole("tab", { name: "Tab 1" });
@@ -373,7 +379,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation ref={ref}>
           <TabItem>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -386,7 +392,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation>
           <TabItem ref={ref}>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLButtonElement);
@@ -396,7 +402,11 @@ describe("TabNavigation", () => {
     it("forwards ref to TabPanel div", () => {
       const ref = React.createRef<HTMLDivElement>();
 
-      render(<TabPanel active ref={ref}>Panel Content</TabPanel>);
+      render(
+        <TabPanel active ref={ref}>
+          Panel Content
+        </TabPanel>,
+      );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
       expect(ref.current).toHaveAttribute("role", "tabpanel");
@@ -408,7 +418,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation data-testid="tab-nav" data-custom="value">
           <TabItem>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tablist = screen.getByTestId("tab-nav");
@@ -421,7 +431,7 @@ describe("TabNavigation", () => {
           <TabItem data-testid="tab-item" data-custom="value">
             Tab 1
           </TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByTestId("tab-item");
@@ -432,7 +442,7 @@ describe("TabNavigation", () => {
       render(
         <TabPanel active data-testid="tab-panel" data-custom="value">
           Panel Content
-        </TabPanel>
+        </TabPanel>,
       );
 
       const panel = screen.getByTestId("tab-panel");
@@ -445,7 +455,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation>
           <TabItem>Focusable Tab</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab", { name: "Focusable Tab" });
@@ -460,7 +470,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation>
           <TabItem onClick={handleClick}>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab", { name: "Tab 1" });
@@ -476,7 +486,7 @@ describe("TabNavigation", () => {
       render(
         <TabNavigation>
           <TabItem onClick={handleClick}>Tab 1</TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab", { name: "Tab 1" });
@@ -517,7 +527,7 @@ describe("TabNavigation", () => {
             <span>Icon</span>
             <span>Label</span>
           </TabItem>
-        </TabNavigation>
+        </TabNavigation>,
       );
 
       const tab = screen.getByRole("tab");
@@ -529,7 +539,7 @@ describe("TabNavigation", () => {
         <div>
           <TabPanel active>Panel 1</TabPanel>
           <TabPanel active>Panel 2</TabPanel>
-        </div>
+        </div>,
       );
 
       const panels = screen.getAllByRole("tabpanel");

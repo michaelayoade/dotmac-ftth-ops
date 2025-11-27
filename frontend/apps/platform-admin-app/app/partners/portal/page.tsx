@@ -6,33 +6,13 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  UniversalDashboard,
-  UniversalKPISection,
-  type KPIItem,
-} from "@dotmac/primitives";
+import { UniversalDashboard, UniversalKPISection, type KPIItem } from "@dotmac/primitives";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import type { LucideIcon } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
-import {
-  Calendar,
-  DollarSign,
-  Download,
-  Eye,
-  Plus,
-  Target,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
+import { Calendar, DollarSign, Download, Eye, Plus, Target, TrendingUp, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type PartnerCustomerStatus = "active" | "pending" | "inactive";
@@ -144,8 +124,7 @@ const MOCK_PARTNER_ANALYTICS: PartnerAnalyticsSnapshot = {
   conversionRate: 58.3,
 };
 
-const simulateNetworkDelay = (ms = 350) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const simulateNetworkDelay = (ms = 350) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function PartnerPortalPage() {
   const [dashboard, setDashboard] = useState<PartnerDashboardMetrics | null>(null);
@@ -299,9 +278,7 @@ export default function PartnerPortalPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Recent Customers</CardTitle>
-                <CardDescription>
-                  Latest customers you&apos;ve onboarded
-                </CardDescription>
+                <CardDescription>Latest customers you&apos;ve onboarded</CardDescription>
               </div>
               <Button variant="outline" size="sm">
                 View All
@@ -310,9 +287,7 @@ export default function PartnerPortalPage() {
           </CardHeader>
           <CardContent>
             {customersLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Loading customers...
-              </div>
+              <div className="text-center py-8 text-muted-foreground">Loading customers...</div>
             ) : customers && customers.data.length > 0 ? (
               <Table>
                 <TableHeader>
@@ -327,20 +302,16 @@ export default function PartnerPortalPage() {
                 <TableBody>
                   {customers.data.map((customer) => (
                     <TableRow key={customer.id}>
-                      <TableCell className="font-medium">
-                        {customer.name}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {customer.email}
-                      </TableCell>
+                      <TableCell className="font-medium">{customer.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{customer.email}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
                             customer.status === "active"
                               ? "default"
                               : customer.status === "pending"
-                              ? "secondary"
-                              : "outline"
+                                ? "secondary"
+                                : "outline"
                           }
                         >
                           {customer.status}
@@ -384,16 +355,12 @@ export default function PartnerPortalPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {commissionsLoading ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  Loading...
-                </div>
+                <div className="text-center py-4 text-muted-foreground">Loading...</div>
               ) : (
                 <>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Recurring Revenue
-                      </p>
+                      <p className="text-sm text-muted-foreground">Recurring Revenue</p>
                       <p className="text-2xl font-bold">
                         ${commissions?.recurring?.toLocaleString() ?? 0}
                       </p>
@@ -403,9 +370,7 @@ export default function PartnerPortalPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        One-Time Commissions
-                      </p>
+                      <p className="text-sm text-muted-foreground">One-Time Commissions</p>
                       <p className="text-2xl font-bold">
                         ${commissions?.oneTime?.toLocaleString() ?? 0}
                       </p>
@@ -415,9 +380,7 @@ export default function PartnerPortalPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Bonus Commissions
-                      </p>
+                      <p className="text-sm text-muted-foreground">Bonus Commissions</p>
                       <p className="text-2xl font-bold">
                         ${commissions?.bonus?.toLocaleString() ?? 0}
                       </p>
@@ -436,9 +399,7 @@ export default function PartnerPortalPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {commissionsLoading ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  Loading...
-                </div>
+                <div className="text-center py-4 text-muted-foreground">Loading...</div>
               ) : commissions?.upcomingPayouts && commissions.upcomingPayouts.length > 0 ? (
                 commissions.upcomingPayouts.map((payout) => (
                   <div key={payout.id} className="flex items-center justify-between">
@@ -458,8 +419,8 @@ export default function PartnerPortalPage() {
                         payout.status === "approved"
                           ? "default"
                           : payout.status === "pending"
-                          ? "secondary"
-                          : "outline"
+                            ? "secondary"
+                            : "outline"
                       }
                     >
                       {payout.status}
@@ -467,9 +428,7 @@ export default function PartnerPortalPage() {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No upcoming payouts
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No upcoming payouts</div>
               )}
             </CardContent>
           </Card>

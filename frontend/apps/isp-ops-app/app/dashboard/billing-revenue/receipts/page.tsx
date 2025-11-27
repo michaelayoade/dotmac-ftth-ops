@@ -4,14 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import {
@@ -122,9 +115,9 @@ export default function ReceiptsPage() {
     return receiptsData.receipts.filter(
       (receipt) =>
         receipt.receipt_number.toLowerCase().includes(query) ||
-        (receipt['customer_name']?? "").toLowerCase().includes(query) ||
+        (receipt["customer_name"] ?? "").toLowerCase().includes(query) ||
         (receipt.customer_email ?? "").toLowerCase().includes(query) ||
-        (receipt.payment_id ?? "").toLowerCase().includes(query)
+        (receipt.payment_id ?? "").toLowerCase().includes(query),
     );
   }, [receiptsData, searchQuery]);
 
@@ -138,7 +131,7 @@ export default function ReceiptsPage() {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const thisMonthReceipts = receiptsData.receipts.filter(
-      (r) => new Date(r.issue_date) >= firstDayOfMonth
+      (r) => new Date(r.issue_date) >= firstDayOfMonth,
     );
 
     return {
@@ -448,7 +441,7 @@ export default function ReceiptsPage() {
                             {receipt.payment_id.slice(0, 8)}...
                           </span>
                         </div>
-                      ) : receipt['invoice_id']? (
+                      ) : receipt["invoice_id"] ? (
                         <div className="flex items-center gap-1">
                           <FileText className="h-3 w-3 text-muted-foreground" />
                           <span className="text-sm font-mono">
@@ -478,9 +471,7 @@ export default function ReceiptsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          router.push(
-                            `/dashboard/billing-revenue/receipts/${receipt.receipt_id}`
-                          )
+                          router.push(`/dashboard/billing-revenue/receipts/${receipt.receipt_id}`)
                         }
                       >
                         View
@@ -496,8 +487,8 @@ export default function ReceiptsPage() {
           {receiptsData && receiptsData.total > limit && (
             <div className="flex justify-between items-center mt-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(page - 1) * limit + 1} to{" "}
-                {Math.min(page * limit, receiptsData.total)} of {receiptsData.total} receipts
+                Showing {(page - 1) * limit + 1} to {Math.min(page * limit, receiptsData.total)} of{" "}
+                {receiptsData.total} receipts
               </div>
               <div className="flex gap-2">
                 <Button
@@ -527,9 +518,7 @@ export default function ReceiptsPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Generate Receipt</DialogTitle>
-            <DialogDescription>
-              Create a new receipt for a payment or invoice
-            </DialogDescription>
+            <DialogDescription>Create a new receipt for a payment or invoice</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -630,10 +619,7 @@ export default function ReceiptsPage() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleGenerateReceipt}
-              disabled={generateReceiptMutation.isPending}
-            >
+            <Button onClick={handleGenerateReceipt} disabled={generateReceiptMutation.isPending}>
               {generateReceiptMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

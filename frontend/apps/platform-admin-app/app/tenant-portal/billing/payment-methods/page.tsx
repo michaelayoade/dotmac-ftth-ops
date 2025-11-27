@@ -22,13 +22,7 @@ import {
 } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  AlertCircle,
-  CreditCard,
-  Plus,
-  Shield,
-  Lock,
-} from "lucide-react";
+import { AlertCircle, CreditCard, Plus, Shield, Lock } from "lucide-react";
 
 export default function PaymentMethodsPage() {
   const {

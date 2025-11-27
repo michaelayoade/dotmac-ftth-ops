@@ -183,7 +183,7 @@ export function ResponsiveSidebar({
     };
   }, [isMobileOpen]);
 
-  const showContent = collapsible ? (!isCollapsed || isHovered) : true;
+  const showContent = collapsible ? !isCollapsed || isHovered : true;
 
   const navigationTree = useMemo(
     () =>
@@ -282,16 +282,17 @@ export function ResponsiveSidebar({
               )}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {showContent ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {showContent ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
             </button>
           )}
         </div>
 
         <nav
-          className={clsx(
-            "flex-1 overflow-y-auto p-4",
-            !showContent && "px-2",
-          )}
+          className={clsx("flex-1 overflow-y-auto p-4", !showContent && "px-2")}
           aria-label="Desktop navigation"
         >
           {navigationTree}

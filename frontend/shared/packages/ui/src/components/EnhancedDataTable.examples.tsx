@@ -5,18 +5,9 @@
  * across different features in the application.
  */
 
-import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Download,
-  Edit,
-  Send,
-  Trash2,
-  X,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, Download, Edit, Send, Trash2, X } from "lucide-react";
+import * as React from "react";
 
 import { Badge } from "./badge";
 import { Button } from "./button";

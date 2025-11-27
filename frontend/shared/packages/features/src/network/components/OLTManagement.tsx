@@ -19,7 +19,12 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Device, DeviceListResponse, LogicalDevice, LogicalDeviceListResponse } from "../types/voltha";
+import {
+  Device,
+  DeviceListResponse,
+  LogicalDevice,
+  LogicalDeviceListResponse,
+} from "../types/voltha";
 
 // ============================================================================
 // Types
@@ -53,7 +58,7 @@ export interface OLTManagementProps {
 
 function getOLTStatus(
   olt: LogicalDevice,
-  rootDeviceMap: Map<string, Device>
+  rootDeviceMap: Map<string, Device>,
 ): { label: string; color: string; icon: typeof CheckCircle } {
   const ports = olt.ports ?? [];
   const activePortCount = ports.filter((port) => port?.ofp_port?.["state"] === 0).length;
@@ -149,7 +154,9 @@ export function OLTManagement({ apiClient, Link }: OLTManagementProps) {
     return logicalDevices.filter((olt) => {
       const serial = olt.desc?.serial_num?.toLowerCase() ?? "";
       const rootId = olt.root_device_id?.toLowerCase() ?? "";
-      return olt.id.toLowerCase().includes(query) || serial.includes(query) || rootId.includes(query);
+      return (
+        olt.id.toLowerCase().includes(query) || serial.includes(query) || rootId.includes(query)
+      );
     });
   }, [logicalDevices, searchQuery]);
 
@@ -241,7 +248,9 @@ export function OLTManagement({ apiClient, Link }: OLTManagementProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
           <Card className="col-span-full">
-            <CardContent className="py-8 text-center text-muted-foreground">Loading OLTs...</CardContent>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Loading OLTs...
+            </CardContent>
           </Card>
         ) : filteredOLTs.length === 0 ? (
           <Card className="col-span-full">
@@ -277,15 +286,21 @@ export function OLTManagement({ apiClient, Link }: OLTManagementProps) {
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Hardware:</span>
-                        <span className="font-medium truncate ml-2">{olt.desc?.hw_desc || "Unknown"}</span>
+                        <span className="font-medium truncate ml-2">
+                          {olt.desc?.hw_desc || "Unknown"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Software:</span>
-                        <span className="font-medium truncate ml-2">{olt.desc?.sw_desc || "Unknown"}</span>
+                        <span className="font-medium truncate ml-2">
+                          {olt.desc?.sw_desc || "Unknown"}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Root Device:</span>
-                        <span className="font-medium truncate ml-2">{olt.root_device_id || "N/A"}</span>
+                        <span className="font-medium truncate ml-2">
+                          {olt.root_device_id || "N/A"}
+                        </span>
                       </div>
                     </div>
 

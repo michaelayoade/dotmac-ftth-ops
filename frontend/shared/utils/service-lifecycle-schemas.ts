@@ -2,24 +2,24 @@
  * Zod schemas for service lifecycle framework validation
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // ============================================================================
 // Enums
 // ============================================================================
 
 export const ServiceStatusValueSchema = z.enum([
-  'pending',
-  'provisioning',
-  'provisioning_failed',
-  'active',
-  'suspended',
-  'suspended_fraud',
-  'degraded',
-  'maintenance',
-  'terminating',
-  'terminated',
-  'failed',
+  "pending",
+  "provisioning",
+  "provisioning_failed",
+  "active",
+  "suspended",
+  "suspended_fraud",
+  "degraded",
+  "maintenance",
+  "terminating",
+  "terminated",
+  "failed",
 ]);
 export type ServiceStatusValue = z.infer<typeof ServiceStatusValueSchema>;
 

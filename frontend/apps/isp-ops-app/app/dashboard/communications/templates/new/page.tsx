@@ -15,13 +15,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { ArrowLeft, Save, Loader2, Plus, X, Eye } from "lucide-react";
@@ -53,18 +47,18 @@ export default function CreateTemplatePage() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData['name'] || formData['name'].trim().length === 0) {
-      newErrors['name'] = "Template name is required";
+    if (!formData["name"] || formData["name"].trim().length === 0) {
+      newErrors["name"] = "Template name is required";
     }
 
-    if (formData['channel'] === CommunicationChannel.EMAIL) {
-      if (!formData['subject'] || formData['subject'].trim().length === 0) {
-        newErrors['subject'] = "Subject is required for email templates";
+    if (formData["channel"] === CommunicationChannel.EMAIL) {
+      if (!formData["subject"] || formData["subject"].trim().length === 0) {
+        newErrors["subject"] = "Subject is required for email templates";
       }
     }
 
-    if (!formData['body_text'] && !formData['body_html']) {
-      newErrors['body_text'] = "Template body is required";
+    if (!formData["body_text"] && !formData["body_html"]) {
+      newErrors["body_text"] = "Template body is required";
     }
 
     setErrors(newErrors);
@@ -72,9 +66,9 @@ export default function CreateTemplatePage() {
   };
 
   const detectVariables = () => {
-    const textVars = extractTemplateVariables(formData['body_text'] || "");
-    const htmlVars = extractTemplateVariables(formData['body_html'] || "");
-    const subjectVars = extractTemplateVariables(formData['subject'] || "");
+    const textVars = extractTemplateVariables(formData["body_text"] || "");
+    const htmlVars = extractTemplateVariables(formData["body_html"] || "");
+    const subjectVars = extractTemplateVariables(formData["subject"] || "");
     const allVars = [...new Set([...textVars, ...htmlVars, ...subjectVars])];
     setDetectedVars(allVars);
 
@@ -124,14 +118,14 @@ export default function CreateTemplatePage() {
       onSuccess: (template) => {
         toast({
           title: "Template Created",
-          description: `Template "${template['name']}" has been created successfully`,
+          description: `Template "${template["name"]}" has been created successfully`,
         });
-        router.push(`/dashboard/communications/templates/${template['id']}`);
+        router.push(`/dashboard/communications/templates/${template["id"]}`);
       },
       onError: (error: any) => {
         toast({
           title: "Creation Failed",
-          description: error['response']?.['data']?.detail || "Failed to create template",
+          description: error["response"]?.["data"]?.detail || "Failed to create template",
           variant: "destructive",
         });
       },
@@ -184,18 +178,18 @@ export default function CreateTemplatePage() {
                   </Label>
                   <Input
                     id="name"
-                    value={formData['name']}
+                    value={formData["name"]}
                     onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="e.g., Welcome Email"
                   />
-                  {errors['name'] && <p className="text-sm text-red-500">{errors['name']}</p>}
+                  {errors["name"] && <p className="text-sm text-red-500">{errors["name"]}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={formData['description'] || ""}
+                    value={formData["description"] || ""}
                     onChange={(e) => handleChange("description", e.target.value)}
                     placeholder="What is this template for?"
                     rows={2}
@@ -206,7 +200,7 @@ export default function CreateTemplatePage() {
                   <div className="space-y-2">
                     <Label htmlFor="channel">Channel</Label>
                     <Select
-                      value={formData['channel']}
+                      value={formData["channel"]}
                       onValueChange={(value) =>
                         handleChange("channel", value as CommunicationChannel)
                       }
@@ -224,7 +218,7 @@ export default function CreateTemplatePage() {
                   <div className="space-y-2">
                     <Label htmlFor="is_active">Status</Label>
                     <Select
-                      value={formData['is_active'] ? "active" : "inactive"}
+                      value={formData["is_active"] ? "active" : "inactive"}
                       onValueChange={(value) => handleChange("is_active", value === "active")}
                     >
                       <SelectTrigger id="is_active">
@@ -247,18 +241,20 @@ export default function CreateTemplatePage() {
                 <CardDescription>Use {`{{ variable_name }}`} for dynamic content</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {formData['channel'] === CommunicationChannel.EMAIL && (
+                {formData["channel"] === CommunicationChannel.EMAIL && (
                   <div className="space-y-2">
                     <Label htmlFor="subject">
                       Subject <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="subject"
-                      value={formData['subject'] || ""}
+                      value={formData["subject"] || ""}
                       onChange={(e) => handleChange("subject", e.target.value)}
                       placeholder="Email subject with {{ variables }}"
                     />
-                    {errors['subject'] && <p className="text-sm text-red-500">{errors['subject']}</p>}
+                    {errors["subject"] && (
+                      <p className="text-sm text-red-500">{errors["subject"]}</p>
+                    )}
                   </div>
                 )}
 
@@ -273,18 +269,20 @@ export default function CreateTemplatePage() {
                     </Label>
                     <Textarea
                       id="body_text"
-                      value={formData['body_text'] || ""}
+                      value={formData["body_text"] || ""}
                       onChange={(e) => handleChange("body_text", e.target.value)}
                       placeholder="Hello {{ name }}, welcome to our service!"
                       rows={12}
                     />
-                    {errors['body_text'] && <p className="text-sm text-red-500">{errors['body_text']}</p>}
+                    {errors["body_text"] && (
+                      <p className="text-sm text-red-500">{errors["body_text"]}</p>
+                    )}
                   </TabsContent>
                   <TabsContent value="html" className="space-y-2">
                     <Label htmlFor="body_html">HTML Body</Label>
                     <Textarea
                       id="body_html"
-                      value={formData['body_html'] || ""}
+                      value={formData["body_html"] || ""}
                       onChange={(e) => handleChange("body_html", e.target.value)}
                       placeholder="<html><body>Hello {{ name }}</body></html>"
                       rows={12}

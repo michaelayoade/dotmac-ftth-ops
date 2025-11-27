@@ -152,7 +152,9 @@ test.describe("Admin User Journey", () => {
       .first();
 
     // FIXED: Try both direct logout button and user menu, but fail if neither found
-    const hasDirectLogout = await logoutButton.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
+    const hasDirectLogout = await logoutButton
+      .isVisible({ timeout: SELECTOR_TIMEOUT })
+      .catch(() => false);
 
     if (hasDirectLogout) {
       await logoutButton.click();

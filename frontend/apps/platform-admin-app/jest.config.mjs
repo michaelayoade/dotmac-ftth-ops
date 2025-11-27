@@ -16,10 +16,8 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@dotmac/testing$': '<rootDir>/../../shared/packages/primitives/src/testing/index.ts',
-    '^@dotmac/better-auth$': '<rootDir>/../../shared/lib/better-auth',
-    '^@dotmac/better-auth/(.*)$': '<rootDir>/../../shared/lib/better-auth/$1',
-    '^@dotmac/(?!better-auth)([^/]+)$': '<rootDir>/../../shared/packages/$1/src',
-    '^@dotmac/(?!better-auth)([^/]+)/(.+)$': '<rootDir>/../../shared/packages/$1/src/$2',
+    '^@dotmac/([^/]+)$': '<rootDir>/../../shared/packages/$1/src',
+    '^@dotmac/([^/]+)/(.+)$': '<rootDir>/../../shared/packages/$1/src/$2',
     '^react$': reactPath,
     '^react-dom$': reactDomPath,
     '^@tanstack/react-query$': '<rootDir>/node_modules/@tanstack/react-query',

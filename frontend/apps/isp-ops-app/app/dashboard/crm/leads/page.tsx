@@ -31,25 +31,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@dotmac/ui";
-import {
-  EnhancedDataTable,
-  type ColumnDef,
-  type BulkAction,
-  type Row,
-} from "@dotmac/ui";
+import { EnhancedDataTable, type ColumnDef, type BulkAction, type Row } from "@dotmac/ui";
 import { MetricCardEnhanced } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { useLeads, type Lead, type LeadStatus, type LeadSource } from "@/hooks/useCRM";
 import { LeadStatusBadge, LeadSourceBadge, LeadPriorityBadge } from "@/components/crm/Badges";
 import { CreateLeadModal } from "@/components/crm/CreateLeadModal";
 import { LeadDetailModal } from "@/components/crm/LeadDetailModal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 
@@ -108,7 +97,7 @@ export default function LeadsManagementPage() {
           lead.first_name.toLowerCase().includes(query) ||
           lead.last_name.toLowerCase().includes(query) ||
           lead.email.toLowerCase().includes(query) ||
-          (lead['phone']?? "").toLowerCase().includes(query) ||
+          (lead["phone"] ?? "").toLowerCase().includes(query) ||
           lead.lead_number.toLowerCase().includes(query),
       );
     }

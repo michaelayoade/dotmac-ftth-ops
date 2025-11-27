@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, formatDistanceToNow } from 'date-fns';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   ArrowLeft,
   CheckCircle,
@@ -18,21 +18,14 @@ import {
   Check,
   X,
   Info,
-} from 'lucide-react';
-import { useRouter, useParams } from 'next/navigation';
+} from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 
-import { RouteGuard } from '@/components/auth/PermissionGuard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dotmac/ui';
-import { Button } from '@dotmac/ui';
-import { Badge } from '@dotmac/ui';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@dotmac/ui';
+import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -41,16 +34,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@dotmac/ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@dotmac/ui';
-import { Input } from '@dotmac/ui';
-import { Label } from '@dotmac/ui';
-import { Textarea } from '@dotmac/ui';
-import { Alert, AlertDescription, AlertTitle } from '@dotmac/ui';
-import { Separator } from '@dotmac/ui';
-import { useAppConfig } from '@/providers/AppConfigContext';
-import { useToast } from '@dotmac/ui';
-import { useConfirmDialog } from '@dotmac/ui';
+} from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
+import { useAppConfig } from "@/providers/AppConfigContext";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 // Types
 interface ReconciliationSession {
@@ -67,7 +60,7 @@ interface ReconciliationSession {
   total_withdrawals: number;
   unreconciled_count: number;
   discrepancy_amount: number;
-  status: 'in_progress' | 'completed' | 'approved';
+  status: "in_progress" | "completed" | "approved";
   completed_by?: string;
   completed_at?: string;
   approved_by?: string;
@@ -100,9 +93,9 @@ const fetchReconciliation = async (
   id: string,
 ): Promise<ReconciliationSession> => {
   const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}`, {
-    credentials: 'include',
+    credentials: "include",
   });
-  if (!response.ok) throw new Error('Failed to fetch reconciliation');
+  if (!response.ok) throw new Error("Failed to fetch reconciliation");
   return response.json();
 };
 
@@ -112,12 +105,12 @@ const addPaymentToReconciliation = async (
   data: ReconcilePaymentRequest,
 ): Promise<ReconciliationSession> => {
   const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}/payments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error('Failed to add payment to reconciliation');
+  if (!response.ok) throw new Error("Failed to add payment to reconciliation");
   return response.json();
 };
 
@@ -126,10 +119,10 @@ const completeReconciliation = async (
   id: string,
 ): Promise<ReconciliationSession> => {
   const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}/complete`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   });
-  if (!response.ok) throw new Error('Failed to complete reconciliation');
+  if (!response.ok) throw new Error("Failed to complete reconciliation");
   return response.json();
 };
 
@@ -138,10 +131,10 @@ const approveReconciliation = async (
   id: string,
 ): Promise<ReconciliationSession> => {
   const response = await fetch(`${buildApiBase(apiBaseUrl)}/${id}/approve`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   });
-  if (!response.ok) throw new Error('Failed to approve reconciliation');
+  if (!response.ok) throw new Error("Failed to approve reconciliation");
   return response.json();
 };
 
@@ -152,21 +145,21 @@ const formatMoney = (amountInCents: number): string => {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case 'in_progress':
+    case "in_progress":
       return (
         <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
           <Clock className="mr-1 h-3 w-3" />
           In Progress
         </Badge>
       );
-    case 'completed':
+    case "completed":
       return (
         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
           <CheckCircle className="mr-1 h-3 w-3" />
           Completed
         </Badge>
       );
-    case 'approved':
+    case "approved":
       return (
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
           <Check className="mr-1 h-3 w-3" />
@@ -180,9 +173,9 @@ const getStatusBadge = (status: string) => {
 
 const getDiscrepancyColor = (amount: number): string => {
   const absAmount = Math.abs(amount);
-  if (absAmount === 0) return 'text-green-600';
-  if (absAmount > 10000) return 'text-red-600'; // > $100
-  return 'text-orange-600';
+  if (absAmount === 0) return "text-green-600";
+  if (absAmount > 10000) return "text-red-600"; // > $100
+  return "text-orange-600";
 };
 
 const getDiscrepancyIcon = (amount: number) => {
@@ -196,17 +189,17 @@ const getDiscrepancyIcon = (amount: number) => {
 export default function ReconciliationDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params['id'] as string;
+  const id = params["id"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl;
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [isAddPaymentDialogOpen, setIsAddPaymentDialogOpen] = useState(false);
   const [addPaymentForm, setAddPaymentForm] = useState<ReconcilePaymentRequest>({
     payment_id: 0,
-    notes: '',
+    notes: "",
   });
 
   // Query
@@ -215,11 +208,11 @@ export default function ReconciliationDetailPage() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ['reconciliation', apiBaseUrl, id],
+    queryKey: ["reconciliation", apiBaseUrl, id],
     queryFn: () => fetchReconciliation(apiBaseUrl, id),
     refetchInterval: (query) => {
       // Refetch every 15 seconds if in_progress
-      return query?.state?.data?.status === 'in_progress' ? 15000 : false;
+      return query?.state?.data?.status === "in_progress" ? 15000 : false;
     },
   });
 
@@ -227,49 +220,55 @@ export default function ReconciliationDetailPage() {
   const addPaymentMutation = useMutation({
     mutationFn: (data: ReconcilePaymentRequest) => addPaymentToReconciliation(apiBaseUrl, id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliation', id] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
-      toast({ title: 'Payment added to reconciliation successfully' });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation", id] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      toast({ title: "Payment added to reconciliation successfully" });
       setIsAddPaymentDialogOpen(false);
-      setAddPaymentForm({ payment_id: 0, notes: '' });
+      setAddPaymentForm({ payment_id: 0, notes: "" });
     },
     onError: (error: Error) => {
-      toast({ title: `Failed to add payment: ${error.message}`, variant: 'destructive' });
+      toast({ title: `Failed to add payment: ${error.message}`, variant: "destructive" });
     },
   });
 
   const completeMutation = useMutation({
     mutationFn: () => completeReconciliation(apiBaseUrl, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliation', id] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast({ title: 'Reconciliation completed successfully' });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation", id] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation-summary"] });
+      toast({ title: "Reconciliation completed successfully" });
     },
     onError: (error: Error) => {
-      toast({ title: `Failed to complete reconciliation: ${error.message}`, variant: 'destructive' });
+      toast({
+        title: `Failed to complete reconciliation: ${error.message}`,
+        variant: "destructive",
+      });
     },
   });
 
   const approveMutation = useMutation({
     mutationFn: () => approveReconciliation(apiBaseUrl, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliation', id] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast({ title: 'Reconciliation approved successfully' });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation", id] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
+      queryClient.invalidateQueries({ queryKey: ["reconciliation-summary"] });
+      toast({ title: "Reconciliation approved successfully" });
     },
     onError: (error: Error) => {
-      toast({ title: `Failed to approve reconciliation: ${error.message}`, variant: 'destructive' });
+      toast({
+        title: `Failed to approve reconciliation: ${error.message}`,
+        variant: "destructive",
+      });
     },
   });
 
   const handleComplete = async () => {
     const confirmed = await confirmDialog({
-      title: 'Complete reconciliation',
+      title: "Complete reconciliation",
       description:
-        'Are you sure you want to complete this reconciliation? This will lock the reconciled payments.',
-      confirmText: 'Complete',
+        "Are you sure you want to complete this reconciliation? This will lock the reconciled payments.",
+      confirmText: "Complete",
     });
     if (confirmed) {
       completeMutation.mutate();
@@ -278,10 +277,10 @@ export default function ReconciliationDetailPage() {
 
   const handleApprove = async () => {
     const confirmed = await confirmDialog({
-      title: 'Approve reconciliation',
+      title: "Approve reconciliation",
       description:
-        'Are you sure you want to approve this reconciliation? This action requires finance team authority.',
-      confirmText: 'Approve',
+        "Are you sure you want to approve this reconciliation? This action requires finance team authority.",
+      confirmText: "Approve",
     });
     if (confirmed) {
       approveMutation.mutate();
@@ -290,7 +289,7 @@ export default function ReconciliationDetailPage() {
 
   const handleAddPayment = () => {
     if (!addPaymentForm.payment_id) {
-      toast({ title: 'Please enter a valid payment ID', variant: 'destructive' });
+      toast({ title: "Please enter a valid payment ID", variant: "destructive" });
       return;
     }
     addPaymentMutation.mutate(addPaymentForm);
@@ -298,7 +297,7 @@ export default function ReconciliationDetailPage() {
 
   if (isLoading) {
     return (
-      <RouteGuard permission={['billing:write']}>
+      <RouteGuard permission={["billing:write"]}>
         <div className="flex justify-center items-center h-screen">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -308,7 +307,7 @@ export default function ReconciliationDetailPage() {
 
   if (!reconciliation) {
     return (
-      <RouteGuard permission={['billing:write']}>
+      <RouteGuard permission={["billing:write"]}>
         <div className="container mx-auto p-6">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -328,11 +327,11 @@ export default function ReconciliationDetailPage() {
   // Calculate total reconciled amount
   const totalReconciledAmount = reconciliation.reconciled_items.reduce(
     (sum, item) => sum + item.amount,
-    0
+    0,
   );
 
   return (
-    <RouteGuard permission={['billing:write']}>
+    <RouteGuard permission={["billing:write"]}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -353,7 +352,11 @@ export default function ReconciliationDetailPage() {
           <div className="flex gap-2">
             {reconciliation.statement_file_url && (
               <Button variant="outline" asChild>
-                <a href={reconciliation.statement_file_url} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={reconciliation.statement_file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download Statement
                 </a>
@@ -374,14 +377,14 @@ export default function ReconciliationDetailPage() {
                 <div>
                   <div className="text-xs text-muted-foreground">Period</div>
                   <div className="text-sm font-medium">
-                    {format(new Date(reconciliation.period_start), 'MMM dd')} -{' '}
-                    {format(new Date(reconciliation.period_end), 'MMM dd, yyyy')}
+                    {format(new Date(reconciliation.period_start), "MMM dd")} -{" "}
+                    {format(new Date(reconciliation.period_end), "MMM dd, yyyy")}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-muted-foreground">Reconciliation Date</div>
                   <div className="text-sm font-medium">
-                    {format(new Date(reconciliation.reconciliation_date), 'MMM dd, yyyy')}
+                    {format(new Date(reconciliation.reconciliation_date), "MMM dd, yyyy")}
                   </div>
                 </div>
               </div>
@@ -428,7 +431,7 @@ export default function ReconciliationDetailPage() {
                   <div className="text-xs text-muted-foreground">Amount</div>
                   <div
                     className={`text-2xl font-bold font-mono ${getDiscrepancyColor(
-                      reconciliation.discrepancy_amount
+                      reconciliation.discrepancy_amount,
                     )}`}
                   >
                     {formatMoney(reconciliation.discrepancy_amount)}
@@ -469,15 +472,17 @@ export default function ReconciliationDetailPage() {
         {/* Discrepancy Alert */}
         {Math.abs(reconciliation.discrepancy_amount) > 0 && (
           <Alert
-            variant={Math.abs(reconciliation.discrepancy_amount) > 10000 ? 'destructive' : 'default'}
+            variant={
+              Math.abs(reconciliation.discrepancy_amount) > 10000 ? "destructive" : "default"
+            }
           >
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Discrepancy Detected</AlertTitle>
             <AlertDescription>
-              There is a discrepancy of {formatMoney(Math.abs(reconciliation.discrepancy_amount))}{' '}
+              There is a discrepancy of {formatMoney(Math.abs(reconciliation.discrepancy_amount))}{" "}
               between the calculated closing balance and the statement balance.
               {Math.abs(reconciliation.discrepancy_amount) > 10000 &&
-                ' This is a significant discrepancy that requires immediate attention.'}
+                " This is a significant discrepancy that requires immediate attention."}
             </AlertDescription>
           </Alert>
         )}
@@ -516,14 +521,14 @@ export default function ReconciliationDetailPage() {
                   <div>
                     <Label className="text-muted-foreground">Reconciliation Date</Label>
                     <div className="text-lg font-medium">
-                      {format(new Date(reconciliation.reconciliation_date), 'MMMM dd, yyyy')}
+                      {format(new Date(reconciliation.reconciliation_date), "MMMM dd, yyyy")}
                     </div>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Period</Label>
                     <div className="text-lg font-medium">
-                      {format(new Date(reconciliation.period_start), 'MMM dd, yyyy')} -{' '}
-                      {format(new Date(reconciliation.period_end), 'MMM dd, yyyy')}
+                      {format(new Date(reconciliation.period_start), "MMM dd, yyyy")} -{" "}
+                      {format(new Date(reconciliation.period_end), "MMM dd, yyyy")}
                     </div>
                   </div>
                 </div>
@@ -604,7 +609,7 @@ export default function ReconciliationDetailPage() {
                       <Separator />
                       <div
                         className={`flex justify-between font-bold text-lg ${getDiscrepancyColor(
-                          reconciliation.discrepancy_amount
+                          reconciliation.discrepancy_amount,
                         )}`}
                       >
                         <span>Discrepancy:</span>
@@ -649,7 +654,7 @@ export default function ReconciliationDetailPage() {
                     Payments that have been matched to this reconciliation
                   </CardDescription>
                 </div>
-                {reconciliation.status === 'in_progress' && (
+                {reconciliation.status === "in_progress" && (
                   <Dialog open={isAddPaymentDialogOpen} onOpenChange={setIsAddPaymentDialogOpen}>
                     <DialogTrigger asChild>
                       <Button>
@@ -671,7 +676,7 @@ export default function ReconciliationDetailPage() {
                             id="payment_id"
                             type="number"
                             placeholder="Enter payment ID"
-                            value={addPaymentForm.payment_id || ''}
+                            value={addPaymentForm.payment_id || ""}
                             onChange={(e) =>
                               setAddPaymentForm({
                                 ...addPaymentForm,
@@ -694,16 +699,10 @@ export default function ReconciliationDetailPage() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsAddPaymentDialogOpen(false)}
-                        >
+                        <Button variant="outline" onClick={() => setIsAddPaymentDialogOpen(false)}>
                           Cancel
                         </Button>
-                        <Button
-                          onClick={handleAddPayment}
-                          disabled={addPaymentMutation.isPending}
-                        >
+                        <Button onClick={handleAddPayment} disabled={addPaymentMutation.isPending}>
                           {addPaymentMutation.isPending && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           )}
@@ -719,8 +718,10 @@ export default function ReconciliationDetailPage() {
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No payments reconciled yet</p>
-                    {reconciliation.status === 'in_progress' && (
-                      <p className="text-sm mt-2">Click &quot;Add Payment&quot; to start reconciling</p>
+                    {reconciliation.status === "in_progress" && (
+                      <p className="text-sm mt-2">
+                        Click &quot;Add Payment&quot; to start reconciling
+                      </p>
                     )}
                   </div>
                 ) : (
@@ -747,11 +748,11 @@ export default function ReconciliationDetailPage() {
                               {formatMoney(item.amount)}
                             </TableCell>
                             <TableCell>
-                              {format(new Date(item.reconciled_at), 'MMM dd, yyyy HH:mm')}
+                              {format(new Date(item.reconciled_at), "MMM dd, yyyy HH:mm")}
                             </TableCell>
                             <TableCell>{item.reconciled_by}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">
-                              {item.notes || '-'}
+                              {item.notes || "-"}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -785,7 +786,7 @@ export default function ReconciliationDetailPage() {
                 <CardDescription>Perform actions on this reconciliation session</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {reconciliation.status === 'in_progress' && (
+                {reconciliation.status === "in_progress" && (
                   <Alert>
                     <Clock className="h-4 w-4" />
                     <AlertTitle>Complete Reconciliation</AlertTitle>
@@ -809,7 +810,7 @@ export default function ReconciliationDetailPage() {
                   </Alert>
                 )}
 
-                {reconciliation.status === 'completed' && (
+                {reconciliation.status === "completed" && (
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertTitle>Approve Reconciliation</AlertTitle>
@@ -833,13 +834,13 @@ export default function ReconciliationDetailPage() {
                   </Alert>
                 )}
 
-                {reconciliation.status === 'approved' && (
+                {reconciliation.status === "approved" && (
                   <Alert>
                     <Check className="h-4 w-4 text-green-600" />
                     <AlertTitle>Approved</AlertTitle>
                     <AlertDescription>
-                      This reconciliation has been approved and is now finalized. No further
-                      actions are available.
+                      This reconciliation has been approved and is now finalized. No further actions
+                      are available.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -849,7 +850,9 @@ export default function ReconciliationDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Action History</CardTitle>
-                <CardDescription>Timeline of actions performed on this reconciliation</CardDescription>
+                <CardDescription>
+                  Timeline of actions performed on this reconciliation
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -863,7 +866,7 @@ export default function ReconciliationDetailPage() {
                     <div className="flex-1 pb-4">
                       <div className="font-semibold">Created</div>
                       <div className="text-sm text-muted-foreground">
-                        {format(new Date(reconciliation.created_at), 'MMM dd, yyyy HH:mm')}
+                        {format(new Date(reconciliation.created_at), "MMM dd, yyyy HH:mm")}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(reconciliation.created_at))} ago
@@ -887,7 +890,7 @@ export default function ReconciliationDetailPage() {
                           By {reconciliation.completed_by}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {format(new Date(reconciliation.completed_at), 'MMM dd, yyyy HH:mm')}
+                          {format(new Date(reconciliation.completed_at), "MMM dd, yyyy HH:mm")}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {formatDistanceToNow(new Date(reconciliation.completed_at))} ago
@@ -909,7 +912,7 @@ export default function ReconciliationDetailPage() {
                           By {reconciliation.approved_by}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {format(new Date(reconciliation.approved_at), 'MMM dd, yyyy HH:mm')}
+                          {format(new Date(reconciliation.approved_at), "MMM dd, yyyy HH:mm")}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {formatDistanceToNow(new Date(reconciliation.approved_at))} ago

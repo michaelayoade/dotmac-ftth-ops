@@ -155,7 +155,7 @@ function Sidebar({
           <div
             key={tech.id}
             className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-              selectedTechnicianId === tech['id']? "bg-blue-50 border-l-4 border-l-blue-600" : ""
+              selectedTechnicianId === tech["id"] ? "bg-blue-50 border-l-4 border-l-blue-600" : ""
             }`}
             onClick={() => onSelectTechnician(tech.id)}
           >
@@ -196,7 +196,8 @@ function Sidebar({
                 {tech.currentLocationLat && tech.currentLocationLng && (
                   <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    Last seen: {tech.lastLocationUpdate
+                    Last seen:{" "}
+                    {tech.lastLocationUpdate
                       ? format(parseISO(tech.lastLocationUpdate), "h:mm a")
                       : "Unknown"}
                   </div>
@@ -250,17 +251,11 @@ export default function MapDashboard() {
     }
     return next;
   }, [filters]);
-  const {
-    data: techniciansData,
-    refetch: refetchTechnicians,
-  } = useTechnicians(technicianFilters);
+  const { data: techniciansData, refetch: refetchTechnicians } = useTechnicians(technicianFilters);
 
   // Fetch today's assignments
   const today = format(new Date(), "yyyy-MM-dd");
-  const {
-    data: assignmentsData,
-    refetch: refetchAssignments,
-  } = useAssignments({
+  const { data: assignmentsData, refetch: refetchAssignments } = useAssignments({
     dateFrom: today,
     dateTo: today,
   });
@@ -273,7 +268,7 @@ export default function MapDashboard() {
       (a) =>
         a.technicianId === tech.id &&
         (a.status === "in_progress" || a.status === "scheduled") &&
-        isToday(parseISO(a.scheduledStart))
+        isToday(parseISO(a.scheduledStart)),
     );
 
     let distanceToTask: number | undefined;
@@ -289,7 +284,7 @@ export default function MapDashboard() {
         tech.currentLocationLat,
         tech.currentLocationLng,
         currentAssignment.taskLocationLat,
-        currentAssignment.taskLocationLng
+        currentAssignment.taskLocationLng,
       );
     }
 
@@ -375,22 +370,14 @@ export default function MapDashboard() {
 /**
  * Calculate distance between two coordinates using Haversine formula
  */
-function calculateDistance(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371; // Earth's radius in km
   const dLat = toRad(lat2 - lat1);
   const dLng = toRad(lng2 - lng1);
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;

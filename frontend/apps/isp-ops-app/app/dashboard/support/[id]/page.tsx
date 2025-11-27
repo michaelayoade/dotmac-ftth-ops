@@ -23,13 +23,7 @@ import { Textarea } from "@dotmac/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   useTicket,
   useAddMessage,
@@ -42,7 +36,7 @@ import {
 export default function TicketDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const ticketId = params['id'] as string;
+  const ticketId = params["id"] as string;
 
   const { ticket, loading, refetch } = useTicket(ticketId, true);
   const { addMessage, loading: sendingMessage } = useAddMessage();

@@ -4,11 +4,12 @@
  * Extends base Button with accessibility warnings and best practices
  */
 
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Button as BaseButton, type ButtonProps } from '../button';
-import { warnMissingLabel, warnMissingButtonType } from '@dotmac/utils/a11y-dev-warnings';
+import { warnMissingLabel, warnMissingButtonType } from "@dotmac/utils/a11y-dev-warnings";
+import * as React from "react";
+
+import { Button as BaseButton, type ButtonProps } from "../components/button";
 
 export interface EnhancedButtonProps extends ButtonProps {
   /** Suppress accessibility warnings (not recommended) */
@@ -55,7 +56,7 @@ export const Button = React.forwardRef<HTMLButtonElement, EnhancedButtonProps>(
       if (suppressA11yWarnings) return;
 
       // Check for missing label
-      warnMissingLabel('Button', { ...props, children });
+      warnMissingLabel("Button", { ...props, children });
 
       // Check for missing type in forms (if we can detect it)
       // Note: This is limited as we can't reliably detect if button is in a form
@@ -69,7 +70,7 @@ export const Button = React.forwardRef<HTMLButtonElement, EnhancedButtonProps>(
         {children}
       </BaseButton>
     );
-  }
+  },
 );
 
-Button.displayName = 'EnhancedButton';
+Button.displayName = "EnhancedButton";

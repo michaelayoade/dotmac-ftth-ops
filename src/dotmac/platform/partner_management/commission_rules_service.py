@@ -4,8 +4,8 @@ Commission Rules Service - Business logic for partner commission rules managemen
 Provides CRUD operations and rule evaluation for partner commission configurations.
 """
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Sequence
 from uuid import UUID
 
 import structlog
@@ -210,9 +210,7 @@ class CommissionRulesService:
                 flat_fee_amount=data.flat_fee_amount
                 if data.flat_fee_amount is not None
                 else rule.flat_fee_amount,
-                tier_config=data.tier_config
-                if data.tier_config is not None
-                else rule.tier_config,
+                tier_config=data.tier_config if data.tier_config is not None else rule.tier_config,
                 effective_from=data.effective_from or rule.effective_from,
                 applies_to_products=data.applies_to_products,
                 applies_to_customers=data.applies_to_customers,
@@ -367,9 +365,7 @@ class CommissionRulesService:
             # Validate each tier
             for idx, tier in enumerate(tiers):
                 if not all(k in tier for k in ["min_volume", "rate"]):
-                    raise ValueError(
-                        f"Tier {idx} must have 'min_volume' and 'rate' fields"
-                    )
+                    raise ValueError(f"Tier {idx} must have 'min_volume' and 'rate' fields")
 
         elif commission_type.value == "hybrid":
             if data.commission_rate is None or data.commission_rate <= 0:

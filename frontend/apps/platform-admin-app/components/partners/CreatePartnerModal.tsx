@@ -34,7 +34,10 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
         ...(partner.phone && { phone: partner.phone }),
         ...(partner.tier && { tier: partner.tier }),
         ...(partner.commission_model && { commission_model: partner.commission_model }),
-        ...(partner.default_commission_rate !== null && partner.default_commission_rate !== undefined && { default_commission_rate: partner.default_commission_rate }),
+        ...(partner.default_commission_rate !== null &&
+          partner.default_commission_rate !== undefined && {
+            default_commission_rate: partner.default_commission_rate,
+          }),
       });
     }
   }, [partner]);
@@ -49,7 +52,9 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
           data: {
             company_name: formData.company_name,
             ...(formData.tier && { tier: formData.tier }),
-            ...(formData.default_commission_rate !== undefined && { default_commission_rate: formData.default_commission_rate }),
+            ...(formData.default_commission_rate !== undefined && {
+              default_commission_rate: formData.default_commission_rate,
+            }),
             ...(formData.billing_email && { billing_email: formData.billing_email }),
             ...(formData.phone && { phone: formData.phone }),
           },
@@ -60,7 +65,7 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
       onClose();
     } catch (error) {
       console.error("Failed to save partner:", error);
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert("Failed to save partner");
     }
   };

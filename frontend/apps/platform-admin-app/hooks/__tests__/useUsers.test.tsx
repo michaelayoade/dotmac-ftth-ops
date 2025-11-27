@@ -114,7 +114,7 @@ describe("useUsers", () => {
       expect(apiClient.get).toHaveBeenCalledWith("/users");
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockResponse },
-        "Failed to load users"
+        "Failed to load users",
       );
     });
 
@@ -162,13 +162,11 @@ describe("useUsers", () => {
                 resolve({
                   data: { users: [], total: 0, page: 1, per_page: 50 },
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const { result } = renderHook(() => useUsers(), {
         wrapper: createWrapper(),
@@ -192,12 +190,9 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockResponse });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockResponse);
 
-      const { result } = renderHook(
-        () => useUsers({ enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useUsers({ enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
 
@@ -238,10 +233,7 @@ describe("useUsers", () => {
 
       expect(result.current.data).toEqual(mockUser);
       expect(apiClient.get).toHaveBeenCalledWith("/users/user-1");
-      expect(extractDataOrThrow).toHaveBeenCalledWith(
-        { data: mockUser },
-        "Failed to load user"
-      );
+      expect(extractDataOrThrow).toHaveBeenCalledWith({ data: mockUser }, "Failed to load user");
     });
 
     it("should not fetch when userId is empty", async () => {
@@ -305,7 +297,7 @@ describe("useUsers", () => {
       expect(apiClient.get).toHaveBeenCalledWith("/users/me");
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockUser },
-        "Failed to load current user"
+        "Failed to load current user",
       );
     });
 
@@ -369,7 +361,7 @@ describe("useUsers", () => {
       expect(apiClient.put).toHaveBeenCalledWith("/users/user-1", updateData);
       expect(extractDataOrThrow).toHaveBeenCalledWith(
         { data: mockUpdatedUser },
-        "Failed to update user"
+        "Failed to update user",
       );
     });
 
@@ -401,9 +393,7 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { users: [], total: 0, page: 1, per_page: 50 },
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const wrapper = createWrapper();
       const { result: usersResult } = renderHook(() => useUsers(), { wrapper });
@@ -426,9 +416,7 @@ describe("useUsers", () => {
 
       // Wait for invalidation to trigger refetch
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
 
@@ -453,7 +441,7 @@ describe("useUsers", () => {
             userId: "user-1",
             data: { full_name: "Updated" },
           });
-        })
+        }),
       ).rejects.toEqual(error);
     });
 
@@ -584,7 +572,7 @@ describe("useUsers", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("user-1");
-        })
+        }),
       ).rejects.toThrow("Failed to delete user");
     });
 
@@ -595,9 +583,7 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { users: [], total: 0, page: 1, per_page: 50 },
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const wrapper = createWrapper();
       const { result: usersResult } = renderHook(() => useUsers(), { wrapper });
@@ -615,9 +601,7 @@ describe("useUsers", () => {
 
       // Wait for invalidation to trigger refetch
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
 
@@ -627,9 +611,7 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { users: [], total: 0, page: 1, per_page: 50 },
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const { result } = renderHook(() => useDeleteUser(), {
         wrapper: createWrapper(),
@@ -711,7 +693,7 @@ describe("useUsers", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("user-1");
-        })
+        }),
       ).rejects.toThrow("Failed to disable user");
     });
 
@@ -722,9 +704,7 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { users: [], total: 0, page: 1, per_page: 50 },
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const wrapper = createWrapper();
       const { result: usersResult } = renderHook(() => useUsers(), { wrapper });
@@ -742,9 +722,7 @@ describe("useUsers", () => {
 
       // Wait for invalidation to trigger refetch
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
 
@@ -754,9 +732,7 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { users: [], total: 0, page: 1, per_page: 50 },
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const { result } = renderHook(() => useDisableUser(), {
         wrapper: createWrapper(),
@@ -838,7 +814,7 @@ describe("useUsers", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("user-1");
-        })
+        }),
       ).rejects.toThrow("Failed to enable user");
     });
 
@@ -849,9 +825,7 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { users: [], total: 0, page: 1, per_page: 50 },
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const wrapper = createWrapper();
       const { result: usersResult } = renderHook(() => useUsers(), { wrapper });
@@ -869,9 +843,7 @@ describe("useUsers", () => {
 
       // Wait for invalidation to trigger refetch
       await waitFor(() => {
-        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(
-          initialCallCount
-        );
+        expect((apiClient.get as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
 
@@ -881,9 +853,7 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { users: [], total: 0, page: 1, per_page: 50 },
       });
-      (extractDataOrThrow as jest.Mock).mockImplementation(
-        (response) => response.data
-      );
+      (extractDataOrThrow as jest.Mock).mockImplementation((response) => response.data);
 
       const { result } = renderHook(() => useEnableUser(), {
         wrapper: createWrapper(),
@@ -1294,12 +1264,9 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockUser });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockUser);
 
-      const { result } = renderHook(
-        () => useUser("user-1", { enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useUser("user-1", { enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
 
@@ -1331,12 +1298,9 @@ describe("useUsers", () => {
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockUser });
       (extractDataOrThrow as jest.Mock).mockReturnValue(mockUser);
 
-      const { result } = renderHook(
-        () => useCurrentUser({ enabled: false }),
-        {
-          wrapper: createWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useCurrentUser({ enabled: false }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isFetching).toBe(false));
 

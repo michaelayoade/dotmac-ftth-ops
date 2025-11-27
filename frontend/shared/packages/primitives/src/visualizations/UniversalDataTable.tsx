@@ -331,7 +331,7 @@ export function UniversalDataTable<T extends Record<string, any>>({
         columns
           .map((col) => {
             const value = row[col.key];
-            return `"${String(value).replace(/"/g, "\"\"")}"`;
+            return `"${String(value).replace(/"/g, '""')}"`;
           })
           .join(","),
       ),

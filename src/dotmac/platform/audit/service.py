@@ -2,9 +2,9 @@
 Audit service for tracking and retrieving activities across the platform.
 """
 
+import math
 from datetime import UTC, datetime, timedelta
 from typing import Any
-import math
 
 import structlog
 from fastapi import Request
@@ -290,7 +290,9 @@ class AuditService:
 
             # Get total activities
             count_result = await session.execute(
-                select(func.count()).select_from(select(AuditActivity).where(filter_clause).subquery())
+                select(func.count()).select_from(
+                    select(AuditActivity).where(filter_clause).subquery()
+                )
             )
             total_activities = count_result.scalar() or 0
 
@@ -301,7 +303,9 @@ class AuditService:
                 .group_by(AuditActivity.activity_type)
             )
             type_result = await session.execute(type_query)
-            activities_by_type = {activity_type: count or 0 for activity_type, count in type_result.all()}
+            activities_by_type = {
+                activity_type: count or 0 for activity_type, count in type_result.all()
+            }
 
             # Get activities by severity
             severity_query = (
@@ -349,7 +353,10 @@ class AuditService:
             )
             timeline_result = await session.execute(timeline_query)
             timeline = [
-                {"date": day.isoformat() if hasattr(day, "isoformat") else str(day), "count": count or 0}
+                {
+                    "date": day.isoformat() if hasattr(day, "isoformat") else str(day),
+                    "count": count or 0,
+                }
                 for day, count in timeline_result
             ]
 

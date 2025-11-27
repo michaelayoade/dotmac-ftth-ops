@@ -2,23 +2,8 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Cog,
-  Database,
-  Router,
-  Settings,
-  XCircle,
-} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
+import { AlertCircle, CheckCircle2, Cog, Database, Router, Settings, XCircle } from "lucide-react";
 import { OSS_SERVICE_INFO, type OSSServiceConfigResponse } from "@/lib/services/oss-config-service";
 
 interface OSSStatusOverviewProps {

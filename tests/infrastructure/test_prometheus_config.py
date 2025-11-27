@@ -18,6 +18,8 @@ from typing import Any
 import pytest
 import yaml
 
+pytestmark = pytest.mark.integration
+
 pytestmark = pytest.mark.infra
 
 

@@ -16,7 +16,10 @@ const CUSTOMER_ID = process.env.CUSTOMER_ID;
 
 async function run() {
   const headers = { "Content-Type": "application/json" };
-  if (AUTH_TOKEN) headers["Authorization"] = AUTH_TOKEN.startsWith("Bearer") ? AUTH_TOKEN : `Bearer ${AUTH_TOKEN}`;
+  if (AUTH_TOKEN)
+    headers["Authorization"] = AUTH_TOKEN.startsWith("Bearer")
+      ? AUTH_TOKEN
+      : `Bearer ${AUTH_TOKEN}`;
 
   const queries = [
     {

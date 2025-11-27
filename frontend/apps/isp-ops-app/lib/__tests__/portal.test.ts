@@ -61,9 +61,7 @@ describe("portal", () => {
 
   describe("Type Safety", () => {
     it("should work with PortalType values", () => {
-      const allowedPortals: Array<"ispAdmin" | "platformAdmin" | "customerPortal"> = [
-        "ispAdmin",
-      ];
+      const allowedPortals: Array<"ispAdmin" | "platformAdmin" | "customerPortal"> = ["ispAdmin"];
       expect(portalAllows(allowedPortals)).toBe(true);
     });
 

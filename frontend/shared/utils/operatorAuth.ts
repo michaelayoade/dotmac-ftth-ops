@@ -16,7 +16,10 @@ export const CUSTOMER_PORTAL_TOKEN_KEY = "customer_access_token";
 export const CUSTOMER_PORTAL_REFRESH_TOKEN_KEY = "customer_refresh_token";
 
 export class PortalAuthError extends Error {
-  constructor(message: string, public readonly code: string = "PORTAL_AUTH_ERROR") {
+  constructor(
+    message: string,
+    public readonly code: string = "PORTAL_AUTH_ERROR",
+  ) {
     super(message);
     this.name = "PortalAuthError";
   }

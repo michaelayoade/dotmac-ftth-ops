@@ -32,7 +32,7 @@ jest.mock("@/lib/api/response-helpers", () => ({
   extractDataOrThrow: jest.fn((response) => response.data),
 }));
 
-// Mock useRealtime to avoid better-auth import
+// Mock useRealtime to isolate tests
 jest.mock("../useRealtime", () => ({
   useCampaignWebSocket: jest.fn(),
 }));
@@ -159,7 +159,7 @@ describe("useCampaigns", () => {
 
     it("should set loading state correctly", async () => {
       (apiClient.get as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 100)),
       );
 
       const { result } = renderHook(() => useCampaigns(), {
@@ -313,7 +313,7 @@ describe("useCampaigns", () => {
       // Verify staleTime is set to 30 seconds (30_000 ms)
       const queries = queryClient.getQueryCache().getAll();
       const campaignQuery = queries.find(
-        (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns"
+        (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "campaigns",
       );
       expect(campaignQuery?.options.staleTime).toBe(30_000);
 
@@ -495,10 +495,9 @@ describe("useUpdateCampaign", () => {
       });
 
       expect(mutationResult).toEqual(updatedCampaign);
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        "/api/v1/billing/dunning/campaigns/campaign-1",
-        { is_active: false }
-      );
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/billing/dunning/campaigns/campaign-1", {
+        is_active: false,
+      });
       expect(extractDataOrThrow).toHaveBeenCalledWith({ data: updatedCampaign });
     });
 
@@ -519,10 +518,9 @@ describe("useUpdateCampaign", () => {
       });
 
       expect(mutationResult).toEqual(updatedCampaign);
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        "/api/v1/billing/dunning/campaigns/campaign-1",
-        { priority: 5 }
-      );
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/billing/dunning/campaigns/campaign-1", {
+        priority: 5,
+      });
     });
 
     it("should update both is_active and priority", async () => {
@@ -540,10 +538,10 @@ describe("useUpdateCampaign", () => {
         });
       });
 
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        "/api/v1/billing/dunning/campaigns/campaign-1",
-        { is_active: false, priority: 3 }
-      );
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/billing/dunning/campaigns/campaign-1", {
+        is_active: false,
+        priority: 3,
+      });
     });
 
     it("should handle additional data properties", async () => {
@@ -561,10 +559,10 @@ describe("useUpdateCampaign", () => {
         });
       });
 
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        "/api/v1/billing/dunning/campaigns/campaign-1",
-        { is_active: true, custom_field: "value" }
-      );
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/billing/dunning/campaigns/campaign-1", {
+        is_active: true,
+        custom_field: "value",
+      });
     });
 
     it("should handle update error", async () => {
@@ -581,13 +579,13 @@ describe("useUpdateCampaign", () => {
             campaignId: "campaign-1",
             data: { is_active: false },
           });
-        })
+        }),
       ).rejects.toThrow("Update failed");
     });
 
     it("should set isPending state correctly during mutation", async () => {
       (apiClient.patch as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: mockCampaign }), 50))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: mockCampaign }), 50)),
       );
 
       const { result } = renderHook(() => useUpdateCampaign(), {
@@ -632,7 +630,9 @@ describe("useUpdateCampaign", () => {
     it("should invalidate campaigns query after successful update", async () => {
       const mockCampaigns = [mockCampaign];
       (apiClient.get as jest.Mock).mockResolvedValue({ data: mockCampaigns });
-      (apiClient.patch as jest.Mock).mockResolvedValue({ data: { ...mockCampaign, is_active: false } });
+      (apiClient.patch as jest.Mock).mockResolvedValue({
+        data: { ...mockCampaign, is_active: false },
+      });
 
       const wrapper = createWrapper();
 
@@ -660,7 +660,10 @@ describe("useUpdateCampaign", () => {
 
     it("should invalidate all campaigns queries (different filters)", async () => {
       const mockActiveCampaigns = [mockCampaign];
-      const mockAllCampaigns = [mockCampaign, { ...mockCampaign, id: "campaign-2", is_active: false }];
+      const mockAllCampaigns = [
+        mockCampaign,
+        { ...mockCampaign, id: "campaign-2", is_active: false },
+      ];
 
       (apiClient.get as jest.Mock).mockImplementation((url, config) => {
         if (config?.params?.is_active === true) {
@@ -669,12 +672,16 @@ describe("useUpdateCampaign", () => {
         return Promise.resolve({ data: mockAllCampaigns });
       });
 
-      (apiClient.patch as jest.Mock).mockResolvedValue({ data: { ...mockCampaign, is_active: false } });
+      (apiClient.patch as jest.Mock).mockResolvedValue({
+        data: { ...mockCampaign, is_active: false },
+      });
 
       const wrapper = createWrapper();
 
       // Fetch with active filter
-      const { result: activeResult } = renderHook(() => useCampaigns({ active: true }), { wrapper });
+      const { result: activeResult } = renderHook(() => useCampaigns({ active: true }), {
+        wrapper,
+      });
       await waitFor(() => expect(activeResult.current.isLoading).toBe(false));
 
       // Fetch without filter
@@ -717,7 +724,7 @@ describe("useUpdateCampaign", () => {
 
       expect(apiClient.patch).toHaveBeenCalledWith(
         "/api/v1/billing/dunning/campaigns/test-campaign-123",
-        { is_active: true }
+        { is_active: true },
       );
     });
 
@@ -737,7 +744,7 @@ describe("useUpdateCampaign", () => {
 
       expect(apiClient.patch).toHaveBeenCalledWith(
         "/api/v1/billing/dunning/campaigns/campaign-uuid-abc-123",
-        { priority: 2 }
+        { priority: 2 },
       );
     });
   });
@@ -757,7 +764,7 @@ describe("useUpdateCampaign", () => {
             campaignId: "campaign-1",
             data: { is_active: false },
           });
-        })
+        }),
       ).rejects.toThrow("Network error");
     });
 
@@ -778,7 +785,7 @@ describe("useUpdateCampaign", () => {
             campaignId: "campaign-1",
             data: { is_active: false },
           });
-        })
+        }),
       ).rejects.toThrow("First error");
 
       // Second mutation succeeds
@@ -793,5 +800,4 @@ describe("useUpdateCampaign", () => {
       expect(secondResult).toEqual(mockCampaign);
     });
   });
-
 });

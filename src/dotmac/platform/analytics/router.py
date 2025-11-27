@@ -13,23 +13,23 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.auth.api_keys_metrics_router import _get_api_key_metrics_cached
 from dotmac.platform.auth.dependencies import (
     CurrentUser,
     get_current_user,
 )
+from dotmac.platform.auth.metrics_router import _get_auth_metrics_cached
 from dotmac.platform.auth.rbac_dependencies import require_any_permission
-from dotmac.platform.db import get_session_dependency
 from dotmac.platform.billing.metrics_router import (
     _get_billing_metrics_cached,
     _get_customer_metrics_cached,
 )
-from dotmac.platform.auth.metrics_router import _get_auth_metrics_cached
-from dotmac.platform.auth.api_keys_metrics_router import _get_api_key_metrics_cached
-from dotmac.platform.secrets.metrics_router import _get_secrets_metrics_cached
-from dotmac.platform.monitoring.metrics_router import _get_monitoring_metrics_cached
 from dotmac.platform.communications.metrics_router import _get_communication_stats_cached
+from dotmac.platform.db import get_session_dependency
 from dotmac.platform.file_storage.metrics_router import _get_file_stats_cached
 from dotmac.platform.file_storage.service import get_storage_service
+from dotmac.platform.monitoring.metrics_router import _get_monitoring_metrics_cached
+from dotmac.platform.secrets.metrics_router import _get_secrets_metrics_cached
 
 from .models import (
     AnalyticsQueryRequest,
@@ -418,9 +418,7 @@ async def get_billing_metrics_analytics(
 
     # Compute derived values with safe fallbacks
     payments_count = total_payments_count or successful_payments + failed_payments
-    payment_success_rate = (
-        (successful_payments / payments_count) * 100 if payments_count else 0.0
-    )
+    payment_success_rate = (successful_payments / payments_count) * 100 if payments_count else 0.0
     revenue_total = total_payment_amount or mrr
     outstanding_balance = float(overdue_invoices) * (mrr / max(total_invoices or 1, 1))
 

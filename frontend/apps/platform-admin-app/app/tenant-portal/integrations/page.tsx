@@ -4,12 +4,7 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import Link from "next/link";
-import {
-  Package,
-  Webhook,
-  ToggleLeft,
-  Settings2,
-} from "lucide-react";
+import { Package, Webhook, ToggleLeft, Settings2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";

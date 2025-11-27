@@ -239,7 +239,7 @@ export function useErrorHandler() {
     console.error(`Manual error report (${errorId}):`, error);
 
     // Report to error service in production
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === "production") {
+    if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") {
       fetch("/api/errors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

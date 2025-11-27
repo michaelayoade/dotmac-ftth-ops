@@ -117,7 +117,7 @@ describe("useCreditNotes", () => {
         headers: {
           "Content-Type": "application/json",
         },
-      })
+      }),
     );
   });
 
@@ -134,7 +134,7 @@ describe("useCreditNotes", () => {
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("limit=5"),
-        expect.anything()
+        expect.anything(),
       );
     });
   });
@@ -152,7 +152,7 @@ describe("useCreditNotes", () => {
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("limit=10"),
-        expect.anything()
+        expect.anything(),
       );
     });
   });
@@ -336,7 +336,7 @@ describe("useCreditNotes", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.[0]?.downloadUrl).toBe(
-      "/api/v1/billing/credit-notes/cn-123/download"
+      "/api/v1/billing/credit-notes/cn-123/download",
     );
   });
 

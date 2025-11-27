@@ -160,7 +160,7 @@ export function BrandingForm({
   const renderError = (field: keyof BrandingFormValues) => {
     const message = errors[field]?.message as string | undefined;
     return message ? <p className="text-xs text-destructive">{message}</p> : null;
-    };
+  };
 
   return (
     <div className="space-y-6">

@@ -636,11 +636,7 @@ describe("Chart Security", () => {
 
   it("prevents XSS in MetricCard values", async () => {
     const result = await renderSecurity(
-      <MetricCard
-        title="Test"
-        value='<script>alert("xss")</script>'
-        data-testid="metric-card"
-      />,
+      <MetricCard title="Test" value='<script>alert("xss")</script>' data-testid="metric-card" />,
     );
 
     expect(result.container).toHaveNoSecurityViolations();
@@ -709,7 +705,11 @@ describe("Chart Performance", () => {
 
   it("MetricCard renders efficiently", () => {
     const result = renderPerformance(
-      <MetricCard title="Performance Metric" value="12,345" trend={{ value: 10, direction: "up" }} />,
+      <MetricCard
+        title="Performance Metric"
+        value="12,345"
+        trend={{ value: 10, direction: "up" }}
+      />,
     );
 
     const metrics = result.measurePerformance();

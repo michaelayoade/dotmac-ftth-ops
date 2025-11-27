@@ -222,7 +222,9 @@ describe("BillingMetricsCard", () => {
 
       renderQuick(<BillingMetricsCard />);
 
-      const chartData = screen.getByTestId("line-chart").querySelector('[data-testid="chart-data"]');
+      const chartData = screen
+        .getByTestId("line-chart")
+        .querySelector('[data-testid="chart-data"]');
       const parsedData = JSON.parse(chartData?.textContent || "[]");
 
       expect(parsedData).toHaveLength(4);

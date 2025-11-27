@@ -70,7 +70,7 @@ export default function ProductCatalogPage() {
     const matchesSearch =
       !searchQuery ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (product['description']?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      (product["description"] ?? "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory = selectedCategory === "all" || product.category_id === selectedCategory;
 
@@ -289,7 +289,9 @@ export default function ProductCatalogPage() {
                 {category.description && (
                   <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
                 )}
-                <p className="text-xs text-muted-foreground">{category.product_count || 0} products</p>
+                <p className="text-xs text-muted-foreground">
+                  {category.product_count || 0} products
+                </p>
               </div>
             ))}
           </div>

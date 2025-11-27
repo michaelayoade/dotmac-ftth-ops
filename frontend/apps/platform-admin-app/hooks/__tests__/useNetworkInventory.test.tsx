@@ -52,10 +52,9 @@ describe("Platform Admin useNetworkInventory hooks", () => {
 
   it("fetches NetBox sites with pagination params", async () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [{ id: "site-1" }] });
-    const { result } = renderHook(
-      () => useNetboxSites({ limit: 10, offset: 5 }),
-      { wrapper: createWrapper() },
-    );
+    const { result } = renderHook(() => useNetboxSites({ limit: 10, offset: 5 }), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(apiClient.get).toHaveBeenCalledWith("/netbox/dcim/sites", {

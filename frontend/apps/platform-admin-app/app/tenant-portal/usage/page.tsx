@@ -10,9 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Skeleton } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
-import {
-  AlertTriangle,
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 export default function TenantUsagePage() {
   const { currentTenant } = useTenant();

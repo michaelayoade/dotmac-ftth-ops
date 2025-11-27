@@ -2,7 +2,7 @@
  * MSW Handlers for Orchestration API Endpoints
  */
 
-import { rest } from 'msw';
+import { rest } from "msw";
 import type {
   Workflow,
   WorkflowType,
@@ -11,7 +11,7 @@ import type {
   WorkflowStepStatus,
   WorkflowStatistics,
   WorkflowListResponse,
-} from '../../../hooks/useOrchestration';
+} from "../../../hooks/useOrchestration";
 
 // In-memory storage for test data
 let workflows: Workflow[] = [];
@@ -30,10 +30,10 @@ export function createMockWorkflowStep(overrides?: Partial<WorkflowStep>): Workf
   return {
     id: nextStepId++,
     step_id: `step-${nextStepId}`,
-    step_name: 'Test Step',
-    step_type: 'provision',
-    target_system: 'radius',
-    status: 'pending' as WorkflowStepStatus,
+    step_name: "Test Step",
+    step_type: "provision",
+    target_system: "radius",
+    status: "pending" as WorkflowStepStatus,
     step_order: 1,
     retry_count: 0,
     max_retries: 3,
@@ -47,12 +47,12 @@ export function createMockWorkflow(overrides?: Partial<Workflow>): Workflow {
   return {
     id: nextWorkflowId,
     workflow_id: workflowId,
-    workflow_type: 'provision_subscriber' as WorkflowType,
-    status: 'pending' as WorkflowStatus,
-    tenant_id: 'tenant-123',
-    initiator_id: 'user-123',
-    initiator_type: 'user',
-    input_data: { subscriber_id: 'sub-123' },
+    workflow_type: "provision_subscriber" as WorkflowType,
+    status: "pending" as WorkflowStatus,
+    tenant_id: "tenant-123",
+    initiator_id: "user-123",
+    initiator_type: "user",
+    input_data: { subscriber_id: "sub-123" },
     retry_count: 0,
     max_retries: 3,
     created_at: new Date().toISOString(),
@@ -71,16 +71,16 @@ export function seedOrchestrationData(workflowsData?: Workflow[]) {
 // Helper to calculate workflow statistics
 function calculateWorkflowStatistics(): WorkflowStatistics {
   const total = workflows.length;
-  const pending = workflows.filter((w) => w.status === 'pending').length;
-  const running = workflows.filter((w) => w.status === 'running').length;
-  const completed = workflows.filter((w) => w.status === 'completed').length;
-  const failed = workflows.filter((w) => w.status === 'failed').length;
+  const pending = workflows.filter((w) => w.status === "pending").length;
+  const running = workflows.filter((w) => w.status === "running").length;
+  const completed = workflows.filter((w) => w.status === "completed").length;
+  const failed = workflows.filter((w) => w.status === "failed").length;
 
   const success_rate = total > 0 ? (completed / total) * 100 : 0;
 
   // Calculate average duration for completed workflows
   const completedWorkflows = workflows.filter(
-    (w) => w.status === 'completed' && w.started_at && w.completed_at
+    (w) => w.status === "completed" && w.started_at && w.completed_at,
   );
   let avg_duration_seconds: number | undefined;
   if (completedWorkflows.length > 0) {
@@ -93,10 +93,13 @@ function calculateWorkflowStatistics(): WorkflowStatistics {
   }
 
   // Calculate counts by workflow type
-  const by_type = workflows.reduce((acc, workflow) => {
-    acc[workflow.workflow_type] = (acc[workflow.workflow_type] || 0) + 1;
-    return acc;
-  }, {} as Record<WorkflowType, number>);
+  const by_type = workflows.reduce(
+    (acc, workflow) => {
+      acc[workflow.workflow_type] = (acc[workflow.workflow_type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<WorkflowType, number>,
+  );
 
   return {
     total,
@@ -112,18 +115,18 @@ function calculateWorkflowStatistics(): WorkflowStatistics {
 
 export const orchestrationHandlers = [
   // GET /api/v1/orchestration/statistics - Get workflow statistics
-  rest.get('*/orchestration/statistics', (req, res, ctx) => {
+  rest.get("*/orchestration/statistics", (req, res, ctx) => {
     const stats = calculateWorkflowStatistics();
-    console.log('[MSW] stats handler', stats);
+    console.log("[MSW] stats handler", stats);
     return res(ctx.status(200), ctx.json(stats));
   }),
 
   // GET /api/v1/orchestration/workflows - List workflows
-  rest.get('*/orchestration/workflows', (req, res, ctx) => {
-    const status = req.url.searchParams.get('status');
-    const workflowType = req.url.searchParams.get('workflow_type');
-    const page = parseInt(req.url.searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(req.url.searchParams.get('page_size') || '20', 10);
+  rest.get("*/orchestration/workflows", (req, res, ctx) => {
+    const status = req.url.searchParams.get("status");
+    const workflowType = req.url.searchParams.get("workflow_type");
+    const page = parseInt(req.url.searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(req.url.searchParams.get("page_size") || "20", 10);
 
     // Filter workflows
     let filteredWorkflows = [...workflows];
@@ -136,7 +139,7 @@ export const orchestrationHandlers = [
 
     // Sort by created_at descending
     filteredWorkflows.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     // Paginate
@@ -158,30 +161,30 @@ export const orchestrationHandlers = [
   }),
 
   // GET /api/v1/orchestration/workflows/:workflowId - Get single workflow
-  rest.get('*/orchestration/workflows/:workflowId', (req, res, ctx) => {
+  rest.get("*/orchestration/workflows/:workflowId", (req, res, ctx) => {
     const { workflowId } = req.params;
     const workflow = workflows.find((w) => w.workflow_id === workflowId);
 
     if (!workflow) {
-      return res(ctx.status(404), ctx.json({ detail: 'Workflow not found' }));
+      return res(ctx.status(404), ctx.json({ detail: "Workflow not found" }));
     }
 
     return res(ctx.status(200), ctx.json(workflow));
   }),
 
   // POST /api/v1/orchestration/workflows/:workflowId/retry - Retry workflow
-  rest.post('*/orchestration/workflows/:workflowId/retry', (req, res, ctx) => {
+  rest.post("*/orchestration/workflows/:workflowId/retry", (req, res, ctx) => {
     const { workflowId } = req.params;
     const index = workflows.findIndex((w) => w.workflow_id === workflowId);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ detail: 'Workflow not found' }));
+      return res(ctx.status(404), ctx.json({ detail: "Workflow not found" }));
     }
 
     // Update workflow status
     workflows[index] = {
       ...workflows[index],
-      status: 'pending',
+      status: "pending",
       retry_count: workflows[index].retry_count + 1,
       updated_at: new Date().toISOString(),
       failed_at: undefined,
@@ -192,51 +195,51 @@ export const orchestrationHandlers = [
     if (workflows[index].steps) {
       workflows[index].steps = workflows[index].steps!.map((step) => ({
         ...step,
-        status: step.status === 'failed' ? 'pending' : step.status,
+        status: step.status === "failed" ? "pending" : step.status,
         failed_at: undefined,
         error_message: undefined,
       }));
     }
 
-    return res(ctx.status(200), ctx.json({ message: 'Workflow retry initiated' }));
+    return res(ctx.status(200), ctx.json({ message: "Workflow retry initiated" }));
   }),
 
   // POST /api/v1/orchestration/workflows/:workflowId/cancel - Cancel workflow
-  rest.post('*/orchestration/workflows/:workflowId/cancel', (req, res, ctx) => {
+  rest.post("*/orchestration/workflows/:workflowId/cancel", (req, res, ctx) => {
     const { workflowId } = req.params;
     const index = workflows.findIndex((w) => w.workflow_id === workflowId);
 
     if (index === -1) {
-      return res(ctx.status(404), ctx.json({ detail: 'Workflow not found' }));
+      return res(ctx.status(404), ctx.json({ detail: "Workflow not found" }));
     }
 
     // Only allow canceling pending or running workflows
-    if (!['pending', 'running'].includes(workflows[index].status)) {
+    if (!["pending", "running"].includes(workflows[index].status)) {
       return res(
         ctx.status(400),
-        ctx.json({ detail: 'Can only cancel pending or running workflows' })
+        ctx.json({ detail: "Can only cancel pending or running workflows" }),
       );
     }
 
     // Update workflow status to failed with cancellation message
     workflows[index] = {
       ...workflows[index],
-      status: 'failed',
+      status: "failed",
       failed_at: new Date().toISOString(),
-      error_message: 'Workflow cancelled by user',
+      error_message: "Workflow cancelled by user",
       updated_at: new Date().toISOString(),
     };
 
-    return res(ctx.status(200), ctx.json({ message: 'Workflow cancelled' }));
+    return res(ctx.status(200), ctx.json({ message: "Workflow cancelled" }));
   }),
 
   // GET /api/v1/orchestration/export/csv - Export workflows as CSV
-  rest.get('*/orchestration/export/csv', (req, res, ctx) => {
-    const workflowType = req.url.searchParams.get('workflow_type');
-    const status = req.url.searchParams.get('status');
-    const dateFrom = req.url.searchParams.get('date_from');
-    const dateTo = req.url.searchParams.get('date_to');
-    const limit = req.url.searchParams.get('limit');
+  rest.get("*/orchestration/export/csv", (req, res, ctx) => {
+    const workflowType = req.url.searchParams.get("workflow_type");
+    const status = req.url.searchParams.get("status");
+    const dateFrom = req.url.searchParams.get("date_from");
+    const dateTo = req.url.searchParams.get("date_to");
+    const limit = req.url.searchParams.get("limit");
 
     // Filter workflows based on query params
     let filteredWorkflows = [...workflows];
@@ -248,12 +251,12 @@ export const orchestrationHandlers = [
     }
     if (dateFrom) {
       filteredWorkflows = filteredWorkflows.filter(
-        (w) => new Date(w.created_at) >= new Date(dateFrom)
+        (w) => new Date(w.created_at) >= new Date(dateFrom),
       );
     }
     if (dateTo) {
       filteredWorkflows = filteredWorkflows.filter(
-        (w) => new Date(w.created_at) <= new Date(dateTo)
+        (w) => new Date(w.created_at) <= new Date(dateTo),
       );
     }
     if (limit) {
@@ -262,15 +265,15 @@ export const orchestrationHandlers = [
 
     // Create CSV content
     const headers = [
-      'workflow_id',
-      'workflow_type',
-      'status',
-      'tenant_id',
-      'created_at',
-      'started_at',
-      'completed_at',
+      "workflow_id",
+      "workflow_type",
+      "status",
+      "tenant_id",
+      "created_at",
+      "started_at",
+      "completed_at",
     ];
-    const csvRows = [headers.join(',')];
+    const csvRows = [headers.join(",")];
 
     filteredWorkflows.forEach((w) => {
       csvRows.push(
@@ -280,30 +283,30 @@ export const orchestrationHandlers = [
           w.status,
           w.tenant_id,
           w.created_at,
-          w.started_at || '',
-          w.completed_at || '',
-        ].join(',')
+          w.started_at || "",
+          w.completed_at || "",
+        ].join(","),
       );
     });
 
-    const csvContent = csvRows.join('\n');
+    const csvContent = csvRows.join("\n");
 
     return res(
       ctx.status(200),
-      ctx.set('Content-Type', 'text/csv'),
-      ctx.set('Content-Disposition', 'attachment; filename="workflows_export.csv"'),
-      ctx.body(csvContent)
+      ctx.set("Content-Type", "text/csv"),
+      ctx.set("Content-Disposition", 'attachment; filename="workflows_export.csv"'),
+      ctx.body(csvContent),
     );
   }),
 
   // GET /api/v1/orchestration/export/json - Export workflows as JSON
-  rest.get('*/orchestration/export/json', (req, res, ctx) => {
-    const workflowType = req.url.searchParams.get('workflow_type');
-    const status = req.url.searchParams.get('status');
-    const dateFrom = req.url.searchParams.get('date_from');
-    const dateTo = req.url.searchParams.get('date_to');
-    const limit = req.url.searchParams.get('limit');
-    const includeSteps = req.url.searchParams.get('include_steps') === 'true';
+  rest.get("*/orchestration/export/json", (req, res, ctx) => {
+    const workflowType = req.url.searchParams.get("workflow_type");
+    const status = req.url.searchParams.get("status");
+    const dateFrom = req.url.searchParams.get("date_from");
+    const dateTo = req.url.searchParams.get("date_to");
+    const limit = req.url.searchParams.get("limit");
+    const includeSteps = req.url.searchParams.get("include_steps") === "true";
 
     // Filter workflows based on query params
     let filteredWorkflows = [...workflows];
@@ -315,12 +318,12 @@ export const orchestrationHandlers = [
     }
     if (dateFrom) {
       filteredWorkflows = filteredWorkflows.filter(
-        (w) => new Date(w.created_at) >= new Date(dateFrom)
+        (w) => new Date(w.created_at) >= new Date(dateFrom),
       );
     }
     if (dateTo) {
       filteredWorkflows = filteredWorkflows.filter(
-        (w) => new Date(w.created_at) <= new Date(dateTo)
+        (w) => new Date(w.created_at) <= new Date(dateTo),
       );
     }
     if (limit) {
@@ -339,9 +342,9 @@ export const orchestrationHandlers = [
 
     return res(
       ctx.status(200),
-      ctx.set('Content-Type', 'application/json'),
-      ctx.set('Content-Disposition', 'attachment; filename="workflows_export.json"'),
-      ctx.body(jsonContent)
+      ctx.set("Content-Type", "application/json"),
+      ctx.set("Content-Disposition", 'attachment; filename="workflows_export.json"'),
+      ctx.body(jsonContent),
     );
   }),
 ];

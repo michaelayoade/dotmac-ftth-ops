@@ -182,7 +182,7 @@ describe("useDataTransfer", () => {
           createMockJob({
             job_id: `job-${i + 1}`,
             name: `Job ${i + 1}`,
-          })
+          }),
         ),
         total: 25,
         page: 1,
@@ -689,7 +689,7 @@ describe("useDataTransfer", () => {
           createMockJob({
             job_id: `job-${i + 1}`,
             name: `Job ${i + 1}`,
-          })
+          }),
         ),
         total: 100,
         page: 1,
@@ -702,7 +702,7 @@ describe("useDataTransfer", () => {
           createMockJob({
             job_id: `job-${i + 21}`,
             name: `Job ${i + 21}`,
-          })
+          }),
         ),
         total: 100,
         page: 2,

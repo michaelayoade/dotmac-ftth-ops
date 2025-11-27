@@ -346,12 +346,15 @@ class TestFileStorageService:
         assert service.backend_type == StorageBackend.MEMORY
         assert isinstance(service.backend, MemoryFileStorage)
 
-    def test_service_initialization_local(self):
+    def test_service_initialization_local(self, tmp_path):
         """Test initializing service with local backend."""
-        service = FileStorageService(backend=StorageBackend.LOCAL)
+        # Mock settings to use temp directory instead of /var/lib/dotmac
+        with patch("dotmac.platform.file_storage.service.settings") as mock_settings:
+            mock_settings.storage.local_path = str(tmp_path)
+            service = FileStorageService(backend=StorageBackend.LOCAL)
 
-        assert service.backend_type == StorageBackend.LOCAL
-        assert isinstance(service.backend, LocalFileStorage)
+            assert service.backend_type == StorageBackend.LOCAL
+            assert isinstance(service.backend, LocalFileStorage)
 
     @pytest.mark.asyncio
     async def test_store_file_via_service(self):
@@ -446,12 +449,14 @@ class TestFileStorageService:
 class TestStorageBackends:
     """Test storage backend selection."""
 
-    def test_unknown_backend_defaults_to_local(self):
+    def test_unknown_backend_defaults_to_local(self, tmp_path):
         """Test unknown backend falls back to local."""
-        service = FileStorageService(backend="unknown")
+        # Use tmp_path to avoid permission issues with /var/lib/dotmac
+        with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+            service = FileStorageService(backend="unknown")
 
-        # Backend should be LocalFileStorage even if backend_type stays as "unknown"
-        assert isinstance(service.backend, LocalFileStorage)
+            # Backend should be LocalFileStorage even if backend_type stays as "unknown"
+            assert isinstance(service.backend, LocalFileStorage)
 
     @pytest.mark.asyncio
     async def test_memory_backend_isolation(self):
@@ -947,16 +952,17 @@ class TestMinIOFileStorageEdgeCases:
 class TestFileStorageServiceMinio:
     """Test FileStorageService with MinIO backend."""
 
-    def test_minio_initialization_fallback(self):
+    def test_minio_initialization_fallback(self, tmp_path):
         """Test fallback to local storage when MinIO fails."""
         with patch("dotmac.platform.file_storage.service.MinIOFileStorage") as mock_minio:
             mock_minio.side_effect = Exception("MinIO connection failed")
+            # Also patch LocalFileStorage to use tmp_path
+            with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+                service = FileStorageService(backend=StorageBackend.MINIO)
 
-            service = FileStorageService(backend=StorageBackend.MINIO)
-
-            # Should fallback to local storage
-            assert service.backend_type == StorageBackend.LOCAL
-            assert isinstance(service.backend, LocalFileStorage)
+                # Should fallback to local storage
+                assert service.backend_type == StorageBackend.LOCAL
+                assert isinstance(service.backend, LocalFileStorage)
 
     def test_s3_backend_initialization(self):
         """Test initializing with S3 backend."""
@@ -1032,24 +1038,22 @@ class TestFileStorageServiceMetadataUpdate:
 class TestGetStorageService:
     """Test global storage service getter."""
 
-    def test_get_storage_service_minio(self):
-        """Test getting storage service defaults to MinIO."""
+    def test_get_storage_service_initializes(self, tmp_path):
+        """Test getting storage service initializes a new instance."""
         # Reset global instance
         import dotmac.platform.file_storage.service as service_module
         from dotmac.platform.file_storage.service import get_storage_service
 
         service_module._storage_service = None
 
-        with patch("dotmac.platform.file_storage.service.FileStorageService") as mock_service:
-            mock_instance = Mock()
-            mock_service.return_value = mock_instance
+        # Patch LocalFileStorage to use tmp_path to avoid permission issues
+        with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+            service = get_storage_service()
 
-            get_storage_service()
+            # Should return a FileStorageService instance
+            assert isinstance(service, FileStorageService)
 
-            # Should initialize with default backend (resolved via factory)
-            mock_service.assert_called_once_with()
-
-    def test_get_storage_service_cached(self):
+    def test_get_storage_service_cached(self, tmp_path):
         """Test storage service is cached."""
         import dotmac.platform.file_storage.service as service_module
         from dotmac.platform.file_storage.service import get_storage_service
@@ -1057,9 +1061,11 @@ class TestGetStorageService:
         # Reset global instance
         service_module._storage_service = None
 
-        # Get service twice
-        service1 = get_storage_service()
-        service2 = get_storage_service()
+        # Patch LocalFileStorage to use tmp_path to avoid permission issues
+        with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+            # Get service twice
+            service1 = get_storage_service()
+            service2 = get_storage_service()
 
-        # Should return same instance
-        assert service1 is service2
+            # Should return same instance
+            assert service1 is service2

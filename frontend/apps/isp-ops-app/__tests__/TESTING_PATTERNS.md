@@ -105,6 +105,7 @@ it("should fetch items successfully", async () => {
 ```
 
 **Key Points**:
+
 - Always seed data before rendering hook
 - Check loading state before and after
 - Use `waitFor` for async operations
@@ -150,6 +151,7 @@ it("should create item successfully", async () => {
 ```
 
 **Key Points**:
+
 - Wrap mutations in `act()`
 - Manually refresh after mutations when using test QueryClient
 - Verify both mutation result and list update
@@ -168,20 +170,18 @@ it("should filter items by status", async () => {
   seedItemsData(mockItems);
 
   // Use hook with filter
-  const { result } = renderHook(
-    () => useItems({ status: "active" }),
-    { wrapper: createWrapper() }
-  );
+  const { result } = renderHook(() => useItems({ status: "active" }), { wrapper: createWrapper() });
 
   await waitFor(() => expect(result.current.loading).toBe(false));
 
   // Should only return active items
   expect(result.current.items).toHaveLength(2);
-  expect(result.current.items.every(item => item.status === "active")).toBe(true);
+  expect(result.current.items.every((item) => item.status === "active")).toBe(true);
 });
 ```
 
 **Key Points**:
+
 - Seed diverse data for filtering
 - Pass filter params to hook
 - Verify filtered results
@@ -208,6 +208,7 @@ it("should handle fetch error gracefully", async () => {
 ```
 
 **Key Points**:
+
 - Use `makeApiEndpointFail` for controlled errors
 - Verify error state is set
 - Ensure data remains safe
@@ -269,6 +270,7 @@ it("should handle item lifecycle: create, update, delete", async () => {
 ```
 
 **Key Points**:
+
 - Test complete workflows, not just individual operations
 - Refresh after each mutation
 - Verify state at each step
@@ -280,6 +282,7 @@ it("should handle item lifecycle: create, update, delete", async () => {
 ### Issue 1: Fetch API Not Intercepted
 
 **Symptoms**:
+
 ```
 Tests fail with "Network request failed" or data is undefined
 Hook uses native fetch() API
@@ -297,6 +300,7 @@ import { server } from "./__tests__/msw/server";
 ```
 
 **Installation**:
+
 ```bash
 pnpm add -D whatwg-fetch
 ```
@@ -308,6 +312,7 @@ pnpm add -D whatwg-fetch
 ### Issue 2: Handler URL Conflicts
 
 **Symptoms**:
+
 ```
 Multiple handlers match the same URL
 Wrong handler processes the request
@@ -341,8 +346,8 @@ rest.get('*/api/v1/items/stats', (req, res, ctx) => {
 ```typescript
 // server.ts
 export const handlers = [
-  ...specificHandlers,     // Match first
-  ...genericHandlers,      // Fallback
+  ...specificHandlers, // Match first
+  ...genericHandlers, // Fallback
 ];
 ```
 
@@ -353,6 +358,7 @@ export const handlers = [
 ### Issue 3: Response Format Mismatch
 
 **Symptoms**:
+
 ```
 Hook expects array but receives { success, data }
 normalizePlansResponse returns []
@@ -386,6 +392,7 @@ return res(ctx.json(plans)); // Direct array
 ### Issue 4: Mutation Refetch Timing
 
 **Symptoms**:
+
 ```
 After mutation, list doesn't update
 waitFor times out waiting for new data
@@ -434,6 +441,7 @@ await waitFor(() => {
 ### Issue 5: Parameter Name Mismatches
 
 **Symptoms**:
+
 ```
 Filters don't work
 All data returned despite filter applied
@@ -467,6 +475,7 @@ export interface CampaignFilters {
 ### Issue 6: ESM Dependency Issues
 
 **Symptoms**:
+
 ```
 Jest fails with "Cannot use import outside a module"
 Error in nanostores or other ESM-only packages
@@ -479,7 +488,7 @@ Test suite won't even load
 
 ```typescript
 // At top of test file, before imports
-jest.mock('../useRealtime', () => ({
+jest.mock("../useRealtime", () => ({
   useRealtime: jest.fn(() => ({
     connect: jest.fn(),
     disconnect: jest.fn(),
@@ -489,7 +498,7 @@ jest.mock('../useRealtime', () => ({
 }));
 
 // Then proceed with normal imports
-import { useJobs } from '../useJobs';
+import { useJobs } from "../useJobs";
 ```
 
 **Pattern**: Mock the immediate importing module, not the problematic dependency
@@ -501,6 +510,7 @@ import { useJobs } from '../useJobs';
 ### Issue 7: Lifecycle Mutation Race Conditions
 
 **Symptoms**:
+
 ```
 Mutation completes but assertion fails
 "Expected isSuccess to be true, received false"
@@ -540,11 +550,11 @@ await waitFor(() => {
 
 ```typescript
 // handlers/items.ts
-import { createMockLogStats, getStoredLogStats } from './operations';
+import { createMockLogStats, getStoredLogStats } from "./operations";
 
 export const itemsHandlers = [
-  rest.get('*/api/v1/items/stats', (req, res, ctx) => {
-    const period = req.url.searchParams.get('period');
+  rest.get("*/api/v1/items/stats", (req, res, ctx) => {
+    const period = req.url.searchParams.get("period");
 
     if (period) {
       // Get data from operations handler storage
@@ -568,14 +578,11 @@ export const itemsHandlers = [
 
 ```typescript
 describe("useMyHook - advanced features", () => {
-  const shouldRunAdvancedTests = process.env.RUN_ADVANCED_TESTS === 'true';
+  const shouldRunAdvancedTests = process.env.RUN_ADVANCED_TESTS === "true";
 
-  (shouldRunAdvancedTests ? it : it.skip)(
-    "should handle complex scenario",
-    async () => {
-      // Complex test that might be slow or fragile
-    }
-  );
+  (shouldRunAdvancedTests ? it : it.skip)("should handle complex scenario", async () => {
+    // Complex test that might be slow or fragile
+  });
 });
 ```
 
@@ -653,7 +660,7 @@ it("should handle items with related data", async () => {
 
 ```typescript
 // BAD: Complex logic in handler
-rest.get('*/api/v1/items', (req, res, ctx) => {
+rest.get("*/api/v1/items", (req, res, ctx) => {
   const items = getItems();
   const filtered = items.filter(complexFilter);
   const sorted = filtered.sort(complexSort);
@@ -663,11 +670,9 @@ rest.get('*/api/v1/items', (req, res, ctx) => {
 });
 
 // GOOD: Simple storage access
-rest.get('*/api/v1/items', (req, res, ctx) => {
-  const status = req.url.searchParams.get('status');
-  const filtered = status
-    ? items.filter(item => item.status === status)
-    : items;
+rest.get("*/api/v1/items", (req, res, ctx) => {
+  const status = req.url.searchParams.get("status");
+  const filtered = status ? items.filter((item) => item.status === status) : items;
   return res(ctx.json(filtered));
 });
 ```
@@ -723,6 +728,7 @@ module.exports = {
 ```
 
 **Why This Matters**:
+
 - ✅ Real issues become visible immediately
 - ✅ Forces fixing root causes instead of hiding symptoms
 - ✅ Better test quality and reliability
@@ -736,12 +742,13 @@ module.exports = {
 // jest.setup.ts
 beforeAll(() => {
   server.listen({
-    onUnhandledRequest: 'warn' // Log unhandled requests
+    onUnhandledRequest: "warn", // Log unhandled requests
   });
 });
 ```
 
 **Output**:
+
 ```
 [MSW] Warning: captured a request without a matching request handler:
   • GET http://localhost/api/v1/items
@@ -752,8 +759,8 @@ beforeAll(() => {
 ### Debug Step 2: Log Handler Execution
 
 ```typescript
-rest.get('*/api/v1/items', (req, res, ctx) => {
-  console.log('[MSW] GET /api/v1/items', {
+rest.get("*/api/v1/items", (req, res, ctx) => {
+  console.log("[MSW] GET /api/v1/items", {
     params: Object.fromEntries(req.url.searchParams),
     storage: items.length,
   });
@@ -777,7 +784,7 @@ it("debugging test", async () => {
 
   // Inspect cache
   const cache = queryClient.getQueryCache().getAll();
-  console.log('Cache state:', cache);
+  console.log("Cache state:", cache);
 });
 ```
 
@@ -787,7 +794,7 @@ it("debugging test", async () => {
 
 ```typescript
 // server.ts
-console.log('Registered handlers:', handlers.length);
+console.log("Registered handlers:", handlers.length);
 handlers.forEach((handler, i) => {
   console.log(`${i}: ${handler.info.path}`);
 });
@@ -809,7 +816,7 @@ import { createTestQueryClient, seedMyData, resetMyStorage } from "@/test-utils"
 
 ```typescript
 // Loading states
-expect(result.current.loading).toBe(true/false);
+expect(result.current.loading).toBe(true / false);
 
 // Data presence
 expect(result.current.data).toBeDefined();

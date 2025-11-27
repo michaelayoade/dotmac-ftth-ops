@@ -4,7 +4,20 @@ import React, { useEffect, useState } from "react";
 import { User, RefreshCw, Shield } from "lucide-react";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { apiClient } from "@/lib/api/client";
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge, Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@dotmac/ui";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Button,
+  Badge,
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@dotmac/ui";
 import { formatDistanceToNow } from "date-fns";
 
 type Session = {
@@ -95,8 +108,12 @@ export default function SessionsPage() {
                 <TableBody>
                   {sessions.map((session) => (
                     <TableRow key={session.session_id}>
-                      <TableCell className="font-medium">{session.user_agent || "Unknown"}</TableCell>
-                      <TableCell className="text-muted-foreground">{session.ip_address || "—"}</TableCell>
+                      <TableCell className="font-medium">
+                        {session.user_agent || "Unknown"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {session.ip_address || "—"}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {session.last_accessed
                           ? `${formatDistanceToNow(new Date(session.last_accessed))} ago`

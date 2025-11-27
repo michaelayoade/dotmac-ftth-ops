@@ -20,7 +20,6 @@ Features:
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import re
 import time
@@ -69,9 +68,7 @@ class CiscoDriverConfig(DriverConfig):
     netconf_port: int = Field(default=830, description="NETCONF port")
 
     # OLT-specific settings
-    pon_interface_prefix: str = Field(
-        default="GponOlt", description="PON interface naming prefix"
-    )
+    pon_interface_prefix: str = Field(default="GponOlt", description="PON interface naming prefix")
     default_dba_profile: str | None = Field(
         default=None, description="Default DBA profile for new ONUs"
     )
@@ -159,9 +156,7 @@ class CiscoOLTDriver(BaseOLTDriver):
 
     CONFIG_MODEL = CiscoDriverConfig
 
-    def __init__(
-        self, config: CiscoDriverConfig, context: DriverContext | None = None
-    ) -> None:
+    def __init__(self, config: CiscoDriverConfig, context: DriverContext | None = None) -> None:
         super().__init__(config, context)
         self.config: CiscoDriverConfig = config
         self._ssh_client: CiscoSSHClient | None = None
@@ -388,10 +383,12 @@ class CiscoOLTDriver(BaseOLTDriver):
 
             # Add VLAN configuration if specified
             if request.vlan:
-                commands.extend([
-                    f"onu {request.onu_id} service 1 vlan {request.vlan}",
-                    f"onu {request.onu_id} service 1 upstream-vlan {request.vlan}",
-                ])
+                commands.extend(
+                    [
+                        f"onu {request.onu_id} service 1 vlan {request.vlan}",
+                        f"onu {request.onu_id} service 1 upstream-vlan {request.vlan}",
+                    ]
+                )
 
             # Add line profile if specified
             if request.line_profile_id:
@@ -487,9 +484,7 @@ class CiscoOLTDriver(BaseOLTDriver):
             # Apply bandwidth limits directly if specified
             if "download_mbps" in service_profile:
                 download_kbps = int(service_profile["download_mbps"]) * 1000
-                commands.append(
-                    f"onu {onu_slot} qos downstream maximum-bandwidth {download_kbps}"
-                )
+                commands.append(f"onu {onu_slot} qos downstream maximum-bandwidth {download_kbps}")
 
             if "upload_mbps" in service_profile:
                 upload_kbps = int(service_profile["upload_mbps"]) * 1000
@@ -497,10 +492,12 @@ class CiscoOLTDriver(BaseOLTDriver):
 
             # Apply VLAN changes
             if "vlan" in service_profile:
-                commands.extend([
-                    f"onu {onu_slot} service 1 vlan {service_profile['vlan']}",
-                    f"onu {onu_slot} service 1 upstream-vlan {service_profile['vlan']}",
-                ])
+                commands.extend(
+                    [
+                        f"onu {onu_slot} service 1 vlan {service_profile['vlan']}",
+                        f"onu {onu_slot} service 1 upstream-vlan {service_profile['vlan']}",
+                    ]
+                )
 
             commands.append("exit")
 

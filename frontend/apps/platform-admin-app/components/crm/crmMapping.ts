@@ -9,8 +9,12 @@ const normalizeSignature = (signature?: Record<string, unknown>): SharedSignatur
   }
 
   const raw = signature as Record<string, unknown>;
-  const nameValue = typeof raw["name"] === "string" && raw["name"].trim().length > 0 ? raw["name"].trim() : "";
-  const dateValue = typeof raw["date"] === "string" && raw["date"].trim().length > 0 ? raw["date"].trim() : new Date().toISOString();
+  const nameValue =
+    typeof raw["name"] === "string" && raw["name"].trim().length > 0 ? raw["name"].trim() : "";
+  const dateValue =
+    typeof raw["date"] === "string" && raw["date"].trim().length > 0
+      ? raw["date"].trim()
+      : new Date().toISOString();
   const ipAddress = typeof raw["ip_address"] === "string" ? raw["ip_address"] : undefined;
 
   return {
@@ -21,7 +25,9 @@ const normalizeSignature = (signature?: Record<string, unknown>): SharedSignatur
 };
 
 export const mapQuoteToShared = (quote: AppQuote): SharedQuote => {
-  const normalized = normalizeSignature(quote.signature_data as Record<string, unknown> | undefined);
+  const normalized = normalizeSignature(
+    quote.signature_data as Record<string, unknown> | undefined,
+  );
 
   return {
     ...quote,
@@ -45,7 +51,8 @@ export const mapQuoteToShared = (quote: AppQuote): SharedQuote => {
   };
 };
 
-export const mapQuotesToShared = (quotes: AppQuote[]): SharedQuote[] => quotes.map(mapQuoteToShared);
+export const mapQuotesToShared = (quotes: AppQuote[]): SharedQuote[] =>
+  quotes.map(mapQuoteToShared);
 
 export const mapLeadToShared = (lead: AppLead): SharedLead => ({
   ...lead,

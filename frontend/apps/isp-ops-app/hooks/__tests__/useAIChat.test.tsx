@@ -6,11 +6,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAIChat } from "../useAIChat";
-import type {
-  ChatMessage,
-  ChatSession,
-  SendMessageResponse,
-} from "../useAIChat";
+import type { ChatMessage, ChatSession, SendMessageResponse } from "../useAIChat";
 
 // Create a wrapper component with QueryClient
 const createWrapper = () => {
@@ -179,9 +175,7 @@ describe("useAIChat", () => {
 
       expect(result.current.currentSessionId).toBeNull();
       expect(result.current.chatHistory).toEqual([]);
-      expect(mockFetch).not.toHaveBeenCalledWith(
-        expect.stringContaining("/history")
-      );
+      expect(mockFetch).not.toHaveBeenCalledWith(expect.stringContaining("/history"));
     });
 
     it("should fetch history when currentSessionId is set", async () => {
@@ -1160,13 +1154,11 @@ describe("useAIChat", () => {
       await expect(
         act(async () => {
           await result.current.submitFeedback(5);
-        })
+        }),
       ).rejects.toThrow("No active session");
 
       expect(mockFetch).toHaveBeenCalledTimes(1); // Only sessions query
     });
-
-
 
     it("should update isSubmittingFeedback state during mutation", async () => {
       const mockSession: ChatSession = {
@@ -1277,13 +1269,11 @@ describe("useAIChat", () => {
       await expect(
         act(async () => {
           await result.current.escalateSession("Need help");
-        })
+        }),
       ).rejects.toThrow("No active session");
 
       expect(mockFetch).toHaveBeenCalledTimes(1); // Only sessions query
     });
-
-
 
     it("should update isEscalating state during mutation", async () => {
       const mockSession: ChatSession = {

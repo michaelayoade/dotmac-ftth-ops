@@ -29,13 +29,7 @@ vi.mock("@dotmac/ui", async () => {
       </button>
     ),
     Input: ({ value, onChange, placeholder, type, ...props }: any) => (
-      <input
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        type={type}
-        {...props}
-      />
+      <input value={value} onChange={onChange} placeholder={placeholder} type={type} {...props} />
     ),
     Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,
     Textarea: ({ value, onChange, placeholder }: any) => (
@@ -71,7 +65,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Assert
@@ -93,7 +87,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Assert
@@ -118,7 +112,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Assert (multiple elements may have invoice number, just check at least one exists)
@@ -142,7 +136,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Act - clear the pre-filled amount and try to submit
@@ -173,7 +167,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Act - clear pre-filled amount and enter valid amount
@@ -213,7 +207,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Act - select payment method
@@ -246,7 +240,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Act - clear pre-filled amount and fill form
@@ -263,7 +257,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           "/billing/payments",
           expect.objectContaining({
             amount: expect.any(Number),
-          })
+          }),
         );
       });
 
@@ -292,7 +286,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Act - clear pre-filled amount and fill form
@@ -308,7 +302,7 @@ describe("RecordPaymentModal Integration Tests", () => {
         expect(deps.logger.error).toHaveBeenCalledWith(
           expect.stringContaining("payment"),
           error,
-          expect.any(Object)
+          expect.any(Object),
         );
         expect(onSuccess).not.toHaveBeenCalled();
         expect(onClose).not.toHaveBeenCalled();
@@ -335,7 +329,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Assert - should show both invoices (multiple elements may match, get first)
@@ -359,7 +353,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Act - enter some data
@@ -377,7 +371,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       rerender(
@@ -390,7 +384,7 @@ describe("RecordPaymentModal Integration Tests", () => {
           logger={deps.logger}
           useConfirmDialog={deps.useConfirmDialog}
           formatCurrency={formatCurrency}
-        />
+        />,
       );
 
       // Assert - amount field should reset to default invoice total

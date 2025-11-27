@@ -35,7 +35,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea className="custom-scroll" data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -111,7 +111,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea data-testid="custom-scroll" data-custom="value">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("custom-scroll");
@@ -122,7 +122,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea aria-label="Scrollable content" data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -141,7 +141,7 @@ describe("ScrollArea", () => {
             <p>Item 4</p>
             <p>Item 5</p>
           </div>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       expect(screen.getByText("Item 1")).toBeInTheDocument();
@@ -156,7 +156,7 @@ describe("ScrollArea", () => {
             <div>Message 2</div>
             <div>Message 3</div>
           </div>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       expect(screen.getByText("Message 1")).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe("ScrollArea", () => {
           <pre className="p-4">
             <code>const example = &quot;code&quot;;</code>
           </pre>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       expect(screen.getByText('const example = "code";')).toBeInTheDocument();
@@ -191,7 +191,7 @@ describe("ScrollArea", () => {
               </tr>
             </tbody>
           </table>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       expect(screen.getByText("Column 1")).toBeInTheDocument();
@@ -205,7 +205,7 @@ describe("ScrollArea", () => {
             <a href="#about">About</a>
             <a href="#contact">Contact</a>
           </nav>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
@@ -220,7 +220,7 @@ describe("ScrollArea", () => {
             <img alt="Gallery item 2" />
             <img alt="Gallery item 3" />
           </div>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       expect(screen.getByAltText("Gallery item 1")).toBeInTheDocument();
@@ -232,7 +232,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea className="h-96" data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -243,7 +243,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea className="w-full" data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -254,7 +254,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea className="border rounded-md" data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -281,7 +281,7 @@ describe("ScrollArea", () => {
           <div>Child 1</div>
           <div>Child 2</div>
           <div>Child 3</div>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       expect(screen.getByText("Child 1")).toBeInTheDocument();
@@ -293,7 +293,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea className="custom-class" data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -306,7 +306,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea data-testid="scroll-area">
           <div style={{ height: "1000px" }}>Tall content</div>
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -317,7 +317,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea tabIndex={0} data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");
@@ -328,7 +328,7 @@ describe("ScrollArea", () => {
       render(
         <ScrollArea tabIndex={0} data-testid="scroll-area">
           Content
-        </ScrollArea>
+        </ScrollArea>,
       );
 
       const scrollArea = screen.getByTestId("scroll-area");

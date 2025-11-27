@@ -4,29 +4,29 @@
  * Tests RADIUS hooks with Jest mocks instead of MSW.
  */
 
-import React from 'react';
+import React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useRADIUSSubscribers, useRADIUSSessions } from "../useRADIUS";
 import { createQueryWrapper } from "../../__tests__/test-utils";
 
 // Import MSW for handlers
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 const { server } = require("@/__tests__/msw/server");
 
 // Mock useAppConfig
-jest.mock('@/providers/AppConfigContext', () => ({
+jest.mock("@/providers/AppConfigContext", () => ({
   AppConfigProvider: ({ children }: { children: React.ReactNode }) => children,
   useAppConfig: jest.fn(() => ({
     api: {
-      baseUrl: 'http://localhost:3000',
-      prefix: '/api/v1',
+      baseUrl: "http://localhost:3000",
+      prefix: "/api/v1",
     },
     features: {},
   })),
 }));
 
 // Mock api-utils to bypass schema validation
-jest.mock('../../../../shared/utils/api-utils', () => ({
+jest.mock("../../../../shared/utils/api-utils", () => ({
   buildApiUrl: (path: string, api: any) => {
     return `${api.baseUrl}${api.prefix}${path}`;
   },
@@ -48,20 +48,20 @@ let shouldThrowError = false;
 // Test data factories
 const createMockRADIUSSubscriber = (overrides: any = {}) => ({
   id: 1,
-  subscriber_id: 'sub-001',
-  username: 'user@example.com',
+  subscriber_id: "sub-001",
+  username: "user@example.com",
   enabled: true,
   ...overrides,
 });
 
 const createMockRADIUSSession = (overrides: any = {}) => ({
   radacctid: 1,
-  username: 'user@example.com',
-  framedipaddress: '10.0.0.1',
+  username: "user@example.com",
+  framedipaddress: "10.0.0.1",
   acctsessiontime: 3600,
   acctinputoctets: 1000000,
   acctoutputoctets: 500000,
-  subscriber_id: 'sub-001',
+  subscriber_id: "sub-001",
   ...overrides,
 });
 
@@ -76,18 +76,18 @@ describe("useRADIUS (Jest)", () => {
 
     // Override MSW handlers for this test suite
     server.use(
-      http.get('http://localhost:3000/api/v1/radius/subscribers', () => {
+      http.get("http://localhost:3000/api/v1/radius/subscribers", () => {
         if (shouldThrowError) {
-          return new HttpResponse(JSON.stringify({ error: 'Server error' }), { status: 500 });
+          return new HttpResponse(JSON.stringify({ error: "Server error" }), { status: 500 });
         }
         return HttpResponse.json(mockSubscribersResponse);
       }),
-      http.get('http://localhost:3000/api/v1/radius/sessions', () => {
+      http.get("http://localhost:3000/api/v1/radius/sessions", () => {
         if (shouldThrowError) {
-          return new HttpResponse(JSON.stringify({ error: 'Server error' }), { status: 500 });
+          return new HttpResponse(JSON.stringify({ error: "Server error" }), { status: 500 });
         }
         return HttpResponse.json(mockSessionsResponse);
-      })
+      }),
     );
   });
 
@@ -137,7 +137,7 @@ describe("useRADIUS (Jest)", () => {
         createMockRADIUSSubscriber({
           id: i + 11,
           username: `user${i + 11}@example.com`,
-        })
+        }),
       );
 
       mockSubscribersResponse = { data: mockSubscribers, total: 25 };
@@ -153,12 +153,9 @@ describe("useRADIUS (Jest)", () => {
     });
 
     it("should not fetch when enabled is false", () => {
-      const { result } = renderHook(
-        () => useRADIUSSubscribers(0, 20, { enabled: false }),
-        {
-          wrapper: createQueryWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useRADIUSSubscribers(0, 20, { enabled: false }), {
+        wrapper: createQueryWrapper(),
+      });
 
       expect(result.current.isLoading).toBe(false);
       expect(result.current.data).toBeUndefined();
@@ -179,7 +176,7 @@ describe("useRADIUS (Jest)", () => {
 
     it("should handle different page sizes", async () => {
       const mockSubscribers = Array.from({ length: 20 }, (_, i) =>
-        createMockRADIUSSubscriber({ id: i + 1 })
+        createMockRADIUSSubscriber({ id: i + 1 }),
       );
 
       mockSubscribersResponse = { data: mockSubscribers, total: 50 };
@@ -240,12 +237,9 @@ describe("useRADIUS (Jest)", () => {
     });
 
     it("should not fetch when enabled is false", () => {
-      const { result } = renderHook(
-        () => useRADIUSSessions(0, 100, { enabled: false }),
-        {
-          wrapper: createQueryWrapper(),
-        }
-      );
+      const { result } = renderHook(() => useRADIUSSessions(0, 100, { enabled: false }), {
+        wrapper: createQueryWrapper(),
+      });
 
       expect(result.current.isLoading).toBe(false);
       expect(result.current.data).toBeUndefined();
@@ -297,9 +291,7 @@ describe("useRADIUS (Jest)", () => {
     });
 
     it("should support default pagination parameters", async () => {
-      const mockSessions = [
-        createMockRADIUSSession({ radacctid: 1 }),
-      ];
+      const mockSessions = [createMockRADIUSSession({ radacctid: 1 })];
 
       mockSessionsResponse = { data: mockSessions, total: 1 };
 
@@ -324,12 +316,9 @@ describe("useRADIUS (Jest)", () => {
         total: 1,
       };
 
-      const { result: subscribersResult } = renderHook(
-        () => useRADIUSSubscribers(0, 20),
-        {
-          wrapper: createQueryWrapper(),
-        }
-      );
+      const { result: subscribersResult } = renderHook(() => useRADIUSSubscribers(0, 20), {
+        wrapper: createQueryWrapper(),
+      });
 
       const { result: sessionsResult } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createQueryWrapper(),
@@ -349,7 +338,7 @@ describe("useRADIUS (Jest)", () => {
         createMockRADIUSSession({
           radacctid: i + 1,
           username: `user${i + 1}@example.com`,
-        })
+        }),
       );
 
       mockSessionsResponse = { data: mockSessions, total: 100 };
@@ -377,12 +366,9 @@ describe("useRADIUS (Jest)", () => {
         total: 1,
       };
 
-      const { result: subscribersResult } = renderHook(
-        () => useRADIUSSubscribers(0, 20),
-        {
-          wrapper: createQueryWrapper(),
-        }
-      );
+      const { result: subscribersResult } = renderHook(() => useRADIUSSubscribers(0, 20), {
+        wrapper: createQueryWrapper(),
+      });
 
       const { result: sessionsResult } = renderHook(() => useRADIUSSessions(0, 100), {
         wrapper: createQueryWrapper(),

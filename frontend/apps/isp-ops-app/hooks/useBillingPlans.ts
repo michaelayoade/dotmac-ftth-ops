@@ -145,7 +145,10 @@ export const useBillingPlans = (activeOnly = true, productId?: string) => {
         );
         return normalizeProductsResponse(response);
       } catch (err) {
-        logger.error("Failed to fetch products", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch products",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         return [];
       }
     },

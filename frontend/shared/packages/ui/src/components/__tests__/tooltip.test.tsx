@@ -19,7 +19,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Hover me</TooltipTrigger>
             <TooltipContent>Tooltip text</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       expect(screen.getByText("Hover me")).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Tooltip text</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       expect(screen.queryByText("Tooltip text")).not.toBeInTheDocument();
@@ -47,7 +47,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Hover me</TooltipTrigger>
             <TooltipContent>Tooltip text</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const trigger = screen.getByText("Hover me");
@@ -67,7 +67,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Hover me</TooltipTrigger>
             <TooltipContent>Tooltip text</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const trigger = screen.getByText("Hover me");
@@ -93,7 +93,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       expect(container).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Second</TooltipTrigger>
             <TooltipContent>Second tooltip</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("First"));
@@ -133,7 +133,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Styled content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -155,7 +155,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent className="custom-tooltip">Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -175,7 +175,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -194,7 +194,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent sideOffset={10}>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -213,7 +213,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Button trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       expect(screen.getByRole("button", { name: "Button trigger" })).toBeInTheDocument();
@@ -230,7 +230,7 @@ describe("Tooltip", () => {
             </TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const trigger = screen.getByText("Custom trigger");
@@ -250,7 +250,7 @@ describe("Tooltip", () => {
             <TooltipTrigger disabled>Disabled trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const trigger = screen.getByRole("button");
@@ -300,7 +300,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -321,7 +321,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -341,7 +341,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -364,7 +364,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent side="top">Top content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -383,7 +383,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent align="start">Aligned content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -405,7 +405,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent ref={ref}>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Trigger"));
@@ -425,7 +425,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const trigger = screen.getByRole("button");
@@ -439,7 +439,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const trigger = screen.getByRole("button");
@@ -457,7 +457,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Trigger</TooltipTrigger>
             <TooltipContent>Content</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const trigger = screen.getByRole("button");
@@ -489,7 +489,7 @@ describe("Tooltip", () => {
             <TooltipTrigger>Second</TooltipTrigger>
             <TooltipContent>Second tooltip</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("First"));
@@ -519,7 +519,7 @@ describe("Tooltip", () => {
             <TooltipTrigger aria-label="Settings">⚙️</TooltipTrigger>
             <TooltipContent>Settings</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByRole("button", { name: "Settings" }));
@@ -548,7 +548,7 @@ describe("Tooltip", () => {
             </label>
             <input id="email-with-tooltip" type="email" />
           </div>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("ℹ️"));
@@ -570,7 +570,7 @@ describe("Tooltip", () => {
             </TooltipTrigger>
             <TooltipContent>{longText}</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("This is a very long ..."));
@@ -595,7 +595,7 @@ describe("Tooltip", () => {
               </div>
             </TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       await user.hover(screen.getByText("Hover for details"));
@@ -620,7 +620,7 @@ describe("Tooltip", () => {
             </TooltipTrigger>
             <TooltipContent>This action is currently unavailable</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>,
       );
 
       const wrapper = screen.getByRole("button").parentElement;

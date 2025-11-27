@@ -91,7 +91,7 @@ async def rls_superuser_context(db_session: AsyncSession):
 
 
 @pytest.fixture(autouse=True)
-async def auto_bypass_rls_for_all_tests(request, db_session: AsyncSession):
+async def auto_bypass_rls_for_all_tests(request):
     """
     Auto-fixture that bypasses RLS for ALL tests by default.
 
@@ -110,6 +110,26 @@ async def auto_bypass_rls_for_all_tests(request, db_session: AsyncSession):
         yield
         return
 
+    # Try to get db_session from the request's fixtures - it may not exist
+    db_session = None
+    if hasattr(request, "fixturenames") and "db_session" in request.fixturenames:
+        try:
+            db_session = request.getfixturevalue("db_session")
+        except Exception:
+            pass
+
+    # If no db_session, skip RLS bypass
+    if db_session is None:
+        yield
+        return
+
+    # Check if db_session is actually an async session by checking for sync_session attribute
+    # Sync sessions don't have async execute methods
+    if not hasattr(db_session, "sync_session"):
+        # This is a sync session, skip RLS bypass
+        yield
+        return
+
     if not await _supports_rls(db_session):
         yield
         return
@@ -120,8 +140,12 @@ async def auto_bypass_rls_for_all_tests(request, db_session: AsyncSession):
         await db_session.commit()
         yield
     finally:
-        await db_session.execute(text("RESET app.bypass_rls"))
-        await db_session.commit()
+        try:
+            await db_session.execute(text("RESET app.bypass_rls"))
+            await db_session.commit()
+        except Exception:
+            # Ignore errors during cleanup - session might already be closed
+            pass
 
 
 # Custom pytest markers

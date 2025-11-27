@@ -28,7 +28,7 @@ This is a workspace package and should be used via workspace protocol:
 The package exports a default client configured with auth and tenant resolution:
 
 ```tsx
-import { graphqlClient } from '@dotmac/graphql';
+import { graphqlClient } from "@dotmac/graphql";
 
 // Make a raw GraphQL request
 const data = await graphqlClient.request(
@@ -39,11 +39,12 @@ const data = await graphqlClient.request(
       email
     }
   }`,
-  { id: '123' }
+  { id: "123" },
 );
 ```
 
 **Endpoint Configuration:**
+
 - Default: `/api/v1/graphql` (matches backend route at `src/dotmac/platform/routers.py:881`)
 - Environment variable: `NEXT_PUBLIC_API_URL` for absolute URLs (cross-domain deployments)
 - Works in both browser and server (SSR/build) contexts
@@ -52,7 +53,7 @@ const data = await graphqlClient.request(
 ```tsx
 // Custom endpoint
 const client = createGraphQLClient({
-  endpoint: '/custom/graphql',
+  endpoint: "/custom/graphql",
 });
 
 // Absolute URL (cross-domain)
@@ -62,6 +63,7 @@ const client = createGraphQLClient({
 ```
 
 **Environment Variable Behavior:**
+
 - `NEXT_PUBLIC_API_URL` is checked in all contexts (browser, SSR, build-time)
 - Next.js inlines `NEXT_PUBLIC_*` vars at build time for browser bundles
 - Server-side code accesses `process.env` directly
@@ -72,7 +74,7 @@ const client = createGraphQLClient({
 After running `pnpm graphql:codegen`, generated hooks will be available:
 
 ```tsx
-import { useGetUserQuery } from '@dotmac/graphql/generated';
+import { useGetUserQuery } from "@dotmac/graphql/generated";
 
 function UserProfile({ userId }: { userId: string }) {
   const { data, isLoading, error } = useGetUserQuery({
@@ -91,19 +93,16 @@ function UserProfile({ userId }: { userId: string }) {
 While migrating to TanStack Query, subscriptions use an Apollo adapter:
 
 ```tsx
-import { useGraphQLSubscription } from '@dotmac/graphql';
-import { DEVICE_UPDATES_SUBSCRIPTION } from './subscriptions';
+import { useGraphQLSubscription } from "@dotmac/graphql";
+import { DEVICE_UPDATES_SUBSCRIPTION } from "./subscriptions";
 
 function DeviceMonitor() {
-  const { data, loading, error } = useGraphQLSubscription(
-    DEVICE_UPDATES_SUBSCRIPTION,
-    {
-      variables: { deviceType: 'OLT' },
-      onData: ({ data }) => {
-        console.log('Device updated:', data);
-      },
-    }
-  );
+  const { data, loading, error } = useGraphQLSubscription(DEVICE_UPDATES_SUBSCRIPTION, {
+    variables: { deviceType: "OLT" },
+    onData: ({ data }) => {
+      console.log("Device updated:", data);
+    },
+  });
 
   // Handle subscription data...
 }
@@ -119,6 +118,7 @@ pnpm graphql:codegen
 ```
 
 This generates:
+
 - TypeScript types from schema
 - TanStack Query hooks from operation documents
 - Type-safe fetcher functions
@@ -160,7 +160,7 @@ pnpm lint
 
 ## Dependencies
 
-- `@dotmac/better-auth`: Authentication hooks and session management
+- `@shared/lib/auth`: Authentication hooks and session management
 - `@dotmac/http-client`: HTTP client with auth, tenant resolution, retries
 - `@tanstack/react-query`: React Query integration
 - `graphql`: GraphQL core library

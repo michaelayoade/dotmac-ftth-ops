@@ -145,7 +145,7 @@ describe("SkipLink", () => {
           <SkipLink />
           <button>Button 1</button>
           <button>Button 2</button>
-        </div>
+        </div>,
       );
 
       const link = screen.getByText("Skip to main content");
@@ -193,7 +193,7 @@ describe("SkipLink", () => {
           <SkipLink />
           <nav>Navigation</nav>
           <main id="main-content">Main Content</main>
-        </div>
+        </div>,
       );
 
       const link = screen.getByText("Skip to main content");
@@ -208,7 +208,7 @@ describe("SkipLink", () => {
         <div>
           <SkipLink />
           <nav>Navigation</nav>
-        </div>
+        </div>,
       );
 
       const link = screen.getByText("Skip to main content");
@@ -227,7 +227,7 @@ describe("SkipLink", () => {
             <a href="/">Home</a>
             <a href="/about">About</a>
           </nav>
-        </header>
+        </header>,
       );
 
       expect(screen.getByText("Skip to main content")).toBeInTheDocument();
@@ -247,7 +247,7 @@ describe("SkipLink", () => {
             </nav>
           </header>
           <main id="main-content">Main Content</main>
-        </div>
+        </div>,
       );
 
       const skipLink = screen.getByText("Skip to main content");
@@ -265,7 +265,7 @@ describe("SkipLink", () => {
           <SkipLink />
           <nav>Navigation</nav>
           <main id="main-content">Main Content</main>
-        </div>
+        </div>,
       );
 
       const link = screen.getByText("Skip to main content");
@@ -310,7 +310,7 @@ describe("SkipLink", () => {
         <div>
           <SkipLink />
           <div>Content</div>
-        </div>
+        </div>,
       );
 
       // Skip link with sr-only should not affect layout
@@ -336,7 +336,7 @@ describe("SkipLink", () => {
           <a href="#navigation" className="sr-only focus:not-sr-only">
             Skip to navigation
           </a>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Skip to main content")).toBeInTheDocument();

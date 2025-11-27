@@ -11,6 +11,7 @@ Subscriber management functionality is tested using **Jest Mocks** for unit test
 ### The Problem with MSW + Axios
 
 MSW (Mock Service Worker) has compatibility issues with axios + React Query for complex hooks:
+
 - MSW intercepts requests successfully ✅
 - MSW returns mock data ✅
 - But React Query doesn't reliably update hook state ❌
@@ -18,12 +19,14 @@ MSW (Mock Service Worker) has compatibility issues with axios + React Query for 
 - Slow execution (~40 seconds) ⚠️
 
 **MSW Test Results**: 22/25 tests passing (88%)
+
 - 3 failing tests due to data flow issues
 - Queries with filters worked, but basic queries failed
 
 ### The Solution: Jest Mocks
 
 Jest mocks work perfectly with axios-based hooks:
+
 - ✅ Direct control over API client responses
 - ✅ React Query receives and processes data correctly
 - ✅ All query and mutation states update properly
@@ -42,6 +45,7 @@ Jest mocks work perfectly with axios-based hooks:
 ### Test Coverage
 
 #### **Query Key Factory (7 tests)** ✅
+
 - Correct base key generation
 - Correct lists key generation
 - Correct list key with params
@@ -110,6 +114,7 @@ Jest mocks work perfectly with axios-based hooks:
    - Show loading state during create
 
 #### **Real-World Scenarios (3 tests)** ✅
+
 - Handle subscriber with multiple filters
 - Handle concurrent subscriber and services fetches
 - Handle complete subscriber lifecycle (create → update → suspend → activate → terminate)
@@ -167,6 +172,7 @@ export function useSubscribers(params?: SubscriberQueryParams) {
 ```
 
 **Features:**
+
 - Advanced filtering (status, connection_type, city, search, date range)
 - Pagination support (limit, offset)
 - Sorting (sort_by, sort_order)
@@ -192,6 +198,7 @@ export function useSubscriber(subscriberId: string | null) {
 ```
 
 **Features:**
+
 - Conditional query (enabled only when subscriberId provided)
 - Returns full subscriber details
 - Faster stale time for detail views
@@ -213,6 +220,7 @@ export function useSubscriberStatistics() {
 ```
 
 **Features:**
+
 - Aggregate statistics (total, active, suspended, pending)
 - Breakdown by connection type and status
 - Metrics (new this month, churn, uptime, bandwidth)
@@ -237,6 +245,7 @@ export function useSubscriberServices(subscriberId: string | null) {
 ```
 
 **Features:**
+
 - Fetches all services for a subscriber
 - Returns empty array by default
 - Conditional query
@@ -279,6 +288,7 @@ export function useSubscriberOperations() {
 ```
 
 **Features:**
+
 - Complete CRUD operations
 - Status lifecycle management (suspend, activate, terminate)
 - Optimistic cache updates for update mutations
@@ -378,9 +388,7 @@ it("should filter subscribers by status", async () => {
 
   await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-  expect(mockApiClient.get).toHaveBeenCalledWith(
-    expect.stringContaining("status=active")
-  );
+  expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("status=active"));
   expect(result.current.data?.subscribers).toHaveLength(1);
 });
 ```
@@ -518,18 +526,11 @@ await result.current.createSubscriber(data);
 it("should call API with correct parameters", async () => {
   mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
-  renderHook(
-    () => useSubscribers({ status: ["active"], limit: 10 }),
-    { wrapper: createWrapper() }
-  );
+  renderHook(() => useSubscribers({ status: ["active"], limit: 10 }), { wrapper: createWrapper() });
 
   await waitFor(() => {
-    expect(mockApiClient.get).toHaveBeenCalledWith(
-      expect.stringContaining("status=active")
-    );
-    expect(mockApiClient.get).toHaveBeenCalledWith(
-      expect.stringContaining("limit=10")
-    );
+    expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("status=active"));
+    expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining("limit=10"));
   });
 });
 ```
@@ -539,6 +540,7 @@ it("should call API with correct parameters", async () => {
 ## Test Quality Metrics
 
 ### Coverage Summary
+
 - ✅ **43 tests passing (100%)**
 - ✅ **~3 seconds execution time**
 - ✅ **Comprehensive coverage:**
@@ -548,6 +550,7 @@ it("should call API with correct parameters", async () => {
   - Real-world scenarios tested (lifecycle, concurrent, filters)
 
 ### Test Organization
+
 - Clear test structure with describe blocks
 - Consistent naming conventions
 - Mock data helper functions
@@ -563,6 +566,7 @@ it("should call API with correct parameters", async () => {
 **MSW Test Results:** 22/25 passing (88%)
 
 **Problems with MSW:**
+
 - 3 basic query tests failing (data flow issues)
 - Slow execution (~40 seconds)
 - Complex handler configuration
@@ -571,6 +575,7 @@ it("should call API with correct parameters", async () => {
 **Jest Mock Results:** 43/43 passing (100%)
 
 **Benefits of Jest Mocks:**
+
 - 100% test pass rate
 - 13x faster execution (~3s vs ~40s)
 - Simple, direct API mocking
@@ -635,18 +640,19 @@ it("should fetch subscribers successfully", async () => {
 
 ### useSubscribers vs useOrchestration
 
-| Feature | useSubscribers | useOrchestration |
-|---------|----------------|------------------|
-| **Queries** | 4 hooks | 3 hooks |
-| **Mutations** | 6 hooks | 3 hooks |
-| **MSW Results** | 22/25 (88%) | 47/74 (64%) |
+| Feature               | useSubscribers   | useOrchestration |
+| --------------------- | ---------------- | ---------------- |
+| **Queries**           | 4 hooks          | 3 hooks          |
+| **Mutations**         | 6 hooks          | 3 hooks          |
+| **MSW Results**       | 22/25 (88%)      | 47/74 (64%)      |
 | **Jest Mock Results** | **43/43 (100%)** | **38/38 (100%)** |
-| **Speed (Jest)** | ~3 seconds | ~3 seconds |
-| **Speed (MSW)** | ~40 seconds | ~80+ seconds |
+| **Speed (Jest)**      | ~3 seconds       | ~3 seconds       |
+| **Speed (MSW)**       | ~40 seconds      | ~80+ seconds     |
 
 ### When to Use Jest Mocks vs MSW
 
 **Use Jest Mocks when:**
+
 - ✅ Hook has mutations (like useSubscribers, useOrchestration, usePlugins)
 - ✅ Hook uses axios
 - ✅ You need full mutation data verification
@@ -654,6 +660,7 @@ it("should fetch subscribers successfully", async () => {
 - ✅ Complex filtering/pagination logic
 
 **Use MSW when:**
+
 - ✅ Hook has only queries (like useOperations)
 - ✅ Hook uses fetch API (like useCustomerPortal)
 - ✅ You want realistic network-level testing
@@ -663,6 +670,7 @@ it("should fetch subscribers successfully", async () => {
 ## Continuous Integration
 
 ### Unit Tests
+
 - ✅ Run on every PR
 - ✅ Must pass before merge
 - ✅ Fast (~3 seconds)
@@ -722,6 +730,7 @@ pnpm test hooks/__tests__/useSubscribers.test.tsx --coverage
 ✅ **Migration success story: MSW 22/25 (88%) → Jest mocks 43/43 (100%)**
 
 **Key Takeaway:**
+
 - **Jest mocks + axios + queries + mutations = ✅ Perfect**
 - **MSW + axios + mutations = ❌ Issues**
 

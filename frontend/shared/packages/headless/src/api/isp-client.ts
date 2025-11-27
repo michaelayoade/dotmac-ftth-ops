@@ -216,9 +216,7 @@ export class ISPApiClient {
     return this.identity.getUser(userId);
   }
 
-  async createCustomer(
-    customerData: Parameters<IdentityApiClient["createCustomer"]>[0],
-  ) {
+  async createCustomer(customerData: Parameters<IdentityApiClient["createCustomer"]>[0]) {
     return this.identity.createCustomer(customerData);
   }
 
@@ -312,9 +310,7 @@ export class ISPApiClient {
     return this.support.getTicket(ticketId);
   }
 
-  async createSupportTicket(
-    ticket: Parameters<SupportApiClient["createTicket"]>[0],
-  ) {
+  async createSupportTicket(ticket: Parameters<SupportApiClient["createTicket"]>[0]) {
     return this.support.createTicket(ticket);
   }
 
@@ -376,11 +372,7 @@ export class ISPApiClient {
     parameters?: Record<string, any>;
     format?: string;
   }) {
-    return this.analytics.executeReport(
-      config.reportId,
-      config.parameters ?? {},
-      config.format,
-    );
+    return this.analytics.executeReport(config.reportId, config.parameters ?? {}, config.format);
   }
 
   // Inventory module
@@ -405,9 +397,7 @@ export class ISPApiClient {
     return this.fieldOps.getWorkOrder(workOrderId);
   }
 
-  async createWorkOrder(
-    data: Parameters<FieldOpsApiClient["createWorkOrder"]>[0],
-  ) {
+  async createWorkOrder(data: Parameters<FieldOpsApiClient["createWorkOrder"]>[0]) {
     return this.fieldOps.createWorkOrder(data);
   }
 

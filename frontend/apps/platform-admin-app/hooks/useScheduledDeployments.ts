@@ -122,12 +122,15 @@ export function useDeploymentTemplates() {
     queryFn: async () => {
       try {
         const response = await apiClient.get<DeploymentTemplate[]>(
-          "/deployments/templates?is_active=true"
+          "/deployments/templates?is_active=true",
         );
         logger.info("Fetched deployment templates", { count: response.data.length });
         return response.data;
       } catch (err) {
-        logger.error("Failed to fetch templates", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch templates",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -146,12 +149,15 @@ export function useDeploymentInstances() {
     queryFn: async () => {
       try {
         const response = await apiClient.get<{ instances: DeploymentInstance[] }>(
-          "/deployments/instances"
+          "/deployments/instances",
         );
         logger.info("Fetched deployment instances", { count: response.data.instances.length });
         return response.data.instances;
       } catch (err) {
-        logger.error("Failed to fetch instances", err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          "Failed to fetch instances",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         throw err;
       }
     },
@@ -168,7 +174,9 @@ export function useScheduleDeploymentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: ScheduledDeploymentRequest): Promise<ScheduledDeploymentResponse> => {
+    mutationFn: async (
+      request: ScheduledDeploymentRequest,
+    ): Promise<ScheduledDeploymentResponse> => {
       // Validate operation-specific requirements
       if (request.operation === "provision" && !request.provision_request) {
         throw new Error("provision_request is required for provision operation");
@@ -192,7 +200,7 @@ export function useScheduleDeploymentMutation() {
       try {
         const response = await apiClient.post<ScheduledDeploymentResponse>(
           "/deployments/schedule",
-          request
+          request,
         );
         logger.info("Scheduled deployment", {
           operation: request.operation,
@@ -202,7 +210,7 @@ export function useScheduleDeploymentMutation() {
       } catch (err) {
         logger.error(
           "Failed to schedule deployment",
-          err instanceof Error ? err : new Error(String(err))
+          err instanceof Error ? err : new Error(String(err)),
         );
         throw err;
       }

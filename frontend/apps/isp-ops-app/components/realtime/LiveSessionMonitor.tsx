@@ -4,14 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Users, Wifi, RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
 import { useWebSocket, useWebSocketSubscription } from "@/lib/websocket/WebSocketProvider";
 import { formatDistanceToNow } from "date-fns";
@@ -103,7 +96,8 @@ export function LiveSessionMonitor() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            WebSocket connection is offline. Once telemetry resumes, active sessions will appear here.
+            WebSocket connection is offline. Once telemetry resumes, active sessions will appear
+            here.
           </p>
         </CardContent>
       </Card>

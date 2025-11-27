@@ -9,21 +9,8 @@ import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useAccessPointListGraphQL, getSignalQualityLabel } from "@/hooks/useWirelessGraphQL";
 import { AccessPointStatus, type FrequencyBand } from "@/lib/graphql/generated";

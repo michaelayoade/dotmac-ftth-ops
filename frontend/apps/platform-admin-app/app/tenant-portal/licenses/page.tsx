@@ -2,14 +2,7 @@
 
 import React from "react";
 import { useLicensing } from "@/hooks/useLicensing";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@dotmac/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
@@ -58,8 +51,8 @@ export default function LicensesPage(): React.ReactElement {
   // Calculate seat allocations (example - would come from real API)
   const seatAllocations: SeatAllocation[] = React.useMemo(() => {
     const userQuota = quotas.find((q) => q.quota_code === "ACTIVE_USERS");
-    const total = userQuota?.extra_metadata?.['limit'] || 50;
-    const used = userQuota?.extra_metadata?.['current'] || 0;
+    const total = userQuota?.extra_metadata?.["limit"] || 50;
+    const used = userQuota?.extra_metadata?.["current"] || 0;
 
     return [
       {
@@ -129,7 +122,9 @@ export default function LicensesPage(): React.ReactElement {
       [SubscriptionStatus.SUSPENDED]: { variant: "destructive", label: "Suspended" },
     };
 
-    const config = status ? statusConfig[status] : { variant: "outline" as const, label: "Unknown" };
+    const config = status
+      ? statusConfig[status]
+      : { variant: "outline" as const, label: "Unknown" };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
@@ -226,9 +221,7 @@ export default function LicensesPage(): React.ReactElement {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {modules.filter((m) => m.is_active).length}
-            </div>
+            <div className="text-2xl font-bold">{modules.filter((m) => m.is_active).length}</div>
             <p className="text-xs text-muted-foreground mt-1">Feature modules enabled</p>
           </CardContent>
         </Card>
@@ -258,8 +251,7 @@ export default function LicensesPage(): React.ReactElement {
           <div className="space-y-4">
             {seatAllocations.map((seat) => {
               const Icon = seat.icon;
-              const roleUtilization =
-                seat.allocated > 0 ? (seat.used / seat.allocated) * 100 : 0;
+              const roleUtilization = seat.allocated > 0 ? (seat.used / seat.allocated) * 100 : 0;
 
               return (
                 <div key={seat.role} className="space-y-2">
@@ -304,9 +296,7 @@ export default function LicensesPage(): React.ReactElement {
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Billing Cycle</p>
                 <p className="text-lg font-semibold">
-                  {currentSubscription.billing_cycle === BillingCycle.ANNUAL
-                    ? "Annual"
-                    : "Monthly"}
+                  {currentSubscription.billing_cycle === BillingCycle.ANNUAL ? "Annual" : "Monthly"}
                 </p>
               </div>
               <div className="space-y-1">
@@ -343,9 +333,7 @@ export default function LicensesPage(): React.ReactElement {
       <Card>
         <CardHeader>
           <CardTitle>Enabled Feature Modules</CardTitle>
-          <CardDescription>
-            Feature modules included in your subscription plan
-          </CardDescription>
+          <CardDescription>Feature modules included in your subscription plan</CardDescription>
         </CardHeader>
         <CardContent>
           {featureSummary.length > 0 ? (

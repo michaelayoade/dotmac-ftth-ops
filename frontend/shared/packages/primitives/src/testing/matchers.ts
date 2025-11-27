@@ -82,9 +82,7 @@ export const ensureTestingMatchers = () => {
           pass
             ? "Expected accessibility violations but none were detected"
             : `Accessibility violations: ${violations
-                .map(
-                  (v) => `${v.id} (${v.nodes.length} node${v.nodes.length > 1 ? "s" : ""})`,
-                )
+                .map((v) => `${v.id} (${v.nodes.length} node${v.nodes.length > 1 ? "s" : ""})`)
                 .join(", ")}`,
       };
     },

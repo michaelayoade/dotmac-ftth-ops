@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Activity,
   Search,
@@ -69,17 +63,20 @@ function DiagnosticsHistoryPageContent() {
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl;
 
-  const { data: runsData, isLoading, refetch } = useQuery<{ total: number; items: DiagnosticRun[] }>({
+  const {
+    data: runsData,
+    isLoading,
+    refetch,
+  } = useQuery<{ total: number; items: DiagnosticRun[] }>({
     queryKey: ["diagnostics-all", apiBaseUrl, typeFilter, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (typeFilter !== "all") params.append("diagnostic_type", typeFilter);
       params.append("limit", "100");
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/diagnostics/runs?${params.toString()}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch diagnostics");
       return response.json();
     },
@@ -90,24 +87,33 @@ function DiagnosticsHistoryPageContent() {
   // Calculate stats
   const stats: DiagnosticStats = {
     total: runs.length,
-    byStatus: runs.reduce((acc, r) => {
-      acc[r.status] = (acc[r.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>),
-    bySeverity: runs.reduce((acc, r) => {
-      if (r.severity) acc[r.severity] = (acc[r.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>),
-    byType: runs.reduce((acc, r) => {
-      acc[r.diagnostic_type] = (acc[r.diagnostic_type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>),
-    avgDuration: runs.length > 0
-      ? Math.round(runs.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / runs.length)
-      : 0,
-    successRate: runs.length > 0
-      ? Math.round((runs.filter((r) => r.success).length / runs.length) * 100)
-      : 0,
+    byStatus: runs.reduce(
+      (acc, r) => {
+        acc[r.status] = (acc[r.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
+    bySeverity: runs.reduce(
+      (acc, r) => {
+        if (r.severity) acc[r.severity] = (acc[r.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
+    byType: runs.reduce(
+      (acc, r) => {
+        acc[r.diagnostic_type] = (acc[r.diagnostic_type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
+    avgDuration:
+      runs.length > 0
+        ? Math.round(runs.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / runs.length)
+        : 0,
+    successRate:
+      runs.length > 0 ? Math.round((runs.filter((r) => r.success).length / runs.length) * 100) : 0,
   };
 
   // Filter runs
@@ -175,8 +181,8 @@ function DiagnosticsHistoryPageContent() {
           run.status,
           run.severity || "",
           run.duration_ms || "",
-          `"${run.summary?.replace(/"/g, "\"\"") || ""}"`,
-        ].join(",")
+          `"${run.summary?.replace(/"/g, '""') || ""}"`,
+        ].join(","),
       ),
     ].join("\n");
 
@@ -232,7 +238,7 @@ function DiagnosticsHistoryPageContent() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.successRate}%</div>
             <p className="text-xs text-muted-foreground">
-              {stats.byStatus['completed'] || 0} completed
+              {stats.byStatus["completed"] || 0} completed
             </p>
           </CardContent>
         </Card>
@@ -255,11 +261,9 @@ function DiagnosticsHistoryPageContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {stats.bySeverity['critical'] || 0}
+              {stats.bySeverity["critical"] || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats.bySeverity['error'] || 0} errors
-            </p>
+            <p className="text-xs text-muted-foreground">{stats.bySeverity["error"] || 0} errors</p>
           </CardContent>
         </Card>
       </div>
@@ -338,9 +342,7 @@ function DiagnosticsHistoryPageContent() {
               Loading diagnostic history...
             </div>
           ) : filteredRuns.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No diagnostic runs found
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No diagnostic runs found</div>
           ) : (
             <div className="space-y-3">
               {filteredRuns.map((run) => (
@@ -348,9 +350,7 @@ function DiagnosticsHistoryPageContent() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">
-                          {formatDiagnosticType(run.diagnostic_type)}
-                        </h4>
+                        <h4 className="font-medium">{formatDiagnosticType(run.diagnostic_type)}</h4>
                         {getStatusBadge(run.status)}
                         {getSeverityBadge(run.severity)}
                       </div>
@@ -372,9 +372,7 @@ function DiagnosticsHistoryPageContent() {
                     </div>
                   </div>
 
-                  {run.summary && (
-                    <p className="text-sm">{run.summary}</p>
-                  )}
+                  {run.summary && <p className="text-sm">{run.summary}</p>}
 
                   {run.error_message && (
                     <p className="text-sm text-destructive">{run.error_message}</p>
@@ -399,9 +397,7 @@ function DiagnosticsHistoryPageContent() {
 
                   {Object.keys(run.results).length > 0 && (
                     <details className="mt-2">
-                      <summary className="text-xs font-medium cursor-pointer">
-                        View Details
-                      </summary>
+                      <summary className="text-xs font-medium cursor-pointer">View Details</summary>
                       <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto max-h-40">
                         {JSON.stringify(run.results, null, 2)}
                       </pre>

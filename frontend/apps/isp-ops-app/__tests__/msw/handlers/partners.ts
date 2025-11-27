@@ -406,7 +406,9 @@ export const partnersHandlers = [
       partner_name: partner.company_name,
       partner_account_id: `acc-${partner.id}`,
       engagement_type: requestData.engagement_type || "managed",
-      commission_rate: String(requestData.custom_commission_rate || partner.default_commission_rate || 15),
+      commission_rate: String(
+        requestData.custom_commission_rate || partner.default_commission_rate || 15,
+      ),
       quota_remaining: 49,
       status: "active",
       created_at: new Date().toISOString(),
@@ -444,10 +446,7 @@ export const partnersHandlers = [
     const quotaRemaining = quotaAllocated - quotaUsed;
 
     if (licenseCount > quotaRemaining) {
-      return HttpResponse.json(
-        { detail: "Insufficient license quota" },
-        { status: 400 }
-      );
+      return HttpResponse.json({ detail: "Insufficient license quota" }, { status: 400 });
     }
     const licenseKeys = Array.from({ length: licenseCount }, (_, i) => `KEY-${nextLicenseId + i}`);
     const licenseIds = Array.from({ length: licenseCount }, (_, i) => `lic-${nextLicenseId + i}`);
@@ -543,9 +542,10 @@ export const partnersHandlers = [
       return HttpResponse.json({ detail: "Partner not found" }, { status: 404 });
     }
 
-    const commissionAmount = typeof commissionData.amount === "string"
-      ? parseFloat(commissionData.amount)
-      : commissionData.amount;
+    const commissionAmount =
+      typeof commissionData.amount === "string"
+        ? parseFloat(commissionData.amount)
+        : commissionData.amount;
 
     const commissionResult = {
       commission_id: `comm-${nextCommissionId++}`,
@@ -560,7 +560,11 @@ export const partnersHandlers = [
       event_date: new Date().toISOString(),
       invoice_id: commissionData.invoice_id,
       partner_balance: (partner.total_commissions_earned + commissionAmount).toFixed(2),
-      partner_outstanding_balance: (partner.total_commissions_earned - partner.total_commissions_paid + commissionAmount).toFixed(2),
+      partner_outstanding_balance: (
+        partner.total_commissions_earned -
+        partner.total_commissions_paid +
+        commissionAmount
+      ).toFixed(2),
       metadata: commissionData.metadata,
     };
 

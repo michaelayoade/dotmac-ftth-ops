@@ -6,21 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { platformConfig } from "@/lib/config";
@@ -64,7 +51,7 @@ interface Job {
 function PlaybookDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const templateId = params?.['id'] as string;
+  const templateId = params?.["id"] as string;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -76,7 +63,7 @@ function PlaybookDetailsPageContent() {
         `${platformConfig.api.baseUrl}/api/v1/ansible/job-templates/${templateId}`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         if (response.status === 404) {
@@ -97,7 +84,7 @@ function PlaybookDetailsPageContent() {
         `${platformConfig.api.baseUrl}/api/v1/ansible/jobs?template_id=${templateId}&limit=10`,
         {
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to fetch recent jobs");
@@ -156,7 +143,9 @@ function PlaybookDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <XCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Playbook Not Found</h2>
-        <p className="text-muted-foreground mb-4">The playbook template you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The playbook template you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/automation/playbooks">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -284,9 +273,7 @@ function PlaybookDetailsPageContent() {
               {recentJobs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No executions found for this playbook
-                  </p>
+                  <p className="text-muted-foreground">No executions found for this playbook</p>
                 </div>
               ) : (
                 <Table>
@@ -303,9 +290,7 @@ function PlaybookDetailsPageContent() {
                   <TableBody>
                     {recentJobs.map((job) => (
                       <TableRow key={job.id}>
-                        <TableCell className="font-mono text-sm">
-                          {job.id}
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{job.id}</TableCell>
                         <TableCell>{job.name}</TableCell>
                         <TableCell>{getStatusBadge(job.status)}</TableCell>
                         <TableCell>
@@ -322,9 +307,7 @@ function PlaybookDetailsPageContent() {
                         <TableCell>{formatDuration(job.elapsed)}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/dashboard/automation/jobs/${job.id}`}>
-                              View
-                            </Link>
+                            <Link href={`/dashboard/automation/jobs/${job.id}`}>View</Link>
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -343,8 +326,8 @@ function PlaybookDetailsPageContent() {
           <DialogHeader>
             <DialogTitle>Coming Soon</DialogTitle>
             <DialogDescription>
-              Playbook editing through the UI is coming soon. For now, please edit
-              playbooks directly via the AWX interface.
+              Playbook editing through the UI is coming soon. For now, please edit playbooks
+              directly via the AWX interface.
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setShowEditDialog(false)}>Got it</Button>

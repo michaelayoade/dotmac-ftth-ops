@@ -292,12 +292,12 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
               </select>
             </div>
 
-        <UniversalTable
-          columns={tableColumns}
-          data={filteredPartners}
-          loading={loading}
-          emptyText="No partners found"
-        />
+            <UniversalTable
+              columns={tableColumns}
+              data={filteredPartners}
+              loading={loading}
+              emptyText="No partners found"
+            />
           </Card>
         </div>
 

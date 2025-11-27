@@ -11,11 +11,11 @@
  * - Better structure and organization
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { logger } from '@/lib/logger';
-import { toError, logAndThrow, logAndReturn } from '../utils/licensing-utils';
-import { parseListResponse } from '../utils/api-utils';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
+import { toError, logAndThrow, logAndReturn } from "../utils/licensing-utils";
+import { parseListResponse } from "../utils/api-utils";
 import {
   FeatureModuleSchema,
   QuotaDefinitionSchema,
@@ -31,7 +31,7 @@ import {
   type CheckEntitlementResponse,
   type CheckQuotaResponse,
   type PlanPricing,
-} from '../utils/licensing-schemas';
+} from "../utils/licensing-schemas";
 
 // Re-export types from app-specific licensing types for request types
 // These are imported from the app's types/licensing.ts
@@ -47,24 +47,24 @@ import type {
   ConsumeQuotaRequest,
   ReleaseQuotaRequest,
   UseLicensingReturn,
-} from '@/types/licensing';
+} from "@/types/licensing";
 
 // ============================================================================
 // Query Key Factory
 // ============================================================================
 
 export const licensingKeys = {
-  all: ['licensing'] as const,
-  modules: (offset = 0, limit = 100) => [...licensingKeys.all, 'modules', offset, limit] as const,
-  module: (id: string) => [...licensingKeys.all, 'module', id] as const,
-  quotas: (offset = 0, limit = 100) => [...licensingKeys.all, 'quotas', offset, limit] as const,
-  plans: (offset = 0, limit = 100) => [...licensingKeys.all, 'plans', offset, limit] as const,
-  plan: (id: string) => [...licensingKeys.all, 'plan', id] as const,
-  subscription: () => [...licensingKeys.all, 'subscription'] as const,
+  all: ["licensing"] as const,
+  modules: (offset = 0, limit = 100) => [...licensingKeys.all, "modules", offset, limit] as const,
+  module: (id: string) => [...licensingKeys.all, "module", id] as const,
+  quotas: (offset = 0, limit = 100) => [...licensingKeys.all, "quotas", offset, limit] as const,
+  plans: (offset = 0, limit = 100) => [...licensingKeys.all, "plans", offset, limit] as const,
+  plan: (id: string) => [...licensingKeys.all, "plan", id] as const,
+  subscription: () => [...licensingKeys.all, "subscription"] as const,
   entitlement: (moduleCode?: string, capabilityCode?: string) =>
-    [...licensingKeys.all, 'entitlement', { moduleCode, capabilityCode }] as const,
+    [...licensingKeys.all, "entitlement", { moduleCode, capabilityCode }] as const,
   quotaCheck: (quotaCode: string, quantity: number) =>
-    [...licensingKeys.all, 'quota-check', { quotaCode, quantity }] as const,
+    [...licensingKeys.all, "quota-check", { quotaCode, quantity }] as const,
 };
 
 // ============================================================================
@@ -93,7 +93,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
     queryFn: async () => {
       try {
         const response = await apiClient.get<FeatureModule[]>(
-          `/licensing/modules?offset=${offset}&limit=${limit}`
+          `/licensing/modules?offset=${offset}&limit=${limit}`,
         );
 
         // Validate with Zod
@@ -102,7 +102,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
         }
         return [];
       } catch (err) {
-        logAndThrow('Failed to fetch modules', err);
+        logAndThrow("Failed to fetch modules", err);
       }
     },
     staleTime: 300000, // 5 minutes
@@ -118,7 +118,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
     queryFn: async () => {
       try {
         const response = await apiClient.get<QuotaDefinition[]>(
-          `/licensing/quotas?offset=${offset}&limit=${limit}`
+          `/licensing/quotas?offset=${offset}&limit=${limit}`,
         );
 
         // Validate with Zod
@@ -127,7 +127,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
         }
         return [];
       } catch (err) {
-        logAndThrow('Failed to fetch quotas', err);
+        logAndThrow("Failed to fetch quotas", err);
       }
     },
     staleTime: 300000, // 5 minutes
@@ -143,7 +143,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
     queryFn: async () => {
       try {
         const response = await apiClient.get<ServicePlan[]>(
-          `/licensing/plans?offset=${offset}&limit=${limit}`
+          `/licensing/plans?offset=${offset}&limit=${limit}`,
         );
 
         // Validate with Zod
@@ -152,7 +152,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
         }
         return [];
       } catch (err) {
-        logAndThrow('Failed to fetch plans', err);
+        logAndThrow("Failed to fetch plans", err);
       }
     },
     staleTime: 300000, // 5 minutes
@@ -167,7 +167,9 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
     queryKey: licensingKeys.subscription(),
     queryFn: async () => {
       try {
-        const response = await apiClient.get<TenantSubscription>('/licensing/subscriptions/current');
+        const response = await apiClient.get<TenantSubscription>(
+          "/licensing/subscriptions/current",
+        );
 
         // Validate with Zod
         return TenantSubscriptionSchema.parse(response.data);
@@ -177,7 +179,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
         if ((error as any)?.response?.status === 404) {
           return null;
         }
-        logger.error('Failed to fetch subscription', err);
+        logger.error("Failed to fetch subscription", err);
         throw err;
       }
     },
@@ -191,19 +193,25 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
 
   const createModuleMutation = useMutation({
     mutationFn: async (data: CreateFeatureModuleRequest): Promise<FeatureModule> => {
-      const response = await apiClient.post<FeatureModule>('/licensing/modules', data);
+      const response = await apiClient.post<FeatureModule>("/licensing/modules", data);
       return FeatureModuleSchema.parse(response.data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: licensingKeys.all });
     },
     onError: (err) => {
-      logger.error('Failed to create module', toError(err));
+      logger.error("Failed to create module", toError(err));
     },
   });
 
   const updateModuleMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<FeatureModule> }): Promise<FeatureModule> => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<FeatureModule>;
+    }): Promise<FeatureModule> => {
       const response = await apiClient.patch<FeatureModule>(`/licensing/modules/${id}`, data);
       return FeatureModuleSchema.parse(response.data);
     },
@@ -211,7 +219,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
       queryClient.invalidateQueries({ queryKey: licensingKeys.all });
     },
     onError: (err) => {
-      logger.error('Failed to update module', toError(err));
+      logger.error("Failed to update module", toError(err));
     },
   });
 
@@ -221,14 +229,14 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
 
   const createQuotaMutation = useMutation({
     mutationFn: async (data: CreateQuotaDefinitionRequest): Promise<QuotaDefinition> => {
-      const response = await apiClient.post<QuotaDefinition>('/licensing/quotas', data);
+      const response = await apiClient.post<QuotaDefinition>("/licensing/quotas", data);
       return QuotaDefinitionSchema.parse(response.data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: licensingKeys.all });
     },
     onError: (err) => {
-      logger.error('Failed to create quota', toError(err));
+      logger.error("Failed to create quota", toError(err));
     },
   });
 
@@ -247,7 +255,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
       queryClient.invalidateQueries({ queryKey: licensingKeys.all });
     },
     onError: (err) => {
-      logger.error('Failed to update quota', toError(err));
+      logger.error("Failed to update quota", toError(err));
     },
   });
 
@@ -257,19 +265,25 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
 
   const createPlanMutation = useMutation({
     mutationFn: async (data: CreateServicePlanRequest): Promise<ServicePlan> => {
-      const response = await apiClient.post<ServicePlan>('/licensing/plans', data);
+      const response = await apiClient.post<ServicePlan>("/licensing/plans", data);
       return ServicePlanSchema.parse(response.data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: licensingKeys.all });
     },
     onError: (err) => {
-      logger.error('Failed to create plan', toError(err));
+      logger.error("Failed to create plan", toError(err));
     },
   });
 
   const updatePlanMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<ServicePlan> }): Promise<ServicePlan> => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<ServicePlan>;
+    }): Promise<ServicePlan> => {
       const response = await apiClient.patch<ServicePlan>(`/licensing/plans/${id}`, data);
       return ServicePlanSchema.parse(response.data);
     },
@@ -277,7 +291,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
       queryClient.invalidateQueries({ queryKey: licensingKeys.all });
     },
     onError: (err) => {
-      logger.error('Failed to update plan', toError(err));
+      logger.error("Failed to update plan", toError(err));
     },
   });
 
@@ -290,7 +304,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
       queryClient.invalidateQueries({ queryKey: licensingKeys.all });
     },
     onError: (err) => {
-      logger.error('Failed to duplicate plan', toError(err));
+      logger.error("Failed to duplicate plan", toError(err));
     },
   });
 
@@ -300,38 +314,38 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
 
   const createSubscriptionMutation = useMutation({
     mutationFn: async (data: CreateSubscriptionRequest): Promise<TenantSubscription> => {
-      const response = await apiClient.post<TenantSubscription>('/licensing/subscriptions', data);
+      const response = await apiClient.post<TenantSubscription>("/licensing/subscriptions", data);
       return TenantSubscriptionSchema.parse(response.data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: licensingKeys.subscription() });
     },
     onError: (err) => {
-      logger.error('Failed to create subscription', toError(err));
+      logger.error("Failed to create subscription", toError(err));
     },
   });
 
   const addAddonMutation = useMutation({
     mutationFn: async (data: AddAddonRequest): Promise<void> => {
-      await apiClient.post('/licensing/subscriptions/current/addons', data);
+      await apiClient.post("/licensing/subscriptions/current/addons", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: licensingKeys.subscription() });
     },
     onError: (err) => {
-      logger.error('Failed to add addon', toError(err));
+      logger.error("Failed to add addon", toError(err));
     },
   });
 
   const removeAddonMutation = useMutation({
     mutationFn: async (data: RemoveAddonRequest): Promise<void> => {
-      await apiClient.delete('/licensing/subscriptions/current/addons', { data });
+      await apiClient.delete("/licensing/subscriptions/current/addons", { data });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: licensingKeys.subscription() });
     },
     onError: (err) => {
-      logger.error('Failed to remove addon', toError(err));
+      logger.error("Failed to remove addon", toError(err));
     },
   });
 
@@ -351,28 +365,33 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
 
   const calculatePlanPrice = async (
     id: string,
-    params: { billing_period?: string; quantity?: number }
+    params: { billing_period?: string; quantity?: number },
   ): Promise<PlanPricing> => {
     const response = await apiClient.get(`/licensing/plans/${id}/pricing`, { params });
     return PlanPricingSchema.parse(response.data);
   };
 
-  const checkEntitlement = async (data: CheckEntitlementRequest): Promise<CheckEntitlementResponse> => {
-    const response = await apiClient.post<CheckEntitlementResponse>('/licensing/entitlements/check', data);
+  const checkEntitlement = async (
+    data: CheckEntitlementRequest,
+  ): Promise<CheckEntitlementResponse> => {
+    const response = await apiClient.post<CheckEntitlementResponse>(
+      "/licensing/entitlements/check",
+      data,
+    );
     return CheckEntitlementResponseSchema.parse(response.data);
   };
 
   const checkQuota = async (data: CheckQuotaRequest): Promise<CheckQuotaResponse> => {
-    const response = await apiClient.post<CheckQuotaResponse>('/licensing/quotas/check', data);
+    const response = await apiClient.post<CheckQuotaResponse>("/licensing/quotas/check", data);
     return CheckQuotaResponseSchema.parse(response.data);
   };
 
   const consumeQuota = async (data: ConsumeQuotaRequest): Promise<void> => {
-    await apiClient.post('/licensing/quotas/consume', data);
+    await apiClient.post("/licensing/quotas/consume", data);
   };
 
   const releaseQuota = async (data: ReleaseQuotaRequest): Promise<void> => {
-    await apiClient.post('/licensing/quotas/release', data);
+    await apiClient.post("/licensing/quotas/release", data);
   };
 
   const refetch = async () => {
@@ -431,7 +450,7 @@ export function useLicensing(pagination: PaginationParams = {}): UseLicensingRet
 
   // Conditionally add currentSubscription if it exists (not null or undefined)
   if (subscriptionQuery.data !== null && subscriptionQuery.data !== undefined) {
-    ((licensingReturn as unknown) as Record<string, unknown>)["currentSubscription"] =
+    (licensingReturn as unknown as Record<string, unknown>)["currentSubscription"] =
       subscriptionQuery.data;
   }
 
@@ -451,14 +470,17 @@ export function useFeatureEntitlement(moduleCode?: string, capabilityCode?: stri
       }
 
       try {
-        const response = await apiClient.post<CheckEntitlementResponse>('/licensing/entitlements/check', {
-          module_code: moduleCode,
-          capability_code: capabilityCode,
-        });
+        const response = await apiClient.post<CheckEntitlementResponse>(
+          "/licensing/entitlements/check",
+          {
+            module_code: moduleCode,
+            capability_code: capabilityCode,
+          },
+        );
         const result = CheckEntitlementResponseSchema.parse(response.data);
         return { entitled: result.entitled };
       } catch (err) {
-        return logAndReturn('Failed to check entitlement', err, { entitled: false });
+        return logAndReturn("Failed to check entitlement", err, { entitled: false });
       }
     },
     enabled: !!moduleCode,
@@ -476,7 +498,7 @@ export function useQuotaCheck(quotaCode: string, quantity = 1) {
     queryKey: licensingKeys.quotaCheck(quotaCode, quantity),
     queryFn: async () => {
       try {
-        const response = await apiClient.post<CheckQuotaResponse>('/licensing/quotas/check', {
+        const response = await apiClient.post<CheckQuotaResponse>("/licensing/quotas/check", {
           quota_code: quotaCode,
           quantity,
         });
@@ -487,7 +509,7 @@ export function useQuotaCheck(quotaCode: string, quantity = 1) {
           details: result,
         };
       } catch (err) {
-        return logAndReturn('Failed to check quota', err, {
+        return logAndReturn("Failed to check quota", err, {
           available: false,
           remaining: 0,
           details: null,

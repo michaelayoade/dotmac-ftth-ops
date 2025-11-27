@@ -59,20 +59,23 @@ interface PluginHealthCheck {
 
 function PluginDetailsPageContent() {
   const params = useParams();
-  const pluginId = params?.['pluginId'] as string;
+  const pluginId = params?.["pluginId"] as string;
   const { toast } = useToast();
   const [_isTestingConnection, _setIsTestingConnection] = useState(false);
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl || "";
 
   // Fetch plugin instance details
-  const { data: plugin, isLoading, refetch } = useQuery<PluginInstance>({
+  const {
+    data: plugin,
+    isLoading,
+    refetch,
+  } = useQuery<PluginInstance>({
     queryKey: ["plugin-instance", pluginId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances/${pluginId}`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error("Plugin instance not found");
@@ -90,7 +93,7 @@ function PluginDetailsPageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/configuration`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch plugin configuration");
       return response.json();
@@ -101,10 +104,9 @@ function PluginDetailsPageContent() {
   // Health check mutation
   const healthCheckMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/health`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/health`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to perform health check");
       return response.json();
     },
@@ -128,15 +130,12 @@ function PluginDetailsPageContent() {
   // Test connection mutation
   const testConnectionMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/test`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ configuration: null }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ configuration: null }),
+      });
       if (!response.ok) throw new Error("Failed to test connection");
       return response.json();
     },
@@ -157,7 +156,10 @@ function PluginDetailsPageContent() {
   });
 
   const getStatusBadge = (status: PluginStatus) => {
-    const statusConfig: Record<PluginStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      PluginStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       active: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       inactive: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Inactive" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
@@ -188,7 +190,9 @@ function PluginDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Plugin Instance Not Found</h2>
-        <p className="text-muted-foreground mb-4">The plugin instance you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The plugin instance you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/plugins">
             <ArrowLeft className="h-4 w-4 mr-2" />

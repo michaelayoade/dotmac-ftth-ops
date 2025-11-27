@@ -89,7 +89,9 @@ test.describe("Regular User Journey", () => {
         const profileForm = page
           .locator('[data-testid="profile-form"], form, input[name="email"]')
           .first();
-        const hasProfileForm = await profileForm.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
+        const hasProfileForm = await profileForm
+          .isVisible({ timeout: SELECTOR_TIMEOUT })
+          .catch(() => false);
         console.log("Profile form displayed:", hasProfileForm);
 
         if (hasProfileForm) {
@@ -134,7 +136,9 @@ test.describe("Regular User Journey", () => {
         const successMessage = page
           .locator('[data-testid="success-message"], .success, [role="status"]')
           .first();
-        const hasSuccess = await successMessage.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
+        const hasSuccess = await successMessage
+          .isVisible({ timeout: SELECTOR_TIMEOUT })
+          .catch(() => false);
 
         console.log("Profile update successful:", hasSuccess);
       }

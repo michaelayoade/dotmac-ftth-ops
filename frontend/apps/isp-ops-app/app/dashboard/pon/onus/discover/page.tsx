@@ -7,15 +7,7 @@ import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  ArrowLeft,
-  Search,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle,
-  Play,
-  Zap,
-} from "lucide-react";
+import { ArrowLeft, Search, RefreshCw, AlertCircle, CheckCircle, Play, Zap } from "lucide-react";
 import Link from "next/link";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { apiClient } from "@/lib/api/client";
@@ -41,7 +33,7 @@ const initialForm: ProvisionForm = {
 
 const normalizeDiscovery = (onu: DiscoveredONU): DiscoveredONU => ({
   ...onu,
-  metadata: onu['metadata']?? {},
+  metadata: onu["metadata"] ?? {},
 });
 
 function ONUDiscoverPageContent() {
@@ -60,37 +52,37 @@ function ONUDiscoverPageContent() {
     queryKey: ["access-discover-onus"],
     queryFn: async () => {
       const response = await apiClient.get<DiscoveredONU[]>("/access/discover-onus");
-      return (response['data'] || []).map(normalizeDiscovery);
+      return (response["data"] || []).map(normalizeDiscovery);
     },
   });
 
   const provisionMutation = useMutation({
     mutationFn: async (form: ProvisionForm) => {
       const payload: ONUProvisionRequest = {
-        serial_number: form['serial_number'],
-        olt_device_id: form['olt_device_id'],
-        pon_port: form['pon_port'],
+        serial_number: form["serial_number"],
+        olt_device_id: form["olt_device_id"],
+        pon_port: form["pon_port"],
       };
-      if (form['subscriber_id']) {
-        payload.subscriber_id = form['subscriber_id'];
+      if (form["subscriber_id"]) {
+        payload.subscriber_id = form["subscriber_id"];
       }
-      if (form['vlan'] !== undefined) {
-        payload.vlan = form['vlan'];
+      if (form["vlan"] !== undefined) {
+        payload.vlan = form["vlan"];
       }
-      if (form['bandwidth_profile']) {
-        payload.bandwidth_profile = form['bandwidth_profile'];
+      if (form["bandwidth_profile"]) {
+        payload.bandwidth_profile = form["bandwidth_profile"];
       }
-      if (form['line_profile_id']) {
-        payload.line_profile_id = form['line_profile_id'];
+      if (form["line_profile_id"]) {
+        payload.line_profile_id = form["line_profile_id"];
       }
-      if (form['service_profile_id']) {
-        payload.service_profile_id = form['service_profile_id'];
+      if (form["service_profile_id"]) {
+        payload.service_profile_id = form["service_profile_id"];
       }
       const response = await apiClient.post(
-        `/access/olts/${encodeURIComponent(form['olt_device_id'])}/onus`,
+        `/access/olts/${encodeURIComponent(form["olt_device_id"])}/onus`,
         payload,
       );
-      return response['data'];
+      return response["data"];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["access-discover-onus"] });
@@ -102,7 +94,8 @@ function ONUDiscoverPageContent() {
     onError: (error: any) => {
       toast({
         title: "Provisioning failed",
-        description: error?.['response']?.['data']?.detail || error?.['message'] || "Failed to provision ONU",
+        description:
+          error?.["response"]?.["data"]?.detail || error?.["message"] || "Failed to provision ONU",
         variant: "destructive",
       });
     },
@@ -114,11 +107,11 @@ function ONUDiscoverPageContent() {
       return discoveredONUs;
     }
     return discoveredONUs.filter((onu) => {
-      const metadata = onu['metadata'] || {};
-      const oltId = String(metadata['olt_id'] ?? "").toLowerCase();
-      const vendor = String(metadata['vendor_id'] ?? "").toLowerCase();
+      const metadata = onu["metadata"] || {};
+      const oltId = String(metadata["olt_id"] ?? "").toLowerCase();
+      const vendor = String(metadata["vendor_id"] ?? "").toLowerCase();
       return (
-        onu['serial_number'].toLowerCase().includes(query) ||
+        onu["serial_number"].toLowerCase().includes(query) ||
         oltId.includes(query) ||
         vendor.includes(query)
       );
@@ -126,28 +119,28 @@ function ONUDiscoverPageContent() {
   }, [discoveredONUs, searchQuery]);
 
   const handleSelectONU = (onu: DiscoveredONU) => {
-    const metadata = onu['metadata'] || {};
-    const ponPort = Number(metadata['pon_port'] ?? metadata['port'] ?? 0);
+    const metadata = onu["metadata"] || {};
+    const ponPort = Number(metadata["pon_port"] ?? metadata["port"] ?? 0);
     setSelectedONU(onu);
     const nextForm: ProvisionForm = {
-      serial_number: onu['serial_number'],
-      olt_device_id: String(metadata['olt_id'] ?? onu['onu_id'].split(":")[0] ?? ""),
+      serial_number: onu["serial_number"],
+      olt_device_id: String(metadata["olt_id"] ?? onu["onu_id"].split(":")[0] ?? ""),
       pon_port: Number.isFinite(ponPort) ? ponPort : 0,
     };
-    if (metadata['subscriber_id']) {
-      nextForm.subscriber_id = metadata['subscriber_id'];
+    if (metadata["subscriber_id"]) {
+      nextForm.subscriber_id = metadata["subscriber_id"];
     }
-    if (metadata['vlan'] !== undefined && metadata['vlan'] !== null) {
-      nextForm.vlan = Number(metadata['vlan']);
+    if (metadata["vlan"] !== undefined && metadata["vlan"] !== null) {
+      nextForm.vlan = Number(metadata["vlan"]);
     }
-    if (metadata['bandwidth_profile']) {
-      nextForm.bandwidth_profile = metadata['bandwidth_profile'];
+    if (metadata["bandwidth_profile"]) {
+      nextForm.bandwidth_profile = metadata["bandwidth_profile"];
     }
-    if (metadata['line_profile_id']) {
-      nextForm.line_profile_id = metadata['line_profile_id'];
+    if (metadata["line_profile_id"]) {
+      nextForm.line_profile_id = metadata["line_profile_id"];
     }
-    if (metadata['service_profile_id']) {
-      nextForm.service_profile_id = metadata['service_profile_id'];
+    if (metadata["service_profile_id"]) {
+      nextForm.service_profile_id = metadata["service_profile_id"];
     }
     setProvisionForm(nextForm);
   };
@@ -241,30 +234,36 @@ function ONUDiscoverPageContent() {
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredONUs.map((onu) => {
-                  const metadata = onu['metadata'] || {};
+                  const metadata = onu["metadata"] || {};
                   return (
                     <button
                       type="button"
-                      key={`${onu['serial_number']}-${metadata['olt_id'] ?? ""}-${metadata['pon_port'] ?? ""}`}
+                      key={`${onu["serial_number"]}-${metadata["olt_id"] ?? ""}-${metadata["pon_port"] ?? ""}`}
                       className={`w-full text-left border rounded-lg p-3 transition-colors ${
-                        selectedONU?.serial_number === onu['serial_number'] ? "border-primary bg-accent" : "hover:bg-accent"
+                        selectedONU?.serial_number === onu["serial_number"]
+                          ? "border-primary bg-accent"
+                          : "hover:bg-accent"
                       }`}
                       onClick={() => handleSelectONU(onu)}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Zap className="h-4 w-4 text-amber-600" />
-                          <span className="font-medium">{onu['serial_number']}</span>
+                          <span className="font-medium">{onu["serial_number"]}</span>
                         </div>
-                        <Badge variant={onu['state'].toLowerCase() === "provisioned" ? "secondary" : "outline"}>
-                          {onu['state']}
+                        <Badge
+                          variant={
+                            onu["state"].toLowerCase() === "provisioned" ? "secondary" : "outline"
+                          }
+                        >
+                          {onu["state"]}
                         </Badge>
                       </div>
                       <div className="text-xs space-y-1 text-muted-foreground">
-                        <p>OLT: {metadata['olt_id'] ?? "Unknown"}</p>
-                        <p>PON Port: {metadata['pon_port'] ?? "Unknown"}</p>
-                        {metadata['vendor_id'] && <p>Vendor: {metadata['vendor_id']}</p>}
-                        {metadata['rssi'] && <p>RSSI: {metadata['rssi']}</p>}
+                        <p>OLT: {metadata["olt_id"] ?? "Unknown"}</p>
+                        <p>PON Port: {metadata["pon_port"] ?? "Unknown"}</p>
+                        {metadata["vendor_id"] && <p>Vendor: {metadata["vendor_id"]}</p>}
+                        {metadata["rssi"] && <p>RSSI: {metadata["rssi"]}</p>}
                       </div>
                     </button>
                   );

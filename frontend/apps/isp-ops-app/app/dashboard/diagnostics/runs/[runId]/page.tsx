@@ -124,9 +124,17 @@ const getSeverityConfig = (severity: DiagnosticSeverity | null) => {
   if (!severity) return null;
   const configs = {
     [DiagnosticSeverity.INFO]: { icon: Info, color: "bg-blue-100 text-blue-800", label: "Info" },
-    [DiagnosticSeverity.WARNING]: { icon: AlertTriangle, color: "bg-yellow-100 text-yellow-800", label: "Warning" },
+    [DiagnosticSeverity.WARNING]: {
+      icon: AlertTriangle,
+      color: "bg-yellow-100 text-yellow-800",
+      label: "Warning",
+    },
     [DiagnosticSeverity.ERROR]: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
-    [DiagnosticSeverity.CRITICAL]: { icon: AlertOctagon, color: "bg-red-600 text-white", label: "Critical" },
+    [DiagnosticSeverity.CRITICAL]: {
+      icon: AlertOctagon,
+      color: "bg-red-600 text-white",
+      label: "Critical",
+    },
   };
   return configs[severity];
 };
@@ -140,7 +148,7 @@ function DiagnosticRunDetailsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const runId = params['runId'] as string;
+  const runId = params["runId"] as string;
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl || "";
 
@@ -148,16 +156,17 @@ function DiagnosticRunDetailsContent() {
   const { data: run, isLoading } = useQuery<DiagnosticRun>({
     queryKey: ["diagnostic-run", runId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/diagnostics/runs/${runId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/diagnostics/runs/${runId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch diagnostic run");
       return response.json();
     },
     refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if status is pending or running
-      return query?.state?.data && (query.state.data.status === DiagnosticStatus.RUNNING || query.state.data.status === DiagnosticStatus.PENDING)
+      return query?.state?.data &&
+        (query.state.data.status === DiagnosticStatus.RUNNING ||
+          query.state.data.status === DiagnosticStatus.PENDING)
         ? 5000
         : false;
     },
@@ -348,7 +357,9 @@ function DiagnosticRunDetailsContent() {
                   </div>
                 )}
                 {!run.subscriber_id && !run.customer_id && (
-                  <div className="text-sm text-muted-foreground">No subscriber or customer information</div>
+                  <div className="text-sm text-muted-foreground">
+                    No subscriber or customer information
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -451,33 +462,33 @@ function DiagnosticRunDetailsContent() {
               ) : (
                 <div className="space-y-4">
                   {/* Key Metrics (if available) */}
-                  {(run.results['signal_level'] ||
-                    run.results['session_count'] ||
-                    run.results['latency'] ||
-                    run.results['packet_loss']) && (
+                  {(run.results["signal_level"] ||
+                    run.results["session_count"] ||
+                    run.results["latency"] ||
+                    run.results["packet_loss"]) && (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
-                      {run.results['signal_level'] && (
+                      {run.results["signal_level"] && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Signal Level</div>
-                          <div className="text-2xl font-bold">{run.results['signal_level']}</div>
+                          <div className="text-2xl font-bold">{run.results["signal_level"]}</div>
                         </div>
                       )}
-                      {run.results['session_count'] !== undefined && (
+                      {run.results["session_count"] !== undefined && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Sessions</div>
-                          <div className="text-2xl font-bold">{run.results['session_count']}</div>
+                          <div className="text-2xl font-bold">{run.results["session_count"]}</div>
                         </div>
                       )}
-                      {run.results['latency'] && (
+                      {run.results["latency"] && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Latency</div>
-                          <div className="text-2xl font-bold">{run.results['latency']}ms</div>
+                          <div className="text-2xl font-bold">{run.results["latency"]}ms</div>
                         </div>
                       )}
-                      {run.results['packet_loss'] !== undefined && (
+                      {run.results["packet_loss"] !== undefined && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Packet Loss</div>
-                          <div className="text-2xl font-bold">{run.results['packet_loss']}%</div>
+                          <div className="text-2xl font-bold">{run.results["packet_loss"]}%</div>
                         </div>
                       )}
                     </div>
@@ -504,7 +515,9 @@ function DiagnosticRunDetailsContent() {
             </CardHeader>
             <CardContent>
               {run.recommendations.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No recommendations available</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No recommendations available
+                </div>
               ) : (
                 <div className="space-y-3">
                   {run.recommendations.map((rec, i) => (
@@ -521,8 +534,8 @@ function DiagnosticRunDetailsContent() {
                                 rec.priority === "high" || rec.priority === "critical"
                                   ? "destructive"
                                   : rec.priority === "medium"
-                                  ? "default"
-                                  : "secondary"
+                                    ? "default"
+                                    : "secondary"
                               }
                             >
                               {rec.priority}

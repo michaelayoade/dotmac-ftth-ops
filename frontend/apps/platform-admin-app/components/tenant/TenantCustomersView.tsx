@@ -16,14 +16,7 @@
  */
 
 import { useState } from "react";
-import {
-  AlertCircle,
-  Download,
-  Filter,
-  Plus,
-  RefreshCw,
-  Search,
-} from "lucide-react";
+import { AlertCircle, Download, Filter, Plus, RefreshCw, Search } from "lucide-react";
 import { QueryBoundary, normalizeDashboardHook } from "@dotmac/graphql";
 import { TableSkeleton, CardGridSkeleton } from "@dotmac/primitives";
 import { CustomersList } from "@/components/customers/CustomersList";
@@ -178,9 +171,7 @@ export default function TenantCustomersView() {
             onClick={handleRefresh}
             disabled={result.loading || result.isRefetching}
           >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${result.isRefetching ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`h-4 w-4 mr-2 ${result.isRefetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button onClick={handleCreateCustomer}>
@@ -310,20 +301,18 @@ export default function TenantCustomersView() {
       >
         {(data: CustomerDashboardData) => (
           <CustomersList
-            customers={data.customers.map(
-              (c: DashboardCustomer) => {
-                const displayName = `${c.firstName} ${c.lastName}`.trim() || c.companyName || c.email;
-                return {
-                  id: c.id,
-                  name: displayName,
-                  display_name: displayName,
-                  email: c.email,
-                  status: c.status.toLowerCase() as Customer["status"],
-                  created_at: c.createdAt,
-                  updated_at: c.createdAt,
-                } as unknown as Customer;
-              },
-            )}
+            customers={data.customers.map((c: DashboardCustomer) => {
+              const displayName = `${c.firstName} ${c.lastName}`.trim() || c.companyName || c.email;
+              return {
+                id: c.id,
+                name: displayName,
+                display_name: displayName,
+                email: c.email,
+                status: c.status.toLowerCase() as Customer["status"],
+                created_at: c.createdAt,
+                updated_at: c.createdAt,
+              } as unknown as Customer;
+            })}
             loading={false} // Already handled by QueryBoundary
             onCustomerSelect={handleViewCustomer}
             onEditCustomer={handleEditCustomer}

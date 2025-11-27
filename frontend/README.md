@@ -1,4 +1,3 @@
-
 # DotMac Frontend Workspace
 
 This directory hosts the two production Next.js apps and shared packages that make up the DotMac frontend. Use this guide to get the apps running locally and find deeper documentation.

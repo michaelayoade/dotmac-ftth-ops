@@ -199,7 +199,7 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
           <h3 className="text-lg font-semibold mb-4">Workflow Steps</h3>
           <div className="space-y-3">
             {workflow.steps?.map((step: WorkflowStep, index: number) => {
-              const StepIcon = getStatusIcon(step['status'] as any);
+              const StepIcon = getStatusIcon(step["status"] as any);
               return (
                 <div
                   key={step.id}
@@ -207,7 +207,7 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
                 >
                   <div className="flex-shrink-0">
                     <div
-                      className={`flex items-center justify-center w-8 h-8 rounded-full ${getStatusColor(step['status'] as any)}`}
+                      className={`flex items-center justify-center w-8 h-8 rounded-full ${getStatusColor(step["status"] as any)}`}
                     >
                       <StepIcon
                         className={`h-4 w-4 ${step.status === "running" ? "animate-spin" : ""}`}
@@ -388,11 +388,7 @@ export default function OrchestrationDashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
 
-  const {
-    data: stats,
-    isLoading: statsLoading,
-    refetch: refetchStats,
-  } = useOrchestrationStats();
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useOrchestrationStats();
 
   const {
     data: runningResponse,

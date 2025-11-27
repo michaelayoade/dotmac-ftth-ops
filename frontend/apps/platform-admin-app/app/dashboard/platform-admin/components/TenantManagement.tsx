@@ -5,14 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import {
   Dialog,
@@ -31,16 +24,7 @@ import {
 } from "@/lib/services/platform-admin-tenant-service";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
 import { tenantService } from "@/lib/services/tenant-service";
-import {
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Key,
-  Plus,
-  Search,
-  Users,
-} from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, Eye, Key, Plus, Search, Users } from "lucide-react";
 import { TenantOnboardingWizard } from "@/components/tenant/TenantOnboardingWizard";
 import { setOperatorAccessToken } from "../../../../../../shared/utils/operatorAuth";
 
@@ -291,7 +275,7 @@ export function TenantManagement() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={tenant.status === "active" ? "default" : "outline"}>
-                          {tenant['status']?? "unknown"}
+                          {tenant["status"] ?? "unknown"}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden capitalize lg:table-cell">
@@ -304,7 +288,9 @@ export function TenantManagement() {
                         <Badge variant="secondary">{tenant.usage?.storage_gb ?? 0}</Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {tenant['created_at']? new Date(tenant.created_at).toLocaleDateString() : "—"}
+                        {tenant["created_at"]
+                          ? new Date(tenant.created_at).toLocaleDateString()
+                          : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -488,7 +474,8 @@ export function TenantManagement() {
                 <div>
                   <p className="text-sm text-muted-foreground">Created</p>
                   <p className="mt-1">
-                    {detailTenant['created_at']? new Date(detailTenant.created_at).toLocaleString()
+                    {detailTenant["created_at"]
+                      ? new Date(detailTenant.created_at).toLocaleString()
                       : "—"}
                   </p>
                 </div>

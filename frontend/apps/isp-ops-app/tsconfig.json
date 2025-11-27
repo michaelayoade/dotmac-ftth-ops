@@ -38,8 +38,8 @@
       "@/hooks/*": ["./hooks/*"],
       "@/contexts/*": ["./contexts/*"],
       "@/*": ["./*"],
-      "@dotmac/better-auth": ["../../shared/lib/better-auth/index.ts"],
-      "@dotmac/better-auth/*": ["../../shared/lib/better-auth/*"],
+      "@dotmac/auth": ["../../shared/lib/auth/index.ts"],
+      "@dotmac/auth/*": ["../../shared/lib/auth/*"],
       "@shared/*": ["../../shared/*"],
       "@dotmac/*": ["../../shared/packages/*/src"],
       "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
@@ -49,13 +49,7 @@
       "zod/*": ["./node_modules/zod/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "types/**/*.d.ts"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "types/**/*.d.ts"],
   "exclude": [
     "node_modules",
     "dist",

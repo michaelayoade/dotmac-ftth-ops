@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..auth.core import UserInfo, get_current_user, get_current_user_optional
@@ -28,7 +29,6 @@ from .models import (
     FrontendLogsResponse,
 )
 from .service import AuditService, log_api_activity
-from pydantic import BaseModel, Field
 
 logger = structlog.get_logger(__name__)
 
@@ -948,7 +948,9 @@ async def compliance_report(
             ComplianceIssue(
                 severity=ActivitySeverity.CRITICAL,
                 description="Critical events detected",
-                event_ids=[str(a.id) for a in activities if a.severity == ActivitySeverity.CRITICAL],
+                event_ids=[
+                    str(a.id) for a in activities if a.severity == ActivitySeverity.CRITICAL
+                ],
             )
         )
 

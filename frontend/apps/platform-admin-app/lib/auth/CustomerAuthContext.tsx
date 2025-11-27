@@ -101,54 +101,57 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const response = await fetch(platformConfig.api.buildUrl("/auth/customer/login"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+        const response = await fetch(platformConfig.api.buildUrl("/auth/customer/login"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Login failed");
-      }
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Login failed");
+        }
 
-      const data = await response.json();
+        const data = await response.json();
 
-      // Store tokens
-      // eslint-disable-next-line no-restricted-globals -- localStorage usage
-      localStorage.setItem("customer_access_token", data.access_token);
-      if (data.refresh_token) {
+        // Store tokens
         // eslint-disable-next-line no-restricted-globals -- localStorage usage
-        localStorage.setItem("customer_refresh_token", data.refresh_token);
+        localStorage.setItem("customer_access_token", data.access_token);
+        if (data.refresh_token) {
+          // eslint-disable-next-line no-restricted-globals -- localStorage usage
+          localStorage.setItem("customer_refresh_token", data.refresh_token);
+        }
+
+        // Set user data
+        setUser({
+          id: data.user.id,
+          email: data.user.email,
+          first_name: data.user.first_name,
+          last_name: data.user.last_name,
+          account_number: data.user.account_number,
+          phone: data.user.phone,
+        });
+
+        // Redirect to dashboard
+        router.push("/customer-portal");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "An error occurred during login";
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
       }
-
-      // Set user data
-      setUser({
-        id: data.user.id,
-        email: data.user.email,
-        first_name: data.user.first_name,
-        last_name: data.user.last_name,
-        account_number: data.user.account_number,
-        phone: data.user.phone,
-      });
-
-      // Redirect to dashboard
-      router.push("/customer-portal");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred during login";
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   const logout = useCallback(() => {
     // Clear tokens

@@ -17,7 +17,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <div>Test Content</div>
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       expect(screen.getByText("Test Content")).toBeInTheDocument();
@@ -27,7 +27,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <div>Test Content</div>
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       expect(screen.queryByText("Confirm action")).not.toBeInTheDocument();
@@ -77,7 +77,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -120,7 +120,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -159,7 +159,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -181,15 +181,13 @@ describe("ConfirmDialogProvider", () => {
       const TestComponent = () => {
         const confirm = useConfirmDialog();
 
-        return (
-          <button onClick={() => confirm({ description: "Test description" })}>Open</button>
-        );
+        return <button onClick={() => confirm({ description: "Test description" })}>Open</button>;
       };
 
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -220,7 +218,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -251,7 +249,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -282,7 +280,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -313,7 +311,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -336,7 +334,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -362,7 +360,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -400,7 +398,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Open"));
@@ -451,7 +449,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Delete User"));
@@ -490,7 +488,7 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Delete User"));
@@ -532,14 +530,14 @@ describe("ConfirmDialogProvider", () => {
       render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       await userEvent.click(screen.getByText("Leave Page"));
 
       await waitFor(() => {
         expect(
-          screen.getByText("You have unsaved changes. Do you want to leave?")
+          screen.getByText("You have unsaved changes. Do you want to leave?"),
         ).toBeInTheDocument();
       });
 
@@ -564,7 +562,7 @@ describe("ConfirmDialogProvider", () => {
       const { rerender } = render(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       const initialRenderCount = renderCount;
@@ -572,7 +570,7 @@ describe("ConfirmDialogProvider", () => {
       rerender(
         <ConfirmDialogProvider>
           <TestComponent />
-        </ConfirmDialogProvider>
+        </ConfirmDialogProvider>,
       );
 
       // Component should not re-render unnecessarily

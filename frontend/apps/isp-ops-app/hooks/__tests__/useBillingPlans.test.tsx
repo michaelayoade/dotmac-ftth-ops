@@ -106,10 +106,7 @@ describe("useBillingPlans", () => {
       const inactivePlan = { ...mockPlans[0], plan_id: "plan-3", is_active: false };
       mockApiClient.get.mockResolvedValue({ data: [...mockPlans, inactivePlan] });
 
-      const { result } = renderHook(
-        () => useBillingPlans({ activeOnly: false }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useBillingPlans({ activeOnly: false }), { wrapper });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -122,10 +119,7 @@ describe("useBillingPlans", () => {
       const filteredPlans = mockPlans.filter((p) => p.product_id === "prod-1");
       mockApiClient.get.mockResolvedValue({ data: filteredPlans });
 
-      const { result } = renderHook(
-        () => useBillingPlans({ productId: "prod-1" }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useBillingPlans({ productId: "prod-1" }), { wrapper });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -201,10 +195,7 @@ describe("useBillingPlans", () => {
 
     it("should set loading state correctly", async () => {
       mockApiClient.get.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: mockPlans }), 100)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: mockPlans }), 100)),
       );
 
       const { result } = renderHook(() => useBillingPlans(), { wrapper });
@@ -243,10 +234,7 @@ describe("useBillingPlans", () => {
         return Promise.resolve({ data: mockPlans });
       });
 
-      const { result } = renderHook(
-        () => useBillingPlans({ activeOnly: false }),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useBillingPlans({ activeOnly: false }), { wrapper });
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -332,7 +320,7 @@ describe("useBillingPlans", () => {
         expect.objectContaining({
           product_id: "prod-1",
           billing_interval: "monthly",
-        })
+        }),
       );
     });
 
@@ -385,7 +373,7 @@ describe("useBillingPlans", () => {
         expect.objectContaining({
           features: ["feature1", "feature2"],
           metadata: { key: "value" },
-        })
+        }),
       );
     });
 
@@ -428,7 +416,7 @@ describe("useBillingPlans", () => {
           interval_count: 1,
           price_amount: 99.99,
           price_currency: "USD",
-        })
+        }),
       ).rejects.toThrow("Create failed");
     });
 
@@ -447,7 +435,7 @@ describe("useBillingPlans", () => {
           interval_count: 1,
           price_amount: 99.99,
           price_currency: "USD",
-        })
+        }),
       ).rejects.toThrow("Invalid response format");
     });
   });
@@ -466,7 +454,7 @@ describe("useBillingPlans", () => {
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         "/billing/subscriptions/plans/plan-1",
-        expect.objectContaining({ price_amount: 199.99 })
+        expect.objectContaining({ price_amount: 199.99 }),
       );
     });
 
@@ -488,7 +476,7 @@ describe("useBillingPlans", () => {
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         "/billing/subscriptions/plans/plan-1",
-        expect.objectContaining({ features: ["new-feature"] })
+        expect.objectContaining({ features: ["new-feature"] }),
       );
     });
 
@@ -505,7 +493,7 @@ describe("useBillingPlans", () => {
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         "/billing/subscriptions/plans/plan-1",
-        expect.objectContaining({ is_active: false })
+        expect.objectContaining({ is_active: false }),
       );
     });
 
@@ -535,9 +523,9 @@ describe("useBillingPlans", () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      await expect(
-        result.current.updatePlan("plan-1", { price_amount: 199.99 })
-      ).rejects.toThrow("Update failed");
+      await expect(result.current.updatePlan("plan-1", { price_amount: 199.99 })).rejects.toThrow(
+        "Update failed",
+      );
     });
   });
 
@@ -552,9 +540,7 @@ describe("useBillingPlans", () => {
 
       await result.current.deletePlan("plan-1");
 
-      expect(mockApiClient.delete).toHaveBeenCalledWith(
-        "/billing/subscriptions/plans/plan-1"
-      );
+      expect(mockApiClient.delete).toHaveBeenCalledWith("/billing/subscriptions/plans/plan-1");
     });
 
     it("should invalidate queries after deleting plan", async () => {
@@ -582,9 +568,7 @@ describe("useBillingPlans", () => {
 
       await waitFor(() => expect(result.current.loading).toBe(false));
 
-      await expect(result.current.deletePlan("plan-1")).rejects.toThrow(
-        "Delete failed"
-      );
+      await expect(result.current.deletePlan("plan-1")).rejects.toThrow("Delete failed");
     });
   });
 
@@ -654,10 +638,7 @@ describe("useBillingPlans", () => {
   describe("useBillingPlans - Loading States", () => {
     it("should show loading during plans query", async () => {
       mockApiClient.get.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: mockPlans }), 100)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: mockPlans }), 100)),
       );
 
       const { result } = renderHook(() => useBillingPlans(), { wrapper });
@@ -670,9 +651,7 @@ describe("useBillingPlans", () => {
     it("should show loading during products query", async () => {
       mockApiClient.get.mockImplementation((url) => {
         if (url.includes("/products")) {
-          return new Promise((resolve) =>
-            setTimeout(() => resolve({ data: mockProducts }), 100)
-          );
+          return new Promise((resolve) => setTimeout(() => resolve({ data: mockProducts }), 100));
         }
         return Promise.resolve({ data: mockPlans });
       });
@@ -688,10 +667,7 @@ describe("useBillingPlans", () => {
       const newPlan = { ...mockPlans[0], plan_id: "plan-new" };
       mockApiClient.get.mockResolvedValue({ data: mockPlans });
       mockApiClient.post.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: newPlan }), 50)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: newPlan }), 50)),
       );
 
       const { result } = renderHook(() => useBillingPlans(), { wrapper });
@@ -718,10 +694,7 @@ describe("useBillingPlans", () => {
       const updatedPlan = { ...mockPlans[0], price_amount: 199.99 };
       mockApiClient.get.mockResolvedValue({ data: mockPlans });
       mockApiClient.patch.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: updatedPlan }), 50)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: updatedPlan }), 50)),
       );
 
       const { result } = renderHook(() => useBillingPlans(), { wrapper });
@@ -742,10 +715,7 @@ describe("useBillingPlans", () => {
     it("should show loading during delete mutation", async () => {
       mockApiClient.get.mockResolvedValue({ data: mockPlans });
       mockApiClient.delete.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ data: null, status: 204 }), 50)
-          )
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: null, status: 204 }), 50)),
       );
 
       const { result } = renderHook(() => useBillingPlans(), { wrapper });

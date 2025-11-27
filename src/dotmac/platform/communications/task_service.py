@@ -11,13 +11,11 @@ from uuid import uuid4
 import structlog
 from celery.exceptions import CeleryError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-
-from dotmac.platform.celery_app import celery_app
-
 from sqlalchemy import select
 
-from dotmac.platform.db import get_async_session_context
+from dotmac.platform.celery_app import celery_app
 from dotmac.platform.communications.models import BulkJobMetadata, CommunicationType
+from dotmac.platform.db import get_async_session_context
 
 from .email_service import EmailMessage, EmailResponse, get_email_service
 
@@ -327,10 +325,13 @@ class TaskService:
         )
         return str(task.id)
 
-    def send_bulk_emails_async(self, job: BulkEmailJob, *, metadata: dict[str, Any] | None = None) -> str:
+    def send_bulk_emails_async(
+        self, job: BulkEmailJob, *, metadata: dict[str, Any] | None = None
+    ) -> str:
         """Queue bulk emails and persist metadata for status lookups."""
         task = send_bulk_email_task.delay(job.model_dump())
         try:
+
             async def _persist() -> None:
                 async with get_async_session_context() as db:
                     meta = BulkJobMetadata(
@@ -347,6 +348,7 @@ class TaskService:
             # Fire and forget persistence
             try:
                 import asyncio
+
                 asyncio.get_event_loop().create_task(_persist())
             except Exception:
                 _run_async(_persist())
@@ -371,6 +373,7 @@ class TaskService:
 
     def get_bulk_metadata(self, job_id: str) -> dict[str, Any] | None:
         try:
+
             async def _fetch() -> dict[str, Any] | None:
                 async with get_async_session_context() as db:
                     stmt = select(BulkJobMetadata).where(BulkJobMetadata.job_id == job_id)
@@ -449,7 +452,7 @@ def queue_email(
     return service.send_email_async(message)
 
 
-def queue_bulk_emails(name: str, messages: list[EmailMessage]) -> str:
+def queue_bulk_emails(name: str, messages: list[EmailMessage]) -> tuple[str, str]:
     return queue_bulk_emails_with_meta(name, messages, metadata=None)
 
 

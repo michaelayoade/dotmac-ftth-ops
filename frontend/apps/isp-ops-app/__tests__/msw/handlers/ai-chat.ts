@@ -3,7 +3,7 @@
  * Mocks AI chat functionality including sessions, messages, and feedback
  */
 
-import { http, HttpResponse, delay } from 'msw';
+import { http, HttpResponse, delay } from "msw";
 
 // In-memory storage
 let sessions: any[] = [];
@@ -11,7 +11,7 @@ let messages: Map<number, any[]> = new Map();
 let nextSessionId = 1;
 
 // Configurable delay for testing loading states (default 50ms)
-const API_DELAY = parseInt(process.env.MSW_API_DELAY || '50');
+const API_DELAY = parseInt(process.env.MSW_API_DELAY || "50");
 
 // Factory functions
 function createMockSession(data: Partial<any> = {}): any {
@@ -112,7 +112,7 @@ export const aiChatHandlers = [
       createMockMessage({
         role: "user",
         content: body.message,
-      })
+      }),
     );
 
     // Add AI response
@@ -125,11 +125,11 @@ export const aiChatHandlers = [
     messages.set(sessionId, sessionMessages);
 
     return HttpResponse.json({
-        session_id: sessionId,
-        message: aiResponse.content,
-        role: "assistant",
-        metadata: { tokens: 50, cost_cents: 1 },
-      });
+      session_id: sessionId,
+      message: aiResponse.content,
+      role: "assistant",
+      metadata: { tokens: 50, cost_cents: 1 },
+    });
   }),
 
   // POST /api/v1/ai/sessions - Create a session
@@ -170,9 +170,9 @@ export const aiChatHandlers = [
     const sessionMessages = messages.get(sessionId) || [];
 
     return HttpResponse.json({
-        session_id: sessionId,
-        messages: sessionMessages,
-      });
+      session_id: sessionId,
+      messages: sessionMessages,
+    });
   }),
 
   // GET /api/v1/ai/sessions/my - Get user's sessions

@@ -101,7 +101,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.listReconciliations as jest.Mock).mockResolvedValue(
-        mockReconciliations
+        mockReconciliations,
       );
 
       const { result } = renderHook(() => useReconciliations(), {
@@ -124,7 +124,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.listReconciliations as jest.Mock).mockResolvedValue(
-        mockReconciliations
+        mockReconciliations,
       );
 
       renderHook(
@@ -139,7 +139,7 @@ describe("useReconciliation", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
@@ -207,7 +207,7 @@ describe("useReconciliation", () => {
         };
 
         (reconciliationService.listReconciliations as jest.Mock).mockResolvedValue(
-          mockReconciliations
+          mockReconciliations,
         );
 
         const { result } = renderHook(() => useReconciliations({ status }), {
@@ -280,9 +280,7 @@ describe("useReconciliation", () => {
         metadata: {},
       };
 
-      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
-      );
+      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(mockReconciliation);
 
       const { result } = renderHook(() => useReconciliation(1), {
         wrapper: createWrapper(),
@@ -346,9 +344,7 @@ describe("useReconciliation", () => {
         metadata: {},
       };
 
-      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
-      );
+      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(mockReconciliation);
 
       const { result } = renderHook(() => useReconciliation(1), {
         wrapper: createWrapper(),
@@ -373,9 +369,7 @@ describe("useReconciliation", () => {
         last_reconciliation_date: "2024-01-31T00:00:00Z",
       };
 
-      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(
-        mockSummary
-      );
+      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(mockSummary);
 
       const { result } = renderHook(() => useReconciliationSummary(), {
         wrapper: createWrapper(),
@@ -397,9 +391,7 @@ describe("useReconciliation", () => {
         last_reconciliation_date: "2024-01-15T00:00:00Z",
       };
 
-      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(
-        mockSummary
-      );
+      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(mockSummary);
 
       renderHook(() => useReconciliationSummary({ bank_account_id: 1, days: 30 }), {
         wrapper: createWrapper(),
@@ -479,7 +471,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.startReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const { result } = renderHook(() => useStartReconciliation(), {
@@ -555,7 +547,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.startReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const queryClient = new QueryClient({
@@ -619,7 +611,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.startReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const { result } = renderHook(() => useStartReconciliation(), {
@@ -640,7 +632,7 @@ describe("useReconciliation", () => {
       expect(reconciliationService.startReconciliation).toHaveBeenCalledWith(
         expect.objectContaining({
           statement_file_url: "https://example.com/statement.pdf",
-        })
+        }),
       );
     });
   });
@@ -684,7 +676,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.addReconciledPayment as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const { result } = renderHook(() => useAddReconciledPayment(), {
@@ -756,7 +748,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.addReconciledPayment as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const queryClient = new QueryClient({
@@ -820,7 +812,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.completeReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const { result } = renderHook(() => useCompleteReconciliation(), {
@@ -839,10 +831,7 @@ describe("useReconciliation", () => {
         expect(completed).toEqual(mockReconciliation);
       });
 
-      expect(reconciliationService.completeReconciliation).toHaveBeenCalledWith(
-        1,
-        completeData
-      );
+      expect(reconciliationService.completeReconciliation).toHaveBeenCalledWith(1, completeData);
     });
 
     it("should handle complete error", async () => {
@@ -894,7 +883,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.completeReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const queryClient = new QueryClient({
@@ -958,7 +947,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.approveReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const { result } = renderHook(() => useApproveReconciliation(), {
@@ -1029,7 +1018,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.approveReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
+        mockReconciliation,
       );
 
       const queryClient = new QueryClient({
@@ -1075,9 +1064,7 @@ describe("useReconciliation", () => {
         retry_at: null,
       };
 
-      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(
-        mockRetryResponse
-      );
+      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(mockRetryResponse);
 
       const { result } = renderHook(() => useRetryFailedPayment(), {
         wrapper: createWrapper(),
@@ -1105,9 +1092,7 @@ describe("useReconciliation", () => {
         retry_at: "2024-01-02T00:00:00Z",
       };
 
-      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(
-        mockRetryResponse
-      );
+      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(mockRetryResponse);
 
       const { result } = renderHook(() => useRetryFailedPayment(), {
         wrapper: createWrapper(),
@@ -1148,9 +1133,7 @@ describe("useReconciliation", () => {
         retry_at: null,
       };
 
-      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(
-        mockRetryResponse
-      );
+      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(mockRetryResponse);
 
       const queryClient = new QueryClient({
         defaultOptions: {
@@ -1186,9 +1169,7 @@ describe("useReconciliation", () => {
         retry_at: null,
       };
 
-      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(
-        mockRetryResponse
-      );
+      (reconciliationService.retryFailedPayment as jest.Mock).mockResolvedValue(mockRetryResponse);
 
       const { result } = renderHook(() => useRetryFailedPayment(), {
         wrapper: createWrapper(),
@@ -1214,9 +1195,7 @@ describe("useReconciliation", () => {
         next_attempt: null,
       };
 
-      (reconciliationService.getCircuitBreakerStatus as jest.Mock).mockResolvedValue(
-        mockStatus
-      );
+      (reconciliationService.getCircuitBreakerStatus as jest.Mock).mockResolvedValue(mockStatus);
 
       const { result } = renderHook(() => useCircuitBreakerStatus(), {
         wrapper: createWrapper(),
@@ -1237,9 +1216,7 @@ describe("useReconciliation", () => {
         next_attempt: "2024-01-01T00:05:00Z",
       };
 
-      (reconciliationService.getCircuitBreakerStatus as jest.Mock).mockResolvedValue(
-        mockStatus
-      );
+      (reconciliationService.getCircuitBreakerStatus as jest.Mock).mockResolvedValue(mockStatus);
 
       const { result } = renderHook(() => useCircuitBreakerStatus(), {
         wrapper: createWrapper(),
@@ -1260,9 +1237,7 @@ describe("useReconciliation", () => {
         next_attempt: null,
       };
 
-      (reconciliationService.getCircuitBreakerStatus as jest.Mock).mockResolvedValue(
-        mockStatus
-      );
+      (reconciliationService.getCircuitBreakerStatus as jest.Mock).mockResolvedValue(mockStatus);
 
       const { result } = renderHook(() => useCircuitBreakerStatus(), {
         wrapper: createWrapper(),
@@ -1309,7 +1284,7 @@ describe("useReconciliation", () => {
   describe("Loading States", () => {
     it("should show loading during reconciliations query", async () => {
       (reconciliationService.listReconciliations as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ reconciliations: [] }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ reconciliations: [] }), 100)),
       );
 
       const { result } = renderHook(() => useReconciliations(), {
@@ -1325,7 +1300,7 @@ describe("useReconciliation", () => {
 
     it("should show loading during start reconciliation mutation", async () => {
       (reconciliationService.startReconciliation as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({}), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({}), 100)),
       );
 
       const { result } = renderHook(() => useStartReconciliation(), {
@@ -1347,7 +1322,7 @@ describe("useReconciliation", () => {
 
     it("should show loading during add payment mutation", async () => {
       (reconciliationService.addReconciledPayment as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({}), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({}), 100)),
       );
 
       const { result } = renderHook(() => useAddReconciledPayment(), {
@@ -1396,9 +1371,7 @@ describe("useReconciliation", () => {
         metadata: {},
       };
 
-      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
-      );
+      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(mockReconciliation);
 
       const { result } = renderHook(() => useReconciliation(1), {
         wrapper: createWrapper(),
@@ -1438,9 +1411,7 @@ describe("useReconciliation", () => {
         metadata: {},
       };
 
-      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
-      );
+      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(mockReconciliation);
 
       const { result } = renderHook(() => useReconciliation(1), {
         wrapper: createWrapper(),
@@ -1489,9 +1460,7 @@ describe("useReconciliation", () => {
         metadata: {},
       };
 
-      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(
-        mockReconciliation
-      );
+      (reconciliationService.getReconciliation as jest.Mock).mockResolvedValue(mockReconciliation);
 
       const { result } = renderHook(() => useReconciliation(1), {
         wrapper: createWrapper(),
@@ -1512,7 +1481,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.listReconciliations as jest.Mock).mockResolvedValue(
-        mockReconciliations
+        mockReconciliations,
       );
 
       const { result } = renderHook(() => useReconciliations(), {
@@ -1535,9 +1504,7 @@ describe("useReconciliation", () => {
         last_reconciliation_date: null,
       };
 
-      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(
-        mockSummary
-      );
+      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(mockSummary);
 
       const { result } = renderHook(() => useReconciliationSummary(), {
         wrapper: createWrapper(),
@@ -1562,7 +1529,7 @@ describe("useReconciliation", () => {
       };
 
       (reconciliationService.listReconciliations as jest.Mock).mockResolvedValue(
-        mockReconciliations
+        mockReconciliations,
       );
 
       renderHook(
@@ -1573,7 +1540,7 @@ describe("useReconciliation", () => {
           }),
         {
           wrapper: createWrapper(),
-        }
+        },
       );
 
       await waitFor(() => {
@@ -1594,9 +1561,7 @@ describe("useReconciliation", () => {
         last_reconciliation_date: "2024-01-15T00:00:00Z",
       };
 
-      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(
-        mockSummary
-      );
+      (reconciliationService.getReconciliationSummary as jest.Mock).mockResolvedValue(mockSummary);
 
       renderHook(() => useReconciliationSummary({ days: 7 }), {
         wrapper: createWrapper(),

@@ -5,15 +5,15 @@
  * Supports multiple layout variants for different dashboard types.
  */
 
-import React from 'react';
-import { clsx } from 'clsx';
+import React from "react";
+import { clsx } from "clsx";
 
 export interface DashboardSkeletonProps {
   /**
    * Layout variant for different dashboard types
    * @default "default"
    */
-  variant?: 'default' | 'metrics' | 'network' | 'compact';
+  variant?: "default" | "metrics" | "network" | "compact";
 
   /**
    * Number of metric cards to show
@@ -42,16 +42,10 @@ export interface DashboardSkeletonProps {
 /**
  * Base skeleton box component
  */
-function SkeletonBox({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+function SkeletonBox({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={clsx(
-        'bg-gray-200 dark:bg-gray-700 rounded animate-pulse',
-        className
-      )}
+      className={clsx("bg-gray-200 dark:bg-gray-700 rounded animate-pulse", className)}
       {...props}
     />
   );
@@ -91,8 +85,8 @@ function DashboardHeaderSkeleton() {
 /**
  * Content section skeleton
  */
-function ContentSectionSkeleton({ variant = 'default' }: { variant?: string }) {
-  if (variant === 'network') {
+function ContentSectionSkeleton({ variant = "default" }: { variant?: string }) {
+  if (variant === "network") {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <SkeletonBox className="h-6 w-32" />
@@ -131,7 +125,7 @@ function ContentSectionSkeleton({ variant = 'default' }: { variant?: string }) {
  * ```
  */
 export function DashboardSkeleton({
-  variant = 'default',
+  variant = "default",
   metricCards = 4,
   showHeader = true,
   contentSections = 2,
@@ -139,25 +133,30 @@ export function DashboardSkeleton({
 }: DashboardSkeletonProps) {
   // Adjust metric cards based on variant
   const cardCount =
-    variant === 'network' ? Math.max(metricCards, 4) :
-    variant === 'compact' ? Math.min(metricCards, 3) :
-    metricCards;
+    variant === "network"
+      ? Math.max(metricCards, 4)
+      : variant === "compact"
+        ? Math.min(metricCards, 3)
+        : metricCards;
 
   // Adjust grid columns based on card count
   const gridCols =
-    cardCount === 2 ? 'grid-cols-2' :
-    cardCount === 3 ? 'grid-cols-3' :
-    cardCount >= 4 ? 'grid-cols-4' :
-    'grid-cols-1';
+    cardCount === 2
+      ? "grid-cols-2"
+      : cardCount === 3
+        ? "grid-cols-3"
+        : cardCount >= 4
+          ? "grid-cols-4"
+          : "grid-cols-1";
 
   return (
-    <div className={clsx('space-y-6', className)}>
+    <div className={clsx("space-y-6", className)}>
       {/* Header */}
       {showHeader && <DashboardHeaderSkeleton />}
 
       {/* Metric Cards */}
-      {variant !== 'compact' && (
-        <div className={clsx('grid gap-4', gridCols)}>
+      {variant !== "compact" && (
+        <div className={clsx("grid gap-4", gridCols)}>
           {Array.from({ length: cardCount }).map((_, i) => (
             <MetricCardSkeleton key={i} />
           ))}
@@ -179,23 +178,17 @@ export const DashboardSkeletons = {
   /**
    * Network monitoring dashboard
    */
-  Network: () => (
-    <DashboardSkeleton variant="network" metricCards={6} contentSections={2} />
-  ),
+  Network: () => <DashboardSkeleton variant="network" metricCards={6} contentSections={2} />,
 
   /**
    * Metrics dashboard with cards
    */
-  Metrics: () => (
-    <DashboardSkeleton variant="metrics" metricCards={4} contentSections={3} />
-  ),
+  Metrics: () => <DashboardSkeleton variant="metrics" metricCards={4} contentSections={3} />,
 
   /**
    * Compact dashboard
    */
-  Compact: () => (
-    <DashboardSkeleton variant="compact" metricCards={3} contentSections={1} />
-  ),
+  Compact: () => <DashboardSkeleton variant="compact" metricCards={3} contentSections={1} />,
 
   /**
    * Default dashboard

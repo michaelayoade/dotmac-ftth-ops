@@ -81,56 +81,53 @@ export function NetworkProfileEditDialog({
       const profileInput: Record<string, unknown> = {};
 
       // VLAN configuration
-      if (formData['serviceVlan']) {
-        profileInput['serviceVlan'] = parseInt(formData['serviceVlan']);
+      if (formData["serviceVlan"]) {
+        profileInput["serviceVlan"] = parseInt(formData["serviceVlan"]);
       }
-      if (formData['innerVlan']) {
-        profileInput['innerVlan'] = parseInt(formData['innerVlan']);
+      if (formData["innerVlan"]) {
+        profileInput["innerVlan"] = parseInt(formData["innerVlan"]);
       }
-      if (formData['vlanPool']) {
-        profileInput['vlanPool'] = formData['vlanPool'];
+      if (formData["vlanPool"]) {
+        profileInput["vlanPool"] = formData["vlanPool"];
       }
-      profileInput['qinqEnabled'] = formData['qinqEnabled'];
+      profileInput["qinqEnabled"] = formData["qinqEnabled"];
 
       // IP addressing
-      if (formData['staticIpv4']) {
-        profileInput['staticIpv4'] = formData['staticIpv4'];
+      if (formData["staticIpv4"]) {
+        profileInput["staticIpv4"] = formData["staticIpv4"];
       }
-      if (formData['staticIpv6']) {
-        profileInput['staticIpv6'] = formData['staticIpv6'];
+      if (formData["staticIpv6"]) {
+        profileInput["staticIpv6"] = formData["staticIpv6"];
       }
-      if (formData['delegatedIpv6Prefix']) {
-        profileInput['delegatedIpv6Prefix'] = formData['delegatedIpv6Prefix'];
+      if (formData["delegatedIpv6Prefix"]) {
+        profileInput["delegatedIpv6Prefix"] = formData["delegatedIpv6Prefix"];
       }
-      if (formData['ipv6PdSize']) {
-        profileInput['ipv6PdSize'] = parseInt(formData['ipv6PdSize']);
+      if (formData["ipv6PdSize"]) {
+        profileInput["ipv6PdSize"] = parseInt(formData["ipv6PdSize"]);
       }
-      profileInput['ipv6AssignmentMode'] = formData['ipv6AssignmentMode'];
+      profileInput["ipv6AssignmentMode"] = formData["ipv6AssignmentMode"];
 
       // Option 82
-      if (formData['circuitId']) {
-        profileInput['circuitId'] = formData['circuitId'];
+      if (formData["circuitId"]) {
+        profileInput["circuitId"] = formData["circuitId"];
       }
-      if (formData['remoteId']) {
-        profileInput['remoteId'] = formData['remoteId'];
+      if (formData["remoteId"]) {
+        profileInput["remoteId"] = formData["remoteId"];
       }
-      profileInput['option82Policy'] = formData['option82Policy'];
+      profileInput["option82Policy"] = formData["option82Policy"];
 
       // Make REST API call (you can also use GraphQL here)
-      const response = await fetch(
-        `/api/v1/network/subscribers/${subscriberId}/profile`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(profileInput),
-        }
-      );
+      const response = await fetch(`/api/v1/network/subscribers/${subscriberId}/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(profileInput),
+      });
 
-      if (!response['ok']) {
+      if (!response["ok"]) {
         const error = await response.json();
-        throw new Error(error['detail'] || "Failed to update network profile");
+        throw new Error(error["detail"] || "Failed to update network profile");
       }
 
       toast({
@@ -143,10 +140,7 @@ export function NetworkProfileEditDialog({
       console.error("Error updating network profile:", error);
       toast({
         title: "Error",
-        description:
-          error instanceof Error
-            ? error['message']
-            : "Failed to update network profile",
+        description: error instanceof Error ? error["message"] : "Failed to update network profile",
         variant: "destructive",
       });
     } finally {
@@ -158,12 +152,9 @@ export function NetworkProfileEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {profile ? "Edit" : "Configure"} Network Profile
-          </DialogTitle>
+          <DialogTitle>{profile ? "Edit" : "Configure"} Network Profile</DialogTitle>
           <DialogDescription>
-            Configure VLAN, IP addressing, and DHCP Option 82 settings for this
-            subscriber
+            Configure VLAN, IP addressing, and DHCP Option 82 settings for this subscriber
           </DialogDescription>
         </DialogHeader>
 
@@ -186,7 +177,7 @@ export function NetworkProfileEditDialog({
                     min="1"
                     max="4094"
                     placeholder="100"
-                    value={formData['serviceVlan']}
+                    value={formData["serviceVlan"]}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({ ...formData, serviceVlan: e.target.value })
                     }
@@ -201,7 +192,7 @@ export function NetworkProfileEditDialog({
                     min="1"
                     max="4094"
                     placeholder="200"
-                    value={formData['innerVlan']}
+                    value={formData["innerVlan"]}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({ ...formData, innerVlan: e.target.value })
                     }
@@ -214,17 +205,15 @@ export function NetworkProfileEditDialog({
                 <Input
                   id="vlanPool"
                   placeholder="pool-business"
-                  value={formData['vlanPool']}
-                  onChange={(e) =>
-                    setFormData({ ...formData, vlanPool: e.target.value })
-                  }
+                  value={formData["vlanPool"]}
+                  onChange={(e) => setFormData({ ...formData, vlanPool: e.target.value })}
                 />
               </div>
 
               <div className="flex items-center space-x-2">
                 <Switch
                   id="qinqEnabled"
-                  checked={formData['qinqEnabled']}
+                  checked={formData["qinqEnabled"]}
                   onCheckedChange={(checked: boolean) =>
                     setFormData({ ...formData, qinqEnabled: checked })
                   }
@@ -240,10 +229,8 @@ export function NetworkProfileEditDialog({
                 <Input
                   id="staticIpv4"
                   placeholder="10.0.0.100"
-                  value={formData['staticIpv4']}
-                  onChange={(e) =>
-                    setFormData({ ...formData, staticIpv4: e.target.value })
-                  }
+                  value={formData["staticIpv4"]}
+                  onChange={(e) => setFormData({ ...formData, staticIpv4: e.target.value })}
                 />
               </div>
 
@@ -252,21 +239,17 @@ export function NetworkProfileEditDialog({
                 <Input
                   id="staticIpv6"
                   placeholder="2001:db8::100"
-                  value={formData['staticIpv6']}
-                  onChange={(e) =>
-                    setFormData({ ...formData, staticIpv6: e.target.value })
-                  }
+                  value={formData["staticIpv6"]}
+                  onChange={(e) => setFormData({ ...formData, staticIpv6: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="delegatedIpv6Prefix">
-                  IPv6 Prefix Delegation
-                </Label>
+                <Label htmlFor="delegatedIpv6Prefix">IPv6 Prefix Delegation</Label>
                 <Input
                   id="delegatedIpv6Prefix"
                   placeholder="2001:db8:1000::/56"
-                  value={formData['delegatedIpv6Prefix']}
+                  value={formData["delegatedIpv6Prefix"]}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -285,7 +268,7 @@ export function NetworkProfileEditDialog({
                     min="0"
                     max="128"
                     placeholder="56"
-                    value={formData['ipv6PdSize']}
+                    value={formData["ipv6PdSize"]}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({ ...formData, ipv6PdSize: e.target.value })
                     }
@@ -295,9 +278,17 @@ export function NetworkProfileEditDialog({
                 <div className="space-y-2">
                   <Label htmlFor="ipv6AssignmentMode">IPv6 Assignment Mode</Label>
                   <Select
-                    value={formData['ipv6AssignmentMode']}
+                    value={formData["ipv6AssignmentMode"]}
                     onValueChange={(value: string) =>
-                      setFormData({ ...formData, ipv6AssignmentMode: value as "none" | "slaac" | "stateful" | "pd" | "dual_stack" })
+                      setFormData({
+                        ...formData,
+                        ipv6AssignmentMode: value as
+                          | "none"
+                          | "slaac"
+                          | "stateful"
+                          | "pd"
+                          | "dual_stack",
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -322,10 +313,8 @@ export function NetworkProfileEditDialog({
                 <Input
                   id="circuitId"
                   placeholder="OLT1:1/1/1"
-                  value={formData['circuitId']}
-                  onChange={(e) =>
-                    setFormData({ ...formData, circuitId: e.target.value })
-                  }
+                  value={formData["circuitId"]}
+                  onChange={(e) => setFormData({ ...formData, circuitId: e.target.value })}
                 />
               </div>
 
@@ -334,39 +323,37 @@ export function NetworkProfileEditDialog({
                 <Input
                   id="remoteId"
                   placeholder="OLT1"
-                  value={formData['remoteId']}
-                  onChange={(e) =>
-                    setFormData({ ...formData, remoteId: e.target.value })
-                  }
+                  value={formData["remoteId"]}
+                  onChange={(e) => setFormData({ ...formData, remoteId: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="option82Policy">Enforcement Policy</Label>
                 <Select
-                  value={formData['option82Policy']}
+                  value={formData["option82Policy"]}
                   onValueChange={(value: string) =>
-                    setFormData({ ...formData, option82Policy: value as "enforce" | "log" | "ignore" })
+                    setFormData({
+                      ...formData,
+                      option82Policy: value as "enforce" | "log" | "ignore",
+                    })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select policy" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="enforce">
-                      Enforce - Block mismatches
-                    </SelectItem>
+                    <SelectItem value="enforce">Enforce - Block mismatches</SelectItem>
                     <SelectItem value="log">Log - Allow but log</SelectItem>
                     <SelectItem value="ignore">Ignore - No validation</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  {formData['option82Policy'] === "enforce" &&
+                  {formData["option82Policy"] === "enforce" &&
                     "Sessions will be rejected if Option 82 doesn't match"}
-                  {formData['option82Policy'] === "log" &&
+                  {formData["option82Policy"] === "log" &&
                     "Sessions will be allowed but mismatches will be logged"}
-                  {formData['option82Policy'] === "ignore" &&
-                    "Option 82 validation is disabled"}
+                  {formData["option82Policy"] === "ignore" && "Option 82 validation is disabled"}
                 </p>
               </div>
             </TabsContent>

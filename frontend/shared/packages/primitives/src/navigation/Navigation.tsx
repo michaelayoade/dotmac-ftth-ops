@@ -134,11 +134,7 @@ export function NavigationProvider({
     collapsed,
   };
 
-  return (
-    <NavigationContext.Provider value={contextValue}>
-      {children}
-    </NavigationContext.Provider>
-  );
+  return <NavigationContext.Provider value={contextValue}>{children}</NavigationContext.Provider>;
 }
 
 // Navbar Component

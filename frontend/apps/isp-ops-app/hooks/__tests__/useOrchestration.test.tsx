@@ -111,7 +111,7 @@ const createMockStats = (overrides?: Partial<WorkflowStatistics>): WorkflowStati
 
 const createMockWorkflowList = (
   workflows: Workflow[],
-  overrides?: Partial<WorkflowListResponse>
+  overrides?: Partial<WorkflowListResponse>,
 ): WorkflowListResponse => ({
   workflows,
   total: workflows.length,
@@ -156,20 +156,16 @@ describe("useOrchestration - Unit Tests", () => {
     });
 
     it("should generate correct workflows key with multiple filters", () => {
-      const filters = { status: "completed" as WorkflowStatus, workflowType: "provision_subscriber" as WorkflowType, page: 2 };
-      expect(orchestrationKeys.workflows(filters)).toEqual([
-        "orchestration",
-        "workflows",
-        filters,
-      ]);
+      const filters = {
+        status: "completed" as WorkflowStatus,
+        workflowType: "provision_subscriber" as WorkflowType,
+        page: 2,
+      };
+      expect(orchestrationKeys.workflows(filters)).toEqual(["orchestration", "workflows", filters]);
     });
 
     it("should generate correct workflow detail key", () => {
-      expect(orchestrationKeys.workflow("wf-123")).toEqual([
-        "orchestration",
-        "workflow",
-        "wf-123",
-      ]);
+      expect(orchestrationKeys.workflow("wf-123")).toEqual(["orchestration", "workflow", "wf-123"]);
     });
   });
 
@@ -210,7 +206,7 @@ describe("useOrchestration - Unit Tests", () => {
 
     it("should show loading state during fetch", async () => {
       mockApiClient.get.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: createMockStats() }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: createMockStats() }), 100)),
       );
 
       const { result } = renderHook(() => useOrchestrationStats(), {
@@ -268,10 +264,9 @@ describe("useOrchestration - Unit Tests", () => {
       const mockResponse = createMockWorkflowList(mockWorkflows);
       mockApiClient.get.mockResolvedValueOnce({ data: mockResponse });
 
-      const { result } = renderHook(
-        () => useWorkflows({ workflowType: "activate_service" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useWorkflows({ workflowType: "activate_service" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -481,7 +476,7 @@ describe("useOrchestration - Unit Tests", () => {
 
     it("should show loading state during retry", async () => {
       mockApiClient.post.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useRetryWorkflow(), {
@@ -531,7 +526,7 @@ describe("useOrchestration - Unit Tests", () => {
 
     it("should show loading state during cancel", async () => {
       mockApiClient.post.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: {} }), 100)),
       );
 
       const { result } = renderHook(() => useCancelWorkflow(), {
@@ -588,10 +583,9 @@ describe("useOrchestration - Unit Tests", () => {
 
       await result.current.exportCSV({ status: "completed" });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        "orchestration/export/csv?status=completed",
-        { responseType: "blob" }
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith("orchestration/export/csv?status=completed", {
+        responseType: "blob",
+      });
 
       jest.restoreAllMocks();
     });
@@ -610,7 +604,7 @@ describe("useOrchestration - Unit Tests", () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         "orchestration/export/json?workflow_type=provision_subscriber&include_steps=true",
-        { responseType: "blob" }
+        { responseType: "blob" },
       );
 
       jest.restoreAllMocks();
@@ -632,7 +626,7 @@ describe("useOrchestration - Unit Tests", () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         "orchestration/export/csv?date_from=2024-01-01&date_to=2024-01-31",
-        { responseType: "blob" }
+        { responseType: "blob" },
       );
 
       jest.restoreAllMocks();
@@ -649,10 +643,9 @@ describe("useOrchestration - Unit Tests", () => {
 
       await result.current.exportJSON({ limit: 100 });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        "orchestration/export/json?limit=100",
-        { responseType: "blob" }
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith("orchestration/export/json?limit=100", {
+        responseType: "blob",
+      });
 
       jest.restoreAllMocks();
     });
@@ -675,7 +668,7 @@ describe("useOrchestration - Unit Tests", () => {
 
     it("should show loading state during export", async () => {
       mockApiClient.get.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: "mock-data" }), 100))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: "mock-data" }), 100)),
       );
 
       const { result } = renderHook(() => useExportWorkflows(), {

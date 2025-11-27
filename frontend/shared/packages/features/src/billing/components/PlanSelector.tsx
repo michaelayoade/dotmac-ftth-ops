@@ -6,14 +6,7 @@
 
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Switch } from "@dotmac/ui";
@@ -129,13 +122,17 @@ export function PlanSelector({
             >
               {recommended && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge variant="default" className="bg-orange-500 hover:bg-orange-600">Recommended</Badge>
+                  <Badge variant="default" className="bg-orange-500 hover:bg-orange-600">
+                    Recommended
+                  </Badge>
                 </div>
               )}
 
               {isCurrent && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge variant="default" className="">Current Plan</Badge>
+                  <Badge variant="default" className="">
+                    Current Plan
+                  </Badge>
                 </div>
               )}
 

@@ -83,7 +83,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       fallback,
       level = "component",
       enableRetry = true,
-      showErrorDetails = typeof process !== 'undefined' && process.env?.NODE_ENV === "development",
+      showErrorDetails = typeof process !== "undefined" && process.env?.NODE_ENV === "development",
     } = this.props;
 
     if (hasError && error) {

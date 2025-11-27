@@ -7,11 +7,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import {
-  useBankAccounts,
-  useCreateBankAccount,
-  useRecordCashPayment,
-} from "../useBankAccounts";
+import { useBankAccounts, useCreateBankAccount, useRecordCashPayment } from "../useBankAccounts";
 import { bankAccountsService } from "@/lib/services/bank-accounts-service";
 import { useToast } from "@dotmac/ui";
 

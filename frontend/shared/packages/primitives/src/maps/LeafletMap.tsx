@@ -21,7 +21,14 @@ import {
   Radio,
 } from "lucide-react";
 import { cn } from "../utils/cn";
-import type { Coordinates, Bounds, MapMarker, ServiceArea, NetworkNode, Route } from "./UniversalMap";
+import type {
+  Coordinates,
+  Bounds,
+  MapMarker,
+  ServiceArea,
+  NetworkNode,
+  Route,
+} from "./UniversalMap";
 
 type LeafletModule = typeof import("leaflet");
 type ReactLeafletModule = typeof import("react-leaflet");
@@ -135,7 +142,7 @@ const createCustomIcon = (
         font-size: 12px;
         font-weight: bold;
       ">
-        ${type === 'fiber' ? 'F' : type === 'tower' ? 'T' : type === 'customer' ? 'C' : '•'}
+        ${type === "fiber" ? "F" : type === "tower" ? "T" : type === "customer" ? "C" : "•"}
       </div>
     </div>
   `;
@@ -211,7 +218,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 }) => {
   const [mapZoom, setMapZoom] = useState(zoom);
   const [mapCenter, setMapCenter] = useState(center);
-  const [modules, setModules] = useState<{ leaflet: LeafletModule; reactLeaflet: ReactLeafletModule } | null>(null);
+  const [modules, setModules] = useState<{
+    leaflet: LeafletModule;
+    reactLeaflet: ReactLeafletModule;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -233,7 +243,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       <div
         className={cn(
           "flex items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg",
-          className
+          className,
         )}
         style={{ height }}
       >
@@ -248,7 +258,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const { leaflet: L, reactLeaflet } = modules;
   const { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, useMap } = reactLeaflet;
 
-  const MapControllerComponent: React.FC<{ center: Coordinates; zoom: number }> = ({ center, zoom }) => {
+  const MapControllerComponent: React.FC<{ center: Coordinates; zoom: number }> = ({
+    center,
+    zoom,
+  }) => {
     const map = useMap();
 
     useEffect(() => {
@@ -286,10 +299,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   // Calculate bounds if provided
   const mapBounds = useMemo(() => {
     if (bounds) {
-      return L.latLngBounds(
-        [bounds.south, bounds.west],
-        [bounds.north, bounds.east]
-      );
+      return L.latLngBounds([bounds.south, bounds.west], [bounds.north, bounds.east]);
     }
     return undefined;
   }, [bounds, L]);
@@ -319,7 +329,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       <div
         className={cn(
           "flex items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg",
-          className
+          className,
         )}
         style={{ height }}
       >
@@ -336,7 +346,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       <div
         className={cn(
           "flex items-center justify-center bg-red-50 dark:bg-red-900/20 rounded-lg",
-          className
+          className,
         )}
         style={{ height }}
       >
@@ -449,7 +459,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                         node.status === "online" && "text-green-600",
                         node.status === "offline" && "text-gray-600",
                         node.status === "maintenance" && "text-yellow-600",
-                        node.status === "error" && "text-red-600"
+                        node.status === "error" && "text-red-600",
                       )}
                     >
                       {node.status}
@@ -495,7 +505,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                           marker.status === "active" && "text-green-600",
                           marker.status === "inactive" && "text-gray-600",
                           marker.status === "maintenance" && "text-yellow-600",
-                          marker.status === "error" && "text-red-600"
+                          marker.status === "error" && "text-red-600",
                         )}
                       >
                         {marker.status}
@@ -510,65 +520,80 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
         {/* Map Controls */}
         {showControls && (
-          <MapControls
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-            onReset={handleReset}
-          />
+          <MapControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} onReset={handleReset} />
         )}
 
         {/* Legend */}
-        {showLegend && (markers.length > 0 || networkNodes.length > 0 || serviceAreas.length > 0) && (
-          <div className="absolute bottom-4 left-4 z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xs">
-            <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-              <LayersIcon className="h-4 w-4" />
-              Legend
-            </h4>
-            <div className="space-y-2 text-xs">
-              {markers.length > 0 && (
-                <div>
-                  <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Markers</p>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from(new Set(markers.map((m) => m.type))).map((type) => (
-                      <div key={type} className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <span className="text-gray-600 dark:text-gray-400 capitalize">{type}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {networkNodes.length > 0 && (
-                <div>
-                  <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Network Nodes</p>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-gray-600 dark:text-gray-400">Online</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span className="text-gray-600 dark:text-gray-400">Error</span>
+        {showLegend &&
+          (markers.length > 0 || networkNodes.length > 0 || serviceAreas.length > 0) && (
+            <div className="absolute bottom-4 left-4 z-[1000] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-xs">
+              <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+                <LayersIcon className="h-4 w-4" />
+                Legend
+              </h4>
+              <div className="space-y-2 text-xs">
+                {markers.length > 0 && (
+                  <div>
+                    <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Markers</p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set(markers.map((m) => m.type))).map((type) => (
+                        <div key={type} className="flex items-center gap-1">
+                          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                          <span className="text-gray-600 dark:text-gray-400 capitalize">
+                            {type}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              )}
-              {serviceAreas.length > 0 && (
-                <div>
-                  <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Service Areas</p>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from(new Set(serviceAreas.map((a) => a.type))).map((type) => (
-                      <div key={type} className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: type === 'fiber' ? '#3B82F6' : type === 'wireless' ? '#8B5CF6' : '#10B981' }}></div>
-                        <span className="text-gray-600 dark:text-gray-400 capitalize">{type}</span>
+                )}
+                {networkNodes.length > 0 && (
+                  <div>
+                    <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Network Nodes
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span className="text-gray-600 dark:text-gray-400">Online</span>
                       </div>
-                    ))}
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <span className="text-gray-600 dark:text-gray-400">Error</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                {serviceAreas.length > 0 && (
+                  <div>
+                    <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Service Areas
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set(serviceAreas.map((a) => a.type))).map((type) => (
+                        <div key={type} className="flex items-center gap-1">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              backgroundColor:
+                                type === "fiber"
+                                  ? "#3B82F6"
+                                  : type === "wireless"
+                                    ? "#8B5CF6"
+                                    : "#10B981",
+                            }}
+                          ></div>
+                          <span className="text-gray-600 dark:text-gray-400 capitalize">
+                            {type}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

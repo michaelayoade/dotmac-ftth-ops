@@ -2,27 +2,27 @@
  * Zod schemas for admin settings validation
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Settings categories as const array for type safety
  */
 export const SETTINGS_CATEGORIES = [
-  'database',
-  'jwt',
-  'redis',
-  'vault',
-  'storage',
-  'email',
-  'tenant',
-  'cors',
-  'rate_limit',
-  'observability',
-  'celery',
-  'features',
-  'billing',
-  'branding',
-  'urls',
+  "database",
+  "jwt",
+  "redis",
+  "vault",
+  "storage",
+  "email",
+  "tenant",
+  "cors",
+  "rate_limit",
+  "observability",
+  "celery",
+  "features",
+  "billing",
+  "branding",
+  "urls",
 ] as const;
 
 /**
@@ -109,10 +109,12 @@ export const AuditLogSchema = z.object({
   user_email: z.string(),
   category: SettingsCategorySchema,
   action: z.string(),
-  changes: z.record(z.object({
-    old: z.any(),
-    new: z.any(),
-  })),
+  changes: z.record(
+    z.object({
+      old: z.any(),
+      new: z.any(),
+    }),
+  ),
   reason: z.string().nullable().optional(),
   ip_address: z.string().nullable().optional(),
   user_agent: z.string().nullable().optional(),

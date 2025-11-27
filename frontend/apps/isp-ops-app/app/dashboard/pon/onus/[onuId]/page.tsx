@@ -44,7 +44,7 @@ function statusBadgeClasses(status?: string) {
 function ONUDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const onuId = params['onuId'] as string;
+  const onuId = params["onuId"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [pendingOperation, setPendingOperation] = useState<DeviceOperation | null>(null);
@@ -58,7 +58,7 @@ function ONUDetailsPageContent() {
     queryKey: ["access-onu", onuId],
     queryFn: async () => {
       const response = await apiClient.get<DeviceDetailResponse>(`/api/v1/access/devices/${onuId}`);
-      return response['data'];
+      return response["data"];
     },
     refetchInterval: 30000,
   });
@@ -70,13 +70,13 @@ function ONUDetailsPageContent() {
       }
       const device = deviceDetail.device;
       const oltId =
-        device['metadata']?.['olt_id'] ||
-        device['parent_id'] ||
-        (device['metadata']?.['root_device_id'] as string | undefined);
+        device["metadata"]?.["olt_id"] ||
+        device["parent_id"] ||
+        (device["metadata"]?.["root_device_id"] as string | undefined);
       const baseUrl = `/api/v1/access/devices/${encodeURIComponent(onuId)}/${operation}`;
       const url = oltId ? `${baseUrl}?olt_id=${encodeURIComponent(oltId)}` : baseUrl;
       const response = await apiClient.post(url);
-      return response['data'];
+      return response["data"];
     },
     onSuccess: (_, operation) => {
       if (operation === "delete") {
@@ -90,7 +90,8 @@ function ONUDetailsPageContent() {
     onError: (error: any, operation) => {
       toast({
         title: `Failed to ${operation} device`,
-        description: error?.['response']?.['data']?.detail || error?.['message'] || "Operation failed",
+        description:
+          error?.["response"]?.["data"]?.detail || error?.["message"] || "Operation failed",
         variant: "destructive",
       });
     },
@@ -113,8 +114,8 @@ function ONUDetailsPageContent() {
 
   const device: Device = deviceDetail.device;
   const ports: Port[] = deviceDetail.ports ?? [];
-  const supportedOperations: string[] = Array.isArray(device['metadata']?.['supported_operations'])
-    ? device['metadata']?.['supported_operations']
+  const supportedOperations: string[] = Array.isArray(device["metadata"]?.["supported_operations"])
+    ? device["metadata"]?.["supported_operations"]
     : ["enable", "disable", "reboot", "delete"];
 
   const canPerform = (op: DeviceOperation) => supportedOperations.includes(op);
@@ -130,7 +131,9 @@ function ONUDetailsPageContent() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">ONU Details</h1>
-            <p className="text-sm text-muted-foreground">{device['serial_number'] || device['id']}</p>
+            <p className="text-sm text-muted-foreground">
+              {device["serial_number"] || device["id"]}
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -140,7 +143,9 @@ function ONUDetailsPageContent() {
           <Button
             variant="outline"
             onClick={() => handleOperation("enable")}
-            disabled={!canPerform("enable") || pendingOperation !== null || device.admin_state === "ENABLED"}
+            disabled={
+              !canPerform("enable") || pendingOperation !== null || device.admin_state === "ENABLED"
+            }
             title={
               canPerform("enable")
                 ? undefined
@@ -153,7 +158,11 @@ function ONUDetailsPageContent() {
           <Button
             variant="outline"
             onClick={() => handleOperation("disable")}
-            disabled={!canPerform("disable") || pendingOperation !== null || device.admin_state === "DISABLED"}
+            disabled={
+              !canPerform("disable") ||
+              pendingOperation !== null ||
+              device.admin_state === "DISABLED"
+            }
             title={
               canPerform("disable")
                 ? undefined
@@ -178,21 +187,21 @@ function ONUDetailsPageContent() {
           </Button>
           <Button
             variant="destructive"
-              onClick={async () => {
-                if (!canPerform("delete")) {
-                  return;
-                }
-                const confirmed = await confirmDialog({
-                  title: "Delete ONU",
-                  description: "Delete this ONU?",
-                  confirmText: "Delete",
-                  variant: "destructive",
-                });
-                if (!confirmed) {
-                  return;
-                }
-                handleOperation("delete");
-              }}
+            onClick={async () => {
+              if (!canPerform("delete")) {
+                return;
+              }
+              const confirmed = await confirmDialog({
+                title: "Delete ONU",
+                description: "Delete this ONU?",
+                confirmText: "Delete",
+                variant: "destructive",
+              });
+              if (!confirmed) {
+                return;
+              }
+              handleOperation("delete");
+            }}
             disabled={!canPerform("delete") || pendingOperation !== null}
             title={
               canPerform("delete")
@@ -212,13 +221,13 @@ function ONUDetailsPageContent() {
             <CardTitle className="text-sm">Operational Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge className={statusBadgeClasses(device['oper_status'])}>
-              {device['oper_status']?.toUpperCase() === "ACTIVE" ? (
+            <Badge className={statusBadgeClasses(device["oper_status"])}>
+              {device["oper_status"]?.toUpperCase() === "ACTIVE" ? (
                 <CheckCircle className="h-3 w-3 mr-1" />
               ) : (
                 <XCircle className="h-3 w-3 mr-1" />
               )}
-              {device['oper_status'] || "UNKNOWN"}
+              {device["oper_status"] || "UNKNOWN"}
             </Badge>
           </CardContent>
         </Card>
@@ -227,8 +236,8 @@ function ONUDetailsPageContent() {
             <CardTitle className="text-sm">Admin State</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge className={statusBadgeClasses(device['admin_state'])}>
-              {device['admin_state'] || "UNKNOWN"}
+            <Badge className={statusBadgeClasses(device["admin_state"])}>
+              {device["admin_state"] || "UNKNOWN"}
             </Badge>
           </CardContent>
         </Card>
@@ -237,8 +246,8 @@ function ONUDetailsPageContent() {
             <CardTitle className="text-sm">Connect Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge className={statusBadgeClasses(device['connect_status'])}>
-              {device['connect_status'] || "UNKNOWN"}
+            <Badge className={statusBadgeClasses(device["connect_status"])}>
+              {device["connect_status"] || "UNKNOWN"}
             </Badge>
           </CardContent>
         </Card>
@@ -251,44 +260,46 @@ function ONUDetailsPageContent() {
         <CardContent className="grid gap-3 md:grid-cols-2">
           <div>
             <p className="text-sm text-muted-foreground">Device ID</p>
-            <p className="font-mono text-sm break-all">{device['id']}</p>
+            <p className="font-mono text-sm break-all">{device["id"]}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Serial Number</p>
-            <p className="font-medium">{device['serial_number'] || "N/A"}</p>
+            <p className="font-medium">{device["serial_number"] || "N/A"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Vendor</p>
-            <p className="font-medium">{device['vendor'] || "Unknown"}</p>
+            <p className="font-medium">{device["vendor"] || "Unknown"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Model</p>
-            <p className="font-medium">{device['model'] || "Unknown"}</p>
+            <p className="font-medium">{device["model"] || "Unknown"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Firmware Version</p>
-            <p className="font-medium">{device['firmware_version'] || "Unknown"}</p>
+            <p className="font-medium">{device["firmware_version"] || "Unknown"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Hardware Version</p>
-            <p className="font-medium">{device['hardware_version'] || "Unknown"}</p>
+            <p className="font-medium">{device["hardware_version"] || "Unknown"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Parent OLT</p>
-            <p className="font-medium">{device['parent_id'] || device['metadata']?.['olt_id'] || "Unknown"}</p>
+            <p className="font-medium">
+              {device["parent_id"] || device["metadata"]?.["olt_id"] || "Unknown"}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Parent Port</p>
-            <p className="font-medium">{device['parent_port_no'] ?? "Unknown"}</p>
+            <p className="font-medium">{device["parent_port_no"] ?? "Unknown"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">VLAN</p>
-            <p className="font-medium">{device['vlan'] ?? "N/A"}</p>
+            <p className="font-medium">{device["vlan"] ?? "N/A"}</p>
           </div>
-          {device['reason'] && (
+          {device["reason"] && (
             <div className="md:col-span-2">
               <p className="text-sm text-muted-foreground">Reason</p>
-              <p className="font-medium">{device['reason']}</p>
+              <p className="font-medium">{device["reason"]}</p>
             </div>
           )}
         </CardContent>
@@ -301,11 +312,11 @@ function ONUDetailsPageContent() {
         <CardContent className="grid gap-3 md:grid-cols-2">
           <div>
             <p className="text-sm text-muted-foreground">Adapter</p>
-            <p className="font-medium">{device['adapter'] || "Unknown"}</p>
+            <p className="font-medium">{device["adapter"] || "Unknown"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Driver</p>
-            <p className="font-medium">{device['metadata']?.['driver_id'] || "Unknown"}</p>
+            <p className="font-medium">{device["metadata"]?.["driver_id"] || "Unknown"}</p>
           </div>
           <div className="md:col-span-2">
             <p className="text-sm text-muted-foreground">Supported Operations</p>
@@ -328,24 +339,27 @@ function ONUDetailsPageContent() {
             </div>
           ) : (
             ports.map((port) => (
-              <div key={`${port['device_id']}-${port['port_no']}`} className="border rounded-lg p-4 space-y-2">
+              <div
+                key={`${port["device_id"]}-${port["port_no"]}`}
+                className="border rounded-lg p-4 space-y-2"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Wifi className="h-4 w-4 text-primary" />
-                    <span className="font-medium">Port {port['port_no']}</span>
+                    <span className="font-medium">Port {port["port_no"]}</span>
                   </div>
-                  <Badge className={statusBadgeClasses(port['oper_status'])}>
-                    {port['oper_status'] || "UNKNOWN"}
+                  <Badge className={statusBadgeClasses(port["oper_status"])}>
+                    {port["oper_status"] || "UNKNOWN"}
                   </Badge>
                 </div>
                 <div className="grid gap-2 md:grid-cols-2 text-sm">
                   <div>
                     <p className="text-muted-foreground">Admin State</p>
-                    <p className="font-medium">{port['admin_state'] || "Unknown"}</p>
+                    <p className="font-medium">{port["admin_state"] || "Unknown"}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Label</p>
-                    <p className="font-medium">{port['label'] || "N/A"}</p>
+                    <p className="font-medium">{port["label"] || "N/A"}</p>
                   </div>
                 </div>
               </div>

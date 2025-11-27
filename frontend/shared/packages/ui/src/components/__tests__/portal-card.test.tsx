@@ -198,7 +198,7 @@ describe("PortalCard", () => {
       const { container } = render(
         <PortalCard interactive onClick={onClick}>
           Card Content
-        </PortalCard>
+        </PortalCard>,
       );
 
       const card = container.firstChild as HTMLElement;
@@ -215,9 +215,7 @@ describe("PortalCard", () => {
     });
 
     it("supports aria attributes", () => {
-      render(
-        <PortalCard aria-label="Product card">Card Content</PortalCard>
-      );
+      render(<PortalCard aria-label="Product card">Card Content</PortalCard>);
 
       const card = screen.getByLabelText("Product card");
       expect(card).toBeInTheDocument();
@@ -253,7 +251,7 @@ describe("PortalCard", () => {
       const { container } = render(
         <PortalCard variant="elevated" hoverable>
           Card Content
-        </PortalCard>
+        </PortalCard>,
       );
 
       const card = container.firstChild;
@@ -264,7 +262,7 @@ describe("PortalCard", () => {
       const { container } = render(
         <PortalCard variant="outlined" interactive>
           Card Content
-        </PortalCard>
+        </PortalCard>,
       );
 
       const card = container.firstChild;
@@ -275,7 +273,7 @@ describe("PortalCard", () => {
       const { container } = render(
         <PortalCard variant="flat" hoverable interactive>
           Card Content
-        </PortalCard>
+        </PortalCard>,
       );
 
       const card = container.firstChild;
@@ -368,7 +366,7 @@ describe("PortalCardHeader", () => {
   describe("Custom ClassName", () => {
     it("supports custom className", () => {
       const { container } = render(
-        <PortalCardHeader className="custom-header">Header Content</PortalCardHeader>
+        <PortalCardHeader className="custom-header">Header Content</PortalCardHeader>,
       );
 
       const header = container.firstChild;
@@ -435,7 +433,7 @@ describe("PortalCardTitle", () => {
   describe("Custom ClassName", () => {
     it("supports custom className", () => {
       const { container } = render(
-        <PortalCardTitle className="custom-title">Card Title</PortalCardTitle>
+        <PortalCardTitle className="custom-title">Card Title</PortalCardTitle>,
       );
 
       const title = container.querySelector("h3");
@@ -474,7 +472,7 @@ describe("PortalCardDescription", () => {
 
     it("renders as p element", () => {
       const { container } = render(
-        <PortalCardDescription>Card description text</PortalCardDescription>
+        <PortalCardDescription>Card description text</PortalCardDescription>,
       );
 
       const description = container.querySelector("p");
@@ -483,7 +481,7 @@ describe("PortalCardDescription", () => {
 
     it("applies base styles", () => {
       const { container } = render(
-        <PortalCardDescription>Card description text</PortalCardDescription>
+        <PortalCardDescription>Card description text</PortalCardDescription>,
       );
 
       const description = container.querySelector("p");
@@ -496,7 +494,7 @@ describe("PortalCardDescription", () => {
 
     it("applies portal fontSize from theme", () => {
       const { container } = render(
-        <PortalCardDescription>Card description text</PortalCardDescription>
+        <PortalCardDescription>Card description text</PortalCardDescription>,
       );
 
       const description = container.querySelector("p") as HTMLElement;
@@ -510,7 +508,7 @@ describe("PortalCardDescription", () => {
       const { container } = render(
         <PortalCardDescription className="custom-description">
           Card description text
-        </PortalCardDescription>
+        </PortalCardDescription>,
       );
 
       const description = container.querySelector("p");
@@ -566,7 +564,7 @@ describe("PortalCardContent", () => {
   describe("Custom ClassName", () => {
     it("supports custom className", () => {
       const { container } = render(
-        <PortalCardContent className="custom-content">Card content</PortalCardContent>
+        <PortalCardContent className="custom-content">Card content</PortalCardContent>,
       );
 
       const content = container.firstChild;
@@ -629,7 +627,7 @@ describe("PortalCardFooter", () => {
   describe("Custom ClassName", () => {
     it("supports custom className", () => {
       const { container } = render(
-        <PortalCardFooter className="custom-footer">Footer content</PortalCardFooter>
+        <PortalCardFooter className="custom-footer">Footer content</PortalCardFooter>,
       );
 
       const footer = container.firstChild;
@@ -677,7 +675,7 @@ describe("PortalCard Compound Component", () => {
           </PortalCardHeader>
           <PortalCardContent>Main content area</PortalCardContent>
           <PortalCardFooter>Footer actions</PortalCardFooter>
-        </PortalCard>
+        </PortalCard>,
       );
 
       expect(screen.getByText("Product Title")).toBeInTheDocument();
@@ -695,7 +693,7 @@ describe("PortalCard Compound Component", () => {
             <PortalCardTitle>Clickable Card</PortalCardTitle>
           </PortalCardHeader>
           <PortalCardContent>Click anywhere on the card</PortalCardContent>
-        </PortalCard>
+        </PortalCard>,
       );
 
       const card = container.firstChild;
@@ -708,7 +706,7 @@ describe("PortalCard Compound Component", () => {
           <PortalCardHeader>
             <PortalCardTitle>Elevated Card</PortalCardTitle>
           </PortalCardHeader>
-        </PortalCard>
+        </PortalCard>,
       );
 
       const card = container.firstChild;
@@ -721,7 +719,7 @@ describe("PortalCard Compound Component", () => {
           <PortalCardHeader>
             <PortalCardTitle>Title Only</PortalCardTitle>
           </PortalCardHeader>
-        </PortalCard>
+        </PortalCard>,
       );
 
       expect(screen.getByText("Title Only")).toBeInTheDocument();

@@ -34,10 +34,10 @@ import {
   type UseMutationOptions,
   type QueryClient,
   type QueryKey,
-} from '@tanstack/react-query';
+} from "@tanstack/react-query";
 
-import { handleGraphQLError } from './error-handler';
-import type { GraphQLToastFn } from './error-handler';
+import { handleGraphQLError } from "./error-handler";
+import type { GraphQLToastFn } from "./error-handler";
 
 /**
  * Options for useMutationWithToast
@@ -56,13 +56,22 @@ export interface MutationWithToastOptions<TData, TError, TVariables, TContext> {
   showErrorToast?: boolean;
 
   /** Optional callback on success */
-  onSuccess?: (data: TData, variables: TVariables, context: TContext | undefined) => void | Promise<void>;
+  onSuccess?: (
+    data: TData,
+    variables: TVariables,
+    context: TContext | undefined,
+  ) => void | Promise<void>;
 
   /** Optional callback on error */
   onError?: (error: TError, variables: TVariables, context: TContext | undefined) => void;
 
   /** Optional callback on settled (success or error) */
-  onSettled?: (data: TData | undefined, error: TError | null, variables: TVariables, context: TContext | undefined) => void;
+  onSettled?: (
+    data: TData | undefined,
+    error: TError | null,
+    variables: TVariables,
+    context: TContext | undefined,
+  ) => void;
 
   /** Toast function from useToast() */
   toast: GraphQLToastFn;
@@ -131,10 +140,10 @@ export function useMutationWithToast<
   TData = unknown,
   TError = Error,
   TVariables = void,
-  TContext = unknown
+  TContext = unknown,
 >(
   mutationOptions: UseMutationOptions<TData, TError, TVariables, TContext>,
-  toastOptions: MutationWithToastOptions<TData, TError, TVariables, TContext>
+  toastOptions: MutationWithToastOptions<TData, TError, TVariables, TContext>,
 ): UseMutationResult<TData, TError, TVariables, TContext> {
   const {
     successMessage,
@@ -146,7 +155,7 @@ export function useMutationWithToast<
     onSettled: userOnSettled,
     toast,
     logger,
-    operationName = 'Mutation',
+    operationName = "Mutation",
   } = toastOptions;
 
   return useMutation<TData, TError, TVariables, TContext>({
@@ -154,14 +163,13 @@ export function useMutationWithToast<
     onSuccess: async (data, variables, context) => {
       // Show success toast
       if (showSuccessToast && successMessage) {
-        const message = typeof successMessage === 'function'
-          ? successMessage(data, variables)
-          : successMessage;
+        const message =
+          typeof successMessage === "function" ? successMessage(data, variables) : successMessage;
 
         toast({
-          title: 'Success',
+          title: "Success",
           description: message,
-          variant: 'default',
+          variant: "default",
         });
       }
 
@@ -183,19 +191,20 @@ export function useMutationWithToast<
     onError: (error, variables, context) => {
       // Handle error with our standard error handler
       if (showErrorToast) {
-        const customMessage = typeof errorMessage === 'function'
-          ? errorMessage(error, variables)
-          : errorMessage;
+        const customMessage =
+          typeof errorMessage === "function" ? errorMessage(error, variables) : errorMessage;
 
         handleGraphQLError(error, {
           toast,
-          ...(logger ? {
-            logger: {
-              error: (message: string, err?: unknown, ctx?: Record<string, unknown>) => {
-                logger.error(message, err as Error);
+          ...(logger
+            ? {
+                logger: {
+                  error: (message: string, err?: unknown, ctx?: Record<string, unknown>) => {
+                    logger.error(message, err as Error);
+                  },
+                },
               }
-            }
-          } : {}),
+            : {}),
           operationName,
           ...(customMessage ? { customMessage } : {}),
           context: { variables },
@@ -250,7 +259,7 @@ export function useMutationWithToast<
 export function createOptimisticUpdate<TData, TVariables>(
   queryClient: QueryClient,
   queryKey: QueryKey,
-  updater: (oldData: TData, variables: TVariables) => TData
+  updater: (oldData: TData, variables: TVariables) => TData,
 ) {
   return {
     onMutate: async (variables: TVariables) => {
@@ -356,47 +365,44 @@ export function useFormMutation<TData, TError, TVariables, TContext = unknown>(
   mutationOptions: UseMutationOptions<TData, TError, TVariables, TContext>,
   toastOptions: MutationWithToastOptions<TData, TError, TVariables, TContext> & {
     resetOnSuccess?: boolean;
-  }
+  },
 ) {
   const { resetOnSuccess = false, ...restToastOptions } = toastOptions;
 
-  return useMutationWithToast<TData, TError, TVariables, TContext>(
-    mutationOptions,
-    {
-      ...restToastOptions,
-      onSuccess: async (data, variables, context) => {
-        // Reset form on success if configured
-        if (resetOnSuccess && form.reset) {
-          form.reset();
-        }
+  return useMutationWithToast<TData, TError, TVariables, TContext>(mutationOptions, {
+    ...restToastOptions,
+    onSuccess: async (data, variables, context) => {
+      // Reset form on success if configured
+      if (resetOnSuccess && form.reset) {
+        form.reset();
+      }
 
-        // Call user's onSuccess
-        if (restToastOptions.onSuccess) {
-          await restToastOptions.onSuccess(data, variables, context);
+      // Call user's onSuccess
+      if (restToastOptions.onSuccess) {
+        await restToastOptions.onSuccess(data, variables, context);
+      }
+    },
+    onError: (error, variables, context) => {
+      // Try to extract field errors from GraphQL error
+      // This is a common pattern for validation errors
+      if (form.setError && error && typeof error === "object" && "graphQLErrors" in error) {
+        const graphQLErrors = (error as any).graphQLErrors;
+        if (Array.isArray(graphQLErrors)) {
+          graphQLErrors.forEach((gqlError: any) => {
+            if (gqlError.extensions?.field && form.setError) {
+              form.setError(gqlError.extensions.field, {
+                type: "server",
+                message: gqlError.message,
+              });
+            }
+          });
         }
-      },
-      onError: (error, variables, context) => {
-        // Try to extract field errors from GraphQL error
-        // This is a common pattern for validation errors
-        if (form.setError && error && typeof error === 'object' && 'graphQLErrors' in error) {
-          const graphQLErrors = (error as any).graphQLErrors;
-          if (Array.isArray(graphQLErrors)) {
-            graphQLErrors.forEach((gqlError: any) => {
-              if (gqlError.extensions?.field && form.setError) {
-                form.setError(gqlError.extensions.field, {
-                  type: 'server',
-                  message: gqlError.message,
-                });
-              }
-            });
-          }
-        }
+      }
 
-        // Call user's onError
-        if (restToastOptions.onError) {
-          restToastOptions.onError(error, variables, context);
-        }
-      },
-    }
-  );
+      // Call user's onError
+      if (restToastOptions.onError) {
+        restToastOptions.onError(error, variables, context);
+      }
+    },
+  });
 }

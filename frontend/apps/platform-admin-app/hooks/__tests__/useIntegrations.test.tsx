@@ -49,7 +49,9 @@ jest.mock("@dotmac/ui", () => ({
 const mockedApi = apiClient as jest.Mocked<typeof apiClient>;
 
 // Mock data helpers
-const createMockIntegration = (overrides: Partial<IntegrationResponse> = {}): IntegrationResponse => ({
+const createMockIntegration = (
+  overrides: Partial<IntegrationResponse> = {},
+): IntegrationResponse => ({
   name: "test-integration",
   type: "email",
   provider: "sendgrid",
@@ -151,7 +153,7 @@ describe("Platform Admin useIntegrations hooks", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       const readyIntegrations = result.current.data?.integrations.filter(
-        (i) => i.status === "ready"
+        (i) => i.status === "ready",
       );
       expect(readyIntegrations).toHaveLength(2);
     });
@@ -593,7 +595,7 @@ describe("Platform Admin useIntegrations hooks", () => {
           acc[i.status] = (acc[i.status] || 0) + 1;
           return acc;
         },
-        {} as Record<string, number>
+        {} as Record<string, number>,
       );
 
       expect(statusCounts?.ready).toBe(1);
@@ -624,7 +626,9 @@ describe("Platform Admin useIntegrations hooks", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       const withMeta = result.current.data?.integrations.find((i) => i.name === "with-metadata");
-      const withoutMeta = result.current.data?.integrations.find((i) => i.name === "without-metadata");
+      const withoutMeta = result.current.data?.integrations.find(
+        (i) => i.name === "without-metadata",
+      );
 
       expect(withMeta?.metadata).toBeDefined();
       expect(withMeta?.metadata?.version).toBe("1.0.0");
@@ -656,7 +660,9 @@ describe("Platform Admin useIntegrations hooks", () => {
       });
 
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["integrations"] });
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["integrations", "test-integration"] });
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ["integrations", "test-integration"],
+      });
     });
   });
 });

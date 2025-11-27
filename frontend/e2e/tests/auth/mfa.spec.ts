@@ -5,7 +5,6 @@
  */
 import { test, expect } from "#e2e/fixtures";
 
-
 test.describe("Multi-Factor Authentication", () => {
   const BASE_APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
   const TEST_USERNAME = process.env.E2E_USER_USERNAME || "admin";

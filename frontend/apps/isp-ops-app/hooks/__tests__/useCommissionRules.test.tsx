@@ -138,7 +138,7 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
 
     it("should handle pagination parameters", async () => {
       const mockRules = Array.from({ length: 10 }, (_, i) =>
-        createMockCommissionRule({ id: `rule-${i + 11}` })
+        createMockCommissionRule({ id: `rule-${i + 11}` }),
       );
 
       mockFetch.mockResolvedValueOnce({
@@ -151,10 +151,9 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
         }),
       } as unknown as Response);
 
-      const { result } = renderHook(
-        () => useCommissionRules({ page: 2, page_size: 10 }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCommissionRules({ page: 2, page_size: 10 }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -164,9 +163,7 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
     });
 
     it("should filter by partner_id", async () => {
-      const mockRules = [
-        createMockCommissionRule({ id: "rule-1", partner_id: "partner-123" }),
-      ];
+      const mockRules = [createMockCommissionRule({ id: "rule-1", partner_id: "partner-123" })];
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -178,10 +175,9 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
         }),
       } as unknown as Response);
 
-      const { result } = renderHook(
-        () => useCommissionRules({ partner_id: "partner-123" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCommissionRules({ partner_id: "partner-123" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -190,9 +186,7 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
     });
 
     it("should filter by is_active", async () => {
-      const mockRules = [
-        createMockCommissionRule({ id: "rule-1", is_active: true }),
-      ];
+      const mockRules = [createMockCommissionRule({ id: "rule-1", is_active: true })];
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -204,10 +198,9 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
         }),
       } as unknown as Response);
 
-      const { result } = renderHook(
-        () => useCommissionRules({ is_active: true }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCommissionRules({ is_active: true }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -321,10 +314,9 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
         json: async () => mockRules,
       } as unknown as Response);
 
-      const { result } = renderHook(
-        () => useApplicableRules({ partner_id: "partner-123" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useApplicableRules({ partner_id: "partner-123" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -333,10 +325,9 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
     });
 
     it("should not fetch when partner_id is empty", async () => {
-      const { result } = renderHook(
-        () => useApplicableRules({ partner_id: "" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useApplicableRules({ partner_id: "" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -559,7 +550,7 @@ describe("useCommissionRules hooks (Jest Mocks)", () => {
       expect(deleteCompleted).toBe(true);
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/partners/commission-rules/rule-1"),
-        expect.objectContaining({ method: "DELETE" })
+        expect.objectContaining({ method: "DELETE" }),
       );
     });
 

@@ -1,8 +1,7 @@
 /**
  * Simplified MFA components
- * The original implementation depended on deprecated auth stores and helpers.
- * These lightweight placeholders provide a predictable API surface so consumers
- * can continue rendering MFA flows while the new Better Auth integration lands.
+ * Provides lightweight MFA UI components for enrollment and verification flows.
+ * Integrates with the FastAPI backend 2FA endpoints.
  */
 
 import { Shield, Smartphone, Mail, Key } from "lucide-react";
@@ -27,8 +26,7 @@ export function MFASetup({ onComplete, onCancel }: MFASetupProps) {
         <Shield className="mx-auto mb-4 h-12 w-12 text-blue-600" />
         <h3 className="mb-2 font-semibold text-gray-900 text-lg">Multi-Factor Authentication</h3>
         <p className="text-gray-600">
-          Full MFA enrollment now lives in Better Auth. Select the method your application should
-          guide the user through and acknowledge once you have completed the external flow.
+          Select the MFA method you want to use and complete the enrollment flow.
         </p>
       </div>
 
@@ -47,8 +45,8 @@ export function MFASetup({ onComplete, onCancel }: MFASetupProps) {
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-        Use the Better Auth dashboard or API to enroll the user with the selected method. When the
-        enrollment succeeds, ask the user to confirm below.
+        Complete the enrollment process with your selected method. When the
+        enrollment succeeds, confirm below.
       </div>
 
       <label className="flex items-center space-x-2 text-sm text-gray-700">
@@ -88,11 +86,7 @@ export interface MFAVerificationProps {
   onCancel: () => void;
 }
 
-export function MFAVerification({
-  method = "totp",
-  onSuccess,
-  onCancel,
-}: MFAVerificationProps) {
+export function MFAVerification({ method = "totp", onSuccess, onCancel }: MFAVerificationProps) {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 

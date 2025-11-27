@@ -16,7 +16,7 @@ describe("Popover", () => {
       <Popover>
         <PopoverTrigger>Open Popover</PopoverTrigger>
         <PopoverContent>Popover content</PopoverContent>
-      </Popover>
+      </Popover>,
     );
   };
 
@@ -106,7 +106,7 @@ describe("Popover", () => {
         <Popover>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent data-testid="content">Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -121,7 +121,7 @@ describe("Popover", () => {
           "bg-popover",
           "p-4",
           "text-popover-foreground",
-          "shadow-md"
+          "shadow-md",
         );
       });
     });
@@ -133,7 +133,7 @@ describe("Popover", () => {
         <Popover>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent className="custom-content">Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -153,7 +153,7 @@ describe("Popover", () => {
           <PopoverContent align="start" data-testid="content">
             Content
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -172,7 +172,7 @@ describe("Popover", () => {
           <PopoverContent sideOffset={10} data-testid="content">
             Content
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -192,7 +192,7 @@ describe("Popover", () => {
         <Popover open={false} onOpenChange={onOpenChange}>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent>Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       expect(screen.queryByText("Content")).not.toBeInTheDocument();
@@ -204,7 +204,7 @@ describe("Popover", () => {
         <Popover open={true} onOpenChange={onOpenChange}>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent>Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await waitFor(() => {
@@ -219,7 +219,7 @@ describe("Popover", () => {
         <Popover defaultOpen>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent>Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await waitFor(() => {
@@ -239,7 +239,7 @@ describe("Popover", () => {
           </PopoverAnchor>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent>Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       expect(screen.getByTestId("anchor")).toBeInTheDocument();
@@ -277,7 +277,7 @@ describe("Popover", () => {
             <input placeholder="Input 1" />
             <input placeholder="Input 2" />
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -320,7 +320,7 @@ describe("Popover", () => {
         <Popover>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent ref={ref}>Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -351,7 +351,7 @@ describe("Popover", () => {
               <button>Logout</button>
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Profile"));
@@ -376,7 +376,7 @@ describe("Popover", () => {
               <button>Clear</button>
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Select Date"));
@@ -401,7 +401,7 @@ describe("Popover", () => {
               <input type="color" />
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       const trigger = screen.getByRole("button");
@@ -424,14 +424,16 @@ describe("Popover", () => {
               <p>This is a helpful description of the feature.</p>
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("?"));
 
       await waitFor(() => {
         expect(screen.getByText("Help")).toBeInTheDocument();
-        expect(screen.getByText("This is a helpful description of the feature.")).toBeInTheDocument();
+        expect(
+          screen.getByText("This is a helpful description of the feature."),
+        ).toBeInTheDocument();
       });
     });
 
@@ -451,7 +453,7 @@ describe("Popover", () => {
               </label>
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Settings"));
@@ -485,7 +487,7 @@ describe("Popover", () => {
         <Popover>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent>{null}</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));
@@ -503,7 +505,7 @@ describe("Popover", () => {
         <Popover>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverContent data-testid="content">Content</PopoverContent>
-        </Popover>
+        </Popover>,
       );
 
       await user.click(screen.getByText("Open"));

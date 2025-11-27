@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Edit,
-  Filter,
-  Plus,
-  Search,
-  Shield,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { Edit, Filter, Plus, Search, Shield, Trash2, Users } from "lucide-react";
 import { toast, useConfirmDialog } from "@dotmac/ui";
 
 import AssignRoleModal from "@/components/admin/AssignRoleModal";
@@ -17,10 +9,7 @@ import CreateRoleModal from "@/components/admin/CreateRoleModal";
 import RoleDetailsModal from "@/components/admin/RoleDetailsModal";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { PermissionCategory, useRBAC } from "@/contexts/RBACContext";
-import type {
-  Permission as BasePermission,
-  Role as BaseRole,
-} from "@/contexts/RBACContext";
+import type { Permission as BasePermission, Role as BaseRole } from "@/contexts/RBACContext";
 import { apiClient } from "@/lib/api/client";
 
 type AdminPermission = BasePermission & {
@@ -141,7 +130,7 @@ export default function RolesManagementPage() {
     const matchesSearch =
       role.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role['description']?.toLowerCase().includes(searchQuery.toLowerCase());
+      role["description"]?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (filterCategory === "all") return matchesSearch;
     if (filterCategory === "system") return matchesSearch && role.is_system;

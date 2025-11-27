@@ -93,7 +93,9 @@ describe("Platform Admin useOSSConfig hooks", () => {
       });
     });
 
-    expect(mockedService.updateConfiguration).toHaveBeenCalledWith("genieacs", { url: "https://new" });
+    expect(mockedService.updateConfiguration).toHaveBeenCalledWith("genieacs", {
+      url: "https://new",
+    });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ossConfigKeys.detail("genieacs") });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ossConfigKeys.allConfigurations() });
 
@@ -162,7 +164,10 @@ describe("Platform Admin useOSSConfig hooks", () => {
     await waitFor(() => expect(result.current.config?.service).toBe("genieacs"));
     expect(result.current.hasOverrides).toBe(true);
     expect(result.current.overriddenFields).toEqual(["verify_ssl"]);
-    expect(result.current.validateUpdate({ url: "https://new" })).toEqual({ valid: true, errors: [] });
+    expect(result.current.validateUpdate({ url: "https://new" })).toEqual({
+      valid: true,
+      errors: [],
+    });
     expect(result.current.isConfigured).toBe(true);
   });
 

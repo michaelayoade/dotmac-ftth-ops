@@ -37,8 +37,8 @@ export const volthaKeys = {
   onu: (onuId: string) => [...volthaKeys.all, "onu", onuId] as const,
   alarms: (deviceId?: string) =>
     deviceId
-      ? [...volthaKeys.all, "alarms", "device", deviceId] as const
-      : [...volthaKeys.all, "alarms"] as const,
+      ? ([...volthaKeys.all, "alarms", "device", deviceId] as const)
+      : ([...volthaKeys.all, "alarms"] as const),
   portStatistics: (oltId: string, portNo: number) =>
     [...volthaKeys.all, "port-statistics", oltId, portNo] as const,
   discoveredONUs: () => [...volthaKeys.all, "discovered-onus"] as const,
@@ -141,10 +141,7 @@ export function useONU(onuId: string | null, options?: UseQueryOptions<Device | 
 /**
  * Fetch VOLTHA alarms (system-wide or device-specific)
  */
-export function useVOLTHAAlarms(
-  deviceId?: string,
-  options?: UseQueryOptions<VOLTHAAlarm[]>,
-) {
+export function useVOLTHAAlarms(deviceId?: string, options?: UseQueryOptions<VOLTHAAlarm[]>) {
   return useQuery({
     queryKey: volthaKeys.alarms(deviceId),
     queryFn: async () => {

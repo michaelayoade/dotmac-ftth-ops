@@ -70,7 +70,7 @@ const pages = [
         });
     });
 
-    // Also intercept get-session which might be used by better-auth
+    // Also intercept get-session
     await context.route('**/api/auth/get-session', async route => {
         console.log('  ⚡ Intercepting get-session request');
         await route.fulfill({

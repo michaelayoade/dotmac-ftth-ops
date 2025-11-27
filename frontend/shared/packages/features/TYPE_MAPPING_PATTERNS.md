@@ -92,6 +92,7 @@ import { CustomerList } from "@dotmac/features/customers";
 ```
 
 **When it works:**
+
 - Simple data structures
 - No optional property differences
 - No enum vs string differences
@@ -143,17 +144,20 @@ export default function InvoiceListWrapper({
 ```
 
 **Why `as unknown as`:**
+
 - TypeScript won't allow direct casting between unrelated types
 - `as unknown as` is the safe escape hatch
 - Documents that we're intentionally converting types
 
 **When to use:**
+
 - Types have same shape but different names
 - Properties are compatible
 - No runtime transformation needed
 - Callbacks where types differ only nominally
 
 **When to avoid:**
+
 - Types have different optional properties
 - Types have different null/undefined handling
 - Properties have incompatible types
@@ -223,6 +227,7 @@ export function CustomerActivitiesWrapper({ customerId }: Props) {
 ```
 
 **Pattern benefits:**
+
 - Type-safe transformations
 - Testable in isolation
 - Reusable across components
@@ -258,9 +263,9 @@ export interface Router {
 export interface InvoiceListProps {
   tenantId: string;
   onInvoiceSelect: ((invoice: Invoice) => void) | undefined;
-  apiClient: BillingApiClient;  // App provides implementation
-  logger: Logger;               // App provides implementation
-  router: Router;               // App provides implementation
+  apiClient: BillingApiClient; // App provides implementation
+  logger: Logger; // App provides implementation
+  router: Router; // App provides implementation
   useConfirmDialog: () => BillingConfirmDialogFn;
 }
 ```
@@ -294,6 +299,7 @@ export const logger = {
 ```
 
 **Why this works:**
+
 - Shared component doesn't depend on specific implementations
 - Apps can use any HTTP client (axios, fetch, ky, etc.)
 - Easy to mock for testing
@@ -310,7 +316,7 @@ export const logger = {
 ```typescript
 // ❌ BAD: Name conflict
 import { ApiClient } from "@dotmac/features/billing";
-import { ApiClient } from "@/lib/api";  // ERROR: Duplicate identifier
+import { ApiClient } from "@/lib/api"; // ERROR: Duplicate identifier
 
 // ✅ GOOD: Rename on import
 import { ApiClient as BillingApiClient } from "@dotmac/features/billing";
@@ -330,6 +336,7 @@ export interface RbacApiClient {
 ```
 
 **Naming conventions:**
+
 - Prefix interface names with module/feature: `BillingApiClient`, `RbacApiClient`
 - Use descriptive names: `CustomerActivitiesHook` not just `Hook`
 - Avoid generic names like `Props`, `Data`, `Config`
@@ -341,10 +348,12 @@ export interface RbacApiClient {
 ### The Problem
 
 TypeScript's `exactOptionalPropertyTypes: true` enforces strict distinction between:
+
 - `property?: Type` - Can be omitted, CANNOT be `undefined`
 - `property: Type | undefined` - Can be omitted OR explicitly `undefined`
 
 This causes issues when:
+
 1. API returns `null` but we want `undefined`
 2. Using object spread with conditional properties
 3. Mixing optional syntax in interfaces
@@ -354,13 +363,13 @@ This causes issues when:
 ```typescript
 // ❌ WRONG (with exactOptionalPropertyTypes: true)
 interface Bad {
-  optional?: string;           // Cannot assign undefined
-  nullish: string | null;      // Incompatible with | undefined
+  optional?: string; // Cannot assign undefined
+  nullish: string | null; // Incompatible with | undefined
 }
 
 // ✅ CORRECT
 interface Good {
-  optional: string | undefined;      // Can be omitted or undefined
+  optional: string | undefined; // Can be omitted or undefined
   nullish: string | null | undefined; // Works with both
 }
 ```
@@ -375,9 +384,9 @@ export interface LeadCreateRequest {
   last_name: string;
   email: string;
   phone: string;
-  company_name: string | undefined;           // ✅ Explicit
+  company_name: string | undefined; // ✅ Explicit
   service_address_line1: string;
-  service_address_line2: string | undefined;  // ✅ Explicit
+  service_address_line2: string | undefined; // ✅ Explicit
   service_city: string;
   service_state_province: string;
   service_postal_code: string;
@@ -385,10 +394,10 @@ export interface LeadCreateRequest {
   source: LeadSource;
   priority: number;
   interested_service_types: string[];
-  desired_bandwidth: string | undefined;             // ✅ Explicit
-  estimated_monthly_budget: number | undefined;      // ✅ Explicit
-  desired_installation_date: string | undefined;     // ✅ Explicit
-  notes: string | undefined;                         // ✅ Explicit
+  desired_bandwidth: string | undefined; // ✅ Explicit
+  estimated_monthly_budget: number | undefined; // ✅ Explicit
+  desired_installation_date: string | undefined; // ✅ Explicit
+  notes: string | undefined; // ✅ Explicit
 }
 ```
 
@@ -396,15 +405,13 @@ export interface LeadCreateRequest {
 
 ```typescript
 // Pattern: Convert null to undefined
-error: hook.error ?? undefined
+error: hook.error ?? undefined;
 
 // Pattern: Use nullish coalescing
 const value = apiResponse.data ?? undefined;
 
 // Pattern: Ternary for complex logic
-const result = response.data
-  ? transformData(response.data)
-  : undefined;
+const result = response.data ? transformData(response.data) : undefined;
 ```
 
 ### Object Property Assignment
@@ -413,7 +420,7 @@ const result = response.data
 // ❌ WRONG: Conditional spread
 const props = {
   name: "John",
-  ...(email ? { email } : {}),  // Type error with exactOptionalPropertyTypes
+  ...(email ? { email } : {}), // Type error with exactOptionalPropertyTypes
 };
 
 // ✅ CORRECT: Explicit undefined
@@ -437,12 +444,12 @@ if (email) {
 ```typescript
 // ✅ Explicit undefined for optional arrays
 interface FormData {
-  tags: string[] | undefined;  // Not tags?: string[]
+  tags: string[] | undefined; // Not tags?: string[]
   attachments: File[] | undefined;
 }
 
 const formData: FormData = {
-  tags: undefined,        // Must be explicit
+  tags: undefined, // Must be explicit
   attachments: undefined,
 };
 ```
@@ -458,7 +465,7 @@ const bulkActions: BulkAction<Invoice>[] = [
     icon: MailIcon,
     action: handleBulkSend,
     disabled: (selected) => selected.every((inv) => inv.status === "void"),
-    variant: undefined,              // ✅ All optional props explicit
+    variant: undefined, // ✅ All optional props explicit
     confirmMessage: undefined,
     confirmTitle: undefined,
     confirmConfirmText: undefined,
@@ -468,8 +475,7 @@ const bulkActions: BulkAction<Invoice>[] = [
     label: "Void Invoices",
     icon: VoidIcon,
     action: handleBulkVoid,
-    disabled: (selected) =>
-      selected.every((inv) => inv.status === "void" || inv.status === "paid"),
+    disabled: (selected) => selected.every((inv) => inv.status === "void" || inv.status === "paid"),
     variant: undefined,
     confirmMessage: undefined,
     confirmTitle: undefined,
@@ -710,7 +716,7 @@ export function InvoiceListWrapper({
 // When types need transformation
 function adaptCallback<TShared, TApp>(
   callback: ((item: TApp) => void) | undefined,
-  transform: (shared: TShared) => TApp
+  transform: (shared: TShared) => TApp,
 ): ((item: TShared) => void) | undefined {
   return callback
     ? (item: TShared) => {
@@ -728,7 +734,7 @@ const handleSelect = adaptCallback(
     name: shared.displayName || `${shared.firstName} ${shared.lastName}`,
     email: shared.email,
     // ... other transformations
-  })
+  }),
 );
 ```
 
@@ -759,7 +765,7 @@ export interface ModalProps {
 
 ```typescript
 // Simple conversion
-error: apiResponse.error ?? undefined
+error: apiResponse.error ?? undefined;
 
 // Function helper
 function nullToUndefined<T>(value: T | null): T | undefined {
@@ -798,7 +804,7 @@ const formData = {
 // Transform array items
 function mapArrayTypes<TSource, TTarget>(
   source: TSource[],
-  mapper: (item: TSource) => TTarget
+  mapper: (item: TSource) => TTarget,
 ): TTarget[] {
   return source.map(mapper);
 }
@@ -811,7 +817,7 @@ const appInvoices = mapArrayTypes(
     number: invoice.invoice_number,
     amount: invoice.total_amount,
     // ... other mappings
-  })
+  }),
 );
 ```
 
@@ -821,7 +827,7 @@ const appInvoices = mapArrayTypes(
 // Transform object shape
 function mapObjectType<TSource, TTarget>(
   source: TSource,
-  mapper: (value: TSource) => TTarget
+  mapper: (value: TSource) => TTarget,
 ): TTarget {
   return mapper(source);
 }
@@ -892,8 +898,7 @@ function mapStatusToShared(app: AppStatus): SharedStatus {
 ```typescript
 // Assert types are equal
 type AssertEqual<T, U> =
-  (<G>() => G extends T ? 1 : 2) extends
-  (<G>() => G extends U ? 1 : 2) ? true : false;
+  (<G>() => G extends T ? 1 : 2) extends <G>() => G extends U ? 1 : 2 ? true : false;
 
 // Usage
 type Test1 = AssertEqual<SharedInvoice, AppInvoice>; // true or false
@@ -1071,17 +1076,17 @@ function goodMapping(input: InputType): OutputType {
 ```typescript
 // ❌ BAD: Inconsistent optional handling
 interface BadInterface {
-  optional?: string;                    // Cannot be undefined
-  explicit: string | undefined;         // Can be undefined
-  nullable: string | null;              // Can be null
-  mixed: string | null | undefined;     // Confusing
+  optional?: string; // Cannot be undefined
+  explicit: string | undefined; // Can be undefined
+  nullable: string | null; // Can be null
+  mixed: string | null | undefined; // Confusing
 }
 
 // ✅ GOOD: Consistent pattern
 interface GoodInterface {
   optional: string | undefined;
   another: string | undefined;
-  nullable: string | null | undefined;  // If null is needed from API
+  nullable: string | null | undefined; // If null is needed from API
 }
 ```
 
@@ -1125,12 +1130,14 @@ export function CustomerActivitiesWrapper({ customerId }: Props) {
 ```
 
 **Before:**
+
 ```typescript
 // ❌ Type error
 error: apiResponse.error,  // Type 'string | null' not assignable to 'string | undefined'
 ```
 
 **After:**
+
 ```typescript
 // ✅ Works
 error: apiResponse.error ?? undefined,
@@ -1181,6 +1188,7 @@ export default function InvoiceListWrapper({
 ```
 
 **Why it works:**
+
 - `SharedInvoice` and `Invoice` are structurally compatible
 - Only names differ
 - No runtime transformation needed
@@ -1227,7 +1235,7 @@ const [formData, setFormData] = useState<LeadCreateRequest>({
   last_name: "",
   email: "",
   phone: "",
-  company_name: "",  // ✅ Empty string, not undefined
+  company_name: "", // ✅ Empty string, not undefined
   service_address_line1: "",
   service_address_line2: "",
   service_city: "",
@@ -1238,7 +1246,7 @@ const [formData, setFormData] = useState<LeadCreateRequest>({
   priority: 2,
   interested_service_types: [],
   desired_bandwidth: "",
-  estimated_monthly_budget: undefined,  // ✅ Explicit undefined for number
+  estimated_monthly_budget: undefined, // ✅ Explicit undefined for number
   desired_installation_date: "",
   notes: "",
 });
@@ -1255,18 +1263,20 @@ const payload: LeadCreateRequest = {
 ```
 
 **Before:**
+
 ```typescript
 // ❌ Type error with exactOptionalPropertyTypes
 interface Bad {
-  company_name?: string;  // Cannot assign undefined
+  company_name?: string; // Cannot assign undefined
 }
 
 const data = {
-  company_name: getValue() || undefined,  // ERROR
+  company_name: getValue() || undefined, // ERROR
 };
 ```
 
 **After:**
+
 ```typescript
 // ✅ Works
 interface Good {
@@ -1274,7 +1284,7 @@ interface Good {
 }
 
 const data = {
-  company_name: getValue() || undefined,  // OK
+  company_name: getValue() || undefined, // OK
 };
 ```
 
@@ -1306,8 +1316,7 @@ const bulkActions: BulkAction<Invoice>[] = [
     label: "Void Invoices",
     icon: VoidIcon,
     action: handleBulkVoid,
-    disabled: (selected) =>
-      selected.every((inv) => inv.status === "void" || inv.status === "paid"),
+    disabled: (selected) => selected.every((inv) => inv.status === "void" || inv.status === "paid"),
     variant: undefined,
     confirmMessage: undefined,
     confirmTitle: undefined,
@@ -1329,6 +1338,7 @@ const bulkActions: BulkAction<Invoice>[] = [
 ```
 
 **Why explicit undefined:**
+
 - BulkAction interface uses `property: Type | undefined`
 - With `exactOptionalPropertyTypes: true`, must be explicit
 - Clearer intent than omitting
@@ -1395,13 +1405,13 @@ Use this checklist when working with types:
 interface Bad {
   optional?: string;
 }
-const obj: Bad = { optional: undefined };  // ERROR
+const obj: Bad = { optional: undefined }; // ERROR
 
 // ✅ After
 interface Good {
   optional: string | undefined;
 }
-const obj: Good = { optional: undefined };  // OK
+const obj: Good = { optional: undefined }; // OK
 ```
 
 ---
@@ -1422,7 +1432,7 @@ const obj: MyInterface = {
 // ✅ After
 const obj: MyInterface = {
   name: "John",
-  email: undefined,  // Explicitly provide
+  email: undefined, // Explicitly provide
 };
 ```
 
@@ -1437,7 +1447,7 @@ const obj: MyInterface = {
 ```typescript
 // ❌ Before
 import { ApiClient } from "@dotmac/features";
-import { ApiClient } from "@/lib/api";  // ERROR: Duplicate
+import { ApiClient } from "@/lib/api"; // ERROR: Duplicate
 
 // ✅ After
 import { ApiClient as SharedApiClient } from "@dotmac/features";
@@ -1488,13 +1498,13 @@ const obj = {
 
 ### Conversion Quick Guide
 
-| From | To | Pattern |
-|------|-----|---------|
-| `null` | `undefined` | `value ?? undefined` |
-| `T \| null` | `T \| undefined` | `value ?? undefined` |
-| `property?:` | `property: T \| undefined` | Change interface definition |
-| Conditional spread | Explicit undefined | `prop: value \|\| undefined` |
-| `any` | Specific type | Create adapter or cast `as unknown as T` |
+| From               | To                         | Pattern                                  |
+| ------------------ | -------------------------- | ---------------------------------------- |
+| `null`             | `undefined`                | `value ?? undefined`                     |
+| `T \| null`        | `T \| undefined`           | `value ?? undefined`                     |
+| `property?:`       | `property: T \| undefined` | Change interface definition              |
+| Conditional spread | Explicit undefined         | `prop: value \|\| undefined`             |
+| `any`              | Specific type              | Create adapter or cast `as unknown as T` |
 
 ### Common Type Patterns
 
@@ -1587,8 +1597,8 @@ shared/packages/features/
 ---
 
 **Questions or issues with type mapping?**
+
 - Review real-world examples above
 - Check existing wrapper components in codebase
 - Search for patterns: `grep -r "as unknown as" apps/`
 - Consult team in #engineering channel
-

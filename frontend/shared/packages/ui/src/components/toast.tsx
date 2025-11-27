@@ -50,10 +50,12 @@ const withOptionalDuration = (type: ToastType, message: string, duration?: numbe
   });
 
 export const toast = {
-  success: (message: string, duration?: number) => withOptionalDuration("success", message, duration),
+  success: (message: string, duration?: number) =>
+    withOptionalDuration("success", message, duration),
   error: (message: string, duration?: number) => withOptionalDuration("error", message, duration),
   info: (message: string, duration?: number) => withOptionalDuration("info", message, duration),
-  warning: (message: string, duration?: number) => withOptionalDuration("warning", message, duration),
+  warning: (message: string, duration?: number) =>
+    withOptionalDuration("warning", message, duration),
 };
 
 const getToastIcon = (type: ToastType) => {

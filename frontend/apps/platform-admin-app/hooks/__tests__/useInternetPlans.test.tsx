@@ -7,11 +7,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import {
-  useInternetPlans,
-  useCreateInternetPlan,
-  internetPlanKeys,
-} from "../useInternetPlans";
+import { useInternetPlans, useCreateInternetPlan, internetPlanKeys } from "../useInternetPlans";
 import { apiClient } from "@/lib/api/client";
 
 jest.unmock("@tanstack/react-query");
@@ -50,15 +46,12 @@ describe("Platform Admin useInternetPlans hooks", () => {
     });
 
     const { wrapper } = createWrapper();
-    const { result } = renderHook(
-      () => useInternetPlans({ status: "active", limit: 5 }),
-      { wrapper },
-    );
+    const { result } = renderHook(() => useInternetPlans({ status: "active", limit: 5 }), {
+      wrapper,
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockedApi.get).toHaveBeenCalledWith(
-      "/services/internet-plans?status=active&limit=5",
-    );
+    expect(mockedApi.get).toHaveBeenCalledWith("/services/internet-plans?status=active&limit=5");
     expect(result.current.data?.[0].name).toBe("Gigabit");
   });
 

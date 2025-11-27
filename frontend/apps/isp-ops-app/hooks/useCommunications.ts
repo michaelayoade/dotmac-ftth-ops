@@ -293,7 +293,12 @@ export function useQuickRender(options?: {
  * GET /api/v1/communications/logs
  */
 export function useCommunicationLogs(params: ListCommunicationsParams = {}) {
-  return useQuery<{ logs: CommunicationLog[]; total: number }, Error, { logs: CommunicationLog[]; total: number }, any>({
+  return useQuery<
+    { logs: CommunicationLog[]; total: number },
+    Error,
+    { logs: CommunicationLog[]; total: number },
+    any
+  >({
     queryKey: communicationsKeys.logs.list(params),
     queryFn: () => communicationsService.listLogs(params),
     staleTime: 10000, // 10 seconds

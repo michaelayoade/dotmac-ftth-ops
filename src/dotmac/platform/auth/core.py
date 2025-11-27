@@ -1032,48 +1032,17 @@ async def get_current_user(
     api_key: str | None = Depends(api_key_header),
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> UserInfo:
-    """Get current authenticated user from Better Auth, Bearer token, OAuth2, API key, or HttpOnly cookie.
+    """Get current authenticated user from Bearer token, OAuth2, API key, or HttpOnly cookie.
 
     Authentication priority:
-    1. Better Auth session (cookie-based)
-    2. Bearer token (JWT)
-    3. OAuth2 token (JWT)
-    4. HttpOnly cookie (legacy JWT)
-    5. API key
+    1. Bearer token (JWT)
+    2. OAuth2 token (JWT)
+    3. HttpOnly cookie (JWT)
+    4. API key
 
     SECURITY: All JWT tokens are validated for ACCESS token type to prevent
     refresh token reuse attacks. API keys are handled separately.
     """
-
-    # Try Better Auth session first (cookie-based authentication)
-    # Better Auth uses cookies like 'better-auth.session_token' or 'session_token'
-    better_auth_session = request.cookies.get("better-auth.session_token") or request.cookies.get("session_token")
-    if better_auth_session:
-        active_tenant_id = request.headers.get("X-Active-Tenant-Id") or request.headers.get("X-Tenant-Id")
-        try:
-            from dotmac.platform.auth.better_auth_service import get_better_auth_user
-            from dotmac.platform.auth.rbac_service import RBACService
-            from dotmac.platform.database import get_async_session
-
-            # Get database session for Better Auth validation
-            db_gen = get_async_session()
-            db = await anext(db_gen)
-            try:
-                rbac_service = RBACService(db)
-                user_info = await get_better_auth_user(
-                    better_auth_session,
-                    db,
-                    tenant_id=active_tenant_id,
-                    rbac_service=rbac_service,
-                )
-                if user_info:
-                    logger.info("User authenticated via Better Auth", user_id=user_info.user_id)
-                    return user_info
-            finally:
-                await db.close()
-        except Exception as e:
-            logger.debug("Better Auth session validation failed", error=str(e))
-            # Continue to next auth method
 
     # Try Bearer token - must be ACCESS token
     if credentials and credentials.credentials:

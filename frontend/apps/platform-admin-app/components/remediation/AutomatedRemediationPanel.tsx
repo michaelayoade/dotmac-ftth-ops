@@ -15,7 +15,5 @@ interface AutomatedRemediationPanelProps {
 }
 
 export function AutomatedRemediationPanel(props: AutomatedRemediationPanelProps) {
-  return (
-    <SharedAutomatedRemediationPanel {...props} apiClient={apiClient} useToast={useToast} />
-  );
+  return <SharedAutomatedRemediationPanel {...props} apiClient={apiClient} useToast={useToast} />;
 }

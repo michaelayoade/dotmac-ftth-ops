@@ -387,7 +387,9 @@ export function runUseLogsSuite(useLogs: UseLogsHook, axiosOverride?: AxiosLike)
         const wrapper = createWrapper();
         const { result } = renderHook(() => useLogs(), { wrapper });
 
-        await waitFor(() => expect(result.current.error).toBe("Failed to fetch logs from database"));
+        await waitFor(() =>
+          expect(result.current.error).toBe("Failed to fetch logs from database"),
+        );
         expect(result.current.logs).toEqual([]);
       });
 

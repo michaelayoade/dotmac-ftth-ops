@@ -37,7 +37,9 @@ export interface CustomerActivitiesHook {
   activities: CustomerActivity[];
   loading: boolean;
   error: string | undefined;
-  addActivity: (activity: Omit<CustomerActivity, "id" | "customer_id" | "created_at">) => Promise<void>;
+  addActivity: (
+    activity: Omit<CustomerActivity, "id" | "customer_id" | "created_at">,
+  ) => Promise<void>;
 }
 
 export interface CustomerActivitiesProps {

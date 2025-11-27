@@ -4,7 +4,6 @@
  */
 import { test, expect } from "#e2e/fixtures";
 
-
 test.describe("Advanced Authentication Scenarios", () => {
   const ISP_APP_URL = "http://localhost:3001";
   const TEST_USERNAME = "admin";

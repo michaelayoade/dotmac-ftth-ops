@@ -4,13 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Wifi,
@@ -99,7 +93,9 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
   const operateMutation = useMutation({
     mutationFn: async ({ device, operation }: { device: Device; operation: DeviceOperation }) => {
       const oltId =
-        device.metadata?.['olt_id'] || device.parent_id || (device.metadata?.['root_device_id'] as string | undefined);
+        device.metadata?.["olt_id"] ||
+        device.parent_id ||
+        (device.metadata?.["root_device_id"] as string | undefined);
       const baseUrl = `/access/devices/${encodeURIComponent(device.id)}/${operation}`;
       const url = oltId ? `${baseUrl}?olt_id=${encodeURIComponent(oltId)}` : baseUrl;
       const response = await apiClient.post(url);
@@ -136,12 +132,18 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
       onu.id.toLowerCase().includes(needle) ||
       (onu.serial_number || "").toLowerCase().includes(needle) ||
       (onu.vendor || "").toLowerCase().includes(needle) ||
-      String(metadata['olt_id'] || "").toLowerCase().includes(needle) ||
-      String(metadata['pon_port'] || "").toLowerCase().includes(needle);
+      String(metadata["olt_id"] || "")
+        .toLowerCase()
+        .includes(needle) ||
+      String(metadata["pon_port"] || "")
+        .toLowerCase()
+        .includes(needle);
 
-    const matchesStatus = statusFilter === "all" || (onu.oper_status || "").toUpperCase() === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || (onu.oper_status || "").toUpperCase() === statusFilter;
 
-    const matchesAdminState = adminStateFilter === "all" || (onu.admin_state || "").toUpperCase() === adminStateFilter;
+    const matchesAdminState =
+      adminStateFilter === "all" || (onu.admin_state || "").toUpperCase() === adminStateFilter;
 
     return matchesSearch && matchesStatus && matchesAdminState;
   });
@@ -149,7 +151,11 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
   const getOperStatusBadge = (status?: string) => {
     const badges = {
       ACTIVE: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
-      DISCOVERED: { icon: AlertTriangle, color: "bg-amber-100 text-amber-800", label: "Discovered" },
+      DISCOVERED: {
+        icon: AlertTriangle,
+        color: "bg-amber-100 text-amber-800",
+        label: "Discovered",
+      },
       ACTIVATING: { icon: RefreshCw, color: "bg-blue-100 text-blue-800", label: "Activating" },
       UNKNOWN: { icon: XCircle, color: "bg-gray-100 text-gray-800", label: "Unknown" },
       FAILED: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Failed" },
@@ -300,7 +306,9 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
           <Card className="col-span-full">
-            <CardContent className="py-8 text-center text-muted-foreground">Loading ONUs...</CardContent>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Loading ONUs...
+            </CardContent>
           </Card>
         ) : filteredONUs.length === 0 ? (
           <Card className="col-span-full">
@@ -311,11 +319,12 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
         ) : (
           filteredONUs.map((onu) => {
             const metadata = onu.metadata || {};
-            const supportedOperations: string[] = Array.isArray(metadata['supported_operations'])
-              ? metadata['supported_operations']
+            const supportedOperations: string[] = Array.isArray(metadata["supported_operations"])
+              ? metadata["supported_operations"]
               : [];
 
-            const canPerform = (operation: DeviceOperation) => supportedOperations.includes(operation);
+            const canPerform = (operation: DeviceOperation) =>
+              supportedOperations.includes(operation);
             const isOperationPending = (operation: DeviceOperation) =>
               pendingOperation?.deviceId === onu.id && pendingOperation.operation === operation;
 
@@ -347,15 +356,21 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Firmware:</span>
-                      <span className="font-medium truncate ml-2">{onu.firmware_version || "N/A"}</span>
+                      <span className="font-medium truncate ml-2">
+                        {onu.firmware_version || "N/A"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">OLT:</span>
-                      <span className="font-medium">{metadata['olt_id'] || onu.parent_id || "N/A"}</span>
+                      <span className="font-medium">
+                        {metadata["olt_id"] || onu.parent_id || "N/A"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">PON Port:</span>
-                      <span className="font-medium">{metadata['pon_port'] ?? onu.parent_port_no ?? "N/A"}</span>
+                      <span className="font-medium">
+                        {metadata["pon_port"] ?? onu.parent_port_no ?? "N/A"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Supported Ops:</span>
@@ -370,7 +385,11 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
                       variant="outline"
                       size="sm"
                       onClick={() => triggerOperation(onu, "enable")}
-                      disabled={!canPerform("enable") || isOperationPending("enable") || onu.admin_state === "ENABLED"}
+                      disabled={
+                        !canPerform("enable") ||
+                        isOperationPending("enable") ||
+                        onu.admin_state === "ENABLED"
+                      }
                       className="flex-1"
                       title={canPerform("enable") ? undefined : "Enable operation not supported"}
                     >
@@ -382,7 +401,9 @@ export function ONUListView({ apiClient, useToast, useConfirmDialog, Link }: ONU
                       size="sm"
                       onClick={() => triggerOperation(onu, "disable")}
                       disabled={
-                        !canPerform("disable") || isOperationPending("disable") || onu.admin_state === "DISABLED"
+                        !canPerform("disable") ||
+                        isOperationPending("disable") ||
+                        onu.admin_state === "DISABLED"
                       }
                       className="flex-1"
                       title={canPerform("disable") ? undefined : "Disable operation not supported"}

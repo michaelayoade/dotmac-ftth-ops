@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   Activity,
   AlertCircle,
@@ -68,10 +62,9 @@ function PluginsPageContent() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["plugin-instances", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/plugins/instances`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch plugin instances");
       return response.json();
     },
@@ -83,11 +76,11 @@ function PluginsPageContent() {
   // Calculate statistics
   const stats: PluginStats = {
     total_plugins: plugins.length,
-    active_plugins: plugins.filter(p => p.status === "active").length,
-    inactive_plugins: plugins.filter(p => p.status === "inactive").length,
-    error_plugins: plugins.filter(p => p.status === "error" || p.status === "unknown").length,
-    enabled_plugins: plugins.filter(p => p.enabled).length,
-    disabled_plugins: plugins.filter(p => !p.enabled).length,
+    active_plugins: plugins.filter((p) => p.status === "active").length,
+    inactive_plugins: plugins.filter((p) => p.status === "inactive").length,
+    error_plugins: plugins.filter((p) => p.status === "error" || p.status === "unknown").length,
+    enabled_plugins: plugins.filter((p) => p.enabled).length,
+    disabled_plugins: plugins.filter((p) => !p.enabled).length,
   };
 
   const filteredPlugins = plugins.filter((plugin) => {
@@ -96,14 +89,16 @@ function PluginsPageContent() {
       plugin.plugin_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       plugin.instance_name.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "all" || plugin.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || plugin.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: PluginStatus) => {
-    const statusConfig: Record<PluginStatus, { icon: React.ElementType; color: string; label: string }> = {
+    const statusConfig: Record<
+      PluginStatus,
+      { icon: React.ElementType; color: string; label: string }
+    > = {
       active: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       inactive: { icon: AlertCircle, color: "bg-yellow-100 text-yellow-800", label: "Inactive" },
       error: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Error" },
@@ -133,13 +128,10 @@ function PluginsPageContent() {
     }
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances/${pluginId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to delete plugin instance");
@@ -166,9 +158,7 @@ function PluginsPageContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Plugin Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage and configure plugin instances
-          </p>
+          <p className="text-sm text-muted-foreground">Manage and configure plugin instances</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => refetch()}>
@@ -304,16 +294,11 @@ function PluginsPageContent() {
                     <Puzzle className="h-8 w-8 text-primary" />
                     <div>
                       <CardTitle className="text-lg">
-                        <Link
-                          href={`/dashboard/plugins/${plugin.id}`}
-                          className="hover:underline"
-                        >
+                        <Link href={`/dashboard/plugins/${plugin.id}`} className="hover:underline">
                           {plugin.instance_name}
                         </Link>
                       </CardTitle>
-                      <CardDescription>
-                        {plugin.plugin_name}
-                      </CardDescription>
+                      <CardDescription>{plugin.plugin_name}</CardDescription>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -334,7 +319,8 @@ function PluginsPageContent() {
                   <div className="pt-3 border-t">
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Activity className="h-3 w-3" />
-                      Last checked {formatDistanceToNow(new Date(plugin.last_health_check), { addSuffix: true })}
+                      Last checked{" "}
+                      {formatDistanceToNow(new Date(plugin.last_health_check), { addSuffix: true })}
                     </p>
                   </div>
                 )}

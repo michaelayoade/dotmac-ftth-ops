@@ -5,9 +5,9 @@
  * Eliminates repetitive ternaries across dashboard pages.
  */
 
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-import type { NormalizedQueryResult } from './query-helpers';
+import type { NormalizedQueryResult } from "./query-helpers";
 
 export interface QueryBoundaryProps<TData> {
   /** Query result from mapQueryResult */
@@ -55,11 +55,7 @@ function DefaultErrorDisplay({ error }: { error: string }) {
     <div className="rounded-md bg-red-50 p-4">
       <div className="flex">
         <div className="flex-shrink-0">
-          <svg
-            className="h-5 w-5 text-red-400"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
+          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -96,9 +92,7 @@ function DefaultEmptyState() {
         />
       </svg>
       <h3 className="mt-2 text-sm font-medium text-gray-900">No data</h3>
-      <p className="mt-1 text-sm text-gray-500">
-        No results found for this query
-      </p>
+      <p className="mt-1 text-sm text-gray-500">No results found for this query</p>
     </div>
   );
 }
@@ -191,7 +185,7 @@ export function ListQueryBoundary<TData, TItem>({
   loadingComponent,
   errorComponent,
   emptyComponent,
-}: Omit<QueryBoundaryProps<TData>, 'isEmpty' | 'skipEmptyCheck'> & {
+}: Omit<QueryBoundaryProps<TData>, "isEmpty" | "skipEmptyCheck"> & {
   data: TItem[];
 }): React.ReactElement | null {
   return (

@@ -248,7 +248,7 @@ export function validateProvisionForm(form: ONUProvisionRequest): ValidationResu
  * Get first validation error message
  */
 export function getFirstError(result: ValidationResult): string | null {
-  return result.errors.length > 0 ? result.errors[0]?.message ?? null : null;
+  return result.errors.length > 0 ? (result.errors[0]?.message ?? null) : null;
 }
 
 /**

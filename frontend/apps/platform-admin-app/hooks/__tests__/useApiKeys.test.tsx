@@ -183,7 +183,7 @@ describe("useApiKeys", () => {
 
     it("should handle pagination", async () => {
       const allKeys = Array.from({ length: 75 }, (_, i) =>
-        createMockApiKey({ id: `key-${i + 1}`, name: `Key ${i + 1}` })
+        createMockApiKey({ id: `key-${i + 1}`, name: `Key ${i + 1}` }),
       );
 
       (apiClient.get as jest.Mock).mockImplementation((url: string) => {
@@ -328,7 +328,7 @@ describe("useApiKeys", () => {
         result.current.createApiKey({
           name: "Invalid Key",
           scopes: ["invalid:scope"],
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -407,7 +407,7 @@ describe("useApiKeys", () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       await expect(
-        result.current.updateApiKey("non-existent", { name: "New Name" })
+        result.current.updateApiKey("non-existent", { name: "New Name" }),
       ).rejects.toThrow();
     });
   });

@@ -51,11 +51,7 @@ export function TestAlertModal({ isOpen, channel, onClose, onSuccess }: TestAler
 
         <div className="space-y-2">
           <Label htmlFor="message">Test Message</Label>
-          <Input
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
+          <Input id="message" value={message} onChange={(e) => setMessage(e.target.value)} />
         </div>
 
         <DialogFooter>

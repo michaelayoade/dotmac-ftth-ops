@@ -30,11 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Plus, MoreVertical, Clock, User } from "lucide-react";
-import type {
-  Task,
-  KanbanColumn,
-  TaskStatus,
-} from "@/types/project-management";
+import type { Task, KanbanColumn, TaskStatus } from "@/types/project-management";
 import { TaskType, TaskPriority } from "@/types/project-management";
 import { useKanbanBoard, useUpdateTask, useCreateTask, useTeams } from "@/hooks/useProjects";
 
@@ -107,9 +103,7 @@ function TaskCard({ task, isDragging = false, teamName }: TaskCardProps) {
           </div>
 
           {task.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-              {task.description}
-            </p>
+            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{task.description}</p>
           )}
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -161,17 +155,12 @@ function TaskCard({ task, isDragging = false, teamName }: TaskCardProps) {
           {task.tags.length > 0 && (
             <div className="flex gap-1 mt-2 flex-wrap">
               {task.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded"
-                >
+                <span key={tag} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
                   {tag}
                 </span>
               ))}
               {task.tags.length > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{task.tags.length - 3}
-                </span>
+                <span className="text-xs text-muted-foreground">+{task.tags.length - 3}</span>
               )}
             </div>
           )}
@@ -227,13 +216,7 @@ function Column({ column, tasks, onAddTask, teamNameById }: ColumnProps) {
             ) : (
               tasks.map((task) => {
                 const teamName = teamNameById.get(task.reporterId ?? "");
-                return (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    {...(teamName ? { teamName } : {})}
-                  />
-                );
+                return <TaskCard key={task.id} task={task} {...(teamName ? { teamName } : {})} />;
               })
             )}
           </SortableContext>
@@ -278,7 +261,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Get active task for drag overlay
@@ -303,11 +286,9 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     const overId = over.id as string;
 
     // Find source and destination columns
-    const activeColumn = columns.find((col) =>
-      col.tasks.some((task) => task.id === activeId)
-    );
+    const activeColumn = columns.find((col) => col.tasks.some((task) => task.id === activeId));
     const overColumn = columns.find(
-      (col) => col.id === overId || col.tasks.some((task) => task.id === overId)
+      (col) => col.id === overId || col.tasks.some((task) => task.id === overId),
     );
 
     if (!activeColumn || !overColumn) return;
@@ -356,11 +337,9 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     const overId = over.id as string;
 
     // Find the columns
-    const activeColumn = columns.find((col) =>
-      col.tasks.some((task) => task.id === activeId)
-    );
+    const activeColumn = columns.find((col) => col.tasks.some((task) => task.id === activeId));
     const overColumn = columns.find(
-      (col) => col.id === overId || col.tasks.some((task) => task.id === overId)
+      (col) => col.id === overId || col.tasks.some((task) => task.id === overId),
     );
 
     if (!activeColumn || !overColumn) return;
@@ -437,14 +416,16 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       </div>
 
       <DragOverlay>
-        {activeTask ? (() => {
-          const teamName = teamNameById.get(activeTask.reporterId ?? "");
-          return teamName ? (
-            <TaskCard task={activeTask} isDragging teamName={teamName} />
-          ) : (
-            <TaskCard task={activeTask} isDragging />
-          );
-        })() : null}
+        {activeTask
+          ? (() => {
+              const teamName = teamNameById.get(activeTask.reporterId ?? "");
+              return teamName ? (
+                <TaskCard task={activeTask} isDragging teamName={teamName} />
+              ) : (
+                <TaskCard task={activeTask} isDragging />
+              );
+            })()
+          : null}
       </DragOverlay>
     </DndContext>
   );

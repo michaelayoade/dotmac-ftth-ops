@@ -622,12 +622,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@dotmac/ui";
 **After:**
 
 ```tsx
-import {
-  PortalCard,
-  PortalCardHeader,
-  PortalCardTitle,
-  PortalCardContent,
-} from "@dotmac/ui";
+import { PortalCard, PortalCardHeader, PortalCardTitle, PortalCardContent } from "@dotmac/ui";
 
 <PortalCard hoverable>
   {/* Spacing automatically adapts to portal */}

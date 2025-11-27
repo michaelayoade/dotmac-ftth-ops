@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { AlertTriangle, Calendar, CheckCircle2, Clock, FileUp, Info, Loader2, Pause, Play, Server, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileUp,
+  Info,
+  Loader2,
+  Pause,
+  Play,
+  Server,
+  XCircle,
+} from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
 import {
@@ -227,8 +239,18 @@ export function FirmwareManagement() {
   };
 
   const getStatusBadge = (status: string) => {
-    type BadgeVariant = "default" | "destructive" | "outline" | "secondary" | "warning" | "success" | "info";
-    const styles: Record<string, { variant: BadgeVariant; icon: React.ElementType; color: string }> = {
+    type BadgeVariant =
+      | "default"
+      | "destructive"
+      | "outline"
+      | "secondary"
+      | "warning"
+      | "success"
+      | "info";
+    const styles: Record<
+      string,
+      { variant: BadgeVariant; icon: React.ElementType; color: string }
+    > = {
       pending: { variant: "secondary", icon: Clock, color: "text-blue-600" },
       running: { variant: "default", icon: Play, color: "text-green-600" },
       completed: {
@@ -241,7 +263,7 @@ export function FirmwareManagement() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord = (styles[normalizedStatus] ?? styles['pending'])!;
+    const styleRecord = (styles[normalizedStatus] ?? styles["pending"])!;
     const Icon = styleRecord.icon;
 
     return (
@@ -261,7 +283,14 @@ export function FirmwareManagement() {
   };
 
   const getDeviceResultBadge = (status: string) => {
-    type BadgeVariant = "default" | "destructive" | "outline" | "secondary" | "warning" | "success" | "info";
+    type BadgeVariant =
+      | "default"
+      | "destructive"
+      | "outline"
+      | "secondary"
+      | "warning"
+      | "success"
+      | "info";
     const styles: Record<string, { variant: BadgeVariant; icon: React.ElementType }> = {
       success: { variant: "outline", icon: CheckCircle2 },
       failed: { variant: "destructive", icon: XCircle },
@@ -270,7 +299,7 @@ export function FirmwareManagement() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord = (styles[normalizedStatus] ?? styles['pending'])!;
+    const styleRecord = (styles[normalizedStatus] ?? styles["pending"])!;
     const Icon = styleRecord.icon;
 
     return (

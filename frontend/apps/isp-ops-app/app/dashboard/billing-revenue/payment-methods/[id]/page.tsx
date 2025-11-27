@@ -7,14 +7,7 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -74,7 +67,7 @@ export default function PaymentMethodDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const paymentMethodId = params['id'] as string;
+  const paymentMethodId = params["id"] as string;
 
   const {
     paymentMethods,
@@ -352,11 +345,7 @@ export default function PaymentMethodDetailPage() {
         </div>
         <div className="flex gap-2">
           {!paymentMethod.is_default && (
-            <Button
-              variant="outline"
-              onClick={handleSetDefault}
-              disabled={isSettingDefault}
-            >
+            <Button variant="outline" onClick={handleSetDefault} disabled={isSettingDefault}>
               {isSettingDefault ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -595,7 +584,7 @@ export default function PaymentMethodDetailPage() {
                       <div className="max-w-[300px] truncate">{transaction.description}</div>
                     </TableCell>
                     <TableCell>
-                      {transaction['invoice_id']? (
+                      {transaction["invoice_id"] ? (
                         <Link
                           href={`/dashboard/billing-revenue/invoices/${transaction.invoice_id}`}
                           className="text-blue-600 hover:underline"

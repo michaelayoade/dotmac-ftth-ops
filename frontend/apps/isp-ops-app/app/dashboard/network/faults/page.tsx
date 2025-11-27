@@ -89,10 +89,7 @@ export default function FaultManagementPage() {
     refetch: refetchSla,
   } = useSLACompliance({ days: 30, excludeMaintenance });
 
-  const {
-    stats: slaRollupStats,
-    isLoading: slaRollupLoading,
-  } = useSLARollupStats(30, 99.9);
+  const { stats: slaRollupStats, isLoading: slaRollupLoading } = useSLARollupStats(30, 99.9);
 
   const alarms = apiAlarms;
   const isLoading = alarmsLoading || operationsLoading;
@@ -137,7 +134,10 @@ export default function FaultManagementPage() {
 
     alarms.forEach((alarm) => {
       const timestamp =
-        alarm.last_occurrence || alarm.first_occurrence || alarm.created_at || new Date().toISOString();
+        alarm.last_occurrence ||
+        alarm.first_occurrence ||
+        alarm.created_at ||
+        new Date().toISOString();
       const hour = new Date(timestamp).getHours();
       const severity = (alarm.severity || "info").toLowerCase();
       const bucket = buckets[hour];
@@ -427,11 +427,9 @@ export default function FaultManagementPage() {
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Total Breaches</span>
               <span className="text-2xl font-bold">
-                {slaRollupLoading ? "..." : slaRollupStats?.total_breaches ?? 0}
+                {slaRollupLoading ? "..." : (slaRollupStats?.total_breaches ?? 0)}
               </span>
-              <span className="text-xs text-muted-foreground">
-                Days below {99.9}% uptime
-              </span>
+              <span className="text-xs text-muted-foreground">Days below {99.9}% uptime</span>
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Worst Day</span>

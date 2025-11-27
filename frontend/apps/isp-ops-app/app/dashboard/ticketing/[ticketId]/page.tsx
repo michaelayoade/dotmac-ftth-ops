@@ -7,13 +7,7 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import {
   ArrowLeft,
   Ticket,
@@ -73,7 +67,7 @@ interface TicketMessage {
 
 function TicketDetailsPageContent() {
   const params = useParams();
-  const ticketId = params?.['ticketId'] as string;
+  const ticketId = params?.["ticketId"] as string;
   const { api } = useAppConfig();
   const apiBaseUrl = api.baseUrl || "";
   const queryClient = useQueryClient();
@@ -98,10 +92,9 @@ function TicketDetailsPageContent() {
   const { data: messages = [] } = useQuery<TicketMessage[]>({
     queryKey: ["ticket-messages", apiBaseUrl, ticketId],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/tickets/${ticketId}/messages`,
-        { credentials: "include" },
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/tickets/${ticketId}/messages`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
       return data.messages || [];
@@ -139,18 +132,15 @@ function TicketDetailsPageContent() {
   // Add message mutation
   const addMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/tickets/${ticketId}/messages`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            content,
-            is_internal: isInternal,
-          }),
-        },
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/tickets/${ticketId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          content,
+          is_internal: isInternal,
+        }),
+      });
       if (!response.ok) throw new Error("Failed to add message");
       return response.json();
     },
@@ -217,7 +207,9 @@ function TicketDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Ticket Not Found</h2>
-        <p className="text-muted-foreground mb-4">The ticket you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The ticket you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/ticketing">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -272,7 +264,9 @@ function TicketDetailsPageContent() {
 
             <Select
               value={ticket.priority}
-              onValueChange={(value) => updateMutation.mutate({ priority: value as TicketPriority })}
+              onValueChange={(value) =>
+                updateMutation.mutate({ priority: value as TicketPriority })
+              }
               disabled={updateMutation.isPending}
             >
               <SelectTrigger className="w-[180px]">
@@ -402,11 +396,16 @@ function TicketDetailsPageContent() {
               </Card>
             ) : (
               messages.map((message) => (
-                <Card key={message.id} className={message.is_internal ? "border-yellow-200 bg-yellow-50/50" : ""}>
+                <Card
+                  key={message.id}
+                  className={message.is_internal ? "border-yellow-200 bg-yellow-50/50" : ""}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <User className={`h-8 w-8 ${message.is_staff ? "text-primary" : "text-muted-foreground"}`} />
+                        <User
+                          className={`h-8 w-8 ${message.is_staff ? "text-primary" : "text-muted-foreground"}`}
+                        />
                         <div>
                           <CardTitle className="text-base">
                             {message.author_name || message.author_email || "Unknown"}
@@ -457,7 +456,10 @@ function TicketDetailsPageContent() {
                     onChange={(e) => setIsInternal(e.target.checked)}
                     className="rounded"
                   />
-                  <label htmlFor="internal" className="text-sm text-muted-foreground cursor-pointer">
+                  <label
+                    htmlFor="internal"
+                    className="text-sm text-muted-foreground cursor-pointer"
+                  >
                     Internal note (not visible to customer)
                   </label>
                 </div>
@@ -481,7 +483,7 @@ function TicketDetailsPageContent() {
               <CardDescription>Additional ticket information</CardDescription>
             </CardHeader>
             <CardContent>
-              {ticket['metadata']? (
+              {ticket["metadata"] ? (
                 <pre className="p-4 bg-accent rounded-lg overflow-x-auto text-sm">
                   {JSON.stringify(ticket.metadata, null, 2)}
                 </pre>

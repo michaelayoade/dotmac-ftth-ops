@@ -217,10 +217,7 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                   <div className="space-y-1">
                     <div className="text-sm text-muted-foreground">Download</div>
                     <div className="text-2xl font-bold flex items-baseline gap-1">
-                      <AnimatedCounter
-                        value={bandwidthTest.result.download_mbps}
-                        duration={1.2}
-                      />
+                      <AnimatedCounter value={bandwidthTest.result.download_mbps} duration={1.2} />
                       <span className="text-xs text-muted-foreground">Mbps</span>
                     </div>
                     {bandwidthTest.result.expected_download_mbps && (
@@ -232,10 +229,7 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                   <div className="space-y-1">
                     <div className="text-sm text-muted-foreground">Upload</div>
                     <div className="text-2xl font-bold flex items-baseline gap-1">
-                      <AnimatedCounter
-                        value={bandwidthTest.result.upload_mbps}
-                        duration={1.2}
-                      />
+                      <AnimatedCounter value={bandwidthTest.result.upload_mbps} duration={1.2} />
                       <span className="text-xs text-muted-foreground">Mbps</span>
                     </div>
                     {bandwidthTest.result.expected_upload_mbps && (

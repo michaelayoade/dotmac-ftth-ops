@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Activity,
-  BarChart3,
-  Calendar,
-  FileText,
-  Server,
-  Settings,
-} from "lucide-react";
+import { Activity, BarChart3, Calendar, FileText, Server, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { BulkOperationsDashboard } from "./BulkOperationsDashboard";

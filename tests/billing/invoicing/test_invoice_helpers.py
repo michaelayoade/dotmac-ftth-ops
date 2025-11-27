@@ -61,7 +61,8 @@ class TestInvoiceServiceHelpers:
 
 
 def _build_invoice_number(tenant_id: str, year: int, sequence: int) -> str:
-    suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+    # Must match service.py which uses sha256
+    suffix = hashlib.sha256(tenant_id.encode()).hexdigest()[:4].upper()
     return f"INV-{suffix}-{year}-{sequence:06d}"
 
     async def test_get_invoice_entity_found(self, sample_tenant_id, mock_invoice_entity):

@@ -77,6 +77,7 @@ The `@dotmac/features` package is a centralized repository of shared UI componen
 **Purpose**: Business intelligence and custom reporting
 
 **Components**:
+
 - `CustomReportBuilder` - Build custom reports with filters and aggregations
 - `ReportingDashboard` - View and manage reports
 
@@ -89,6 +90,7 @@ The `@dotmac/features` package is a centralized repository of shared UI componen
 **Purpose**: API key lifecycle management
 
 **Components**:
+
 - `CreateApiKeyModal` - Create and configure API keys with permissions
 
 **Use Cases**: Developer portal, external integrations, webhook management
@@ -100,6 +102,7 @@ The `@dotmac/features` package is a centralized repository of shared UI componen
 **Purpose**: Comprehensive billing and payment management
 
 **Components**:
+
 - `CustomerBilling` - Complete billing overview with invoices and payments
 - `InvoiceList` - Tabular invoice display with filtering
 - `InvoiceDetailModal` - Detailed invoice view with line items
@@ -113,8 +116,9 @@ The `@dotmac/features` package is a centralized repository of shared UI componen
 - `SkeletonLoaders` - Loading states for billing components
 
 **Types**:
+
 ```typescript
-Invoice, Payment, BillingSummary, PaymentMethod, CreditNote
+(Invoice, Payment, BillingSummary, PaymentMethod, CreditNote);
 ```
 
 **Use Cases**: Customer billing portal, payment processing, revenue operations
@@ -126,6 +130,7 @@ Invoice, Payment, BillingSummary, PaymentMethod, CreditNote
 **Purpose**: Marketing campaign management
 
 **Components**:
+
 - `CampaignControlDialog` - Start, pause, resume campaigns
 
 **Use Cases**: Email campaigns, promotional activities, customer communications
@@ -137,13 +142,21 @@ Invoice, Payment, BillingSummary, PaymentMethod, CreditNote
 **Purpose**: Customer Premises Equipment management via GenieACS (TR-069/CWMP)
 
 **Components**:
+
 - `DeviceManagement` - Device discovery, provisioning, configuration
 - `CPEConfigTemplates` - Mass configuration templates
 
 **Types**:
+
 ```typescript
-DeviceInfo, DeviceResponse, WiFiConfig, LANConfig, WANConfig,
-MassConfigRequest, MassConfigJob, ConfigTemplate
+(DeviceInfo,
+  DeviceResponse,
+  WiFiConfig,
+  LANConfig,
+  WANConfig,
+  MassConfigRequest,
+  MassConfigJob,
+  ConfigTemplate);
 ```
 
 **Use Cases**: ONT/Router management, WiFi provisioning, firmware updates
@@ -155,6 +168,7 @@ MassConfigRequest, MassConfigJob, ConfigTemplate
 **Purpose**: Customer relationship management
 
 **Components**:
+
 - `CustomersMetrics` - Customer KPIs and distribution charts
 - `CustomerSubscriptions` - Subscription overview and management
 - `CustomerActivities` - Activity timeline
@@ -167,8 +181,9 @@ MassConfigRequest, MassConfigJob, ConfigTemplate
 - `Badges` - Status badges for CRM entities
 
 **Types**:
+
 ```typescript
-CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
+(CustomerMetrics, Subscription, Lead, Quote, Survey, Activity);
 ```
 
 **Use Cases**: Sales pipeline, lead management, customer analytics
@@ -180,6 +195,7 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: Core customer management
 
 **Components**:
+
 - `CustomersList` - Searchable, filterable customer table
 - `CreateCustomerModal` - New customer onboarding
 - `CustomerDetailModal` - Comprehensive customer view
@@ -196,6 +212,7 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: Network diagnostics and troubleshooting
 
 **Components**:
+
 - `DiagnosticsDashboard` - Ping, traceroute, speed tests, port scanning
 
 **Use Cases**: Network troubleshooting, service verification, support escalation
@@ -207,6 +224,7 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: Application error boundaries
 
 **Components**:
+
 - `ErrorBoundary` - React error boundary with fallback UI
 
 **Use Cases**: Graceful error handling, error reporting
@@ -218,6 +236,7 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: Fault and alarm management
 
 **Components**:
+
 - `AlarmDetailModal` - Alarm details, assignment, resolution
 
 **Use Cases**: Network operations center, SLA tracking, incident management
@@ -229,6 +248,7 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: Reusable form components
 
 **Components**:
+
 - `AddressAutocomplete` - Google Places address autocomplete
 
 **Use Cases**: Customer registration, service provisioning
@@ -240,6 +260,7 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: IP address management
 
 **Components**:
+
 - `IPAddressList` - IP pool management and assignment
 
 **Use Cases**: Static IP allocation, IPv4/IPv6 management
@@ -251,6 +272,7 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: Real-time network monitoring
 
 **Components**:
+
 - `NetworkMonitoringDashboard` - Network-wide metrics and alerts
 - `DualStackMetricsDashboard` - IPv4/IPv6 monitoring
 
@@ -263,13 +285,15 @@ CustomerMetrics, Subscription, Lead, Quote, Survey, Activity
 **Purpose**: VOLTHA-based PON network management
 
 **Components**:
+
 - `ONUListView` - ONU inventory and status
 - `ONUDetailView` - Detailed ONU information and controls
 - `OLTManagement` - OLT configuration and monitoring
 
 **Types**:
+
 ```typescript
-VOLTHATypes.ONU, VOLTHATypes.OLT, VOLTHATypes.Port
+(VOLTHATypes.ONU, VOLTHATypes.OLT, VOLTHATypes.Port);
 ```
 
 **Use Cases**: PON network operations, ONU provisioning, troubleshooting
@@ -281,6 +305,7 @@ VOLTHATypes.ONU, VOLTHATypes.OLT, VOLTHATypes.Port
 **Purpose**: Communication template management
 
 **Components**:
+
 - `NotificationCenter` - Notification inbox
 - `CommunicationDetailModal` - View sent communications
 - `PreviewTemplateModal` - Preview email/SMS templates
@@ -294,6 +319,7 @@ VOLTHATypes.ONU, VOLTHATypes.OLT, VOLTHATypes.Port
 **Purpose**: Subscriber service provisioning
 
 **Components**:
+
 - `SubscriberProvisionForm` - Complete provisioning workflow
 
 **Use Cases**: New subscriber activation, service changes
@@ -305,6 +331,7 @@ VOLTHATypes.ONU, VOLTHATypes.OLT, VOLTHATypes.Port
 **Purpose**: RADIUS/AAA management
 
 **Components**:
+
 - `RadiusSessionMonitor` - Active session monitoring
 - `BandwidthProfileDialog` - Create/edit bandwidth profiles
 - `NASDeviceDialog` - Manage NAS devices
@@ -318,14 +345,16 @@ VOLTHATypes.ONU, VOLTHATypes.OLT, VOLTHATypes.Port
 **Purpose**: Role-based access control
 
 **Components**:
+
 - `CreateRoleModal` - Define roles with permissions
 - `RoleDetailsModal` - View role details
 - `AssignRoleModal` - Assign roles to users
 - `createPermissionGuard` - Higher-order component for permission checks
 
 **Types**:
+
 ```typescript
-Role, Permission, PermissionCategory, PermissionAction
+(Role, Permission, PermissionCategory, PermissionAction);
 ```
 
 **Use Cases**: User management, access control, multi-tenant security
@@ -347,6 +376,7 @@ Role, Permission, PermissionCategory, PermissionAction
 **Purpose**: Subscriber lifecycle management
 
 **Components**:
+
 - `AddSubscriberModal` - New subscriber creation
 - `SubscriberDetailModal` - Comprehensive subscriber view
 
@@ -413,6 +443,7 @@ Backend (Python FastAPI)
 ```
 
 Each app needs:
+
 - Different API clients (different auth tokens, error handling)
 - Different toast notification implementations
 - Different routing configurations
@@ -552,7 +583,7 @@ The package.json defines granular exports:
     ".": "./src/index.ts",
     "./billing": "./src/billing/index.ts",
     "./crm": "./src/crm/index.ts",
-    "./network": "./src/network/index.ts",
+    "./network": "./src/network/index.ts"
     // ... other modules
   }
 }
@@ -689,31 +720,33 @@ export default function RolesPage() {
 
 ### Module Breakdown
 
-| Module | Components | LOC | Primary Use Case |
-|--------|-----------|-----|------------------|
-| Billing | 11 | 3,500+ | Payment processing, invoicing |
-| CRM | 9 | 2,800+ | Lead management, analytics |
-| Customers | 6 | 2,400+ | Customer lifecycle |
-| Network | 3 | 2,200+ | PON network operations |
-| CPE | 2 | 1,800+ | Device management |
-| Notifications | 3 | 1,500+ | Communications |
-| RADIUS | 3 | 1,400+ | AAA operations |
-| RBAC | 4 | 1,200+ | Access control |
-| Subscribers | 2 | 1,100+ | Subscriber management |
-| Diagnostics | 1 | 900+ | Network diagnostics |
-| Analytics | 2 | 800+ | Business intelligence |
-| Monitoring | 2 | 700+ | Real-time monitoring |
-| Others | 10+ | 6,600+ | Various features |
+| Module        | Components | LOC    | Primary Use Case              |
+| ------------- | ---------- | ------ | ----------------------------- |
+| Billing       | 11         | 3,500+ | Payment processing, invoicing |
+| CRM           | 9          | 2,800+ | Lead management, analytics    |
+| Customers     | 6          | 2,400+ | Customer lifecycle            |
+| Network       | 3          | 2,200+ | PON network operations        |
+| CPE           | 2          | 1,800+ | Device management             |
+| Notifications | 3          | 1,500+ | Communications                |
+| RADIUS        | 3          | 1,400+ | AAA operations                |
+| RBAC          | 4          | 1,200+ | Access control                |
+| Subscribers   | 2          | 1,100+ | Subscriber management         |
+| Diagnostics   | 1          | 900+   | Network diagnostics           |
+| Analytics     | 2          | 800+   | Business intelligence         |
+| Monitoring    | 2          | 700+   | Real-time monitoring          |
+| Others        | 10+        | 6,600+ | Various features              |
 
 ### Dependency Summary
 
 **Runtime Dependencies**:
+
 - `@dotmac/ui`: Shared UI component library
 - `@tanstack/react-query`: Data fetching (v5.56.2)
 - `lucide-react`: Icon library
 - `react`, `react-dom`: UI framework
 
 **Peer Dependencies**:
+
 - `react ^18.3.1`
 - `react-dom ^18.3.1`
 

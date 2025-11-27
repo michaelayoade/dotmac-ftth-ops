@@ -177,7 +177,7 @@ describe("Checkbox", () => {
         <div>
           <span id="checkbox-label">Subscribe to newsletter</span>
           <Checkbox aria-labelledby="checkbox-label" />
-        </div>
+        </div>,
       );
 
       const checkbox = screen.getByRole("checkbox");
@@ -189,7 +189,7 @@ describe("Checkbox", () => {
         <div>
           <Checkbox aria-describedby="checkbox-desc" />
           <span id="checkbox-desc">This is optional</span>
-        </div>
+        </div>,
       );
 
       const checkbox = screen.getByRole("checkbox");
@@ -274,10 +274,9 @@ describe("Checkbox", () => {
       render(
         <div>
           <label htmlFor="terms">
-            <Checkbox id="terms" />
-            I agree to the terms and conditions
+            <Checkbox id="terms" />I agree to the terms and conditions
           </label>
-        </div>
+        </div>,
       );
 
       const checkbox = screen.getByRole("checkbox");
@@ -292,7 +291,7 @@ describe("Checkbox", () => {
             <Checkbox id="required-check" required />
             Required field <span className="text-red-500">*</span>
           </label>
-        </div>
+        </div>,
       );
 
       const checkbox = screen.getByRole("checkbox");
@@ -305,7 +304,7 @@ describe("Checkbox", () => {
           <Checkbox id="option1" name="options" value="1" />
           <Checkbox id="option2" name="options" value="2" />
           <Checkbox id="option3" name="options" value="3" />
-        </div>
+        </div>,
       );
 
       const checkboxes = screen.getAllByRole("checkbox");
@@ -319,7 +318,7 @@ describe("Checkbox", () => {
             <Checkbox id="disabled-check" disabled />
             This option is not available
           </label>
-        </div>
+        </div>,
       );
 
       const checkbox = screen.getByRole("checkbox");
@@ -333,7 +332,7 @@ describe("Checkbox", () => {
         <form onSubmit={handleSubmit}>
           <Checkbox name="subscribe" value="yes" />
           <button type="submit">Submit</button>
-        </form>
+        </form>,
       );
 
       const submitButton = screen.getByRole("button");

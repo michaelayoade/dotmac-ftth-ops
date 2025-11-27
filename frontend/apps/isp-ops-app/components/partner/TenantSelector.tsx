@@ -1,28 +1,16 @@
 "use client";
 
 import { Building2, Check } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { usePartnerTenant } from "@/contexts/PartnerTenantContext";
-import { useSession } from "@dotmac/better-auth";
-import type { ExtendedUser } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
 
 export function TenantSelector() {
-  const { data: session } = useSession();
-  const user = session?.user as ExtendedUser | undefined;
-  const {
-    activeTenantId,
-    managedTenants,
-    loading,
-    error,
-    setActiveTenant,
-    isPartnerUser,
-  } = usePartnerTenant();
+  const { user: sessionUser } = useSession();
+  const user = sessionUser as UserInfo | undefined;
+  const { activeTenantId, managedTenants, loading, error, setActiveTenant, isPartnerUser } =
+    usePartnerTenant();
 
   // Don't render if not a partner user
   if (!isPartnerUser) {
@@ -61,7 +49,7 @@ export function TenantSelector() {
 
   // Get current tenant name
   const currentTenant = activeTenantId
-    ? managedTenants.find(t => t.tenant_id === activeTenantId)
+    ? managedTenants.find((t) => t.tenant_id === activeTenantId)
     : null;
 
   // Home tenant name (partner's own tenant)
@@ -75,9 +63,7 @@ export function TenantSelector() {
         onValueChange={(value) => setActiveTenant(value === "home" ? null : value)}
       >
         <SelectTrigger className="w-[200px] h-9 border-border/50 hover:border-border transition-colors">
-          <SelectValue>
-            {currentTenant ? currentTenant.tenant_name : homeTenantName}
-          </SelectValue>
+          <SelectValue>{currentTenant ? currentTenant.tenant_name : homeTenantName}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {/* Home tenant option */}
@@ -94,7 +80,7 @@ export function TenantSelector() {
               <div className="flex flex-col">
                 <span className="font-medium">{tenant.tenant_name}</span>
                 <span className="text-xs text-muted-foreground">
-                  {tenant.access_role.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+                  {tenant.access_role.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                 </span>
               </div>
             </SelectItem>

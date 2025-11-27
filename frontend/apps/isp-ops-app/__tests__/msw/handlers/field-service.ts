@@ -48,9 +48,7 @@ let resourceAssignments: ResourceAssignment[] = [];
 // Mock Data Generators
 // ============================================
 
-export function createMockTechnician(
-  overrides: Partial<Technician> = {}
-): Technician {
+export function createMockTechnician(overrides: Partial<Technician> = {}): Technician {
   const id = overrides.id || `tech-${Date.now()}-${Math.random()}`;
   return {
     id,
@@ -78,9 +76,7 @@ export function createMockTechnician(
   };
 }
 
-export function createMockTimeEntry(
-  overrides: Partial<TimeEntry> = {}
-): TimeEntry {
+export function createMockTimeEntry(overrides: Partial<TimeEntry> = {}): TimeEntry {
   const id = overrides.id || `entry-${Date.now()}-${Math.random()}`;
   return {
     id,
@@ -96,9 +92,7 @@ export function createMockTimeEntry(
   };
 }
 
-export function createMockAssignment(
-  overrides: Partial<TaskAssignment> = {}
-): TaskAssignment {
+export function createMockAssignment(overrides: Partial<TaskAssignment> = {}): TaskAssignment {
   const id = overrides.id || `assign-${Date.now()}-${Math.random()}`;
   return {
     id,
@@ -115,9 +109,7 @@ export function createMockAssignment(
   };
 }
 
-export function createMockEquipment(
-  overrides: Partial<Equipment> = {}
-): Equipment {
+export function createMockEquipment(overrides: Partial<Equipment> = {}): Equipment {
   const id = overrides.id || `equip-${Date.now()}-${Math.random()}`;
   return {
     id,
@@ -135,9 +127,7 @@ export function createMockEquipment(
   };
 }
 
-export function createMockVehicle(
-  overrides: Partial<Vehicle> = {}
-): Vehicle {
+export function createMockVehicle(overrides: Partial<Vehicle> = {}): Vehicle {
   const id = overrides.id || `vehicle-${Date.now()}-${Math.random()}`;
   return {
     id,
@@ -156,7 +146,7 @@ export function createMockVehicle(
 }
 
 export function createMockResourceAssignment(
-  overrides: Partial<ResourceAssignment> = {}
+  overrides: Partial<ResourceAssignment> = {},
 ): ResourceAssignment {
   const id = overrides.id || `res-assign-${Date.now()}-${Math.random()}`;
   return {
@@ -245,7 +235,7 @@ export const fieldServiceHandlers = [
         (t) =>
           t.fullName.toLowerCase().includes(searchLower) ||
           t.email.toLowerCase().includes(searchLower) ||
-          t.employeeId.toLowerCase().includes(searchLower)
+          t.employeeId.toLowerCase().includes(searchLower),
       );
     }
 
@@ -269,7 +259,7 @@ export const fieldServiceHandlers = [
     if (!technician) {
       return HttpResponse.json(
         { error: "Technician not found", code: "NOT_FOUND" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -311,7 +301,7 @@ export const fieldServiceHandlers = [
     if (!entry) {
       return HttpResponse.json(
         { error: "Time entry not found", code: "NOT_FOUND" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -426,7 +416,7 @@ export const fieldServiceHandlers = [
     if (!selectedTech) {
       return HttpResponse.json(
         { error: "No available technicians", code: "NO_TECHNICIANS" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 

@@ -46,7 +46,7 @@ interface UseWebSocketTechnicianLocationsReturn {
  * ```
  */
 export function useWebSocketTechnicianLocations(
-  options: UseWebSocketTechnicianLocationsOptions = {}
+  options: UseWebSocketTechnicianLocationsOptions = {},
 ): UseWebSocketTechnicianLocationsReturn {
   const {
     enabled = true,
@@ -71,7 +71,7 @@ export function useWebSocketTechnicianLocations(
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Get WebSocket URL (Better Auth uses cookies; no token param needed unless backend requires it)
+   * Get WebSocket URL (auth cookies are sent automatically; no token param needed)
    */
   const getWebSocketUrl = useCallback(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -122,7 +122,11 @@ export function useWebSocketTechnicianLocations(
               // Received initial state with all technician locations
               if (Array.isArray(message.data)) {
                 setTechnicians(message.data);
-                console.log("[WebSocket] Received initial state:", message.data.length, "technicians");
+                console.log(
+                  "[WebSocket] Received initial state:",
+                  message.data.length,
+                  "technicians",
+                );
               }
               break;
 
@@ -134,7 +138,7 @@ export function useWebSocketTechnicianLocations(
                 setTechnicians((prev) => {
                   // Check if technician already exists
                   const existingIndex = prev.findIndex(
-                    (t) => t.technician_id === updatedTech.technician_id
+                    (t) => t.technician_id === updatedTech.technician_id,
                   );
 
                   if (existingIndex >= 0) {

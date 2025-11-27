@@ -137,14 +137,11 @@ class CommunicationsService {
    * @returns Job status with recent logs
    */
   async getBulkEmailStatus(jobId: string): Promise<BulkOperationStatusResponse> {
-    const response = await fetch(
-      this.buildUrl(`/communications/bulk/${jobId}/status`),
-      {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      },
-    );
+    const response = await fetch(this.buildUrl(`/communications/bulk/${jobId}/status`), {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     return this.handleResponse<BulkOperationStatusResponse>(response);
   }
@@ -156,14 +153,11 @@ class CommunicationsService {
    * @returns Updated bulk operation
    */
   async cancelBulkEmail(jobId: string): Promise<BulkOperation> {
-    const response = await fetch(
-      this.buildUrl(`/communications/bulk/${jobId}/cancel`),
-      {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      },
-    );
+    const response = await fetch(this.buildUrl(`/communications/bulk/${jobId}/cancel`), {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     return this.handleResponse<BulkOperation>(response);
   }
@@ -187,9 +181,7 @@ class CommunicationsService {
     if (params.page_size) searchParams.append("page_size", String(params.page_size));
 
     const queryString = searchParams.toString();
-    const url = this.buildUrl(
-      `/communications/templates${queryString ? `?${queryString}` : ""}`,
-    );
+    const url = this.buildUrl(`/communications/templates${queryString ? `?${queryString}` : ""}`);
 
     const response = await fetch(url, {
       method: "GET",
@@ -280,15 +272,12 @@ class CommunicationsService {
     id: string,
     variables: Record<string, unknown>,
   ): Promise<RenderTemplateResponse> {
-    const response = await fetch(
-      this.buildUrl(`/communications/templates/${id}/render`),
-      {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-        body: JSON.stringify({ variables }),
-      },
-    );
+    const response = await fetch(this.buildUrl(`/communications/templates/${id}/render`), {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+      body: JSON.stringify({ variables }),
+    });
 
     return this.handleResponse<RenderTemplateResponse>(response);
   }
@@ -336,9 +325,7 @@ class CommunicationsService {
     if (params.sort_order) searchParams.append("sort_order", params.sort_order);
 
     const queryString = searchParams.toString();
-    const url = this.buildUrl(
-      `/communications/logs${queryString ? `?${queryString}` : ""}`,
-    );
+    const url = this.buildUrl(`/communications/logs${queryString ? `?${queryString}` : ""}`);
 
     const response = await fetch(url, {
       method: "GET",
@@ -402,9 +389,7 @@ class CommunicationsService {
     if (params.channel) searchParams.append("channel", params.channel);
 
     const queryString = searchParams.toString();
-    const url = this.buildUrl(
-      `/communications/stats${queryString ? `?${queryString}` : ""}`,
-    );
+    const url = this.buildUrl(`/communications/stats${queryString ? `?${queryString}` : ""}`);
 
     const response = await fetch(url, {
       method: "GET",
@@ -427,9 +412,7 @@ class CommunicationsService {
     if (params.channel) searchParams.append("channel", params.channel);
 
     const queryString = searchParams.toString();
-    const url = this.buildUrl(
-      `/communications/activity${queryString ? `?${queryString}` : ""}`,
-    );
+    const url = this.buildUrl(`/communications/activity${queryString ? `?${queryString}` : ""}`);
 
     const response = await fetch(url, {
       method: "GET",

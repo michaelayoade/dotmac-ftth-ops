@@ -115,8 +115,12 @@ async def get_sla_breach_report(
         # Calculate summary statistics
         stmt_summary = select(
             func.count(SLABreach.id).label("total_breaches"),
-            func.count(SLABreach.id).filter(SLABreach.resolved.is_(True)).label("resolved_breaches"),
-            func.count(SLABreach.id).filter(SLABreach.resolved.is_(False)).label("unresolved_breaches"),
+            func.count(SLABreach.id)
+            .filter(SLABreach.resolved.is_(True))
+            .label("resolved_breaches"),
+            func.count(SLABreach.id)
+            .filter(SLABreach.resolved.is_(False))
+            .label("unresolved_breaches"),
             func.sum(SLABreach.credit_amount).label("total_credits"),
         ).where(SLABreach.tenant_id == current_user.tenant_id)
 

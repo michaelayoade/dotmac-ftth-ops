@@ -46,7 +46,7 @@ describe("Command", () => {
       render(
         <Command>
           <div>Command content</div>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("Command content")).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandInput placeholder="Search..." />
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe("Command", () => {
       const { container } = render(
         <Command>
           <CommandInput placeholder="Search" />
-        </Command>
+        </Command>,
       );
 
       const icon = container.querySelector("svg");
@@ -80,7 +80,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandInput placeholder="Search" />
-        </Command>
+        </Command>,
       );
 
       const input = screen.getByPlaceholderText("Search");
@@ -93,7 +93,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandInput placeholder="Search" disabled />
-        </Command>
+        </Command>,
       );
 
       const input = screen.getByPlaceholderText("Search");
@@ -104,7 +104,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandInput placeholder="Search" className="custom-input" />
-        </Command>
+        </Command>,
       );
 
       const input = screen.getByPlaceholderText("Search");
@@ -119,7 +119,7 @@ describe("Command", () => {
           <CommandList data-testid="list">
             <div>Items</div>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByTestId("list")).toBeInTheDocument();
@@ -129,7 +129,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandList data-testid="list">Items</CommandList>
-        </Command>
+        </Command>,
       );
 
       const list = screen.getByTestId("list");
@@ -142,7 +142,7 @@ describe("Command", () => {
           <CommandList>
             <div>List content</div>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("List content")).toBeInTheDocument();
@@ -156,7 +156,7 @@ describe("Command", () => {
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("No results found.")).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe("Command", () => {
           <CommandList>
             <CommandEmpty data-testid="empty">No results</CommandEmpty>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const empty = screen.getByTestId("empty");
@@ -185,7 +185,7 @@ describe("Command", () => {
               <div>Items</div>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("Suggestions")).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe("Command", () => {
               <CommandItem>Item 2</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("Item 1")).toBeInTheDocument();
@@ -215,7 +215,7 @@ describe("Command", () => {
               Items
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const group = screen.getByTestId("group");
@@ -236,7 +236,7 @@ describe("Command", () => {
               <CommandItem>Item 2</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByTestId("separator")).toBeInTheDocument();
@@ -248,7 +248,7 @@ describe("Command", () => {
           <CommandList>
             <CommandSeparator data-testid="separator" />
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const separator = screen.getByTestId("separator");
@@ -265,7 +265,7 @@ describe("Command", () => {
               <CommandItem>Calendar</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("Calendar")).toBeInTheDocument();
@@ -282,7 +282,7 @@ describe("Command", () => {
               <CommandItem onSelect={onSelect}>Settings</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       await user.click(screen.getByText("Settings"));
@@ -300,7 +300,7 @@ describe("Command", () => {
               </CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const item = screen.getByTestId("item");
@@ -317,7 +317,7 @@ describe("Command", () => {
               </CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const item = screen.getByTestId("item");
@@ -337,7 +337,7 @@ describe("Command", () => {
               </CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("⌘S")).toBeInTheDocument();
@@ -354,7 +354,7 @@ describe("Command", () => {
               </CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const shortcut = screen.getByTestId("shortcut");
@@ -374,7 +374,7 @@ describe("Command", () => {
               </CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const shortcut = screen.getByTestId("shortcut");
@@ -387,7 +387,7 @@ describe("Command", () => {
       render(
         <CommandDialog open={false}>
           <CommandInput placeholder="Type a command..." />
-        </CommandDialog>
+        </CommandDialog>,
       );
 
       // Dialog is closed initially
@@ -398,7 +398,7 @@ describe("Command", () => {
       const { rerender } = render(
         <CommandDialog open={false}>
           <CommandInput placeholder="Type a command..." />
-        </CommandDialog>
+        </CommandDialog>,
       );
 
       expect(screen.queryByPlaceholderText("Type a command...")).not.toBeInTheDocument();
@@ -406,7 +406,7 @@ describe("Command", () => {
       rerender(
         <CommandDialog open={true}>
           <CommandInput placeholder="Type a command..." />
-        </CommandDialog>
+        </CommandDialog>,
       );
 
       await waitFor(() => {
@@ -425,7 +425,7 @@ describe("Command", () => {
               <CommandItem>Settings</CommandItem>
             </CommandGroup>
           </CommandList>
-        </CommandDialog>
+        </CommandDialog>,
       );
 
       await waitFor(() => {
@@ -450,7 +450,7 @@ describe("Command", () => {
               <CommandItem>Calculator</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const input = screen.getByPlaceholderText("Type a command or search...");
@@ -479,7 +479,7 @@ describe("Command", () => {
               </CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("⌘N")).toBeInTheDocument();
@@ -502,7 +502,7 @@ describe("Command", () => {
               <CommandItem>Copy</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("File")).toBeInTheDocument();
@@ -523,7 +523,7 @@ describe("Command", () => {
               <CommandItem>Profile</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
@@ -546,7 +546,7 @@ describe("Command", () => {
               <CommandItem>🐱 Cat</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("😀 Grinning Face")).toBeInTheDocument();
@@ -569,7 +569,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandInput ref={ref} placeholder="Search" />
-        </Command>
+        </Command>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLInputElement);
@@ -581,7 +581,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandList ref={ref}>Items</CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -595,7 +595,7 @@ describe("Command", () => {
           <CommandList>
             <CommandEmpty ref={ref}>Empty</CommandEmpty>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -609,7 +609,7 @@ describe("Command", () => {
           <CommandList>
             <CommandGroup ref={ref}>Items</CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -623,7 +623,7 @@ describe("Command", () => {
           <CommandList>
             <CommandSeparator ref={ref} />
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -639,7 +639,7 @@ describe("Command", () => {
               <CommandItem ref={ref}>Item</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -685,7 +685,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandInput placeholder="Search" />
-        </Command>
+        </Command>,
       );
 
       const input = screen.getByPlaceholderText("Search");
@@ -703,7 +703,7 @@ describe("Command", () => {
               <CommandItem>Item 3</CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const input = screen.getByPlaceholderText("Search");
@@ -723,7 +723,7 @@ describe("Command", () => {
               </CommandItem>
             </CommandGroup>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const item = screen.getByTestId("item");
@@ -739,7 +739,7 @@ describe("Command", () => {
           <CommandList>
             <CommandEmpty>No results</CommandEmpty>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("No results")).toBeInTheDocument();
@@ -751,7 +751,7 @@ describe("Command", () => {
           <CommandList>
             <CommandItem>Standalone Item</CommandItem>
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       expect(screen.getByText("Standalone Item")).toBeInTheDocument();
@@ -765,7 +765,7 @@ describe("Command", () => {
             <CommandSeparator />
             <CommandSeparator />
           </CommandList>
-        </Command>
+        </Command>,
       );
 
       const separators = container.querySelectorAll(".h-px");
@@ -776,7 +776,7 @@ describe("Command", () => {
       render(
         <Command>
           <CommandList>{null}</CommandList>
-        </Command>
+        </Command>,
       );
 
       // Should not crash

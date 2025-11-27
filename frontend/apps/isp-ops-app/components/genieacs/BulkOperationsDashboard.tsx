@@ -23,13 +23,7 @@ import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import {
@@ -73,11 +67,11 @@ export function BulkOperationsDashboard() {
         apiClient.get<FirmwareUpgradeScheduleList>("/genieacs/firmware-schedules"),
       ]);
 
-      setConfigJobs(configRes.data['jobs']);
-      setFirmwareSchedules(firmwareRes.data['schedules']);
+      setConfigJobs(configRes.data["jobs"]);
+      setFirmwareSchedules(firmwareRes.data["schedules"]);
 
       // Calculate stats
-      const allOperations = [...configRes.data['jobs'], ...firmwareRes.data['schedules']];
+      const allOperations = [...configRes.data["jobs"], ...firmwareRes.data["schedules"]];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -125,7 +119,7 @@ export function BulkOperationsDashboard() {
     } catch (err: any) {
       toast({
         title: "Failed to load operations",
-        description: err?.response?.['data']?.detail || "Could not fetch bulk operations",
+        description: err?.response?.["data"]?.detail || "Could not fetch bulk operations",
         variant: "destructive",
       });
     } finally {
@@ -153,7 +147,7 @@ export function BulkOperationsDashboard() {
     } catch (err: any) {
       toast({
         title: "Failed to cancel operation",
-        description: err?.response?.['data']?.detail || "Could not cancel operation",
+        description: err?.response?.["data"]?.detail || "Could not cancel operation",
         variant: "destructive",
       });
     }
@@ -173,7 +167,7 @@ export function BulkOperationsDashboard() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord = (styles[normalizedStatus] ?? styles['pending'])!;
+    const styleRecord = (styles[normalizedStatus] ?? styles["pending"])!;
     const Icon = styleRecord.icon;
 
     return (
@@ -185,9 +179,9 @@ export function BulkOperationsDashboard() {
   };
 
   const getProgressPercentage = (job: MassConfigJob | FirmwareUpgradeSchedule): number => {
-    const total = job['total_devices'] || 0;
+    const total = job["total_devices"] || 0;
     if (total === 0) return 0;
-    const completed = (job['completed_devices'] || 0) + (job['failed_devices'] || 0);
+    const completed = (job["completed_devices"] || 0) + (job["failed_devices"] || 0);
     return (completed / total) * 100;
   };
 
@@ -238,7 +232,7 @@ export function BulkOperationsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats['total_operations']}</div>
+            <div className="text-3xl font-bold">{stats["total_operations"]}</div>
           </CardContent>
         </Card>
 
@@ -247,7 +241,7 @@ export function BulkOperationsDashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{stats['active_operations']}</div>
+            <div className="text-3xl font-bold text-blue-600">{stats["active_operations"]}</div>
           </CardContent>
         </Card>
 
@@ -258,7 +252,7 @@ export function BulkOperationsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">{stats['completed_today']}</div>
+            <div className="text-3xl font-bold text-green-600">{stats["completed_today"]}</div>
           </CardContent>
         </Card>
 
@@ -269,7 +263,7 @@ export function BulkOperationsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{stats['failed_today']}</div>
+            <div className="text-3xl font-bold text-red-600">{stats["failed_today"]}</div>
           </CardContent>
         </Card>
 
@@ -280,7 +274,7 @@ export function BulkOperationsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats['devices_affected_today']}</div>
+            <div className="text-3xl font-bold">{stats["devices_affected_today"]}</div>
             <p className="text-xs text-muted-foreground">Today</p>
           </CardContent>
         </Card>
@@ -293,7 +287,7 @@ export function BulkOperationsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">
-              {stats['success_rate'].toFixed(1)}%
+              {stats["success_rate"].toFixed(1)}%
             </div>
           </CardContent>
         </Card>
@@ -343,38 +337,40 @@ export function BulkOperationsDashboard() {
               ) : (
                 filteredConfigJobs.map((job) => (
                   <div
-                    key={job['job_id']}
+                    key={job["job_id"]}
                     className="p-4 rounded-lg border bg-card hover:bg-card/80 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Settings className="w-4 h-4" />
-                          <div className="font-medium">{job['name']}</div>
-                          {getStatusBadge(job['status'])}
-                          {job['dry_run'] && (
+                          <div className="font-medium">{job["name"]}</div>
+                          {getStatusBadge(job["status"])}
+                          {job["dry_run"] && (
                             <Badge variant="outline" className="bg-blue-50">
                               Dry Run
                             </Badge>
                           )}
                         </div>
-                        {job['description'] && (
-                          <p className="text-sm text-muted-foreground mb-2">{job['description']}</p>
+                        {job["description"] && (
+                          <p className="text-sm text-muted-foreground mb-2">{job["description"]}</p>
                         )}
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <span className="text-muted-foreground">Total:</span>{" "}
-                            <span className="font-medium">{job['total_devices']}</span>
+                            <span className="font-medium">{job["total_devices"]}</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Completed:</span>{" "}
                             <span className="font-medium text-green-600">
-                              {job['completed_devices']}
+                              {job["completed_devices"]}
                             </span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Failed:</span>{" "}
-                            <span className="font-medium text-red-600">{job['failed_devices']}</span>
+                            <span className="font-medium text-red-600">
+                              {job["failed_devices"]}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -383,7 +379,7 @@ export function BulkOperationsDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleCancelJob(job['job_id'], "config")}
+                            onClick={() => handleCancelJob(job["job_id"], "config")}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             Cancel
@@ -412,18 +408,18 @@ export function BulkOperationsDashboard() {
                     <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3 pt-3 border-t">
                       <div>
                         <Calendar className="w-3 h-3 inline mr-1" />
-                        Created: {new Date(job['created_at']).toLocaleString()}
+                        Created: {new Date(job["created_at"]).toLocaleString()}
                       </div>
-                      {job['started_at'] && (
+                      {job["started_at"] && (
                         <div>
                           <Play className="w-3 h-3 inline mr-1" />
-                          Started: {new Date(job['started_at']).toLocaleString()}
+                          Started: {new Date(job["started_at"]).toLocaleString()}
                         </div>
                       )}
-                      {job['completed_at'] && (
+                      {job["completed_at"] && (
                         <div>
                           <CheckCircle2 className="w-3 h-3 inline mr-1" />
-                          Completed: {new Date(job['completed_at']).toLocaleString()}
+                          Completed: {new Date(job["completed_at"]).toLocaleString()}
                         </div>
                       )}
                     </div>

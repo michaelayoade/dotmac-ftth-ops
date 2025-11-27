@@ -366,11 +366,10 @@ export function useUsageOperations() {
         await markAsBilled.mutateAsync({ recordIds, invoiceId });
         return true;
       } catch (error) {
-        logger.error(
-          "Failed to mark usage records as billed",
-          toError(error),
-          { invoiceId, recordCount: recordIds.length },
-        );
+        logger.error("Failed to mark usage records as billed", toError(error), {
+          invoiceId,
+          recordCount: recordIds.length,
+        });
         return false;
       }
     },
@@ -379,11 +378,9 @@ export function useUsageOperations() {
         await excludeFromBilling.mutateAsync(recordIds);
         return true;
       } catch (error) {
-        logger.error(
-          "Failed to exclude usage records from billing",
-          toError(error),
-          { recordCount: recordIds.length },
-        );
+        logger.error("Failed to exclude usage records from billing", toError(error), {
+          recordCount: recordIds.length,
+        });
         return false;
       }
     },

@@ -2,7 +2,16 @@
  * Test data factories for customer module
  */
 
-import type { Lead, Quote, SiteSurvey, LeadStatus, LeadSource, QuoteStatus, SiteSurveyStatus, Serviceability } from "../../crm/types";
+import type {
+  Lead,
+  Quote,
+  SiteSurvey,
+  LeadStatus,
+  LeadSource,
+  QuoteStatus,
+  SiteSurveyStatus,
+  Serviceability,
+} from "../../crm/types";
 
 let leadCounter = 1;
 let quoteCounter = 1;
@@ -197,7 +206,8 @@ export const createMockQuote = (overrides?: Partial<Quote>): Quote => {
     promo_monthly_discount: overrides?.promo_monthly_discount,
 
     // Validity
-    valid_until: overrides?.valid_until ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    valid_until:
+      overrides?.valid_until ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
 
     // Delivery
     sent_at: overrides?.sent_at,
@@ -269,7 +279,8 @@ export const createMockSiteSurvey = (overrides?: Partial<SiteSurvey>): SiteSurve
     lead_id: overrides?.lead_id ?? "lead_1",
 
     // Scheduling
-    scheduled_date: overrides?.scheduled_date ?? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    scheduled_date:
+      overrides?.scheduled_date ?? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     completed_date: overrides?.completed_date,
     technician_id: overrides?.technician_id ?? "tech_1",
 

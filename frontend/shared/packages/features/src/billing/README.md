@@ -9,9 +9,11 @@ The billing module provides a complete set of components for managing customer b
 ## Components
 
 ### CustomerBilling
+
 **Purpose**: Complete billing overview for a customer
 
 **Props**:
+
 ```typescript
 interface CustomerBillingProps {
   customerId: string;
@@ -22,6 +24,7 @@ interface CustomerBillingProps {
 ```
 
 **Features**:
+
 - Billing summary metrics (total revenue, outstanding, overdue, last payment)
 - Invoice list with status badges
 - Payment history table
@@ -31,6 +34,7 @@ interface CustomerBillingProps {
 **Dependencies**: apiClient, useToast, invoiceViewUrlPrefix
 
 **Usage**:
+
 ```typescript
 import { CustomerBilling } from "@/components/customers/CustomerBilling";
 
@@ -40,9 +44,11 @@ import { CustomerBilling } from "@/components/customers/CustomerBilling";
 ---
 
 ### InvoiceList
+
 **Purpose**: Tabular display of invoices
 
 **Props**:
+
 ```typescript
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -54,6 +60,7 @@ interface InvoiceListProps {
 ```
 
 **Features**:
+
 - Sortable columns
 - Status badges
 - Quick actions (view, download)
@@ -63,6 +70,7 @@ interface InvoiceListProps {
 **Dependencies**: None (data passed as props)
 
 **Usage**:
+
 ```typescript
 import { InvoiceList } from "@dotmac/features/billing";
 import { useInvoices } from "@/hooks/useInvoices";
@@ -83,9 +91,11 @@ function InvoicesPage() {
 ---
 
 ### InvoiceDetailModal
+
 **Purpose**: Detailed invoice view
 
 **Props**:
+
 ```typescript
 interface InvoiceDetailModalProps {
   open: boolean;
@@ -97,6 +107,7 @@ interface InvoiceDetailModalProps {
 ```
 
 **Features**:
+
 - Invoice header (number, dates, status)
 - Line items table with descriptions and amounts
 - Subtotal, tax, and total breakdown
@@ -109,9 +120,11 @@ interface InvoiceDetailModalProps {
 ---
 
 ### ReceiptList
+
 **Purpose**: Display payment receipts
 
 **Props**:
+
 ```typescript
 interface ReceiptListProps {
   receipts: Receipt[];
@@ -122,6 +135,7 @@ interface ReceiptListProps {
 ```
 
 **Features**:
+
 - Payment method display
 - Status badges
 - Amount formatting
@@ -133,9 +147,11 @@ interface ReceiptListProps {
 ---
 
 ### ReceiptDetailModal
+
 **Purpose**: Detailed receipt view
 
 **Props**:
+
 ```typescript
 interface ReceiptDetailModalProps {
   open: boolean;
@@ -147,6 +163,7 @@ interface ReceiptDetailModalProps {
 ```
 
 **Features**:
+
 - Receipt information
 - Payment method details
 - Associated invoice
@@ -158,9 +175,11 @@ interface ReceiptDetailModalProps {
 ---
 
 ### AddPaymentMethodModal
+
 **Purpose**: Add credit card or bank account
 
 **Props**:
+
 ```typescript
 interface AddPaymentMethodModalProps {
   open: boolean;
@@ -173,6 +192,7 @@ interface AddPaymentMethodModalProps {
 ```
 
 **Features**:
+
 - Credit card entry (Stripe Elements)
 - Bank account (ACH) setup
 - Set as default payment method
@@ -184,9 +204,11 @@ interface AddPaymentMethodModalProps {
 ---
 
 ### RecordPaymentModal
+
 **Purpose**: Manually record payments
 
 **Props**:
+
 ```typescript
 interface RecordPaymentModalProps {
   open: boolean;
@@ -200,6 +222,7 @@ interface RecordPaymentModalProps {
 ```
 
 **Features**:
+
 - Payment method selection (cash, check, wire, etc.)
 - Amount entry with validation
 - Invoice association (optional)
@@ -212,9 +235,11 @@ interface RecordPaymentModalProps {
 ---
 
 ### CreateCreditNoteModal
+
 **Purpose**: Issue refunds and credits
 
 **Props**:
+
 ```typescript
 interface CreateCreditNoteModalProps {
   open: boolean;
@@ -227,6 +252,7 @@ interface CreateCreditNoteModalProps {
 ```
 
 **Features**:
+
 - Partial or full refund
 - Reason selection
 - Item-level credit selection
@@ -238,9 +264,11 @@ interface CreateCreditNoteModalProps {
 ---
 
 ### InvoiceStatusBadge
+
 **Purpose**: Visual status indicator
 
 **Props**:
+
 ```typescript
 interface InvoiceStatusBadgeProps {
   status: "paid" | "pending" | "overdue" | "cancelled";
@@ -248,6 +276,7 @@ interface InvoiceStatusBadgeProps {
 ```
 
 **Features**:
+
 - Color-coded badges
 - Icon indicators
 - Accessible labels
@@ -255,6 +284,7 @@ interface InvoiceStatusBadgeProps {
 **Dependencies**: None
 
 **Usage**:
+
 ```typescript
 import { InvoiceStatusBadge } from "@dotmac/features/billing";
 
@@ -264,9 +294,11 @@ import { InvoiceStatusBadge } from "@dotmac/features/billing";
 ---
 
 ### PaymentStatusBadge
+
 **Purpose**: Visual payment status indicator
 
 **Props**:
+
 ```typescript
 interface PaymentStatusBadgeProps {
   status: "succeeded" | "failed" | "pending";
@@ -274,6 +306,7 @@ interface PaymentStatusBadgeProps {
 ```
 
 **Features**:
+
 - Color-coded badges
 - Status labels
 
@@ -282,14 +315,17 @@ interface PaymentStatusBadgeProps {
 ---
 
 ### SkeletonLoaders
+
 **Purpose**: Loading states for billing components
 
 **Exports**:
+
 - `InvoiceListSkeleton`
 - `ReceiptListSkeleton`
 - `BillingSummarySkeleton`
 
 **Usage**:
+
 ```typescript
 import { InvoiceListSkeleton } from "@dotmac/features/billing";
 
@@ -299,6 +335,7 @@ import { InvoiceListSkeleton } from "@dotmac/features/billing";
 ## Types
 
 ### Invoice
+
 ```typescript
 interface Invoice {
   id: string;
@@ -312,6 +349,7 @@ interface Invoice {
 ```
 
 ### Payment
+
 ```typescript
 interface Payment {
   id: string;
@@ -324,6 +362,7 @@ interface Payment {
 ```
 
 ### Receipt
+
 ```typescript
 interface Receipt {
   id: string;
@@ -337,6 +376,7 @@ interface Receipt {
 ```
 
 ### BillingSummary
+
 ```typescript
 interface BillingSummary {
   total_revenue: number;
@@ -349,6 +389,7 @@ interface BillingSummary {
 ```
 
 ### PaymentMethod
+
 ```typescript
 interface PaymentMethod {
   id: string;
@@ -360,6 +401,7 @@ interface PaymentMethod {
 ```
 
 ### CreditNote
+
 ```typescript
 interface CreditNote {
   id: string;
@@ -459,32 +501,38 @@ const [showPaymentModal, setShowPaymentModal] = useState(false);
 The billing module expects these backend endpoints:
 
 ### Customer Billing
+
 - `GET /api/v1/customers/{id}/invoices` - List invoices
 - `GET /api/v1/customers/{id}/payments` - List payments
 - `GET /api/v1/customers/{id}/billing-summary` - Get summary
 
 ### Invoices
+
 - `GET /api/v1/invoices` - List all invoices
 - `GET /api/v1/invoices/{id}` - Get invoice details
 - `GET /api/v1/invoices/{id}/download` - Download PDF
 - `POST /api/v1/invoices/{id}/email` - Email invoice
 
 ### Payments
+
 - `GET /api/v1/payments` - List all payments
 - `GET /api/v1/payments/{id}` - Get payment details
 - `POST /api/v1/payments` - Record payment
 
 ### Payment Methods
+
 - `GET /api/v1/customers/{id}/payment-methods` - List payment methods
 - `POST /api/v1/customers/{id}/payment-methods` - Add payment method
 - `DELETE /api/v1/customers/{id}/payment-methods/{id}` - Remove payment method
 
 ### Receipts
+
 - `GET /api/v1/receipts` - List receipts
 - `GET /api/v1/receipts/{id}` - Get receipt details
 - `GET /api/v1/receipts/{id}/download` - Download PDF
 
 ### Credit Notes
+
 - `POST /api/v1/invoices/{id}/credit-notes` - Create credit note
 
 ## Styling
@@ -553,6 +601,7 @@ test("wrapper provides correct dependencies", () => {
 ### Issue: API calls failing
 
 **Check**:
+
 1. API client is properly configured with auth
 2. Base URL is correct
 3. Endpoints match backend routes
@@ -561,6 +610,7 @@ test("wrapper provides correct dependencies", () => {
 ### Issue: Toast notifications not showing
 
 **Check**:
+
 1. `useToast` is properly imported from `@dotmac/ui`
 2. Toast provider is set up in app layout
 3. Toast function is being called with correct options
@@ -568,6 +618,7 @@ test("wrapper provides correct dependencies", () => {
 ### Issue: Type errors
 
 **Check**:
+
 1. Types are imported: `import type { Invoice } from "@dotmac/features/billing"`
 2. Data structure matches interface
 3. Optional fields are handled with `?` or default values

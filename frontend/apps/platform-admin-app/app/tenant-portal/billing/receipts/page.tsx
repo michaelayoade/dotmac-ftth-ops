@@ -7,12 +7,7 @@ import { useState } from "react";
 import { useTenant } from "@/lib/contexts/tenant-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Download,
-  FileText,
-  Mail,
-  RefreshCw,
-} from "lucide-react";
+import { Download, FileText, Mail, RefreshCw } from "lucide-react";
 import ReceiptList from "@/components/billing/ReceiptList";
 import ReceiptDetailModal from "@/components/billing/ReceiptDetailModal";
 import { apiClient } from "@/lib/api/client";
@@ -51,7 +46,7 @@ export default function ReceiptsPage() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Failed to download receipt:", err);
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert("Failed to download receipt. Please try again.");
     }
   };
@@ -59,11 +54,11 @@ export default function ReceiptsPage() {
   const handleEmailReceipt = async (receipt: Receipt) => {
     try {
       await apiClient.post(`/api/v1/billing/receipts/${receipt.receipt_id}/email`);
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
     } catch (err) {
       console.error("Failed to email receipt:", err);
-    // eslint-disable-next-line no-alert
+      // eslint-disable-next-line no-alert
       alert("Failed to email receipt. Please try again.");
     }
   };

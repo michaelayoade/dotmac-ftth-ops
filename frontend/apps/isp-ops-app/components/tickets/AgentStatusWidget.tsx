@@ -6,13 +6,7 @@ import { CheckCircle2, XCircle, Clock, Coffee } from "lucide-react";
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
@@ -200,10 +194,10 @@ export function AgentStatusBadge({ status }: { status: AgentStatus }) {
     status === "available"
       ? "default"
       : status === "busy"
-      ? "destructive"
-      : status === "away"
-      ? "secondary"
-      : "outline";
+        ? "destructive"
+        : status === "away"
+          ? "secondary"
+          : "outline";
 
   return (
     <Badge variant={variant}>

@@ -19,16 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@dotmac/ui";
-import {
-  Ban,
-  Edit,
-  Eye,
-  MoreHorizontal,
-  Play,
-  Trash2,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
+import { Ban, Edit, Eye, MoreHorizontal, Play, Trash2, Wifi, WifiOff } from "lucide-react";
 import type { Subscriber, SubscriberStatus, ConnectionType } from "@/hooks/useSubscribers";
 import { formatDistanceToNow } from "date-fns";
 

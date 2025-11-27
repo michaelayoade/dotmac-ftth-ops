@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
@@ -148,7 +141,7 @@ export default function PlansPage() {
     currency: plan.currency,
     status: plan.isActive ? "active" : ("inactive" as "active" | "inactive" | "archived"),
     tier:
-      (plan['name']?.toLowerCase() as "starter" | "professional" | "enterprise" | "custom") ||
+      (plan["name"]?.toLowerCase() as "starter" | "professional" | "enterprise" | "custom") ||
       "custom",
     features: [],
     popular: false,
@@ -269,7 +262,10 @@ export default function PlansPage() {
       // Archive plan via API (DELETE or PATCH to archived status)
       await apiClient.delete(`/billing/plans/${selectedPlan.id}`);
 
-      logger.info("Billing plan archived", { planId: selectedPlan.id, planName: selectedPlan.name });
+      logger.info("Billing plan archived", {
+        planId: selectedPlan.id,
+        planName: selectedPlan.name,
+      });
 
       toast({
         title: "Success",
@@ -559,12 +555,7 @@ export default function PlansPage() {
                       <Archive className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled
-                      title="Plan is not active"
-                    >
+                    <Button variant="outline" size="sm" disabled title="Plan is not active">
                       <Archive className="h-4 w-4" />
                     </Button>
                   )}

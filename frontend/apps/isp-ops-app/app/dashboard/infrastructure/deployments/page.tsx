@@ -6,14 +6,7 @@ import { Plus, RefreshCw, Server, Play, Pause, Trash2 } from "lucide-react";
 import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 
@@ -31,7 +24,12 @@ interface DeploymentInstance {
 
 export default function DeploymentsPage() {
   // Fetch deployment instances
-  const { data: instances, isLoading, refetch, isFetching } = useQuery({
+  const {
+    data: instances,
+    isLoading,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["deployment-instances"],
     queryFn: async () => {
       const response = await apiClient.get("/deployment/instances");
@@ -106,7 +104,9 @@ export default function DeploymentsPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Provisioning</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Provisioning
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">

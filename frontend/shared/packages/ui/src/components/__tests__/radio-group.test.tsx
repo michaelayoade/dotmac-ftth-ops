@@ -16,7 +16,7 @@ describe("RadioGroup", () => {
       const { container } = render(
         <RadioGroup>
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       expect(container.firstChild).toBeInTheDocument();
@@ -26,7 +26,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup data-testid="radio-group">
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const group = screen.getByTestId("radio-group");
@@ -37,7 +37,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup data-testid="radio-group">
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const group = screen.getByTestId("radio-group");
@@ -48,7 +48,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup className="custom-group" data-testid="radio-group">
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const group = screen.getByTestId("radio-group");
@@ -61,7 +61,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio");
@@ -72,7 +72,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio");
@@ -83,7 +83,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="option1" data-testid="radio" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByTestId("radio");
@@ -94,7 +94,7 @@ describe("RadioGroup", () => {
         "border",
         "border-border",
         "text-sky-500",
-        "focus:ring-sky-500"
+        "focus:ring-sky-500",
       );
     });
 
@@ -102,7 +102,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="option1" className="custom-radio" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio");
@@ -113,7 +113,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="test-value" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio");
@@ -128,7 +128,7 @@ describe("RadioGroup", () => {
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
           <RadioGroupItem value="option3" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio");
@@ -140,7 +140,7 @@ describe("RadioGroup", () => {
         <RadioGroup name="test-group">
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio");
@@ -154,7 +154,7 @@ describe("RadioGroup", () => {
         <RadioGroup>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio");
@@ -174,7 +174,7 @@ describe("RadioGroup", () => {
         <RadioGroup>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -192,7 +192,7 @@ describe("RadioGroup", () => {
         <RadioGroup>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -214,7 +214,7 @@ describe("RadioGroup", () => {
         <RadioGroup onValueChange={handleChange}>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio");
@@ -234,7 +234,7 @@ describe("RadioGroup", () => {
         <RadioGroup value="option1" onValueChange={onValueChange}>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -248,7 +248,7 @@ describe("RadioGroup", () => {
         <RadioGroup value="option2" onValueChange={onValueChange}>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       expect(radios[0].checked).toBe(false);
@@ -260,7 +260,7 @@ describe("RadioGroup", () => {
         <RadioGroup value="option2">
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -275,7 +275,7 @@ describe("RadioGroup", () => {
         <RadioGroup defaultValue="option2">
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -290,7 +290,7 @@ describe("RadioGroup", () => {
         <RadioGroup defaultValue="option1">
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -309,7 +309,7 @@ describe("RadioGroup", () => {
         <RadioGroup>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" disabled />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio");
@@ -324,7 +324,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup onValueChange={handleChange}>
           <RadioGroupItem value="option1" disabled />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio");
@@ -340,7 +340,7 @@ describe("RadioGroup", () => {
         <RadioGroup>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio");
@@ -351,7 +351,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="option1" aria-label="First option" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio", { name: "First option" });
@@ -362,7 +362,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio");
@@ -378,7 +378,7 @@ describe("RadioGroup", () => {
         <RadioGroup>
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -400,7 +400,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup ref={ref}>
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
@@ -412,7 +412,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem ref={ref} value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       expect(ref.current).toBeInstanceOf(HTMLInputElement);
@@ -435,7 +435,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup>
           <RadioGroupItem value="option1" id="my-radio" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radio = screen.getByRole("radio");
@@ -446,7 +446,7 @@ describe("RadioGroup", () => {
       render(
         <RadioGroup data-testid="group" data-custom="value">
           <RadioGroupItem value="option1" data-testid="radio" data-item="value" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const group = screen.getByTestId("group");
@@ -469,7 +469,7 @@ describe("RadioGroup", () => {
             <RadioGroupItem value="option2" id="opt2" />
             <label htmlFor="opt2">Option 2</label>
           </div>
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       expect(screen.getByText("Option 1")).toBeInTheDocument();
@@ -489,7 +489,7 @@ describe("RadioGroup", () => {
             <RadioGroupItem value="large" />
           </RadioGroup>
           <button type="submit">Submit</button>
-        </form>
+        </form>,
       );
 
       await user.click(screen.getByRole("button"));
@@ -513,7 +513,7 @@ describe("RadioGroup", () => {
             </div>
             <p className="text-sm text-muted-foreground">Best for teams</p>
           </div>
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       expect(screen.getByText("Free")).toBeInTheDocument();
@@ -534,7 +534,7 @@ describe("RadioGroup", () => {
               <label htmlFor="dark">Dark</label>
             </RadioGroup>
           </div>
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Theme")).toBeInTheDocument();
@@ -555,7 +555,7 @@ describe("RadioGroup", () => {
               Coming Soon
             </label>
           </div>
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       const radios = screen.getAllByRole("radio");
@@ -577,7 +577,7 @@ describe("RadioGroup", () => {
           <RadioGroupItem value="option1" />
           <span>Some text</span>
           <RadioGroupItem value="option2" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       expect(screen.getAllByRole("radio")).toHaveLength(2);
@@ -590,7 +590,7 @@ describe("RadioGroup", () => {
           <RadioGroupItem value="option1" />
           <RadioGroupItem value="option2" />
           <RadioGroupItem value="option3" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       let radios = screen.getAllByRole("radio") as HTMLInputElement[];
@@ -601,7 +601,7 @@ describe("RadioGroup", () => {
           <RadioGroupItem value="option3" />
           <RadioGroupItem value="option2" />
           <RadioGroupItem value="option1" />
-        </RadioGroup>
+        </RadioGroup>,
       );
 
       radios = screen.getAllByRole("radio") as HTMLInputElement[];

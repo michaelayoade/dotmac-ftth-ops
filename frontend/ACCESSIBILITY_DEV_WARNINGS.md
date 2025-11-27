@@ -9,6 +9,7 @@ Guide to using development-time accessibility warnings and enhanced components.
 The platform includes comprehensive development-time warnings to catch accessibility issues before they reach production.
 
 **Two-Layer Approach:**
+
 1. **Runtime Warnings** - Console warnings during development
 2. **Static Analysis** - ESLint rules for build-time checks
 
@@ -147,35 +148,32 @@ import { Link } from '@dotmac/ui/enhanced';
 
 ### All Available Warnings
 
-| Warning Function | Checks For | Severity |
-|-----------------|------------|----------|
-| `warnMissingLabel` | Interactive elements without labels | Error |
-| `warnMissingAlt` | Images without alt text | Error |
-| `warnMissingFormLabel` | Form inputs without labels | Error |
-| `warnMissingButtonType` | Buttons in forms without explicit type | Warning |
-| `warnNotKeyboardAccessible` | onClick on non-interactive elements | Warning |
-| `warnSkippedHeadingLevel` | Skipped heading levels (h1 → h3) | Warning |
-| `warnLowContrast` | Insufficient color contrast | Warning |
-| `warnInvalidAria` | Incorrect ARIA usage | Error |
-| `warnRemovedFocusIndicator` | outline: none without replacement | Warning |
-| `warnTableWithoutHeaders` | Tables missing `<th>` headers | Warning |
-| `warnImproperList` | Invalid list structure | Warning |
-| `warnModalWithoutFocusTrap` | Modals without focus management | Error |
-| `warnMissingLandmarks` | Pages missing landmark regions | Warning |
+| Warning Function            | Checks For                             | Severity |
+| --------------------------- | -------------------------------------- | -------- |
+| `warnMissingLabel`          | Interactive elements without labels    | Error    |
+| `warnMissingAlt`            | Images without alt text                | Error    |
+| `warnMissingFormLabel`      | Form inputs without labels             | Error    |
+| `warnMissingButtonType`     | Buttons in forms without explicit type | Warning  |
+| `warnNotKeyboardAccessible` | onClick on non-interactive elements    | Warning  |
+| `warnSkippedHeadingLevel`   | Skipped heading levels (h1 → h3)       | Warning  |
+| `warnLowContrast`           | Insufficient color contrast            | Warning  |
+| `warnInvalidAria`           | Incorrect ARIA usage                   | Error    |
+| `warnRemovedFocusIndicator` | outline: none without replacement      | Warning  |
+| `warnTableWithoutHeaders`   | Tables missing `<th>` headers          | Warning  |
+| `warnImproperList`          | Invalid list structure                 | Warning  |
+| `warnModalWithoutFocusTrap` | Modals without focus management        | Error    |
+| `warnMissingLandmarks`      | Pages missing landmark regions         | Warning  |
 
 ### Using Warning Functions
 
 ```tsx
-import {
-  warnMissingLabel,
-  warnNotKeyboardAccessible
-} from '@dotmac/utils/a11y-dev-warnings';
+import { warnMissingLabel, warnNotKeyboardAccessible } from "@dotmac/utils/a11y-dev-warnings";
 
 // In your component
 useEffect(() => {
-  warnMissingLabel('CustomButton', {
+  warnMissingLabel("CustomButton", {
     children,
-    'aria-label': ariaLabel
+    "aria-label": ariaLabel,
   });
 }, [children, ariaLabel]);
 ```
@@ -188,15 +186,14 @@ Add to your `.eslintrc.json`:
 
 ```json
 {
-  "extends": [
-    "./.eslintrc.a11y.json"
-  ]
+  "extends": ["./.eslintrc.a11y.json"]
 }
 ```
 
 ### Key Rules
 
 **Enforced (Errors):**
+
 - `jsx-a11y/alt-text` - All images must have alt text
 - `jsx-a11y/aria-props` - ARIA attributes must be valid
 - `jsx-a11y/label-has-associated-control` - Form labels must be associated
@@ -205,11 +202,13 @@ Add to your `.eslintrc.json`:
 - `jsx-a11y/anchor-is-valid` - Links must have valid href
 
 **Warnings:**
+
 - `jsx-a11y/click-events-have-key-events` - onClick needs keyboard handler
 - `jsx-a11y/no-autofocus` - Avoid autofocus
 - `jsx-a11y/media-has-caption` - Media should have captions
 
 **Stricter Rules for Forms:**
+
 ```json
 {
   "files": ["**/forms/**/*.tsx"],
@@ -298,10 +297,10 @@ When you intentionally want to bypass warnings (rare):
 
 ```tsx
 // In development
-import { Button, Image, Input, Link } from '@dotmac/ui/enhanced';
+import { Button, Image, Input, Link } from "@dotmac/ui/enhanced";
 
 // In production (if you want to skip runtime checks)
-import { Button, Image, Input, Link } from '@dotmac/ui';
+import { Button, Image, Input, Link } from "@dotmac/ui";
 ```
 
 ### 2. Fix Warnings as You Go
@@ -449,7 +448,7 @@ echo "✅ Accessibility checks passed"
 
 ```tsx
 // Add to development environment
-process.env.A11Y_VERBOSE = 'true';
+process.env.A11Y_VERBOSE = "true";
 ```
 
 ### 2. Component-Specific Debugging
@@ -458,8 +457,8 @@ process.env.A11Y_VERBOSE = 'true';
 <Button
   onClick={handleClick}
   ref={(node) => {
-    if (node && !node.getAttribute('aria-label')) {
-      console.trace('Button without aria-label');
+    if (node && !node.getAttribute("aria-label")) {
+      console.trace("Button without aria-label");
     }
   }}
 >
@@ -470,7 +469,8 @@ process.env.A11Y_VERBOSE = 'true';
 ### 3. Browser DevTools
 
 Use React DevTools to inspect component props:
-- Check for aria-* attributes
+
+- Check for aria-\* attributes
 - Verify accessible labels
 - Inspect role attributes
 

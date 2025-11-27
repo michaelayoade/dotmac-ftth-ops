@@ -25,6 +25,7 @@ from dotmac.platform.access.drivers import (
     ONUProvisionResult,
 )
 from dotmac.platform.access.registry import AccessDriverRegistry, DriverDescriptor
+from dotmac.platform.settings import get_settings
 from dotmac.platform.voltha.schemas import Device as VolthaDevice
 from dotmac.platform.voltha.schemas import (
     DeviceDetailResponse,
@@ -38,7 +39,6 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAAlarmListResponse,
     VOLTHAHealthResponse,
 )
-from dotmac.platform.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 
@@ -179,7 +179,11 @@ class AccessNetworkService:
         }
 
     async def acknowledge_alarm(
-        self, alarm_id: str, olt_id: str | None = None, actor: str | None = None, note: str | None = None
+        self,
+        alarm_id: str,
+        olt_id: str | None = None,
+        actor: str | None = None,
+        note: str | None = None,
     ) -> dict[str, Any]:
         """
         Attempt to acknowledge an alarm.
@@ -217,7 +221,11 @@ class AccessNetworkService:
         }
 
     async def clear_alarm(
-        self, alarm_id: str, olt_id: str | None = None, actor: str | None = None, note: str | None = None
+        self,
+        alarm_id: str,
+        olt_id: str | None = None,
+        actor: str | None = None,
+        note: str | None = None,
     ) -> dict[str, Any]:
         """
         Attempt to clear an alarm.

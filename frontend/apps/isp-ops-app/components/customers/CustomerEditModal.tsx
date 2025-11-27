@@ -24,10 +24,5 @@ export function CustomerEditModal(props: CustomerEditModalProps) {
     props.onCustomerUpdated(customer);
   };
 
-  return (
-    <SharedCustomerEditModal
-      {...props}
-      onCustomerUpdated={handleCustomerUpdated}
-    />
-  );
+  return <SharedCustomerEditModal {...props} onCustomerUpdated={handleCustomerUpdated} />;
 }

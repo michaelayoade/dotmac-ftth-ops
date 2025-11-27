@@ -368,7 +368,9 @@ export function DeviceManagement({
                     {selectedDevice.device_info["ModelName"] && (
                       <div>
                         <span className="text-muted-foreground">Model:</span>
-                        <p className="font-medium mt-1">{selectedDevice.device_info["ModelName"]}</p>
+                        <p className="font-medium mt-1">
+                          {selectedDevice.device_info["ModelName"]}
+                        </p>
                       </div>
                     )}
                     {selectedDevice.device_info["SerialNumber"] && (

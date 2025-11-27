@@ -7,14 +7,7 @@ import { Button } from "@dotmac/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { CreateIPPoolModal } from "@/components/ipam/CreateIPPoolModal";
 import { EditIPPoolModal } from "@/components/ipam/EditIPPoolModal";
@@ -45,7 +38,13 @@ export default function IPPoolManagementPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
 
   // Fetch IP pools
-  const { data: pools, isLoading, error, refetch, isFetching } = useQuery({
+  const {
+    data: pools,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["ip-pools", poolTypeFilter, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -106,11 +105,7 @@ export default function IPPoolManagementPage() {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            disabled={isLoading || isFetching}
-          >
+          <Button variant="outline" onClick={() => refetch()} disabled={isLoading || isFetching}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -125,9 +120,7 @@ export default function IPPoolManagementPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Pools
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Pools</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pools?.length || 0}</div>
@@ -251,9 +244,7 @@ export default function IPPoolManagementPage() {
                         <Badge variant="outline">{pool.pool_type.toUpperCase()}</Badge>
                       </TableCell>
                       <TableCell className="font-mono text-sm">{pool.network_cidr}</TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {pool.gateway || "-"}
-                      </TableCell>
+                      <TableCell className="font-mono text-sm">{pool.gateway || "-"}</TableCell>
                       <TableCell>{pool.vlan_id || "-"}</TableCell>
                       <TableCell>{getStatusBadge(pool.status)}</TableCell>
                       <TableCell>
@@ -274,11 +265,7 @@ export default function IPPoolManagementPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedPool(pool)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setSelectedPool(pool)}>
                           Edit
                         </Button>
                       </TableCell>

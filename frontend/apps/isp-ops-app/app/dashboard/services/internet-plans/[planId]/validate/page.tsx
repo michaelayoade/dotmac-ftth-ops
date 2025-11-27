@@ -42,7 +42,7 @@ import type {
 export default function PlanValidationPage() {
   const params = useParams();
   const router = useRouter();
-  const planId = params['planId'] as string;
+  const planId = params["planId"] as string;
 
   const { data: plan, isLoading: planLoading } = useInternetPlan(planId);
   const { mutate: validatePlan, isPending: validating } = useValidatePlan();
@@ -89,11 +89,12 @@ export default function PlanValidationPage() {
     if (!plan || !plan.has_fup || !plan.fup_threshold) return null;
 
     const totalUsageGB = simulationConfig.downloadGB + simulationConfig.uploadGB;
-    const fupThresholdGB = plan.fup_threshold_unit === "TB"
-      ? Number(plan.fup_threshold) * 1024
-      : plan.fup_threshold_unit === "MB"
-        ? Number(plan.fup_threshold) / 1024
-        : Number(plan.fup_threshold);
+    const fupThresholdGB =
+      plan.fup_threshold_unit === "TB"
+        ? Number(plan.fup_threshold) * 1024
+        : plan.fup_threshold_unit === "MB"
+          ? Number(plan.fup_threshold) / 1024
+          : Number(plan.fup_threshold);
 
     const fupTriggerPercentage = Math.min((fupThresholdGB / totalUsageGB) * 100, 100);
     const daysUntilFup = (fupThresholdGB / totalUsageGB) * (simulationConfig.durationHours / 24);
@@ -115,11 +116,12 @@ export default function PlanValidationPage() {
     if (!plan || !plan.has_data_cap || !plan.data_cap_amount) return null;
 
     const totalUsageGB = simulationConfig.downloadGB + simulationConfig.uploadGB;
-    const dataCapGB = plan.data_cap_unit === "TB"
-      ? Number(plan.data_cap_amount) * 1024
-      : plan.data_cap_unit === "MB"
-        ? Number(plan.data_cap_amount) / 1024
-        : Number(plan.data_cap_amount);
+    const dataCapGB =
+      plan.data_cap_unit === "TB"
+        ? Number(plan.data_cap_amount) * 1024
+        : plan.data_cap_unit === "MB"
+          ? Number(plan.data_cap_amount) / 1024
+          : Number(plan.data_cap_amount);
 
     const capTriggerPercentage = Math.min((dataCapGB / totalUsageGB) * 100, 100);
     const overageGB = Math.max(totalUsageGB - dataCapGB, 0);
@@ -239,9 +241,13 @@ export default function PlanValidationPage() {
               <div className="p-3 bg-blue-50 border border-blue-200 rounded">
                 <p className="text-xs font-medium text-blue-700 mb-1">Fair Usage Policy</p>
                 <p className="text-sm">
-                  <span className="font-bold">{plan.fup_threshold} {plan.fup_threshold_unit}</span>
+                  <span className="font-bold">
+                    {plan.fup_threshold} {plan.fup_threshold_unit}
+                  </span>
                   {" → "}
-                  <span className="text-orange-600">throttles to {plan.fup_throttle_speed} {plan.speed_unit}</span>
+                  <span className="text-orange-600">
+                    throttles to {plan.fup_throttle_speed} {plan.speed_unit}
+                  </span>
                 </p>
               </div>
             )}
@@ -249,7 +255,9 @@ export default function PlanValidationPage() {
               <div className="p-3 bg-purple-50 border border-purple-200 rounded">
                 <p className="text-xs font-medium text-purple-700 mb-1">Data Cap</p>
                 <p className="text-sm">
-                  <span className="font-bold">{plan.data_cap_amount} {plan.data_cap_unit}</span>
+                  <span className="font-bold">
+                    {plan.data_cap_amount} {plan.data_cap_unit}
+                  </span>
                   {" → "}
                   <span className="text-red-600">{plan.throttle_policy.replace(/_/g, " ")}</span>
                 </p>
@@ -308,8 +316,14 @@ export default function PlanValidationPage() {
             {/* Timeline Labels */}
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>0 GB (Day 1)</span>
-              <span>{fupAnalysis.fupThresholdGB.toFixed(0)} GB (Day {fupAnalysis.daysUntilFup.toFixed(1)})</span>
-              <span>{fupAnalysis.totalUsageGB} GB (Day {(simulationConfig.durationHours / 24).toFixed(0)})</span>
+              <span>
+                {fupAnalysis.fupThresholdGB.toFixed(0)} GB (Day{" "}
+                {fupAnalysis.daysUntilFup.toFixed(1)})
+              </span>
+              <span>
+                {fupAnalysis.totalUsageGB} GB (Day{" "}
+                {(simulationConfig.durationHours / 24).toFixed(0)})
+              </span>
             </div>
 
             {/* FUP Impact Summary */}
@@ -324,9 +338,9 @@ export default function PlanValidationPage() {
                 <p className="text-xs text-muted-foreground mb-1">Days Throttled</p>
                 <p className="text-lg font-bold text-orange-600">
                   {fupAnalysis.willTriggerFup
-                    ? ((simulationConfig.durationHours / 24) - fupAnalysis.daysUntilFup).toFixed(1)
-                    : "0"
-                  } days
+                    ? (simulationConfig.durationHours / 24 - fupAnalysis.daysUntilFup).toFixed(1)
+                    : "0"}{" "}
+                  days
                 </p>
               </div>
               <div className="p-3 bg-gray-50 rounded">
@@ -334,8 +348,7 @@ export default function PlanValidationPage() {
                 <p className="text-lg font-bold text-red-600">
                   {fupAnalysis.willTriggerFup
                     ? `${(((fupAnalysis.normalSpeed - fupAnalysis.throttledSpeed) / fupAnalysis.normalSpeed) * 100).toFixed(0)}%`
-                    : "N/A"
-                  }
+                    : "N/A"}
                 </p>
               </div>
             </div>
@@ -345,10 +358,14 @@ export default function PlanValidationPage() {
               <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded">
                 <AlertTriangle className="h-5 w-5 text-yellow-500" />
                 <div className="text-sm">
-                  <p className="font-medium text-yellow-700">FUP will trigger under this usage scenario</p>
+                  <p className="font-medium text-yellow-700">
+                    FUP will trigger under this usage scenario
+                  </p>
                   <p className="text-yellow-600">
-                    Users will experience throttled speeds ({fupAnalysis.throttledSpeed} Mbps)
-                    for approximately {((simulationConfig.durationHours / 24) - fupAnalysis.daysUntilFup).toFixed(1)} days
+                    Users will experience throttled speeds ({fupAnalysis.throttledSpeed} Mbps) for
+                    approximately{" "}
+                    {(simulationConfig.durationHours / 24 - fupAnalysis.daysUntilFup).toFixed(1)}{" "}
+                    days
                   </p>
                 </div>
               </div>
@@ -378,7 +395,8 @@ export default function PlanValidationPage() {
               <div className="flex justify-between text-sm">
                 <span>Usage Progress</span>
                 <span className="font-bold">
-                  {dataCapAnalysis.totalUsageGB.toFixed(0)} / {dataCapAnalysis.dataCapGB.toFixed(0)} GB
+                  {dataCapAnalysis.totalUsageGB.toFixed(0)} / {dataCapAnalysis.dataCapGB.toFixed(0)}{" "}
+                  GB
                 </span>
               </div>
               <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
@@ -437,8 +455,9 @@ export default function PlanValidationPage() {
               )}
               {plan.unrestricted_speed_multiplier && (
                 <p className="text-sm mt-1 text-indigo-700">
-                  ✓ Speed boost: {plan.unrestricted_speed_multiplier}x
-                  ({(plan.download_speed * Number(plan.unrestricted_speed_multiplier)).toFixed(0)} Mbps)
+                  ✓ Speed boost: {plan.unrestricted_speed_multiplier}x (
+                  {(plan.download_speed * Number(plan.unrestricted_speed_multiplier)).toFixed(0)}{" "}
+                  Mbps)
                 </p>
               )}
             </div>

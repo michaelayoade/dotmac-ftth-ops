@@ -145,23 +145,21 @@ export function AddressAutocomplete({
       setIsLoading(true);
 
       try {
-        const response = await new Promise<any[]>(
-          (resolve, reject) => {
-            autocompleteService.current!.getPlacePredictions(
-              {
-                input: query,
-                types: ["address"],
-              },
-              (predictions: any, status: any) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-                  resolve(predictions);
-                } else {
-                  reject(status);
-                }
-              },
-            );
-          },
-        );
+        const response = await new Promise<any[]>((resolve, reject) => {
+          autocompleteService.current!.getPlacePredictions(
+            {
+              input: query,
+              types: ["address"],
+            },
+            (predictions: any, status: any) => {
+              if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                resolve(predictions);
+              } else {
+                reject(status);
+              }
+            },
+          );
+        });
 
         setSuggestions(response);
       } catch (error) {
@@ -175,9 +173,7 @@ export function AddressAutocomplete({
   );
 
   // Parse Google Places result into structured components
-  const parseAddressComponents = (
-    placeResult: any,
-  ): AddressComponents => {
+  const parseAddressComponents = (placeResult: any): AddressComponents => {
     const components: AddressComponents = {
       formattedAddress: placeResult.formatted_address,
       latitude: placeResult.geometry?.location?.lat(),

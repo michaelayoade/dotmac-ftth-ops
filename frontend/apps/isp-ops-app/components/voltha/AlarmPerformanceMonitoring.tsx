@@ -19,13 +19,7 @@ import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { VOLTHAAlarm, AlarmSeverity } from "@/types/voltha";
@@ -146,11 +140,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
   };
 
   // Use React Query hooks
-  const {
-    data: alarms = [],
-    isLoading: loading,
-    refetch: loadAlarms,
-  } = useVOLTHAAlarms(deviceId);
+  const { data: alarms = [], isLoading: loading, refetch: loadAlarms } = useVOLTHAAlarms(deviceId);
   const { data: volthaHealth } = useVOLTHAHealth();
 
   const acknowledgeMutation = useAcknowledgeAlarm({
@@ -325,7 +315,12 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
               <CardDescription>Real-time alarm monitoring and management</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={severityFilter} onValueChange={setSeverityFilter} open={severitySelectOpen} onOpenChange={setSeveritySelectOpen}>
+              <Select
+                value={severityFilter}
+                onValueChange={setSeverityFilter}
+                open={severitySelectOpen}
+                onOpenChange={setSeveritySelectOpen}
+              >
                 <SelectTrigger className="w-40" aria-label="Filter alarms by severity">
                   <SelectValue />
                 </SelectTrigger>
@@ -338,7 +333,12 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                 </SelectContent>
               </Select>
 
-              <Select value={stateFilter} onValueChange={setStateFilter} open={stateSelectOpen} onOpenChange={setStateSelectOpen}>
+              <Select
+                value={stateFilter}
+                onValueChange={setStateFilter}
+                open={stateSelectOpen}
+                onOpenChange={setStateSelectOpen}
+              >
                 <SelectTrigger className="w-32" aria-label="Filter alarms by state">
                   <SelectValue />
                 </SelectTrigger>
@@ -349,7 +349,12 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" size="sm" onClick={() => loadAlarms()} aria-label="Refresh alarms">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => loadAlarms()}
+                aria-label="Refresh alarms"
+              >
                 <Activity className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
@@ -496,7 +501,9 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                     {performanceMetrics.overviewHealth.toFixed(1)}%
                   </div>
                   <Progress value={performanceMetrics.overviewHealth} className="h-2 mt-2" />
-                  {metricsLoading && <div className="text-xs text-muted-foreground mt-1">Updating…</div>}
+                  {metricsLoading && (
+                    <div className="text-xs text-muted-foreground mt-1">Updating…</div>
+                  )}
                 </div>
 
                 <div className="p-4 rounded-lg border bg-card">
@@ -518,7 +525,10 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                   <div className="text-2xl font-bold text-yellow-600">
                     {performanceMetrics.errors.crc.toFixed(2)}%
                   </div>
-                  <Progress value={Math.min(100, performanceMetrics.errors.crc)} className="h-2 mt-2" />
+                  <Progress
+                    value={Math.min(100, performanceMetrics.errors.crc)}
+                    className="h-2 mt-2"
+                  />
                 </div>
               </div>
             </TabsContent>

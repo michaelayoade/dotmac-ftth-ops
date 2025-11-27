@@ -2,7 +2,12 @@
  * Platform Admin App - useTenantAddons tests
  * Tests for tenant addon management with TanStack Query
  */
-import {useAvailableAddons, useActiveAddons, useAddonOperations, useTenantAddons} from "../useTenantAddons";
+import {
+  useAvailableAddons,
+  useActiveAddons,
+  useAddonOperations,
+  useTenantAddons,
+} from "../useTenantAddons";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
@@ -128,7 +133,10 @@ describe("useTenantAddons", () => {
       const request = { quantity: 1 };
       await result.current.purchaseAddon("addon_1", request);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/billing/tenant/addons/addon_1/purchase", request);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/billing/tenant/addons/addon_1/purchase",
+        request,
+      );
     });
 
     it("should update addon quantity successfully", async () => {

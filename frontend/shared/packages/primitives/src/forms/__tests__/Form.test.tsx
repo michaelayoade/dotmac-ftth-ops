@@ -38,7 +38,11 @@ const TestForm = ({ onSubmit = jest.fn() }: { onSubmit?: jest.fn }) => {
         {({ value, onChange, error, invalid }) => (
           <FormItem>
             <FormLabel required>Email</FormLabel>
-            <Input value={value || ""} onChange={(e) => onChange(e.target.value)} data-testid="email-input" />
+            <Input
+              value={value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              data-testid="email-input"
+            />
             {error && <FormMessage data-testid="email-error">{error}</FormMessage>}
           </FormItem>
         )}
@@ -48,7 +52,11 @@ const TestForm = ({ onSubmit = jest.fn() }: { onSubmit?: jest.fn }) => {
         {({ value, onChange }) => (
           <FormItem>
             <FormLabel>Name</FormLabel>
-            <Input value={value || ""} onChange={(e) => onChange(e.target.value)} data-testid="name-input" />
+            <Input
+              value={value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              data-testid="name-input"
+            />
           </FormItem>
         )}
       </FormField>
@@ -423,7 +431,7 @@ describe("Form Components", () => {
     it("renders checkbox input", () => {
       render(<Checkbox data-testid="checkbox" />);
 
-      const checkbox = screen.getByTestId("checkbox").querySelector("input[type=\"checkbox\"]");
+      const checkbox = screen.getByTestId("checkbox").querySelector('input[type="checkbox"]');
       expect(checkbox).toBeInTheDocument();
     });
 
@@ -463,7 +471,7 @@ describe("Form Components", () => {
     it("renders radio input", () => {
       render(<Radio name="test" value="option1" data-testid="radio" />);
 
-      const radio = screen.getByTestId("radio").querySelector("input[type=\"radio\"]");
+      const radio = screen.getByTestId("radio").querySelector('input[type="radio"]');
       expect(radio).toBeInTheDocument();
       expect(radio).toHaveAttribute("name", "test");
       expect(radio).toHaveAttribute("value", "option1");

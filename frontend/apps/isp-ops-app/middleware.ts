@@ -60,9 +60,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Check if trying to access platform-only routes
-  const isAccessingPlatformRoute = PLATFORM_ONLY_ROUTES.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isAccessingPlatformRoute = PLATFORM_ONLY_ROUTES.some((route) => pathname.startsWith(route));
 
   if (isAccessingPlatformRoute) {
     // Block access with forbidden response
@@ -73,9 +71,10 @@ export function middleware(request: NextRequest) {
         route: pathname,
         allowedApp: "platform-admin-app",
         currentApp: "isp-ops-app",
-        suggestion: "Contact your platform administrator if you need access to platform-level features.",
+        suggestion:
+          "Contact your platform administrator if you need access to platform-level features.",
       },
-      { status: 403 }
+      { status: 403 },
     );
   }
 

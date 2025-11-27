@@ -3,7 +3,7 @@
  * Mocks tenant onboarding automation endpoints
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // In-memory storage
 let onboardingStatuses: Map<string, any> = new Map();
@@ -47,7 +47,9 @@ function createMockOnboardingResponse(data: Partial<any> = {}): any {
     created: data.created ?? true,
     onboarding_status: data.onboarding_status || "complete",
     admin_user_id: data.admin_user_id || (data.admin_user ? `user-${Date.now()}` : undefined),
-    admin_user_password: data.admin_user_password || (data.admin_user?.generate_password ? "GeneratedPassword123!" : undefined),
+    admin_user_password:
+      data.admin_user_password ||
+      (data.admin_user?.generate_password ? "GeneratedPassword123!" : undefined),
     invitations: data.invitations || [],
     applied_settings: data.applied_settings || [],
     metadata: data.metadata || {},
@@ -108,7 +110,10 @@ export const tenantOnboardingHandlers = [
 
     // Validate required fields
     if (!body.tenant && !body.tenant_id) {
-      return HttpResponse.json({ detail: "Either tenant or tenant_id must be provided" }, { status: 400 });
+      return HttpResponse.json(
+        { detail: "Either tenant or tenant_id must be provided" },
+        { status: 400 },
+      );
     }
 
     if (body.tenant && !body.tenant.name) {
@@ -149,10 +154,16 @@ export const tenantOnboardingHandlers = [
         "Starting tenant onboarding process",
         created ? "Creating new tenant" : "Using existing tenant",
         body.admin_user ? "Creating admin user" : "Skipping admin user creation",
-        body.options?.apply_default_settings ? "Applying default settings" : "Skipping default settings",
-        body.invitations?.length ? `Sending ${body.invitations.length} invitations` : "No invitations to send",
+        body.options?.apply_default_settings
+          ? "Applying default settings"
+          : "Skipping default settings",
+        body.invitations?.length
+          ? `Sending ${body.invitations.length} invitations`
+          : "No invitations to send",
         body.feature_flags ? "Updating feature flags" : "No feature flags to update",
-        body.options?.mark_onboarding_complete ? "Marking onboarding as complete" : "Onboarding status: pending",
+        body.options?.mark_onboarding_complete
+          ? "Marking onboarding as complete"
+          : "Onboarding status: pending",
         "Onboarding process completed",
       ],
     });
@@ -197,7 +208,10 @@ export const tenantOnboardingHandlers = [
     const status = onboardingStatuses.get(tenantId as string);
 
     if (!status) {
-      return HttpResponse.json({ detail: "Onboarding status not found for tenant" }, { status: 404 });
+      return HttpResponse.json(
+        { detail: "Onboarding status not found for tenant" },
+        { status: 404 },
+      );
     }
 
     return HttpResponse.json(status);

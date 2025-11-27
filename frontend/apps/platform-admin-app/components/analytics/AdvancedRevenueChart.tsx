@@ -17,25 +17,9 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
-import {
-  DollarSign,
-  Download,
-  TrendingUp,
-} from "lucide-react";
-import {
-  format,
-  subDays,
-  subMonths,
-  eachDayOfInterval,
-  eachMonthOfInterval,
-} from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { DollarSign, Download, TrendingUp } from "lucide-react";
+import { format, subDays, subMonths, eachDayOfInterval, eachMonthOfInterval } from "date-fns";
 
 type ChartType = "line" | "area" | "bar";
 type TimeRange = "7d" | "30d" | "90d" | "12m";

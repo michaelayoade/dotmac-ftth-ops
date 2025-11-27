@@ -9,14 +9,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
@@ -80,7 +73,7 @@ function SubscribersDashboardContent() {
     queryFn: async () => {
       if (!selectedSubscriber?.subscriberId) return null;
       const response = await fetch(
-        `/api/v1/network/subscribers/${selectedSubscriber.subscriberId}/profile`
+        `/api/v1/network/subscribers/${selectedSubscriber.subscriberId}/profile`,
       );
       if (response.status === 404) return null;
       if (!response.ok) throw new Error("Failed to fetch network profile");

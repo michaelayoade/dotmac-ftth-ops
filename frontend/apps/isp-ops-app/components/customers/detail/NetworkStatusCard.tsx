@@ -16,10 +16,7 @@ interface NetworkStatusCardProps {
   customerId: string;
 }
 
-export function NetworkStatusCard({
-  network,
-  customerId,
-}: NetworkStatusCardProps) {
+export function NetworkStatusCard({ network, customerId }: NetworkStatusCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -53,9 +50,7 @@ export function NetworkStatusCard({
               <Globe className="h-3 w-3" />
               IPv6
             </span>
-            <span className="font-mono text-sm truncate max-w-[150px]">
-              {network.ipv6Prefix}
-            </span>
+            <span className="font-mono text-sm truncate max-w-[150px]">{network.ipv6Prefix}</span>
           </div>
         )}
         {network?.bandwidth && (

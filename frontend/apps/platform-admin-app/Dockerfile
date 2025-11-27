@@ -19,7 +19,6 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1 \
     DATABASE_URL="postgresql://build:build@localhost:5432/build" \
-    BETTER_AUTH_SECRET="build-time-secret-not-used-in-production" \
     JWT_SECRET="build-time-jwt-secret-not-used-in-production" \
     NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
     NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL} \

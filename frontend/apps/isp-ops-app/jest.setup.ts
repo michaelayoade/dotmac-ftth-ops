@@ -157,9 +157,9 @@ import axios from "axios";
 
 // Configure axios to use fetch adapter in test environment (for MSW compatibility)
 // This ensures axios can properly read MSW's streamed responses
-if (typeof window !== 'undefined') {
-  axios.defaults.adapter = 'fetch' as any;
-  apiClient.defaults.adapter = 'fetch' as any;
+if (typeof window !== "undefined") {
+  axios.defaults.adapter = "fetch" as any;
+  apiClient.defaults.adapter = "fetch" as any;
 }
 
 if (!(global as any).TextEncoder) {
@@ -207,7 +207,7 @@ if (typeof globalAny.URL.revokeObjectURL !== "function") {
   globalAny.URL.revokeObjectURL = jest.fn();
 }
 
-const shouldPatchRenderHook = process.env['DOTMAC_ENABLE_RENDER_HOOK_PATCH'] === "true";
+const shouldPatchRenderHook = process.env["DOTMAC_ENABLE_RENDER_HOOK_PATCH"] === "true";
 
 if (shouldPatchRenderHook) {
   try {
@@ -229,7 +229,9 @@ if (shouldPatchRenderHook) {
           ? React.createElement(Wrapper, null, React.createElement(HookContainer, { props }))
           : React.createElement(HookContainer, { props });
 
-      const { rerender: baseRerender, unmount } = testingLibraryReact.render(renderTree(initialProps));
+      const { rerender: baseRerender, unmount } = testingLibraryReact.render(
+        renderTree(initialProps),
+      );
 
       const rerender = (newProps?: unknown) => {
         baseRerender(renderTree(newProps));
@@ -244,7 +246,10 @@ if (shouldPatchRenderHook) {
 
     const descriptor = Object.getOwnPropertyDescriptor(testingLibraryReact, "renderHook");
     const canPatchDirectly =
-      !descriptor || descriptor.configurable || descriptor.writable || typeof descriptor?.set === "function";
+      !descriptor ||
+      descriptor.configurable ||
+      descriptor.writable ||
+      typeof descriptor?.set === "function";
 
     if (canPatchDirectly) {
       Object.defineProperty(testingLibraryReact, "renderHook", {
@@ -255,8 +260,9 @@ if (shouldPatchRenderHook) {
       });
     } else if (require.cache && require.cache[testingLibraryModuleId]) {
       const cachedModule = require.cache[testingLibraryModuleId];
-      const clonedExports =
-        Object.create(Object.getPrototypeOf(testingLibraryReact) ?? Object.prototype);
+      const clonedExports = Object.create(
+        Object.getPrototypeOf(testingLibraryReact) ?? Object.prototype,
+      );
 
       for (const key of Reflect.ownKeys(testingLibraryReact)) {
         if (key === "renderHook") {

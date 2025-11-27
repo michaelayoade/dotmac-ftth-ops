@@ -149,7 +149,7 @@ describe("error-handler", () => {
             description: "API request failed",
             variant: "destructive",
           }),
-        })
+        }),
       );
     });
 
@@ -162,7 +162,7 @@ describe("error-handler", () => {
       // Check that toast event was dispatched with custom message
       const calls = eventSpy.mock.calls;
       expect(calls.length).toBeGreaterThan(0);
-      const toastCall = calls.find(call => call[0]?.type === "toast");
+      const toastCall = calls.find((call) => call[0]?.type === "toast");
       expect(toastCall).toBeDefined();
       if (toastCall && toastCall[0] && toastCall[0].detail) {
         expect(toastCall[0].detail.description).toBe("Custom Error Message");
@@ -212,7 +212,7 @@ describe("error-handler", () => {
           detail: expect.objectContaining({
             description: "Regular error",
           }),
-        })
+        }),
       );
     });
 
@@ -225,7 +225,7 @@ describe("error-handler", () => {
           detail: expect.objectContaining({
             description: "String error message",
           }),
-        })
+        }),
       );
     });
 
@@ -238,7 +238,7 @@ describe("error-handler", () => {
           detail: expect.objectContaining({
             description: "An unexpected error occurred. Please try again.",
           }),
-        })
+        }),
       );
     });
 
@@ -273,7 +273,7 @@ describe("error-handler", () => {
             title: "Validation Error",
             description: "Invalid email format",
           }),
-        })
+        }),
       );
     });
 
@@ -393,7 +393,7 @@ describe("error-handler", () => {
             title: "Access Denied",
             description: "You do not have permission to perform this action.",
           }),
-        })
+        }),
       );
     });
 
@@ -410,7 +410,7 @@ describe("error-handler", () => {
           detail: expect.objectContaining({
             title: "Not Found",
           }),
-        })
+        }),
       );
     });
 
@@ -427,7 +427,7 @@ describe("error-handler", () => {
           detail: expect.objectContaining({
             title: "Validation Error",
           }),
-        })
+        }),
       );
     });
 
@@ -445,7 +445,7 @@ describe("error-handler", () => {
             title: "Server Error",
             description: "An unexpected server error occurred. Please try again later.",
           }),
-        })
+        }),
       );
     });
   });

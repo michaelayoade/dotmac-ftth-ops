@@ -10,7 +10,7 @@ import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { handleError } from "@/lib/utils/error-handler";
 import { useToast } from "@dotmac/ui";
-import { isAuthBypassEnabled } from "@dotmac/better-auth";
+import { isAuthBypassEnabled } from "@shared/lib/auth";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -369,7 +369,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         if (p.name === "*") return true;
 
         // Category and action match (convert enum to string for comparison)
-        if (String(p.category) === category && (!action || String(p.action) === action)) return true;
+        if (String(p.category) === category && (!action || String(p.action) === action))
+          return true;
 
         return false;
       });
@@ -553,10 +554,7 @@ export function useRole(role: string): boolean {
 /**
  * Hook for category access
  */
-export function useCategoryAccess(
-  category: string,
-  action?: string,
-): boolean {
+export function useCategoryAccess(category: string, action?: string): boolean {
   const { canAccess } = useRBAC();
   return canAccess(category, action);
 }

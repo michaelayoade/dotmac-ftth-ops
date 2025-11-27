@@ -52,7 +52,8 @@ def invoice_service(mock_db):
 
 def _build_invoice_number(tenant_id: str, year: int, sequence: int) -> str:
     """Mirror invoice number generation logic used by the service."""
-    tenant_suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+    # Must match service.py which uses sha256
+    tenant_suffix = hashlib.sha256(tenant_id.encode()).hexdigest()[:4].upper()
     return f"INV-{tenant_suffix}-{year}-{sequence:06d}"
 
 

@@ -9,10 +9,7 @@ import {
   type CustomerNote as SharedCustomerNote,
   type CustomerNotesProps as SharedCustomerNotesProps,
 } from "@dotmac/features/customers";
-import {
-  useCustomerNotes,
-  useAddCustomerNote,
-} from "@/hooks/useCustomersQuery";
+import { useCustomerNotes, useAddCustomerNote } from "@/hooks/useCustomersQuery";
 
 interface CustomerNotesProps {
   customerId: string;

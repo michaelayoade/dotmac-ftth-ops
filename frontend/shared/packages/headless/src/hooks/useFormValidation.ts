@@ -181,10 +181,7 @@ export function useFormValidation(
       const fieldProps: FieldProps = {
         value: formData[field] ?? "",
         onChange: (event) => {
-          const target = event.target as
-            | HTMLInputElement
-            | HTMLSelectElement
-            | HTMLTextAreaElement;
+          const target = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
           const nextValue =
             target instanceof HTMLInputElement && target.type === "checkbox"
               ? target.checked

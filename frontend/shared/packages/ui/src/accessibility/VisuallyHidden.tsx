@@ -7,7 +7,7 @@
 interface VisuallyHiddenProps {
   children: React.ReactNode;
   /** Whether to use span or div */
-  as?: 'span' | 'div';
+  as?: "span" | "div";
   /** Additional CSS classes */
   className?: string;
 }
@@ -27,21 +27,21 @@ interface VisuallyHiddenProps {
  */
 export function VisuallyHidden({
   children,
-  as: Component = 'span',
+  as: Component = "span",
   className,
 }: VisuallyHiddenProps) {
   return (
     <Component
-      className={`sr-only ${className || ''}`}
+      className={`sr-only ${className || ""}`}
       style={{
-        position: 'absolute',
-        width: '1px',
-        height: '1px',
+        position: "absolute",
+        width: "1px",
+        height: "1px",
         padding: 0,
-        margin: '-1px',
-        overflow: 'hidden',
-        clip: 'rect(0, 0, 0, 0)',
-        whiteSpace: 'nowrap',
+        margin: "-1px",
+        overflow: "hidden",
+        clip: "rect(0, 0, 0, 0)",
+        whiteSpace: "nowrap",
         borderWidth: 0,
       }}
     >

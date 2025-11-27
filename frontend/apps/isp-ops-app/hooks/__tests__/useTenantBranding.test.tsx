@@ -5,19 +5,19 @@
  * Covers fetching and updating branding configuration.
  */
 
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   useTenantBrandingQuery,
   useUpdateTenantBranding,
   type TenantBrandingConfigDto,
   type TenantBrandingResponseDto,
-} from '../useTenantBranding';
-import { apiClient } from '@/lib/api/client';
-import * as betterAuth from '@dotmac/better-auth';
+} from "../useTenantBranding";
+import { apiClient } from "@/lib/api/client";
+import * as sharedAuth from "@shared/lib/auth";
 
 // Mock dependencies
-jest.mock('@/lib/api/client', () => ({
+jest.mock("@/lib/api/client", () => ({
   apiClient: {
     get: jest.fn(),
     put: jest.fn(),
@@ -26,13 +26,13 @@ jest.mock('@/lib/api/client', () => ({
   },
 }));
 
-jest.mock('@dotmac/better-auth', () => ({
+jest.mock("@shared/lib/auth", () => ({
   useSession: jest.fn(),
   isAuthBypassEnabled: jest.fn(() => false),
 }));
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
-const mockUseSession = betterAuth.useSession as jest.MockedFunction<typeof betterAuth.useSession>;
+const mockUseSession = sharedAuth.useSession as jest.MockedFunction<typeof sharedAuth.useSession>;
 
 // Test wrapper with QueryClient
 const createWrapper = () => {
@@ -50,71 +50,71 @@ const createWrapper = () => {
 
 // Test data factories
 const createMockBrandingConfig = (
-  overrides: Partial<TenantBrandingConfigDto> = {}
+  overrides: Partial<TenantBrandingConfigDto> = {},
 ): TenantBrandingConfigDto => ({
-  product_name: 'ISP Platform',
-  product_tagline: 'Your Network Management Solution',
-  company_name: 'ACME ISP',
-  support_email: 'support@acme-isp.com',
-  success_email: 'success@acme-isp.com',
-  operations_email: 'ops@acme-isp.com',
-  partner_support_email: 'partners@acme-isp.com',
-  primary_color: '#0066CC',
-  secondary_color: '#00AA66',
-  accent_color: '#FF6600',
-  logo_light_url: 'https://example.com/logo-light.png',
-  logo_dark_url: 'https://example.com/logo-dark.png',
-  favicon_url: 'https://example.com/favicon.ico',
-  docs_url: 'https://docs.acme-isp.com',
-  support_portal_url: 'https://support.acme-isp.com',
-  status_page_url: 'https://status.acme-isp.com',
-  terms_url: 'https://acme-isp.com/terms',
-  privacy_url: 'https://acme-isp.com/privacy',
+  product_name: "ISP Platform",
+  product_tagline: "Your Network Management Solution",
+  company_name: "ACME ISP",
+  support_email: "support@acme-isp.com",
+  success_email: "success@acme-isp.com",
+  operations_email: "ops@acme-isp.com",
+  partner_support_email: "partners@acme-isp.com",
+  primary_color: "#0066CC",
+  secondary_color: "#00AA66",
+  accent_color: "#FF6600",
+  logo_light_url: "https://example.com/logo-light.png",
+  logo_dark_url: "https://example.com/logo-dark.png",
+  favicon_url: "https://example.com/favicon.ico",
+  docs_url: "https://docs.acme-isp.com",
+  support_portal_url: "https://support.acme-isp.com",
+  status_page_url: "https://status.acme-isp.com",
+  terms_url: "https://acme-isp.com/terms",
+  privacy_url: "https://acme-isp.com/privacy",
   ...overrides,
 });
 
 const createMockBrandingResponse = (
-  overrides: Partial<TenantBrandingResponseDto> = {}
+  overrides: Partial<TenantBrandingResponseDto> = {},
 ): TenantBrandingResponseDto => ({
-  tenant_id: 'tenant-001',
+  tenant_id: "tenant-001",
   branding: createMockBrandingConfig(),
-  updated_at: '2024-01-01T00:00:00Z',
+  updated_at: "2024-01-01T00:00:00Z",
   ...overrides,
 });
 
-const createMockSession = (tenantId?: string) => ({
-  user: {
-    id: 'user-001',
-    tenant_id: tenantId || 'tenant-001',
-    email: 'user@example.com',
-    name: 'Test User',
-  },
-  session: {
-    id: 'session-001',
-    userId: 'user-001',
-    expiresAt: new Date(Date.now() + 86400000),
-  },
+const createMockUser = (tenantId?: string) => ({
+  id: "user-001",
+  tenant_id: tenantId || "tenant-001",
+  email: "user@example.com",
+  username: "testuser",
+  full_name: "Test User",
+  roles: ["user"],
+  permissions: [],
+  is_active: true,
+  is_platform_admin: false,
+  mfa_enabled: false,
+  activeOrganization: null,
 });
 
-describe('useTenantBranding', () => {
+describe("useTenantBranding", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('useTenantBrandingQuery', () => {
-    it('should fetch tenant branding configuration successfully', async () => {
+  describe("useTenantBrandingQuery", () => {
+    it("should fetch tenant branding configuration successfully", async () => {
       const mockBranding = createMockBrandingResponse();
 
       mockUseSession.mockReturnValue({
-        data: createMockSession(),
-        isPending: false,
-        error: null,
-      });
+        user: createMockUser(),
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
       mockApiClient.get.mockResolvedValue({
         data: mockBranding,
         status: 200,
-        statusText: 'OK',
+        statusText: "OK",
         headers: {},
         config: {} as any,
       });
@@ -128,26 +128,27 @@ describe('useTenantBranding', () => {
       });
 
       expect(result.current.data).toEqual(mockBranding);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/branding');
+      expect(mockApiClient.get).toHaveBeenCalledWith("/branding");
     });
 
-    it('should not fetch when user has no tenant_id', () => {
+    it("should not fetch when user has no tenant_id", () => {
       mockUseSession.mockReturnValue({
-        data: {
-          user: {
-            id: 'user-001',
-            email: 'user@example.com',
-            name: 'Test User',
-          },
-          session: {
-            id: 'session-001',
-            userId: 'user-001',
-            expiresAt: new Date(Date.now() + 86400000),
-          },
-        } as any,
-        isPending: false,
-        error: null,
-      });
+        user: {
+          id: "user-001",
+          email: "user@example.com",
+          username: "testuser",
+          full_name: "Test User",
+          roles: ["user"],
+          permissions: [],
+          is_active: true,
+          is_platform_admin: false,
+          mfa_enabled: false,
+          activeOrganization: null,
+          tenant_id: null,
+        },
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
       const { result } = renderHook(() => useTenantBrandingQuery(), {
         wrapper: createWrapper(),
@@ -157,12 +158,12 @@ describe('useTenantBranding', () => {
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should not fetch when session is not available', () => {
+    it("should not fetch when session is not available", () => {
       mockUseSession.mockReturnValue({
-        data: null,
-        isPending: false,
-        error: null,
-      });
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      } as any);
 
       const { result } = renderHook(() => useTenantBrandingQuery(), {
         wrapper: createWrapper(),
@@ -172,14 +173,14 @@ describe('useTenantBranding', () => {
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should handle errors when fetching branding', async () => {
+    it("should handle errors when fetching branding", async () => {
       mockUseSession.mockReturnValue({
-        data: createMockSession(),
-        isPending: false,
-        error: null,
-      });
+        user: createMockUser(),
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
-      mockApiClient.get.mockRejectedValue(new Error('Failed to load branding configuration'));
+      mockApiClient.get.mockRejectedValue(new Error("Failed to load branding configuration"));
 
       const { result } = renderHook(() => useTenantBrandingQuery(), {
         wrapper: createWrapper(),
@@ -192,24 +193,24 @@ describe('useTenantBranding', () => {
       expect(result.current.error).toBeTruthy();
     });
 
-    it('should handle partial branding configuration', async () => {
+    it("should handle partial branding configuration", async () => {
       const mockBranding = createMockBrandingResponse({
         branding: {
-          product_name: 'Custom ISP',
-          primary_color: '#FF0000',
+          product_name: "Custom ISP",
+          primary_color: "#FF0000",
         },
       });
 
       mockUseSession.mockReturnValue({
-        data: createMockSession(),
-        isPending: false,
-        error: null,
-      });
+        user: createMockUser(),
+        isLoading: false,
+        isAuthenticated: true,
+      } as any);
 
       mockApiClient.get.mockResolvedValue({
         data: mockBranding,
         status: 200,
-        statusText: 'OK',
+        statusText: "OK",
         headers: {},
         config: {} as any,
       });
@@ -222,27 +223,27 @@ describe('useTenantBranding', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data?.branding.product_name).toBe('Custom ISP');
-      expect(result.current.data?.branding.primary_color).toBe('#FF0000');
+      expect(result.current.data?.branding.product_name).toBe("Custom ISP");
+      expect(result.current.data?.branding.primary_color).toBe("#FF0000");
     });
   });
 
-  describe('useUpdateTenantBranding', () => {
-    it('should update tenant branding successfully', async () => {
+  describe("useUpdateTenantBranding", () => {
+    it("should update tenant branding successfully", async () => {
       const updatedBranding = createMockBrandingConfig({
-        product_name: 'Updated ISP Platform',
-        primary_color: '#00FF00',
+        product_name: "Updated ISP Platform",
+        primary_color: "#00FF00",
       });
 
       const mockResponse = createMockBrandingResponse({
         branding: updatedBranding,
-        updated_at: '2024-01-02T00:00:00Z',
+        updated_at: "2024-01-02T00:00:00Z",
       });
 
       mockApiClient.put.mockResolvedValue({
         data: mockResponse,
         status: 200,
-        statusText: 'OK',
+        statusText: "OK",
         headers: {},
         config: {} as any,
       });
@@ -254,12 +255,12 @@ describe('useTenantBranding', () => {
       const response = await result.current.mutateAsync(updatedBranding);
 
       expect(response).toEqual(mockResponse);
-      expect(mockApiClient.put).toHaveBeenCalledWith('/branding', {
+      expect(mockApiClient.put).toHaveBeenCalledWith("/branding", {
         branding: updatedBranding,
       });
     });
 
-    it('should invalidate query cache on successful update', async () => {
+    it("should invalidate query cache on successful update", async () => {
       const queryClient = new QueryClient({
         defaultOptions: {
           queries: { retry: false },
@@ -267,7 +268,7 @@ describe('useTenantBranding', () => {
         },
       });
 
-      const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+      const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
 
       const updatedBranding = createMockBrandingConfig();
       const mockResponse = createMockBrandingResponse({ branding: updatedBranding });
@@ -275,7 +276,7 @@ describe('useTenantBranding', () => {
       mockApiClient.put.mockResolvedValue({
         data: mockResponse,
         status: 200,
-        statusText: 'OK',
+        statusText: "OK",
         headers: {},
         config: {} as any,
       });
@@ -289,12 +290,12 @@ describe('useTenantBranding', () => {
       await result.current.mutateAsync(updatedBranding);
 
       await waitFor(() => {
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['tenant-branding'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["tenant-branding"] });
       });
     });
 
-    it('should handle errors when updating branding', async () => {
-      mockApiClient.put.mockRejectedValue(new Error('Failed to update branding configuration'));
+    it("should handle errors when updating branding", async () => {
+      mockApiClient.put.mockRejectedValue(new Error("Failed to update branding configuration"));
 
       const { result } = renderHook(() => useUpdateTenantBranding(), {
         wrapper: createWrapper(),
@@ -303,11 +304,11 @@ describe('useTenantBranding', () => {
       const updatedBranding = createMockBrandingConfig();
 
       await expect(result.current.mutateAsync(updatedBranding)).rejects.toThrow(
-        'Failed to update branding configuration'
+        "Failed to update branding configuration",
       );
     });
 
-    it('should call custom onSuccess callback', async () => {
+    it("should call custom onSuccess callback", async () => {
       const updatedBranding = createMockBrandingConfig();
       const mockResponse = createMockBrandingResponse({ branding: updatedBranding });
       const onSuccess = jest.fn();
@@ -315,7 +316,7 @@ describe('useTenantBranding', () => {
       mockApiClient.put.mockResolvedValue({
         data: mockResponse,
         status: 200,
-        statusText: 'OK',
+        statusText: "OK",
         headers: {},
         config: {} as any,
       });
@@ -337,9 +338,9 @@ describe('useTenantBranding', () => {
       expect(variables).toEqual(updatedBranding);
     });
 
-    it('should update only specific branding fields', async () => {
+    it("should update only specific branding fields", async () => {
       const partialUpdate: TenantBrandingConfigDto = {
-        primary_color: '#123456',
+        primary_color: "#123456",
       };
 
       const mockResponse = createMockBrandingResponse({
@@ -349,7 +350,7 @@ describe('useTenantBranding', () => {
       mockApiClient.put.mockResolvedValue({
         data: mockResponse,
         status: 200,
-        statusText: 'OK',
+        statusText: "OK",
         headers: {},
         config: {} as any,
       });
@@ -360,18 +361,18 @@ describe('useTenantBranding', () => {
 
       const response = await result.current.mutateAsync(partialUpdate);
 
-      expect(mockApiClient.put).toHaveBeenCalledWith('/branding', {
+      expect(mockApiClient.put).toHaveBeenCalledWith("/branding", {
         branding: partialUpdate,
       });
-      expect(response.branding.primary_color).toBe('#123456');
+      expect(response.branding.primary_color).toBe("#123456");
     });
 
-    it('should handle validation errors', async () => {
+    it("should handle validation errors", async () => {
       mockApiClient.put.mockRejectedValue({
         response: {
           data: {
-            error: 'Validation failed',
-            details: { primary_color: 'Invalid color format' },
+            error: "Validation failed",
+            details: { primary_color: "Invalid color format" },
           },
         },
       });
@@ -381,7 +382,7 @@ describe('useTenantBranding', () => {
       });
 
       const invalidBranding = createMockBrandingConfig({
-        primary_color: 'invalid-color',
+        primary_color: "invalid-color",
       });
 
       await expect(result.current.mutateAsync(invalidBranding)).rejects.toBeTruthy();

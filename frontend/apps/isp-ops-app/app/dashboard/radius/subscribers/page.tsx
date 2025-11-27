@@ -18,14 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,9 +73,7 @@ export default function RADIUSSubscribersPage() {
   // Enable subscriber mutation
   const enableMutation = useMutation({
     mutationFn: async (username: string) => {
-      const response = await apiClient.post(
-        `/radius/subscribers/${username}/enable`
-      );
+      const response = await apiClient.post(`/radius/subscribers/${username}/enable`);
       return response.data;
     },
     onSuccess: () => {
@@ -104,9 +95,7 @@ export default function RADIUSSubscribersPage() {
   // Disable subscriber mutation
   const disableMutation = useMutation({
     mutationFn: async (username: string) => {
-      const response = await apiClient.post(
-        `/radius/subscribers/${username}/disable`
-      );
+      const response = await apiClient.post(`/radius/subscribers/${username}/disable`);
       return response.data;
     },
     onSuccess: () => {
@@ -151,7 +140,7 @@ export default function RADIUSSubscribersPage() {
     (sub) =>
       sub.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.subscriber_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.framed_ipv4_address?.toLowerCase().includes(searchQuery.toLowerCase())
+      sub.framed_ipv4_address?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleToggleStatus = (subscriber: RADIUSSubscriber) => {
@@ -181,9 +170,7 @@ export default function RADIUSSubscribersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">RADIUS Subscribers</h1>
-          <p className="text-muted-foreground">
-            Manage RADIUS authentication credentials
-          </p>
+          <p className="text-muted-foreground">Manage RADIUS authentication credentials</p>
         </div>
         <Link href="/dashboard/radius/subscribers/new">
           <Button>
@@ -217,9 +204,7 @@ export default function RADIUSSubscribersPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              Loading subscribers...
-            </div>
+            <div className="p-8 text-center text-muted-foreground">Loading subscribers...</div>
           ) : filteredSubscribers && filteredSubscribers.length > 0 ? (
             <Table>
               <TableHeader>
@@ -237,9 +222,7 @@ export default function RADIUSSubscribersPage() {
               <TableBody>
                 {filteredSubscribers.map((subscriber) => (
                   <TableRow key={subscriber.id}>
-                    <TableCell className="font-medium">
-                      {subscriber.username}
-                    </TableCell>
+                    <TableCell className="font-medium">{subscriber.username}</TableCell>
                     <TableCell>{subscriber.subscriber_id}</TableCell>
                     <TableCell>
                       {subscriber.enabled ? (
@@ -294,9 +277,7 @@ export default function RADIUSSubscribersPage() {
                               Edit
                             </DropdownMenuItem>
                           </Link>
-                          <DropdownMenuItem
-                            onClick={() => handleToggleStatus(subscriber)}
-                          >
+                          <DropdownMenuItem onClick={() => handleToggleStatus(subscriber)}>
                             {subscriber.enabled ? (
                               <>
                                 <PowerOff className="mr-2 h-4 w-4" />

@@ -87,20 +87,10 @@ describe("useVOLTHA Hooks", () => {
       expect(volthaKeys.all).toEqual(["voltha"]);
       expect(volthaKeys.health()).toEqual(["voltha", "health"]);
       expect(volthaKeys.olts()).toEqual(["voltha", "olts"]);
-      expect(volthaKeys.oltOverview("olt-1")).toEqual([
-        "voltha",
-        "olt",
-        "olt-1",
-        "overview",
-      ]);
+      expect(volthaKeys.oltOverview("olt-1")).toEqual(["voltha", "olt", "olt-1", "overview"]);
       expect(volthaKeys.onus()).toEqual(["voltha", "onus"]);
       expect(volthaKeys.alarms()).toEqual(["voltha", "alarms"]);
-      expect(volthaKeys.alarms("device-1")).toEqual([
-        "voltha",
-        "alarms",
-        "device",
-        "device-1",
-      ]);
+      expect(volthaKeys.alarms("device-1")).toEqual(["voltha", "alarms", "device", "device-1"]);
       expect(volthaKeys.portStatistics("olt-1", 1)).toEqual([
         "voltha",
         "port-statistics",
@@ -358,9 +348,7 @@ describe("useVOLTHA Hooks", () => {
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(result.current.data?.rx_power).toBe(-22.5);
-      expect(apiClient.get).toHaveBeenCalledWith(
-        "/api/v1/access/devices/olt-1/ports/1/statistics",
-      );
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/access/devices/olt-1/ports/1/statistics");
     });
   });
 
@@ -577,9 +565,7 @@ describe("useVOLTHA Hooks", () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        "/access/devices/onu-1/enable?olt_id=olt-1",
-      );
+      expect(apiClient.post).toHaveBeenCalledWith("/access/devices/onu-1/enable?olt_id=olt-1");
     });
 
     it("performs device reboot operation", async () => {
@@ -645,7 +631,10 @@ describe("useVOLTHA Hooks", () => {
 
     it("surfaces feature-flag/driver 501 details gracefully", async () => {
       apiClient.post.mockRejectedValue({
-        response: { status: 501, data: { detail: "Alarm acknowledgement is disabled by feature flag" } },
+        response: {
+          status: 501,
+          data: { detail: "Alarm acknowledgement is disabled by feature flag" },
+        },
       });
 
       const { result } = renderHook(() => useAcknowledgeAlarm(), {

@@ -2,7 +2,7 @@
  * Authentication Helpers for E2E Tests
  */
 
-import { Page, expect } from '@playwright/test';
+import { Page, expect } from "@playwright/test";
 
 export interface TestCredentials {
   email: string;
@@ -11,16 +11,16 @@ export interface TestCredentials {
 
 export const TEST_USERS = {
   admin: {
-    email: process.env.TEST_USER_EMAIL || 'test@example.com',
-    password: process.env.TEST_USER_PASSWORD || 'TestPass123!',
+    email: process.env.TEST_USER_EMAIL || "test@example.com",
+    password: process.env.TEST_USER_PASSWORD || "TestPass123!",
   },
   operator: {
-    email: process.env.TEST_OPERATOR_EMAIL || 'operator@test.com',
-    password: process.env.TEST_OPERATOR_PASSWORD || 'OperatorPass123!',
+    email: process.env.TEST_OPERATOR_EMAIL || "operator@test.com",
+    password: process.env.TEST_OPERATOR_PASSWORD || "OperatorPass123!",
   },
   customer: {
-    email: process.env.TEST_CUSTOMER_EMAIL || 'customer@test.com',
-    password: process.env.TEST_CUSTOMER_PASSWORD || 'CustomerPass123!',
+    email: process.env.TEST_CUSTOMER_EMAIL || "customer@test.com",
+    password: process.env.TEST_CUSTOMER_PASSWORD || "CustomerPass123!",
   },
 };
 
@@ -56,7 +56,7 @@ export async function login(page: Page, credentials: TestCredentials, baseUrl: s
  */
 export async function isLoggedIn(page: Page): Promise<boolean> {
   const url = page.url();
-  return !url.includes('/login') && (url.includes('/dashboard') || url.includes('/portal'));
+  return !url.includes("/login") && (url.includes("/dashboard") || url.includes("/portal"));
 }
 
 /**
@@ -65,9 +65,11 @@ export async function isLoggedIn(page: Page): Promise<boolean> {
 export async function logout(page: Page) {
   try {
     // Look for logout button/link
-    const logoutButton = page.locator('button:has-text("Logout"), button:has-text("Sign out"), a:has-text("Logout")').first();
+    const logoutButton = page
+      .locator('button:has-text("Logout"), button:has-text("Sign out"), a:has-text("Logout")')
+      .first();
 
-    if (await logoutButton.count() > 0) {
+    if ((await logoutButton.count()) > 0) {
       await logoutButton.click();
       await page.waitForURL(/login/, { timeout: 5000 });
     }
@@ -79,7 +81,11 @@ export async function logout(page: Page) {
 /**
  * Ensure user is logged in before testing
  */
-export async function ensureAuthenticated(page: Page, baseUrl: string, credentials: TestCredentials = TEST_USERS.admin) {
+export async function ensureAuthenticated(
+  page: Page,
+  baseUrl: string,
+  credentials: TestCredentials = TEST_USERS.admin,
+) {
   if (await isLoggedIn(page)) {
     return true;
   }
@@ -94,9 +100,11 @@ export async function getAuthToken(page: Page): Promise<string | null> {
   try {
     // Try to get token from localStorage
     const token = await page.evaluate(() => {
-      return localStorage.getItem('access_token') ||
-             localStorage.getItem('token') ||
-             localStorage.getItem('auth_token');
+      return (
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("auth_token")
+      );
     });
 
     return token;
@@ -110,7 +118,7 @@ export async function getAuthToken(page: Page): Promise<string | null> {
  */
 export async function setAuthToken(page: Page, token: string) {
   await page.evaluate((tokenValue) => {
-    localStorage.setItem('access_token', tokenValue);
-    localStorage.setItem('token', tokenValue);
+    localStorage.setItem("access_token", tokenValue);
+    localStorage.setItem("token", tokenValue);
   }, token);
 }

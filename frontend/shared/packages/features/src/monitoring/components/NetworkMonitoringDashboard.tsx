@@ -11,14 +11,7 @@ import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge, type BadgeProps } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   AlertCircle,
   CheckCircle2,
@@ -344,7 +337,7 @@ export function NetworkMonitoringDashboard({ apiClient, logger }: NetworkMonitor
         </CardContent>
       </Card>
 
-     {/* Overview Stats Cards */}
+      {/* Overview Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Devices */}
         <Card>

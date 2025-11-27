@@ -43,7 +43,7 @@ export function WebSocketAnalyticsDashboard() {
   const fetchAnalytics = async () => {
     try {
       const response = await apiClient.get<WebSocketAnalytics>(
-        "/field-service/analytics/websocket-stats"
+        "/field-service/analytics/websocket-stats",
       );
       const data = extractDataOrThrow(response);
       setAnalytics(data);
@@ -130,7 +130,8 @@ export function WebSocketAnalyticsDashboard() {
               {analytics.total_active_connections}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Across {analytics.total_active_tenants} tenant{analytics.total_active_tenants !== 1 ? "s" : ""}
+              Across {analytics.total_active_tenants} tenant
+              {analytics.total_active_tenants !== 1 ? "s" : ""}
             </p>
           </CardContent>
         </Card>
@@ -147,9 +148,7 @@ export function WebSocketAnalyticsDashboard() {
             <div className="text-3xl font-bold text-green-600">
               {analytics.total_messages_sent.toLocaleString()}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              ~{messagesPerConnection} per connection
-            </p>
+            <p className="text-xs text-gray-500 mt-1">~{messagesPerConnection} per connection</p>
           </CardContent>
         </Card>
 
@@ -162,12 +161,8 @@ export function WebSocketAnalyticsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-600">
-              {analytics.uptime_formatted}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Since server start
-            </p>
+            <div className="text-3xl font-bold text-purple-600">{analytics.uptime_formatted}</div>
+            <p className="text-xs text-gray-500 mt-1">Since server start</p>
           </CardContent>
         </Card>
 
@@ -183,9 +178,7 @@ export function WebSocketAnalyticsDashboard() {
             <div className="text-3xl font-bold text-orange-600">
               {analytics.total_connections_lifetime}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Lifetime total
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Lifetime total</p>
           </CardContent>
         </Card>
       </div>
@@ -204,8 +197,8 @@ export function WebSocketAnalyticsDashboard() {
             </div>
             <div className="mt-4 pt-4 border-t">
               <div className="text-sm text-gray-600">
-                This represents how long connections stay active on average. Longer durations indicate
-                stable connections and engaged users.
+                This represents how long connections stay active on average. Longer durations
+                indicate stable connections and engaged users.
               </div>
             </div>
           </CardContent>
@@ -233,7 +226,8 @@ export function WebSocketAnalyticsDashboard() {
                       </span>
                     </div>
                     <Badge variant="secondary">
-                      {stats.active_connections} connection{stats.active_connections !== 1 ? "s" : ""}
+                      {stats.active_connections} connection
+                      {stats.active_connections !== 1 ? "s" : ""}
                     </Badge>
                   </div>
                 ))}
@@ -271,13 +265,15 @@ export function WebSocketAnalyticsDashboard() {
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {analytics.total_connections_lifetime > 0
                   ? Math.round(
-                      (analytics.total_active_connections / analytics.total_connections_lifetime) * 100
+                      (analytics.total_active_connections / analytics.total_connections_lifetime) *
+                        100,
                     )
                   : 0}
                 <span className="text-sm font-normal text-gray-500 ml-1">%</span>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {analytics.total_active_connections} active of {analytics.total_connections_lifetime} total
+                {analytics.total_active_connections} active of{" "}
+                {analytics.total_connections_lifetime} total
               </p>
             </div>
 

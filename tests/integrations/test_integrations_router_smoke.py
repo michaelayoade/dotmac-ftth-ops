@@ -14,6 +14,8 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.integrations import IntegrationConfig, IntegrationHealth, IntegrationStatus, IntegrationType
 from dotmac.platform.integrations.router import integrations_router
 
+pytestmark = pytest.mark.integration
+
 
 class FakeIntegration:
     def __init__(self, config: IntegrationConfig):

@@ -10,7 +10,7 @@ class Logger {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = process.env['NODE_ENV'] === "development";
+    this.isDevelopment = process.env["NODE_ENV"] === "development";
   }
 
   /**
@@ -22,14 +22,24 @@ class Logger {
 
     const sanitized = { ...context };
     const sensitiveKeys = [
-      'password', 'token', 'secret', 'apiKey', 'apikey',
-      'cookie', 'cookies', 'authorization', 'auth',
-      'accessToken', 'refreshToken', 'sessionId', 'sessionid'
+      "password",
+      "token",
+      "secret",
+      "apiKey",
+      "apikey",
+      "cookie",
+      "cookies",
+      "authorization",
+      "auth",
+      "accessToken",
+      "refreshToken",
+      "sessionId",
+      "sessionid",
     ];
 
     Object.keys(sanitized).forEach((key) => {
       if (sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive))) {
-        sanitized[key] = '[REDACTED]';
+        sanitized[key] = "[REDACTED]";
       }
     });
 

@@ -3,7 +3,7 @@
  * Mocks domain verification workflow endpoints
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // Types
 type VerificationMethod = "dns_txt" | "dns_cname" | "meta_tag" | "file_upload";
@@ -117,7 +117,7 @@ function createMockVerificationResponse(
   domain: string,
   method: VerificationMethod,
   status: VerificationStatus = "pending",
-  data: Partial<any> = {}
+  data: Partial<any> = {},
 ) {
   const token = data.token || `dotmac-verify-${tokenCounter++}-${Date.now()}`;
   const now = new Date().toISOString();
@@ -141,17 +141,22 @@ function createMockVerificationResponse(
   }
 
   if (status === "failed") {
-    response.error_message = data.error_message || "Verification failed. Please check your DNS records.";
+    response.error_message =
+      data.error_message || "Verification failed. Please check your DNS records.";
   }
 
   if (status === "expired") {
-    response.error_message = data.error_message || "Verification token has expired. Please initiate verification again.";
+    response.error_message =
+      data.error_message || "Verification token has expired. Please initiate verification again.";
   }
 
   return response;
 }
 
-function createMockStatusResponse(tenantId: string, data: Partial<DomainStatus> = {}): DomainStatus {
+function createMockStatusResponse(
+  tenantId: string,
+  data: Partial<DomainStatus> = {},
+): DomainStatus {
   return {
     tenant_id: tenantId,
     domain: data.domain || null,
@@ -169,7 +174,9 @@ export function seedDomainStatus(tenantId: string, status: Partial<DomainStatus>
   domainStatuses.set(tenantId, createMockStatusResponse(tenantId, status));
 }
 
-export function seedDomainStatuses(statuses: Array<{ tenantId: string; status: Partial<DomainStatus> }>): void {
+export function seedDomainStatuses(
+  statuses: Array<{ tenantId: string; status: Partial<DomainStatus> }>,
+): void {
   statuses.forEach(({ tenantId, status }) => {
     seedDomainStatus(tenantId, status);
   });
@@ -273,7 +280,8 @@ export const domainVerificationHandlers = [
   // GET /api/v1/tenants/:tenantId/domains/status - Get status
   http.get("*/api/v1/tenants/:tenantId/domains/status", ({ params }) => {
     const tenantId = params.tenantId as string;
-    const status = domainStatuses.get(tenantId as string) || createMockStatusResponse(tenantId as string);
+    const status =
+      domainStatuses.get(tenantId as string) || createMockStatusResponse(tenantId as string);
     return HttpResponse.json(status);
   }),
 ];

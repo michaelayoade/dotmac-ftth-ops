@@ -4,32 +4,32 @@
  * Uses next-intl for internationalization with type safety
  */
 
-import { getRequestConfig } from 'next-intl/server';
-import { notFound } from 'next/navigation';
+import { getRequestConfig } from "next-intl/server";
+import { notFound } from "next/navigation";
 
 // Supported locales
-export const locales = ['en', 'es', 'fr', 'de', 'pt'] as const;
+export const locales = ["en", "es", "fr", "de", "pt"] as const;
 export type Locale = (typeof locales)[number];
 
 // Default locale
-export const defaultLocale: Locale = 'en';
+export const defaultLocale: Locale = "en";
 
 // Locale names for language selector
 export const localeNames: Record<Locale, string> = {
-  en: 'English',
-  es: 'Español',
-  fr: 'Français',
-  de: 'Deutsch',
-  pt: 'Português',
+  en: "English",
+  es: "Español",
+  fr: "Français",
+  de: "Deutsch",
+  pt: "Português",
 };
 
 // Locale flags (emoji) for UI
 export const localeFlags: Record<Locale, string> = {
-  en: '🇺🇸',
-  es: '🇪🇸',
-  fr: '🇫🇷',
-  de: '🇩🇪',
-  pt: '🇧🇷',
+  en: "🇺🇸",
+  es: "🇪🇸",
+  fr: "🇫🇷",
+  de: "🇩🇪",
+  pt: "🇧🇷",
 };
 
 /**
@@ -44,7 +44,7 @@ export default getRequestConfig(async ({ locale }) => {
   return {
     locale: locale as string,
     messages: (await import(`./messages/${locale}.json`)).default,
-    timeZone: 'UTC',
+    timeZone: "UTC",
     now: new Date(),
   };
 });

@@ -161,6 +161,7 @@ describe("InvoiceList Integration Tests", () => {
 All components in this package use Dependency Injection. Here's the pattern:
 
 **Component Props:**
+
 ```typescript
 interface InvoiceListProps {
   // Business props
@@ -176,6 +177,7 @@ interface InvoiceListProps {
 ```
 
 **Test Setup:**
+
 ```typescript
 import { createBillingDependencies } from "../../../test/mocks/dependencies";
 
@@ -209,11 +211,7 @@ expect(apiClient.get).toHaveBeenCalledWith("/billing/invoices");
 const logger = createMockLogger();
 
 // Verify error logging
-expect(logger.error).toHaveBeenCalledWith(
-  "Error message",
-  expect.any(Error),
-  { context: "data" }
-);
+expect(logger.error).toHaveBeenCalledWith("Error message", expect.any(Error), { context: "data" });
 ```
 
 #### 3. Router
@@ -285,7 +283,7 @@ import {
 // Create single invoice
 const invoice = createMockInvoice({
   invoice_number: "INV-12345",
-  total_amount: 150.00,
+  total_amount: 150.0,
 });
 
 // Create multiple invoices
@@ -428,11 +426,13 @@ it("should show loading state", () => {
 ### 1. Test Observable Behavior
 
 ✅ **Good:** Test what users see and interact with
+
 ```typescript
 expect(screen.getByText("Invoice created")).toBeInTheDocument();
 ```
 
 ❌ **Bad:** Test implementation details
+
 ```typescript
 expect(component.state.invoices).toHaveLength(5);
 ```
@@ -440,6 +440,7 @@ expect(component.state.invoices).toHaveLength(5);
 ### 2. Use Semantic Queries
 
 Prefer queries in this order:
+
 1. `getByRole` - Best for accessibility
 2. `getByLabelText` - Good for forms
 3. `getByPlaceholderText` - Forms without labels
@@ -485,6 +486,7 @@ beforeEach(() => {
 Each test should verify ONE specific behavior:
 
 ✅ **Good:**
+
 ```typescript
 it("should display error message when API fails", async () => {
   // Test only error display
@@ -496,6 +498,7 @@ it("should log error when API fails", async () => {
 ```
 
 ❌ **Bad:**
+
 ```typescript
 it("should handle errors correctly", async () => {
   // Tests multiple behaviors at once
@@ -511,6 +514,7 @@ it("should handle errors correctly", async () => {
 **Problem:** State updates not wrapped in `act()`
 
 **Solution:** Use `waitFor` for async updates:
+
 ```typescript
 await waitFor(() => {
   expect(screen.getByText("Data loaded")).toBeInTheDocument();
@@ -522,6 +526,7 @@ await waitFor(() => {
 **Problem:** Element doesn't exist in DOM
 
 **Solution:**
+
 - Use `screen.debug()` to see current DOM
 - Check if element is rendered conditionally
 - Verify correct query method
@@ -535,14 +540,18 @@ screen.debug(); // Print current DOM
 **Problem:** `waitFor` never resolves
 
 **Solution:**
+
 - Verify mock is returning expected data
 - Check if component is actually calling the API
 - Increase timeout if needed
 
 ```typescript
-await waitFor(() => {
-  expect(screen.getByText("Data")).toBeInTheDocument();
-}, { timeout: 5000 }); // Increase timeout
+await waitFor(
+  () => {
+    expect(screen.getByText("Data")).toBeInTheDocument();
+  },
+  { timeout: 5000 },
+); // Increase timeout
 ```
 
 #### 4. Mock Not Working
@@ -550,6 +559,7 @@ await waitFor(() => {
 **Problem:** Mock function not being called
 
 **Solution:**
+
 - Verify component receives the mock
 - Check if component actually uses the dependency
 - Ensure mock is set up before render
@@ -599,6 +609,7 @@ When adding new tests:
 ## Questions?
 
 If you have questions about testing, please:
+
 1. Check this documentation
 2. Review existing tests for examples
 3. Ask in the team chat

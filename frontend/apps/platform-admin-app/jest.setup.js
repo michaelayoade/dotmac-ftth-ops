@@ -55,13 +55,13 @@ const originalError = console.error;
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
-if (!(global.TransformStream)) {
+if (!global.TransformStream) {
   global.TransformStream = TransformStream;
 }
-if (!(global.ReadableStream)) {
+if (!global.ReadableStream) {
   global.ReadableStream = ReadableStream;
 }
-if (!(global.WritableStream)) {
+if (!global.WritableStream) {
   global.WritableStream = WritableStream;
 }
 

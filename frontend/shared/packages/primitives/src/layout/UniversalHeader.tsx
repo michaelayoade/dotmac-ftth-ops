@@ -84,7 +84,12 @@ const defaultActions: Record<string, HeaderAction[]> = {
       onClick: () => {},
       badge: 3,
     },
-    { id: "settings", label: "Settings", icon: (props) => <Settings {...props} />, onClick: () => {} },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: (props) => <Settings {...props} />,
+      onClick: () => {},
+    },
   ],
   customer: [
     { id: "help", label: "Help", icon: (props) => <HelpCircle {...props} />, onClick: () => {} },
@@ -104,7 +109,12 @@ const defaultActions: Record<string, HeaderAction[]> = {
       onClick: () => {},
       badge: 5,
     },
-    { id: "settings", label: "Settings", icon: (props) => <Settings {...props} />, onClick: () => {} },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: (props) => <Settings {...props} />,
+      onClick: () => {},
+    },
   ],
   technician: [
     { id: "help", label: "Help", icon: (props) => <HelpCircle {...props} />, onClick: () => {} },
@@ -124,7 +134,12 @@ const defaultActions: Record<string, HeaderAction[]> = {
       onClick: () => {},
       badge: 7,
     },
-    { id: "settings", label: "Settings", icon: (props) => <Settings {...props} />, onClick: () => {} },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: (props) => <Settings {...props} />,
+      onClick: () => {},
+    },
   ],
 };
 

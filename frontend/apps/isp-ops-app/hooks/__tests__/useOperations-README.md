@@ -12,19 +12,20 @@ Operations monitoring functionality is tested using **MSW (Mock Service Worker)*
 
 Through testing all hooks, we've identified a clear pattern:
 
-| Hook | API Client | Mutations? | MSW Works? | Pass Rate |
-|------|-----------|------------|------------|-----------|
-| useApiKeys | axios | ✅ Yes | ❌ No | 42% → 100% (tests removed) |
-| useDunning | axios | ✅ Yes | ❌ No | 87% → 100% (tests removed) |
-| usePlugins | axios | ✅ Yes | ✅ Yes (jest mocks) | 100% |
-| useCustomerPortal | fetch | ✅ Yes | ✅ Yes | 100% |
-| **useOperations** | **axios** | **❌ No** | **✅ Yes** | **100%** |
+| Hook              | API Client | Mutations? | MSW Works?          | Pass Rate                  |
+| ----------------- | ---------- | ---------- | ------------------- | -------------------------- |
+| useApiKeys        | axios      | ✅ Yes     | ❌ No               | 42% → 100% (tests removed) |
+| useDunning        | axios      | ✅ Yes     | ❌ No               | 87% → 100% (tests removed) |
+| usePlugins        | axios      | ✅ Yes     | ✅ Yes (jest mocks) | 100%                       |
+| useCustomerPortal | fetch      | ✅ Yes     | ✅ Yes              | 100%                       |
+| **useOperations** | **axios**  | **❌ No**  | **✅ Yes**          | **100%**                   |
 
 ### Key Finding
 
 **MSW + axios works perfectly for queries, but fails for mutations.**
 
 useOperations proves this because:
+
 - ✅ Uses axios-based apiClient (same as useApiKeys, useDunning)
 - ✅ All 30 tests pass with MSW
 - ✅ No data flow issues
@@ -138,6 +139,7 @@ export function useSystemHealth(options?: ...) {
 ```
 
 **Key Features:**
+
 - All auto-refresh at intervals (15-30 seconds)
 - Support for multiple time periods
 - Clean error handling
@@ -152,13 +154,13 @@ export function useSystemHealth(options?: ...) {
 ```typescript
 it("should fetch metrics successfully with default period", async () => {
   // Seed test data
-  const mockMetrics = createMockMetrics('24h', {
+  const mockMetrics = createMockMetrics("24h", {
     error_rate: 3.5,
     critical_errors: 5,
     total_requests: 15000,
   });
 
-  seedOperationsData({ '24h': mockMetrics });
+  seedOperationsData({ "24h": mockMetrics });
 
   // Render hook
   const { result } = renderHook(() => useMonitoringMetrics(), {
@@ -174,7 +176,7 @@ it("should fetch metrics successfully with default period", async () => {
   // Verify data
   expect(result.current.data?.error_rate).toBe(3.5);
   expect(result.current.data?.critical_errors).toBe(5);
-  expect(result.current.data?.period).toBe('24h');
+  expect(result.current.data?.period).toBe("24h");
   expect(result.current.error).toBeNull();
 });
 ```
@@ -184,7 +186,7 @@ it("should fetch metrics successfully with default period", async () => {
 ```typescript
 it("should handle fetch error", async () => {
   // Make endpoint fail
-  makeApiEndpointFail('get', '/api/v1/monitoring/metrics', 'Server error', 500);
+  makeApiEndpointFail("get", "/api/v1/monitoring/metrics", "Server error", 500);
 
   const { result } = renderHook(() => useMonitoringMetrics(), {
     wrapper: createWrapper(),
@@ -203,20 +205,20 @@ it("should handle fetch error", async () => {
 
 ```typescript
 it("should handle multiple period queries", async () => {
-  const metrics1h = createMockMetrics('1h', { total_requests: 500 });
-  const metrics24h = createMockMetrics('24h', { total_requests: 10000 });
-  const metrics7d = createMockMetrics('7d', { total_requests: 70000 });
+  const metrics1h = createMockMetrics("1h", { total_requests: 500 });
+  const metrics24h = createMockMetrics("24h", { total_requests: 10000 });
+  const metrics7d = createMockMetrics("7d", { total_requests: 70000 });
 
-  seedOperationsData({ '1h': metrics1h, '24h': metrics24h, '7d': metrics7d });
+  seedOperationsData({ "1h": metrics1h, "24h": metrics24h, "7d": metrics7d });
 
   // Render multiple hooks
-  const { result: result1h } = renderHook(() => useMonitoringMetrics('1h'), {
+  const { result: result1h } = renderHook(() => useMonitoringMetrics("1h"), {
     wrapper: createWrapper(),
   });
-  const { result: result24h } = renderHook(() => useMonitoringMetrics('24h'), {
+  const { result: result24h } = renderHook(() => useMonitoringMetrics("24h"), {
     wrapper: createWrapper(),
   });
-  const { result: result7d } = renderHook(() => useMonitoringMetrics('7d'), {
+  const { result: result7d } = renderHook(() => useMonitoringMetrics("7d"), {
     wrapper: createWrapper(),
   });
 
@@ -238,27 +240,23 @@ it("should handle multiple period queries", async () => {
 
 ```typescript
 it("should correlate metrics with log stats", async () => {
-  const mockMetrics = createMockMetrics('24h', {
+  const mockMetrics = createMockMetrics("24h", {
     error_rate: 5,
     failed_requests: 500,
     total_requests: 10000,
   });
 
-  const mockStats = createMockLogStats('24h', {
+  const mockStats = createMockLogStats("24h", {
     error_logs: 500,
     total_logs: 10000,
   });
 
-  seedOperationsData({ '24h': mockMetrics }, { '24h': mockStats });
+  seedOperationsData({ "24h": mockMetrics }, { "24h": mockStats });
 
-  const { result: metricsResult } = renderHook(
-    () => useMonitoringMetrics(),
-    { wrapper: createWrapper() }
-  );
-  const { result: statsResult } = renderHook(
-    () => useLogStats(),
-    { wrapper: createWrapper() }
-  );
+  const { result: metricsResult } = renderHook(() => useMonitoringMetrics(), {
+    wrapper: createWrapper(),
+  });
+  const { result: statsResult } = renderHook(() => useLogStats(), { wrapper: createWrapper() });
 
   await waitFor(() => {
     expect(metricsResult.current.isLoading).toBe(false);
@@ -279,32 +277,33 @@ it("should correlate metrics with log stats", async () => {
 
 ```typescript
 // Create mock data
-createMockMetrics(period, overrides)
-createMockLogStats(period, overrides)
-createMockSystemHealth(overrides)
-createMockOperationsServiceHealth(overrides)
+createMockMetrics(period, overrides);
+createMockLogStats(period, overrides);
+createMockSystemHealth(overrides);
+createMockOperationsServiceHealth(overrides);
 
 // Seed test data
-seedOperationsData(metrics, logStats, systemHealth)
+seedOperationsData(metrics, logStats, systemHealth);
 
 // Reset storage
-resetOperationsStorage()
+resetOperationsStorage();
 
 // Simulate failures
-makeApiEndpointFail(method, endpoint, message, status)
+makeApiEndpointFail(method, endpoint, message, status);
 
 // Create wrapper
-createTestQueryClient()
+createTestQueryClient();
 ```
 
 **Usage:**
+
 ```typescript
-const mockMetrics = createMockMetrics('24h', {
+const mockMetrics = createMockMetrics("24h", {
   error_rate: 5.5,
   total_requests: 10000,
 });
 
-seedOperationsData({ '24h': mockMetrics });
+seedOperationsData({ "24h": mockMetrics });
 ```
 
 ---
@@ -312,6 +311,7 @@ seedOperationsData({ '24h': mockMetrics });
 ## Test Quality Metrics
 
 ### Coverage
+
 - ✅ **30 tests passing**
 - ✅ **~13 seconds execution time**
 - ✅ **100% pass rate**
@@ -324,6 +324,7 @@ seedOperationsData({ '24h': mockMetrics });
   - Service health states tested (healthy, degraded, unhealthy)
 
 ### Test Organization
+
 - Clear test structure with describe blocks
 - Consistent naming conventions
 - Good use of helper functions
@@ -337,10 +338,12 @@ seedOperationsData({ '24h': mockMetrics });
 ### The Technical Explanation
 
 **MSW + axios + React Query:**
+
 - ✅ **Queries:** Data flows correctly through React Query
 - ❌ **Mutations:** Data doesn't populate in mutation results
 
 **What happens with queries:**
+
 ```typescript
 // 1. Hook makes request
 const response = await apiClient.get("/monitoring/metrics");
@@ -356,6 +359,7 @@ return extractDataOrThrow(response);
 ```
 
 **What happens with mutations:**
+
 ```typescript
 // 1. Hook makes request
 const response = await apiClient.post("/plugins/instances", data);
@@ -371,6 +375,7 @@ return extractDataOrThrow(response);
 ```
 
 **Why the difference?**
+
 - Queries: Simpler state management, direct data assignment
 - Mutations: Complex state transitions (idle → loading → success), optimistic updates, callbacks
 
@@ -380,24 +385,26 @@ return extractDataOrThrow(response);
 
 ### useOperations vs usePlugins
 
-| Feature | useOperations | usePlugins |
-|---------|--------------|------------|
-| **Queries** | 3 hooks | 6 hooks |
-| **Mutations** | 0 hooks | 6 hooks |
-| **MSW Works?** | ✅ Perfect | ❌ Data flow issues |
-| **Solution** | MSW | Jest mocks |
-| **Pass Rate** | 30/30 (100%) | 30/30 (100%) |
-| **Speed** | ~13 seconds | ~7 seconds |
+| Feature        | useOperations | usePlugins          |
+| -------------- | ------------- | ------------------- |
+| **Queries**    | 3 hooks       | 6 hooks             |
+| **Mutations**  | 0 hooks       | 6 hooks             |
+| **MSW Works?** | ✅ Perfect    | ❌ Data flow issues |
+| **Solution**   | MSW           | Jest mocks          |
+| **Pass Rate**  | 30/30 (100%)  | 30/30 (100%)        |
+| **Speed**      | ~13 seconds   | ~7 seconds          |
 
 ### When to Use MSW vs Jest Mocks
 
 **Use MSW when:**
+
 - ✅ Hook has only queries (like useOperations)
 - ✅ Hook uses fetch API
 - ✅ You want realistic network-level testing
 - ✅ You're testing auto-refresh/polling behavior
 
 **Use Jest Mocks when:**
+
 - ✅ Hook has mutations
 - ✅ Hook uses axios
 - ✅ You need full mutation data verification
@@ -410,6 +417,7 @@ return extractDataOrThrow(response);
 ### Scenario 1: High Error Rate Monitoring
 
 Tests system behavior when error rates spike:
+
 ```typescript
 it("should handle high error rate scenario", async () => {
   const mockMetrics = createMockMetrics('24h', {
@@ -439,6 +447,7 @@ it("should handle high error rate scenario", async () => {
 ### Scenario 2: Multi-Period Monitoring
 
 Tests querying different time periods simultaneously:
+
 - Useful for dashboards showing multiple timeframes
 - Tests query key isolation
 - Validates period parameter handling
@@ -446,6 +455,7 @@ Tests querying different time periods simultaneously:
 ### Scenario 3: Metrics Correlation
 
 Tests that metrics and logs align:
+
 - Failed requests count should match error logs count
 - Validates data consistency across different endpoints
 - Real-world monitoring requirement
@@ -455,17 +465,19 @@ Tests that metrics and logs align:
 ## Auto-Refresh Testing
 
 All queries have auto-refresh intervals:
+
 - `useMonitoringMetrics`: 30 seconds
 - `useLogStats`: 30 seconds
 - `useSystemHealth`: 15 seconds
 
 **Not explicitly tested** in current suite, but could be tested with:
+
 ```typescript
 it("should auto-refresh metrics", async () => {
   jest.useFakeTimers();
 
-  const mockMetrics1 = createMockMetrics('24h', { total_requests: 1000 });
-  seedOperationsData({ '24h': mockMetrics1 });
+  const mockMetrics1 = createMockMetrics("24h", { total_requests: 1000 });
+  seedOperationsData({ "24h": mockMetrics1 });
 
   const { result } = renderHook(() => useMonitoringMetrics(), {
     wrapper: createWrapper(),
@@ -474,8 +486,8 @@ it("should auto-refresh metrics", async () => {
   await waitFor(() => expect(result.current.data?.total_requests).toBe(1000));
 
   // Update mock data
-  const mockMetrics2 = createMockMetrics('24h', { total_requests: 2000 });
-  seedOperationsData({ '24h': mockMetrics2 });
+  const mockMetrics2 = createMockMetrics("24h", { total_requests: 2000 });
+  seedOperationsData({ "24h": mockMetrics2 });
 
   // Advance time by 30 seconds
   jest.advanceTimersByTime(30000);
@@ -491,6 +503,7 @@ it("should auto-refresh metrics", async () => {
 ## Continuous Integration
 
 ### Unit Tests
+
 - ✅ Run on every PR
 - ✅ Must pass before merge
 - ✅ Fast (~13 seconds)
@@ -534,6 +547,7 @@ it("should auto-refresh metrics", async () => {
 ✅ **Multiple time period support**
 
 **Key Takeaway:**
+
 - **MSW + axios + queries = ✅ Perfect**
 - **MSW + axios + mutations = ❌ Issues**
 

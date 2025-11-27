@@ -17,14 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -152,9 +145,7 @@ export default function ContactsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Contacts</h1>
-          <p className="text-muted-foreground">
-            Manage customer contacts and relationships
-          </p>
+          <p className="text-muted-foreground">Manage customer contacts and relationships</p>
         </div>
         <Link href="/dashboard/crm/contacts/new">
           <Button>
@@ -197,8 +188,7 @@ export default function ContactsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Set(response?.contacts.filter((c) => c.company).map((c) => c.company))
-                .size ?? 0}
+              {new Set(response?.contacts.filter((c) => c.company).map((c) => c.company)).size ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">Unique companies</p>
           </CardContent>
@@ -232,9 +222,7 @@ export default function ContactsPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              Loading contacts...
-            </div>
+            <div className="p-8 text-center text-muted-foreground">Loading contacts...</div>
           ) : response && response.contacts.length > 0 ? (
             <>
               <Table>
@@ -258,14 +246,10 @@ export default function ContactsPage() {
                           "Unnamed"}
                       </TableCell>
                       <TableCell>
-                        {contact.company || (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                        {contact.company || <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>
-                        {contact.job_title || (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                        {contact.job_title || <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
@@ -325,8 +309,8 @@ export default function ContactsPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between p-4 border-t">
                 <div className="text-sm text-muted-foreground">
-                  Page {response.page} - Showing {response.contacts.length} of{" "}
-                  {response.total} contacts
+                  Page {response.page} - Showing {response.contacts.length} of {response.total}{" "}
+                  contacts
                 </div>
                 <div className="flex gap-2">
                   <Button

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { resetPassword } from "@dotmac/better-auth";
+import { confirmPasswordReset } from "@shared/lib/auth";
 
 const resetPasswordSchema = z
   .object({
@@ -53,13 +53,10 @@ function ResetPasswordForm() {
       setLoading(true);
 
       try {
-        const result = await resetPassword({
-          newPassword: data.password,
-          token,
-        });
+        const result = await confirmPasswordReset(token, data.password);
 
-        if (result.error) {
-          setError(result.error.message || "Failed to reset password");
+        if (!result.success) {
+          setError(result.error || "Failed to reset password");
           return;
         }
 
@@ -71,7 +68,7 @@ function ResetPasswordForm() {
         setLoading(false);
       }
     },
-    [token]
+    [token],
   );
 
   if (!token) {
@@ -110,9 +107,7 @@ function ResetPasswordForm() {
               <span className="text-3xl">✅</span>
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Password Reset!</h1>
-            <p className="text-muted-foreground">
-              Your password has been successfully reset.
-            </p>
+            <p className="text-muted-foreground">Your password has been successfully reset.</p>
           </div>
 
           <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-8 space-y-6">

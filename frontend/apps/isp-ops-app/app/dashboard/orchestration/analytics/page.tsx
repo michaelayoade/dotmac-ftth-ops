@@ -301,11 +301,7 @@ function PerformanceMetrics({ workflows }: { workflows: Workflow[] }) {
 export default function OrchestrationAnalyticsPage() {
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d" | "90d">("7d");
 
-  const {
-    data: stats,
-    isLoading: statsLoading,
-    refetch: refetchStats,
-  } = useOrchestrationStats();
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useOrchestrationStats();
   const {
     data: workflowResponse,
     isLoading: workflowsLoading,

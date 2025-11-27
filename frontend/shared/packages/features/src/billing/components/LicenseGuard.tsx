@@ -223,7 +223,7 @@ export function LicenseGuard({
  * {hasLicense("ADVANCED_ANALYTICS") && <AnalyticsButton />}
  */
 export function hasLicense(moduleOrFeature: string): boolean {
-    // This is a simplified sync version for inline checks
+  // This is a simplified sync version for inline checks
   const mockModules = ["CORE_BILLING", "ADVANCED_ANALYTICS", "NETWORK_MONITORING"];
   return mockModules.includes(moduleOrFeature);
 }
@@ -238,7 +238,7 @@ export function hasLicense(moduleOrFeature: string): boolean {
  */
 export function withLicenseGuard<P extends object>(
   Component: React.ComponentType<P>,
-  guardProps: Omit<LicenseGuardProps, "children">
+  guardProps: Omit<LicenseGuardProps, "children">,
 ) {
   return function LicenseGuardedComponent(props: P) {
     return (

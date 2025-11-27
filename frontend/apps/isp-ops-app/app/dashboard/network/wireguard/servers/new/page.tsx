@@ -37,47 +37,49 @@ export default function CreateServerPage(): JSX.Element {
     metadata: {},
   });
 
-  const [dnsInput, setDnsInput] = useState((formData['dns_servers'] ?? []).join(", "));
-  const [allowedIpsInput, setAllowedIpsInput] = useState((formData['allowed_ips'] ?? []).join(", "));
+  const [dnsInput, setDnsInput] = useState((formData["dns_servers"] ?? []).join(", "));
+  const [allowedIpsInput, setAllowedIpsInput] = useState(
+    (formData["allowed_ips"] ?? []).join(", "),
+  );
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!formData['name'].trim()) {
-      errors['name'] = "Server name is required";
+    if (!formData["name"].trim()) {
+      errors["name"] = "Server name is required";
     }
 
-    if (!formData['public_endpoint'].trim()) {
-      errors['public_endpoint'] = "Public endpoint is required";
+    if (!formData["public_endpoint"].trim()) {
+      errors["public_endpoint"] = "Public endpoint is required";
     }
 
-    const listenPort = formData['listen_port'] ?? 0;
+    const listenPort = formData["listen_port"] ?? 0;
     if (listenPort < 1 || listenPort > 65535) {
-      errors['listen_port'] = "Port must be between 1 and 65535";
+      errors["listen_port"] = "Port must be between 1 and 65535";
     }
 
-    if (!formData['server_ipv4']?.trim()) {
-      errors['server_ipv4'] = "Server IPv4 address is required";
-    } else if (!isValidCIDR(formData['server_ipv4'])) {
-      errors['server_ipv4'] = "Invalid IPv4 CIDR format (e.g., 10.10.0.1/24)";
+    if (!formData["server_ipv4"]?.trim()) {
+      errors["server_ipv4"] = "Server IPv4 address is required";
+    } else if (!isValidCIDR(formData["server_ipv4"])) {
+      errors["server_ipv4"] = "Invalid IPv4 CIDR format (e.g., 10.10.0.1/24)";
     }
 
-    if (formData['server_ipv6'] && !isValidIPv6CIDR(formData['server_ipv6'])) {
-      errors['server_ipv6'] = "Invalid IPv6 CIDR format";
+    if (formData["server_ipv6"] && !isValidIPv6CIDR(formData["server_ipv6"])) {
+      errors["server_ipv6"] = "Invalid IPv6 CIDR format";
     }
 
-    const maxPeers = formData['max_peers'] ?? 0;
+    const maxPeers = formData["max_peers"] ?? 0;
     if (maxPeers < 1 || maxPeers > 65535) {
-      errors['max_peers'] = "Max peers must be between 1 and 65535";
+      errors["max_peers"] = "Max peers must be between 1 and 65535";
     }
 
-    if ((formData['dns_servers']?.length ?? 0) === 0) {
-      errors['dns_servers'] = "At least one DNS server is required";
+    if ((formData["dns_servers"]?.length ?? 0) === 0) {
+      errors["dns_servers"] = "At least one DNS server is required";
     }
 
-    if ((formData['allowed_ips']?.length ?? 0) === 0) {
-      errors['allowed_ips'] = "At least one allowed IP range is required";
+    if ((formData["allowed_ips"]?.length ?? 0) === 0) {
+      errors["allowed_ips"] = "At least one allowed IP range is required";
     }
 
     setValidationErrors(errors);
@@ -113,16 +115,16 @@ export default function CreateServerPage(): JSX.Element {
 
     const submitData: WireGuardServerCreate = {
       ...formData,
-      description: formData['description'] || null,
-      server_ipv6: formData['server_ipv6'] || null,
-      location: formData['location'] || null,
+      description: formData["description"] || null,
+      server_ipv6: formData["server_ipv6"] || null,
+      location: formData["location"] || null,
       dns_servers,
       allowed_ips,
     };
 
     createServer(submitData, {
       onSuccess: (data) => {
-        router.push(`/dashboard/network/wireguard/servers/${data['id']}`);
+        router.push(`/dashboard/network/wireguard/servers/${data["id"]}`);
       },
     });
   };
@@ -181,23 +183,23 @@ export default function CreateServerPage(): JSX.Element {
               </label>
               <input
                 type="text"
-                value={formData['name']}
+                value={formData["name"]}
                 onChange={(e) => handleFieldChange("name", e.target.value)}
                 placeholder="e.g., US-East-VPN-1"
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors['name']? "border-red-500" : ""
+                  validationErrors["name"] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors['name'] && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors['name']}</p>
+              {validationErrors["name"] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors["name"]}</p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Description</label>
               <textarea
-                value={formData['description'] || ""}
+                value={formData["description"] || ""}
                 onChange={(e) => handleFieldChange("description", e.target.value)}
                 placeholder="Optional description for this server"
                 rows={3}
@@ -209,7 +211,7 @@ export default function CreateServerPage(): JSX.Element {
               <label className="block text-sm font-medium mb-1">Location</label>
               <input
                 type="text"
-                value={formData['location'] || ""}
+                value={formData["location"] || ""}
                 onChange={(e) => handleFieldChange("location", e.target.value)}
                 placeholder="e.g., New York, US"
                 className="w-full px-4 py-2 border rounded-md"
@@ -228,16 +230,16 @@ export default function CreateServerPage(): JSX.Element {
               </label>
               <input
                 type="text"
-                value={formData['public_endpoint']}
+                value={formData["public_endpoint"]}
                 onChange={(e) => handleFieldChange("public_endpoint", e.target.value)}
                 placeholder="e.g., vpn['example'].com:51820 or 203.0.113.1:51820"
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors['public_endpoint'] ? "border-red-500" : ""
+                  validationErrors["public_endpoint"] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors['public_endpoint'] && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors['public_endpoint']}</p>
+              {validationErrors["public_endpoint"] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors["public_endpoint"]}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 The public address and port clients will connect to
@@ -250,19 +252,19 @@ export default function CreateServerPage(): JSX.Element {
               </label>
               <input
                 type="number"
-                value={formData['listen_port'] ?? ""}
+                value={formData["listen_port"] ?? ""}
                 onChange={(e) =>
                   handleFieldChange("listen_port", parseInt(e.target.value) || undefined)
                 }
                 min={1}
                 max={65535}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors['listen_port'] ? "border-red-500" : ""
+                  validationErrors["listen_port"] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors['listen_port'] && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors['listen_port']}</p>
+              {validationErrors["listen_port"] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors["listen_port"]}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">Default: 51820</p>
             </div>
@@ -274,16 +276,16 @@ export default function CreateServerPage(): JSX.Element {
                 </label>
                 <input
                   type="text"
-                  value={formData['server_ipv4'] ?? ""}
+                  value={formData["server_ipv4"] ?? ""}
                   onChange={(e) => handleFieldChange("server_ipv4", e.target.value)}
                   placeholder="e.g., 10.10.0.1/24"
                   className={`w-full px-4 py-2 border rounded-md ${
-                    validationErrors['server_ipv4'] ? "border-red-500" : ""
+                    validationErrors["server_ipv4"] ? "border-red-500" : ""
                   }`}
                   required
                 />
-                {validationErrors['server_ipv4'] && (
-                  <p className="text-sm text-red-500 mt-1">{validationErrors['server_ipv4']}</p>
+                {validationErrors["server_ipv4"] && (
+                  <p className="text-sm text-red-500 mt-1">{validationErrors["server_ipv4"]}</p>
                 )}
               </div>
 
@@ -291,15 +293,15 @@ export default function CreateServerPage(): JSX.Element {
                 <label className="block text-sm font-medium mb-1">Server IPv6 (CIDR)</label>
                 <input
                   type="text"
-                  value={formData['server_ipv6'] || ""}
+                  value={formData["server_ipv6"] || ""}
                   onChange={(e) => handleFieldChange("server_ipv6", e.target.value)}
                   placeholder="e.g., fd42:42:42::1/64"
                   className={`w-full px-4 py-2 border rounded-md ${
-                    validationErrors['server_ipv6'] ? "border-red-500" : ""
+                    validationErrors["server_ipv6"] ? "border-red-500" : ""
                   }`}
                 />
-                {validationErrors['server_ipv6'] && (
-                  <p className="text-sm text-red-500 mt-1">{validationErrors['server_ipv6']}</p>
+                {validationErrors["server_ipv6"] && (
+                  <p className="text-sm text-red-500 mt-1">{validationErrors["server_ipv6"]}</p>
                 )}
               </div>
             </div>
@@ -316,19 +318,19 @@ export default function CreateServerPage(): JSX.Element {
               </label>
               <input
                 type="number"
-                value={formData['max_peers'] ?? ""}
+                value={formData["max_peers"] ?? ""}
                 onChange={(e) =>
                   handleFieldChange("max_peers", parseInt(e.target.value) || undefined)
                 }
                 min={1}
                 max={65535}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors['max_peers'] ? "border-red-500" : ""
+                  validationErrors["max_peers"] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors['max_peers'] && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors['max_peers']}</p>
+              {validationErrors["max_peers"] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors["max_peers"]}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Maximum number of peer connections (default: 254)
@@ -345,12 +347,12 @@ export default function CreateServerPage(): JSX.Element {
                 onChange={(e) => setDnsInput(e.target.value)}
                 placeholder="e.g., 1.1.1.1, 1.0.0.1"
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors['dns_servers'] ? "border-red-500" : ""
+                  validationErrors["dns_servers"] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors['dns_servers'] && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors['dns_servers']}</p>
+              {validationErrors["dns_servers"] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors["dns_servers"]}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Comma-separated list of DNS servers for peers
@@ -367,12 +369,12 @@ export default function CreateServerPage(): JSX.Element {
                 onChange={(e) => setAllowedIpsInput(e.target.value)}
                 placeholder="e.g., 0.0.0.0/0, ::/0"
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors['allowed_ips'] ? "border-red-500" : ""
+                  validationErrors["allowed_ips"] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors['allowed_ips'] && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors['allowed_ips']}</p>
+              {validationErrors["allowed_ips"] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors["allowed_ips"]}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Comma-separated CIDR ranges that peers can route through VPN
@@ -385,7 +387,7 @@ export default function CreateServerPage(): JSX.Element {
               </label>
               <input
                 type="number"
-                value={formData['persistent_keepalive']}
+                value={formData["persistent_keepalive"]}
                 onChange={(e) =>
                   handleFieldChange("persistent_keepalive", parseInt(e.target.value))
                 }

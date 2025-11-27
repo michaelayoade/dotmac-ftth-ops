@@ -4,7 +4,10 @@ import clsx from "clsx";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {}
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ className, ...props }, ref) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { className, ...props },
+  ref,
+) {
   return (
     <input
       ref={ref}

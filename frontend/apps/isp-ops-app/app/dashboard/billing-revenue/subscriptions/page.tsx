@@ -6,14 +6,7 @@ export const dynamic = "force-dynamic";
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import {
@@ -669,8 +662,7 @@ export default function SubscriptionsPage() {
                 <option value="">Select plan</option>
                 {(plansData?.plans || []).map((plan) => (
                   <option key={plan.id} value={plan.id}>
-                    {plan.name} - {plan.currency}{" "}
-                    {plan.price.toFixed(2)}/{plan.billingCycle}
+                    {plan.name} - {plan.currency} {plan.price.toFixed(2)}/{plan.billingCycle}
                   </option>
                 ))}
               </select>
@@ -826,8 +818,7 @@ export default function SubscriptionsPage() {
                   <option value="">Select plan</option>
                   {(plansData?.plans || []).map((plan) => (
                     <option key={plan.id} value={plan.id}>
-                      {plan.name} - {plan.currency}{" "}
-                      {plan.price.toFixed(2)}/{plan.billingCycle}
+                      {plan.name} - {plan.currency} {plan.price.toFixed(2)}/{plan.billingCycle}
                     </option>
                   ))}
                 </select>

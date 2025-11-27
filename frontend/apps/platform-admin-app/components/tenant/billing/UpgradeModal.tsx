@@ -13,11 +13,7 @@ import { Button } from "@dotmac/ui";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { Separator } from "@dotmac/ui";
 import { AvailablePlan, ProrationPreview } from "@/hooks/useTenantSubscription";
-import {
-  Loader2,
-  AlertCircle,
-  ArrowRight,
-} from "lucide-react";
+import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 interface UpgradeModalProps {

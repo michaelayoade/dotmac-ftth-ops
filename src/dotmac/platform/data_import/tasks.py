@@ -16,11 +16,11 @@ from celery import Task, current_task
 from celery.schedules import crontab
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-import dotmac.platform.db as db_module
 from dotmac.platform.core.tasks import app, idempotent_task
 from dotmac.platform.customer_management.mappers import CustomerImportSchema, CustomerMapper
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.data_import.models import ImportJob, ImportJobStatus, ImportJobType
+from dotmac.platform.db import get_async_database_url
 
 logger = structlog.get_logger(__name__)
 
@@ -32,7 +32,7 @@ MAX_CHUNK_SIZE = 5000
 def get_async_session() -> AsyncSession:
     """Create async database session for Celery tasks."""
     engine = create_async_engine(
-        db_module.get_async_database_url(),  # type: ignore[attr-defined]
+        get_async_database_url(),
         echo=False,
     )
     async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -726,7 +726,7 @@ async def _process_chunk_data(
 
 
 @app.task  # type: ignore[misc]  # Celery decorator is untyped
-@idempotent_task(ttl=300)  # type: ignore[misc]  # Custom decorator is untyped
+@idempotent_task(ttl=300)
 def check_import_health() -> dict[str, Any]:
     """
     Periodic health check for import system.

@@ -154,9 +154,7 @@ export const invalidateHelpers = {
     queryClient: QueryClient,
     queryKeys: readonly (readonly unknown[])[],
   ) => {
-    await Promise.all(
-      queryKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-    );
+    await Promise.all(queryKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
   },
 };
 

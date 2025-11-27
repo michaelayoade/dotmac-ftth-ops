@@ -44,7 +44,8 @@ const baseClassNames: CalendarClassNames = {
   day: "group h-9 w-9",
   hidden: "invisible",
   range_start: "group-data-[range_start=true]:rounded-l-md",
-  range_middle: "group-data-[range_middle=true]:bg-accent group-data-[range_middle=true]:text-accent-foreground",
+  range_middle:
+    "group-data-[range_middle=true]:bg-accent group-data-[range_middle=true]:text-accent-foreground",
   range_end: "group-data-[range_end=true]:rounded-r-md",
   focused: "outline-none focus-visible:ring-2 focus-visible:ring-primary",
 };
@@ -67,7 +68,11 @@ function Calendar({
       result[key] = cn(baseValue, incomingValue);
     });
     if (classNames?.caption) {
-      result.month_caption = cn(baseClassNames.month_caption, classNames.caption, classNames.month_caption);
+      result.month_caption = cn(
+        baseClassNames.month_caption,
+        classNames.caption,
+        classNames.month_caption,
+      );
     }
     return result;
   }, [classNames]);
@@ -115,7 +120,11 @@ function Calendar({
       return selectedValue[0];
     }
 
-    if (resolvedMode === "range" && isDateRange(selectedValue) && selectedValue.from instanceof Date) {
+    if (
+      resolvedMode === "range" &&
+      isDateRange(selectedValue) &&
+      selectedValue.from instanceof Date
+    ) {
       return selectedValue.from;
     }
 
@@ -150,7 +159,10 @@ function Calendar({
             } as const;
             const IconComponent = icons[orientation] ?? ChevronRight;
             return (
-              <IconComponent className={cn("h-4 w-4", className)} style={{ width: size, height: size }} />
+              <IconComponent
+                className={cn("h-4 w-4", className)}
+                style={{ width: size, height: size }}
+              />
             );
           },
         },

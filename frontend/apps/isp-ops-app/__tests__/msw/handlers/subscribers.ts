@@ -5,7 +5,7 @@
  * providing realistic responses without hitting a real server.
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type {
   Subscriber,
   SubscriberService,
@@ -14,7 +14,7 @@ import type {
   UpdateSubscriberRequest,
   SubscriberStatus,
   ConnectionType,
-} from '../../../hooks/useSubscribers';
+} from "../../../hooks/useSubscribers";
 
 // In-memory storage for test data
 let subscribers: Subscriber[] = [];
@@ -34,20 +34,20 @@ export function resetSubscriberStorage() {
 export function createMockSubscriber(overrides?: Partial<Subscriber>): Subscriber {
   return {
     id: `sub-${nextSubscriberId++}`,
-    tenant_id: 'tenant-1',
-    subscriber_id: `SUB-${String(nextSubscriberId).padStart(3, '0')}`,
-    first_name: 'John',
-    last_name: 'Doe',
+    tenant_id: "tenant-1",
+    subscriber_id: `SUB-${String(nextSubscriberId).padStart(3, "0")}`,
+    first_name: "John",
+    last_name: "Doe",
     email: `subscriber${nextSubscriberId}@example.com`,
-    phone: '+1234567890',
-    service_address: '123 Main St',
-    service_city: 'New York',
-    service_state: 'NY',
-    service_postal_code: '10001',
-    service_country: 'USA',
-    status: 'active',
-    connection_type: 'ftth',
-    service_plan: 'Premium 1000',
+    phone: "+1234567890",
+    service_address: "123 Main St",
+    service_city: "New York",
+    service_state: "NY",
+    service_postal_code: "10001",
+    service_country: "USA",
+    status: "active",
+    connection_type: "ftth",
+    service_plan: "Premium 1000",
     bandwidth_mbps: 1000,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -58,14 +58,14 @@ export function createMockSubscriber(overrides?: Partial<Subscriber>): Subscribe
 // Helper to create a subscriber service
 export function createMockService(
   subscriberId: string,
-  overrides?: Partial<SubscriberService>
+  overrides?: Partial<SubscriberService>,
 ): SubscriberService {
   return {
     id: `svc-${nextServiceId++}`,
     subscriber_id: subscriberId,
-    service_type: 'internet',
-    service_name: 'Fiber 1000',
-    status: 'active',
+    service_type: "internet",
+    service_name: "Fiber 1000",
+    status: "active",
     bandwidth_mbps: 1000,
     monthly_fee: 99.99,
     created_at: new Date().toISOString(),
@@ -77,7 +77,7 @@ export function createMockService(
 // Helper to seed initial data
 export function seedSubscriberData(
   subscribersData: Subscriber[],
-  servicesData: SubscriberService[]
+  servicesData: SubscriberService[],
 ) {
   subscribers = [...subscribersData];
   services = [...servicesData];
@@ -113,7 +113,8 @@ export function createMockStatistics(): SubscriberStatistics {
     new_this_month: 0,
     churn_this_month: 0,
     average_uptime: 99.5,
-    total_bandwidth_gbps: subscribers.reduce((acc, sub) => acc + (sub.bandwidth_mbps || 0), 0) / 1000,
+    total_bandwidth_gbps:
+      subscribers.reduce((acc, sub) => acc + (sub.bandwidth_mbps || 0), 0) / 1000,
     by_connection_type: byConnectionType,
     by_status: byStatus,
   };
@@ -121,19 +122,19 @@ export function createMockStatistics(): SubscriberStatistics {
 
 export const subscriberHandlers = [
   // GET /subscribers - List subscribers
-  http.get('*/subscribers', ({ request, params }) => {
+  http.get("*/subscribers", ({ request, params }) => {
     const url = new URL(request.url);
-    const offset = parseInt(url.searchParams.get('offset') || '0');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-    const search = url.searchParams.get('search');
-    const city = url.searchParams.get('city');
-    const servicePlan = url.searchParams.get('service_plan');
-    const statuses = url.searchParams.getAll('status');
-    const connectionTypes = url.searchParams.getAll('connection_type');
-    const sortBy = url.searchParams.get('sort_by') || 'id';
-    const sortOrder = url.searchParams.get('sort_order') || 'asc';
+    const offset = parseInt(url.searchParams.get("offset") || "0");
+    const limit = parseInt(url.searchParams.get("limit") || "20");
+    const search = url.searchParams.get("search");
+    const city = url.searchParams.get("city");
+    const servicePlan = url.searchParams.get("service_plan");
+    const statuses = url.searchParams.getAll("status");
+    const connectionTypes = url.searchParams.getAll("connection_type");
+    const sortBy = url.searchParams.get("sort_by") || "id";
+    const sortOrder = url.searchParams.get("sort_order") || "asc";
 
-    console.log('[MSW] GET /subscribers', {
+    console.log("[MSW] GET /subscribers", {
       offset,
       limit,
       search,
@@ -173,17 +174,17 @@ export const subscriberHandlers = [
           sub.first_name.toLowerCase().includes(searchLower) ||
           sub.last_name.toLowerCase().includes(searchLower) ||
           sub.email.toLowerCase().includes(searchLower) ||
-          sub.subscriber_id.toLowerCase().includes(searchLower)
+          sub.subscriber_id.toLowerCase().includes(searchLower),
       );
     }
 
     // Sort
     filtered.sort((a, b) => {
-      const aValue = a[sortBy as keyof Subscriber] || '';
-      const bValue = b[sortBy as keyof Subscriber] || '';
+      const aValue = a[sortBy as keyof Subscriber] || "";
+      const bValue = b[sortBy as keyof Subscriber] || "";
 
       let comparison = 0;
-      if (sortOrder === 'asc') {
+      if (sortOrder === "asc") {
         comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
         comparison = aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
@@ -202,7 +203,7 @@ export const subscriberHandlers = [
     const end = offset + limit;
     const paginated = filtered.slice(start, end);
 
-    console.log('[MSW] Returning', paginated.length, 'subscribers');
+    console.log("[MSW] Returning", paginated.length, "subscribers");
 
     // Return in the format expected by the hook
     return HttpResponse.json({
@@ -213,14 +214,14 @@ export const subscriberHandlers = [
 
   // GET /subscribers/statistics - Get subscriber statistics
   // NOTE: This MUST come before /subscribers/:id to avoid matching "statistics" as an ID
-  http.get('*/subscribers/statistics', ({ request, params }) => {
+  http.get("*/subscribers/statistics", ({ request, params }) => {
     const stats = createMockStatistics();
     return HttpResponse.json(stats);
   }),
 
   // GET /subscribers/:id/services - Get subscriber services
   // NOTE: This MUST come before /subscribers/:id to avoid matching "services" as an ID
-  http.get('*/subscribers/:id/services', ({ request, params }) => {
+  http.get("*/subscribers/:id/services", ({ request, params }) => {
     const { id } = params;
 
     const subscriberServices = services.filter((svc) => svc.subscriber_id === id);
@@ -230,15 +231,15 @@ export const subscriberHandlers = [
 
   // GET /subscribers/:id - Get single subscriber
   // NOTE: This must come AFTER all specific routes like /statistics and /:id/services
-  http.get('*/subscribers/:id', ({ request, params }) => {
+  http.get("*/subscribers/:id", ({ request, params }) => {
     const { id } = params;
 
     const subscriber = subscribers.find((sub) => sub.id === id);
 
     if (!subscriber) {
       return HttpResponse.json(
-        { error: 'Subscriber not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Subscriber not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
@@ -246,8 +247,8 @@ export const subscriberHandlers = [
   }),
 
   // POST /subscribers - Create subscriber
-  http.post('*/subscribers', async ({ request, params }) => {
-    const data = await request.json() as CreateSubscriberRequest;
+  http.post("*/subscribers", async ({ request, params }) => {
+    const data = (await request.json()) as CreateSubscriberRequest;
 
     const newSubscriber = createMockSubscriber({
       ...data,
@@ -260,16 +261,16 @@ export const subscriberHandlers = [
   }),
 
   // PATCH /subscribers/:id - Update subscriber
-  http.patch('*/subscribers/:id', async ({ request, params }) => {
+  http.patch("*/subscribers/:id", async ({ request, params }) => {
     const { id } = params;
-    const updates = await request.json() as UpdateSubscriberRequest;
+    const updates = (await request.json()) as UpdateSubscriberRequest;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
       return HttpResponse.json(
-        { error: 'Subscriber not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Subscriber not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
@@ -283,15 +284,15 @@ export const subscriberHandlers = [
   }),
 
   // DELETE /subscribers/:id - Delete subscriber
-  http.delete('*/subscribers/:id', ({ request, params }) => {
+  http.delete("*/subscribers/:id", ({ request, params }) => {
     const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
       return HttpResponse.json(
-        { error: 'Subscriber not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Subscriber not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
@@ -301,57 +302,57 @@ export const subscriberHandlers = [
   }),
 
   // POST /subscribers/:id/suspend - Suspend subscriber
-  http.post('*/subscribers/:id/suspend', ({ request, params }) => {
+  http.post("*/subscribers/:id/suspend", ({ request, params }) => {
     const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
       return HttpResponse.json(
-        { error: 'Subscriber not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Subscriber not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
-    subscribers[index].status = 'suspended';
+    subscribers[index].status = "suspended";
     subscribers[index].updated_at = new Date().toISOString();
 
     return HttpResponse.json(subscribers[index], { status: 200 });
   }),
 
   // POST /subscribers/:id/activate - Activate subscriber
-  http.post('*/subscribers/:id/activate', ({ request, params }) => {
+  http.post("*/subscribers/:id/activate", ({ request, params }) => {
     const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
       return HttpResponse.json(
-        { error: 'Subscriber not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Subscriber not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
-    subscribers[index].status = 'active';
+    subscribers[index].status = "active";
     subscribers[index].updated_at = new Date().toISOString();
 
     return HttpResponse.json(subscribers[index], { status: 200 });
   }),
 
   // POST /subscribers/:id/terminate - Terminate subscriber
-  http.post('*/subscribers/:id/terminate', ({ request, params }) => {
+  http.post("*/subscribers/:id/terminate", ({ request, params }) => {
     const { id } = params;
 
     const index = subscribers.findIndex((sub) => sub.id === id);
 
     if (index === -1) {
       return HttpResponse.json(
-        { error: 'Subscriber not found', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: "Subscriber not found", code: "NOT_FOUND" },
+        { status: 404 },
       );
     }
 
-    subscribers[index].status = 'terminated';
+    subscribers[index].status = "terminated";
     subscribers[index].updated_at = new Date().toISOString();
 
     return HttpResponse.json(subscribers[index], { status: 200 });

@@ -5,7 +5,11 @@
 
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useDomainVerification, useDomainStatus, useDomainValidation } from "../useDomainVerification";
+import {
+  useDomainVerification,
+  useDomainStatus,
+  useDomainValidation,
+} from "../useDomainVerification";
 import { domainVerificationService } from "@/lib/services/domain-verification-service";
 
 // Mock the service
@@ -59,10 +63,9 @@ describe("useDomainVerification", () => {
       await waitFor(() => expect(result.current.isInitiating).toBe(false));
 
       expect(result.current.initiateResult).toEqual(mockResponse);
-      expect(domainVerificationService.initiateVerification).toHaveBeenCalledWith(
-        tenantId,
-        { domain: "example.com" }
-      );
+      expect(domainVerificationService.initiateVerification).toHaveBeenCalledWith(tenantId, {
+        domain: "example.com",
+      });
     });
 
     it("should handle initiate error", async () => {

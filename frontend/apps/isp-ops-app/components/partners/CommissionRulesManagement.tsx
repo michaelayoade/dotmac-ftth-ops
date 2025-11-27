@@ -4,30 +4,11 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { Plus, Edit, Trash2, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import {
   useCommissionRules,
@@ -65,11 +46,7 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
     ...(partnerId && { partner_id: partnerId }),
   };
 
-  const {
-    data: rulesData,
-    isLoading,
-    error,
-  } = useCommissionRules(commissionRuleFilters);
+  const { data: rulesData, isLoading, error } = useCommissionRules(commissionRuleFilters);
 
   // Mutations
   const createMutation = useCreateCommissionRule();
@@ -78,33 +55,39 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
 
   const handleCreateRule = () => {
     setEditingRule(null);
-    setFormData((prev) => ({
-      ...prev,
-      commission_type: "revenue_share",
-      is_active: true,
-      priority: 1,
-      effective_from: new Date().toISOString().split("T")[0],
-    } as Partial<CreateCommissionRuleInput>));
+    setFormData(
+      (prev) =>
+        ({
+          ...prev,
+          commission_type: "revenue_share",
+          is_active: true,
+          priority: 1,
+          effective_from: new Date().toISOString().split("T")[0],
+        }) as Partial<CreateCommissionRuleInput>,
+    );
     setIsDialogOpen(true);
   };
 
   const handleEditRule = (rule: CommissionRule) => {
     setEditingRule(rule);
-    setFormData((prev) => ({
-      ...prev,
-      rule_name: rule.rule_name,
-      description: rule.description,
-      commission_type: rule.commission_type,
-      commission_rate: rule.commission_rate,
-      flat_fee_amount: rule.flat_fee_amount,
-      tier_config: rule.tier_config,
-      applies_to_products: rule.applies_to_products,
-      applies_to_customers: rule.applies_to_customers,
-      effective_from: rule.effective_from.split("T")[0],
-      effective_to: rule.effective_to?.split("T")[0],
-      is_active: rule.is_active,
-      priority: rule.priority,
-    } as Partial<CreateCommissionRuleInput>));
+    setFormData(
+      (prev) =>
+        ({
+          ...prev,
+          rule_name: rule.rule_name,
+          description: rule.description,
+          commission_type: rule.commission_type,
+          commission_rate: rule.commission_rate,
+          flat_fee_amount: rule.flat_fee_amount,
+          tier_config: rule.tier_config,
+          applies_to_products: rule.applies_to_products,
+          applies_to_customers: rule.applies_to_customers,
+          effective_from: rule.effective_from.split("T")[0],
+          effective_to: rule.effective_to?.split("T")[0],
+          is_active: rule.is_active,
+          priority: rule.priority,
+        }) as Partial<CreateCommissionRuleInput>,
+    );
     setSelectedPartnerId(rule.partner_id);
     setIsDialogOpen(true);
   };
@@ -304,11 +287,7 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                       <TableCell>{rule.priority}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditRule(rule)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleEditRule(rule)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
@@ -434,12 +413,15 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                   placeholder="10.0"
                   value={formData.commission_rate ? formData.commission_rate * 100 : ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      commission_rate: e.target.value
-                        ? parseFloat(e.target.value) / 100
-                        : undefined,
-                    } as Partial<CreateCommissionRuleInput>))
+                    setFormData(
+                      (prev) =>
+                        ({
+                          ...prev,
+                          commission_rate: e.target.value
+                            ? parseFloat(e.target.value) / 100
+                            : undefined,
+                        }) as Partial<CreateCommissionRuleInput>,
+                    )
                   }
                   disabled={formData.commission_type === "flat_fee"}
                 />
@@ -461,10 +443,13 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                   placeholder="50.00"
                   value={formData.flat_fee_amount || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      flat_fee_amount: e.target.value ? parseFloat(e.target.value) : undefined,
-                    } as Partial<CreateCommissionRuleInput>))
+                    setFormData(
+                      (prev) =>
+                        ({
+                          ...prev,
+                          flat_fee_amount: e.target.value ? parseFloat(e.target.value) : undefined,
+                        }) as Partial<CreateCommissionRuleInput>,
+                    )
                   }
                   disabled={formData.commission_type === "revenue_share"}
                 />
@@ -494,7 +479,13 @@ export function CommissionRulesManagement({ partnerId }: CommissionRulesManageme
                   type="date"
                   value={formData.effective_to || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, effective_to: e.target.value || undefined } as Partial<CreateCommissionRuleInput>))
+                    setFormData(
+                      (prev) =>
+                        ({
+                          ...prev,
+                          effective_to: e.target.value || undefined,
+                        }) as Partial<CreateCommissionRuleInput>,
+                    )
                   }
                 />
               </div>

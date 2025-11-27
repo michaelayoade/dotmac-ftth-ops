@@ -19,13 +19,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { useVOLTHADashboard, useOLTOverview, useDeviceOperation } from "@/hooks/useVOLTHA";
 import { DISPLAY_LIMITS, OPTICAL_POWER_THRESHOLDS } from "@/lib/constants/voltha";
 import { useDebouncedValue } from "@/hooks/useDebounce";
@@ -63,9 +57,7 @@ export function VOLTHADashboard() {
   useEffect(() => {
     if (isError && error) {
       const errorMessage =
-        (error as any)?.response?.data?.detail ||
-        error.message ||
-        "Could not connect to VOLTHA";
+        (error as any)?.response?.data?.detail || error.message || "Could not connect to VOLTHA";
 
       toast({
         title: "Failed to load VOLTHA data",
@@ -125,7 +117,11 @@ export function VOLTHADashboard() {
         </Badge>
       );
     } else {
-      return <Badge variant="outline" className="">{status}</Badge>;
+      return (
+        <Badge variant="outline" className="">
+          {status}
+        </Badge>
+      );
     }
   };
 
@@ -365,7 +361,9 @@ export function VOLTHADashboard() {
                 <Input
                   placeholder="Search ONUs..."
                   value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setSearchQuery(e.target.value)
+                  }
                   className="pl-8 w-64"
                   aria-label="Search ONUs by serial number or ID"
                 />
@@ -396,7 +394,11 @@ export function VOLTHADashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                   {getStatusBadge(onu.oper_status || "UNKNOWN")}
-                  <Button variant="ghost" size="sm" aria-label={`View details for ${onu.serial_number || onu.id}`}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`View details for ${onu.serial_number || onu.id}`}
+                  >
                     Details
                   </Button>
                 </div>
@@ -434,7 +436,9 @@ export function VOLTHADashboard() {
                       Device: {alarm.device_id} • {alarm.description}
                     </div>
                   </div>
-                  <Badge variant="destructive" className="">{alarm.severity}</Badge>
+                  <Badge variant="destructive" className="">
+                    {alarm.severity}
+                  </Badge>
                 </div>
               ))}
             </div>

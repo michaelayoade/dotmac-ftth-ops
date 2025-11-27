@@ -40,7 +40,7 @@ interface UpgradeJob {
 
 function FirmwarePageContent() {
   const params = useParams();
-  const deviceId = params['deviceId'] as string;
+  const deviceId = params["deviceId"] as string;
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
@@ -50,10 +50,9 @@ function FirmwarePageContent() {
   const { data: device } = useQuery({
     queryKey: ["device", deviceId],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch device");
       return response.json();
     },
@@ -64,7 +63,7 @@ function FirmwarePageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/genieacs/firmware/versions?model=${device?.summary?.model}`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) return [];
       return response.json();
@@ -77,7 +76,7 @@ function FirmwarePageContent() {
     queryFn: async () => {
       const response = await fetch(
         `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/firmware/status`,
-        { credentials: "include" }
+        { credentials: "include" },
       );
       if (!response.ok) return null;
       return response.json();
@@ -94,7 +93,7 @@ function FirmwarePageContent() {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ version }),
-        }
+        },
       );
       if (!response.ok) throw new Error("Failed to initiate upgrade");
       return response.json();
@@ -191,9 +190,7 @@ function FirmwarePageContent() {
             <p className="text-sm text-muted-foreground">
               Started: {new Date(upgradeJob.startedAt).toLocaleString()}
             </p>
-            {upgradeJob.error && (
-              <p className="text-sm text-destructive">{upgradeJob.error}</p>
-            )}
+            {upgradeJob.error && <p className="text-sm text-destructive">{upgradeJob.error}</p>}
           </CardContent>
         </Card>
       )}
@@ -226,9 +223,7 @@ function FirmwarePageContent() {
                         {version.version === device?.summary?.softwareVersion && (
                           <Badge variant="secondary">Current</Badge>
                         )}
-                        {!version.compatible && (
-                          <Badge variant="destructive">Incompatible</Badge>
-                        )}
+                        {!version.compatible && <Badge variant="destructive">Incompatible</Badge>}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Released: {new Date(version.releaseDate).toLocaleDateString()} •{" "}

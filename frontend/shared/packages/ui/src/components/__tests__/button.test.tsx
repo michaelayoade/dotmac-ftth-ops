@@ -115,7 +115,11 @@ describe("Button", () => {
     });
 
     it("renders icon size", () => {
-      render(<Button size="icon" aria-label="Icon button">🔍</Button>);
+      render(
+        <Button size="icon" aria-label="Icon button">
+          🔍
+        </Button>,
+      );
 
       const button = screen.getByRole("button");
       expect(button).toHaveClass("h-10", "w-10", "min-h-[44px]", "min-w-[44px]");
@@ -147,7 +151,7 @@ describe("Button", () => {
       render(
         <Button onClick={handleClick} disabled>
           Disabled
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button");
@@ -187,7 +191,7 @@ describe("Button", () => {
       expect(button).toHaveClass(
         "focus-visible:outline-none",
         "focus-visible:ring-2",
-        "focus-visible:ring-primary"
+        "focus-visible:ring-primary",
       );
     });
 
@@ -203,7 +207,7 @@ describe("Button", () => {
         <div>
           <span id="label-id">Label</span>
           <Button aria-labelledby="label-id">Button</Button>
-        </div>
+        </div>,
       );
 
       const button = screen.getByRole("button");
@@ -228,7 +232,7 @@ describe("Button", () => {
 
       expect(consoleWarn).toHaveBeenCalledWith(
         expect.stringContaining("Buttons should have accessible labels"),
-        expect.any(Object)
+        expect.any(Object),
       );
 
       consoleWarn.mockRestore();
@@ -312,7 +316,7 @@ describe("Button", () => {
       render(
         <Button data-testid="custom-button" data-custom="value">
           Button
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByTestId("custom-button");
@@ -358,7 +362,7 @@ describe("Button", () => {
       render(
         <Button>
           <span>Span content</span>
-        </Button>
+        </Button>,
       );
 
       expect(screen.getByText("Span content")).toBeInTheDocument();
@@ -369,7 +373,7 @@ describe("Button", () => {
         <Button>
           <span>Icon</span>
           <span>Label</span>
-        </Button>
+        </Button>,
       );
 
       expect(screen.getByText("Icon")).toBeInTheDocument();
@@ -389,7 +393,7 @@ describe("Button", () => {
       render(
         <Button variant="default" size="lg">
           Large Primary
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button");
@@ -400,7 +404,7 @@ describe("Button", () => {
       render(
         <Button variant="destructive" size="sm">
           Small Delete
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button");
@@ -411,7 +415,7 @@ describe("Button", () => {
       render(
         <Button variant="ghost" size="icon" aria-label="Ghost icon">
           🔍
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button");
@@ -460,7 +464,7 @@ describe("Button", () => {
       render(
         <Button variant="default" size="default">
           Save Changes
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button", { name: "Save Changes" });
@@ -473,7 +477,7 @@ describe("Button", () => {
       render(
         <Button variant="destructive" onClick={handleDelete}>
           Delete Account
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button", { name: "Delete Account" });
@@ -487,7 +491,7 @@ describe("Button", () => {
       render(
         <Button variant="ghost" size="icon" aria-label="Close dialog">
           ✕
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button", { name: "Close dialog" });
@@ -500,7 +504,7 @@ describe("Button", () => {
       render(
         <form onSubmit={handleSubmit}>
           <Button type="submit">Submit Form</Button>
-        </form>
+        </form>,
       );
 
       const button = screen.getByRole("button", { name: "Submit Form" });
@@ -513,7 +517,7 @@ describe("Button", () => {
       render(
         <Button disabled>
           <span>Loading...</span>
-        </Button>
+        </Button>,
       );
 
       const button = screen.getByRole("button");
@@ -526,7 +530,7 @@ describe("Button", () => {
         <Button>
           <span aria-hidden>📁</span>
           <span>Open File</span>
-        </Button>
+        </Button>,
       );
 
       expect(screen.getByText("Open File")).toBeInTheDocument();

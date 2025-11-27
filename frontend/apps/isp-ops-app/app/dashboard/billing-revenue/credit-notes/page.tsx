@@ -14,12 +14,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { CreditNote, CreditNoteStatuses } from "@/types/billing";
-import {
-  EnhancedDataTable,
-  type ColumnDef,
-  type QuickFilter,
-  type Row,
-} from "@dotmac/ui";
+import { EnhancedDataTable, type ColumnDef, type QuickFilter, type Row } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import {
@@ -33,13 +28,7 @@ import {
 import { Input } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
 import { Textarea } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
 import { formatCurrency } from "@dotmac/features/billing";
 import { useRouter } from "next/navigation";
 import { useToast } from "@dotmac/ui";
@@ -123,13 +112,13 @@ export default function CreditNotesPage() {
 
       const lineItems = [
         {
-          description: formData['description'],
-          amount: parseFloat(formData['amount']),
+          description: formData["description"],
+          amount: parseFloat(formData["amount"]),
         },
       ];
 
       const payload = {
-        invoice_id: formData['invoice_id'],
+        invoice_id: formData["invoice_id"],
         reason: formData.reason,
         line_items: lineItems,
         notes: formData.notes || null,
@@ -211,7 +200,8 @@ export default function CreditNotesPage() {
             </div>
             {row.original.available_credit > 0 && (
               <div className="text-xs text-muted-foreground">
-                Available: {formatCurrency(row.original.available_credit, row.original.currency || "USD")}
+                Available:{" "}
+                {formatCurrency(row.original.available_credit, row.original.currency || "USD")}
               </div>
             )}
           </div>
@@ -348,10 +338,7 @@ export default function CreditNotesPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setCreateDialogOpen(true)}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={() => setCreateDialogOpen(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Create Credit Note
           </Button>
@@ -407,9 +394,7 @@ export default function CreditNotesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create Credit Note</DialogTitle>
-            <DialogDescription>
-              Create a new credit note for a customer invoice.
-            </DialogDescription>
+            <DialogDescription>Create a new credit note for a customer invoice.</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -417,7 +402,7 @@ export default function CreditNotesPage() {
               <Label htmlFor="invoice_id">Invoice ID</Label>
               <Input
                 id="invoice_id"
-                value={formData['invoice_id']}
+                value={formData["invoice_id"]}
                 onChange={(e) => setFormData({ ...formData, invoice_id: e.target.value })}
                 placeholder="Enter invoice ID"
               />
@@ -448,7 +433,7 @@ export default function CreditNotesPage() {
                 id="amount"
                 type="number"
                 step="0.01"
-                value={formData['amount']}
+                value={formData["amount"]}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0.00"
               />
@@ -458,7 +443,7 @@ export default function CreditNotesPage() {
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
-                value={formData['description']}
+                value={formData["description"]}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Description of the credit"
               />

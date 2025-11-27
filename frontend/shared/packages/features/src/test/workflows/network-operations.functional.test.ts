@@ -43,8 +43,7 @@ const bytesToGB = (bytes: number): number => bytes / (1024 * 1024 * 1024);
 /**
  * Helper: Calculate bandwidth utilization percentage
  */
-const calculateUtilization = (current: number, max: number): number =>
-  (current / max) * 100;
+const calculateUtilization = (current: number, max: number): number => (current / max) * 100;
 
 describe("Network Operations: RADIUS Authentication", () => {
   let deps: ReturnType<typeof createNetworkDependencies>;
@@ -79,13 +78,15 @@ describe("Network Operations: RADIUS Authentication", () => {
 
       // Act & Assert
       validIPs.forEach((ip) => {
-        const isValid = /^(\d{1,3}\.){3}\d{1,3}$/.test(ip) &&
+        const isValid =
+          /^(\d{1,3}\.){3}\d{1,3}$/.test(ip) &&
           ip.split(".").every((octet) => parseInt(octet) <= 255);
         expect(isValid).toBe(true);
       });
 
       invalidIPs.forEach((ip) => {
-        const isValid = /^(\d{1,3}\.){3}\d{1,3}$/.test(ip) &&
+        const isValid =
+          /^(\d{1,3}\.){3}\d{1,3}$/.test(ip) &&
           ip.split(".").every((octet) => parseInt(octet) <= 255);
         expect(isValid).toBe(false);
       });
@@ -467,14 +468,8 @@ describe("Network Operations: RADIUS Authentication", () => {
       const currentUpload = 48000; // 48 Mbps
 
       // Act
-      const downloadUtilization = calculateUtilization(
-        currentDownload,
-        profile.download_rate
-      );
-      const uploadUtilization = calculateUtilization(
-        currentUpload,
-        profile.upload_rate
-      );
+      const downloadUtilization = calculateUtilization(currentDownload, profile.download_rate);
+      const uploadUtilization = calculateUtilization(currentUpload, profile.upload_rate);
 
       // Assert
       expect(downloadUtilization).toBeCloseTo(95, 1);
@@ -524,12 +519,12 @@ describe("Network Operations: RADIUS Authentication", () => {
         createMockRADIUSSession({
           nasipaddress: nasDevice.nasname,
           username: `user${i}@isp.com`,
-        })
+        }),
       );
 
       // Act
-      const sessionCount = sessions.filter((s) =>
-        s.nasipaddress === nasDevice.nasname && s.is_active
+      const sessionCount = sessions.filter(
+        (s) => s.nasipaddress === nasDevice.nasname && s.is_active,
       ).length;
 
       const threshold = 100;
@@ -549,10 +544,7 @@ describe("Network Operations: RADIUS Authentication", () => {
       ];
 
       // Act
-      const totalBytes = sessions.reduce(
-        (sum, s) => sum + (s.acctinputoctets ?? 0),
-        0
-      );
+      const totalBytes = sessions.reduce((sum, s) => sum + (s.acctinputoctets ?? 0), 0);
       const totalGB = bytesToGB(totalBytes);
 
       // Assert
@@ -573,8 +565,7 @@ describe("Network Operations: RADIUS Authentication", () => {
       const sessionThresholdHours = 72; // 3 days
       const sessionThresholdSeconds = sessionThresholdHours * 3600;
 
-      const isLongRunning = (sessionTime: number) =>
-        sessionTime > sessionThresholdSeconds;
+      const isLongRunning = (sessionTime: number) => sessionTime > sessionThresholdSeconds;
 
       // Assert
       expect(isLongRunning(longSession.acctsessiontime!)).toBe(true);

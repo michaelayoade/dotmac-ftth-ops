@@ -26,7 +26,10 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-lg rounded-xl bg-white shadow-xl"
         role="dialog"

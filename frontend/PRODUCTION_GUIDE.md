@@ -4,10 +4,10 @@ This document captures everything needed to run the DotMac frontend in productio
 
 ## 1. Architecture Snapshot
 
-- **Apps**  
-  - `apps/isp-ops-app` → Tenant-facing ISP portal (`pnpm dev:isp`, port 3001).  
+- **Apps**
+  - `apps/isp-ops-app` → Tenant-facing ISP portal (`pnpm dev:isp`, port 3001).
   - `apps/platform-admin-app` → DotMac control plane (`pnpm dev:admin`, port 3002).
-- **Shared packages**  
+- **Shared packages**
   - `shared/packages/primitives`, `ui`, `headless`, `graphql`, etc. provide reusable UI, hooks, and data utilities.
 - **Key directories**
 
@@ -24,12 +24,12 @@ frontend/
 
 Each app has its own `.env.local.example`. Required variables:
 
-| App | File | Important Vars |
-|-----|------|----------------|
-| ISP Ops | `apps/isp-ops-app/.env.local` | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=isp-ops`, `NEXT_PUBLIC_FEATURES=…` |
+| App            | File                                 | Important Vars                                                                                            |
+| -------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| ISP Ops        | `apps/isp-ops-app/.env.local`        | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=isp-ops`, `NEXT_PUBLIC_FEATURES=…`                      |
 | Platform Admin | `apps/platform-admin-app/.env.local` | `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_TYPE=platform-admin`, `NEXT_PUBLIC_REQUIRE_SUPER_ADMIN=true` |
 
-Set `NEXT_PUBLIC_API_BASE_URL` to the backend ingress (`https://api.dotmac.com` in production). Both apps inherit auth cookies from the Better Auth backend.
+Set `NEXT_PUBLIC_API_BASE_URL` to the backend ingress (`https://api.dotmac.com` in production). Both apps use HttpOnly cookies for JWT authentication.
 
 ## 3. Build, Health & Tests
 
@@ -87,21 +87,21 @@ Treat any new lint/type errors as blockers—CI enforces zero warnings.
 
 ## 5. Authentication
 
-Better Auth powers the session across both apps. Use the exported hooks (`useSession` or the thin `useAuth` wrapper) for any authentication-aware UI.
+FastAPI JWT authentication powers the session across both apps. Use the `useSession` hook from `@shared/lib/auth` for any authentication-aware UI.
 
 ```ts
-import { useSession } from "@dotmac/better-auth";
+import { useSession } from "@shared/lib/auth";
 import { apiClient } from "@dotmac/headless/api";
 
 export function useAuthedApi() {
-  const { data: session, isPending } = useSession();
-  const token = session?.accessToken;
+  const { user, isLoading, isAuthenticated } = useSession();
 
   return {
-    user: session?.user ?? null,
-    isLoading: isPending,
+    user,
+    isLoading,
+    isAuthenticated,
+    // Cookies are sent automatically with withCredentials: true
     client: apiClient.extend({
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
       withCredentials: true,
     }),
   };
@@ -129,9 +129,7 @@ import { useNetworkOverviewQuery } from "@dotmac/graphql/generated/react-query";
 import { mapQueryResult, QueryBoundary } from "@dotmac/graphql";
 
 export function NetworkDashboard() {
-  const result = mapQueryResult(
-    useNetworkOverviewQuery(undefined, { refetchInterval: 30_000 })
-  );
+  const result = mapQueryResult(useNetworkOverviewQuery(undefined, { refetchInterval: 30_000 }));
 
   return (
     <QueryBoundary result={result}>

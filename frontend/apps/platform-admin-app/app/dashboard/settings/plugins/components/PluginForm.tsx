@@ -400,13 +400,13 @@ export const PluginForm = ({
     const newErrors: Record<string, string> = {};
 
     if (!selectedPlugin) {
-      newErrors['plugin'] = "Please select a plugin";
+      newErrors["plugin"] = "Please select a plugin";
       setErrors(newErrors);
       return false;
     }
 
     if (!instanceName.trim()) {
-      newErrors['instanceName'] = "Instance name is required";
+      newErrors["instanceName"] = "Instance name is required";
     }
 
     // Validate each field
@@ -588,7 +588,7 @@ export const PluginForm = ({
                     </option>
                   ))}
                 </select>
-                {errors['plugin'] && <p className="text-xs text-rose-400">{errors['plugin']}</p>}
+                {errors["plugin"] && <p className="text-xs text-rose-400">{errors["plugin"]}</p>}
               </div>
             )}
 
@@ -610,8 +610,8 @@ export const PluginForm = ({
                 required
                 disabled={!!instance}
               />
-              {errors['instanceName'] && (
-                <p className="text-xs text-rose-400">{errors['instanceName']}</p>
+              {errors["instanceName"] && (
+                <p className="text-xs text-rose-400">{errors["instanceName"]}</p>
               )}
             </div>
 
@@ -693,11 +693,11 @@ export const PluginForm = ({
             )}
 
             {/* Submit Error */}
-            {errors['submit'] && (
+            {errors["submit"] && (
               <div className="p-4 rounded-lg border border-rose-500/20 bg-rose-500/10">
                 <div className="flex items-center gap-2">
                   <XCircle className="h-4 w-4 text-rose-400" />
-                  <span className="text-sm text-rose-400">{errors['submit']}</span>
+                  <span className="text-sm text-rose-400">{errors["submit"]}</span>
                 </div>
               </div>
             )}

@@ -64,7 +64,7 @@ export function WebSocketProvider({
   // Get WebSocket URL from props or environment
   const wsUrl =
     url ||
-    process.env['NEXT_PUBLIC_WEBSOCKET_URL'] ||
+    process.env["NEXT_PUBLIC_WEBSOCKET_URL"] ||
     `ws://${typeof window !== "undefined" ? window.location.host : "localhost:8000"}/ws`;
 
   const connect = useCallback(() => {
@@ -84,7 +84,7 @@ export function WebSocketProvider({
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
 
-        // Better Auth uses cookies; if a token handshake is needed, update here.
+        // Auth cookies are sent automatically. Add token handshake here if needed.
       };
 
       ws.onmessage = (event) => {
@@ -111,7 +111,7 @@ export function WebSocketProvider({
               try {
                 callback(message);
               } catch (error) {
-            console.error("Error in WebSocket \"all\" subscriber callback:", error);
+                console.error('Error in WebSocket "all" subscriber callback:', error);
               }
             });
           }

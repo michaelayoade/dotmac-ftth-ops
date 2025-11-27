@@ -121,7 +121,7 @@ describe("useCommissionRules", () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-        }
+        },
       );
     });
 
@@ -131,10 +131,9 @@ describe("useCommissionRules", () => {
         json: async () => ({ ...mockRulesResponse, page: 2, page_size: 25 }),
       });
 
-      const { result } = renderHook(
-        () => useCommissionRules({ page: 2, page_size: 25 }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCommissionRules({ page: 2, page_size: 25 }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -143,7 +142,7 @@ describe("useCommissionRules", () => {
         expect.objectContaining({
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-        })
+        }),
       );
     });
 
@@ -153,16 +152,15 @@ describe("useCommissionRules", () => {
         json: async () => mockRulesResponse,
       });
 
-      const { result } = renderHook(
-        () => useCommissionRules({ partner_id: "partner-123" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCommissionRules({ partner_id: "partner-123" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
         "http://localhost:8000/api/v1/partners/commission-rules/?partner_id=partner-123",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -172,16 +170,15 @@ describe("useCommissionRules", () => {
         json: async () => mockRulesResponse,
       });
 
-      const { result } = renderHook(
-        () => useCommissionRules({ is_active: true }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useCommissionRules({ is_active: true }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
         "http://localhost:8000/api/v1/partners/commission-rules/?is_active=true",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -199,7 +196,7 @@ describe("useCommissionRules", () => {
             page: 3,
             page_size: 50,
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -256,9 +253,9 @@ describe("useCommissionRules", () => {
                   ok: true,
                   json: async () => mockRulesResponse,
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       const { result } = renderHook(() => useCommissionRules(), {
@@ -326,7 +323,7 @@ describe("useCommissionRules", () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-        }
+        },
       );
     });
 
@@ -453,10 +450,9 @@ describe("useCommissionRules", () => {
         json: async () => mockApplicableRules,
       });
 
-      const { result } = renderHook(
-        () => useApplicableRules({ partner_id: "partner-123" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useApplicableRules({ partner_id: "partner-123" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -468,7 +464,7 @@ describe("useCommissionRules", () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-        }
+        },
       );
     });
 
@@ -484,14 +480,14 @@ describe("useCommissionRules", () => {
             partner_id: "partner-123",
             product_id: "product-1",
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
         "http://localhost:8000/api/v1/partners/commission-rules/partners/partner-123/applicable?product_id=product-1",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -507,14 +503,14 @@ describe("useCommissionRules", () => {
             partner_id: "partner-123",
             customer_id: "customer-1",
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       expect(global.fetch).toHaveBeenCalledWith(
         "http://localhost:8000/api/v1/partners/commission-rules/partners/partner-123/applicable?customer_id=customer-1",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -531,7 +527,7 @@ describe("useCommissionRules", () => {
             product_id: "product-1",
             customer_id: "customer-1",
           }),
-        { wrapper: createWrapper() }
+        { wrapper: createWrapper() },
       );
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -542,10 +538,9 @@ describe("useCommissionRules", () => {
     });
 
     it("should not fetch when partner_id is empty", async () => {
-      const { result } = renderHook(
-        () => useApplicableRules({ partner_id: "" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useApplicableRules({ partner_id: "" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -560,10 +555,9 @@ describe("useCommissionRules", () => {
         json: async () => ({ detail: "Access denied" }),
       });
 
-      const { result } = renderHook(
-        () => useApplicableRules({ partner_id: "partner-123" }),
-        { wrapper: createWrapper() }
-      );
+      const { result } = renderHook(() => useApplicableRules({ partner_id: "partner-123" }), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => expect(result.current.isError).toBe(true));
 
@@ -619,7 +613,7 @@ describe("useCommissionRules", () => {
           },
           credentials: "include",
           body: JSON.stringify(input),
-        }
+        },
       );
     });
 
@@ -656,7 +650,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(input),
-        })
+        }),
       );
     });
 
@@ -702,7 +696,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(input),
-        })
+        }),
       );
     });
 
@@ -740,7 +734,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(input),
-        })
+        }),
       );
     });
 
@@ -806,7 +800,7 @@ describe("useCommissionRules", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync(input);
-        })
+        }),
       ).rejects.toThrow("Invalid commission rate");
     });
 
@@ -891,7 +885,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(input),
-        })
+        }),
       );
     });
   });
@@ -945,7 +939,7 @@ describe("useCommissionRules", () => {
           },
           credentials: "include",
           body: JSON.stringify(data),
-        }
+        },
       );
     });
 
@@ -971,7 +965,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -1006,7 +1000,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -1062,7 +1056,7 @@ describe("useCommissionRules", () => {
             ruleId: "rule-999",
             data: { rule_name: "Updated" },
           });
-        })
+        }),
       ).rejects.toThrow("Rule not found");
     });
 
@@ -1130,7 +1124,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
 
@@ -1163,7 +1157,7 @@ describe("useCommissionRules", () => {
         expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(data),
-        })
+        }),
       );
     });
   });
@@ -1190,7 +1184,7 @@ describe("useCommissionRules", () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-        }
+        },
       );
     });
 
@@ -1239,7 +1233,7 @@ describe("useCommissionRules", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("rule-999");
-        })
+        }),
       ).rejects.toThrow("Rule not found");
     });
 
@@ -1257,7 +1251,7 @@ describe("useCommissionRules", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("rule-1");
-        })
+        }),
       ).rejects.toThrow("Permission denied");
     });
 
@@ -1308,13 +1302,12 @@ describe("useCommissionRules", () => {
       await expect(
         act(async () => {
           await result.current.mutateAsync("rule-1");
-        })
+        }),
       ).rejects.toThrow("Failed to delete commission rule");
     });
   });
 
   // Authentication header tests removed (client no longer sets Authorization)
-
 
   describe("Credentials", () => {
     it("should always include credentials: include", async () => {
@@ -1332,7 +1325,7 @@ describe("useCommissionRules", () => {
           expect.any(String),
           expect.objectContaining({
             credentials: "include",
-          })
+          }),
         );
       });
     });

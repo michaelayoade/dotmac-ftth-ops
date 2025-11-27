@@ -142,7 +142,7 @@ describe("FormError", () => {
       render(<FormError error="Email 'user@example.com' is already registered" />);
 
       expect(
-        screen.getByText("Email 'user@example.com' is already registered")
+        screen.getByText("Email 'user@example.com' is already registered"),
       ).toBeInTheDocument();
     });
   });
@@ -153,7 +153,7 @@ describe("FormError", () => {
         <div>
           <input type="text" aria-describedby="email-error" />
           <FormError id="email-error" error="Invalid email" />
-        </div>
+        </div>,
       );
 
       const input = container.querySelector("input");
@@ -168,7 +168,7 @@ describe("FormError", () => {
         <div>
           <FormError id="email-error" error="Invalid email" />
           <FormError id="password-error" error="Password too short" />
-        </div>
+        </div>,
       );
 
       expect(screen.getByText("Invalid email")).toBeInTheDocument();
@@ -198,13 +198,13 @@ describe("FormError", () => {
         <FormError
           id="password-error"
           error="Password must contain at least one uppercase letter, one lowercase letter, and one number"
-        />
+        />,
       );
 
       expect(
         screen.getByText(
-          "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-        )
+          "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -216,11 +216,11 @@ describe("FormError", () => {
 
     it("renders server validation error", () => {
       render(
-        <FormError id="submit-error" error="Unable to submit form. Please try again later." />
+        <FormError id="submit-error" error="Unable to submit form. Please try again later." />,
       );
 
       expect(
-        screen.getByText("Unable to submit form. Please try again later.")
+        screen.getByText("Unable to submit form. Please try again later."),
       ).toBeInTheDocument();
     });
   });
@@ -242,7 +242,7 @@ describe("FormError", () => {
 
     it("renders with className and id together", () => {
       const { container } = render(
-        <FormError id="test-error" error="Error" className="custom-class" />
+        <FormError id="test-error" error="Error" className="custom-class" />,
       );
 
       const errorElement = container.firstChild;

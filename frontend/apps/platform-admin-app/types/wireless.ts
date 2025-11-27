@@ -366,12 +366,7 @@ export interface WirelessInfrastructureStats {
 export interface MapLayer {
   id: string;
   name: string;
-  type:
-    | "access_points"
-    | "coverage_zones"
-    | "signal_heat_map"
-    | "clients"
-    | "interference";
+  type: "access_points" | "coverage_zones" | "signal_heat_map" | "clients" | "interference";
   visible: boolean;
   color?: string;
   opacity?: number;

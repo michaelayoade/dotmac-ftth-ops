@@ -4,4 +4,4 @@
  * Re-exports shared useSettings hooks with app-specific configuration
  */
 
-export * from '../../../shared/hooks/useSettings';
+export * from "../../../shared/hooks/useSettings";

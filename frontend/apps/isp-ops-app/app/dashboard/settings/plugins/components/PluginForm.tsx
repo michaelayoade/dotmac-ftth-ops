@@ -59,20 +59,20 @@ const DynamicField = ({
   }`;
 
   const renderField = () => {
-    switch (field['type']) {
+    switch (field["type"]) {
       case "string":
         return (
           <input
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             type="text"
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={valueOrUndefined(field['description'])}
+            placeholder={valueOrUndefined(field["description"])}
             className={baseInputClasses}
-            minLength={valueOrUndefined(field['min_length'])}
-            maxLength={valueOrUndefined(field['max_length'])}
-            pattern={valueOrUndefined(field['pattern'])}
-            required={field['required']}
+            minLength={valueOrUndefined(field["min_length"])}
+            maxLength={valueOrUndefined(field["max_length"])}
+            pattern={valueOrUndefined(field["pattern"])}
+            required={field["required"]}
           />
         );
 
@@ -80,22 +80,22 @@ const DynamicField = ({
         return (
           <div className="relative">
             <input
-              id={`field-${field['key']}`}
-              type={showSecrets[field['key']] ? "text" : "password"}
+              id={`field-${field["key"]}`}
+              type={showSecrets[field["key"]] ? "text" : "password"}
               value={(value as string) || ""}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Enter secret value"
               className={`${baseInputClasses} pr-10`}
-              minLength={valueOrUndefined(field['min_length'])}
-              maxLength={valueOrUndefined(field['max_length'])}
-              required={field['required']}
+              minLength={valueOrUndefined(field["min_length"])}
+              maxLength={valueOrUndefined(field["max_length"])}
+              required={field["required"]}
             />
             <button
               type="button"
-              onClick={() => onToggleSecret(field['key'])}
+              onClick={() => onToggleSecret(field["key"])}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              {showSecrets[field['key']] ? (
+              {showSecrets[field["key"]] ? (
                 <EyeOff className="h-4 w-4" />
               ) : (
                 <Eye className="h-4 w-4" />
@@ -108,14 +108,14 @@ const DynamicField = ({
         return (
           <label className="flex items-center gap-2 cursor-pointer">
             <input
-              id={`field-${field['key']}`}
+              id={`field-${field["key"]}`}
               type="checkbox"
               checked={(value as boolean) || false}
               onChange={(e) => onChange(e.target.checked)}
               className="h-4 w-4 rounded border-border bg-accent text-sky-500 focus:ring-sky-500"
             />
             <span className="text-sm text-muted-foreground">
-              {field['description'] || "Enable this option"}
+              {field["description"] || "Enable this option"}
             </span>
           </label>
         );
@@ -123,46 +123,46 @@ const DynamicField = ({
       case "integer":
         return (
           <input
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             type="number"
             value={(value as string) || ""}
             onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
-            placeholder={valueOrUndefined(field['description'])}
+            placeholder={valueOrUndefined(field["description"])}
             className={baseInputClasses}
-            min={valueOrUndefined(field['min_value'])}
-            max={valueOrUndefined(field['max_value'])}
+            min={valueOrUndefined(field["min_value"])}
+            max={valueOrUndefined(field["max_value"])}
             step={1}
-            required={field['required']}
+            required={field["required"]}
           />
         );
 
       case "float":
         return (
           <input
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             type="number"
             value={(value as string) || ""}
             onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-            placeholder={valueOrUndefined(field['description'])}
+            placeholder={valueOrUndefined(field["description"])}
             className={baseInputClasses}
-            min={valueOrUndefined(field['min_value'])}
-            max={valueOrUndefined(field['max_value'])}
+            min={valueOrUndefined(field["min_value"])}
+            max={valueOrUndefined(field["max_value"])}
             step="any"
-            required={field['required']}
+            required={field["required"]}
           />
         );
 
       case "select":
         return (
           <select
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
             className={baseInputClasses}
-            required={field['required']}
+            required={field["required"]}
           >
-            <option value="">{`Select ${field['label'].toLowerCase()}...`}</option>
-            {field['options']?.map((option) => (
+            <option value="">{`Select ${field["label"].toLowerCase()}...`}</option>
+            {field["options"]?.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -173,7 +173,7 @@ const DynamicField = ({
       case "json":
         return (
           <textarea
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             value={
               typeof value === "object" ? JSON.stringify(value, null, 2) : (value as string) || ""
             }
@@ -188,49 +188,49 @@ const DynamicField = ({
             placeholder='{"key": "value"}'
             rows={4}
             className={`${baseInputClasses} font-mono text-sm`}
-            required={field['required']}
+            required={field["required"]}
           />
         );
 
       case "url":
         return (
           <input
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             type="url"
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder="https://example.com"
             className={baseInputClasses}
-            required={field['required']}
+            required={field["required"]}
           />
         );
 
       case "email":
         return (
           <input
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             type="email"
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder="user@example.com"
             className={baseInputClasses}
-            required={field['required']}
+            required={field["required"]}
           />
         );
 
       case "phone":
         return (
           <input
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             type="tel"
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder="+1234567890"
             className={baseInputClasses}
-            minLength={valueOrUndefined(field['min_length'])}
-            maxLength={valueOrUndefined(field['max_length'])}
-            pattern={valueOrUndefined(field['pattern']) ?? "^\\+[1-9]\\d{1,14}$"}
-            required={field['required']}
+            minLength={valueOrUndefined(field["min_length"])}
+            maxLength={valueOrUndefined(field["max_length"])}
+            pattern={valueOrUndefined(field["pattern"]) ?? "^\\+[1-9]\\d{1,14}$"}
+            required={field["required"]}
           />
         );
 
@@ -238,12 +238,12 @@ const DynamicField = ({
         return (
           <div className="relative">
             <input
-              id={`field-${field['key']}`}
+              id={`field-${field["key"]}`}
               type="date"
               value={(value as string) || ""}
               onChange={(e) => onChange(e.target.value)}
               className={`${baseInputClasses} pr-10`}
-              required={field['required']}
+              required={field["required"]}
             />
             <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
@@ -253,12 +253,12 @@ const DynamicField = ({
         return (
           <div className="relative">
             <input
-              id={`field-${field['key']}`}
+              id={`field-${field["key"]}`}
               type="datetime-local"
               value={(value as string) || ""}
               onChange={(e) => onChange(e.target.value)}
               className={`${baseInputClasses} pr-10`}
-              required={field['required']}
+              required={field["required"]}
             />
             <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
@@ -279,11 +279,11 @@ const DynamicField = ({
                   }
                 }}
                 className="hidden"
-                id={`file-${field['key']}`}
-                required={field['required']}
+                id={`file-${field["key"]}`}
+                required={field["required"]}
               />
               <label
-                htmlFor={`file-${field['key']}`}
+                htmlFor={`file-${field["key"]}`}
                 className={`${baseInputClasses} cursor-pointer flex items-center gap-2 hover:bg-muted`}
               >
                 <Upload className="h-4 w-4" />
@@ -299,13 +299,13 @@ const DynamicField = ({
       default:
         return (
           <input
-            id={`field-${field['key']}`}
+            id={`field-${field["key"]}`}
             type="text"
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={valueOrUndefined(field['description'])}
+            placeholder={valueOrUndefined(field["description"])}
             className={baseInputClasses}
-            required={field['required']}
+            required={field["required"]}
           />
         );
     }
@@ -314,22 +314,22 @@ const DynamicField = ({
   return (
     <div className="space-y-1">
       <label
-        htmlFor={`field-${field['key']}`}
+        htmlFor={`field-${field["key"]}`}
         className="block text-sm font-medium text-muted-foreground"
       >
-        {field['label']}
-        {field['required'] && <span className="text-rose-400 ml-1">*</span>}
-        {field['is_secret'] && <span className="text-amber-400 ml-1 text-xs">(Secret)</span>}
+        {field["label"]}
+        {field["required"] && <span className="text-rose-400 ml-1">*</span>}
+        {field["is_secret"] && <span className="text-amber-400 ml-1 text-xs">(Secret)</span>}
       </label>
-      {field['description'] && field['type'] !== "boolean" && (
-        <p className="text-xs text-muted-foreground">{field['description']}</p>
+      {field["description"] && field["type"] !== "boolean" && (
+        <p className="text-xs text-muted-foreground">{field["description"]}</p>
       )}
       {renderField()}
       {error && <p className="text-xs text-rose-400">{error}</p>}
-      {field['validation_rules'].length > 0 && (
+      {field["validation_rules"].length > 0 && (
         <div className="text-xs text-muted-foreground">
           <ul className="list-disc list-inside space-y-0.5">
-            {field['validation_rules'].map((rule, index) => {
+            {field["validation_rules"].map((rule, index) => {
               const ruleText =
                 rule.message ??
                 [rule.type, rule.value !== undefined ? String(rule.value) : null]
@@ -367,8 +367,8 @@ export const PluginForm = ({
       // Load existing configuration (would need API call to get unmasked values for editing)
       const defaultConfig: Record<string, any> = {};
       instance.config_schema.fields.forEach((field) => {
-        if (field['default'] !== undefined) {
-          defaultConfig[field['key']] = field['default'];
+        if (field["default"] !== undefined) {
+          defaultConfig[field["key"]] = field["default"];
         }
       });
       setConfiguration(defaultConfig);
@@ -376,8 +376,8 @@ export const PluginForm = ({
       // Set default values
       const defaultConfig: Record<string, any> = {};
       selectedPlugin.fields.forEach((field) => {
-        if (field['default'] !== undefined) {
-          defaultConfig[field['key']] = field['default'];
+        if (field["default"] !== undefined) {
+          defaultConfig[field["key"]] = field["default"];
         }
       });
       setConfiguration(defaultConfig);
@@ -400,58 +400,58 @@ export const PluginForm = ({
     const newErrors: Record<string, string> = {};
 
     if (!selectedPlugin) {
-      newErrors['plugin'] = "Please select a plugin";
+      newErrors["plugin"] = "Please select a plugin";
       setErrors(newErrors);
       return false;
     }
 
     if (!instanceName.trim()) {
-      newErrors['instanceName'] = "Instance name is required";
+      newErrors["instanceName"] = "Instance name is required";
     }
 
     // Validate each field
     selectedPlugin.fields.forEach((field) => {
-      const value = configuration[field['key']];
+      const value = configuration[field["key"]];
 
-      if (field['required'] && (value === undefined || value === null || value === "")) {
-        newErrors[field['key']] = `${field['label']} is required`;
+      if (field["required"] && (value === undefined || value === null || value === "")) {
+        newErrors[field["key"]] = `${field["label"]} is required`;
         return;
       }
 
       if (value !== undefined && value !== null && value !== "") {
         // Type-specific validation
         if (field.type === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          newErrors[field['key']] = "Invalid email format";
+          newErrors[field["key"]] = "Invalid email format";
         }
 
         if (field.type === "url" && value && !/^https?:\/\/.+/.test(value)) {
-          newErrors[field['key']] = "Invalid URL format";
+          newErrors[field["key"]] = "Invalid URL format";
         }
 
         if (
           field.type === "phone" &&
           value &&
-          field['pattern'] &&
-          !new RegExp(field['pattern']).test(value)
+          field["pattern"] &&
+          !new RegExp(field["pattern"]).test(value)
         ) {
-          newErrors[field['key']] = "Invalid phone number format";
+          newErrors[field["key"]] = "Invalid phone number format";
         }
 
-        if (field['min_length'] != null && value['length'] < field['min_length']) {
-          newErrors[field['key']] = `Minimum length is ${field['min_length']} characters`;
+        if (field["min_length"] != null && value["length"] < field["min_length"]) {
+          newErrors[field["key"]] = `Minimum length is ${field["min_length"]} characters`;
         }
 
-        if (field['max_length'] != null && value['length'] > field['max_length']) {
-          newErrors[field['key']] = `Maximum length is ${field['max_length']} characters`;
+        if (field["max_length"] != null && value["length"] > field["max_length"]) {
+          newErrors[field["key"]] = `Maximum length is ${field["max_length"]} characters`;
         }
 
         if (field.type === "integer" || field.type === "float") {
           const num = Number(value);
-          if (field['min_value'] != null && num < field['min_value']) {
-            newErrors[field['key']] = `Minimum value is ${field['min_value']}`;
+          if (field["min_value"] != null && num < field["min_value"]) {
+            newErrors[field["key"]] = `Minimum value is ${field["min_value"]}`;
           }
-          if (field['max_value'] != null && num > field['max_value']) {
-            newErrors[field['key']] = `Maximum value is ${field['max_value']}`;
+          if (field["max_value"] != null && num > field["max_value"]) {
+            newErrors[field["key"]] = `Maximum value is ${field["max_value"]}`;
           }
         }
 
@@ -459,7 +459,7 @@ export const PluginForm = ({
           try {
             JSON.parse(value);
           } catch {
-            newErrors[field['key']] = "Invalid JSON format";
+            newErrors[field["key"]] = "Invalid JSON format";
           }
         }
       }
@@ -484,7 +484,7 @@ export const PluginForm = ({
         configuration,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error['message'] : "Failed to submit form";
+      const errorMessage = error instanceof Error ? error["message"] : "Failed to submit form";
       setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);
@@ -503,7 +503,7 @@ export const PluginForm = ({
       const result = await onTestConnection(instance?.id ?? "", configuration);
       setTestResult(result);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error['message'] : "Connection test failed";
+      const errorMessage = error instanceof Error ? error["message"] : "Connection test failed";
       setTestResult({
         success: false,
         message: errorMessage,
@@ -524,7 +524,7 @@ export const PluginForm = ({
   const groupedFields =
     (selectedPlugin?.fields as ExtendedFieldSpec[] | undefined)?.reduce(
       (groups, field) => {
-        const group = field['group'] || "Configuration";
+        const group = field["group"] || "Configuration";
         if (!groups[group]) {
           groups[group] = [];
         }
@@ -581,12 +581,12 @@ export const PluginForm = ({
                 >
                   <option value="">Select a plugin...</option>
                   {availablePlugins.map((plugin) => (
-                    <option key={plugin['name']} value={plugin['name']}>
-                      {plugin['name']} - {plugin['description']}
+                    <option key={plugin["name"]} value={plugin["name"]}>
+                      {plugin["name"]} - {plugin["description"]}
                     </option>
                   ))}
                 </select>
-                {errors['plugin'] && <p className="text-xs text-rose-400">{errors['plugin']}</p>}
+                {errors["plugin"] && <p className="text-xs text-rose-400">{errors["plugin"]}</p>}
               </div>
             )}
 
@@ -608,8 +608,8 @@ export const PluginForm = ({
                 required
                 disabled={!!instance}
               />
-              {errors['instanceName'] && (
-                <p className="text-xs text-rose-400">{errors['instanceName']}</p>
+              {errors["instanceName"] && (
+                <p className="text-xs text-rose-400">{errors["instanceName"]}</p>
               )}
             </div>
 
@@ -647,16 +647,16 @@ export const PluginForm = ({
                       .sort((a, b) => (a.order || 0) - (b.order || 0))
                       .map((field) => (
                         <div
-                          key={field['key']}
+                          key={field["key"]}
                           className={field.type === "json" ? "md:col-span-2" : ""}
                         >
                           <DynamicField
                             field={field}
-                            value={configuration[field['key']]}
-                            onChange={(value) => handleConfigChange(field['key'], value)}
+                            value={configuration[field["key"]]}
+                            onChange={(value) => handleConfigChange(field["key"], value)}
                             showSecrets={showSecrets}
                             onToggleSecret={toggleSecretVisibility}
-                            error={errors[field['key']]}
+                            error={errors[field["key"]]}
                           />
                         </div>
                       ))}
@@ -691,11 +691,11 @@ export const PluginForm = ({
             )}
 
             {/* Submit Error */}
-            {errors['submit'] && (
+            {errors["submit"] && (
               <div className="p-4 rounded-lg border border-rose-500/20 bg-rose-500/10">
                 <div className="flex items-center gap-2">
                   <XCircle className="h-4 w-4 text-rose-400" />
-                  <span className="text-sm text-rose-400">{errors['submit']}</span>
+                  <span className="text-sm text-rose-400">{errors["submit"]}</span>
                 </div>
               </div>
             )}

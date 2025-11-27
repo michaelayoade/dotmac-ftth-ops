@@ -9,9 +9,11 @@ The network module provides components for managing Passive Optical Network (PON
 ## Components
 
 ### ONUListView
+
 **Purpose**: Display ONU inventory with status and management actions
 
 **Props**:
+
 ```typescript
 interface ONUListViewProps {
   apiClient: ONUListViewApiClient;
@@ -21,6 +23,7 @@ interface ONUListViewProps {
 ```
 
 **Features**:
+
 - ONU list with real-time status
 - Filter by OLT and PON port
 - Search by serial number or device ID
@@ -33,6 +36,7 @@ interface ONUListViewProps {
 **Dependencies**: apiClient, useToast
 
 **Usage**:
+
 ```typescript
 import { ONUListView } from "@/components/network/ONUListView";
 
@@ -42,6 +46,7 @@ import { ONUListView } from "@/components/network/ONUListView";
 ```
 
 **Status Indicators**:
+
 - 🟢 Online: ONU is active and communicating
 - 🔴 Offline: ONU is not responding
 - 🟡 LOS (Loss of Signal): Fiber issue detected
@@ -50,9 +55,11 @@ import { ONUListView } from "@/components/network/ONUListView";
 ---
 
 ### ONUDetailView
+
 **Purpose**: Detailed ONU information and diagnostics
 
 **Props**:
+
 ```typescript
 interface ONUDetailViewProps {
   onuId: string;
@@ -62,6 +69,7 @@ interface ONUDetailViewProps {
 ```
 
 **Features**:
+
 - ONU information (serial, model, vendor, firmware)
 - Connection details (OLT, PON port, ONU ID)
 - Signal levels:
@@ -79,6 +87,7 @@ interface ONUDetailViewProps {
 **Dependencies**: apiClient, useToast
 
 **Usage**:
+
 ```typescript
 import { ONUDetailView } from "@/components/network/ONUDetailView";
 
@@ -86,6 +95,7 @@ import { ONUDetailView } from "@/components/network/ONUDetailView";
 ```
 
 **Signal Level Interpretation**:
+
 - Good: > -25 dBm
 - Fair: -25 to -28 dBm
 - Poor: < -28 dBm
@@ -93,9 +103,11 @@ import { ONUDetailView } from "@/components/network/ONUDetailView";
 ---
 
 ### OLTManagement
+
 **Purpose**: OLT configuration and PON port monitoring
 
 **Props**:
+
 ```typescript
 interface OLTManagementProps {
   apiClient: OLTManagementApiClient;
@@ -104,6 +116,7 @@ interface OLTManagementProps {
 ```
 
 **Features**:
+
 - OLT list with status
 - PON port overview (utilization, ONU count)
 - Per-PON metrics:
@@ -121,6 +134,7 @@ interface OLTManagementProps {
 **Dependencies**: apiClient, useToast
 
 **Usage**:
+
 ```typescript
 import { OLTManagement } from "@/components/network/OLTManagement";
 
@@ -142,6 +156,7 @@ const onu: VOLTHATypes.ONU = { ... };
 ```
 
 ### ONU
+
 ```typescript
 namespace VOLTHATypes {
   interface ONU {
@@ -167,6 +182,7 @@ namespace VOLTHATypes {
 ```
 
 ### OLT
+
 ```typescript
 namespace VOLTHATypes {
   interface OLT {
@@ -187,6 +203,7 @@ namespace VOLTHATypes {
 ```
 
 ### PON Port
+
 ```typescript
 namespace VOLTHATypes {
   interface PONPort {
@@ -203,6 +220,7 @@ namespace VOLTHATypes {
 ```
 
 ### UNI Port
+
 ```typescript
 namespace VOLTHATypes {
   interface UNIPort {
@@ -218,6 +236,7 @@ namespace VOLTHATypes {
 ## API Endpoints
 
 ### ONU Management
+
 - `GET /api/v1/voltha/onus` - List ONUs
 - `GET /api/v1/voltha/onus/{id}` - Get ONU details
 - `POST /api/v1/voltha/onus/{id}/reboot` - Reboot ONU
@@ -226,12 +245,14 @@ namespace VOLTHATypes {
 - `GET /api/v1/voltha/onus/{id}/alarms` - Get ONU alarms
 
 ### OLT Management
+
 - `GET /api/v1/voltha/olts` - List OLTs
 - `GET /api/v1/voltha/olts/{id}` - Get OLT details
 - `GET /api/v1/voltha/olts/{id}/ports` - Get PON ports
 - `PUT /api/v1/voltha/olts/{id}/ports/{port}` - Update PON port config
 
 ### Diagnostics
+
 - `POST /api/v1/voltha/onus/{id}/omci` - Run OMCI diagnostics
 - `GET /api/v1/voltha/onus/{id}/stats` - Get performance stats
 
@@ -290,21 +311,25 @@ const unusedOnus = onus.filter(onu => !onu.subscriber_id);
 ## Signal Level Guidelines
 
 ### OLT RX Power (at OLT)
+
 - Excellent: -15 to -20 dBm
 - Good: -20 to -25 dBm
 - Fair: -25 to -28 dBm
 - Poor: < -28 dBm (investigate fiber quality)
 
 ### ONU TX Power (from ONU)
+
 - Normal: 0 to +4 dBm
 - Laser on: ~2 dBm typical
 
 ### ONU RX Power (at ONU)
+
 - Good: -8 to -25 dBm
 - Fair: -25 to -27 dBm
 - Poor: < -27 dBm
 
 ### Temperature
+
 - Normal: 20-50°C
 - Warning: 50-70°C
 - Critical: > 70°C
@@ -314,6 +339,7 @@ const unusedOnus = onus.filter(onu => !onu.subscriber_id);
 ### Issue: ONU showing offline but should be online
 
 **Check**:
+
 1. Signal levels (should be > -28 dBm)
 2. Last seen timestamp
 3. Fiber connection physical status
@@ -321,6 +347,7 @@ const unusedOnus = onus.filter(onu => !onu.subscriber_id);
 5. ONU power supply
 
 **Actions**:
+
 ```typescript
 // Check last seen
 if (onu.last_seen > 5 minutes ago) {
@@ -340,12 +367,14 @@ apiClient.post(`/api/v1/voltha/onus/${onu.id}/reboot`);
 ### Issue: Poor signal levels
 
 **Causes**:
+
 1. Fiber connector dirty/damaged
 2. Excessive fiber length or splices
 3. Bad ONU laser
 4. PON splitter ratio too high
 
 **Actions**:
+
 - Clean fiber connectors
 - Check fiber path for damage
 - Measure optical budget
@@ -354,12 +383,14 @@ apiClient.post(`/api/v1/voltha/onus/${onu.id}/reboot`);
 ### Issue: ONU flapping (online/offline)
 
 **Causes**:
+
 1. Unstable power supply
 2. Marginal signal level
 3. Temperature issues
 4. Firmware bugs
 
 **Actions**:
+
 - Check ONU temperature
 - Verify signal levels are stable
 - Check for alarms in history
@@ -368,6 +399,7 @@ apiClient.post(`/api/v1/voltha/onus/${onu.id}/reboot`);
 ## Integration with Other Modules
 
 ### With Subscribers Module
+
 ```typescript
 // Link ONU to subscriber
 import { ONUListView } from "@dotmac/features/network";
@@ -385,6 +417,7 @@ import { ONUListView } from "@dotmac/features/network";
 ```
 
 ### With Faults Module
+
 ```typescript
 // Create alarm when signal poor
 if (onu.olt_rx_power < -28) {
@@ -398,6 +431,7 @@ if (onu.olt_rx_power < -28) {
 ```
 
 ### With Diagnostics Module
+
 ```typescript
 // Run network diagnostics from ONU
 import { DiagnosticsDashboard } from "@dotmac/features/diagnostics";

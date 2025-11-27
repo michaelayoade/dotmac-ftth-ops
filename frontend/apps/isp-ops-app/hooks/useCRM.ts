@@ -276,12 +276,14 @@ export interface QuoteCreateRequest {
   promo_discount_months?: number | undefined;
   promo_monthly_discount?: number | undefined;
   valid_until: string;
-  line_items?: Array<{
-    description: string;
-    quantity: number;
-    unit_price: number;
-    total: number;
-  }> | undefined;
+  line_items?:
+    | Array<{
+        description: string;
+        quantity: number;
+        unit_price: number;
+        total: number;
+      }>
+    | undefined;
   metadata?: Record<string, any> | undefined;
   notes?: string | undefined;
 }
@@ -303,11 +305,13 @@ export interface SiteSurveyCompleteRequest {
   estimated_installation_time_hours?: number | undefined;
   special_equipment_required?: string[] | undefined;
   installation_complexity?: "simple" | "moderate" | "complex" | undefined;
-  photos?: Array<{
-    url: string;
-    description?: string | undefined;
-    timestamp: string;
-  }> | undefined;
+  photos?:
+    | Array<{
+        url: string;
+        description?: string | undefined;
+        timestamp: string;
+      }>
+    | undefined;
   recommendations?: string | undefined;
   obstacles?: string | undefined;
   notes?: string | undefined;

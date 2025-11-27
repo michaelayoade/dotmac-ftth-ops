@@ -68,23 +68,13 @@ export function QuickActionsCard({
       <CardContent>
         <div className="flex flex-wrap gap-2">
           {customerStatus === "ACTIVE" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSuspend}
-              disabled={isLoading}
-            >
+            <Button variant="outline" size="sm" onClick={handleSuspend} disabled={isLoading}>
               <Pause className="h-4 w-4 mr-2" />
               Suspend Service
             </Button>
           )}
           {customerStatus === "SUSPENDED" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResume}
-              disabled={isLoading}
-            >
+            <Button variant="outline" size="sm" onClick={handleResume} disabled={isLoading}>
               <Play className="h-4 w-4 mr-2" />
               Resume Service
             </Button>

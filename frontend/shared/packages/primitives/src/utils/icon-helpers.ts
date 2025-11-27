@@ -35,5 +35,4 @@ export const toSafeIcon = (icon: LucideIcon): SafeIcon => icon as any;
  * @param icons - Array of Lucide icons
  * @returns Array of type-safe icons
  */
-export const toSafeIcons = (icons: LucideIcon[]): SafeIcon[] =>
-  icons.map(icon => icon as any);
+export const toSafeIcons = (icons: LucideIcon[]): SafeIcon[] => icons.map((icon) => icon as any);

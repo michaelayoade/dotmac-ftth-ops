@@ -3,7 +3,7 @@
  * Mocks tenant branding configuration endpoints
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 import type { TenantBrandingConfigDto, TenantBrandingResponseDto } from "@/hooks/useTenantBranding";
 
 // ============================================
@@ -18,7 +18,7 @@ let brandingConfigs: Map<string, TenantBrandingResponseDto> = new Map();
 
 export function createMockBranding(
   tenantId: string,
-  overrides: Partial<TenantBrandingConfigDto> = {}
+  overrides: Partial<TenantBrandingConfigDto> = {},
 ): TenantBrandingResponseDto {
   return {
     tenant_id: tenantId,
@@ -53,7 +53,7 @@ export function createMockBranding(
 
 export function seedBrandingData(
   tenantId: string,
-  branding: Partial<TenantBrandingConfigDto>
+  branding: Partial<TenantBrandingConfigDto>,
 ): void {
   brandingConfigs.set(tenantId, createMockBranding(tenantId, branding));
 }
@@ -85,7 +85,7 @@ export const brandingHandlers = [
       brandingConfigs.set(tenantId, branding);
     }
 
-    console.log('[MSW] GET /api/v1/branding - returning:', {
+    console.log("[MSW] GET /api/v1/branding - returning:", {
       product_name: branding.branding.product_name,
       primary_color: branding.branding.primary_color,
       hasSeededData: brandingConfigs.has(tenantId),

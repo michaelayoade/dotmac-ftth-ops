@@ -15,10 +15,7 @@ interface SubscriptionCardProps {
   totalSubscriptions: number;
 }
 
-export function SubscriptionCard({
-  subscription,
-  totalSubscriptions,
-}: SubscriptionCardProps) {
+export function SubscriptionCard({ subscription, totalSubscriptions }: SubscriptionCardProps) {
   if (!subscription) {
     return (
       <Card>
@@ -78,11 +75,7 @@ export function SubscriptionCard({
         {subscription.status && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Status</span>
-            <Badge
-              variant={
-                subscription.status === "ACTIVE" ? "default" : "secondary"
-              }
-            >
+            <Badge variant={subscription.status === "ACTIVE" ? "default" : "secondary"}>
               {subscription.status}
             </Badge>
           </div>

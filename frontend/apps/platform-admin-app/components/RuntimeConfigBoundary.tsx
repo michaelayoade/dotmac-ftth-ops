@@ -2,10 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 
-import {
-  RuntimeConfigProvider,
-  useRuntimeConfigState,
-} from "@shared/runtime/RuntimeConfigContext";
+import { RuntimeConfigProvider, useRuntimeConfigState } from "@shared/runtime/RuntimeConfigContext";
 
 import { applyPlatformRuntimeConfig } from "@/lib/config";
 

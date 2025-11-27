@@ -91,7 +91,7 @@ interface ActivationProgress {
 
 function OrderDetailsPageContent() {
   const params = useParams();
-  const orderId = params?.['orderId'] as string;
+  const orderId = params?.["orderId"] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { api } = useAppConfig();
@@ -101,10 +101,9 @@ function OrderDetailsPageContent() {
   const { data: order, isLoading } = useQuery<Order>({
     queryKey: ["sales-order", orderId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders/${orderId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders/${orderId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch order");
       return response.json();
     },
@@ -115,17 +114,19 @@ function OrderDetailsPageContent() {
   const { data: progress } = useQuery<ActivationProgress>({
     queryKey: ["sales-order-progress", orderId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders/${orderId}/activations/progress`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders/${orderId}/activations/progress`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch progress");
       return response.json();
     },
     enabled: !!orderId,
     refetchInterval: (query) => {
       // Auto-refresh while in progress
-      if (query?.state?.data && (query.state.data.in_progress > 0 || query.state.data.pending > 0)) {
+      if (
+        query?.state?.data &&
+        (query.state.data.in_progress > 0 || query.state.data.pending > 0)
+      ) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -135,13 +136,10 @@ function OrderDetailsPageContent() {
   // Process order mutation
   const processMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders/${orderId}/process`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders/${orderId}/process`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to process order");
       return response.json();
     },
@@ -162,13 +160,10 @@ function OrderDetailsPageContent() {
   // Retry failed activations mutation
   const retryMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${apiBaseUrl}/api/v1/orders/${orderId}/activations/retry`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/api/v1/orders/${orderId}/activations/retry`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to retry activations");
       return response.json();
     },
@@ -241,7 +236,9 @@ function OrderDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Order Not Found</h2>
-        <p className="text-muted-foreground mb-4">The order you&apos;re looking for doesn&apos;t exist.</p>
+        <p className="text-muted-foreground mb-4">
+          The order you&apos;re looking for doesn&apos;t exist.
+        </p>
         <Button asChild>
           <Link href="/dashboard/sales">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -270,10 +267,7 @@ function OrderDetailsPageContent() {
         <div className="flex items-center gap-2">
           {getStatusBadge(order.status)}
           {(order.status === "APPROVED" || order.status === "FAILED") && (
-            <Button
-              onClick={() => processMutation.mutate()}
-              disabled={processMutation.isPending}
-            >
+            <Button onClick={() => processMutation.mutate()} disabled={processMutation.isPending}>
               <Play className="h-4 w-4 mr-2" />
               Process Order
             </Button>
@@ -397,18 +391,14 @@ function OrderDetailsPageContent() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Created At</p>
                   </div>
-                  <p className="font-medium">
-                    {format(new Date(order.created_at), "PPpp")}
-                  </p>
+                  <p className="font-medium">{format(new Date(order.created_at), "PPpp")}</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">Last Updated</p>
                   </div>
-                  <p className="font-medium">
-                    {format(new Date(order.updated_at), "PPpp")}
-                  </p>
+                  <p className="font-medium">{format(new Date(order.updated_at), "PPpp")}</p>
                 </div>
               </CardContent>
             </Card>

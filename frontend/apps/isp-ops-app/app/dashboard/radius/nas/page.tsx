@@ -2,25 +2,11 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Server,
-  Plus,
-  Search,
-  MoreVertical,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Server, Plus, Search, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,7 +85,7 @@ export default function RADIUSNASPage() {
       nas.nasname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       nas.shortname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       nas.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (nas['description']?? "").toLowerCase().includes(searchQuery.toLowerCase())
+      (nas["description"] ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleDelete = async (nas: NASDevice) => {
@@ -205,9 +191,7 @@ export default function RADIUSNASPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              Loading NAS devices...
-            </div>
+            <div className="p-8 text-center text-muted-foreground">Loading NAS devices...</div>
           ) : filteredNAS && filteredNAS.length > 0 ? (
             <Table>
               <TableHeader>
@@ -230,17 +214,13 @@ export default function RADIUSNASPage() {
                       <Badge variant="outline">{nas.type}</Badge>
                     </TableCell>
                     <TableCell>
-                      {nas.ports ?? (
-                        <span className="text-muted-foreground">N/A</span>
-                      )}
+                      {nas.ports ?? <span className="text-muted-foreground">N/A</span>}
                     </TableCell>
                     <TableCell>
-                      {nas.server ?? (
-                        <span className="text-muted-foreground">N/A</span>
-                      )}
+                      {nas.server ?? <span className="text-muted-foreground">N/A</span>}
                     </TableCell>
                     <TableCell>
-                      {nas['description']?? (
+                      {nas["description"] ?? (
                         <span className="text-muted-foreground">No description</span>
                       )}
                     </TableCell>
@@ -292,11 +272,7 @@ export default function RADIUSNASPage() {
       </Card>
 
       {/* NAS Device Dialog */}
-      <NASDeviceDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        nasDevice={selectedNAS}
-      />
+      <NASDeviceDialog open={dialogOpen} onOpenChange={setDialogOpen} nasDevice={selectedNAS} />
     </div>
   );
 }

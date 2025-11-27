@@ -3,11 +3,7 @@
  */
 
 // Components
-export {
-  NASDeviceDialog,
-  BandwidthProfileDialog,
-  RadiusSessionMonitor,
-} from "./components";
+export { NASDeviceDialog, BandwidthProfileDialog, RadiusSessionMonitor } from "./components";
 
 export type {
   NASDeviceDialogProps,

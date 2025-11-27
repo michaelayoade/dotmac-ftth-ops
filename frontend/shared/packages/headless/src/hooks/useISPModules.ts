@@ -431,13 +431,8 @@ export function useISPModules() {
 
   const useUpdateTechnicianLocation = () => {
     return useMutation({
-      mutationFn: ({
-        technicianId,
-        location,
-      }: {
-        technicianId: string;
-        location: GeoLocation;
-      }) => ispClient.updateTechnicianLocation(technicianId, location),
+      mutationFn: ({ technicianId, location }: { technicianId: string; location: GeoLocation }) =>
+        ispClient.updateTechnicianLocation(technicianId, location),
       onSuccess: (_, { technicianId }) => {
         queryClient.invalidateQueries({
           queryKey: ["field-ops", "technicians", technicianId, "location"],

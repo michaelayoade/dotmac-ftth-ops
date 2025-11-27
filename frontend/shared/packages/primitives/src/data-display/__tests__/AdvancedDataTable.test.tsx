@@ -289,7 +289,7 @@ describe("AdvancedDataTable Component", () => {
       );
 
       const nameHeaders = screen.getAllByText("Name");
-      const nameHeader = nameHeaders.find(el => el.tagName !== 'LABEL') || nameHeaders[0];
+      const nameHeader = nameHeaders.find((el) => el.tagName !== "LABEL") || nameHeaders[0];
       fireEvent.click(nameHeader);
 
       await waitFor(() => {
@@ -309,7 +309,7 @@ describe("AdvancedDataTable Component", () => {
       );
 
       const nameHeaders = screen.getAllByText("Name");
-      const nameHeader = nameHeaders.find(el => el.tagName !== 'LABEL') || nameHeaders[0];
+      const nameHeader = nameHeaders.find((el) => el.tagName !== "LABEL") || nameHeaders[0];
       fireEvent.click(nameHeader);
       fireEvent.click(nameHeader);
 
@@ -657,7 +657,11 @@ describe("AdvancedDataTable Security", () => {
     ];
 
     const result = await renderSecurity(
-      <AdvancedDataTable data={xssData} columns={basicColumns} keyExtractor={(record) => record.id} />,
+      <AdvancedDataTable
+        data={xssData}
+        columns={basicColumns}
+        keyExtractor={(record) => record.id}
+      />,
     );
 
     expect(result.container).toHaveNoSecurityViolations();

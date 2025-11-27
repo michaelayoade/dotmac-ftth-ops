@@ -5,21 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@dotmac/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@dotmac/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@dotmac/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
@@ -58,12 +45,9 @@ function JobsPageContent() {
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ["ansible", "jobs"],
     queryFn: async () => {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/ansible/jobs`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/ansible/jobs`, {
+        credentials: "include",
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch jobs");
       }
@@ -80,7 +64,7 @@ function JobsPageContent() {
         {
           method: "POST",
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to cancel job");
@@ -147,27 +131,27 @@ function JobsPageContent() {
       successful: {
         variant: "outline" as const,
         color: "text-green-600 bg-green-50 border-green-200",
-        icon: CheckCircle
+        icon: CheckCircle,
       },
       failed: {
         variant: "destructive" as const,
         color: "text-red-600",
-        icon: XCircle
+        icon: XCircle,
       },
       running: {
         variant: "default" as const,
         color: "text-blue-600 bg-blue-50 border-blue-200",
-        icon: Loader2
+        icon: Loader2,
       },
       pending: {
         variant: "secondary" as const,
         color: "text-yellow-600 bg-yellow-50 border-yellow-200",
-        icon: Clock
+        icon: Clock,
       },
       canceled: {
         variant: "secondary" as const,
         color: "text-gray-600 bg-gray-50 border-gray-200",
-        icon: StopCircle
+        icon: StopCircle,
       },
     };
 
@@ -195,18 +179,10 @@ function JobsPageContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Ansible Jobs</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage playbook execution jobs
-          </p>
+          <p className="text-muted-foreground">Monitor and manage playbook execution jobs</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={jobsLoading}
-        >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${jobsLoading ? "animate-spin" : ""}`}
-          />
+        <Button variant="outline" onClick={handleRefresh} disabled={jobsLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${jobsLoading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
@@ -310,16 +286,10 @@ function JobsPageContent() {
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                {statusFilter === "all"
-                  ? "No jobs found"
-                  : `No ${statusFilter} jobs found`}
+                {statusFilter === "all" ? "No jobs found" : `No ${statusFilter} jobs found`}
               </p>
               {statusFilter !== "all" && (
-                <Button
-                  variant="link"
-                  onClick={() => setStatusFilter("all")}
-                  className="mt-2"
-                >
+                <Button variant="link" onClick={() => setStatusFilter("all")} className="mt-2">
                   Clear filter
                 </Button>
               )}
@@ -339,13 +309,9 @@ function JobsPageContent() {
               <TableBody>
                 {filteredJobs.map((job) => (
                   <TableRow key={job.id}>
-                    <TableCell className="font-mono text-sm">
-                      {job.id}
-                    </TableCell>
+                    <TableCell className="font-mono text-sm">{job.id}</TableCell>
                     <TableCell>
-                      <div className="font-medium max-w-xs truncate">
-                        {job.name}
-                      </div>
+                      <div className="font-medium max-w-xs truncate">{job.name}</div>
                     </TableCell>
                     <TableCell>{getStatusBadge(job.status)}</TableCell>
                     <TableCell>
@@ -363,9 +329,7 @@ function JobsPageContent() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/dashboard/automation/jobs/${job.id}`}>
-                            View
-                          </Link>
+                          <Link href={`/dashboard/automation/jobs/${job.id}`}>View</Link>
                         </Button>
                         {(job.status === "running" || job.status === "pending") && (
                           <Button

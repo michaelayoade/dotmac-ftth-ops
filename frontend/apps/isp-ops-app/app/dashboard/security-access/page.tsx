@@ -209,8 +209,7 @@ export default function SecurityOverviewPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 text-slate-400 text-xs">
-                <Clock className="h-3 w-3" />
-                2 hours ago
+                <Clock className="h-3 w-3" />2 hours ago
               </div>
             </div>
 
@@ -225,8 +224,7 @@ export default function SecurityOverviewPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 text-slate-400 text-xs">
-                <Clock className="h-3 w-3" />
-                5 hours ago
+                <Clock className="h-3 w-3" />5 hours ago
               </div>
             </div>
 
@@ -241,8 +239,7 @@ export default function SecurityOverviewPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 text-slate-400 text-xs">
-                <Clock className="h-3 w-3" />
-                1 day ago
+                <Clock className="h-3 w-3" />1 day ago
               </div>
             </div>
           </div>

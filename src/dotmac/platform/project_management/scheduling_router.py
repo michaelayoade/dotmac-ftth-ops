@@ -8,7 +8,7 @@ from datetime import date, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, or_, select, func
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -145,10 +145,14 @@ async def list_schedules(
     if status:
         query = query.where(TechnicianSchedule.status == status)
 
-    total = (await session.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
+    total = (
+        await session.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar() or 0
     page = (offset // limit) + 1 if limit else 1
 
-    result = await session.execute(query.order_by(TechnicianSchedule.schedule_date).limit(limit).offset(offset))
+    result = await session.execute(
+        query.order_by(TechnicianSchedule.schedule_date).limit(limit).offset(offset)
+    )
     schedules = list(result.scalars().all())
 
     return TechnicianScheduleListResponse(
@@ -494,13 +498,15 @@ async def list_task_assignments(
     if status_filter:
         statuses = [s for s in status_filter.split(",") if s]
         if statuses:
-          query = query.where(TaskAssignment.status.in_(statuses))
+            query = query.where(TaskAssignment.status.in_(statuses))
     if start_date:
         query = query.where(TaskAssignment.scheduled_start >= start_date)
     if end_date:
         query = query.where(TaskAssignment.scheduled_end <= end_date)
 
-    total = (await session.execute(select(func.count()).select_from(query.subquery()))).scalar() or 0
+    total = (
+        await session.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar() or 0
     page = (offset // limit) + 1 if limit else 1
 
     result = await session.execute(
