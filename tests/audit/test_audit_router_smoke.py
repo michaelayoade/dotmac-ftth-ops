@@ -2,6 +2,8 @@
 
 import pytest
 import pytest_asyncio
+
+pytestmark = pytest.mark.unit
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 

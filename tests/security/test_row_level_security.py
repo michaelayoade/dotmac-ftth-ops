@@ -18,6 +18,8 @@ from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 
 import pytest
+
+pytestmark = pytest.mark.integration
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 

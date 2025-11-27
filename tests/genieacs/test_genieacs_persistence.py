@@ -7,6 +7,8 @@ from uuid import uuid4
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 import dotmac.platform.genieacs.models  # noqa: F401  # Ensure tables are registered
 from dotmac.platform.genieacs.models import FirmwareUpgradeSchedule, MassConfigJob
 from dotmac.platform.genieacs.schemas import (

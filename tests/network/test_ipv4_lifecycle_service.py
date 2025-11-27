@@ -9,6 +9,8 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
+
+pytestmark = pytest.mark.integration
 from sqlalchemy import select
 
 from dotmac.platform.ip_management.models import IPPool, IPReservation

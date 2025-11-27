@@ -17,7 +17,7 @@ from dotmac.platform.auth.core import UserInfo
 from src.dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
 from src.dotmac.platform.tenant.service import TenantService
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 
 @asynccontextmanager

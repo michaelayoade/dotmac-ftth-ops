@@ -3,6 +3,8 @@
 from datetime import datetime
 
 import pytest
+
+pytestmark = pytest.mark.integration
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

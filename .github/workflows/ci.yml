@@ -207,12 +207,29 @@ jobs:
             -n auto \
             -q \
             --maxfail=10 \
-            --ignore=tests/e2e
+            --ignore=tests/e2e \
+            --ignore=tests/integration \
+            --ignore=tests/integrations
 
   backend-integration-tests:
-    name: "1. Backend Integration Tests"
+    name: "1. Integration Tests (${{ matrix.group.name }})"
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+          - name: "Billing"
+            paths: "tests/billing"
+          - name: "Auth"
+            paths: "tests/auth"
+          - name: "Network"
+            paths: "tests/radius tests/network tests/orchestration tests/ip_management"
+          - name: "Core"
+            paths: "tests/tenant tests/subscribers tests/customer_management tests/admin tests/deployment"
+          - name: "Other"
+            paths: "tests/integration tests/integrations tests/metrics tests/genieacs tests/security tests/workflows"
 
     services:
       postgres:
@@ -270,14 +287,14 @@ jobs:
           timeout 60 bash -c 'until nc -z localhost 6379; do sleep 1; done'
           echo "Redis is ready"
 
-      - name: Run integration tests
+      - name: Run integration tests - ${{ matrix.group.name }}
         env:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
           DOTMAC_REDIS_URL: redis://localhost:6379/0
           DOTMAC_AUTOSTART_SERVICES: "0"
         run: |
-          poetry run pytest tests/ -m integration \
+          poetry run pytest ${{ matrix.group.paths }} -m integration \
             --tb=short \
             -n auto \
             -q \

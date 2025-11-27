@@ -11,6 +11,8 @@ Tests for:
 import uuid
 
 import pytest
+
+pytestmark = pytest.mark.unit
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.network.models import (

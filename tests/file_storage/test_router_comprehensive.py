@@ -16,6 +16,8 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
+pytestmark = pytest.mark.unit
 from fastapi import HTTPException, status
 from starlette.requests import Request
 

@@ -33,7 +33,6 @@ from dotmac.platform.billing.cache import (
 from dotmac.platform.core.caching import cache_clear
 
 
-@pytest.mark.unit
 class TestCacheEnums:
     """Test cache enum types."""
 
@@ -52,7 +51,6 @@ class TestCacheEnums:
         assert CacheTier.L3_DATABASE == "l3_database"
 
 
-@pytest.mark.unit
 class TestBillingCacheConfig:
     """Test billing cache configuration."""
 

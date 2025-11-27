@@ -7,6 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from dotmac.platform.monitoring.dual_stack_metrics import (
     DualStackMetrics,
     DualStackMetricsCollector,

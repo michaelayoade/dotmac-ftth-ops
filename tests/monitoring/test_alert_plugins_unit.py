@@ -7,6 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from dotmac.platform.monitoring.alert_webhook_router import (
     Alert,
     AlertChannel,
