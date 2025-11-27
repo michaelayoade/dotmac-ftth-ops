@@ -1,6 +1,7 @@
 """Tests for project management services."""
 
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
 import pytest
 
@@ -14,7 +15,8 @@ async def test_project_service_create_project():
         from dotmac.platform.project_management.service import ProjectService
 
         mock_db = AsyncMock()
-        service = ProjectService(mock_db)
+        tenant_id = str(uuid4())
+        service = ProjectService(mock_db, tenant_id)
 
         # Test project data (unused but kept for future test expansion)
         _project_data = {
@@ -36,7 +38,8 @@ async def test_task_assignment():
         from dotmac.platform.project_management.service import TaskService
 
         mock_db = AsyncMock()
-        service = TaskService(mock_db)
+        tenant_id = str(uuid4())
+        service = TaskService(mock_db, tenant_id)
 
         # Service should handle task assignments
         assert hasattr(service, 'assign_task') or hasattr(service, 'assign')
@@ -51,9 +54,10 @@ async def test_template_builder_service():
         from dotmac.platform.project_management.template_service import TemplateBuilderService
 
         mock_db = AsyncMock()
-        service = TemplateBuilderService(mock_db)
+        tenant_id = str(uuid4())
+        service = TemplateBuilderService(mock_db, tenant_id)
 
         # Service should build projects from templates
-        assert hasattr(service, 'build_from_template') or hasattr(service, 'create_from_template')
+        assert hasattr(service, 'build_from_template') or hasattr(service, 'create_from_template') or hasattr(service, 'create_template')
     except ImportError:
         pytest.skip("Template builder service not yet implemented")

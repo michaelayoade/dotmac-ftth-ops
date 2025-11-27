@@ -10,7 +10,10 @@ def test_geo_router_import():
     from dotmac.platform.geo import router
 
     assert router is not None
-    assert hasattr(router, 'prefix') or hasattr(router, 'routes')
+    # The module exports an APIRouter instance named 'router'
+    assert hasattr(router, 'router')
+    # The router instance has routes
+    assert hasattr(router.router, 'routes')
 
 
 def test_geocoding_service_available():

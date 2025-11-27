@@ -65,15 +65,16 @@ class TestTokenExtraction:
         assert token == "test_jwt_token"
 
     @pytest.mark.asyncio
-    async def test_extract_token_priority_query_first(self):
-        """Test token extraction prioritizes query param over others."""
+    async def test_extract_token_priority_header_first(self):
+        """Test token extraction prioritizes Authorization header over others."""
         mock_websocket = Mock(spec=WebSocket)
         mock_websocket.url = Mock(query="token=query_token")
         mock_websocket.headers = {"authorization": "Bearer header_token"}
         mock_websocket.cookies = {"access_token": "cookie_token"}
 
         token = await extract_token_from_websocket(mock_websocket)
-        assert token == "query_token"
+        # Header has priority, then cookie, then query param (legacy fallback)
+        assert token == "header_token"
 
     @pytest.mark.asyncio
     async def test_extract_token_no_token_provided(self):
