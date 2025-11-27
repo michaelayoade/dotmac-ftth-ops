@@ -131,16 +131,43 @@ async def async_client(db_engine, tenant_id, user_id):
         expire_on_commit=False,
     )
 
-    # Create mock user with admin permissions for e2e tests
+    # Create mock user with tenant admin permissions for e2e tests
+    # NOTE: Explicitly NOT granting "platform:*" or "*" to avoid making all users platform admins
     async def mock_get_current_user(request=None, token=None, api_key=None):
         """Mock get_current_user for E2E tests - matches actual dependency signature."""
         return UserInfo(
             user_id=user_id,
             tenant_id=tenant_id,
             email="e2e-test@example.com",
-            # Grant all permissions for e2e tests to avoid permission issues
-            permissions=["*"],
+            # Grant tenant-scoped permissions for e2e tests (not platform admin)
+            permissions=[
+                "tenant:read",
+                "tenant:write",
+                "tenant:admin",
+                "users:read",
+                "users:write",
+                "users:admin",
+                "customers:read",
+                "customers:write",
+                "customers:admin",
+                "billing:read",
+                "billing:write",
+                "billing:admin",
+                "files:read",
+                "files:write",
+                "files:admin",
+                "webhooks:read",
+                "webhooks:write",
+                "webhooks:admin",
+                "communications:read",
+                "communications:write",
+                "communications:admin",
+                "data:read",
+                "data:write",
+                "data:admin",
+            ],
             roles=["admin"],
+            is_platform_admin=False,  # Explicitly not a platform admin
         )
 
     # Create async generator for session override - creates a new session for each request

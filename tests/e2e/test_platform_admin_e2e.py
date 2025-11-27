@@ -115,13 +115,15 @@ async def platform_admin_client(db_engine, platform_admin_id, platform_admin_ten
 
 
 @pytest_asyncio.fixture
-async def seed_multi_tenant_data(db_session):
+async def seed_multi_tenant_data(db_engine):
     """
     Seed database with multiple tenants for testing platform admin features.
 
     Creates:
     - 3 tenants with users and customers
     - Platform admin user
+
+    Note: Uses db_engine directly to avoid circular dependency with platform_admin_client fixture.
     """
     from datetime import datetime, timedelta
 
@@ -129,100 +131,108 @@ async def seed_multi_tenant_data(db_session):
     from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
     from dotmac.platform.user_management.models import User
 
-    # Create actual tenant records
-    tenants_data = [
-        {
-            "tenant_id": "tenant-alpha",
-            "name": "Alpha Corporation",
-            "slug": "alpha-corp",
-            "users": 5,
-            "customers": 10,
-        },
-        {
-            "tenant_id": "tenant-beta",
-            "name": "Beta Industries",
-            "slug": "beta-ind",
-            "users": 3,
-            "customers": 7,
-        },
-        {
-            "tenant_id": "tenant-gamma",
-            "name": "Gamma Solutions",
-            "slug": "gamma-sol",
-            "users": 8,
-            "customers": 15,
-        },
-    ]
+    # Create a session from the engine directly
+    test_session_maker = async_sessionmaker(
+        db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
 
-    for tenant_data in tenants_data:
-        # Create tenant record
-        tenant = Tenant(
-            id=tenant_data["tenant_id"],
-            name=tenant_data["name"],
-            slug=tenant_data["slug"],
-            email=f"contact@{tenant_data['slug']}.com",
+    async with test_session_maker() as db_session:
+        # Create actual tenant records
+        tenants_data = [
+            {
+                "tenant_id": "tenant-alpha",
+                "name": "Alpha Corporation",
+                "slug": "alpha-corp",
+                "users": 5,
+                "customers": 10,
+            },
+            {
+                "tenant_id": "tenant-beta",
+                "name": "Beta Industries",
+                "slug": "beta-ind",
+                "users": 3,
+                "customers": 7,
+            },
+            {
+                "tenant_id": "tenant-gamma",
+                "name": "Gamma Solutions",
+                "slug": "gamma-sol",
+                "users": 8,
+                "customers": 15,
+            },
+        ]
+
+        for tenant_data in tenants_data:
+            # Create tenant record
+            tenant = Tenant(
+                id=tenant_data["tenant_id"],
+                name=tenant_data["name"],
+                slug=tenant_data["slug"],
+                email=f"contact@{tenant_data['slug']}.com",
+                status=TenantStatus.ACTIVE,
+                plan_type=TenantPlanType.PROFESSIONAL,
+                billing_cycle=BillingCycle.MONTHLY,
+                max_users=10,
+                max_api_calls_per_month=100000,
+                max_storage_gb=50,
+                current_users=tenant_data["users"],
+                current_api_calls=0,
+                current_storage_gb=0,
+                created_at=datetime.now(UTC) - timedelta(days=30),
+            )
+            db_session.add(tenant)
+
+            # Create users for this tenant
+            for i in range(tenant_data["users"]):
+                user = User(
+                    username=f"user{i}_{tenant_data['tenant_id']}",
+                    email=f"user{i}@{tenant_data['slug']}.com",
+                    password_hash="hashed_password",
+                    tenant_id=tenant_data["tenant_id"],
+                    is_active=True,
+                    created_at=datetime.now(UTC),
+                )
+                db_session.add(user)
+
+            # Create customers for this tenant
+            for i in range(tenant_data["customers"]):
+                customer = Customer(
+                    customer_number=f"{tenant_data['tenant_id']}-CUST-{i:04d}",
+                    first_name=f"Customer{i}",
+                    last_name="Test",
+                    email=f"customer{i}@{tenant_data['slug']}.com",
+                    tenant_id=tenant_data["tenant_id"],
+                    created_at=datetime.now(UTC),
+                )
+                db_session.add(customer)
+
+        # Create platform admin tenant
+        admin_tenant = Tenant(
+            id="platform-admin-tenant",
+            name="Platform Administration",
+            slug="platform-admin",
             status=TenantStatus.ACTIVE,
-            plan_type=TenantPlanType.PROFESSIONAL,
-            billing_cycle=BillingCycle.MONTHLY,
-            max_users=10,
-            max_api_calls_per_month=100000,
-            max_storage_gb=50,
-            current_users=tenant_data["users"],
-            current_api_calls=0,
-            current_storage_gb=0,
-            created_at=datetime.now(UTC) - timedelta(days=30),
+            plan_type=TenantPlanType.ENTERPRISE,
+            billing_cycle=BillingCycle.YEARLY,
+            created_at=datetime.now(UTC) - timedelta(days=365),
         )
-        db_session.add(tenant)
+        db_session.add(admin_tenant)
 
-        # Create users for this tenant
-        for i in range(tenant_data["users"]):
-            user = User(
-                username=f"user{i}_{tenant_data['tenant_id']}",
-                email=f"user{i}@{tenant_data['slug']}.com",
-                password_hash="hashed_password",
-                tenant_id=tenant_data["tenant_id"],
-                is_active=True,
-                created_at=datetime.now(UTC),
-            )
-            db_session.add(user)
+        # Create platform admin user
+        platform_admin = User(
+            username="platform_admin",
+            email="admin@platform.com",
+            password_hash="hashed_password",
+            tenant_id="platform-admin-tenant",
+            is_active=True,
+            is_platform_admin=True,
+            created_at=datetime.now(UTC),
+        )
+        db_session.add(platform_admin)
 
-        # Create customers for this tenant
-        for i in range(tenant_data["customers"]):
-            customer = Customer(
-                customer_number=f"{tenant_data['tenant_id']}-CUST-{i:04d}",
-                first_name=f"Customer{i}",
-                last_name="Test",
-                email=f"customer{i}@{tenant_data['slug']}.com",
-                tenant_id=tenant_data["tenant_id"],
-                created_at=datetime.now(UTC),
-            )
-            db_session.add(customer)
-
-    # Create platform admin tenant
-    admin_tenant = Tenant(
-        id="platform-admin-tenant",
-        name="Platform Administration",
-        slug="platform-admin",
-        status=TenantStatus.ACTIVE,
-        plan_type=TenantPlanType.ENTERPRISE,
-        billing_cycle=BillingCycle.YEARLY,
-        created_at=datetime.now(UTC) - timedelta(days=365),
-    )
-    db_session.add(admin_tenant)
-
-    # Create platform admin user
-    platform_admin = User(
-        username="platform_admin",
-        email="admin@platform.com",
-        password_hash="hashed_password",
-        tenant_id="platform-admin-tenant",
-        is_active=True,
-        is_platform_admin=True,
-        created_at=datetime.now(UTC),
-    )
-    db_session.add(platform_admin)
-
-    await db_session.commit()
+        await db_session.commit()
 
     return {
         "tenants": tenants_data,
