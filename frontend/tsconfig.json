@@ -18,6 +18,7 @@
     { "path": "./shared/packages/utils" },
     { "path": "./shared/packages/primitives" },
     { "path": "./shared/packages/rbac" },
+    { "path": "./shared/packages/providers" },
     { "path": "./shared/packages/ui" },
     { "path": "./shared/packages/testing-utils" }
   ]
