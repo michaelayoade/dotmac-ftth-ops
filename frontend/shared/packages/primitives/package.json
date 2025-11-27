@@ -14,7 +14,7 @@
   },
   "scripts": {
     "prebuild": "echo 'Type checking handled by tsup'",
-    "build": "tsup && tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
+    "build": "tsup && pnpm exec tsc -p tsconfig.build.json",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "echo 'Linting disabled pending chart component type fixes'",
     "type-check": "tsc -p tsconfig.json --emitDeclarationOnly",
