@@ -500,50 +500,52 @@ def _should_run_integration(config: pytest.Config) -> bool:
     """
     env_flag = os.getenv("DOTMAC_TEST_PROFILE", "").strip().lower()
     if env_flag in {"integration", "integration_tests", "integration-test"}:
-        logger.debug("_should_run_integration: True (env_flag=%s)", env_flag)
+        print(f"[DEBUG] _should_run_integration: True (env_flag={env_flag})")  # noqa: T201
         return True
 
     mark_expr = getattr(config.option, "markexpr", "") or ""
+    print(f"[DEBUG] _should_run_integration: mark_expr={mark_expr!r}")  # noqa: T201
     if mark_expr:
         try:
             expression = Expression(mark_expr)
             if expression.evaluate(_MarkerNamespace(integration=True)) and not expression.evaluate(
                 _MarkerNamespace(integration=False)
             ):
-                logger.debug("_should_run_integration: True (expression match)")
+                print("[DEBUG] _should_run_integration: True (expression match)")  # noqa: T201
                 return True
         except Exception:
             pass
 
         normalized = mark_expr.lower()
         if "not integration" in normalized.replace("(", " ").replace(")", " "):
-            logger.debug("_should_run_integration: False ('not integration' in mark_expr)")
+            print("[DEBUG] _should_run_integration: False ('not integration' in mark_expr)")  # noqa: T201
             return False
         if "integration" in normalized.replace("(", " ").replace(")", " ").split():
-            logger.debug("_should_run_integration: True ('integration' word in mark_expr)")
+            print("[DEBUG] _should_run_integration: True ('integration' word in mark_expr)")  # noqa: T201
             return True
         if "integration" in normalized:
-            logger.debug("_should_run_integration: True ('integration' substring in mark_expr=%s)", mark_expr)
+            print(f"[DEBUG] _should_run_integration: True ('integration' substring in mark_expr={mark_expr})")  # noqa: T201
             return True
 
     invocation_args = getattr(getattr(config, "invocation_params", None), "args", None) or []
     explicit_args = getattr(config, "args", []) or []
+    print(f"[DEBUG] _should_run_integration: invocation_args={invocation_args}, explicit_args={explicit_args}")  # noqa: T201
     for arg in (*invocation_args, *explicit_args):
         arg_str = str(arg)
         # Only match explicit integration test directories, not files with "integration" in name
         if "tests/integration/" in arg_str or arg_str.endswith("tests/integration"):
-            logger.debug("_should_run_integration: True (tests/integration/ in arg=%s)", arg_str)
+            print(f"[DEBUG] _should_run_integration: True (tests/integration/ in arg={arg_str})")  # noqa: T201
             return True
         if "tests/integrations/" in arg_str or arg_str.endswith("tests/integrations"):
-            logger.debug("_should_run_integration: True (tests/integrations/ in arg=%s)", arg_str)
+            print(f"[DEBUG] _should_run_integration: True (tests/integrations/ in arg={arg_str})")  # noqa: T201
             return True
 
     env_async_url = os.getenv("DOTMAC_DATABASE_URL_ASYNC", "").strip()
     if env_async_url and "postgresql" in env_async_url.lower():
-        logger.debug("_should_run_integration: True (postgresql in DOTMAC_DATABASE_URL_ASYNC)")
+        print("[DEBUG] _should_run_integration: True (postgresql in DOTMAC_DATABASE_URL_ASYNC)")  # noqa: T201
         return True
 
-    logger.debug("_should_run_integration: False (no integration indicators found)")
+    print("[DEBUG] _should_run_integration: False (no integration indicators found)")  # noqa: T201
     return False
 
 
