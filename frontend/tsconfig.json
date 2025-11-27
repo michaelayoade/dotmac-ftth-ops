@@ -15,6 +15,7 @@
     { "path": "./shared/packages/analytics" },
     { "path": "./shared/packages/design-system" },
     { "path": "./shared/packages/headless" },
+    { "path": "./shared/packages/utils" },
     { "path": "./shared/packages/primitives" },
     { "path": "./shared/packages/rbac" },
     { "path": "./shared/packages/ui" },

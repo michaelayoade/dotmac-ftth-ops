@@ -37,7 +37,13 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "verbatimModuleSyntax": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@dotmac/*": ["../*/src"],
+      "@dotmac/testing-utils/*": ["../testing-utils/src/*"],
+      "@dotmac/typescript-config/*": ["../typescript-config/*"]
+    }
   },
   "exclude": ["node_modules", "dist", ".next", "coverage", "*.config.js", "*.config.ts"]
 }
