@@ -74,6 +74,9 @@ const nextConfig = {
 
     const path = require('path');
 
+    // Ensure "@" maps to the app root for absolute imports
+    config.resolve.alias['@'] = path.resolve(dir);
+
     // Add @shared alias for importing from shared directory
     config.resolve.alias['@shared'] = path.resolve(dir, '../../shared');
 

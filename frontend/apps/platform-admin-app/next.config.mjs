@@ -79,6 +79,9 @@ const nextConfig = {
 
     const path = require('path');
 
+    // Ensure "@" maps to the app root for absolute imports
+    config.resolve.alias['@'] = path.resolve(dir);
+
     for (const [pkg, relativePath] of Object.entries(sharedPackageAliases)) {
       config.resolve.alias[pkg] = path.resolve(dir, relativePath);
     }
