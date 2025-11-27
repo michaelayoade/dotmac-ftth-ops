@@ -13,7 +13,7 @@ This guide demonstrates how to integrate the DotMac frontend packages (`frontend
 | **Service Registry** | `@dotmac/headless` (useWebSocket) | Real-time service status, health monitoring |
 | **Audit Trail** | `@dotmac/analytics`, `@dotmac/dashboard` | Compliance dashboards, event visualization |
 | **Distributed Locks** | `@dotmac/headless` (useRealTimeSync) | Optimistic UI updates, conflict resolution |
-| **Authentication** | `@dotmac/headless` (useAuth, useMFA) | Login flows, session management |
+| **Authentication** | `@shared/lib/auth` (AuthProvider, useSession, 2FA helpers) | Login flows, session management |
 | **API Gateway** | `@dotmac/http-client` | Request routing, tenant resolution |
 | **Multi-tenant** | `@dotmac/headless` (useISPTenant) | Tenant switching, context |
 
