@@ -59,7 +59,7 @@ def _get_lazy_storage_service() -> FileStorageService:
 class _StorageServiceProxy:
     """Proxy to allow lazy initialization of storage service."""
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         return getattr(_get_lazy_storage_service(), name)
 
 

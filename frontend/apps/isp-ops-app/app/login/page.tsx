@@ -15,8 +15,8 @@ const authBypassEnabled = isAuthBypassEnabled();
 
 // Default branding for bypass mode
 const defaultBranding = { productName: "DotMac" };
-const envBrandName = process.env.NEXT_PUBLIC_BRAND_NAME;
-const envBrandLogoUrl = process.env.NEXT_PUBLIC_BRAND_LOGO_URL;
+const envBrandName = process.env["NEXT_PUBLIC_BRAND_NAME"];
+const envBrandLogoUrl = process.env["NEXT_PUBLIC_BRAND_LOGO_URL"];
 const branding = {
   productName: envBrandName || defaultBranding.productName,
   logoUrl: envBrandLogoUrl || null,

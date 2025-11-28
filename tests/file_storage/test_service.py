@@ -620,12 +620,27 @@ class TestFileStorageService:
         assert metadata["metadata"]["version"] == "2.0"
         assert metadata["metadata"]["updated_by"] == "test"
 
-    def test_get_storage_service_singleton(self):
+    def test_get_storage_service_singleton(self, tmp_path):
         """Test that get_storage_service returns singleton."""
-        service1 = get_storage_service()
-        service2 = get_storage_service()
+        import dotmac.platform.file_storage.service as service_module
 
-        assert service1 is service2
+        # Reset the singleton to ensure clean test
+        original_service = service_module._storage_service
+        service_module._storage_service = None
+
+        try:
+            # Mock settings to use tmp_path instead of /var/lib/dotmac
+            with patch("dotmac.platform.file_storage.service.settings") as mock_settings:
+                mock_settings.storage.local_path = str(tmp_path)
+                mock_settings.storage.backend = StorageBackend.MEMORY
+
+                service1 = get_storage_service()
+                service2 = get_storage_service()
+
+                assert service1 is service2
+        finally:
+            # Restore original singleton state
+            service_module._storage_service = original_service
 
     @pytest.mark.asyncio
     async def test_service_handles_errors(self):
