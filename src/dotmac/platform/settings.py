@@ -660,6 +660,20 @@ class Settings(BaseSettings):
             "dotmac.com",
             description="Domain used for message IDs and transactional communications",
         )
+        logo_url: str | None = Field(
+            default=None,
+            description="Absolute or relative URL to the product logo",
+            validation_alias=AliasChoices("BRAND_LOGO_URL", "NEXT_PUBLIC_LOGO_URL", "LOGO_URL"),
+        )
+        favicon_url: str | None = Field(
+            default=None,
+            description="Absolute or relative URL to the favicon",
+            validation_alias=AliasChoices(
+                "BRAND_FAVICON_URL",
+                "NEXT_PUBLIC_FAVICON",
+                "FAVICON_URL",
+            ),
+        )
 
     brand: BrandSettings = Field(  # type: ignore[call-arg]
         default_factory=BrandSettings,

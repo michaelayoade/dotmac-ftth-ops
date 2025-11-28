@@ -105,6 +105,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 "/api/v1/health",  # Health check endpoint (also available at /health)
                 "/api",
                 "/api/v1/platform/config",
+                "/api/v1/platform/runtime-config",  # Frontend SSR needs this before tenant context exists
+                "/api/v1/branding",  # Public branding for frontend bootstrapping
                 "/api/v1/platform/health",
                 "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
             }

@@ -82,6 +82,7 @@
     "concurrently": "^8.2.0",
     "msw": "^2.12.1",
     "openapi-typescript": "^7.5.2",
+    "openapi-zod-client": "^1.18.3",
     "prettier": "^3.6.2"
   },
   "dependencies": {

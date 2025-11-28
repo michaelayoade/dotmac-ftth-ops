@@ -34,7 +34,7 @@ export const ServiceStatisticsSchema = z.object({
   suspended_count: z.number(),
   terminated_count: z.number(),
   failed_count: z.number(),
-  services_by_type: z.record(z.number()),
+  services_by_type: z.record(z.string(), z.number()),
   healthy_count: z.number(),
   degraded_count: z.number(),
   average_uptime: z.number(),
@@ -71,11 +71,11 @@ export const ServiceInstanceDetailSchema = ServiceInstanceSummarySchema.extend({
   provisioned_at: z.string().nullable().optional(),
   suspended_at: z.string().nullable().optional(),
   terminated_at: z.string().nullable().optional(),
-  service_config: z.record(z.unknown()).optional(),
+  service_config: z.record(z.string(), z.unknown()).optional(),
   equipment_assigned: z.array(z.string()).optional(),
   ip_address: z.string().nullable().optional(),
   vlan_id: z.number().nullable().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   notes: z.string().nullable().optional(),
 });
 export type ServiceInstanceDetail = z.infer<typeof ServiceInstanceDetailSchema>;

@@ -19,7 +19,8 @@
     "smoke:network": "node scripts/smoke-network.js",
     "analyze": "ANALYZE=true pnpm build",
     "analyze:server": "ANALYZE=true BUNDLE_ANALYZE=server pnpm build",
-    "analyze:browser": "ANALYZE=true BUNDLE_ANALYZE=browser pnpm build"
+    "analyze:browser": "ANALYZE=true BUNDLE_ANALYZE=browser pnpm build",
+    "generate:isp-schemas": "cd ../../../ && poetry run python3 frontend/apps/isp-ops-app/scripts/generate-isp-schemas.py > frontend/apps/isp-ops-app/app/dashboard/settings/isp-config/openapi-isp-settings.json && cd frontend/apps/isp-ops-app && pnpm exec openapi-zod-client app/dashboard/settings/isp-config/openapi-isp-settings.json -o app/dashboard/settings/isp-config/generated-validation.ts && sed -i 's/z\\.record(z\\.string())/z.record(z.string(), z.string())/g; s/z\\.record(z\\.number())/z.record(z.string(), z.number())/g; s/z\\.record(z\\.object/z.record(z.string(), z.object/g' app/dashboard/settings/isp-config/generated-validation.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.14.0",
@@ -43,6 +44,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-table": "^8.20.5",
+    "@zodios/core": "^10.9.6",
     "axios": "^1.6.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

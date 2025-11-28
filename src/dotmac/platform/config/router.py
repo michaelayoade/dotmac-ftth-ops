@@ -114,6 +114,8 @@ def _build_branding_payload(settings: Settings) -> dict[str, Any]:
         "companyName": brand.company_name,
         "productName": brand.product_name,
         "productTagline": brand.product_tagline,
+        "logoUrl": brand.logo_url,
+        "faviconUrl": brand.favicon_url,
         "supportEmail": brand.support_email,
         "successEmail": brand.success_email,
         "operationsEmail": brand.operations_email,
@@ -208,6 +210,17 @@ async def get_runtime_frontend_config(
 
     response.headers["Cache-Control"] = f"public, max-age={_RUNTIME_CONFIG_CACHE_SECONDS}"
     return runtime_payload
+
+
+@router.get("/branding", include_in_schema=False)
+async def get_branding_config(settings: Annotated[Settings, Depends(get_settings)]) -> dict[str, Any]:
+    """
+    Public branding configuration for frontends.
+
+    Exposed separately so clients can fetch branding without tenant context.
+    """
+
+    return _build_branding_payload(settings)
 
 
 @router.get("/config")

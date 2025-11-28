@@ -47,15 +47,17 @@ export function ClientProviders({ children }: { children: ReactNode }) {
   }, [runtimeError, runtimeLoading, toast]);
 
   const appConfigValue = useMemo(() => {
-    const clone = {
+    const snapshot = {
       ...platformConfig,
       api: { ...platformConfig.api },
       features: { ...platformConfig.features },
       branding: { ...platformConfig.branding },
       tenant: { ...platformConfig.tenant },
+      realtime: { ...platformConfig.realtime },
+      deployment: { ...platformConfig.deployment },
+      license: { ...platformConfig.license },
     };
-    deepFreeze(clone);
-    return clone;
+    return deepFreeze(snapshot);
   }, [runtimeConfig?.generatedAt]);
 
   const shouldWrapWithRBAC =

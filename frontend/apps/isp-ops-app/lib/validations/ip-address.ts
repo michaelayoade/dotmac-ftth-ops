@@ -175,7 +175,7 @@ export const wireguardServerSchema = z.object({
   dns_servers: z.array(ipAddressSchema).default(["1.1.1.1", "1.0.0.1"]),
   allowed_ips: z.array(ipCIDRSchema).default(["0.0.0.0/0", "::/0"]),
   persistent_keepalive: z.number().int().min(0).max(3600).default(25),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // WireGuard peer schema with IPv6 support
@@ -191,7 +191,7 @@ export const wireguardPeerSchema = z.object({
   peer_ipv6: optionalIPv6CIDRSchema,
   allowed_ips: z.array(ipCIDRSchema).optional(),
   expires_at: z.string().datetime().optional().nullable(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   notes: z.string().max(1000).optional().nullable(),
 });
 

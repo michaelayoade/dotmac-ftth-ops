@@ -42,7 +42,7 @@ export const SettingFieldSchema = z.object({
   default: z.any().optional(),
   required: z.boolean(),
   sensitive: z.boolean(),
-  validation_rules: z.record(z.any()).nullable().optional(),
+  validation_rules: z.record(z.string(), z.any()).nullable().optional(),
 });
 
 export type SettingField = z.infer<typeof SettingFieldSchema>;
@@ -79,7 +79,7 @@ export type SettingsCategoryInfo = z.infer<typeof SettingsCategoryInfoSchema>;
  * Settings update request schema
  */
 export const SettingsUpdateRequestSchema = z.object({
-  updates: z.record(z.any()),
+  updates: z.record(z.string(), z.any()),
   validate_only: z.boolean().optional(),
   restart_required: z.boolean().optional(),
   reason: z.string().nullable().optional(),
@@ -92,8 +92,8 @@ export type SettingsUpdateRequest = z.infer<typeof SettingsUpdateRequestSchema>;
  */
 export const SettingsValidationResultSchema = z.object({
   valid: z.boolean(),
-  errors: z.record(z.string()),
-  warnings: z.record(z.string()),
+  errors: z.record(z.string(), z.string()),
+  warnings: z.record(z.string(), z.string()),
   restart_required: z.boolean(),
 });
 
@@ -110,6 +110,7 @@ export const AuditLogSchema = z.object({
   category: SettingsCategorySchema,
   action: z.string(),
   changes: z.record(
+    z.string(),
     z.object({
       old: z.any(),
       new: z.any(),

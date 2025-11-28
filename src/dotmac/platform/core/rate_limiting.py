@@ -58,8 +58,31 @@ def _create_limiter() -> Limiter:
             storage_uri = cache_url
 
     if storage_uri:
-        logger.info("rate_limit.storage.initialized", storage=storage_uri)
-        return Limiter(key_func=get_remote_address, storage_uri=storage_uri, enabled=enabled)
+        normalized_storage = storage_uri
+        if storage_uri.startswith("redis://"):
+            try:
+                import redis
+
+                connection = redis.Redis.from_url(storage_uri)
+                try:
+                    connection.ping()
+                finally:
+                    try:
+                        connection.close()
+                    except Exception:  # pragma: no cover - defensive
+                        pass
+            except Exception as exc:  # pragma: no cover - redis optional/denied
+                logger.warning(
+                    "rate_limit.storage.redis_unavailable",
+                    storage=storage_uri,
+                    error=str(exc),
+                    fallback="memory",
+                )
+                normalized_storage = None
+
+        if normalized_storage:
+            logger.debug("rate_limit.storage.initialized", storage=normalized_storage)
+            return Limiter(key_func=get_remote_address, storage_uri=normalized_storage, enabled=enabled)
 
     # SECURITY: In production, fail fast if Redis is not available
     # to prevent silent degradation to per-process rate limiting
