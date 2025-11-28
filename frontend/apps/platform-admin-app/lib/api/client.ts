@@ -111,6 +111,7 @@ apiClient.interceptors.response.use(
   },
 );
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 setupRefreshInterceptor(apiClient as any, defaultAuthFailureHandler);
 
 /**
