@@ -495,14 +495,12 @@ class TestGetExecutionStats:
         db = AsyncMock()
         service = WorkflowService(db_session=db)
 
-        # Mock query results
+        # Mock query results with _mapping attribute to simulate SQLAlchemy row behavior
         mock_row1 = MagicMock()
-        mock_row1.status = WorkflowStatus.COMPLETED
-        mock_row1.count = 10
+        mock_row1._mapping = {"status": WorkflowStatus.COMPLETED, "count": 10}
 
         mock_row2 = MagicMock()
-        mock_row2.status = WorkflowStatus.FAILED
-        mock_row2.count = 2
+        mock_row2._mapping = {"status": WorkflowStatus.FAILED, "count": 2}
 
         mock_result = MagicMock()
         mock_result.all.return_value = [mock_row1, mock_row2]

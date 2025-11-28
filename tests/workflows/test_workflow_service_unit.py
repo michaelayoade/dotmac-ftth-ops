@@ -632,11 +632,16 @@ class TestGetExecutionStats:
         db = AsyncMock()
         service = WorkflowService(db_session=db)
 
-        # Mock query results
+        # Mock query results with _mapping attribute to simulate SQLAlchemy row behavior
+        def create_mock_row(status, count):
+            row = MagicMock()
+            row._mapping = {"status": status, "count": count}
+            return row
+
         mock_rows = [
-            MagicMock(status=WorkflowStatus.COMPLETED, count=10),
-            MagicMock(status=WorkflowStatus.FAILED, count=2),
-            MagicMock(status=WorkflowStatus.RUNNING, count=3),
+            create_mock_row(WorkflowStatus.COMPLETED, 10),
+            create_mock_row(WorkflowStatus.FAILED, 2),
+            create_mock_row(WorkflowStatus.RUNNING, 3),
         ]
 
         mock_result = MagicMock()
@@ -669,12 +674,12 @@ class TestGetExecutionStats:
         db = AsyncMock()
         service = WorkflowService(db_session=db)
 
-        mock_rows = [
-            MagicMock(status=WorkflowStatus.COMPLETED, count=5),
-        ]
+        # Mock query results with _mapping attribute to simulate SQLAlchemy row behavior
+        mock_row = MagicMock()
+        mock_row._mapping = {"status": WorkflowStatus.COMPLETED, "count": 5}
 
         mock_result = MagicMock()
-        mock_result.all.return_value = mock_rows
+        mock_result.all.return_value = [mock_row]
         db.execute = AsyncMock(return_value=mock_result)
 
         stats = await service.get_execution_stats(workflow_id=1)
@@ -686,12 +691,12 @@ class TestGetExecutionStats:
         db = AsyncMock()
         service = WorkflowService(db_session=db)
 
-        mock_rows = [
-            MagicMock(status=WorkflowStatus.COMPLETED, count=3),
-        ]
+        # Mock query results with _mapping attribute to simulate SQLAlchemy row behavior
+        mock_row = MagicMock()
+        mock_row._mapping = {"status": WorkflowStatus.COMPLETED, "count": 3}
 
         mock_result = MagicMock()
-        mock_result.all.return_value = mock_rows
+        mock_result.all.return_value = [mock_row]
         db.execute = AsyncMock(return_value=mock_result)
 
         stats = await service.get_execution_stats(tenant_id="00000000-0000-0000-0000-0000000000dd")

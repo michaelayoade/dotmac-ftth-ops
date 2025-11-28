@@ -50,7 +50,19 @@ _local_rate_counters: dict[str, tuple[int, float]] = {}
 
 def _parse_rate_limit_config(config: str) -> tuple[int, int]:
     try:
-        count_str, window_str = config.split("/", 1)
+        # Support both "15/minute" and "15 per minute" formats
+        if "/" in config:
+            count_str, window_str = config.split("/", 1)
+        elif " per " in config.lower():
+            parts = config.lower().split(" per ", 1)
+            count_str, window_str = parts[0], parts[1]
+        else:
+            # Try splitting by space for formats like "15 minute"
+            parts = config.split(None, 1)
+            if len(parts) == 2:
+                count_str, window_str = parts
+            else:
+                return 120, 60
         max_requests = int(count_str.strip())
     except Exception:
         return 120, 60

@@ -211,6 +211,7 @@ class HealthChecker:
             else:
                 # DEVELOPMENT: Redis failure is DEGRADED (fallback available)
                 # This is NOT safe for production - session revocation breaks across workers
+                # Still marked as required to ensure tests fail and highlight the issue
                 return ServiceHealth(
                     name="redis",
                     status=ServiceStatus.DEGRADED,
@@ -220,7 +221,7 @@ class HealthChecker:
                         "Session revocation does NOT work across multiple workers/servers. "
                         "DO NOT use in production."
                     ),
-                    required=False,
+                    required=True,  # Always required, even in development
                 )
 
         # Redis is healthy

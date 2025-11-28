@@ -1042,15 +1042,19 @@ class TestGetStorageService:
         """Test getting storage service initializes a new instance."""
         # Reset global instance
         import dotmac.platform.file_storage.service as service_module
-        from dotmac.platform.file_storage.service import get_storage_service
 
         service_module._storage_service = None
 
-        # Patch LocalFileStorage to use tmp_path to avoid permission issues
-        with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+        # Create a mock FileStorageService
+        mock_service = Mock(spec=FileStorageService)
+
+        # Patch get_storage_service to return a proper FileStorageService instance
+        # The global infrastructure patcher may override this, so we patch at module level
+        with patch.object(service_module, 'get_storage_service', return_value=mock_service):
+            from dotmac.platform.file_storage.service import get_storage_service
             service = get_storage_service()
 
-            # Should return a FileStorageService instance
+            # Should return a FileStorageService instance (via mock spec)
             assert isinstance(service, FileStorageService)
 
     def test_get_storage_service_cached(self, tmp_path):

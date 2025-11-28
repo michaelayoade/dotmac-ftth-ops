@@ -160,37 +160,37 @@ class DualStackMetricsCollector:
 
         # Total subscribers
         result = await self.session.execute(
-            select(func.count(Subscriber.subscriber_id)).where(*filters)
+            select(func.count(Subscriber.id)).where(*filters)
         )
         metrics.total_subscribers = result.scalar() or 0
 
         # Dual-stack subscribers (both IPv4 and IPv6)
         dual_stack_filters = filters + [
-            Subscriber.framed_ipv4_address.isnot(None),
-            Subscriber.framed_ipv6_address.isnot(None),
+            Subscriber.static_ipv4.isnot(None),
+            Subscriber.ipv6_prefix.isnot(None),
         ]
         result = await self.session.execute(
-            select(func.count(Subscriber.subscriber_id)).where(*dual_stack_filters)
+            select(func.count(Subscriber.id)).where(*dual_stack_filters)
         )
         metrics.dual_stack_subscribers = result.scalar() or 0
 
         # IPv4-only subscribers
         ipv4_only_filters = filters + [
-            Subscriber.framed_ipv4_address.isnot(None),
-            Subscriber.framed_ipv6_address.is_(None),
+            Subscriber.static_ipv4.isnot(None),
+            Subscriber.ipv6_prefix.is_(None),
         ]
         result = await self.session.execute(
-            select(func.count(Subscriber.subscriber_id)).where(*ipv4_only_filters)
+            select(func.count(Subscriber.id)).where(*ipv4_only_filters)
         )
         metrics.ipv4_only_subscribers = result.scalar() or 0
 
         # IPv6-only subscribers
         ipv6_only_filters = filters + [
-            Subscriber.framed_ipv4_address.is_(None),
-            Subscriber.framed_ipv6_address.isnot(None),
+            Subscriber.static_ipv4.is_(None),
+            Subscriber.ipv6_prefix.isnot(None),
         ]
         result = await self.session.execute(
-            select(func.count(Subscriber.subscriber_id)).where(*ipv6_only_filters)
+            select(func.count(Subscriber.id)).where(*ipv6_only_filters)
         )
         metrics.ipv6_only_subscribers = result.scalar() or 0
 

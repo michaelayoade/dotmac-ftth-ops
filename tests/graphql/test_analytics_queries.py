@@ -5,7 +5,7 @@ Tests dashboard and metrics queries using Strawberry test client.
 """
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -310,6 +310,9 @@ class TestAnalyticsQueries:
             "timestamp": datetime.now(UTC),
         }
 
+        # Mock storage service to avoid permission errors
+        mock_storage_service = MagicMock()
+
         with (
             patch(
                 "dotmac.platform.graphql.queries.analytics._get_billing_metrics_cached",
@@ -334,6 +337,10 @@ class TestAnalyticsQueries:
             patch(
                 "dotmac.platform.graphql.queries.analytics._get_monitoring_metrics_cached",
                 new=AsyncMock(return_value=mock_monitoring_data),
+            ),
+            patch(
+                "dotmac.platform.graphql.queries.analytics.get_storage_service",
+                return_value=mock_storage_service,
             ),
         ):
             result = await graphql_client.execute(query, context_value=mock_context)
