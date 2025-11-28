@@ -632,8 +632,9 @@ class TestFileStorageService:
             # Mock get_storage_backend to return a memory backend
             # This avoids accessing /var/lib/dotmac which doesn't exist on CI
             mock_backend = MemoryFileStorage()
-            with patch(
-                "dotmac.platform.file_storage.service.get_storage_backend",
+            with patch.object(
+                service_module,
+                "get_storage_backend",
                 return_value=(mock_backend, "memory"),
             ):
                 service1 = get_storage_service()

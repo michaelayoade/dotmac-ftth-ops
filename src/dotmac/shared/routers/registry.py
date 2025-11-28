@@ -67,9 +67,9 @@ class RouterEntry:
     module_path: str
     router_name: str
     prefix: str
-    base_prefix: str = ""
     tags: tuple[str, ...]
     scope: ServiceScope
+    base_prefix: str = ""
     requires_auth: bool = True
     description: str = ""
     deprecated: bool = False
@@ -1158,7 +1158,7 @@ def validate_registry() -> tuple[list[str], list[str]]:
 
 
 def register_routers_for_scope(
-    app: "FastAPI",
+    app: FastAPI,
     scope: ServiceScope,
     include_shared: bool = True,
     auth_dependency: Any = None,
@@ -1260,7 +1260,7 @@ def register_routers_for_scope(
     return registered, failed
 
 
-def register_graphql_endpoint(app: "FastAPI", path: str = "/graphql") -> bool:
+def register_graphql_endpoint(app: FastAPI, path: str = "/graphql") -> bool:
     """
     Register the GraphQL endpoint with the application.
 
@@ -1273,8 +1273,9 @@ def register_graphql_endpoint(app: "FastAPI", path: str = "/graphql") -> bool:
     """
     try:
         from strawberry.fastapi import GraphQLRouter
-        from dotmac.platform.graphql.schema import schema
+
         from dotmac.platform.graphql.context import Context
+        from dotmac.platform.graphql.schema import schema
 
         graphql_context_getter = cast(
             Callable[..., Awaitable[Context] | Context | None],
