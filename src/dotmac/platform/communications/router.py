@@ -4,7 +4,7 @@ Communications router.
 FastAPI router for communications services.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from smtplib import SMTPException
 from typing import Any
 from uuid import UUID
@@ -520,7 +520,7 @@ async def list_templates_endpoint(
             if conditions:
                 total_query = total_query.where(and_(*conditions))
 
-            total = (await db.execute(total_query)).scalar() or 0
+            _total = (await db.execute(total_query)).scalar() or 0  # noqa: F841
 
             offset = max(page - 1, 0) * page_size
             result = await db.execute(
@@ -1753,7 +1753,7 @@ async def get_recent_activity(
 
     activities = activities[offset : offset + limit]
 
-    points = [
+    _points = [  # noqa: F841
         ActivityPoint(
             date=activity.timestamp.date().isoformat(),
             sent=1,
