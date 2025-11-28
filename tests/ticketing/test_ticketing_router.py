@@ -30,12 +30,25 @@ from dotmac.platform.partner_management.models import (
     PartnerUser,
 )
 from dotmac.platform.tenant import get_current_tenant_id
+<<<<<<< HEAD
 from dotmac.platform.ticketing.models import Ticket, TicketActorType, TicketPriority, TicketStatus, TicketType
 from dotmac.platform.ticketing.router import router as ticketing_router
 from dotmac.platform.user_management.models import User
 from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
 pytestmark = pytest.mark.integration
+=======
+from dotmac.platform.ticketing.dependencies import get_ticket_service
+from dotmac.platform.ticketing.models import Ticket, TicketActorType
+from dotmac.platform.ticketing.router import router as ticketing_router
+from dotmac.platform.user_management.models import User
+from dotmac.platform.ticketing.service import (
+    TicketAccessDeniedError,
+    TicketNotFoundError,
+    TicketService,
+    TicketValidationError,
+)
+>>>>>>> upstream/main
 
 
 @pytest.fixture
@@ -67,6 +80,44 @@ def ticketing_app(async_db_session):
     app.dependency_overrides[get_current_tenant_id] = override_get_current_tenant_id
 
     return app, current_user_holder
+
+
+class _StubTicketService(TicketService):
+    """Minimal stub that can be customised per test via callables."""
+
+    def __init__(self, session, **handlers):
+        super().__init__(session)
+        self._handlers = handlers
+
+    async def create_ticket(self, *args, **kwargs):
+        handler = self._handlers.get("create_ticket")
+        if handler:
+            return await handler(*args, **kwargs)
+        return await super().create_ticket(*args, **kwargs)
+
+    async def list_tickets(self, *args, **kwargs):
+        handler = self._handlers.get("list_tickets")
+        if handler:
+            return await handler(*args, **kwargs)
+        return await super().list_tickets(*args, **kwargs)
+
+    async def get_ticket(self, *args, **kwargs):
+        handler = self._handlers.get("get_ticket")
+        if handler:
+            return await handler(*args, **kwargs)
+        return await super().get_ticket(*args, **kwargs)
+
+    async def add_message(self, *args, **kwargs):
+        handler = self._handlers.get("add_message")
+        if handler:
+            return await handler(*args, **kwargs)
+        return await super().add_message(*args, **kwargs)
+
+    async def update_ticket(self, *args, **kwargs):
+        handler = self._handlers.get("update_ticket")
+        if handler:
+            return await handler(*args, **kwargs)
+        return await super().update_ticket(*args, **kwargs)
 
 
 @pytest.mark.asyncio
@@ -322,6 +373,7 @@ async def test_partner_appends_message_with_status_transition(
 
 
 @pytest.mark.asyncio
+<<<<<<< HEAD
 async def test_ticket_metrics_endpoint(async_db_session, ticketing_app):
     """Ticket metrics should aggregate status, priority, type, and SLA counts."""
     app, current_user_holder = ticketing_app
@@ -408,3 +460,143 @@ async def test_ticket_metrics_endpoint(async_db_session, ticketing_app):
     assert data["by_priority"]["urgent"] == 1
     assert data["by_type"]["outage"] == 2
     assert data["by_type"]["technical_support"] == 1
+=======
+async def test_create_ticket_maps_validation_error(async_db_session, ticketing_app):
+    """Service validation errors should surface as HTTP 400 responses."""
+    app, current_user_holder = ticketing_app
+
+    async def raise_validation(*args, **kwargs):
+        raise TicketValidationError("invalid data")
+
+    async def override_service():
+        return _StubTicketService(async_db_session, create_ticket=raise_validation)
+
+    app.dependency_overrides[get_ticket_service] = override_service
+    current_user_holder["value"] = UserInfo(
+        user_id=str(uuid.uuid4()),
+        email="user@example.com",
+        username="user",
+        roles=["customer"],
+        permissions=["tickets:create"],
+        tenant_id="test-tenant",
+    )
+
+    transport = ASGITransport(app=app)
+    try:
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.post(
+                "/api/v1/ticketing/",
+                json={
+                    "subject": "Invalid",
+                    "message": "Trigger validation error",
+                    "target_type": "tenant",
+                },
+            )
+    finally:
+        app.dependency_overrides.pop(get_ticket_service, None)
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "invalid data"
+
+
+@pytest.mark.asyncio
+async def test_add_message_maps_access_denied(async_db_session, ticketing_app):
+    """Access denied should translate to HTTP 403."""
+    app, current_user_holder = ticketing_app
+
+    async def raise_forbidden(*args, **kwargs):
+        raise TicketAccessDeniedError("not allowed")
+
+    async def override_service():
+        return _StubTicketService(async_db_session, add_message=raise_forbidden)
+
+    app.dependency_overrides[get_ticket_service] = override_service
+    current_user_holder["value"] = UserInfo(
+        user_id=str(uuid.uuid4()),
+        email="user@example.com",
+        username="user",
+        roles=["partner"],
+        permissions=["tickets:respond"],
+        tenant_id="test-tenant",
+    )
+
+    transport = ASGITransport(app=app)
+    try:
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.post(
+                f"/api/v1/ticketing/{uuid.uuid4()}/messages",
+                json={"message": "Attempt response"},
+            )
+    finally:
+        app.dependency_overrides.pop(get_ticket_service, None)
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "not allowed"
+
+
+@pytest.mark.asyncio
+async def test_get_ticket_maps_not_found(async_db_session, ticketing_app):
+    """Missing tickets should produce 404."""
+    app, current_user_holder = ticketing_app
+
+    async def raise_not_found(*args, **kwargs):
+        raise TicketNotFoundError("missing ticket")
+
+    async def override_service():
+        return _StubTicketService(async_db_session, get_ticket=raise_not_found)
+
+    app.dependency_overrides[get_ticket_service] = override_service
+    current_user_holder["value"] = UserInfo(
+        user_id=str(uuid.uuid4()),
+        email="user@example.com",
+        username="user",
+        roles=["admin"],
+        permissions=["tickets:read"],
+        tenant_id="test-tenant",
+    )
+
+    transport = ASGITransport(app=app)
+    try:
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.get(f"/api/v1/ticketing/{uuid.uuid4()}")
+    finally:
+        app.dependency_overrides.pop(get_ticket_service, None)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "missing ticket"
+
+
+@pytest.mark.asyncio
+async def test_update_ticket_maps_unexpected_error(async_db_session, ticketing_app):
+    """Unhandled exceptions are converted to HTTP 500 with generic detail."""
+    app, current_user_holder = ticketing_app
+
+    async def raise_generic(*args, **kwargs):
+        raise RuntimeError("boom")
+
+    async def override_service():
+        return _StubTicketService(async_db_session, update_ticket=raise_generic)
+
+    app.dependency_overrides[get_ticket_service] = override_service
+    current_user_holder["value"] = UserInfo(
+        user_id=str(uuid.uuid4()),
+        email="user@example.com",
+        username="user",
+        roles=["admin"],
+        permissions=["tickets:update"],
+        tenant_id="test-tenant",
+    )
+
+    transport = ASGITransport(app=app)
+    try:
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.patch(
+                f"/api/v1/ticketing/{uuid.uuid4()}",
+                json={"status": "resolved"},
+            )
+    finally:
+        app.dependency_overrides.pop(get_ticket_service, None)
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Ticketing operation failed"
+>>>>>>> upstream/main

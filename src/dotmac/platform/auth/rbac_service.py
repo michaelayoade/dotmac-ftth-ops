@@ -112,10 +112,10 @@ class RBACService:
         self._role_cache: dict[str, Role] = {}
 
     def _invalidate_user_permission_cache(self, user_id: UUID | str) -> None:
-        """Remove cached permissions for a user (with and without expired grants)."""
-        user_key = str(user_id)
-        cache_delete(f"user_perms:{user_key}:expired=False")
-        cache_delete(f"user_perms:{user_key}:expired=True")
+        """Remove cached permissions for a user (clears legacy and new cache keys)."""
+        cache_delete(f"user_perms:{user_id}")
+        cache_delete(f"user_perms:{user_id}:expired=False")
+        cache_delete(f"user_perms:{user_id}:expired=True")
 
     # ==================== User Permissions ====================
 
