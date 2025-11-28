@@ -93,7 +93,7 @@ export function useQuotaCheck(quotaType: string) {
       setIsLoading(true);
 
       try {
-        const response = await fetch(`/api/v1/quotas/${quotaType}`, {
+        const response = await fetch(`/api/isp/v1/admin/quotas/${quotaType}`, {
           credentials: "include",
         });
 

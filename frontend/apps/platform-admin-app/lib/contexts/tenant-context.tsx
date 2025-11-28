@@ -8,6 +8,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
 import { apiClient } from "@/lib/api/client";
+import { useAuth } from "@shared/lib/auth";
+import { setTenantIdentifiers } from "@/lib/tenant-storage";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface Tenant {
   id: string;
@@ -42,15 +45,31 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
   const [availableTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { isLoading: authLoading, user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
 
   const refreshTenant = async () => {
+    if (!isAuthenticated) {
+      setTenant(null);
+      setError(null);
+      setTenantIdentifiers(null, null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Fetch tenant from API
+      // If tenant provided via props, use it and sync storage
+      if (initialTenant) {
+        setTenant(initialTenant);
+        setTenantIdentifiers(initialTenant.id, null);
+        return;
+      }
+
       const response = await apiClient.get<Tenant>("/tenants/current");
       setTenant(response.data);
+      setTenantIdentifiers(response.data.id, null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Unknown error"));
       setTenant(null);
@@ -59,12 +78,19 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
     }
   };
 
-  // Load tenant on mount if not provided
+  // Load tenant when auth is ready or user changes
   useEffect(() => {
-    if (!initialTenant) {
+    if (!authLoading) {
       refreshTenant();
     }
-  }, [initialTenant]);
+  }, [authLoading, isAuthenticated, user?.tenant_id]);
+
+  useEffect(() => {
+    if (!tenant?.id) {
+      return;
+    }
+    queryClient.invalidateQueries();
+  }, [tenant?.id, queryClient]);
 
   const value: TenantContextValue = useMemo(
     () => ({

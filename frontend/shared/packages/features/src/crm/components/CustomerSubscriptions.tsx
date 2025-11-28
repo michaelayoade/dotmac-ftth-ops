@@ -118,7 +118,7 @@ export default function CustomerSubscriptions({
     try {
       setLoading(true);
       const response = await apiClient.get<{ subscriptions: Subscription[] }>(
-        `/api/v1/customers/${customerId}/subscriptions`,
+        `/api/isp/v1/admin/customers/${customerId}/subscriptions`,
       );
       setSubscriptions(response.data.subscriptions);
     } catch (error: any) {

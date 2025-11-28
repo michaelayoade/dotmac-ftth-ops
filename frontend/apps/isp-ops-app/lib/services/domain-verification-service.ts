@@ -76,11 +76,14 @@ class DomainVerificationService {
     tenantId: string,
     request: InitiateVerificationRequest,
   ): Promise<DomainVerificationResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains/verify`, {
-      method: "POST",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(request),
-    });
+    const response = await fetch(
+      `${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains/verify`,
+      {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(request),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -97,11 +100,14 @@ class DomainVerificationService {
     tenantId: string,
     request: CheckVerificationRequest,
   ): Promise<DomainVerificationResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains/check`, {
-      method: "POST",
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(request),
-    });
+    const response = await fetch(
+      `${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains/check`,
+      {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(request),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -115,7 +121,7 @@ class DomainVerificationService {
    * Get current domain verification status
    */
   async getStatus(tenantId: string): Promise<DomainVerificationStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains/status`, {
+    const response = await fetch(`${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains/status`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -131,7 +137,7 @@ class DomainVerificationService {
    * Remove verified domain
    */
   async removeDomain(tenantId: string): Promise<DomainRemovalResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenants/${tenantId}/domains`, {
+    const response = await fetch(`${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });

@@ -1,4 +1,9 @@
-"""Tests for AppBoundaryMiddleware and SingleTenantMiddleware."""
+"""Tests for AppBoundaryMiddleware and SingleTenantMiddleware.
+
+Tests boundary enforcement for:
+- Platform routes: /api/platform/v1/* (requires platform scopes)
+- ISP routes: /api/isp/v1/* (requires tenant context and ISP scopes)
+"""
 
 from unittest.mock import Mock, patch
 
@@ -157,12 +162,12 @@ class TestAppBoundaryMiddleware:
             response = await middleware.dispatch(mock_request, self.call_next)
             assert response.status_code == 200, f"Failed for scopes: {scopes}"
 
-    # ===== Tenant Route Tests =====
+    # ===== ISP Route Tests =====
 
     @pytest.mark.asyncio
-    async def test_tenant_route_requires_authentication(self, middleware, mock_request):
-        """Test that tenant routes require authentication."""
-        mock_request.url.path = "/api/tenant/v1/customers"
+    async def test_isp_route_requires_authentication(self, middleware, mock_request):
+        """Test that ISP routes require authentication."""
+        mock_request.url.path = "/api/isp/v1/customers"
         mock_request.state.user = None
         mock_request.state.tenant_id = None
 
@@ -173,9 +178,9 @@ class TestAppBoundaryMiddleware:
         assert "Authentication required" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    async def test_tenant_route_requires_tenant_context(self, middleware, mock_request):
-        """Test that tenant routes require tenant_id context."""
-        mock_request.url.path = "/api/tenant/v1/billing/invoices"
+    async def test_isp_route_requires_tenant_context(self, middleware, mock_request):
+        """Test that ISP routes require tenant_id context."""
+        mock_request.url.path = "/api/isp/v1/billing/invoices"
         mock_user = Mock()
         mock_user.id = "user-123"
         mock_user.scopes = ["billing:read"]
@@ -190,12 +195,12 @@ class TestAppBoundaryMiddleware:
         assert "X-Tenant-ID" in str(exc_info.value.detail["help"])
 
     @pytest.mark.asyncio
-    async def test_tenant_route_requires_tenant_scope(self, middleware, mock_request):
-        """Test that tenant routes require tenant-level scopes."""
-        mock_request.url.path = "/api/tenant/v1/radius/sessions"
+    async def test_isp_route_requires_isp_scope(self, middleware, mock_request):
+        """Test that ISP routes require ISP-level scopes."""
+        mock_request.url.path = "/api/isp/v1/radius/sessions"
         mock_user = Mock()
         mock_user.id = "user-123"
-        mock_user.scopes = ["public:read"]  # No tenant scopes
+        mock_user.scopes = ["public:read"]  # No ISP scopes
         mock_request.state.user = mock_user
         mock_request.state.tenant_id = "tenant-456"
 
@@ -203,14 +208,14 @@ class TestAppBoundaryMiddleware:
             await middleware.dispatch(mock_request, self.call_next)
 
         assert exc_info.value.status_code == 403
-        assert "Insufficient permissions for tenant operations" in str(
+        assert "Insufficient permissions for ISP operations" in str(
             exc_info.value.detail["error"]
         )
 
     @pytest.mark.asyncio
-    async def test_tenant_route_accepts_tenant_scope(self, middleware, mock_request):
-        """Test that tenant routes accept valid tenant scopes."""
-        mock_request.url.path = "/api/tenant/v1/network/devices"
+    async def test_isp_route_accepts_isp_scope(self, middleware, mock_request):
+        """Test that ISP routes accept valid ISP scopes."""
+        mock_request.url.path = "/api/isp/v1/network/devices"
         mock_user = Mock()
         mock_user.id = "user-123"
         mock_user.scopes = ["network:read", "network:write"]
@@ -221,9 +226,9 @@ class TestAppBoundaryMiddleware:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_tenant_route_accepts_platform_scope(self, middleware, mock_request):
-        """Test that tenant routes accept platform scopes (for support)."""
-        mock_request.url.path = "/api/tenant/v1/customers"
+    async def test_isp_route_accepts_platform_scope(self, middleware, mock_request):
+        """Test that ISP routes accept platform scopes (for support)."""
+        mock_request.url.path = "/api/isp/v1/customers"
         mock_user = Mock()
         mock_user.id = "support-123"
         mock_user.scopes = ["platform_support"]  # Platform scope
@@ -234,9 +239,9 @@ class TestAppBoundaryMiddleware:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_tenant_scope_variations(self, middleware, mock_request):
-        """Test various tenant scope formats are recognized."""
-        tenant_scopes = [
+    async def test_isp_scope_variations(self, middleware, mock_request):
+        """Test various ISP scope formats are recognized."""
+        isp_scopes = [
             ["isp_admin:*"],
             ["network:read"],
             ["billing:write"],
@@ -253,32 +258,16 @@ class TestAppBoundaryMiddleware:
             ["audit:read"],
         ]
 
-        mock_request.url.path = "/api/tenant/v1/customers"
+        mock_request.url.path = "/api/isp/v1/customers"
         mock_user = Mock()
         mock_user.id = "user-123"
         mock_request.state.user = mock_user
         mock_request.state.tenant_id = "tenant-456"
 
-        for scopes in tenant_scopes:
+        for scopes in isp_scopes:
             mock_user.scopes = scopes
             response = await middleware.dispatch(mock_request, self.call_next)
             assert response.status_code == 200, f"Failed for scopes: {scopes}"
-
-    # ===== Shared Route Tests =====
-
-    @pytest.mark.asyncio
-    async def test_shared_routes_bypass_boundary_checks(self, middleware, mock_request):
-        """Test that shared /api/v1/* routes bypass boundary middleware."""
-        mock_request.url.path = "/api/v1/users"
-        mock_user = Mock()
-        mock_user.id = "user-123"
-        mock_user.scopes = ["user:read"]
-        mock_request.state.user = mock_user
-        mock_request.state.tenant_id = None
-
-        # Should pass through without tenant_id requirement
-        response = await middleware.dispatch(mock_request, self.call_next)
-        assert response.status_code == 200
 
     # ===== Helper Method Tests =====
 
@@ -301,15 +290,15 @@ class TestAppBoundaryMiddleware:
         """Test platform route detection."""
         assert middleware._is_platform_route("/api/platform/v1/admin")
         assert middleware._is_platform_route("/api/platform/v1/tenants")
-        assert not middleware._is_platform_route("/api/tenant/v1/customers")
-        assert not middleware._is_platform_route("/api/v1/users")
+        assert not middleware._is_platform_route("/api/isp/v1/customers")
 
-    def test_is_tenant_route(self, middleware):
-        """Test tenant route detection."""
-        assert middleware._is_tenant_route("/api/tenant/v1/customers")
-        assert middleware._is_tenant_route("/api/tenant/v1/radius/sessions")
-        assert not middleware._is_tenant_route("/api/platform/v1/admin")
-        assert not middleware._is_tenant_route("/api/v1/users")
+    def test_is_isp_route(self, middleware):
+        """Test ISP route detection."""
+        # ISP prefix
+        assert middleware._is_isp_route("/api/isp/v1/customers")
+        assert middleware._is_isp_route("/api/isp/v1/radius/sessions")
+        # Not ISP routes
+        assert not middleware._is_isp_route("/api/platform/v1/admin")
 
     def test_has_platform_scope(self, middleware):
         """Test platform scope detection."""
@@ -333,24 +322,24 @@ class TestAppBoundaryMiddleware:
         del user_invalid.scopes
         assert not middleware._has_platform_scope(user_invalid)
 
-    def test_has_tenant_scope(self, middleware):
-        """Test tenant scope detection."""
-        user_with_tenant = Mock()
-        user_with_tenant.scopes = ["isp_admin:*", "billing:read"]
-        assert middleware._has_tenant_scope(user_with_tenant)
+    def test_has_isp_scope(self, middleware):
+        """Test ISP scope detection."""
+        user_with_isp = Mock()
+        user_with_isp.scopes = ["isp_admin:*", "billing:read"]
+        assert middleware._has_isp_scope(user_with_isp)
 
         user_with_platform = Mock()
         user_with_platform.scopes = ["platform_support"]
-        # Platform users can access tenant routes
-        assert middleware._has_tenant_scope(user_with_platform)
+        # Platform users can access ISP routes
+        assert middleware._has_isp_scope(user_with_platform)
 
-        user_without_tenant = Mock()
-        user_without_tenant.scopes = ["public:read"]
-        assert not middleware._has_tenant_scope(user_without_tenant)
+        user_without_isp = Mock()
+        user_without_isp.scopes = ["public:read"]
+        assert not middleware._has_isp_scope(user_without_isp)
 
         user_no_scopes = Mock()
         user_no_scopes.scopes = []
-        assert not middleware._has_tenant_scope(user_no_scopes)
+        assert not middleware._has_isp_scope(user_no_scopes)
 
 
 @pytest.mark.unit
@@ -368,7 +357,7 @@ class TestSingleTenantMiddleware:
         """Create mock Request object."""
         request = Mock(spec=Request)
         request.url = Mock()
-        request.url.path = "/api/tenant/v1/customers"
+        request.url.path = "/api/isp/v1/customers"
         request.state = Mock()
         return request
 
@@ -458,11 +447,11 @@ class TestMiddlewareIntegration:
             mock_settings.TENANT_ID = "fixed-tenant-123"
 
             # Step 1: SingleTenantMiddleware sets tenant_id
-            mock_request.url.path = "/api/tenant/v1/customers"
+            mock_request.url.path = "/api/isp/v1/customers"
             await tenant_middleware.dispatch(mock_request, self.call_next)
             assert mock_request.state.tenant_id == "fixed-tenant-123"
 
-            # Step 2: AppBoundaryMiddleware validates tenant route
+            # Step 2: AppBoundaryMiddleware validates ISP route
             mock_user = Mock()
             mock_user.id = "user-456"
             mock_user.scopes = ["customer:read"]
@@ -489,13 +478,13 @@ class TestMiddlewareIntegration:
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_hybrid_mode_platform_support_tenant_access(self, app_middleware, mock_request):
-        """Test hybrid mode: platform support accessing tenant routes."""
+    async def test_hybrid_mode_platform_support_isp_access(self, app_middleware, mock_request):
+        """Test hybrid mode: platform support accessing ISP routes."""
         with patch("dotmac.platform.api.app_boundary_middleware.settings") as mock_settings:
             mock_settings.DEPLOYMENT_MODE = "hybrid"
 
-            # Platform support user accessing tenant route with tenant context
-            mock_request.url.path = "/api/tenant/v1/radius/sessions"
+            # Platform support user accessing ISP route with tenant context
+            mock_request.url.path = "/api/isp/v1/radius/sessions"
             mock_user = Mock()
             mock_user.id = "support-123"
             mock_user.scopes = ["platform_support"]

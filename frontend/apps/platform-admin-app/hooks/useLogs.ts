@@ -92,7 +92,7 @@ export function useLogs(filters: LogsFilter = {}) {
           params.append("page_size", normalizedFilters.page_size.toString());
 
         const response = await axios.get<LogsResponse>(
-          `${apiBaseUrl}/api/v1/monitoring/logs?${params.toString()}`,
+          `${apiBaseUrl}/api/platform/v1/admin/monitoring/logs?${params.toString()}`,
           { withCredentials: true },
         );
 
@@ -115,7 +115,7 @@ export function useLogs(filters: LogsFilter = {}) {
     queryKey: [...logsKeys.stats(), api.baseUrl, api.prefix],
     queryFn: async () => {
       try {
-        const response = await axios.get<LogStats>(`${apiBaseUrl}/api/v1/monitoring/logs/stats`, {
+        const response = await axios.get<LogStats>(`${apiBaseUrl}/api/platform/v1/admin/monitoring/logs/stats`, {
           withCredentials: true,
         });
         return response.data;
@@ -136,7 +136,7 @@ export function useLogs(filters: LogsFilter = {}) {
     queryFn: async () => {
       try {
         const response = await axios.get<string[]>(
-          `${apiBaseUrl}/api/v1/monitoring/logs/services`,
+          `${apiBaseUrl}/api/platform/v1/admin/monitoring/logs/services`,
           { withCredentials: true },
         );
         return response.data;

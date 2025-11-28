@@ -2,12 +2,12 @@
  * React Query hooks for data transfer (import/export) operations
  *
  * Connects to backend data transfer APIs:
- * - POST /api/v1/data-transfer/import - Create import job
- * - POST /api/v1/data-transfer/export - Create export job
- * - GET /api/v1/data-transfer/jobs - List jobs with filters
- * - GET /api/v1/data-transfer/jobs/{job_id} - Get job status
- * - DELETE /api/v1/data-transfer/jobs/{job_id} - Cancel job
- * - GET /api/v1/data-transfer/formats - Get supported formats
+ * - POST /api/platform/v1/admin/data-transfer/import - Create import job
+ * - POST /api/platform/v1/admin/data-transfer/export - Create export job
+ * - GET /api/platform/v1/admin/data-transfer/jobs - List jobs with filters
+ * - GET /api/platform/v1/admin/data-transfer/jobs/{job_id} - Get job status
+ * - DELETE /api/platform/v1/admin/data-transfer/jobs/{job_id} - Cancel job
+ * - GET /api/platform/v1/admin/data-transfer/formats - Get supported formats
  */
 
 import {

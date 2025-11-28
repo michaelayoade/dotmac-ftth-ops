@@ -45,7 +45,7 @@ const data = await graphqlClient.request(
 
 **Endpoint Configuration:**
 
-- Default: `/api/v1/graphql` (matches backend route at `src/dotmac/platform/routers.py:881`)
+- Default: `/api/platform/v1/admin/graphql` (matches backend route at `src/dotmac/platform/routers.py:881`)
 - Environment variable: `NEXT_PUBLIC_API_URL` for absolute URLs (cross-domain deployments)
 - Works in both browser and server (SSR/build) contexts
 - Custom endpoint: Pass `endpoint` in config
@@ -58,7 +58,7 @@ const client = createGraphQLClient({
 
 // Absolute URL (cross-domain)
 // Set NEXT_PUBLIC_API_URL=https://api.example.com
-// Client will use: https://api.example.com/api/v1/graphql
+// Client will use: https://api.example.com/api/platform/v1/admin/graphql
 // Works during SSR, build-time, and browser runtime
 ```
 

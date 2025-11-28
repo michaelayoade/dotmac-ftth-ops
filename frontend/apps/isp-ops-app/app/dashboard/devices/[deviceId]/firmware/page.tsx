@@ -50,7 +50,7 @@ function FirmwarePageContent() {
   const { data: device } = useQuery({
     queryKey: ["device", deviceId],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch device");
@@ -62,7 +62,7 @@ function FirmwarePageContent() {
     queryKey: ["firmware-versions", device?.summary?.model],
     queryFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/firmware/versions?model=${device?.summary?.model}`,
+        `${apiBaseUrl}/api/isp/v1/admin/genieacs/firmware/versions?model=${device?.summary?.model}`,
         { credentials: "include" },
       );
       if (!response.ok) return [];
@@ -75,7 +75,7 @@ function FirmwarePageContent() {
     queryKey: ["firmware-upgrade", deviceId],
     queryFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/firmware/status`,
+        `${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/firmware/status`,
         { credentials: "include" },
       );
       if (!response.ok) return null;
@@ -87,7 +87,7 @@ function FirmwarePageContent() {
   const upgradeMutation = useMutation({
     mutationFn: async (version: string) => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/firmware/upgrade`,
+        `${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/firmware/upgrade`,
         {
           method: "POST",
           credentials: "include",

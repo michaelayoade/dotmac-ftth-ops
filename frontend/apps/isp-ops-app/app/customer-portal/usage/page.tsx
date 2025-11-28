@@ -71,7 +71,7 @@ export default function CustomerUsagePage() {
         }
 
         const response = await fetch(
-          `${apiBaseUrl}/api/v1/customer/usage/history?time_range=${timeRange}`,
+          `${apiBaseUrl}/api/isp/v1/portal/customer/usage/history?time_range=${timeRange}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -168,7 +168,7 @@ export default function CustomerUsagePage() {
       if (!token) {
         throw new Error("Customer session expired");
       }
-      const response = await fetch(`${apiBaseUrl}/api/v1/customer/usage/report`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/portal/customer/usage/report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

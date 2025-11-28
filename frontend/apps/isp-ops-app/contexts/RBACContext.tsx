@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { handleError } from "@/lib/utils/error-handler";
 import { useToast } from "@dotmac/ui";
 import { isAuthBypassEnabled } from "@shared/lib/auth";
+import { useTenant } from "@/lib/contexts/tenant-context";
 import { useAuth } from "@shared/lib/auth";
 
 // Migrated from sonner to useToast hook
@@ -267,6 +268,7 @@ const RBACContext = createContext<RBACContextValue | undefined>(undefined);
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { tenantId } = useTenant();
 
   const queryClient = useQueryClient();
 
@@ -318,7 +320,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     error,
     refetch: refreshPermissions,
   } = useQuery({
-    queryKey: ["rbac", "my-permissions"],
+    queryKey: ["rbac", "my-permissions", tenantId ?? "none"],
     queryFn: allowTestSuperuser
       ? async () => ({
           user_id: "e2e-test-user",
@@ -337,7 +339,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch all roles (skip in E2E test mode)
   const { data: roles = [] } = useQuery({
-    queryKey: ["rbac", "roles"],
+    queryKey: ["rbac", "roles", tenantId ?? "none"],
     queryFn: allowTestSuperuser ? async () => [] : () => rbacApi.fetchRoles(true),
     staleTime: 10 * 60 * 1000, // 10 minutes
     enabled: !authLoading && Boolean(isAuthenticated || allowTestSuperuser),

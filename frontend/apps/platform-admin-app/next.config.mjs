@@ -61,8 +61,8 @@ const nextConfig = {
     const backendUrl = process.env['INTERNAL_API_URL'] || process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8001';
     return [
       {
-        source: '/api/v1/:path*',
-        destination: `${backendUrl}/api/v1/:path*`,
+        source: '/api/platform/v1/admin/:path*',
+        destination: `${backendUrl}/api/platform/v1/admin/:path*`,
       },
       {
         source: '/health',

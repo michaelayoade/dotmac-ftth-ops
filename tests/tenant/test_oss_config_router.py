@@ -72,7 +72,7 @@ def oss_client(async_db_session: AsyncSession, tenant: Tenant) -> TestClient:
 
 
 def test_get_default_configuration(oss_client: TestClient) -> None:
-    response = oss_client.get("/api/v1/tenant/oss/netbox")
+    response = oss_client.get("/api/isp/v1/oss/netbox")
     assert response.status_code == 200
     payload = response.json()
     assert payload["service"] == "netbox"
@@ -84,7 +84,7 @@ def test_update_and_reset_configuration(
     oss_client: TestClient,
 ) -> None:
     update_payload = {"url": "https://netbox.example.com", "api_token": "TOKEN123"}
-    response = oss_client.patch("/api/v1/tenant/oss/netbox", json=update_payload)
+    response = oss_client.patch("/api/isp/v1/oss/netbox", json=update_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["config"]["url"] == "https://netbox.example.com"
@@ -93,11 +93,11 @@ def test_update_and_reset_configuration(
     assert data["overrides"]["api_token"] == "TOKEN123"
 
     # Reset configuration
-    reset_resp = oss_client.delete("/api/v1/tenant/oss/netbox")
+    reset_resp = oss_client.delete("/api/isp/v1/oss/netbox")
     assert reset_resp.status_code == 204
 
     # Fetch again - should return defaults
-    final_resp = oss_client.get("/api/v1/tenant/oss/netbox")
+    final_resp = oss_client.get("/api/isp/v1/oss/netbox")
     assert final_resp.status_code == 200
     final_data = final_resp.json()
     assert final_data["config"]["url"] == EXPECTED_NETBOX_URL

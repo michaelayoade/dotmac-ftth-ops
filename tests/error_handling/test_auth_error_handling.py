@@ -22,7 +22,7 @@ class TestAuthenticationErrors:
         expired_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjAwMDAwMDAwfQ.invalid"
 
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"Authorization": f"Bearer {expired_token}"},
         )
 
@@ -38,7 +38,7 @@ class TestAuthenticationErrors:
     async def test_malformed_token(self, test_client):
         """Test malformed JWT token."""
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"Authorization": "Bearer not-a-valid-token"},
         )
 
@@ -47,7 +47,7 @@ class TestAuthenticationErrors:
     @pytest.mark.asyncio
     async def test_missing_authorization_header(self, test_client):
         """Test request without Authorization header."""
-        response = test_client.get("/api/v1/tenants")
+        response = test_client.get("/api/platform/v1/tenants")
 
         assert response.status_code == 401
 
@@ -55,7 +55,7 @@ class TestAuthenticationErrors:
     async def test_invalid_authorization_scheme(self, test_client):
         """Test invalid authorization scheme (not Bearer)."""
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"Authorization": "Basic dXNlcjpwYXNz"},  # Basic auth instead of Bearer
         )
 
@@ -70,7 +70,7 @@ class TestAuthenticationErrors:
         )
 
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"Authorization": f"Bearer {invalid_token}"},
         )
 
@@ -83,7 +83,7 @@ class TestAuthenticationErrors:
         incomplete_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiJ9.invalid"
 
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"Authorization": f"Bearer {incomplete_token}"},
         )
 
@@ -98,7 +98,7 @@ class TestAuthorizationErrors:
         """Test access with insufficient permissions."""
         # Try to access protected endpoint without valid auth
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"Authorization": "Bearer fake-token"},
         )
 
@@ -110,7 +110,7 @@ class TestAuthorizationErrors:
         """Test accessing resources from different tenant."""
         # This requires proper tenant setup in fixtures
         response = test_client.get(
-            "/api/v1/tenants/other-tenant-id",
+            "/api/platform/v1/tenants/other-tenant-id",
             headers={"Authorization": "Bearer fake-token"},
         )
 
@@ -122,7 +122,7 @@ class TestAuthorizationErrors:
         """Test access with revoked token."""
         # This would require token revocation to be implemented
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"Authorization": "Bearer revoked-token"},
         )
 
@@ -407,7 +407,7 @@ class TestAPIKeyErrors:
     async def test_use_expired_api_key(self, test_client):
         """Test using expired API key."""
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"X-API-Key": "expired-api-key-12345"},
         )
 
@@ -417,7 +417,7 @@ class TestAPIKeyErrors:
     async def test_use_revoked_api_key(self, test_client):
         """Test using revoked API key."""
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"X-API-Key": "revoked-api-key-12345"},
         )
 
@@ -443,7 +443,7 @@ class TestAPIKeyErrors:
         """Test using API key without required scope for endpoint."""
         # Try to access protected endpoint with invalid API key
         response = test_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers={"X-API-Key": "limited-scope-api-key"},
         )
 

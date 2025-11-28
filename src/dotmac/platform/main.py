@@ -1,5 +1,22 @@
 """
 Main FastAPI application entry point for DotMac Platform Services.
+
+This is the COMBINED entrypoint intended for local development.
+It mounts both platform and ISP sub-applications on a single server.
+
+For production deployments, use the dedicated entrypoints:
+- platform_main.py: Platform (control-plane) service only
+- isp_main.py: ISP operations service only
+
+Usage (development):
+    uvicorn dotmac.platform.main:app --host 0.0.0.0 --port 8000
+
+Usage (production):
+    # Platform service
+    uvicorn dotmac.platform.platform_main:app --host 0.0.0.0 --port 8000
+
+    # ISP service
+    uvicorn dotmac.platform.isp_main:app --host 0.0.0.0 --port 8000
 """
 
 import os
@@ -42,7 +59,8 @@ from dotmac.platform.monitoring.error_middleware import (
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
 from dotmac.platform.platform_app import platform_app
 from dotmac.platform.redis_client import init_redis, redis_manager, shutdown_redis
-from dotmac.platform.routers import get_api_info, register_routers
+# API info for documentation
+from dotmac.platform.routers import get_api_info
 from dotmac.platform.secrets import load_secrets_from_vault_sync
 from dotmac.platform.settings import settings
 from dotmac.platform.telemetry import setup_telemetry
@@ -288,11 +306,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
 
 def create_application() -> FastAPI:
-    """Create and configure the FastAPI application."""
+    """
+    Create and configure the FastAPI application.
+
+    This creates a combined application that mounts both platform and ISP
+    sub-applications. For production, use platform_main.py or isp_main.py
+    which run each service independently.
+    """
     # Create FastAPI app
     app = FastAPI(
-        title="DotMac Platform Services",
-        description="Unified platform services providing auth, secrets, and observability",
+        title="DotMac Platform Services (Combined)",
+        description="Combined platform + ISP services for local development",
         version=settings.app_version,
         lifespan=lifespan,
         docs_url="/docs" if not settings.is_production else None,
@@ -371,13 +395,15 @@ def create_application() -> FastAPI:
     register_exception_handlers(app)
     logger.info("exception_handlers.registered", emoji="✅")
 
-    # Register shared routers (auth, webhooks, etc.) before mounting tenant apps so
-    # single-tenant deployments retain access to shared endpoints under /api/v1.
-    # NOTE: For Phase 2, we're keeping the old router registration for shared routes.
-    # This will be refactored in Phase 3.
-    register_routers(app)
+    # NOTE: Shared routers (auth, health, etc.) are now registered via the declarative
+    # registry in dotmac.shared.routers.registry. Each sub-app (platform_app, tenant_app)
+    # gets its own copy of shared routers with proper authentication.
+    # The old register_routers(app) call has been removed to avoid duplicate routes.
 
     # Mount sub-applications based on deployment mode
+    # API paths:
+    #   - Platform (control-plane): /api/platform/v1/*
+    #   - ISP (tenant/operations): /api/isp/v1/*
     logger.info(
         "mounting_applications",
         deployment_mode=settings.DEPLOYMENT_MODE,
@@ -385,27 +411,29 @@ def create_application() -> FastAPI:
     )
 
     if settings.DEPLOYMENT_MODE == "single_tenant":
-        # Single-tenant mode: Only mount tenant app (no platform routes)
-        logger.info("single_tenant_mode.mounting_tenant_app_only")
-        app.mount("/api/v1", tenant_app)  # Mount at /api/v1 for backward compatibility
+        # Single-tenant mode: Only mount ISP app (no platform routes)
+        # Mount at /api/isp/v1 for consistency with multi-tenant mode
+        logger.info("single_tenant_mode.mounting_isp_app_only")
+        app.mount("/api/isp/v1", tenant_app)
 
     elif settings.DEPLOYMENT_MODE == "hybrid":
-        # Hybrid mode: Could be control plane OR tenant instance
+        # Hybrid mode: Could be control plane OR ISP instance
         # Control plane: platform app only
-        # Tenant instance: tenant app only
+        # ISP instance: tenant app only
         # Determined by ENABLE_PLATFORM_ROUTES setting
         if settings.ENABLE_PLATFORM_ROUTES:
             logger.info("hybrid_mode.control_plane.mounting_platform_app")
             app.mount("/api/platform/v1", platform_app)
         else:
-            logger.info("hybrid_mode.tenant_instance.mounting_tenant_app")
-            app.mount("/api/tenant/v1", tenant_app)
+            logger.info("hybrid_mode.isp_instance.mounting_isp_app")
+            app.mount("/api/isp/v1", tenant_app)
 
-    else:  # multi_tenant (default)
-        # Multi-tenant SaaS mode: Mount both apps
-        logger.info("multi_tenant_mode.mounting_both_apps")
+    else:  # multi_tenant (default) - combined mode for development
+        # Combined mode: Mount both apps on single server
+        # NOTE: In production, run platform_main.py and isp_main.py separately
+        logger.info("combined_mode.mounting_both_apps", mode="development")
         app.mount("/api/platform/v1", platform_app)
-        app.mount("/api/tenant/v1", tenant_app)
+        app.mount("/api/isp/v1", tenant_app)
 
     # Health check endpoint (public - no auth required)
     @app.get("/health")

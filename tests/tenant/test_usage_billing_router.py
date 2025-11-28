@@ -201,7 +201,7 @@ async def create_test_tenant(client: AsyncClient, suffix: str = "") -> dict:
     )
 
     response = await client.post(
-        "/api/v1/tenants",
+        "/api/platform/v1/tenants",
         json={
             "name": f"Test Organization {suffix or unique_id}",
             "slug": unique_slug,
@@ -215,7 +215,7 @@ async def create_test_tenant(client: AsyncClient, suffix: str = "") -> dict:
 
 
 class TestUsageBillingRecordEndpoint:
-    """Test POST /api/v1/tenants/{id}/usage/record-with-billing endpoint."""
+    """Test POST /api/platform/v1/tenants/{id}/usage/record-with-billing endpoint."""
 
     async def test_record_usage_with_billing_success(self, test_client_with_auth: AsyncClient):
         """Test successful usage recording with billing integration."""
@@ -224,7 +224,7 @@ class TestUsageBillingRecordEndpoint:
 
         now = datetime.now(UTC)
         response = await test_client_with_auth.post(
-            f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={
                 "period_start": now.isoformat(),
                 "period_end": (now + timedelta(hours=1)).isoformat(),
@@ -246,7 +246,7 @@ class TestUsageBillingRecordEndpoint:
 
         now = datetime.now(UTC)
         response = await test_client_with_auth.post(
-            f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing?subscription_id=sub-123",
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/record-with-billing?subscription_id=sub-123",
             json={
                 "period_start": now.isoformat(),
                 "period_end": (now + timedelta(hours=1)).isoformat(),
@@ -273,7 +273,7 @@ class TestUsageBillingRecordEndpoint:
 
         now = datetime.now(UTC)
         response = await test_client_with_auth.post(
-            f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={
                 "period_start": now.isoformat(),
                 "period_end": (now + timedelta(hours=1)).isoformat(),
@@ -288,14 +288,14 @@ class TestUsageBillingRecordEndpoint:
 
 
 class TestUsageBillingSyncEndpoint:
-    """Test POST /api/v1/tenants/{id}/usage/sync-billing endpoint."""
+    """Test POST /api/platform/v1/tenants/{id}/usage/sync-billing endpoint."""
 
     async def test_sync_usage_to_billing_success(self, test_client_with_auth: AsyncClient):
         """Test successful sync of tenant usage to billing."""
         tenant = await create_test_tenant(test_client_with_auth, "sync-usage")
 
         response = await test_client_with_auth.post(
-            f"/api/v1/tenants/{tenant['id']}/usage/sync-billing"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/sync-billing"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -309,7 +309,7 @@ class TestUsageBillingSyncEndpoint:
         tenant = await create_test_tenant(test_client_with_auth, "sync-sub")
 
         response = await test_client_with_auth.post(
-            f"/api/v1/tenants/{tenant['id']}/usage/sync-billing?subscription_id=sub-456"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/sync-billing?subscription_id=sub-456"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -319,13 +319,13 @@ class TestUsageBillingSyncEndpoint:
 
 
 class TestUsageOveragesEndpoint:
-    """Test GET /api/v1/tenants/{id}/usage/overages endpoint."""
+    """Test GET /api/platform/v1/tenants/{id}/usage/overages endpoint."""
 
     async def test_get_overages_no_period(self, test_client_with_auth: AsyncClient):
         """Test getting overages without specifying period (current period)."""
         tenant = await create_test_tenant(test_client_with_auth, "overages-basic")
 
-        response = await test_client_with_auth.get(f"/api/v1/tenants/{tenant['id']}/usage/overages")
+        response = await test_client_with_auth.get(f"/api/platform/v1/tenants/{tenant['id']}/usage/overages")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -344,7 +344,7 @@ class TestUsageOveragesEndpoint:
         from urllib.parse import quote
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/usage/overages"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/overages"
             f"?period_start={quote(period_start.isoformat())}"
             f"&period_end={quote(period_end.isoformat())}"
         )
@@ -359,7 +359,7 @@ class TestUsageOveragesEndpoint:
         """Test getting overages when tenant is within limits."""
         tenant = await create_test_tenant(test_client_with_auth, "no-overages")
 
-        response = await test_client_with_auth.get(f"/api/v1/tenants/{tenant['id']}/usage/overages")
+        response = await test_client_with_auth.get(f"/api/platform/v1/tenants/{tenant['id']}/usage/overages")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -367,14 +367,14 @@ class TestUsageOveragesEndpoint:
 
 
 class TestBillingPreviewEndpoint:
-    """Test GET /api/v1/tenants/{id}/billing/preview endpoint."""
+    """Test GET /api/platform/v1/tenants/{id}/billing/preview endpoint."""
 
     async def test_billing_preview_with_overages(self, test_client_with_auth: AsyncClient):
         """Test billing preview including overage calculations."""
         tenant = await create_test_tenant(test_client_with_auth, "preview-overages")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/billing/preview?include_overages=true"
+            f"/api/platform/v1/tenants/{tenant['id']}/billing/preview?include_overages=true"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -388,7 +388,7 @@ class TestBillingPreviewEndpoint:
         tenant = await create_test_tenant(test_client_with_auth, "preview-no-over")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/billing/preview?include_overages=false"
+            f"/api/platform/v1/tenants/{tenant['id']}/billing/preview?include_overages=false"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -402,7 +402,7 @@ class TestBillingPreviewEndpoint:
         tenant = await create_test_tenant(test_client_with_auth, "preview-default")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/billing/preview"
+            f"/api/platform/v1/tenants/{tenant['id']}/billing/preview"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -411,14 +411,14 @@ class TestBillingPreviewEndpoint:
 
 
 class TestUsageBillingStatusEndpoint:
-    """Test GET /api/v1/tenants/{id}/usage/billing-status endpoint."""
+    """Test GET /api/platform/v1/tenants/{id}/usage/billing-status endpoint."""
 
     async def test_billing_status_within_limits(self, test_client_with_auth: AsyncClient):
         """Test billing status when tenant is within all limits."""
         tenant = await create_test_tenant(test_client_with_auth, "status-within")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/usage/billing-status"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/billing-status"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -442,7 +442,7 @@ class TestUsageBillingStatusEndpoint:
         tenant = await create_test_tenant(test_client_with_auth, "high-usage")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/usage/billing-status"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/billing-status"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -459,7 +459,7 @@ class TestUsageBillingStatusEndpoint:
         tenant = await create_test_tenant(test_client_with_auth, "warn")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/usage/billing-status"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/billing-status"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -478,7 +478,7 @@ class TestUsageBillingStatusEndpoint:
         tenant = await create_test_tenant(test_client_with_auth, "percentages")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/usage/billing-status"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/billing-status"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -498,7 +498,7 @@ class TestUsageBillingStatusEndpoint:
     async def test_billing_status_tenant_not_found(self, test_client_with_auth: AsyncClient):
         """Test billing status returns 404 for non-existent tenant."""
         response = await test_client_with_auth.get(
-            "/api/v1/tenants/nonexistent-tenant-id/usage/billing-status"
+            "/api/platform/v1/tenants/nonexistent-tenant-id/usage/billing-status"
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -517,7 +517,7 @@ class TestRecommendationLogic:
         tenant = await create_test_tenant(test_client_with_auth, "status-test")
 
         response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/usage/billing-status"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/billing-status"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -554,7 +554,7 @@ class TestUsageBillingIntegration:
         # Step 1: Try to record usage (may fail without billing setup, that's ok)
         now = datetime.now(UTC)
         record_response = await test_client_with_auth.post(
-            f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={
                 "period_start": now.isoformat(),
                 "period_end": (now + timedelta(hours=1)).isoformat(),
@@ -575,6 +575,6 @@ class TestUsageBillingIntegration:
 
         # Check status endpoint is accessible
         status_response = await test_client_with_auth.get(
-            f"/api/v1/tenants/{tenant['id']}/usage/billing-status"
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/billing-status"
         )
         assert status_response.status_code == status.HTTP_200_OK

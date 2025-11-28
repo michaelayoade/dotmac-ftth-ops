@@ -11,7 +11,7 @@ const showTestCredentials = process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] ===
 export default function HomePage() {
   const { branding } = useBranding();
   const config = useAppConfig();
-  const apiBaseUrl = config.api.baseUrl || "/api/v1";
+  const apiBaseUrl = config.api.baseUrl || "/api/platform/v1/admin";
   const { isLoading: authLoading, isAuthenticated } = useSession();
   const isLoggedIn = isAuthenticated;
 

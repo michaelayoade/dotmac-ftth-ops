@@ -11,6 +11,7 @@
 import { platformConfig } from "@/lib/config";
 
 const API_BASE = platformConfig.api.baseUrl;
+const ADMIN_PREFIX = "/api/isp/v1/admin";
 
 // ============================================
 // Type Definitions
@@ -116,7 +117,7 @@ class OSSConfigService {
    * @returns Service configuration with overrides
    */
   async getConfiguration(service: OSSService): Promise<OSSServiceConfigResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenant/oss/${service}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/tenant/oss/${service}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -156,7 +157,7 @@ class OSSConfigService {
     service: OSSService,
     updates: OSSServiceConfigUpdate,
   ): Promise<OSSServiceConfigResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenant/oss/${service}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/tenant/oss/${service}`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -172,7 +173,7 @@ class OSSConfigService {
    * @param service - OSS service name
    */
   async resetConfiguration(service: OSSService): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/tenant/oss/${service}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/tenant/oss/${service}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
       credentials: "include",

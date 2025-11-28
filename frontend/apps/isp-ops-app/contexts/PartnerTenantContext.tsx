@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useSession } from "@shared/lib/auth";
 import type { UserInfo } from "@shared/lib/auth";
 import { logger } from "@/lib/logger";
+import { setTenantIdentifiers } from "@/lib/tenant-storage";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ManagedTenant {
   tenant_id: string;
@@ -27,6 +29,7 @@ const PartnerTenantContext = createContext<PartnerTenantContextType | undefined>
 export function PartnerTenantProvider({ children }: { children: ReactNode }) {
   const { user: sessionUser } = useSession();
   const user = sessionUser as UserInfo | undefined;
+  const queryClient = useQueryClient();
   const [activeTenantId, setActiveTenantId] = useState<string | null>(null);
   const [managedTenants, setManagedTenants] = useState<ManagedTenant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -82,20 +85,26 @@ export function PartnerTenantProvider({ children }: { children: ReactNode }) {
 
     // Persist to localStorage
     if (tenantId) {
-      localStorage.setItem("active_managed_tenant_id", tenantId);
+      setTenantIdentifiers(user?.tenant_id ?? null, tenantId);
       logger.info("Switched to managed tenant", {
         partnerId: user?.partner_id,
         activeTenantId: tenantId,
       });
     } else {
-      localStorage.removeItem("active_managed_tenant_id");
+      setTenantIdentifiers(user?.tenant_id ?? null, null);
       logger.info("Switched back to partner home tenant", {
         partnerId: user?.partner_id,
       });
     }
 
-    // Trigger page reload to refresh all data with new context
-    window.location.reload();
+    // Targeted invalidations instead of full reload
+    queryClient.invalidateQueries({ queryKey: ["rbac"] });
+    queryClient.invalidateQueries({ queryKey: ["tenant-branding"] });
+    queryClient.invalidateQueries({ queryKey: ["tenant-branding", tenantId] });
+    queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
+    queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions"] });
+    queryClient.invalidateQueries({ predicate: (q) => q.queryKey.includes("tenants") });
+    queryClient.invalidateQueries({ queryKey: ["tenant", "current"] });
   };
 
   // Effective tenant ID is active managed tenant or user's home tenant

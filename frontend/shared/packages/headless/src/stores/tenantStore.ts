@@ -128,7 +128,7 @@ export const useTenantStore = create<TenantState>()(
 
         try {
           const apiClient = getApiClient();
-          const response = await apiClient.request(`/api/v1/tenants/${tenantId}/permissions`, {
+          const response = await apiClient.request(`/api/platform/v1/admin/tenants/${tenantId}/permissions`, {
             method: "GET",
           });
 

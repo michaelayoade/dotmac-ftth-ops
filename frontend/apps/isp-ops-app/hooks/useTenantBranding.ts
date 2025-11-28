@@ -55,7 +55,7 @@ export interface TenantBrandingResponseDto {
   updated_at?: string | null;
 }
 
-type BrandingQueryKey = ["tenant-branding"];
+type BrandingQueryKey = ["tenant-branding", string | null];
 type BrandingQueryOptions = Omit<
   UseQueryOptions<TenantBrandingResponseDto, Error, TenantBrandingResponseDto, BrandingQueryKey>,
   "queryKey" | "queryFn"
@@ -68,7 +68,7 @@ export function useTenantBrandingQuery(options?: BrandingQueryOptions) {
 
   // Skip query in bypass mode - no auth/session available
   return useQuery<TenantBrandingResponseDto, Error, TenantBrandingResponseDto, BrandingQueryKey>({
-    queryKey: ["tenant-branding"],
+    queryKey: ["tenant-branding", tenantId ?? null],
     queryFn: async () => {
       const response = await apiClient.get<TenantBrandingResponseDto>("/branding");
       return extractDataOrThrow(response, "Failed to load branding configuration");
@@ -83,6 +83,8 @@ export function useUpdateTenantBranding(
   options?: MutationOptions<TenantBrandingResponseDto, Error, TenantBrandingConfigDto, unknown>,
 ) {
   const queryClient = useQueryClient();
+  const { user } = useSession();
+  const tenantId = user?.tenant_id || user?.activeOrganization?.id || null;
 
   return useMutation({
     mutationFn: async (branding: TenantBrandingConfigDto) => {
@@ -93,6 +95,7 @@ export function useUpdateTenantBranding(
     },
     onSuccess: (...args) => {
       void queryClient.invalidateQueries({ queryKey: ["tenant-branding"] });
+      void queryClient.invalidateQueries({ queryKey: ["tenant-branding", tenantId] });
       options?.onSuccess?.(...args);
     },
     ...options,

@@ -17,7 +17,7 @@
  *
  * 3. Environment Variables:
  *    - NEXT_PUBLIC_API_URL: Full backend URL for absolute requests (optional)
- *    - If not set, uses relative path /api/v1/graphql (works with Next.js rewrites)
+ *    - If not set, uses relative path /api/isp/v1/admin/graphql (works with Next.js rewrites)
  *
  * 4. Pagination Requirements:
  *    - All paginated queries MUST include consistent args: offset, limit, filters
@@ -43,10 +43,10 @@ function resolveGraphQLEndpoint(preferred?: string): string {
   }
 
   if (process.env["NEXT_PUBLIC_API_URL"]) {
-    return `${process.env["NEXT_PUBLIC_API_URL"]}/api/v1/graphql`;
+    return `${process.env["NEXT_PUBLIC_API_URL"]}/api/isp/v1/admin/graphql`;
   }
 
-  return "/api/v1/graphql";
+  return "/api/isp/v1/admin/graphql";
 }
 
 // Auth link - cookies are automatically included via credentials: 'include'

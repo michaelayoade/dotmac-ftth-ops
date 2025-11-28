@@ -212,7 +212,7 @@ export function ReportingDashboard({ apiClient, useToast }: ReportingDashboardPr
 
     try {
       const response = await apiClient.post(
-        `/api/v1/analytics/reports/generate`,
+        `/api/platform/v1/admin/analytics/reports/generate`,
         {
           report_id: reportId,
           format,
@@ -252,7 +252,7 @@ export function ReportingDashboard({ apiClient, useToast }: ReportingDashboardPr
 
   const scheduleReport = async (reportId: string) => {
     try {
-      await apiClient.post(`/api/v1/analytics/reports/schedule`, {
+      await apiClient.post(`/api/platform/v1/admin/analytics/reports/schedule`, {
         report_id: reportId,
         frequency: "weekly",
         recipients: [],

@@ -91,13 +91,13 @@ test_endpoint_detailed "Platform tenants (no auth)" "GET" "/api/platform/v1/tena
 test_endpoint_detailed "Platform licensing (no auth)" "GET" "/api/platform/v1/licensing/plans" 401
 echo ""
 
-echo "===== 3. Tenant Routes (No Auth - Should Fail 401) ====="
-test_endpoint_detailed "Tenant customers (no auth)" "GET" "/api/tenant/v1/customers" 401
-test_endpoint_detailed "Tenant RADIUS (no auth)" "GET" "/api/tenant/v1/radius/sessions" 401
-test_endpoint_detailed "Tenant billing (no auth)" "GET" "/api/tenant/v1/billing/invoices" 401
+echo "===== 3. ISP Routes (No Auth - Should Fail 401) ====="
+test_endpoint_detailed "ISP customers (no auth)" "GET" "/api/isp/v1/customers" 401
+test_endpoint_detailed "ISP RADIUS (no auth)" "GET" "/api/isp/v1/radius/sessions" 401
+test_endpoint_detailed "ISP billing (no auth)" "GET" "/api/isp/v1/billing/invoices" 401
 echo ""
 
-echo "===== 4. Tenant Routes (No Tenant Context - Should Fail 400) ====="
+echo "===== 4. ISP Routes (No Tenant Context - Should Fail 400) ====="
 # Note: These would need valid auth token, which we're not testing here
 # The middleware runs after auth, so we'd need to create a test user first
 echo -e "${YELLOW}[SKIPPED]${NC} Requires authentication setup"

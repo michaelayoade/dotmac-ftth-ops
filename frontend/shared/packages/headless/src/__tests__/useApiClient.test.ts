@@ -397,7 +397,7 @@ describe("useApiClient Hook", () => {
       { portal: "reseller", baseURL: "/api/reseller" },
       { portal: "management-admin", baseURL: "/api/management" },
       { portal: "management-reseller", baseURL: "/api/management-reseller" },
-      { portal: "tenant-portal", baseURL: "/api/tenant" },
+      { portal: "tenant-portal", baseURL: "/api/isp/v1/portal" },
     ];
 
     portals.forEach(({ portal, baseURL }) => {

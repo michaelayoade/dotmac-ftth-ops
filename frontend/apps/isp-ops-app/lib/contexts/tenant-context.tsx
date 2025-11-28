@@ -10,6 +10,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { apiClient } from "@/lib/api/client";
 import { useSession } from "@shared/lib/auth";
 import type { UserInfo } from "@shared/lib/auth";
+import { setTenantIdentifiers } from "@/lib/tenant-storage";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePartnerTenant } from "@/contexts/PartnerTenantContext";
+import { useToast } from "@dotmac/ui";
 
 export interface Tenant {
   id: string;
@@ -47,8 +51,13 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
   const [error, setError] = useState<Error | null>(null);
   const { user: sessionUser, isLoading: authLoading } = useSession();
   const user = sessionUser as UserInfo | undefined;
+  const queryClient = useQueryClient();
+  const { activeTenantId: activeManagedTenantId } = usePartnerTenant();
+  const { toast } = useToast();
 
-  const hasTenantAssociation = Boolean(user?.tenant_id || user?.activeOrganization?.id);
+  const hasTenantAssociation = Boolean(
+    activeManagedTenantId || user?.tenant_id || user?.activeOrganization?.id,
+  );
 
   const refreshTenant = async () => {
     if (!hasTenantAssociation) {
@@ -56,6 +65,7 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
       setAvailableTenants([]);
       setError(null);
       setLoading(false);
+      setTenantIdentifiers(null, null);
       return;
     }
 
@@ -63,9 +73,17 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
     setError(null);
 
     try {
+      // If initial tenant was provided, sync it immediately
+      if (initialTenant) {
+        setTenant(initialTenant);
+        setTenantIdentifiers(initialTenant.id, activeManagedTenantId ?? null);
+        return;
+      }
+
       // Fetch tenant from API
       const response = await apiClient.get<Tenant>("/tenants/current");
       setTenant(response.data);
+      setTenantIdentifiers(response.data.id, activeManagedTenantId ?? null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Unknown error"));
       setTenant(null);
@@ -74,13 +92,33 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
     }
   };
 
-  // Load tenant on mount if not provided
+  // Load tenant when auth is ready and when auth user or managed tenant changes
   useEffect(() => {
-    if (!authLoading && !initialTenant) {
+    if (!authLoading) {
       refreshTenant();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialTenant, authLoading, user?.tenant_id]);
+  }, [authLoading, user?.tenant_id, activeManagedTenantId]);
+
+  // Invalidate tenant-dependent caches when tenant changes
+  useEffect(() => {
+    if (!tenant?.id) {
+      return;
+    }
+    queryClient.invalidateQueries({ predicate: (q) => q.queryKey.includes("tenant") });
+    queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions", tenant.id] });
+    queryClient.invalidateQueries({ queryKey: ["rbac", "roles", tenant.id] });
+  }, [tenant?.id, queryClient]);
+
+  useEffect(() => {
+    if (error && !loading) {
+      toast({
+        title: "Tenant unavailable",
+        description: "We could not load the current tenant. Some data may be missing.",
+        variant: "destructive",
+      });
+    }
+  }, [error, loading, toast]);
 
   const value: TenantContextValue = {
     tenant,

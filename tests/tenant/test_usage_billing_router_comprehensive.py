@@ -37,7 +37,7 @@ class TestRecordUsageWithBilling:
         }
 
         response = await authenticated_client.post(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
             json=usage_data,
         )
 
@@ -61,7 +61,7 @@ class TestRecordUsageWithBilling:
         }
 
         response = await authenticated_client.post(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/record-with-billing?subscription_id=sub-explicit",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/record-with-billing?subscription_id=sub-explicit",
             json=usage_data,
         )
 
@@ -86,7 +86,7 @@ class TestRecordUsageWithBilling:
         }
 
         response = await authenticated_client.post(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
             json=usage_data,
         )
 
@@ -105,7 +105,7 @@ class TestRecordUsageWithBilling:
         }
 
         response = await authenticated_client.post(
-            "/api/v1/tenants/nonexistent-tenant/usage/record-with-billing",
+            "/api/platform/v1/tenants/nonexistent-tenant/usage/record-with-billing",
             json=usage_data,
         )
 
@@ -123,7 +123,7 @@ class TestRecordUsageWithBilling:
         }
 
         response = await authenticated_client.post(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
             json=usage_data,
         )
 
@@ -150,7 +150,7 @@ class TestSyncUsageToBilling:
         )
 
         response = await authenticated_client.post(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/sync-billing",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/sync-billing",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -164,7 +164,7 @@ class TestSyncUsageToBilling:
     ):
         """Test usage sync with explicit subscription ID."""
         response = await authenticated_client.post(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/sync-billing?subscription_id=sub-123",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/sync-billing?subscription_id=sub-123",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -180,7 +180,7 @@ class TestSyncUsageToBilling:
         mock_subscription_service.list_subscriptions = AsyncMock(return_value=[])
 
         response = await authenticated_client.post(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/sync-billing",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/sync-billing",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -207,7 +207,7 @@ class TestGetUsageOverages:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/overages",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/overages",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -231,7 +231,7 @@ class TestGetUsageOverages:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/overages",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/overages",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -249,7 +249,7 @@ class TestGetUsageOverages:
         end_date = datetime.now(UTC).isoformat()
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/overages",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/overages",
             params={
                 "period_start": start_date,
                 "period_end": end_date,
@@ -280,7 +280,7 @@ class TestGetBillingPreview:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/billing/preview?include_overages=true",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/billing/preview?include_overages=true",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -297,7 +297,7 @@ class TestGetBillingPreview:
     ):
         """Test billing preview excluding overages."""
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/billing/preview?include_overages=false",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/billing/preview?include_overages=false",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -316,7 +316,7 @@ class TestGetBillingPreview:
     ):
         """Test billing preview defaults to including overages."""
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/billing/preview",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/billing/preview",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -344,7 +344,7 @@ class TestGetUsageBillingStatus:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -372,7 +372,7 @@ class TestGetUsageBillingStatus:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -400,7 +400,7 @@ class TestGetUsageBillingStatus:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -429,7 +429,7 @@ class TestGetUsageBillingStatus:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -445,7 +445,7 @@ class TestGetUsageBillingStatus:
     ):
         """Test billing status for non-existent tenant."""
         response = await authenticated_client.get(
-            "/api/v1/tenants/nonexistent-tenant/usage/billing-status",
+            "/api/platform/v1/tenants/nonexistent-tenant/usage/billing-status",
         )
 
         assert response.status_code == http_status.HTTP_404_NOT_FOUND
@@ -466,7 +466,7 @@ class TestGetUsageBillingStatus:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         assert response.status_code == http_status.HTTP_200_OK
@@ -487,11 +487,11 @@ class TestEndpointAuthentication:
         allowing us to verify that authentication is actually enforced.
         """
         endpoints = [
-            ("POST", f"/api/v1/tenants/{sample_tenant.id}/usage/record-with-billing"),
-            ("POST", f"/api/v1/tenants/{sample_tenant.id}/usage/sync-billing"),
-            ("GET", f"/api/v1/tenants/{sample_tenant.id}/usage/overages"),
-            ("GET", f"/api/v1/tenants/{sample_tenant.id}/billing/preview"),
-            ("GET", f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status"),
+            ("POST", f"/api/platform/v1/tenants/{sample_tenant.id}/usage/record-with-billing"),
+            ("POST", f"/api/platform/v1/tenants/{sample_tenant.id}/usage/sync-billing"),
+            ("GET", f"/api/platform/v1/tenants/{sample_tenant.id}/usage/overages"),
+            ("GET", f"/api/platform/v1/tenants/{sample_tenant.id}/billing/preview"),
+            ("GET", f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status"),
         ]
 
         for method, url in endpoints:
@@ -532,7 +532,7 @@ class TestErrorHandling:
             }
 
             response = await authenticated_client.post(
-                f"/api/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
+                f"/api/platform/v1/tenants/{sample_tenant.id}/usage/record-with-billing",
                 json=usage_data,
             )
 
@@ -556,7 +556,7 @@ class TestRecommendationGeneration:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         data = response.json()
@@ -577,7 +577,7 @@ class TestRecommendationGeneration:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         data = response.json()
@@ -597,7 +597,7 @@ class TestRecommendationGeneration:
         )
 
         response = await authenticated_client.get(
-            f"/api/v1/tenants/{sample_tenant.id}/usage/billing-status",
+            f"/api/platform/v1/tenants/{sample_tenant.id}/usage/billing-status",
         )
 
         data = response.json()

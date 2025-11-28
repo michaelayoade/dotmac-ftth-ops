@@ -66,7 +66,7 @@ function IntegrationsPageContent() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["integrations"],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/integrations`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/integrations`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch integrations");

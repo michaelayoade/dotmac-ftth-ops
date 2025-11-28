@@ -13,7 +13,7 @@ from dotmac.platform.auth.token_with_rbac import get_current_user_with_rbac
 from dotmac.platform.db import get_db_session
 from dotmac.platform.push.service import PushNotificationService
 
-router = APIRouter(prefix="/api/v1/push", tags=["push-notifications"])
+router = APIRouter(prefix="/push", tags=["push-notifications"])
 
 
 # ============================================================================

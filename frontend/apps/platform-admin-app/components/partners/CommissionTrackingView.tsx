@@ -50,7 +50,7 @@ export default function CommissionTrackingView({ partnerId }: CommissionTracking
       }
 
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/partners/commissions?${params.toString()}`,
+        `${apiBaseUrl}/api/isp/v1/admin/partners/commissions?${params.toString()}`,
         {
           credentials: "include",
           headers: {

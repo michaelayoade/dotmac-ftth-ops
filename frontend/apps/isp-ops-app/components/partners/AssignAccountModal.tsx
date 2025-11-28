@@ -21,7 +21,7 @@ interface AssignAccountInput {
 }
 
 async function assignAccount(partnerId: string, data: AssignAccountInput): Promise<void> {
-  const response = await fetch(`${API_BASE}/api/v1/partners/accounts`, {
+  const response = await fetch(`${API_BASE}/api/isp/v1/admin/partners/accounts`, {
     method: "POST",
     credentials: "include",
     headers: {

@@ -137,7 +137,7 @@ export function CustomerNetwork({ customerId, apiClient }: CustomerNetworkProps)
     try {
       setLoading(true);
       const response = await apiClient.get<NetworkInfo>(
-        `/api/v1/customers/${customerId}/network-info`,
+        `/api/isp/v1/admin/customers/${customerId}/network-info`,
       );
       setNetworkInfo(response.data);
     } catch (error: any) {
@@ -154,7 +154,7 @@ export function CustomerNetwork({ customerId, apiClient }: CustomerNetworkProps)
   const fetchNetworkStats = useCallback(async () => {
     try {
       const response = await apiClient.get<NetworkStats>(
-        `/api/v1/customers/${customerId}/network-stats`,
+        `/api/isp/v1/admin/customers/${customerId}/network-stats`,
       );
       setNetworkStats(response.data);
     } catch (error: any) {

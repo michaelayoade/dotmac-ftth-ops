@@ -47,7 +47,7 @@ test.describe("Admin Operations Monitoring Dashboard", () => {
 
   test("should load metrics from real API", async ({ page, request }) => {
     const apiResponse = await request.get(
-      "http://localhost:8000/api/v1/monitoring/metrics?period=24h",
+      "http://localhost:8000/api/platform/v1/admin/monitoring/metrics?period=24h",
       {
         headers: {
           Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
@@ -94,7 +94,7 @@ test.describe("Admin Operations Monitoring Dashboard", () => {
 
   test("should load log statistics", async ({ page, request }) => {
     const apiResponse = await request.get(
-      "http://localhost:8000/api/v1/monitoring/logs/stats?period=24h",
+      "http://localhost:8000/api/platform/v1/admin/monitoring/logs/stats?period=24h",
       {
         headers: {
           Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
@@ -161,7 +161,7 @@ test.describe("Admin Operations Monitoring Dashboard", () => {
 
   test("should display top errors when available", async ({ page, request }) => {
     const apiResponse = await request.get(
-      "http://localhost:8000/api/v1/monitoring/metrics?period=24h",
+      "http://localhost:8000/api/platform/v1/admin/monitoring/metrics?period=24h",
       {
         headers: {
           Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,

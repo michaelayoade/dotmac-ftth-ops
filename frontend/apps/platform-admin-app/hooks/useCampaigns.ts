@@ -32,7 +32,7 @@ export function useUpdateCampaign() {
   return useMutation<DunningCampaign, Error, UpdateCampaignStatusVariables>({
     mutationFn: async ({ campaignId, data }) => {
       const response = await apiClient.patch<DunningCampaign>(
-        `/api/v1/billing/dunning/campaigns/${campaignId}`,
+        `/api/isp/v1/admin/billing/dunning/campaigns/${campaignId}`,
         data,
       );
       return extractDataOrThrow(response);

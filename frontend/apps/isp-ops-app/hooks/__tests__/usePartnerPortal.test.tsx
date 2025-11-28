@@ -95,7 +95,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/dashboard",
+          "http://localhost:3000/api/isp/v1/partners/portal/dashboard",
           expect.objectContaining({
             credentials: "include",
           }),
@@ -140,7 +140,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/profile",
+          "http://localhost:3000/api/isp/v1/partners/portal/profile",
           expect.objectContaining({
             credentials: "include",
           }),
@@ -188,7 +188,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/profile",
+          "http://localhost:3000/api/isp/v1/partners/portal/profile",
           expect.objectContaining({
             method: "PATCH",
             credentials: "include",
@@ -244,7 +244,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/referrals",
+          "http://localhost:3000/api/isp/v1/partners/portal/referrals",
           expect.objectContaining({
             credentials: "include",
           }),
@@ -375,7 +375,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/commissions",
+          "http://localhost:3000/api/isp/v1/partners/portal/commissions",
           expect.objectContaining({
             credentials: "include",
           }),
@@ -427,7 +427,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/customers",
+          "http://localhost:3000/api/isp/v1/partners/portal/customers",
           expect.objectContaining({
             credentials: "include",
           }),
@@ -481,7 +481,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/statements",
+          "http://localhost:3000/api/isp/v1/partners/portal/statements",
           expect.objectContaining({
             credentials: "include",
           }),
@@ -542,7 +542,7 @@ describe("usePartnerPortal", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(mockFetch).toHaveBeenCalledWith(
-          "http://localhost:3000/api/v1/partners/portal/payouts",
+          "http://localhost:3000/api/isp/v1/partners/portal/payouts",
           expect.objectContaining({
             credentials: "include",
           }),

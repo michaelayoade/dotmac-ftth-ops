@@ -1,7 +1,7 @@
 /**
  * WebSocket Client for Real-Time Bidirectional Communication
  *
- * Handles WebSocket connections to /api/v1/realtime/ws endpoints with:
+ * Handles WebSocket connections to /api/isp/v1/admin/realtime/ws endpoints with:
  * - JWT authentication (query param, header, cookie)
  * - Automatic reconnection with exponential backoff
  * - Heartbeat/ping-pong for connection health
@@ -356,7 +356,7 @@ export class WebSocketEndpoints {
    */
   sessions(config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/ws/sessions`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/ws/sessions`,
       ...config,
     });
   }
@@ -366,7 +366,7 @@ export class WebSocketEndpoints {
    */
   job(jobId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/ws/jobs/${jobId}`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/ws/jobs/${jobId}`,
       ...config,
     });
   }
@@ -376,7 +376,7 @@ export class WebSocketEndpoints {
    */
   campaign(campaignId: string, config?: Partial<WebSocketConfig>): WebSocketClient {
     return createWebSocketClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/ws/campaigns/${campaignId}`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/ws/campaigns/${campaignId}`,
       ...config,
     });
   }

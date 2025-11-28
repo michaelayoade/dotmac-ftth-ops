@@ -43,7 +43,7 @@ describe("graphql-client", () => {
       const result = await graphqlClient.request(query);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:3000/api/v1/graphql",
+        "http://localhost:3000/api/isp/v1/admin/graphql",
         expect.objectContaining({
           method: "POST",
           headers: expect.objectContaining({

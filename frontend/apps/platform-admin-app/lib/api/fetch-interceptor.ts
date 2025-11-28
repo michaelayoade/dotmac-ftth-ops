@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * Fetch interceptor that rewrites hard-coded /api/v1 paths to the current runtime prefix.
- * This allows older code that concatenates "/api/v1" manually to continue working when
+ * Fetch interceptor that rewrites hard-coded  paths to the current runtime prefix.
+ * This allows older code that concatenates "" manually to continue working when
  * the backend changes its REST path via runtime config.
  */
 
 import { platformConfig } from "@/lib/config";
 
-const DEFAULT_PREFIX = "/api/v1";
+const DEFAULT_PREFIX = "";
 let originalFetch: typeof fetch | null = null;
 
 function rewriteUrl(url: string): string {

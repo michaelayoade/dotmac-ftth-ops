@@ -14,7 +14,7 @@ from dotmac.platform.resilience.circuit_breaker import CircuitState
 from dotmac.platform.resilience.external_service_breakers import get_breaker_manager
 from dotmac.platform.user_management.models import User
 
-router = APIRouter(prefix="/api/v1/resilience", tags=["resilience"])
+router = APIRouter(prefix="/resilience", tags=["resilience"])
 
 
 class CircuitBreakerState(BaseModel):

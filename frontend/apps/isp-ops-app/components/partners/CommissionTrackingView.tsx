@@ -48,12 +48,16 @@ async function fetchCommissions(
     params.append("status", status);
   }
 
-  const response = await fetch(`${API_BASE}/api/v1/partners/commissions?${params.toString()}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${API_BASE}/api/isp/v1/admin/partners/commissions?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
     },
-  });
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch commissions");

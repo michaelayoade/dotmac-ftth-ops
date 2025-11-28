@@ -1,7 +1,7 @@
 /**
  * Server-Sent Events (SSE) Client
  *
- * Handles SSE connections to /api/v1/realtime endpoints with:
+ * Handles SSE connections to /api/platform/v1/admin/realtime endpoints with:
  * - JWT authentication
  * - Automatic reconnection
  * - Event subscription management
@@ -254,7 +254,7 @@ export class SSEEndpoints {
   private buildEndpoint(path: string): string {
     if (this.overrideBaseUrl) {
       const normalizedBase = this.overrideBaseUrl.replace(/\/+$/, "");
-      const prefix = platformConfig.api.prefix || "/api/v1";
+      const prefix = platformConfig.api.prefix || "/api/platform/v1/admin";
       return `${normalizedBase}${prefix}${path}`;
     }
     return platformConfig.api.buildUrl(path);

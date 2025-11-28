@@ -7,7 +7,7 @@
 import type { PasswordResetRequest, PasswordResetConfirm } from "./types";
 import { isAuthBypassEnabled } from "./bypass";
 
-const API_BASE = "/api/v1";
+const API_BASE = "/api/isp/v1/admin";
 
 export interface PasswordResetResult {
   success: boolean;

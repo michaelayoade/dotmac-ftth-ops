@@ -90,7 +90,7 @@ class TestRouterRegistration:
         """Test that there are no unexpected duplicate router prefixes.
 
         Note: Some routers intentionally share the same prefix (e.g., tenant.router and
-        tenant.usage_billing_router both use /api/v1/tenants) because they have different
+        tenant.usage_billing_router both use /api/platform/v1/tenants) because they have different
         routes and don't conflict.
         """
         prefixes = []
@@ -116,7 +116,7 @@ class TestRouterRegistration:
         allowed_duplicate_prefixes = {
             "",  # Routers that define their own prefix internally
             "/api/v1",
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             "/api/v1/billing",
             "/api/v1/metrics",
             "/api/v1/partners",

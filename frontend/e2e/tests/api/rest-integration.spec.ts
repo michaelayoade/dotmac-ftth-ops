@@ -19,7 +19,7 @@ test.describe("REST API Integration", () => {
    * Helper to authenticate and get token
    */
   async function authenticate(request: APIRequestContext): Promise<string> {
-    const response = await request.post(`${BASE_URL}/api/v1/auth/login`, {
+    const response = await request.post(`${BASE_URL}/api/isp/v1/admin/auth/login`, {
       data: {
         username: TEST_USERNAME,
         password: TEST_PASSWORD,
@@ -41,7 +41,7 @@ test.describe("REST API Integration", () => {
       await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API call to return validation error
-      await page.route("**/api/v1/**", (route) => {
+      await page.route("**/api/isp/v1/admin/**", (route) => {
         if (route.request().method() === "POST") {
           route.fulfill({
             status: 422,
@@ -78,7 +78,7 @@ test.describe("REST API Integration", () => {
       await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API calls to return 500 error
-      await page.route("**/api/v1/**", (route) => {
+      await page.route("**/api/isp/v1/admin/**", (route) => {
         route.fulfill({
           status: 500,
           contentType: "application/json",
@@ -109,7 +109,7 @@ test.describe("REST API Integration", () => {
       await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API calls and delay response
-      await page.route("**/api/v1/**", async (route) => {
+      await page.route("**/api/isp/v1/admin/**", async (route) => {
         await new Promise((resolve) => setTimeout(resolve, 10000)); // 10 second delay
         route.abort("timedout");
       });
@@ -161,7 +161,7 @@ test.describe("REST API Integration", () => {
       await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API to return empty array
-      await page.route("**/api/v1/**", (route) => {
+      await page.route("**/api/isp/v1/admin/**", (route) => {
         if (route.request().method() === "GET") {
           route.fulfill({
             status: 200,
@@ -196,7 +196,7 @@ test.describe("REST API Integration", () => {
       await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API to return 401
-      await page.route("**/api/v1/**", (route) => {
+      await page.route("**/api/isp/v1/admin/**", (route) => {
         route.fulfill({
           status: 401,
           contentType: "application/json",
@@ -231,7 +231,7 @@ test.describe("REST API Integration", () => {
       // Monitor API requests
       let hasAuthHeader = false;
       page.on("request", (request) => {
-        if (request.url().includes("/api/v1/")) {
+        if (request.url().includes("/api/isp/v1/admin/")) {
           const headers = request.headers();
           if (headers["authorization"] || headers["cookie"]) {
             hasAuthHeader = true;
@@ -253,7 +253,7 @@ test.describe("REST API Integration", () => {
   test.describe("CORS and Security", () => {
     test("should handle CORS properly", async ({ request }) => {
       // Test OPTIONS preflight request
-      const response = await request.fetch(`${BASE_URL}/api/v1/health`, {
+      const response = await request.fetch(`${BASE_URL}/api/isp/v1/admin/health`, {
         method: "OPTIONS",
         headers: {
           Origin: APP_URL,
@@ -302,7 +302,7 @@ test.describe("REST API Integration", () => {
       let currentConcurrent = 0;
 
       page.on("request", (request) => {
-        if (request.url().includes("/api/v1/")) {
+        if (request.url().includes("/api/isp/v1/admin/")) {
           requestCount++;
           currentConcurrent++;
           maxConcurrent = Math.max(maxConcurrent, currentConcurrent);
@@ -310,7 +310,7 @@ test.describe("REST API Integration", () => {
       });
 
       page.on("response", (response) => {
-        if (response.url().includes("/api/v1/")) {
+        if (response.url().includes("/api/isp/v1/admin/")) {
           currentConcurrent--;
         }
       });
@@ -339,7 +339,7 @@ test.describe("REST API Integration", () => {
       const requests: Map<string, number> = new Map();
 
       page.on("request", (request) => {
-        if (request.url().includes("/api/v1/")) {
+        if (request.url().includes("/api/isp/v1/admin/")) {
           const url = request.url();
           requests.set(url, (requests.get(url) || 0) + 1);
         }

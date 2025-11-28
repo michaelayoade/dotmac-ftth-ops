@@ -41,7 +41,7 @@ export function CustomersList(props: CustomersListProps) {
   const handleUpdateCustomerStatus = async (customerId: string, status: string) => {
     logger.info("Updating customer status", { customerId, status });
 
-    const response = await fetch(`${apiBaseUrl}/api/v1/customers/${customerId}/status`, {
+    const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/customers/${customerId}/status`, {
       method: "PATCH",
       credentials: "include",
       headers: buildAuthHeaders(),
@@ -54,7 +54,7 @@ export function CustomersList(props: CustomersListProps) {
   const handleResetCustomerPassword = async (customerId: string) => {
     logger.info("Resetting customer password", { customerId });
 
-    const response = await fetch(`${apiBaseUrl}/api/v1/customers/${customerId}/reset-password`, {
+    const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/customers/${customerId}/reset-password`, {
       method: "POST",
       credentials: "include",
       headers: buildAuthHeaders(),

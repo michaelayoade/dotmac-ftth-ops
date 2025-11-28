@@ -96,7 +96,7 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
     try {
       setLoading(true);
       const response = await apiClient.get<{ tickets: CustomerTicket[] }>(
-        `/api/v1/customers/${customerId}/tickets`,
+        `/api/isp/v1/admin/customers/${customerId}/tickets`,
       );
       setTickets(response.data.tickets);
     } catch (error: unknown) {

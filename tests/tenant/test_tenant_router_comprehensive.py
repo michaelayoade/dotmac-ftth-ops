@@ -54,9 +54,9 @@ class TestTenantCRUDEndpoints:
     """Test tenant CRUD API endpoints."""
 
     async def test_create_tenant_endpoint(self, async_client: AsyncClient, auth_headers):
-        """Test POST /api/v1/tenants - Create tenant."""
+        """Test POST /api/platform/v1/tenants - Create tenant."""
         response = await async_client.post(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             json={
                 "name": "New Org",
@@ -80,7 +80,7 @@ class TestTenantCRUDEndpoints:
     ):
         """Test creating tenant with duplicate slug fails."""
         response = await async_client.post(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             json={
                 "name": "Duplicate",
@@ -94,9 +94,9 @@ class TestTenantCRUDEndpoints:
     async def test_list_tenants_endpoint(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test GET /api/v1/tenants - List tenants."""
+        """Test GET /api/platform/v1/tenants - List tenants."""
         response = await async_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             params={"page": 1, "page_size": 10},
         )
@@ -115,7 +115,7 @@ class TestTenantCRUDEndpoints:
     ):
         """Test listing with status filter."""
         response = await async_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             params={"status": "trial", "page_size": 20},
         )
@@ -129,7 +129,7 @@ class TestTenantCRUDEndpoints:
     ):
         """Test listing with search."""
         response = await async_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             params={"search": "Test Organization"},
         )
@@ -141,9 +141,9 @@ class TestTenantCRUDEndpoints:
     async def test_get_tenant_by_id(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test GET /api/v1/tenants/{id} - Get tenant by ID."""
+        """Test GET /api/platform/v1/tenants/{id} - Get tenant by ID."""
         response = await async_client.get(
-            f"/api/v1/tenants/{sample_tenant_id}",
+            f"/api/platform/v1/tenants/{sample_tenant_id}",
             headers=auth_headers,
         )
 
@@ -155,9 +155,9 @@ class TestTenantCRUDEndpoints:
     async def test_get_tenant_by_slug(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test GET /api/v1/tenants/slug/{slug} - Get by slug."""
+        """Test GET /api/platform/v1/tenants/slug/{slug} - Get by slug."""
         response = await async_client.get(
-            "/api/v1/tenants/slug/test-org-api",
+            "/api/platform/v1/tenants/slug/test-org-api",
             headers=auth_headers,
         )
 
@@ -168,16 +168,16 @@ class TestTenantCRUDEndpoints:
     async def test_get_nonexistent_tenant(self, async_client: AsyncClient, auth_headers):
         """Test getting non-existent tenant returns 404."""
         response = await async_client.get(
-            "/api/v1/tenants/nonexistent-id",
+            "/api/platform/v1/tenants/nonexistent-id",
             headers=auth_headers,
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_update_tenant(self, async_client: AsyncClient, auth_headers, sample_tenant_id):
-        """Test PATCH /api/v1/tenants/{id} - Update tenant."""
+        """Test PATCH /api/platform/v1/tenants/{id} - Update tenant."""
         response = await async_client.patch(
-            f"/api/v1/tenants/{sample_tenant_id}",
+            f"/api/platform/v1/tenants/{sample_tenant_id}",
             headers=auth_headers,
             json={
                 "name": "Updated Name",
@@ -193,9 +193,9 @@ class TestTenantCRUDEndpoints:
     async def test_soft_delete_tenant(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test DELETE /api/v1/tenants/{id} - Soft delete."""
+        """Test DELETE /api/platform/v1/tenants/{id} - Soft delete."""
         response = await async_client.delete(
-            f"/api/v1/tenants/{sample_tenant_id}",
+            f"/api/platform/v1/tenants/{sample_tenant_id}",
             headers=auth_headers,
             params={"permanent": False},
         )
@@ -204,7 +204,7 @@ class TestTenantCRUDEndpoints:
 
         # Verify tenant is soft deleted
         get_response = await async_client.get(
-            f"/api/v1/tenants/{sample_tenant_id}",
+            f"/api/platform/v1/tenants/{sample_tenant_id}",
             headers=auth_headers,
         )
         assert get_response.status_code == status.HTTP_404_NOT_FOUND
@@ -212,13 +212,13 @@ class TestTenantCRUDEndpoints:
     async def test_restore_tenant(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id, tenant_service
     ):
-        """Test POST /api/v1/tenants/{id}/restore - Restore tenant."""
+        """Test POST /api/platform/v1/tenants/{id}/restore - Restore tenant."""
         # First soft delete
         await tenant_service.delete_tenant(sample_tenant_id, permanent=False)
 
         # Then restore
         response = await async_client.post(
-            f"/api/v1/tenants/{sample_tenant_id}/restore",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/restore",
             headers=auth_headers,
         )
 
@@ -232,9 +232,9 @@ class TestTenantSettingsEndpoints:
     """Test tenant settings API endpoints."""
 
     async def test_create_setting(self, async_client: AsyncClient, auth_headers, sample_tenant_id):
-        """Test POST /api/v1/tenants/{id}/settings - Create setting."""
+        """Test POST /api/platform/v1/tenants/{id}/settings - Create setting."""
         response = await async_client.post(
-            f"/api/v1/tenants/{sample_tenant_id}/settings",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/settings",
             headers=auth_headers,
             json={
                 "key": "api_endpoint",
@@ -252,9 +252,9 @@ class TestTenantSettingsEndpoints:
     async def test_get_all_settings(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test GET /api/v1/tenants/{id}/settings - Get all settings."""
+        """Test GET /api/platform/v1/tenants/{id}/settings - Get all settings."""
         response = await async_client.get(
-            f"/api/v1/tenants/{sample_tenant_id}/settings",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/settings",
             headers=auth_headers,
         )
 
@@ -265,7 +265,7 @@ class TestTenantSettingsEndpoints:
     async def test_get_specific_setting(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id, tenant_service
     ):
-        """Test GET /api/v1/tenants/{id}/settings/{key} - Get setting."""
+        """Test GET /api/platform/v1/tenants/{id}/settings/{key} - Get setting."""
         from src.dotmac.platform.tenant.schemas import TenantSettingCreate
 
         # Create a setting first
@@ -275,7 +275,7 @@ class TestTenantSettingsEndpoints:
         )
 
         response = await async_client.get(
-            f"/api/v1/tenants/{sample_tenant_id}/settings/test_key",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/settings/test_key",
             headers=auth_headers,
         )
 
@@ -287,7 +287,7 @@ class TestTenantSettingsEndpoints:
     async def test_delete_setting(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id, tenant_service
     ):
-        """Test DELETE /api/v1/tenants/{id}/settings/{key} - Delete setting."""
+        """Test DELETE /api/platform/v1/tenants/{id}/settings/{key} - Delete setting."""
         from src.dotmac.platform.tenant.schemas import TenantSettingCreate
 
         await tenant_service.set_tenant_setting(
@@ -296,7 +296,7 @@ class TestTenantSettingsEndpoints:
         )
 
         response = await async_client.delete(
-            f"/api/v1/tenants/{sample_tenant_id}/settings/delete_me",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/settings/delete_me",
             headers=auth_headers,
         )
 
@@ -307,10 +307,10 @@ class TestTenantUsageEndpoints:
     """Test tenant usage tracking endpoints."""
 
     async def test_record_usage(self, async_client: AsyncClient, auth_headers, sample_tenant_id):
-        """Test POST /api/v1/tenants/{id}/usage - Record usage."""
+        """Test POST /api/platform/v1/tenants/{id}/usage - Record usage."""
         now = datetime.now(UTC)
         response = await async_client.post(
-            f"/api/v1/tenants/{sample_tenant_id}/usage",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/usage",
             headers=auth_headers,
             json={
                 "period_start": (now - timedelta(hours=1)).isoformat(),
@@ -331,9 +331,9 @@ class TestTenantUsageEndpoints:
     async def test_get_usage_history(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test GET /api/v1/tenants/{id}/usage - Get usage."""
+        """Test GET /api/platform/v1/tenants/{id}/usage - Get usage."""
         response = await async_client.get(
-            f"/api/v1/tenants/{sample_tenant_id}/usage",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/usage",
             headers=auth_headers,
         )
 
@@ -344,9 +344,9 @@ class TestTenantUsageEndpoints:
     async def test_get_tenant_stats(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test GET /api/v1/tenants/{id}/stats - Get statistics."""
+        """Test GET /api/platform/v1/tenants/{id}/stats - Get statistics."""
         response = await async_client.get(
-            f"/api/v1/tenants/{sample_tenant_id}/stats",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/stats",
             headers=auth_headers,
         )
 
@@ -364,9 +364,9 @@ class TestTenantInvitationEndpoints:
     async def test_create_invitation(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test POST /api/v1/tenants/{id}/invitations - Create invitation."""
+        """Test POST /api/platform/v1/tenants/{id}/invitations - Create invitation."""
         response = await async_client.post(
-            f"/api/v1/tenants/{sample_tenant_id}/invitations",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/invitations",
             headers=auth_headers,
             json={
                 "email": "newuser@example.com",
@@ -384,9 +384,9 @@ class TestTenantInvitationEndpoints:
     async def test_list_invitations(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id
     ):
-        """Test GET /api/v1/tenants/{id}/invitations - List invitations."""
+        """Test GET /api/platform/v1/tenants/{id}/invitations - List invitations."""
         response = await async_client.get(
-            f"/api/v1/tenants/{sample_tenant_id}/invitations",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/invitations",
             headers=auth_headers,
         )
 
@@ -397,7 +397,7 @@ class TestTenantInvitationEndpoints:
     async def test_accept_invitation(
         self, async_client: AsyncClient, sample_tenant_id, tenant_service
     ):
-        """Test POST /api/v1/tenants/invitations/accept - Accept invitation."""
+        """Test POST /api/platform/v1/tenants/invitations/accept - Accept invitation."""
         from src.dotmac.platform.tenant.schemas import TenantInvitationCreate
 
         # Create invitation
@@ -408,7 +408,7 @@ class TestTenantInvitationEndpoints:
         )
 
         response = await async_client.post(
-            "/api/v1/tenants/invitations/accept",
+            "/api/platform/v1/tenants/invitations/accept",
             json={"token": invitation.token},
         )
 
@@ -419,7 +419,7 @@ class TestTenantInvitationEndpoints:
     async def test_revoke_invitation(
         self, async_client: AsyncClient, auth_headers, sample_tenant_id, tenant_service
     ):
-        """Test POST /api/v1/tenants/{id}/invitations/{inv_id}/revoke - Revoke."""
+        """Test POST /api/platform/v1/tenants/{id}/invitations/{inv_id}/revoke - Revoke."""
         from src.dotmac.platform.tenant.schemas import TenantInvitationCreate
 
         invitation = await tenant_service.create_invitation(
@@ -429,7 +429,7 @@ class TestTenantInvitationEndpoints:
         )
 
         response = await async_client.post(
-            f"/api/v1/tenants/{sample_tenant_id}/invitations/{invitation.id}/revoke",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/invitations/{invitation.id}/revoke",
             headers=auth_headers,
         )
 
@@ -442,9 +442,9 @@ class TestTenantFeatureEndpoints:
     """Test tenant feature management endpoints."""
 
     async def test_update_features(self, async_client: AsyncClient, auth_headers, sample_tenant_id):
-        """Test PATCH /api/v1/tenants/{id}/features - Update features."""
+        """Test PATCH /api/platform/v1/tenants/{id}/features - Update features."""
         response = await async_client.patch(
-            f"/api/v1/tenants/{sample_tenant_id}/features",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/features",
             headers=auth_headers,
             json={
                 "features": {
@@ -461,9 +461,9 @@ class TestTenantFeatureEndpoints:
         assert data["features"]["advanced_analytics"] is True
 
     async def test_update_metadata(self, async_client: AsyncClient, auth_headers, sample_tenant_id):
-        """Test PATCH /api/v1/tenants/{id}/metadata - Update metadata."""
+        """Test PATCH /api/platform/v1/tenants/{id}/metadata - Update metadata."""
         response = await async_client.patch(
-            f"/api/v1/tenants/{sample_tenant_id}/metadata",
+            f"/api/platform/v1/tenants/{sample_tenant_id}/metadata",
             headers=auth_headers,
             json={
                 "custom_metadata": {
@@ -484,7 +484,7 @@ class TestTenantBulkEndpoints:
     async def test_bulk_status_update(
         self, async_client: AsyncClient, auth_headers, tenant_service
     ):
-        """Test POST /api/v1/tenants/bulk/status - Bulk status update."""
+        """Test POST /api/platform/v1/tenants/bulk/status - Bulk status update."""
         from src.dotmac.platform.tenant.schemas import TenantCreate
 
         # Create test tenants
@@ -498,7 +498,7 @@ class TestTenantBulkEndpoints:
             tenant_ids.append(tenant.id)
 
         response = await async_client.post(
-            "/api/v1/tenants/bulk/status",
+            "/api/platform/v1/tenants/bulk/status",
             headers=auth_headers,
             json={
                 "tenant_ids": tenant_ids,
@@ -511,7 +511,7 @@ class TestTenantBulkEndpoints:
         assert data["updated_count"] == 3
 
     async def test_bulk_delete(self, async_client: AsyncClient, auth_headers, tenant_service):
-        """Test POST /api/v1/tenants/bulk/delete - Bulk delete."""
+        """Test POST /api/platform/v1/tenants/bulk/delete - Bulk delete."""
         from src.dotmac.platform.tenant.schemas import TenantCreate
 
         # Create test tenants
@@ -525,7 +525,7 @@ class TestTenantBulkEndpoints:
             tenant_ids.append(tenant.id)
 
         response = await async_client.post(
-            "/api/v1/tenants/bulk/delete",
+            "/api/platform/v1/tenants/bulk/delete",
             headers=auth_headers,
             json={
                 "tenant_ids": tenant_ids,
@@ -545,7 +545,7 @@ class TestTenantValidation:
     async def test_create_tenant_invalid_slug(self, async_client: AsyncClient, auth_headers):
         """Test creating tenant with invalid slug."""
         response = await async_client.post(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             json={
                 "name": "Test",
@@ -561,7 +561,7 @@ class TestTenantValidation:
     ):
         """Test creating tenant without required fields."""
         response = await async_client.post(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             json={
                 "name": "Test",
@@ -575,7 +575,7 @@ class TestTenantValidation:
         """Test pagination parameter validation."""
         # Invalid page number
         response = await async_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             params={"page": 0},  # Must be >= 1
         )
@@ -584,7 +584,7 @@ class TestTenantValidation:
 
         # Invalid page size
         response = await async_client.get(
-            "/api/v1/tenants",
+            "/api/platform/v1/tenants",
             headers=auth_headers,
             params={"page_size": 200},  # Max is 100
         )

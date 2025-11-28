@@ -7,7 +7,7 @@
 export const handlers = [
   // Add mock handlers here as needed
   // Example:
-  // http.get('/api/v1/users', () => {
+  // http.get('/api/platform/v1/admin/users', () => {
   //   return HttpResponse.json({ users: [] });
   // }),
 ];

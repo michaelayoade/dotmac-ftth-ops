@@ -64,7 +64,7 @@ const extractDatePart = (isoString: string): string => {
 };
 
 export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = ({
-  apiEndpoint = "/api/v1/commission-config",
+  apiEndpoint = "/api/isp/v1/admin/commission-config",
   onConfigChange,
 }) => {
   const [configs, setConfigs] = useState<CommissionConfig[]>([]);

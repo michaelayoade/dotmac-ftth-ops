@@ -22,7 +22,7 @@ jest.mock("@/lib/logger", () => ({
 
 const buildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+  const prefixed = normalized.startsWith("/api/isp/v1/portal") ? normalized : `/api/isp/v1/portal${normalized}`;
   return `https://api.example.com${prefixed}`;
 };
 
@@ -30,7 +30,7 @@ jest.mock("@/providers/AppConfigContext", () => ({
   useAppConfig: () => ({
     api: {
       baseUrl: "https://api.example.com",
-      prefix: "/api/v1",
+      prefix: "/api/isp/v1/portal",
       buildUrl,
     },
     features: {},
@@ -91,14 +91,14 @@ describe("Platform Admin useCustomerPortal hooks", () => {
     const { result } = renderHook(() => useCustomerProfile(), { wrapper });
 
     await waitFor(() => expect(result.current.profile?.id).toBe("profile-1"));
-    expect(portalFetchMock).toHaveBeenCalledWith("https://api.example.com/api/v1/customer/profile");
+    expect(portalFetchMock).toHaveBeenCalledWith("https://api.example.com/api/isp/v1/portal/customer/profile");
 
     await act(async () => {
       await result.current.updateProfile({ phone: "555-1234" } as any);
     });
 
     expect(portalFetchMock).toHaveBeenCalledWith(
-      "https://api.example.com/api/v1/customer/profile",
+      "https://api.example.com/api/isp/v1/portal/customer/profile",
       expect.objectContaining({
         method: "PUT",
       }),

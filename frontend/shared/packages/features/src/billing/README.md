@@ -502,38 +502,38 @@ The billing module expects these backend endpoints:
 
 ### Customer Billing
 
-- `GET /api/v1/customers/{id}/invoices` - List invoices
-- `GET /api/v1/customers/{id}/payments` - List payments
-- `GET /api/v1/customers/{id}/billing-summary` - Get summary
+- `GET /api/isp/v1/admin/customers/{id}/invoices` - List invoices
+- `GET /api/isp/v1/admin/customers/{id}/payments` - List payments
+- `GET /api/isp/v1/admin/customers/{id}/billing-summary` - Get summary
 
 ### Invoices
 
-- `GET /api/v1/invoices` - List all invoices
-- `GET /api/v1/invoices/{id}` - Get invoice details
-- `GET /api/v1/invoices/{id}/download` - Download PDF
-- `POST /api/v1/invoices/{id}/email` - Email invoice
+- `GET /api/isp/v1/admin/invoices` - List all invoices
+- `GET /api/isp/v1/admin/invoices/{id}` - Get invoice details
+- `GET /api/isp/v1/admin/invoices/{id}/download` - Download PDF
+- `POST /api/isp/v1/admin/invoices/{id}/email` - Email invoice
 
 ### Payments
 
-- `GET /api/v1/payments` - List all payments
-- `GET /api/v1/payments/{id}` - Get payment details
-- `POST /api/v1/payments` - Record payment
+- `GET /api/isp/v1/admin/payments` - List all payments
+- `GET /api/isp/v1/admin/payments/{id}` - Get payment details
+- `POST /api/isp/v1/admin/payments` - Record payment
 
 ### Payment Methods
 
-- `GET /api/v1/customers/{id}/payment-methods` - List payment methods
-- `POST /api/v1/customers/{id}/payment-methods` - Add payment method
-- `DELETE /api/v1/customers/{id}/payment-methods/{id}` - Remove payment method
+- `GET /api/isp/v1/admin/customers/{id}/payment-methods` - List payment methods
+- `POST /api/isp/v1/admin/customers/{id}/payment-methods` - Add payment method
+- `DELETE /api/isp/v1/admin/customers/{id}/payment-methods/{id}` - Remove payment method
 
 ### Receipts
 
-- `GET /api/v1/receipts` - List receipts
-- `GET /api/v1/receipts/{id}` - Get receipt details
-- `GET /api/v1/receipts/{id}/download` - Download PDF
+- `GET /api/isp/v1/admin/receipts` - List receipts
+- `GET /api/isp/v1/admin/receipts/{id}` - Get receipt details
+- `GET /api/isp/v1/admin/receipts/{id}/download` - Download PDF
 
 ### Credit Notes
 
-- `POST /api/v1/invoices/{id}/credit-notes` - Create credit note
+- `POST /api/isp/v1/admin/invoices/{id}/credit-notes` - Create credit note
 
 ## Styling
 

@@ -111,14 +111,14 @@ export function getPartners(): Partner[] {
 // ============================================
 
 export const partnersHandlers = [
-  // GET /api/v1/partners/:id/quota/check - MUST come before /:id route
-  http.get("*/api/v1/partners/:id/quota/check", ({ request, params }) => {
+// GET /api/isp/v1/admin/partners/:id/quota/check - MUST come before /:id route
+http.get("*/api/isp/v1/admin/partners/:id/quota/check", ({ request, params }) => {
     const { id } = params;
     const url = new URL(request.url);
     const requestedLicenses = parseInt(url.searchParams.get("requested_licenses") || "0");
     const tenantId = url.searchParams.get("tenant_id");
 
-    console.log("[MSW] GET /api/v1/partners/:id/quota/check", {
+  console.log("[MSW] GET /api/isp/v1/admin/partners/:id/quota/check", {
       id,
       requestedLicenses,
       tenantId,
@@ -155,11 +155,11 @@ export const partnersHandlers = [
     return HttpResponse.json(quotaResult);
   }),
 
-  // POST /api/v1/partners/onboarding/complete - MUST come before /:id route
-  http.post("*/api/v1/partners/onboarding/complete", async ({ request, params }) => {
+// POST /api/isp/v1/admin/partners/onboarding/complete - MUST come before /:id route
+http.post("*/api/isp/v1/admin/partners/onboarding/complete", async ({ request, params }) => {
     const onboardingData = await request.json();
 
-    console.log("[MSW] POST /api/v1/partners/onboarding/complete", {
+  console.log("[MSW] POST /api/isp/v1/admin/partners/onboarding/complete", {
       onboardingData,
     });
 
@@ -273,14 +273,14 @@ export const partnersHandlers = [
     return HttpResponse.json(onboardingResult);
   }),
 
-  // GET /api/v1/partners - List partners
-  http.get("*/api/v1/partners", ({ request, params }) => {
+// GET /api/isp/v1/admin/partners - List partners
+http.get("*/api/isp/v1/admin/partners", ({ request, params }) => {
     const url = new URL(request.url);
     const status = url.searchParams.get("status");
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("page_size") || "50");
 
-    console.log("[MSW] GET /api/v1/partners", { status, page, pageSize });
+  console.log("[MSW] GET /api/isp/v1/admin/partners", { status, page, pageSize });
 
     // Filter by status
     let filtered = [...partners];
@@ -304,11 +304,11 @@ export const partnersHandlers = [
     return HttpResponse.json(response);
   }),
 
-  // POST /api/v1/partners - Create partner
-  http.post("*/api/v1/partners", async ({ request, params }) => {
+// POST /api/isp/v1/admin/partners - Create partner
+http.post("*/api/isp/v1/admin/partners", async ({ request, params }) => {
     const createData = await request.json();
 
-    console.log("[MSW] POST /api/v1/partners", { createData });
+  console.log("[MSW] POST /api/isp/v1/admin/partners", { createData });
 
     const newPartner = createMockPartner({
       ...createData,
@@ -322,11 +322,11 @@ export const partnersHandlers = [
     return HttpResponse.json(newPartner);
   }),
 
-  // GET /api/v1/partners/:id - Get single partner
-  http.get("*/api/v1/partners/:id", ({ request, params }) => {
+// GET /api/isp/v1/admin/partners/:id - Get single partner
+http.get("*/api/isp/v1/admin/partners/:id", ({ request, params }) => {
     const { id } = params;
 
-    console.log("[MSW] GET /api/v1/partners/:id", { id });
+  console.log("[MSW] GET /api/isp/v1/admin/partners/:id", { id });
 
     const partner = partners.find((p) => p.id === id);
 
@@ -337,12 +337,12 @@ export const partnersHandlers = [
     return HttpResponse.json(partner);
   }),
 
-  // PATCH /api/v1/partners/:id - Update partner
-  http.patch("*/api/v1/partners/:id", async ({ request, params }) => {
+// PATCH /api/isp/v1/admin/partners/:id - Update partner
+http.patch("*/api/isp/v1/admin/partners/:id", async ({ request, params }) => {
     const { id } = params;
     const updateData = await request.json();
 
-    console.log("[MSW] PATCH /api/v1/partners/:id", { id, updateData });
+  console.log("[MSW] PATCH /api/isp/v1/admin/partners/:id", { id, updateData });
 
     const partner = partners.find((p) => p.id === id);
 
@@ -358,11 +358,11 @@ export const partnersHandlers = [
     return HttpResponse.json(partner);
   }),
 
-  // DELETE /api/v1/partners/:id - Delete partner
-  http.delete("*/api/v1/partners/:id", ({ request, params }) => {
+// DELETE /api/isp/v1/admin/partners/:id - Delete partner
+http.delete("*/api/isp/v1/admin/partners/:id", ({ request, params }) => {
     const { id } = params;
 
-    console.log("[MSW] DELETE /api/v1/partners/:id", { id });
+  console.log("[MSW] DELETE /api/isp/v1/admin/partners/:id", { id });
 
     const index = partners.findIndex((p) => p.id === id);
 
@@ -376,12 +376,12 @@ export const partnersHandlers = [
     return new HttpResponse(null, { status: 200 });
   }),
 
-  // POST /api/v1/partners/:id/customers - Create partner customer
-  http.post("*/api/v1/partners/:id/customers", async ({ request, params }) => {
+// POST /api/isp/v1/admin/partners/:id/customers - Create partner customer
+http.post("*/api/isp/v1/admin/partners/:id/customers", async ({ request, params }) => {
     const { id } = params;
     const requestData = await request.json();
 
-    console.log("[MSW] POST /api/v1/partners/:id/customers", {
+  console.log("[MSW] POST /api/isp/v1/admin/partners/:id/customers", {
       id,
       requestData,
     });
@@ -422,12 +422,12 @@ export const partnersHandlers = [
     return HttpResponse.json(customer);
   }),
 
-  // POST /api/v1/partners/:id/licenses/allocate - Allocate licenses
-  http.post("*/api/v1/partners/:id/licenses/allocate", async ({ request, params }) => {
+// POST /api/isp/v1/admin/partners/:id/licenses/allocate - Allocate licenses
+http.post("*/api/isp/v1/admin/partners/:id/licenses/allocate", async ({ request, params }) => {
     const { id } = params;
     const allocationData = await request.json();
 
-    console.log("[MSW] POST /api/v1/partners/:id/licenses/allocate", {
+  console.log("[MSW] POST /api/isp/v1/admin/partners/:id/licenses/allocate", {
       id,
       allocationData,
     });
@@ -474,12 +474,12 @@ export const partnersHandlers = [
     return HttpResponse.json(allocationResult);
   }),
 
-  // POST /api/v1/partners/:id/tenants/provision - Provision tenant
-  http.post("*/api/v1/partners/:id/tenants/provision", async ({ request, params }) => {
+// POST /api/isp/v1/admin/partners/:id/tenants/provision - Provision tenant
+http.post("*/api/isp/v1/admin/partners/:id/tenants/provision", async ({ request, params }) => {
     const { id } = params;
     const provisionData = await request.json();
 
-    console.log("[MSW] POST /api/v1/partners/:id/tenants/provision", {
+  console.log("[MSW] POST /api/isp/v1/admin/partners/:id/tenants/provision", {
       id,
       provisionData,
     });
@@ -526,12 +526,12 @@ export const partnersHandlers = [
     return HttpResponse.json(tenantResult);
   }),
 
-  // POST /api/v1/partners/:id/commissions - Record commission
-  http.post("*/api/v1/partners/:id/commissions", async ({ request, params }) => {
+// POST /api/isp/v1/admin/partners/:id/commissions - Record commission
+http.post("*/api/isp/v1/admin/partners/:id/commissions", async ({ request, params }) => {
     const { id } = params;
     const commissionData = await request.json();
 
-    console.log("[MSW] POST /api/v1/partners/:id/commissions", {
+  console.log("[MSW] POST /api/isp/v1/admin/partners/:id/commissions", {
       id,
       commissionData,
     });

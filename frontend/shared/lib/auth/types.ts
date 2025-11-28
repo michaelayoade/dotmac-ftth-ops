@@ -16,7 +16,7 @@ export interface ActiveOrganization {
 }
 
 /**
- * User information returned from /api/v1/auth/me
+ * User information returned from /api/isp/v1/admin/auth/me
  */
 export interface UserInfo {
   id: string;
@@ -55,7 +55,7 @@ export interface LoginRequest {
 }
 
 /**
- * Login response from /api/v1/auth/login
+ * Login response from /api/isp/v1/admin/auth/login
  */
 export interface LoginResponse {
   access_token: string;

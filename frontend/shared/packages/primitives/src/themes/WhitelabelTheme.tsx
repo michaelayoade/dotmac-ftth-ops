@@ -76,7 +76,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
   partnerId,
   domain,
   fallbackConfig,
-  apiEndpoint = "/api/v1/partners",
+  apiEndpoint = "/api/isp/v1/admin/partners",
 }) => {
   const [config, setConfig] = useState<WhitelabelConfig | null>(fallbackConfig || null);
   const [isWhitelabel, setIsWhitelabel] = useState(!!fallbackConfig);

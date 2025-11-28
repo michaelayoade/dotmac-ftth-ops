@@ -25,7 +25,7 @@ jest.mock("@dotmac/ui", () => ({
 
 const buildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+  const prefixed = normalized.startsWith("/api/isp/v1/admin") ? normalized : `/api/isp/v1/admin${normalized}`;
   return `https://api.example.com${prefixed}`;
 };
 
@@ -33,7 +33,7 @@ jest.mock("@/providers/AppConfigContext", () => ({
   useAppConfig: () => ({
     api: {
       baseUrl: "https://api.example.com",
-      prefix: "/api/v1",
+      prefix: "/api/isp/v1/admin",
       buildUrl,
     },
     features: {},
@@ -83,7 +83,7 @@ describe("Platform Admin usePartnerPortal hooks", () => {
     const dashboardHook = renderHook(() => usePartnerDashboard(), { wrapper });
     await waitFor(() => expect(dashboardHook.result.current.data?.total_customers).toBe(10));
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.com/api/v1/partners/portal/dashboard",
+      "https://api.example.com/api/isp/v1/admin/partners/portal/dashboard",
       expect.any(Object),
     );
 
@@ -96,7 +96,7 @@ describe("Platform Admin usePartnerPortal hooks", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.com/api/v1/partners/portal/profile",
+      "https://api.example.com/api/isp/v1/admin/partners/portal/profile",
       expect.objectContaining({ method: "PATCH" }),
     );
   });

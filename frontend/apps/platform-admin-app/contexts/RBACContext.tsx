@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { handleError } from "@/lib/utils/error-handler";
 import { useToast } from "@dotmac/ui";
 import { useAuth } from "@dotmac/auth";
+import { useTenant } from "@/lib/contexts/tenant-context";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -299,6 +300,7 @@ export function permissionMatches(
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { tenantId } = useTenant();
 
   const queryClient = useQueryClient();
 
@@ -312,7 +314,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     error,
     refetch: refreshPermissions,
   } = useQuery({
-    queryKey: ["rbac", "my-permissions"],
+    queryKey: ["rbac", "my-permissions", tenantId ?? "none"],
     queryFn: isE2ETest
       ? async () => ({
           user_id: "e2e-test-user",
@@ -329,7 +331,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch all roles (skip in E2E test mode)
   const { data: roles = [] } = useQuery({
-    queryKey: ["rbac", "roles"],
+    queryKey: ["rbac", "roles", tenantId ?? "none"],
     queryFn: isE2ETest ? async () => [] : () => rbacApi.fetchRoles(true),
     staleTime: 10 * 60 * 1000, // 10 minutes
     enabled: !authLoading && Boolean(isAuthenticated || isE2ETest),
@@ -410,7 +412,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     mutationFn: rbacApi.createRole,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
-      queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions", tenantId ?? "none"] });
       toast({ title: "Success", description: "Role created successfully" });
     },
     onError: (error) => {
@@ -423,7 +425,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       rbacApi.updateRole(name, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
-      queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions", tenantId ?? "none"] });
       toast({ title: "Success", description: "Role updated successfully" });
     },
     onError: (error) => {
@@ -435,7 +437,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     mutationFn: rbacApi.deleteRole,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
-      queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["rbac", "my-permissions", tenantId ?? "none"] });
       toast({ title: "Success", description: "Role deleted successfully" });
     },
     onError: (error) => {
@@ -544,9 +546,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     // Auth state changed (user switch/logout/login) - refetch permissions immediately
     if (!authLoading) {
       refreshPermissions();
-      queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
+      queryClient.invalidateQueries({ queryKey: ["rbac", "roles", tenantId ?? "none"] });
     }
-  }, [authLoading, userId, refreshPermissions, queryClient]);
+  }, [authLoading, userId, tenantId, refreshPermissions, queryClient]);
 
   useEffect(() => {
     if (!loading && error && !isE2ETest) {

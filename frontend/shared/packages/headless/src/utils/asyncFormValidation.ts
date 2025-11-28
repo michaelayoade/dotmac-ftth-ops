@@ -207,7 +207,7 @@ export const asyncValidationRules = {
 
       try {
         const response = await apiClient.get(
-          `/api/v1/auth/check-email?email=${encodeURIComponent(value)}`,
+          `/api/isp/v1/admin/auth/check-email?email=${encodeURIComponent(value)}`,
         );
         return !response.data.exists; // Returns true if email is available
       } catch (error) {
@@ -228,7 +228,7 @@ export const asyncValidationRules = {
 
       try {
         const response = await apiClient.get(
-          `/api/v1/auth/check-username?username=${encodeURIComponent(value)}`,
+          `/api/isp/v1/admin/auth/check-username?username=${encodeURIComponent(value)}`,
         );
         return !response.data.exists;
       } catch (error) {
@@ -248,7 +248,7 @@ export const asyncValidationRules = {
       if (typeof value !== "string" || value.length < 5) return false;
 
       try {
-        const response = await apiClient.post("/api/v1/geocoding/validate", {
+        const response = await apiClient.post("/api/isp/v1/admin/geocoding/validate", {
           address: value,
         });
         return response.data.valid;
@@ -269,7 +269,7 @@ export const asyncValidationRules = {
       if (typeof value !== "string") return false;
 
       try {
-        const response = await apiClient.post("/api/v1/validation/phone", {
+        const response = await apiClient.post("/api/isp/v1/admin/validation/phone", {
           phone: value,
         });
         return response.data.valid;
@@ -310,7 +310,7 @@ export const asyncValidationRules = {
 
       // Server-side verification (BIN check, etc.)
       try {
-        const response = await apiClient.post("/api/v1/payment/validate-card", {
+        const response = await apiClient.post("/api/isp/v1/admin/payment/validate-card", {
           card_number: cleaned,
         });
         return response.data.valid;
@@ -332,7 +332,7 @@ export const asyncValidationRules = {
 
       try {
         const response = await apiClient.get(
-          `/api/v1/tenants/check-subdomain?subdomain=${encodeURIComponent(value)}`,
+          `/api/platform/v1/admin/tenants/check-subdomain?subdomain=${encodeURIComponent(value)}`,
         );
         return response.data.available;
       } catch (error) {
@@ -352,7 +352,7 @@ export const asyncValidationRules = {
       if (typeof value !== "string") return false;
 
       try {
-        const response = await apiClient.post("/api/v1/validation/iban", {
+        const response = await apiClient.post("/api/isp/v1/admin/validation/iban", {
           iban: value,
         });
         return response.data.valid;

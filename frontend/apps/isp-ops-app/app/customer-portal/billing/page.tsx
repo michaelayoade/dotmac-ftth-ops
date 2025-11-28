@@ -154,13 +154,16 @@ export default function CustomerBillingPage() {
       if (!token) {
         throw new Error("Customer session expired");
       }
-      const response = await fetch(`${apiBaseUrl}/api/v1/customer/invoices/${invoiceId}/download`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/pdf",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${apiBaseUrl}/api/isp/v1/portal/customer/invoices/${invoiceId}/download`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/pdf",
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (urlToken) {
         setPortalAuthToken(urlToken, CUSTOMER_PORTAL_TOKEN_KEY);

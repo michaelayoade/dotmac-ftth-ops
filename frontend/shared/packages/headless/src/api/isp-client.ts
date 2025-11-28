@@ -293,25 +293,25 @@ export class ISPApiClient {
   }
 
   async getTenant(tenantId: string) {
-    return this.http<{ data: ISPTenant }>(`/api/tenants/${tenantId}`);
+    return this.http<{ data: ISPTenant }>(`/tenants/${tenantId}`);
   }
 
   async getTenantNotifications(tenantId: string, params?: Record<string, any>) {
     return this.http<{ data: TenantNotification[] }>(
-      `/api/tenants/${tenantId}/notifications${this.buildQuery(params)}`,
+      `/tenants/${tenantId}/notifications${this.buildQuery(params)}`,
     );
   }
 
   async markNotificationRead(notificationId: string) {
-    await this.http(`/api/tenants/notifications/${notificationId}/read`, { method: "POST" });
+    await this.http(`/tenants/notifications/${notificationId}/read`, { method: "POST" });
   }
 
   async markAllNotificationsRead(tenantId: string) {
-    await this.http(`/api/tenants/${tenantId}/notifications/read-all`, { method: "POST" });
+    await this.http(`/tenants/${tenantId}/notifications/read-all`, { method: "POST" });
   }
 
   async dismissNotification(notificationId: string) {
-    await this.http(`/api/tenants/notifications/${notificationId}/dismiss`, { method: "POST" });
+    await this.http(`/tenants/notifications/${notificationId}/dismiss`, { method: "POST" });
   }
 
   // Legacy methods for backward compatibility

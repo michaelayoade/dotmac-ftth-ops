@@ -103,7 +103,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
     try {
       setLoading(true);
       const response = await apiClient.get<{ devices: Device[] }>(
-        `/api/v1/customers/${customerId}/devices`,
+        `/api/isp/v1/admin/customers/${customerId}/devices`,
       );
       setDevices(response.data.devices);
     } catch (error: unknown) {
@@ -125,7 +125,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
 
   const handleRebootDevice = async (deviceId: string) => {
     try {
-      await apiClient.post(`/api/v1/devices/${deviceId}/reboot`);
+      await apiClient.post(`/api/isp/v1/admin/devices/${deviceId}/reboot`);
       toast({
         title: "Reboot Initiated",
         description: "Device reboot command has been sent",

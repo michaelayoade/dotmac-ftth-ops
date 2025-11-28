@@ -160,7 +160,7 @@ export function AutomatedRemediationPanel({
     setRemediationSettings((prev) => new Map(prev).set(actionId, enabled));
 
     try {
-      await apiClient.post(`/api/v1/remediation/settings`, {
+      await apiClient.post(`/api/platform/v1/admin/remediation/settings`, {
         action_id: actionId,
         auto_enabled: enabled,
         subscriber_id: subscriberId,
@@ -194,7 +194,7 @@ export function AutomatedRemediationPanel({
     setExecutingAction(actionId);
 
     try {
-      const response = await apiClient.post(`/api/v1/remediation/execute`, {
+      const response = await apiClient.post(`/api/platform/v1/admin/remediation/execute`, {
         action_id: actionId,
         subscriber_id: subscriberId,
         manual_trigger: true,

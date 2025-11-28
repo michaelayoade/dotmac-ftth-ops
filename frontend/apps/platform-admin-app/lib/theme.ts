@@ -115,6 +115,15 @@ type BrandingColors = {
 
 type BrandingConfig = {
   colors?: BrandingColors;
+  logo?: { light?: string; dark?: string };
+  logoUrl?: string;
+  logoLight?: string;
+  logoDark?: string;
+  productName?: string;
+  productTagline?: string;
+  companyName?: string;
+  supportEmail?: string;
+  customCss?: Record<string, string | undefined>;
 };
 
 function resolveBrandingPalette(branding: BrandingConfig, mode: BrandThemeMode): BrandingColors {
@@ -182,9 +191,13 @@ export function applyBrandingConfig(branding: unknown, options?: { theme?: Brand
 
   if (lightLogo) {
     root.style.setProperty("--brand-logo-light", `url(${lightLogo})`);
+  } else {
+    root.style.removeProperty("--brand-logo-light");
   }
   if (darkLogo) {
     root.style.setProperty("--brand-logo-dark", `url(${darkLogo})`);
+  } else {
+    root.style.removeProperty("--brand-logo-dark");
   }
 
   // Text/brand metadata tokens
