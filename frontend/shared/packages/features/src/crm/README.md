@@ -479,30 +479,30 @@ interface Activity {
 
 ### Leads
 
-- `GET /api/v1/leads` - List leads
-- `POST /api/v1/leads` - Create lead
-- `GET /api/v1/leads/{id}` - Get lead details
-- `PUT /api/v1/leads/{id}` - Update lead
-- `POST /api/v1/leads/{id}/convert` - Convert to customer
+- `GET /api/isp/v1/admin/leads` - List leads
+- `POST /api/isp/v1/admin/leads` - Create lead
+- `GET /api/isp/v1/admin/leads/{id}` - Get lead details
+- `PUT /api/isp/v1/admin/leads/{id}` - Update lead
+- `POST /api/isp/v1/admin/leads/{id}/convert` - Convert to customer
 
 ### Quotes
 
-- `GET /api/v1/quotes` - List quotes
-- `POST /api/v1/quotes` - Create quote
-- `GET /api/v1/quotes/{id}` - Get quote details
-- `PUT /api/v1/quotes/{id}` - Update quote
-- `POST /api/v1/quotes/{id}/send` - Send to customer
-- `POST /api/v1/quotes/{id}/accept` - Accept quote
-- `POST /api/v1/quotes/{id}/reject` - Reject quote
-- `GET /api/v1/quotes/{id}/download` - Download PDF
+- `GET /api/isp/v1/admin/quotes` - List quotes
+- `POST /api/isp/v1/admin/quotes` - Create quote
+- `GET /api/isp/v1/admin/quotes/{id}` - Get quote details
+- `PUT /api/isp/v1/admin/quotes/{id}` - Update quote
+- `POST /api/isp/v1/admin/quotes/{id}/send` - Send to customer
+- `POST /api/isp/v1/admin/quotes/{id}/accept` - Accept quote
+- `POST /api/isp/v1/admin/quotes/{id}/reject` - Reject quote
+- `GET /api/isp/v1/admin/quotes/{id}/download` - Download PDF
 
 ### Surveys
 
-- `GET /api/v1/surveys` - List surveys
-- `POST /api/v1/surveys` - Create survey
-- `GET /api/v1/surveys/{id}` - Get survey details
-- `PUT /api/v1/surveys/{id}` - Update survey
-- `POST /api/v1/surveys/{id}/complete` - Complete survey
+- `GET /api/isp/v1/admin/surveys` - List surveys
+- `POST /api/isp/v1/admin/surveys` - Create survey
+- `GET /api/isp/v1/admin/surveys/{id}` - Get survey details
+- `PUT /api/isp/v1/admin/surveys/{id}` - Update survey
+- `POST /api/isp/v1/admin/surveys/{id}/complete` - Complete survey
 
 ### Activities
 
@@ -637,7 +637,7 @@ test("creates lead", async () => {
   fireEvent.click(screen.getByText("Create Lead"));
 
   await waitFor(() => {
-    expect(mockApiClient.post).toHaveBeenCalledWith("/api/v1/leads", expect.any(Object));
+    expect(mockApiClient.post).toHaveBeenCalledWith("/api/isp/v1/admin/leads", expect.any(Object));
     expect(onLeadCreated).toHaveBeenCalled();
   });
 });

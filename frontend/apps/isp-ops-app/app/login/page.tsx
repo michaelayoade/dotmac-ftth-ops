@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { login, isAuthBypassEnabled } from "@shared/lib/auth";
@@ -174,11 +175,13 @@ export default function LoginPage() {
           </Link>
           <div className="flex items-center justify-center mb-4">
             {branding.logoUrl ? (
-              <img
+              <Image
                 src={branding.logoUrl}
                 alt={`${branding.productName} logo`}
+                width={48}
+                height={48}
                 className="h-12 w-auto"
-                loading="lazy"
+                unoptimized
               />
             ) : (
               <span className="text-3xl">🌐</span>

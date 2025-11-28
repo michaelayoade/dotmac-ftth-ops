@@ -58,7 +58,7 @@ function FeatureFlagDetailsPageContent() {
     queryKey: ["feature-flag", flagName, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags/${encodeURIComponent(flagName)}`,
         { credentials: "include" },
       );
       if (!response.ok) {
@@ -78,7 +78,7 @@ function FeatureFlagDetailsPageContent() {
   const toggleFlagMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags/${encodeURIComponent(flagName)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -114,7 +114,7 @@ function FeatureFlagDetailsPageContent() {
   const updateDescriptionMutation = useMutation({
     mutationFn: async (description: string) => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags/${encodeURIComponent(flagName)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -151,7 +151,7 @@ function FeatureFlagDetailsPageContent() {
   const deleteFlagMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/feature-flags/flags/${encodeURIComponent(flagName)}`,
+        `${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags/${encodeURIComponent(flagName)}`,
         {
           method: "DELETE",
           credentials: "include",

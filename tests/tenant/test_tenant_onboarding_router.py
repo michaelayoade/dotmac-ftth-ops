@@ -49,7 +49,7 @@ class TestTenantOnboardingRouter:
         mock_user_service.create_user.return_value = SimpleNamespace(id="admin-123")
 
         response = await async_client.post(
-            "/api/v1/tenants/onboarding",
+            "/api/platform/v1/tenants/onboarding",
             headers=auth_headers,
             json={
                 "tenant": {
@@ -107,7 +107,7 @@ class TestTenantOnboardingRouter:
         mock_user_service.create_user.return_value = SimpleNamespace(id="admin-456")
 
         response = await async_client.post(
-            "/api/v1/tenants/onboarding",
+            "/api/platform/v1/tenants/onboarding",
             headers=auth_headers,
             json={
                 "tenant": {
@@ -141,7 +141,7 @@ class TestTenantOnboardingRouter:
         mock_user_service.create_user.return_value = SimpleNamespace(id="admin-999")
 
         create_response = await async_client.post(
-            "/api/v1/tenants/onboarding",
+            "/api/platform/v1/tenants/onboarding",
             headers=auth_headers,
             json={
                 "tenant": {
@@ -162,7 +162,7 @@ class TestTenantOnboardingRouter:
         assert create_payload["admin_user_password"] is not None
 
         status_response = await async_client.get(
-            f"/api/v1/tenants/{tenant_id}/onboarding/status",
+            f"/api/platform/v1/tenants/{tenant_id}/onboarding/status",
             headers=auth_headers,
         )
 

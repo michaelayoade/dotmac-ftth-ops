@@ -264,7 +264,7 @@ test.describe("API Key Management", () => {
   test.describe("Error Handling", () => {
     test("should show error when network request fails", async ({ page, context }) => {
       // Simulate network failure
-      await context.route("**/api/v1/auth/api-keys", (route) => {
+      await context.route("**/api/isp/v1/admin/auth/api-keys", (route) => {
         route.abort("failed");
       });
 

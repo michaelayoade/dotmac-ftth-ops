@@ -16,7 +16,7 @@ test.describe("Advanced Authentication Scenarios", () => {
 
   test("should handle network errors gracefully", async ({ page }) => {
     // Intercept login request and simulate network error
-    await page.route("**/api/v1/auth/login", (route) => {
+    await page.route("**/api/isp/v1/admin/auth/login", (route) => {
       route.abort("failed");
     });
 
@@ -30,7 +30,7 @@ test.describe("Advanced Authentication Scenarios", () => {
 
   test("should show loading state during login", async ({ page }) => {
     // Intercept login request and delay response
-    await page.route("**/api/v1/auth/login", async (route) => {
+    await page.route("**/api/isp/v1/admin/auth/login", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await route.continue();
     });

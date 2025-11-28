@@ -22,6 +22,7 @@ import type {
 } from "@/types/audit";
 
 const API_BASE = platformConfig.api.baseUrl;
+const ADMIN_PREFIX = "/api/isp/v1/admin";
 
 // ============================================
 // Additional Interfaces
@@ -112,7 +113,7 @@ class AuditService {
     if (filters.per_page) params.append("per_page", filters.per_page.toString());
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/audit/activities${queryString ? `?${queryString}` : ""}`;
+    const url = `${this.baseUrl}${ADMIN_PREFIX}/audit/activities${queryString ? `?${queryString}` : ""}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -136,7 +137,7 @@ class AuditService {
     params.append("days", days.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/audit/activities/recent?${params.toString()}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/audit/activities/recent?${params.toString()}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -165,7 +166,7 @@ class AuditService {
     params.append("days", days.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/audit/activities/user/${userId}?${params.toString()}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/audit/activities/user/${userId}?${params.toString()}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -183,7 +184,7 @@ class AuditService {
    * @returns Activity details
    */
   async getActivity(activityId: string): Promise<AuditActivity> {
-    const response = await fetch(`${this.baseUrl}/api/v1/audit/activities/${activityId}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/audit/activities/${activityId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -207,7 +208,7 @@ class AuditService {
     params.append("days", days.toString());
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/audit/activities/summary?${params.toString()}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/audit/activities/summary?${params.toString()}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -247,7 +248,7 @@ class AuditService {
    * @returns Export response with download URL
    */
   async exportLogs(request: AuditExportRequest): Promise<AuditExportResponse> {
-    const response = await fetch(`${this.baseUrl}/api/v1/audit/export`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/audit/export`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -269,7 +270,7 @@ class AuditService {
     params.append("from_date", fromDate);
     params.append("to_date", toDate);
 
-    const response = await fetch(`${this.baseUrl}/api/v1/audit/compliance?${params.toString()}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/audit/compliance?${params.toString()}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",

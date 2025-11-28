@@ -1354,14 +1354,14 @@ const PLATFORM_ENDPOINTS = {
 
 **ISP Operations API Routes**:
 ```typescript
-// ISP ops calls tenant-scoped APIs
-const TENANT_ENDPOINTS = {
-  subscribers: '/api/v1/tenants/{tenant_id}/subscribers',
-  devices: '/api/v1/tenants/{tenant_id}/devices',
-  invoices: '/api/v1/tenants/{tenant_id}/invoices',  // Customer billing
-  radius: '/api/v1/tenants/{tenant_id}/radius',
-  support: '/api/v1/tenants/{tenant_id}/support',
-  analytics: '/api/v1/tenants/{tenant_id}/analytics',  // Tenant analytics
+// ISP ops calls tenant-scoped APIs (tenant context from X-Tenant-ID header)
+const ISP_ENDPOINTS = {
+  subscribers: '/api/isp/v1/subscribers',
+  devices: '/api/isp/v1/devices',
+  invoices: '/api/isp/v1/invoices',  // Customer billing
+  radius: '/api/isp/v1/radius',
+  support: '/api/isp/v1/support',
+  analytics: '/api/isp/v1/analytics',  // Tenant analytics
 }
 ```
 
@@ -1371,8 +1371,8 @@ const TENANT_ENDPOINTS = {
 from fastapi import APIRouter, Depends
 from dotmac.platform.auth.rbac_dependencies import require_permission
 
-platform_router = APIRouter(prefix="/api/v1/platform")
-tenant_router = APIRouter(prefix="/api/v1/tenants/{tenant_id}")
+platform_router = APIRouter(prefix="/api/platform/v1")
+isp_router = APIRouter(prefix="/api/isp/v1")
 
 # Platform routes (platform admin app only)
 @platform_router.get("/tenants")
@@ -1381,12 +1381,13 @@ async def list_tenants():
     """Platform admins can list all tenants"""
     return await TenantService.list_all()
 
-# Tenant routes (ISP ops app only)
-@tenant_router.get("/subscribers")
+# ISP routes (ISP ops app only, tenant from X-Tenant-ID header)
+@isp_router.get("/subscribers")
 @require_permission("customers:read")
-async def list_subscribers(tenant_id: str):
+async def list_subscribers():
     """ISP staff can list their subscribers"""
-    return await SubscriberService.list_by_tenant(tenant_id)
+    # Tenant context injected via middleware from X-Tenant-ID header
+    return await SubscriberService.list_by_tenant()
 ```
 
 ### Tenant Context Injection
@@ -1434,8 +1435,8 @@ export const apiClient = axios.create({
   },
 })
 
-// All API calls automatically include tenant context
-apiClient.get('/subscribers')  // → GET /api/v1/tenants/fast-fiber-isp-123/subscribers
+// All API calls automatically include tenant context via X-Tenant-ID header
+apiClient.get('/subscribers')  // → GET /api/isp/v1/subscribers (with X-Tenant-ID: fast-fiber-isp-123)
 ```
 
 ### Resource Limits

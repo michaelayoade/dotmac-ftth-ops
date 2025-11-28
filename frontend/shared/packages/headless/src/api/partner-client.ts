@@ -43,7 +43,7 @@ export class PartnerApiClient {
   async getDashboard(partnerId: string): Promise<ApiResponse<DashboardData>> {
     const sanitizedPartnerId = sanitizeInput(partnerId);
     const response = await this.client.request<ApiResponse<DashboardData>>(
-      `/api/v1/partners/${sanitizedPartnerId}/dashboard`,
+      `/api/isp/v1/admin/partners/${sanitizedPartnerId}/dashboard`,
       {
         method: "GET",
       },
@@ -85,7 +85,7 @@ export class PartnerApiClient {
 
     const response = await this.client.request<
       ApiResponse<{ customers: Customer[]; total: number; pagination: any }>
-    >(`/api/v1/partners/${sanitizedPartnerId}/customers?${searchParams.toString()}`, {
+    >(`/api/isp/v1/admin/partners/${sanitizedPartnerId}/customers?${searchParams.toString()}`, {
       method: "GET",
     });
 
@@ -104,7 +104,7 @@ export class PartnerApiClient {
     const sanitizedCustomerId = sanitizeInput(customerId);
 
     const response = await this.client.request<ApiResponse<Customer>>(
-      `/api/v1/partners/${sanitizedPartnerId}/customers/${sanitizedCustomerId}`,
+      `/api/isp/v1/admin/partners/${sanitizedPartnerId}/customers/${sanitizedCustomerId}`,
       {
         method: "GET",
       },
@@ -125,7 +125,7 @@ export class PartnerApiClient {
     const validatedData = CreateCustomerSchema.parse(customerData);
 
     const response = await this.client.request<ApiResponse<Customer>>(
-      `/api/v1/partners/${sanitizedPartnerId}/customers`,
+      `/api/isp/v1/admin/partners/${sanitizedPartnerId}/customers`,
       {
         method: "POST",
         body: JSON.stringify(validatedData),
@@ -149,7 +149,7 @@ export class PartnerApiClient {
     const validatedData = UpdateCustomerSchema.parse(customerData);
 
     const response = await this.client.request<ApiResponse<Customer>>(
-      `/api/v1/partners/${sanitizedPartnerId}/customers/${sanitizedCustomerId}`,
+      `/api/isp/v1/admin/partners/${sanitizedPartnerId}/customers/${sanitizedCustomerId}`,
       {
         method: "PUT",
         body: JSON.stringify(validatedData),
@@ -184,7 +184,7 @@ export class PartnerApiClient {
 
     return this.client.request<
       ApiResponse<{ commissions: CommissionRecord[]; total: number; summary: any }>
-    >(`/api/v1/partners/${partnerId}/commissions?${searchParams.toString()}`, {
+    >(`/api/isp/v1/admin/partners/${partnerId}/commissions?${searchParams.toString()}`, {
       method: "GET",
     });
   }
@@ -203,7 +203,7 @@ export class PartnerApiClient {
     }
 
     return this.client.request<ApiResponse<any>>(
-      `/api/v1/partners/${partnerId}/analytics?${searchParams.toString()}`,
+      `/api/isp/v1/admin/partners/${partnerId}/analytics?${searchParams.toString()}`,
       {
         method: "GET",
       },
@@ -221,7 +221,7 @@ export class PartnerApiClient {
     });
 
     return this.client.request<ApiResponse<{ valid: boolean; territory: string }>>(
-      `/api/v1/partners/${validatedData.partnerId}/validate-territory`,
+      `/api/isp/v1/admin/partners/${validatedData.partnerId}/validate-territory`,
       {
         method: "POST",
         body: JSON.stringify({ address: validatedData.address }),

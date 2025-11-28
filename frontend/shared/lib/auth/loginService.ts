@@ -16,7 +16,7 @@ import { getRuntimeConfigSnapshot } from "../../runtime/runtime-config";
 import { clearOperatorAuthTokens } from "../../utils/operatorAuth";
 import { fetchWithAuth } from "./fetchWithAuth";
 
-const DEFAULT_API_PREFIX = "/api/v1";
+const DEFAULT_API_PREFIX = "/api/isp/v1/admin";
 
 function sanitizeBase(url: string): string {
   return url.replace(/\/+$/, "");

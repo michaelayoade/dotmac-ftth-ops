@@ -54,7 +54,7 @@ async function fetchCreditNotes(
       totalAmountMinor: Number(n?.total_amount ?? 0),
       remainingAmountMinor: Number(n?.remaining_credit_amount ?? 0),
       status: (n?.status ?? "draft").toString(),
-      downloadUrl: id ? `/api/v1/billing/credit-notes/${id}/download` : "#",
+      downloadUrl: id ? `/api/isp/v1/admin/billing/credit-notes/${id}/download` : "#",
     };
   });
 }

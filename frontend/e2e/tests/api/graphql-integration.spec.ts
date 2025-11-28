@@ -17,7 +17,7 @@ test.describe("GraphQL API Integration", () => {
    * Helper to authenticate and get token
    */
   async function authenticate(request: APIRequestContext): Promise<string> {
-    const response = await request.post(`${BASE_URL}/api/v1/auth/login`, {
+    const response = await request.post(`${BASE_URL}/api/isp/v1/admin/auth/login`, {
       data: {
         email: TEST_EMAIL,
         password: TEST_PASSWORD,

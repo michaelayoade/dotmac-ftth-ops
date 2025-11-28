@@ -373,7 +373,7 @@ export function TenantProvider({ children }) {
       document.title = `${currentTenant.name} - DotMac Platform`;
 
       // Load tenant-specific configuration
-      apiClient.get('/api/tenant/config').then(response => {
+      apiClient.get('/api/isp/v1/config').then(response => {
         updateTenantConfig(response.data);
       });
     }

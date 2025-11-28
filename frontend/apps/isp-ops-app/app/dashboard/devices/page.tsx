@@ -74,7 +74,7 @@ function DevicesPageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (manufacturerFilter !== "all") params.append("manufacturer", manufacturerFilter);
 
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices?${params.toString()}`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices?${params.toString()}`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
@@ -89,7 +89,7 @@ function DevicesPageContent() {
   const { data: stats } = useQuery<DeviceStats>({
     queryKey: ["genieacs-stats", refreshKey],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/stats`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/stats`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
@@ -102,7 +102,7 @@ function DevicesPageContent() {
   // Refresh device
   const refreshMutation = useMutation({
     mutationFn: async (deviceId: string) => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/refresh`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

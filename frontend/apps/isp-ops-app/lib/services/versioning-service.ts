@@ -11,6 +11,7 @@
 import { platformConfig } from "@/lib/config";
 
 const API_BASE = platformConfig.api.baseUrl;
+const ADMIN_PREFIX = "/api/isp/v1/admin";
 
 // ============================================
 // Type Definitions
@@ -221,7 +222,7 @@ class VersioningService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/admin/versions${queryString ? `?${queryString}` : ""}`;
+    const url = `${this.baseUrl}${ADMIN_PREFIX}/versions${queryString ? `?${queryString}` : ""}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -240,7 +241,7 @@ class VersioningService {
    * @returns Version details
    */
   async getVersion(version: string): Promise<APIVersionInfo> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/${version}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/${version}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -256,7 +257,7 @@ class VersioningService {
    * @returns Created version
    */
   async createVersion(data: VersionCreate): Promise<APIVersionInfo> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -274,7 +275,7 @@ class VersioningService {
    * @returns Updated version
    */
   async updateVersion(version: string, data: VersionUpdate): Promise<APIVersionInfo> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/${version}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/${version}`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -292,7 +293,7 @@ class VersioningService {
    * @returns Updated version
    */
   async deprecateVersion(version: string, data: VersionDeprecation): Promise<APIVersionInfo> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/${version}/deprecate`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/${version}/deprecate`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -309,7 +310,7 @@ class VersioningService {
    * @returns Updated version
    */
   async undeprecateVersion(version: string): Promise<APIVersionInfo> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/${version}/undeprecate`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/${version}/undeprecate`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -325,7 +326,7 @@ class VersioningService {
    * @returns Updated version
    */
   async setDefaultVersion(version: string): Promise<APIVersionInfo> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/${version}/set-default`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/${version}/set-default`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -340,7 +341,7 @@ class VersioningService {
    * @param version - Version string
    */
   async removeVersion(version: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/${version}`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/${version}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -376,7 +377,7 @@ class VersioningService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/admin/versions/breaking-changes${
+    const url = `${this.baseUrl}${ADMIN_PREFIX}/versions/breaking-changes${
       queryString ? `?${queryString}` : ""
     }`;
 
@@ -398,7 +399,7 @@ class VersioningService {
    */
   async getBreakingChange(changeId: string): Promise<BreakingChange> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/admin/versions/breaking-changes/${changeId}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/versions/breaking-changes/${changeId}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -416,7 +417,7 @@ class VersioningService {
    * @returns Created breaking change
    */
   async createBreakingChange(data: BreakingChangeCreate): Promise<BreakingChange> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/breaking-changes`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/breaking-changes`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -438,7 +439,7 @@ class VersioningService {
     data: BreakingChangeUpdate,
   ): Promise<BreakingChange> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/admin/versions/breaking-changes/${changeId}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/versions/breaking-changes/${changeId}`,
       {
         method: "PATCH",
         headers: this.getAuthHeaders(),
@@ -457,7 +458,7 @@ class VersioningService {
    */
   async deleteBreakingChange(changeId: string): Promise<void> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/admin/versions/breaking-changes/${changeId}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/versions/breaking-changes/${changeId}`,
       {
         method: "DELETE",
         headers: this.getAuthHeaders(),
@@ -483,7 +484,7 @@ class VersioningService {
    */
   async getAdoptionMetrics(days: number = 30): Promise<VersionAdoptionMetrics> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/admin/versions/metrics/adoption?days=${days}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/versions/metrics/adoption?days=${days}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -503,7 +504,7 @@ class VersioningService {
    */
   async getVersionUsageStats(version: string, days: number = 30): Promise<VersionUsageStats> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/admin/versions/${version}/usage?days=${days}`,
+      `${this.baseUrl}${ADMIN_PREFIX}/versions/${version}/usage?days=${days}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -521,7 +522,7 @@ class VersioningService {
    * @returns Health check results
    */
   async getVersionHealth(version: string): Promise<VersionHealthCheck> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/${version}/health`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/${version}/health`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -540,7 +541,7 @@ class VersioningService {
    * @returns Current configuration
    */
   async getConfiguration(): Promise<VersionConfiguration> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/config`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/config`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -556,7 +557,7 @@ class VersioningService {
    * @returns Updated configuration
    */
   async updateConfiguration(data: Partial<VersionConfiguration>): Promise<VersionConfiguration> {
-    const response = await fetch(`${this.baseUrl}/api/v1/admin/versions/config`, {
+    const response = await fetch(`${this.baseUrl}${ADMIN_PREFIX}/versions/config`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
       credentials: "include",

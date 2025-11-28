@@ -36,7 +36,7 @@ export const searchKeys = {
 
 /**
  * Search across tenant entities
- * GET /api/v1/search
+ * GET /api/platform/v1/admin/search
  */
 export function useSearch(params: SearchParams, enabled = true) {
   return useQuery<SearchResponse, Error, SearchResponse, any>({
@@ -113,7 +113,7 @@ export function useDebouncedSearch(query: string, type?: string, debounceMs = 30
 
 /**
  * Index content for search
- * POST /api/v1/search/index
+ * POST /api/platform/v1/admin/search/index
  */
 export function useIndexContent(options?: {
   onSuccess?: (data: IndexContentResponse) => void;
@@ -140,7 +140,7 @@ export function useIndexContent(options?: {
 
 /**
  * Remove content from search index
- * DELETE /api/v1/search/index/{contentId}
+ * DELETE /api/platform/v1/admin/search/index/{contentId}
  */
 export function useRemoveFromIndex(options?: {
   onSuccess?: (data: RemoveFromIndexResponse) => void;
@@ -167,7 +167,7 @@ export function useRemoveFromIndex(options?: {
 
 /**
  * Reindex entity
- * POST /api/v1/search/reindex
+ * POST /api/platform/v1/admin/search/reindex
  */
 export function useReindex(options?: { onSuccess?: () => void; onError?: (error: Error) => void }) {
   const queryClient = useQueryClient();
@@ -195,7 +195,7 @@ export function useReindex(options?: { onSuccess?: () => void; onError?: (error:
 
 /**
  * Get search statistics
- * GET /api/v1/search/stats
+ * GET /api/platform/v1/admin/search/stats
  */
 export function useSearchStatistics(enabled = true) {
   return useQuery<SearchStatistics, Error, SearchStatistics, any>({

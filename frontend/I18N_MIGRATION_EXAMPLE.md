@@ -34,7 +34,7 @@ export function JobsList() {
   async function fetchJobs() {
     try {
       setLoading(true);
-      const response = await fetch('/api/v1/jobs');
+      const response = await fetch('/api/isp/v1/admin/jobs');
       const data = await response.json();
       setJobs(data.jobs);
     } catch (err) {
@@ -198,7 +198,7 @@ export function JobsList() {
       setLoading(false);
       clearError();
 
-      const response = await fetch('/api/v1/jobs');
+      const response = await fetch('/api/isp/v1/admin/jobs');
       if (!response.ok) throw new Error('Failed to fetch');
 
       const data = await response.json();

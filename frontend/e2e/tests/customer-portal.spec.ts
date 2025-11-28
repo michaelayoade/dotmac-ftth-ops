@@ -565,7 +565,7 @@ test.describe("Customer Portal", () => {
   test.describe("Error Handling", () => {
     test("should handle network errors gracefully", async ({ page, context }) => {
       // Simulate network failure
-      await context.route("**/api/v1/customer/**", (route) => {
+      await context.route("**/api/isp/v1/portal/customer/**", (route) => {
         route.abort("failed");
       });
 

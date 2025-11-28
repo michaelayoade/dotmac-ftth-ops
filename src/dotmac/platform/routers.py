@@ -2,6 +2,21 @@
 Centralized router registration for all API endpoints.
 
 All routes except /health, /ready, and /metrics require authentication.
+
+.. deprecated::
+    This module is deprecated and will be removed in a future version.
+    Use :mod:`dotmac.shared.routers.registry` instead.
+
+    Migration guide:
+    - Platform routes: Use ServiceScope.CONTROLPLANE
+    - ISP routes: Use ServiceScope.ISP
+    - Shared routes: Use ServiceScope.SHARED
+
+    Example:
+        from dotmac.shared.routers import ServiceScope, register_routers_for_scope
+        register_routers_for_scope(app, ServiceScope.ISP)
+
+    See scripts/validate_routers.py for the new registry validation.
 """
 
 import importlib
@@ -87,15 +102,6 @@ ROUTER_CONFIGS = [
         tags=["Platform Administration"],
         requires_auth=True,  # Uses require_platform_admin internally
         description="Cross-tenant platform administration (super admin only)",
-    ),
-    # Backwards compatibility path for legacy clients hitting /api/v1/platform-admin/*
-    RouterConfig(
-        module_path="dotmac.platform.auth.platform_admin_router",
-        router_name="router",
-        prefix="/api/v1/platform-admin",
-        tags=["Platform Administration"],
-        requires_auth=True,
-        description="Legacy platform administration path (deprecated)",
     ),
     # NEW: Cross-tenant platform admin endpoints (billing, analytics, audit)
     RouterConfig(
@@ -211,14 +217,6 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
-        module_path="dotmac.platform.tenant.router",
-        router_name="legacy_router",
-        prefix="/api/v1",  # Legacy singular path (/api/v1/tenant/*)
-        tags=["Tenant Management"],
-        description="Legacy tenant endpoints (singular prefix)",
-        requires_auth=True,
-    ),
-    RouterConfig(
         module_path="dotmac.platform.tenant.onboarding_router",
         router_name="router",
         prefix="/api/v1",  # Module has /tenants prefix
@@ -237,7 +235,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.usage_billing_router",
         router_name="router",
-        prefix="/api/v1/tenants",  # Router exposes /{tenant_id}/usage paths
+        prefix="/api/v1/tenants",  # Router exposes /{tenant_id}/usage paths (deprecated)
         tags=["Tenant Usage Billing"],
         description="Usage tracking and billing integration",
         requires_auth=True,
@@ -245,7 +243,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.oss_router",
         router_name="router",
-        prefix="",  # Router already includes /api/v1/tenant/oss prefix
+        prefix="",  # Router already includes internal prefix (deprecated)
         tags=["Tenant OSS"],
         description="Tenant-specific OSS integration configuration",
         requires_auth=True,

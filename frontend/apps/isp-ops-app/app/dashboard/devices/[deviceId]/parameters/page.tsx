@@ -58,7 +58,7 @@ function ParametersPageContent() {
   const { data: parametersData, isLoading } = useQuery<ParameterGroup[]>({
     queryKey: ["device-parameters", deviceId, refreshKey],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/parameters`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
@@ -71,7 +71,7 @@ function ParametersPageContent() {
   const { data: device } = useQuery({
     queryKey: ["device", deviceId],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
@@ -83,7 +83,7 @@ function ParametersPageContent() {
   // Update parameter mutation
   const updateMutation = useMutation({
     mutationFn: async ({ path, value }: { path: string; value: string }) => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/parameters`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/parameters`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -113,7 +113,7 @@ function ParametersPageContent() {
   // Refresh parameters
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/genieacs/devices/${deviceId}/refresh`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/refresh`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

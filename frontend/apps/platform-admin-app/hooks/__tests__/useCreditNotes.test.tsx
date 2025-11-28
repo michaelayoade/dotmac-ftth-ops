@@ -12,7 +12,7 @@ const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 const mockBuildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const prefixed = normalized.startsWith("/api/v1") ? normalized : `/api/v1${normalized}`;
+  const prefixed = normalized.startsWith("/api/isp/v1/admin") ? normalized : `/api/isp/v1/admin${normalized}`;
   return `http://localhost:8000${prefixed}`;
 };
 
@@ -20,7 +20,7 @@ jest.mock("@/providers/AppConfigContext", () => ({
   useAppConfig: () => ({
     api: {
       baseUrl: "http://localhost:8000",
-      prefix: "/api/v1",
+      prefix: "/api/isp/v1/admin",
       buildUrl: mockBuildUrl,
     },
     features: {},
@@ -107,11 +107,11 @@ describe("useCreditNotes", () => {
       totalAmountMinor: 10000,
       remainingAmountMinor: 5000,
       status: "issued",
-      downloadUrl: "/api/v1/billing/credit-notes/cn-1/download",
+      downloadUrl: "/api/isp/v1/admin/billing/credit-notes/cn-1/download",
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/api/v1/billing/credit-notes?limit=5",
+      "http://localhost:8000/api/isp/v1/admin/billing/credit-notes?limit=5",
       expect.objectContaining({
         credentials: "include",
         headers: {
@@ -247,7 +247,7 @@ describe("useCreditNotes", () => {
       totalAmountMinor: 0,
       remainingAmountMinor: 0,
       status: "draft",
-      downloadUrl: "/api/v1/billing/credit-notes/cn-1/download",
+      downloadUrl: "/api/isp/v1/admin/billing/credit-notes/cn-1/download",
     });
   });
 
@@ -336,7 +336,7 @@ describe("useCreditNotes", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.[0]?.downloadUrl).toBe(
-      "/api/v1/billing/credit-notes/cn-123/download",
+      "/api/isp/v1/admin/billing/credit-notes/cn-123/download",
     );
   });
 

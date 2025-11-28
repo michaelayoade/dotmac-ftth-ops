@@ -86,7 +86,7 @@ function AuditPageContent() {
       params.append("days", daysFilter.toString());
       params.append("per_page", "100");
 
-      const response = await fetch(`${apiBaseUrl}/api/v1/audit/activities?${params.toString()}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/audit/activities?${params.toString()}`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch audit activities");

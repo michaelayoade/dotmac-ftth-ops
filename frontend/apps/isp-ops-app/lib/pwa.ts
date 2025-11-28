@@ -106,7 +106,7 @@ export async function subscribeToPushNotifications(
     if (isDev) console.log("Push subscription:", subscription);
 
     // Send subscription to server
-    await fetch("/api/v1/push/subscribe", {
+    await fetch("/api/isp/v1/admin/push/subscribe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -131,7 +131,7 @@ export async function unsubscribeFromPushNotifications(
       await subscription.unsubscribe();
 
       // Notify server
-      await fetch("/api/v1/push/unsubscribe", {
+      await fetch("/api/isp/v1/admin/push/unsubscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

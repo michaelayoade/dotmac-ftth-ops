@@ -59,7 +59,7 @@ async def test_schedule_provisioning_job(
     )
 
     response = await async_client.post(
-        f"/api/v1/tenants/{tenant_id}/provisioning/jobs",
+        f"/api/platform/v1/tenants/{tenant_id}/provisioning/jobs",
         json={"deployment_mode": "dotmac_hosted", "awx_template_id": 99},
     )
 
@@ -85,7 +85,7 @@ async def test_schedule_provisioning_job_conflict(
     )
 
     response = await async_client.post(
-        "/api/v1/tenants/conflict-tenant/provisioning/jobs",
+        "/api/platform/v1/tenants/conflict-tenant/provisioning/jobs",
         json={"deployment_mode": "dotmac_hosted"},
     )
 
@@ -100,7 +100,7 @@ async def test_list_provisioning_jobs(async_client: AsyncClient, mock_provisioni
     job = _job_factory(tenant_id, job_id="job-456", status=TenantProvisioningStatus.SUCCEEDED)
     mock_provisioning_service.list_jobs.return_value = ([job], 1)
 
-    response = await async_client.get(f"/api/v1/tenants/{tenant_id}/provisioning/jobs")
+    response = await async_client.get(f"/api/platform/v1/tenants/{tenant_id}/provisioning/jobs")
     assert response.status_code == 200
     payload = response.json()
     assert payload["total"] == 1
@@ -115,7 +115,7 @@ async def test_get_provisioning_job(async_client: AsyncClient, mock_provisioning
     job = _job_factory(tenant_id, job_id="job-789")
     mock_provisioning_service.get_job.return_value = job
 
-    response = await async_client.get(f"/api/v1/tenants/{tenant_id}/provisioning/jobs/{job.id}")
+    response = await async_client.get(f"/api/platform/v1/tenants/{tenant_id}/provisioning/jobs/{job.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == job.id

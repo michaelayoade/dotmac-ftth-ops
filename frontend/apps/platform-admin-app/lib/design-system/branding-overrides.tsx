@@ -268,7 +268,7 @@ export function PoweredByFooter({ className }: { className?: string }) {
  */
 export async function fetchBrandingConfig(tenantId: string): Promise<ISPBrandingConfig> {
   try {
-    const response = await fetch(`/api/v1/tenant/${tenantId}/branding`);
+    const response = await fetch(`/api/platform/v1/admin/tenant/${tenantId}/branding`);
 
     if (!response.ok) {
       console.warn(`Failed to fetch branding for tenant ${tenantId}, using defaults`);
@@ -291,7 +291,7 @@ export async function saveBrandingConfig(
   config: Partial<ISPBrandingConfig>,
 ): Promise<boolean> {
   try {
-    const response = await fetch(`/api/v1/tenant/${tenantId}/branding`, {
+    const response = await fetch(`/api/platform/v1/admin/tenant/${tenantId}/branding`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

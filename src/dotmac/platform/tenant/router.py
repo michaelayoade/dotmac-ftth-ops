@@ -11,8 +11,7 @@ from datetime import datetime
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.tenant.oss_config import OSSService, update_service_config
@@ -86,7 +85,7 @@ def _can_view_sensitive_tenant_data(user: UserInfo) -> bool:
     if is_platform_admin(user) or has_platform_permission(user, TENANT_READ_PERMISSION):
         return True
 
-    # Accept legacy alias permissions
+    # Accept alias permissions
     user_permissions = set(user.permissions or [])
     if "tenants:read" in user_permissions or "tenants:*" in user_permissions:
         return True
@@ -133,7 +132,7 @@ def _ensure_can_read_tenant(user: UserInfo, tenant_id: str) -> None:
     user_permissions = set(user.permissions or [])
     if is_platform_admin(user) or has_platform_permission(user, TENANT_READ_PERMISSION):
         return
-    # Allow legacy aliases used in older tests/clients
+    # Allow alias permissions
     if "tenants:read" in user_permissions or "tenants:*" in user_permissions:
         return
     raise HTTPException(
@@ -149,7 +148,7 @@ def _ensure_can_write_tenant(user: UserInfo, tenant_id: str) -> None:
     user_permissions = set(user.permissions or [])
     if is_platform_admin(user) or has_platform_permission(user, TENANT_WRITE_PERMISSION):
         return
-    # Allow legacy aliases used in older tests/clients
+    # Allow alias permissions
     if "tenants:write" in user_permissions or "tenants:*" in user_permissions:
         return
     raise HTTPException(
@@ -182,7 +181,7 @@ def _user_can_view_sensitive_tenant_data(user: UserInfo, tenant_id: str) -> bool
 
 
 def require_tenant_permission(permission: str) -> Callable[..., Awaitable[UserInfo]]:
-    """Wrapper dependency that honours legacy tenant:* permission aliases."""
+    """Wrapper dependency that honours tenant:* permission aliases."""
 
     platform_checker = require_platform_permission(permission)
 
@@ -816,21 +815,3 @@ async def get_tenant_provisioning_job(
     return TenantProvisioningJobResponse.model_validate(job)
 
 
-# Legacy route alias (/api/v1/tenant/*) maintained for backwards compatibility.
-legacy_router = APIRouter(prefix="/tenant", tags=["Tenant Management (legacy)"])
-
-
-@legacy_router.api_route(
-    "/{full_path:path}",
-    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-    include_in_schema=False,
-)
-async def redirect_legacy_tenant_paths(full_path: str, request: Request) -> RedirectResponse:
-    """
-    Redirect legacy /tenant/* paths to the canonical /tenants/* endpoints.
-
-    Uses HTTP 307 to preserve the original HTTP method.
-    """
-    new_path = request.url.path.replace("/tenant", "/tenants", 1)
-    new_url = request.url.replace(path=new_path)
-    return RedirectResponse(url=str(new_url), status_code=status.HTTP_307_TEMPORARY_REDIRECT)

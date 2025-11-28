@@ -45,7 +45,7 @@ from dotmac.platform.project_management.scheduling_schemas import (
 )
 from dotmac.platform.tenant import get_current_tenant_id
 
-router = APIRouter(prefix="/api/v1/scheduling", tags=["scheduling"])
+router = APIRouter(prefix="/scheduling", tags=["scheduling"])
 
 
 # ============================================================================

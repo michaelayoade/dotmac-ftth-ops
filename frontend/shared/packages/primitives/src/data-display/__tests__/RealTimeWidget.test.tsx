@@ -52,9 +52,9 @@ const mockService: ServiceHealthWidgetProps["service"] = {
   uptime: 0.9995,
   version: "2.1.0",
   endpoints: [
-    { name: "/api/v1/health", status: "up", responseTime: 50 },
-    { name: "/api/v1/users", status: "up", responseTime: 150 },
-    { name: "/api/v1/products", status: "degraded", responseTime: 350 },
+    { name: "/api/platform/v1/admin/health", status: "up", responseTime: 50 },
+    { name: "/api/platform/v1/admin/users", status: "up", responseTime: 150 },
+    { name: "/api/platform/v1/admin/products", status: "degraded", responseTime: 350 },
   ],
 };
 
@@ -519,9 +519,9 @@ describe("ServiceHealthWidget Component", () => {
     it("shows all endpoints", () => {
       render(<ServiceHealthWidget service={mockService} />);
 
-      expect(screen.getByText("/api/v1/health")).toBeInTheDocument();
-      expect(screen.getByText("/api/v1/users")).toBeInTheDocument();
-      expect(screen.getByText("/api/v1/products")).toBeInTheDocument();
+      expect(screen.getByText("/api/platform/v1/admin/health")).toBeInTheDocument();
+      expect(screen.getByText("/api/platform/v1/admin/users")).toBeInTheDocument();
+      expect(screen.getByText("/api/platform/v1/admin/products")).toBeInTheDocument();
     });
 
     it("displays endpoint response times", () => {

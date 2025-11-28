@@ -11,8 +11,8 @@ import { server } from "../msw-setup";
 import { http, HttpResponse } from "msw";
 
 const API_BASE = process.env.BACKEND_URL
-  ? `${process.env.BACKEND_URL}/api/v1`
-  : "http://localhost:8000/api/v1";
+  ? `${process.env.BACKEND_URL}/api/platform/v1/admin`
+  : "http://localhost:8000/api/platform/v1/admin";
 
 type IntegrationStatus = "disabled" | "configuring" | "ready" | "error" | "deprecated";
 

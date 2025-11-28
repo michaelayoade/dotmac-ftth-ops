@@ -53,7 +53,7 @@ interface PartnerDashboardProps {
 }
 
 export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
-  apiEndpoint = "/api/v1/partners",
+  apiEndpoint = "/api/isp/v1/admin/partners",
   onPartnerSelect,
   showCommissionConfig = true,
 }) => {
@@ -88,7 +88,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
 
   const loadCommissionConfigs = async () => {
     try {
-      const response = await fetch("/api/v1/commission-config");
+      const response = await fetch("/api/isp/v1/admin/commission-config");
       const configs = await response.json();
       setCommissionConfigs(configs);
     } catch (error) {

@@ -76,7 +76,7 @@ export const communicationsKeys = {
 
 /**
  * Send immediate email
- * POST /api/v1/communications/email/send
+ * POST /api/platform/v1/admin/communications/email/send
  */
 export function useSendEmail(options?: {
   onSuccess?: (data: SendEmailResponse) => void;
@@ -103,7 +103,7 @@ export function useSendEmail(options?: {
 
 /**
  * Queue async email
- * POST /api/v1/communications/email/queue
+ * POST /api/platform/v1/admin/communications/email/queue
  */
 export function useQueueEmail(options?: {
   onSuccess?: (data: QueueEmailResponse) => void;
@@ -129,7 +129,7 @@ export function useQueueEmail(options?: {
 
 /**
  * List templates with pagination
- * GET /api/v1/communications/templates
+ * GET /api/platform/v1/admin/communications/templates
  */
 export function useTemplates(params: ListTemplatesParams = {}) {
   return useQuery<TemplateListResponse, Error, TemplateListResponse, any>({
@@ -142,7 +142,7 @@ export function useTemplates(params: ListTemplatesParams = {}) {
 
 /**
  * Get single template
- * GET /api/v1/communications/templates/{id}
+ * GET /api/platform/v1/admin/communications/templates/{id}
  */
 export function useTemplate(id: string | null) {
   return useQuery<CommunicationTemplate, Error, CommunicationTemplate, any>({
@@ -156,7 +156,7 @@ export function useTemplate(id: string | null) {
 
 /**
  * Create template
- * POST /api/v1/communications/templates
+ * POST /api/platform/v1/admin/communications/templates
  */
 export function useCreateTemplate(options?: {
   onSuccess?: (data: CommunicationTemplate) => void;
@@ -185,7 +185,7 @@ export function useCreateTemplate(options?: {
 
 /**
  * Update template
- * PUT /api/v1/communications/templates/{id}
+ * PUT /api/platform/v1/admin/communications/templates/{id}
  */
 export function useUpdateTemplate(options?: {
   onSuccess?: (data: CommunicationTemplate) => void;
@@ -214,7 +214,7 @@ export function useUpdateTemplate(options?: {
 
 /**
  * Delete template
- * DELETE /api/v1/communications/templates/{id}
+ * DELETE /api/platform/v1/admin/communications/templates/{id}
  */
 export function useDeleteTemplate(options?: {
   onSuccess?: () => void;
@@ -246,7 +246,7 @@ export function useDeleteTemplate(options?: {
 
 /**
  * Render template with variables
- * POST /api/v1/communications/templates/{id}/render
+ * POST /api/platform/v1/admin/communications/templates/{id}/render
  */
 export function useRenderTemplate(options?: {
   onSuccess?: (data: RenderTemplateResponse) => void;
@@ -270,7 +270,7 @@ export function useRenderTemplate(options?: {
 
 /**
  * Quick render without template ID
- * POST /api/v1/communications/render
+ * POST /api/platform/v1/admin/communications/render
  */
 export function useQuickRender(options?: {
   onSuccess?: (data: RenderTemplateResponse) => void;
@@ -292,7 +292,7 @@ export function useQuickRender(options?: {
 
 /**
  * List communication logs with filters
- * GET /api/v1/communications/logs
+ * GET /api/platform/v1/admin/communications/logs
  */
 export function useCommunicationLogs(params: ListCommunicationsParams = {}) {
   return useQuery<
@@ -310,7 +310,7 @@ export function useCommunicationLogs(params: ListCommunicationsParams = {}) {
 
 /**
  * Get single communication log
- * GET /api/v1/communications/logs/{id}
+ * GET /api/platform/v1/admin/communications/logs/{id}
  */
 export function useCommunicationLog(id: string | null) {
   return useQuery<CommunicationLog, Error, CommunicationLog, any>({
@@ -326,7 +326,7 @@ export function useCommunicationLog(id: string | null) {
 
 /**
  * Queue bulk email operation
- * POST /api/v1/communications/bulk/queue
+ * POST /api/platform/v1/admin/communications/bulk/queue
  */
 export function useQueueBulk(options?: {
   onSuccess?: (data: BulkOperation) => void;
@@ -353,7 +353,7 @@ export function useQueueBulk(options?: {
 
 /**
  * Get bulk operation status
- * GET /api/v1/communications/bulk/{id}/status
+ * GET /api/platform/v1/admin/communications/bulk/{id}/status
  */
 export function useBulkOperationStatus(id: string | null, options?: { refetchInterval?: number }) {
   return useQuery<BulkOperationStatusResponse, Error, BulkOperationStatusResponse, any>({
@@ -368,7 +368,7 @@ export function useBulkOperationStatus(id: string | null, options?: { refetchInt
 
 /**
  * Cancel bulk operation
- * POST /api/v1/communications/bulk/{id}/cancel
+ * POST /api/platform/v1/admin/communications/bulk/{id}/cancel
  */
 export function useCancelBulk(options?: {
   onSuccess?: (data: BulkOperation) => void;
@@ -397,7 +397,7 @@ export function useCancelBulk(options?: {
 
 /**
  * Get Celery task status
- * GET /api/v1/communications/tasks/{task_id}
+ * GET /api/platform/v1/admin/communications/tasks/{task_id}
  */
 export function useTaskStatus(taskId: string | null, options?: { refetchInterval?: number }) {
   return useQuery<TaskStatusResponse, Error, TaskStatusResponse, any>({
@@ -414,7 +414,7 @@ export function useTaskStatus(taskId: string | null, options?: { refetchInterval
 
 /**
  * Get communication statistics
- * GET /api/v1/communications/stats
+ * GET /api/platform/v1/admin/communications/stats
  */
 export function useCommunicationStats(params: StatsParams = {}) {
   return useQuery<CommunicationStats, Error, CommunicationStats, any>({
@@ -427,7 +427,7 @@ export function useCommunicationStats(params: StatsParams = {}) {
 
 /**
  * Get activity timeline
- * GET /api/v1/communications/activity
+ * GET /api/platform/v1/admin/communications/activity
  */
 export function useCommunicationActivity(params: ActivityParams = {}) {
   return useQuery<ActivityResponse, Error, ActivityResponse, any>({
@@ -440,7 +440,7 @@ export function useCommunicationActivity(params: ActivityParams = {}) {
 
 /**
  * Get health status
- * GET /api/v1/communications/health
+ * GET /api/platform/v1/admin/communications/health
  */
 export function useCommunicationHealth() {
   return useQuery<HealthResponse, Error, HealthResponse, any>({
@@ -454,7 +454,7 @@ export function useCommunicationHealth() {
 
 /**
  * Get metrics (cached)
- * GET /api/v1/communications/metrics
+ * GET /api/platform/v1/admin/communications/metrics
  */
 export function useCommunicationMetrics() {
   return useQuery<MetricsResponse, Error, MetricsResponse, any>({

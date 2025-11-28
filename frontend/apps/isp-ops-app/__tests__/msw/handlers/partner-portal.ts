@@ -223,8 +223,8 @@ export function clearPartnerPortalData(): void {
 // ============================================
 
 export const partnerPortalHandlers = [
-  // GET /api/v1/partners/portal/dashboard - Get dashboard statistics
-  http.get("*/api/v1/partners/portal/dashboard", ({ request }) => {
+// GET /api/isp/v1/partners/portal/dashboard - Get dashboard statistics
+http.get("*/api/isp/v1/partners/portal/dashboard", ({ request }) => {
     if (!dashboardStats) {
       dashboardStats = createMockDashboardStats();
     }
@@ -232,8 +232,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(dashboardStats);
   }),
 
-  // GET /api/v1/partners/portal/profile - Get partner profile
-  http.get("*/api/v1/partners/portal/profile", ({ request }) => {
+// GET /api/isp/v1/partners/portal/profile - Get partner profile
+http.get("*/api/isp/v1/partners/portal/profile", ({ request }) => {
     if (!partnerProfile) {
       partnerProfile = createMockPartnerProfile();
     }
@@ -241,8 +241,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(partnerProfile);
   }),
 
-  // PATCH /api/v1/partners/portal/profile - Update partner profile
-  http.patch("*/api/v1/partners/portal/profile", async (req) => {
+// PATCH /api/isp/v1/partners/portal/profile - Update partner profile
+http.patch("*/api/isp/v1/partners/portal/profile", async (req) => {
     const body = await req.json<any>();
 
     if (!partnerProfile) {
@@ -258,8 +258,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(partnerProfile);
   }),
 
-  // GET /api/v1/partners/portal/referrals - Get referrals
-  http.get("*/api/v1/partners/portal/referrals", ({ request }) => {
+// GET /api/isp/v1/partners/portal/referrals - Get referrals
+http.get("*/api/isp/v1/partners/portal/referrals", ({ request }) => {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const offset = parseInt(url.searchParams.get("offset") || "0");
@@ -269,8 +269,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(paginated);
   }),
 
-  // POST /api/v1/partners/portal/referrals - Submit referral
-  http.post("*/api/v1/partners/portal/referrals", async (req) => {
+// POST /api/isp/v1/partners/portal/referrals - Submit referral
+http.post("*/api/isp/v1/partners/portal/referrals", async (req) => {
     const body = await req.json<any>();
 
     const newReferral = createMockReferral({
@@ -293,8 +293,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(newReferral);
   }),
 
-  // GET /api/v1/partners/portal/commissions - Get commissions
-  http.get("*/api/v1/partners/portal/commissions", ({ request }) => {
+// GET /api/isp/v1/partners/portal/commissions - Get commissions
+http.get("*/api/isp/v1/partners/portal/commissions", ({ request }) => {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const offset = parseInt(url.searchParams.get("offset") || "0");
@@ -304,8 +304,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(paginated);
   }),
 
-  // GET /api/v1/partners/portal/customers - Get customers
-  http.get("*/api/v1/partners/portal/customers", ({ request }) => {
+// GET /api/isp/v1/partners/portal/customers - Get customers
+http.get("*/api/isp/v1/partners/portal/customers", ({ request }) => {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const offset = parseInt(url.searchParams.get("offset") || "0");
@@ -315,8 +315,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(paginated);
   }),
 
-  // GET /api/v1/partners/portal/statements - Get statements
-  http.get("*/api/v1/partners/portal/statements", ({ request }) => {
+// GET /api/isp/v1/partners/portal/statements - Get statements
+http.get("*/api/isp/v1/partners/portal/statements", ({ request }) => {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const offset = parseInt(url.searchParams.get("offset") || "0");
@@ -326,8 +326,8 @@ export const partnerPortalHandlers = [
     return HttpResponse.json(paginated);
   }),
 
-  // GET /api/v1/partners/portal/payouts - Get payout history
-  http.get("*/api/v1/partners/portal/payouts", ({ request }) => {
+// GET /api/isp/v1/partners/portal/payouts - Get payout history
+http.get("*/api/isp/v1/partners/portal/payouts", ({ request }) => {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const offset = parseInt(url.searchParams.get("offset") || "0");

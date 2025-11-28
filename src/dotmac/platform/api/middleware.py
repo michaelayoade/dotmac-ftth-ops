@@ -160,8 +160,7 @@ class CircuitBreakerMiddleware(BaseHTTPMiddleware):
 
         Path patterns:
         - /api/platform/v1/{service}/... → extract 'service' (index 4)
-        - /api/tenant/v1/{service}/... → extract 'service' (index 4)
-        - /api/v1/{service}/... → extract 'service' (index 3)
+        - /api/isp/v1/{service}/... → extract 'service' (index 4)
         - Other paths → return 'unknown'
 
         Args:
@@ -172,18 +171,13 @@ class CircuitBreakerMiddleware(BaseHTTPMiddleware):
         """
         path_parts = path.split("/")
 
-        # /api/platform/v1/{service}/... or /api/tenant/v1/{service}/...
+        # /api/platform/v1/{service}/... or /api/isp/v1/{service}/...
         if (
             len(path_parts) > 4
             and path_parts[1] == "api"
-            and path_parts[2] in ("platform", "tenant")
+            and path_parts[2] in ("platform", "isp")
         ):
             service = path_parts[4]  # service name after /api/{boundary}/v1/
-            return service or "unknown"
-
-        # /api/v1/{service}/...
-        if len(path_parts) > 3 and path_parts[1] == "api" and path_parts[2] == "v1":
-            service = path_parts[3]  # service name after /api/v1/
             return service or "unknown"
 
         # Fallback for non-API paths or unknown patterns

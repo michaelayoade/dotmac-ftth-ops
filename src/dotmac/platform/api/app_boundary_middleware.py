@@ -1,11 +1,13 @@
 """
 App Boundary Middleware
 
-Enforces platform vs tenant route boundaries based on scopes and tenant context.
+Enforces platform vs ISP route boundaries based on scopes and tenant context.
 Provides clear separation between:
 - Platform routes (/api/platform/v1/*) - Requires platform:* scopes
-- Tenant routes (/api/tenant/v1/*) - Requires tenant_id context
-- Shared routes (/api/v1/*) - Available to both with scope-based filtering
+- ISP routes (/api/isp/v1/*) - Requires tenant_id context and ISP scopes
+
+IMPORTANT: The /api/tenant/v1 prefix is NO LONGER SUPPORTED.
+All ISP routes must use /api/isp/v1.
 """
 
 from collections.abc import Awaitable, Callable
@@ -24,47 +26,50 @@ CallNext = Callable[[Request], Awaitable[Response]]
 
 class AppBoundaryMiddleware(BaseHTTPMiddleware):
     """
-    Enforce route boundaries between platform and tenant operations.
+    Enforce route boundaries between platform and ISP operations.
 
     Rules:
     1. /api/platform/* routes require platform:* scopes
-    2. /api/tenant/* routes require tenant_id context
-    3. /api/v1/* (shared) available to both with scope-based filtering
-    4. /api/public/* open to all
-    5. /health, /ready, /metrics public
+    2. /api/isp/* routes require tenant_id context and ISP scopes
+    3. /api/public/* open to all
+    4. /health, /ready, /metrics public
+    5. /api/tenant/* REJECTED with 410 Gone (removed)
 
-    The middleware runs early in the stack to reject unauthorized
-    requests before they reach route handlers.
+    Note: Shared routes (auth, users, etc.) are embedded in each sub-app
+    and inherit that app's boundary rules automatically.
     """
 
     # Route prefixes that define boundaries
     PLATFORM_PREFIXES = ("/api/platform/",)
-    TENANT_PREFIXES = ("/api/tenant/",)
-    SHARED_PREFIXES = ("/api/v1/",)
+    ISP_PREFIXES = ("/api/isp/",)
     PUBLIC_PREFIXES = ("/api/public/", "/docs", "/redoc", "/openapi.json")
-    # Fixed: Removed overly broad "/api" prefix that was bypassing ALL API route enforcement
-    # Only include actual health endpoints: /health, /ready, /metrics, /api/health
     HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api/health")
+
+    # Rejected prefixes - fail fast with 410 Gone
+    REJECTED_PREFIXES = ("/api/tenant/", "/api/v1/")
 
     async def dispatch(
         self,
         request: Request,
         call_next: CallNext,
     ) -> Response:
-        """
-        Enforce app boundaries before processing request.
-
-        Args:
-            request: FastAPI Request
-            call_next: Next middleware in chain
-
-        Returns:
-            Response
-
-        Raises:
-            HTTPException: If boundary rules are violated
-        """
+        """Enforce app boundaries before processing request."""
         path = request.url.path
+
+        # Fail fast on rejected prefixes
+        if self._is_rejected_route(path):
+            logger.error(
+                "rejected_route",
+                path=path,
+                message="Route prefix not supported",
+            )
+            raise HTTPException(
+                status_code=410,
+                detail={
+                    "error": "This API endpoint does not exist",
+                    "path": path,
+                },
+            )
 
         # Skip middleware for public and health routes
         if self._is_public_route(path) or self._is_health_route(path):
@@ -78,13 +83,10 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         if self._is_platform_route(path):
             self._enforce_platform_boundary(path, user, tenant_id)
 
-        # Enforce tenant route boundaries
-        elif self._is_tenant_route(path):
-            self._enforce_tenant_boundary(path, user, tenant_id)
+        # Enforce ISP route boundaries
+        elif self._is_isp_route(path):
+            self._enforce_isp_boundary(path, user, tenant_id)
 
-        # Shared routes - no additional enforcement (handled by route dependencies)
-
-        # Proceed with request
         return await call_next(request)
 
     def _enforce_platform_boundary(
@@ -93,17 +95,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         user: Any | None,
         tenant_id: str | None,
     ) -> None:
-        """
-        Enforce platform route boundary rules.
-
-        Args:
-            path: Request path
-            user: Current user (if authenticated)
-            tenant_id: Current tenant ID (if present)
-
-        Raises:
-            HTTPException: If access denied
-        """
+        """Enforce platform route boundary rules."""
         # Check deployment mode - platform routes disabled in single-tenant mode
         if settings.DEPLOYMENT_MODE == "single_tenant":
             logger.warning(
@@ -122,10 +114,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
 
         # Platform routes require authentication
         if not user:
-            logger.warning(
-                "platform_route_requires_auth",
-                path=path,
-            )
+            logger.warning("platform_route_requires_auth", path=path)
             raise HTTPException(
                 status_code=401,
                 detail={
@@ -153,7 +142,6 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
                         "platform_support",
                         "platform_finance",
                     ],
-                    "help": "Contact your platform administrator for access",
                 },
             )
 
@@ -163,38 +151,25 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
             user_id=getattr(user, "id", None),
         )
 
-    def _enforce_tenant_boundary(
+    def _enforce_isp_boundary(
         self,
         path: str,
         user: Any | None,
         tenant_id: str | None,
     ) -> None:
-        """
-        Enforce tenant route boundary rules.
-
-        Args:
-            path: Request path
-            user: Current user (if authenticated)
-            tenant_id: Current tenant ID (if present)
-
-        Raises:
-            HTTPException: If access denied
-        """
-        # Tenant routes require authentication
+        """Enforce ISP route boundary rules."""
+        # ISP routes require authentication
         if not user:
-            logger.warning(
-                "tenant_route_requires_auth",
-                path=path,
-            )
+            logger.warning("isp_route_requires_auth", path=path)
             raise HTTPException(
                 status_code=401,
                 detail={
-                    "error": "Authentication required for tenant routes",
+                    "error": "Authentication required for ISP routes",
                     "path": path,
                 },
             )
 
-        # Tenant routes require tenant context
+        # ISP routes require tenant context
         if not tenant_id:
             logger.warning(
                 "tenant_context_missing",
@@ -204,16 +179,16 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
             raise HTTPException(
                 status_code=400,
                 detail={
-                    "error": "Tenant context required for this operation",
+                    "error": "Tenant context required for ISP operations",
                     "path": path,
-                    "help": "Include X-Tenant-ID header or select a tenant in the UI",
+                    "help": "Include X-Tenant-ID header",
                 },
             )
 
-        # Check for tenant or platform scopes (platform users can access tenant routes)
-        if not self._has_tenant_scope(user) and not self._has_platform_scope(user):
+        # Check for ISP or platform scopes
+        if not self._has_isp_scope(user) and not self._has_platform_scope(user):
             logger.warning(
-                "tenant_access_denied",
+                "isp_access_denied",
                 path=path,
                 user_id=getattr(user, "id", None),
                 tenant_id=tenant_id,
@@ -222,19 +197,22 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
             raise HTTPException(
                 status_code=403,
                 detail={
-                    "error": "Insufficient permissions for tenant operations",
+                    "error": "Insufficient permissions for ISP operations",
                     "path": path,
                     "required_scopes": ["isp_admin:*", "network:*", "billing:*", "customer:*"],
-                    "help": "Contact your tenant administrator for access",
                 },
             )
 
         logger.debug(
-            "tenant_route_access_granted",
+            "isp_route_access_granted",
             path=path,
             user_id=getattr(user, "id", None),
             tenant_id=tenant_id,
         )
+
+    def _is_rejected_route(self, path: str) -> bool:
+        """Check if route uses rejected prefixes."""
+        return any(path.startswith(prefix) for prefix in self.REJECTED_PREFIXES)
 
     def _is_public_route(self, path: str) -> bool:
         """Check if route is public (no auth required)."""
@@ -248,31 +226,12 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         """Check if route is platform-only."""
         return any(path.startswith(prefix) for prefix in self.PLATFORM_PREFIXES)
 
-    def _is_tenant_route(self, path: str) -> bool:
-        """Check if route is tenant-only."""
-        return any(path.startswith(prefix) for prefix in self.TENANT_PREFIXES)
+    def _is_isp_route(self, path: str) -> bool:
+        """Check if route is ISP-only."""
+        return any(path.startswith(prefix) for prefix in self.ISP_PREFIXES)
 
     def _has_platform_scope(self, user: Any) -> bool:
-        """
-        Check if user has any platform-level scopes.
-
-        Platform scopes include:
-        - platform:* (super admin)
-        - platform:tenants:*
-        - platform:licensing:*
-        - platform:support:*
-        - platform_super_admin
-        - platform_support
-        - platform_finance
-        - platform_partner_admin
-        - platform_observer
-
-        Args:
-            user: User object
-
-        Returns:
-            True if user has platform scopes
-        """
+        """Check if user has any platform-level scopes."""
         if not hasattr(user, "scopes"):
             return False
 
@@ -280,7 +239,6 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         if not isinstance(scopes, list):
             return False
 
-        # Check for platform scopes
         platform_scope_keywords = [
             "platform:",
             "platform_super_admin",
@@ -296,28 +254,8 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
 
         return False
 
-    def _has_tenant_scope(self, user: Any) -> bool:
-        """
-        Check if user has any tenant-level scopes.
-
-        Tenant scopes include:
-        - isp_admin:*
-        - network:*
-        - billing:*
-        - customer:*
-        - services:*
-        - reseller:*
-        - support:*
-        - ticket:*
-        - workflows:*
-        - jobs:*
-
-        Args:
-            user: User object
-
-        Returns:
-            True if user has tenant scopes
-        """
+    def _has_isp_scope(self, user: Any) -> bool:
+        """Check if user has any ISP-level scopes."""
         if not hasattr(user, "scopes"):
             return False
 
@@ -325,12 +263,11 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         if not isinstance(scopes, list):
             return False
 
-        # Allow platform users to access tenant routes (for support)
+        # Allow platform users to access ISP routes (for support)
         if self._has_platform_scope(user):
             return True
 
-        # Check for tenant scopes
-        tenant_scope_keywords = [
+        isp_scope_keywords = [
             "isp_admin:",
             "network:",
             "billing:",
@@ -348,7 +285,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         ]
 
         for scope in scopes:
-            if any(str(scope).startswith(keyword) for keyword in tenant_scope_keywords):
+            if any(str(scope).startswith(keyword) for keyword in isp_scope_keywords):
                 return True
 
         return False
@@ -361,9 +298,6 @@ class SingleTenantMiddleware(BaseHTTPMiddleware):
     In single-tenant mode:
     - Automatically sets tenant_id from config
     - Disables tenant selection
-    - Simplifies authentication
-
-    This middleware should be disabled in multi-tenant mode.
     """
 
     async def dispatch(
@@ -371,21 +305,10 @@ class SingleTenantMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: CallNext,
     ) -> Response:
-        """
-        Set fixed tenant context for single-tenant deployment.
-
-        Args:
-            request: FastAPI Request
-            call_next: Next middleware
-
-        Returns:
-            Response
-        """
-        # Only apply in single-tenant mode
+        """Set fixed tenant context for single-tenant deployment."""
         if settings.DEPLOYMENT_MODE != "single_tenant":
             return await call_next(request)
 
-        # Set fixed tenant ID from config
         if settings.TENANT_ID:
             request.state.tenant_id = settings.TENANT_ID
             logger.debug(

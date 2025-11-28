@@ -73,7 +73,7 @@ function PluginDetailsPageContent() {
   } = useQuery<PluginInstance>({
     queryKey: ["plugin-instance", pluginId, apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances/${pluginId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/plugins/instances/${pluginId}`, {
         credentials: "include",
       });
       if (!response.ok) {
@@ -92,7 +92,7 @@ function PluginDetailsPageContent() {
     queryKey: ["plugin-configuration", pluginId, apiBaseUrl],
     queryFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/configuration`,
+        `${apiBaseUrl}/api/platform/v1/admin/plugins/instances/${pluginId}/configuration`,
         { credentials: "include" },
       );
       if (!response.ok) throw new Error("Failed to fetch plugin configuration");
@@ -104,7 +104,7 @@ function PluginDetailsPageContent() {
   // Health check mutation
   const healthCheckMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/health`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/plugins/instances/${pluginId}/health`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to perform health check");
@@ -130,7 +130,7 @@ function PluginDetailsPageContent() {
   // Test connection mutation
   const testConnectionMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/v1/plugins/instances/${pluginId}/test`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/plugins/instances/${pluginId}/test`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -76,7 +76,7 @@ async def main():
     print("Step 4: Test with curl:")
     print(f"   curl -H 'Authorization: Bearer {access_token}' \\")
     print(f"        -H 'X-Tenant-ID: demo-alpha' \\")
-    print(f"        http://localhost:8000/api/tenant/v1/customers")
+    print(f"        http://localhost:8000/api/isp/v1/customers")
     print()
 
     print("=" * 60)

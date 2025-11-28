@@ -192,9 +192,13 @@ export function applyBrandingConfig(branding: any, options?: { theme?: BrandThem
 
   if (lightLogo) {
     root.style.setProperty("--brand-logo-light", `url(${lightLogo})`);
+  } else {
+    root.style.removeProperty("--brand-logo-light");
   }
   if (darkLogo) {
     root.style.setProperty("--brand-logo-dark", `url(${darkLogo})`);
+  } else {
+    root.style.removeProperty("--brand-logo-dark");
   }
 
   // Text/brand metadata tokens

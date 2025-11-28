@@ -109,7 +109,7 @@ class TestTenantRouterPropertyAssignments:
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://testserver") as client:
                 response = await client.post(
-                    "/api/v1/tenants",
+                    "/api/platform/v1/tenants",
                     json={
                         "name": "Test Org",
                         "slug": "test-org",
@@ -172,7 +172,7 @@ class TestTenantRouterErrorHandlers:
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://testserver") as client:
                 response = await client.post(
-                    "/api/v1/tenants",
+                    "/api/platform/v1/tenants",
                     json={
                         "name": "Test Org",
                         "slug": "test-org",
@@ -223,7 +223,7 @@ class TestTenantRouterErrorHandlers:
         try:
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-                response = await client.get("/api/v1/tenants/nonexistent")
+                response = await client.get("/api/platform/v1/tenants/nonexistent")
 
                 # This should hit line 154 (TenantNotFoundError handler in get_tenant)
                 assert response.status_code == 404
@@ -268,7 +268,7 @@ class TestTenantRouterErrorHandlers:
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://testserver") as client:
                 response = await client.patch(
-                    "/api/v1/tenants/nonexistent",
+                    "/api/platform/v1/tenants/nonexistent",
                     json={"name": "Updated Name"},
                 )
 
@@ -313,7 +313,7 @@ class TestTenantRouterErrorHandlers:
         try:
             transport = ASGITransport(app=app)
             async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-                response = await client.delete("/api/v1/tenants/nonexistent")
+                response = await client.delete("/api/platform/v1/tenants/nonexistent")
 
                 # This should hit line 283 (TenantNotFoundError handler in delete_tenant)
                 assert response.status_code == 404

@@ -39,9 +39,20 @@ const nextConfig = {
     // Falls back to NEXT_PUBLIC_API_BASE_URL for local dev
     const backendUrl = process.env['INTERNAL_API_URL'] || process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8000';
     const baseRewrites = [
+      // ISP admin API
       {
-        source: '/api/v1/:path*',
-        destination: `${backendUrl}/api/v1/:path*`,
+        source: '/api/isp/v1/admin/:path*',
+        destination: `${backendUrl}/api/isp/v1/admin/:path*`,
+      },
+      // ISP partner portal
+      {
+        source: '/api/isp/v1/partners/:path*',
+        destination: `${backendUrl}/api/isp/v1/partners/:path*`,
+      },
+      // ISP customer portal
+      {
+        source: '/api/isp/v1/portal/:path*',
+        destination: `${backendUrl}/api/isp/v1/portal/:path*`,
       },
       {
         source: '/health',

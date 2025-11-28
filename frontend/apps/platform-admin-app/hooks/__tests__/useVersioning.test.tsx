@@ -379,7 +379,7 @@ describe("useVersioning", () => {
         issues: [],
         endpoint_health: [
           {
-            endpoint: "/api/v1/users",
+            endpoint: "/api/platform/v1/admin/users",
             is_available: true,
             error_rate: 0.01,
             avg_response_time: 100,
@@ -407,12 +407,12 @@ describe("useVersioning", () => {
           {
             type: "error",
             message: "High error rate detected",
-            affected_endpoints: ["/api/v1/orders"],
+            affected_endpoints: ["/api/platform/v1/admin/orders"],
           },
         ],
         endpoint_health: [
           {
-            endpoint: "/api/v1/orders",
+            endpoint: "/api/platform/v1/admin/orders",
             is_available: true,
             error_rate: 0.25,
             avg_response_time: 500,
@@ -961,7 +961,7 @@ describe("useVersioning", () => {
           change_type: "breaking",
           title: "API endpoint removed",
           description: "Removed deprecated endpoint",
-          affected_endpoints: ["/api/v1/old-endpoint"],
+          affected_endpoints: ["/api/platform/v1/admin/old-endpoint"],
           migration_steps: ["Use /api/v2/new-endpoint instead"],
           severity: "high",
           created_at: "2024-01-01T00:00:00Z",
@@ -1036,9 +1036,9 @@ describe("useVersioning", () => {
         change_type: "breaking",
         title: "API endpoint removed",
         description: "Removed deprecated endpoint",
-        affected_endpoints: ["/api/v1/old-endpoint"],
+        affected_endpoints: ["/api/platform/v1/admin/old-endpoint"],
         migration_steps: ["Use /api/v2/new-endpoint instead"],
-        before_example: "GET /api/v1/old-endpoint",
+        before_example: "GET /api/platform/v1/admin/old-endpoint",
         after_example: "GET /api/v2/new-endpoint",
         severity: "high",
         created_at: "2024-01-01T00:00:00Z",
@@ -1077,7 +1077,7 @@ describe("useVersioning", () => {
         change_type: "breaking",
         title: "New breaking change",
         description: "Description",
-        affected_endpoints: ["/api/v1/endpoint"],
+        affected_endpoints: ["/api/platform/v1/admin/endpoint"],
         migration_steps: ["Step 1"],
         severity: "medium",
         created_at: "2024-01-01T00:00:00Z",
@@ -1096,7 +1096,7 @@ describe("useVersioning", () => {
           change_type: "breaking",
           title: "New breaking change",
           description: "Description",
-          affected_endpoints: ["/api/v1/endpoint"],
+          affected_endpoints: ["/api/platform/v1/admin/endpoint"],
           migration_steps: ["Step 1"],
           severity: "medium",
         });

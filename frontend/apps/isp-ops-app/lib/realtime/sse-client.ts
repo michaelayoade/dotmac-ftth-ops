@@ -1,7 +1,7 @@
 /**
  * Server-Sent Events (SSE) Client
  *
- * Handles SSE connections to /api/v1/realtime endpoints with:
+ * Handles SSE connections to /api/isp/v1/admin/realtime endpoints with:
  * - JWT authentication
  * - Automatic reconnection
  * - Event subscription management
@@ -255,7 +255,7 @@ export class SSEEndpoints {
    */
   onuStatus(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/onu-status`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/onu-status`,
       ...config,
     });
   }
@@ -265,7 +265,7 @@ export class SSEEndpoints {
    */
   alerts(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/alerts`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/alerts`,
       ...config,
     });
   }
@@ -275,7 +275,7 @@ export class SSEEndpoints {
    */
   tickets(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/tickets`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/tickets`,
       ...config,
     });
   }
@@ -285,7 +285,7 @@ export class SSEEndpoints {
    */
   subscribers(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/subscribers`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/subscribers`,
       ...config,
     });
   }
@@ -295,7 +295,7 @@ export class SSEEndpoints {
    */
   radiusSessions(config?: Partial<SSEConfig>): SSEClient {
     return createSSEClient({
-      endpoint: `${this.baseUrl}/api/v1/realtime/radius-sessions`,
+      endpoint: `${this.baseUrl}/api/isp/v1/admin/realtime/radius-sessions`,
       ...config,
     });
   }

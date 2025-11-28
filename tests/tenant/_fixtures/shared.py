@@ -813,7 +813,7 @@ async def authenticated_client(
     app.include_router(tenant_router.router, prefix="/api/v1")
     app.include_router(onboarding_router, prefix="/api/v1")
     app.include_router(
-        usage_billing_router, prefix="/api/v1/tenants", tags=["Tenant Usage Billing"]
+        usage_billing_router, prefix="/api/platform/v1/tenants", tags=["Tenant Usage Billing"]
     )
 
     # Create async client

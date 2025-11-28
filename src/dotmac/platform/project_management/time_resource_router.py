@@ -40,7 +40,7 @@ from dotmac.platform.project_management.time_tracking_models import (
 )
 from dotmac.platform.tenant import get_current_tenant_id
 
-router = APIRouter(prefix="/api/v1", tags=["time-tracking", "resources"])
+router = APIRouter(prefix="", tags=["time-tracking", "resources"])
 
 
 # ============================================================================

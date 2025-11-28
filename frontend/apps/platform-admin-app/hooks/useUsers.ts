@@ -2,13 +2,13 @@
  * React Query hooks for user management
  *
  * Connects to backend user management API:
- * - GET /api/v1/users - List all users
- * - GET /api/v1/users/{id} - Get user details
- * - GET /api/v1/users/me - Current user
- * - PUT /api/v1/users/{id} - Update user
- * - DELETE /api/v1/users/{id} - Delete user
- * - POST /api/v1/users/{id}/disable - Disable user
- * - POST /api/v1/users/{id}/enable - Enable user
+ * - GET /api/platform/v1/admin/users - List all users
+ * - GET /api/platform/v1/admin/users/{id} - Get user details
+ * - GET /api/platform/v1/admin/users/me - Current user
+ * - PUT /api/platform/v1/admin/users/{id} - Update user
+ * - DELETE /api/platform/v1/admin/users/{id} - Delete user
+ * - POST /api/platform/v1/admin/users/{id}/disable - Disable user
+ * - POST /api/platform/v1/admin/users/{id}/enable - Enable user
  */
 
 import {

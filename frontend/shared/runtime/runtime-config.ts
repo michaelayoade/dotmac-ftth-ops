@@ -173,7 +173,7 @@ export function serializeRuntimeConfig(config: RuntimeConfig): string {
 }
 
 async function fetchRuntimeConfigFromApi(): Promise<RuntimeConfig> {
-  const response = await fetch("/api/v1/platform/runtime-config", {
+  const response = await fetch("/api/platform/v1/admin/runtime-config", {
     cache: "no-store",
     next: {
       revalidate: 60,
@@ -189,7 +189,7 @@ async function fetchRuntimeConfigFromApi(): Promise<RuntimeConfig> {
 }
 
 function normalizeRuntimePayload(payload: BackendRuntimeConfig): RuntimeConfig {
-  const restPath = payload.api.rest_path || "/api/v1";
+  const restPath = payload.api.rest_path || "/api/platform/v1/admin";
   const baseUrl = sanitizeBaseUrl(payload.api.base_url);
   const restUrl = payload.api.rest_url || joinUrl(baseUrl, restPath);
   const realtimeSource = payload.realtime ?? {};

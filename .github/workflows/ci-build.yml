@@ -629,6 +629,70 @@ jobs:
         run: bash scripts/count_mocks.sh
         continue-on-error: true
 
+  router-registry-check:
+    name: "2. Router Registry"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [backend-lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Validate router registry
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+        run: |
+          poetry run python scripts/validate_routers.py
+          if [ $? -ne 0 ]; then
+            echo "::error::Router registry validation failed!"
+            exit 1
+          fi
+          echo "✅ Router registry validation passed"
+
+      - name: Verify URL structure (no double prefixes)
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+        run: |
+          poetry run python scripts/verify_url_structure.py
+          if [ $? -ne 0 ]; then
+            echo "::error::URL structure verification failed! Routes may have double prefixes."
+            exit 1
+          fi
+          echo "✅ URL structure verification passed"
+
+      - name: Show router summary
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+        run: poetry run python scripts/validate_routers.py --summary
+
+      - name: Check for legacy tenant paths
+        run: |
+          bash scripts/check_legacy_tenant_paths.sh
+          if [ $? -ne 0 ]; then
+            echo "::error::Legacy /api/tenant/ references found! Use /api/isp/v1 instead."
+            exit 1
+          fi
+          echo "✅ No legacy tenant path references"
+
   # ============================================================================
   # LAYER 3: BUILD/PACKAGING (~15 min)
   # Verify everything compiles and packages correctly
@@ -850,6 +914,7 @@ jobs:
           echo "| 2 | Frontend Types | ${{ needs.frontend-typecheck.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 2 | Backend Types | ${{ needs.backend-typecheck.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 2 | Migrations | ${{ needs.migrations-check.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2 | Router Registry | ${{ needs.router-registry-check.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 3 | Frontend Build | ${{ needs.frontend-build.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 3 | Backend Import | ${{ needs.backend-import-smoke.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 3 | Docker Validate | ${{ needs.docker-validate.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY

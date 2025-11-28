@@ -185,7 +185,7 @@ export default function ServicePlansList({
     const fetchPlans = async () => {
       try {
         const response = await apiClient.get<{ plans: ServicePlan[] }>(
-          "/api/v1/service-plans"
+          "/api/isp/v1/admin/service-plans"
         );
         setPlans(response.data.plans);
       } catch (error) {

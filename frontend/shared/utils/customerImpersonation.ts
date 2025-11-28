@@ -24,7 +24,7 @@ export async function impersonateCustomer({
   fetchImpl = fetch,
 }: ImpersonationOptions): Promise<string> {
   const normalizedBase = normalizeBaseUrl(baseUrl);
-  const url = `${normalizedBase}/api/v1/customers/${customerId}/impersonate`;
+  const url = `${normalizedBase}/api/isp/v1/admin/customers/${customerId}/impersonate`;
 
   const response = await fetchImpl(url, {
     method: "POST",

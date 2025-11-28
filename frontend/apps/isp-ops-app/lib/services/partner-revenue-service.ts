@@ -145,7 +145,7 @@ class PartnerRevenueService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/partners/revenue/metrics${
+    const url = `${this.baseUrl}/api/isp/v1/admin/partners/revenue/metrics${
       queryString ? `?${queryString}` : ""
     }`;
 
@@ -182,7 +182,7 @@ class PartnerRevenueService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/partners/revenue/commissions${
+    const url = `${this.baseUrl}/api/isp/v1/admin/partners/revenue/commissions${
       queryString ? `?${queryString}` : ""
     }`;
 
@@ -203,7 +203,7 @@ class PartnerRevenueService {
    */
   async getCommissionEvent(commissionId: string): Promise<PartnerCommissionEvent> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1/partners/revenue/commissions/${commissionId}`,
+      `${this.baseUrl}/api/isp/v1/admin/partners/revenue/commissions/${commissionId}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -238,7 +238,7 @@ class PartnerRevenueService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/v1/partners/revenue/payouts${
+    const url = `${this.baseUrl}/api/isp/v1/admin/partners/revenue/payouts${
       queryString ? `?${queryString}` : ""
     }`;
 
@@ -258,7 +258,7 @@ class PartnerRevenueService {
    * @returns Payout details
    */
   async getPayout(payoutId: string): Promise<PartnerPayout> {
-    const response = await fetch(`${this.baseUrl}/api/v1/partners/revenue/payouts/${payoutId}`, {
+    const response = await fetch(`${this.baseUrl}/api/isp/v1/admin/partners/revenue/payouts/${payoutId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",

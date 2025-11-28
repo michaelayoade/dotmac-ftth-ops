@@ -686,7 +686,7 @@ sequenceDiagram
     ISPApp->>ISPApp: Check authentication
     ISPApp->>ISPApp: Get tenant context (env)
 
-    ISPApp->>Backend: GET /api/v1/tenants/{id}/subscribers
+    ISPApp->>Backend: GET /api/isp/v1/subscribers
     Note over ISPApp,Backend: Headers: X-Tenant-ID, Authorization
 
     Backend->>Backend: Validate JWT

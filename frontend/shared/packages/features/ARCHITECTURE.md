@@ -437,9 +437,9 @@ The DotMac platform has a unique multi-deployment architecture:
 ```
 Backend (Python FastAPI)
     ├── Platform Admin App (Next.js)
-    │   └── Uses /api/v1/* endpoints
+    │   └── Uses /api/isp/v1/admin/* endpoints
     └── ISP Ops App (Next.js)
-        └── Uses /api/v1/* endpoints with different auth
+        └── Uses /api/isp/v1/admin/* endpoints with different auth
 ```
 
 Each app needs:
@@ -472,7 +472,7 @@ export default function CustomerBilling({
 
   // Component implementation uses injected dependencies
   const fetchData = async () => {
-    const response = await apiClient.get(`/api/v1/customers/${customerId}/invoices`);
+    const response = await apiClient.get(`/api/isp/v1/admin/customers/${customerId}/invoices`);
     // ...
   };
 }

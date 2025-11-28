@@ -7,7 +7,7 @@ import { getRuntimeConfigSnapshot } from "../../../shared/runtime/runtime-config
  * Centralized configuration for the frontend application.
  */
 
-const DEFAULT_API_PREFIX = "/api/v1";
+const DEFAULT_API_PREFIX = "/api/isp/v1/admin";
 
 const rawApiBaseUrl =
   process.env["NEXT_PUBLIC_API_BASE_URL"] ??
@@ -38,7 +38,7 @@ export const platformConfig = {
    * API configuration
    */
   api: {
-    // Empty string - all API calls use full paths like /api/v1/...
+    // Empty string - all API calls use full paths like /api/isp/v1/admin/...
     // Next.js rewrites in next.config.mjs proxy these to the backend
     baseUrl: apiBaseUrl,
     prefix: apiPrefix,
@@ -111,7 +111,7 @@ export const platformConfig = {
 
   realtime: {
     wsUrl: process.env["NEXT_PUBLIC_WS_URL"] || "",
-    sseUrl: process.env["NEXT_PUBLIC_SSE_URL"] || "/api/v1/realtime/events",
+    sseUrl: process.env["NEXT_PUBLIC_SSE_URL"] || buildApiPath("/realtime/events"),
     alertsChannel: `tenant-${process.env["TENANT_SLUG"] || "global"}`,
   },
 

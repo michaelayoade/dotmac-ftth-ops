@@ -29,7 +29,7 @@ from .schemas import (
 )
 from .service import InternetPlanService
 
-router = APIRouter(prefix="/api/v1/services/internet-plans")
+router = APIRouter(prefix="/services/internet-plans")
 
 
 # ============================================================================

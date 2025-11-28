@@ -6,6 +6,8 @@ import { useAppConfig } from "./AppConfigContext";
 import { applyBrandingConfig } from "@/lib/theme";
 import { useTenantBrandingQuery, type TenantBrandingConfigDto } from "@/hooks/useTenantBranding";
 import { isAuthBypassEnabled } from "@shared/lib/auth";
+import { useTenant } from "@/lib/contexts/tenant-context";
+import { useToast } from "@dotmac/ui";
 
 // Skip auth/session calls in bypass mode to avoid hangs during E2E tests
 const authBypassEnabled = isAuthBypassEnabled();
@@ -144,6 +146,8 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
   const brandingQuery = useTenantBrandingQuery({ enabled: !authBypassEnabled });
   const { resolvedTheme } = useTheme();
   const themeMode = resolvedTheme === "dark" ? "dark" : "light";
+  const { tenant } = useTenant();
+  const { toast } = useToast();
 
   const mergedBranding = useMemo(
     () => mergeBranding(defaultBranding, brandingQuery.data?.branding),
@@ -154,6 +158,16 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
     applyBrandingConfig(mergedBranding, { theme: themeMode });
     updateFavicon(mergedBranding.faviconUrl);
   }, [mergedBranding, themeMode]);
+
+  useEffect(() => {
+    if (brandingQuery.error && !brandingQuery.isLoading) {
+      toast({
+        title: "Branding unavailable",
+        description: "Using default branding because tenant branding could not be loaded.",
+        variant: "destructive",
+      });
+    }
+  }, [brandingQuery.error, brandingQuery.isLoading, toast]);
 
   return (
     <BrandingContext.Provider
