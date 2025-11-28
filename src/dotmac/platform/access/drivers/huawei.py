@@ -191,12 +191,14 @@ class HuaweiCLIDriver(BaseOLTDriver):
 
         # Optional VLAN mapping
         if request.vlan is not None:
-            await self._run_config_commands(
-                [
-                    f"service-port vlan {request.vlan} gpon {request.metadata.get('port')} "
-                    f"ont {request.metadata.get('onu_index', 1)} gem 1 multi-service user-vlan {request.vlan}"
-                ]
+            port = request.metadata.get("port")
+            onu_idx = request.metadata.get("onu_index", 1)
+            vlan = request.vlan
+            cmd = (
+                f"service-port vlan {vlan} gpon {port} "
+                f"ont {onu_idx} gem 1 multi-service user-vlan {vlan}"
             )
+            await self._run_config_commands([cmd])
 
         # Optional TR-069 push if profile provided
         if self.config.tr069_profile:
@@ -222,7 +224,10 @@ class HuaweiCLIDriver(BaseOLTDriver):
         await self._run_config_commands(
             [
                 f"undo service-port gpon {port} ont {onu_index}",
-                f"service-port vlan {vlan} gpon {port} ont {onu_index} gem 1 multi-service user-vlan {vlan}",
+                (
+                    f"service-port vlan {vlan} gpon {port} ont {onu_index} "
+                    f"gem 1 multi-service user-vlan {vlan}"
+                ),
             ]
         )
         return ONUProvisionResult(success=True, applied_config=service_profile)

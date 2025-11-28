@@ -695,10 +695,12 @@ class MikrotikRouterOSDriver(BaseOLTDriver):
             resource = await self._run_api_command("/system/resource")
             info = resource[0] if resource else {}
 
+            version = info.get('version', 'unknown')
+            uptime = info.get('uptime', 'unknown')
             return {
                 "healthy": True,
                 "state": "HEALTHY",
-                "message": f"RouterOS {info.get('version', 'unknown')} - {info.get('uptime', 'unknown')}",
+                "message": f"RouterOS {version} - {uptime}",
                 "total_devices": len(await self.discover_onus()),
                 "cpu_load": info.get("cpu-load"),
                 "memory_free": info.get("free-memory"),

@@ -322,9 +322,11 @@ class CiscoOLTDriver(BaseOLTDriver):
             else:
                 return None
 
-            output = await self._run_command(
-                f"show gpon onu detail interface {self.config.pon_interface_prefix}{pon_port} onu {onu_id}"
+            cmd = (
+                f"show gpon onu detail interface "
+                f"{self.config.pon_interface_prefix}{pon_port} onu {onu_id}"
             )
+            output = await self._run_command(cmd)
 
             # Parse detailed ONU info
             device_info: dict[str, Any] = {
