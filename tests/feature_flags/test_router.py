@@ -19,7 +19,7 @@ from dotmac.platform.feature_flags.router import (
     feature_flags_router,
 )
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
