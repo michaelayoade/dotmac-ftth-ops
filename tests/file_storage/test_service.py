@@ -620,7 +620,7 @@ class TestFileStorageService:
         assert metadata["metadata"]["version"] == "2.0"
         assert metadata["metadata"]["updated_by"] == "test"
 
-    def test_get_storage_service_singleton(self, tmp_path):
+    def test_get_storage_service_singleton(self):
         """Test that get_storage_service returns singleton."""
         import dotmac.platform.file_storage.service as service_module
 
@@ -629,11 +629,13 @@ class TestFileStorageService:
         service_module._storage_service = None
 
         try:
-            # Mock settings to use tmp_path instead of /var/lib/dotmac
-            with patch("dotmac.platform.file_storage.service.settings") as mock_settings:
-                mock_settings.storage.local_path = str(tmp_path)
-                mock_settings.storage.backend = StorageBackend.MEMORY
-
+            # Mock get_storage_backend to return a memory backend
+            # This avoids accessing /var/lib/dotmac which doesn't exist on CI
+            mock_backend = MemoryFileStorage()
+            with patch(
+                "dotmac.platform.file_storage.service.get_storage_backend",
+                return_value=(mock_backend, "memory"),
+            ):
                 service1 = get_storage_service()
                 service2 = get_storage_service()
 
