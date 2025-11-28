@@ -42,8 +42,28 @@ logger = structlog.get_logger(__name__)
 file_storage_router = APIRouter(prefix="/files/storage")
 storage_router = file_storage_router  # Alias for backward compatibility
 
-# Maintain a module-level storage service for legacy test patches.
-storage_service: FileStorageService = get_storage_service()
+# Lazy storage service for legacy test patches - avoid import-time initialization
+# which can fail if /var/lib/dotmac doesn't exist (e.g., on CI runners).
+_storage_service: FileStorageService | None = None
+
+
+def _get_lazy_storage_service() -> FileStorageService:
+    """Get storage service with lazy initialization."""
+    global _storage_service
+    if _storage_service is None:
+        _storage_service = get_storage_service()
+    return _storage_service
+
+
+# Expose as property-like for backward compatibility with test patches
+class _StorageServiceProxy:
+    """Proxy to allow lazy initialization of storage service."""
+
+    def __getattr__(self, name: str):
+        return getattr(_get_lazy_storage_service(), name)
+
+
+storage_service: FileStorageService = _StorageServiceProxy()  # type: ignore[assignment]
 
 
 def _resolve_tenant_id(request: Request, current_user: UserInfo) -> str:

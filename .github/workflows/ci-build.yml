@@ -288,10 +288,19 @@ jobs:
           timeout 60 bash -c 'until nc -z localhost 6379; do sleep 1; done'
           echo "Redis is ready"
 
+      - name: Run migrations
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_DATABASE_URL_ASYNC: postgresql+asyncpg://dotmac_user:test_password@localhost:5432/dotmac_test
+        run: |
+          poetry run alembic upgrade head
+
       - name: Run integration tests - ${{ matrix.group.name }}
         env:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_DATABASE_URL_ASYNC: postgresql+asyncpg://dotmac_user:test_password@localhost:5432/dotmac_test
           DOTMAC_REDIS_URL: redis://localhost:6379/0
           DOTMAC_AUTOSTART_SERVICES: "0"
         run: |
@@ -362,10 +371,19 @@ jobs:
           timeout 60 bash -c 'until nc -z localhost 6379; do sleep 1; done'
           echo "Redis is ready"
 
+      - name: Run migrations
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_DATABASE_URL_ASYNC: postgresql+asyncpg://dotmac_user:test_password@localhost:5432/dotmac_test
+        run: |
+          poetry run alembic upgrade head
+
       - name: Run E2E tests
         env:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
+          DOTMAC_DATABASE_URL_ASYNC: postgresql+asyncpg://dotmac_user:test_password@localhost:5432/dotmac_test
           DOTMAC_REDIS_URL: redis://localhost:6379/0
           DOTMAC_AUTOSTART_SERVICES: "0"
         run: |
