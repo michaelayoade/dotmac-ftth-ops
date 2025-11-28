@@ -49,7 +49,7 @@ logger = structlog.get_logger(__name__)
 
 def queue_bulk_emails(
     job_name: str, messages: list[EmailMessage], metadata: dict[str, Any] | None = None
-):
+) -> Any:
     """Compatibility wrapper for bulk email queuing used in tests."""
     return queue_bulk_emails_with_meta(job_name, messages, metadata)
 
@@ -553,7 +553,12 @@ async def list_templates_endpoint(
                 for tpl in templates_db
             ]
 
-            return resp_templates
+            return TemplateListResponse(
+                templates=resp_templates,
+                total=_total,
+                page=page,
+                page_size=page_size,
+            )
     except Exception as exc:
         logger.warning("DB template list failed, falling back to in-memory", error=str(exc))
 
@@ -597,7 +602,12 @@ async def list_templates_endpoint(
             )
         )
 
-    return resp_templates
+    return TemplateListResponse(
+        templates=resp_templates,
+        total=len(filtered),
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/templates/{template_id}", response_model=TemplateResponse)
