@@ -76,6 +76,23 @@ export function RuntimeConfigProvider({ children }: RuntimeConfigProviderProps) 
     }
   }, [runtimeConfig, runtimeConfigDisabled, resolveRuntimeConfig]);
 
+  useEffect(() => {
+    if (runtimeConfigDisabled || !runtimeConfig?.cacheTtlSeconds) {
+      return;
+    }
+
+    const ttlSeconds = runtimeConfig.cacheTtlSeconds || 60;
+    const intervalMs = Math.max(ttlSeconds, 30) * 1000;
+
+    const id = window.setInterval(() => {
+      resolveRuntimeConfig(true).catch(() => {
+        /* errors handled in resolveRuntimeConfig */
+      });
+    }, intervalMs);
+
+    return () => clearInterval(id);
+  }, [runtimeConfig?.cacheTtlSeconds, runtimeConfigDisabled, resolveRuntimeConfig]);
+
   // onConfig callback removed - not used anywhere in the codebase
   // Components that need to react to runtime config changes should use useRuntimeConfigState() hook
 

@@ -24,6 +24,7 @@ import {
   getCurrentUser,
 } from "./loginService";
 import { isAuthBypassEnabled, MOCK_USER } from "./bypass";
+import { useRuntimeConfigState } from "../../runtime/RuntimeConfigContext";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { loading: runtimeLoading } = useRuntimeConfigState();
 
   const isAuthenticated = useMemo(() => user !== null, [user]);
 
@@ -42,6 +44,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Fetch current user on mount.
    */
   useEffect(() => {
+    if (runtimeLoading) {
+      return;
+    }
+
+    let cancelled = false;
+
     const initAuth = async () => {
       setIsLoading(true);
       setError(null);
@@ -49,24 +57,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         // Check bypass mode
         if (isAuthBypassEnabled()) {
-          setUser(MOCK_USER);
-          setIsLoading(false);
+          if (!cancelled) {
+            setUser(MOCK_USER);
+          }
           return;
         }
 
         // Try to get current user (validates cookies)
         const currentUser = await getCurrentUser();
-        setUser(currentUser);
+        if (!cancelled) {
+          setUser(currentUser);
+        }
       } catch (err) {
         console.error("Auth init error:", err);
-        setUser(null);
+        if (!cancelled) {
+          setUser(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     initAuth();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [runtimeLoading]);
 
   /**
    * Login with email/username and password.

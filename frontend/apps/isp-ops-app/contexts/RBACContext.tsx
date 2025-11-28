@@ -272,6 +272,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const authBypassEnabled = isAuthBypassEnabled();
   const isE2ETest =
     (typeof window !== "undefined" && (window as any).__e2e_test__) || authBypassEnabled;
+  const allowTestSuperuser = isE2ETest && process.env["NODE_ENV"] !== "production";
 
   // Fetch current user permissions (skip in E2E test mode)
   const {
@@ -281,7 +282,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     refetch: refreshPermissions,
   } = useQuery({
     queryKey: ["rbac", "my-permissions"],
-    queryFn: isE2ETest
+    queryFn: allowTestSuperuser
       ? async () => ({
           user_id: "e2e-test-user",
           roles: [],
@@ -297,7 +298,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   // Fetch all roles (skip in E2E test mode)
   const { data: roles = [] } = useQuery({
     queryKey: ["rbac", "roles"],
-    queryFn: isE2ETest ? async () => [] : () => rbacApi.fetchRoles(true),
+    queryFn: allowTestSuperuser ? async () => [] : () => rbacApi.fetchRoles(true),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
@@ -314,9 +315,18 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       if (!permissions) return false;
       if (isSuperuser) return true;
 
-      return effectivePermissions.some(
-        (p) => p.name === permission || p.name === "*" || p.name.endsWith(".*"),
-      );
+      const requested = permission.trim();
+
+      return effectivePermissions.some((p) => {
+        const name = p.name?.trim();
+        if (!name) return false;
+        if (name === "*" || name === requested) return true;
+        if (name.endsWith(".*")) {
+          const prefix = name.slice(0, -2);
+          return requested === prefix || requested.startsWith(`${prefix}.`);
+        }
+        return false;
+      });
     },
     [permissions, effectivePermissions, isSuperuser],
   );

@@ -8,17 +8,26 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { platformConfig } from "@/lib/config";
 
-const API_PREFIX = platformConfig.api.prefix || "/api/v1";
-const RAW_BASE_URL = platformConfig.api.baseUrl
-  ? `${platformConfig.api.baseUrl}${API_PREFIX}`
-  : API_PREFIX || "/api/v1";
-const BASE_URL = ensureAbsoluteBaseUrl(RAW_BASE_URL);
+const DEFAULT_API_PREFIX = "/api/v1";
+
+const resolveBaseUrl = (): string => {
+  const base = platformConfig.api.baseUrl;
+  const prefix = platformConfig.api.prefix || DEFAULT_API_PREFIX;
+
+  if (base) {
+    return `${base}${prefix}`;
+  }
+
+  return prefix;
+};
+
+const initialBaseUrl = ensureAbsoluteBaseUrl(resolveBaseUrl());
 
 /**
  * Configured axios instance for API requests
  */
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: initialBaseUrl,
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -26,9 +35,13 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true, // Include cookies for authentication
 });
 
-// Request interceptor to add auth token and tenant ID if available
+// Request interceptor to sync baseURL with runtime config and add tenant headers
 apiClient.interceptors.request.use(
   (config) => {
+    const resolvedBaseUrl = ensureAbsoluteBaseUrl(resolveBaseUrl());
+    config.baseURL = resolvedBaseUrl;
+    apiClient.defaults.baseURL = resolvedBaseUrl;
+
     if (typeof window !== "undefined") {
       // Preserve multi-tenant header from storage (set at login)
       const tenantId = window.localStorage?.getItem("tenant_id");

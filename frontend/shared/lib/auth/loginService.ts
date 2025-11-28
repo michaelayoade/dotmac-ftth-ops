@@ -12,8 +12,39 @@ import type {
   TwoFactorVerifyRequest,
 } from "./types";
 import { isAuthBypassEnabled, MOCK_USER } from "./bypass";
+import { getRuntimeConfigSnapshot } from "../../runtime/runtime-config";
+import { clearOperatorAuthTokens } from "../../utils/operatorAuth";
 
-const API_BASE = "/api/v1";
+const DEFAULT_API_PREFIX = "/api/v1";
+
+function sanitizeBase(url: string): string {
+  return url.replace(/\/+$/, "");
+}
+
+function joinUrl(base: string, path: string): string {
+  const normalizedBase = base ? sanitizeBase(base) : "";
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}` || normalizedPath;
+}
+
+function resolveApiBase(): string {
+  const runtime = getRuntimeConfigSnapshot();
+  if (runtime?.api?.restUrl) {
+    return runtime.api.restUrl;
+  }
+
+  const envBase =
+    process.env["NEXT_PUBLIC_API_BASE_URL"] ??
+    process.env["NEXT_PUBLIC_API_URL"] ??
+    "";
+  const envPrefix = process.env["NEXT_PUBLIC_API_PREFIX"] ?? DEFAULT_API_PREFIX;
+
+  return joinUrl(envBase, envPrefix);
+}
+
+function getApiBase(): string {
+  return resolveApiBase() || DEFAULT_API_PREFIX;
+}
 
 /**
  * Custom error for 2FA required response.
@@ -52,7 +83,8 @@ export async function login(
   }
 
   try {
-    const response = await fetch(`${API_BASE}/auth/login`, {
+    const apiBase = getApiBase();
+    const response = await fetch(`${apiBase}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,7 +122,7 @@ export async function login(
 
     // Cookies are set by the backend (httpOnly)
     // Fetch user info to get full user object
-    const userResponse = await fetch(`${API_BASE}/auth/me`, {
+    const userResponse = await fetch(`${apiBase}/auth/me`, {
       credentials: "include",
     });
 
@@ -142,7 +174,8 @@ export async function verify2FA(
   }
 
   try {
-    const response = await fetch(`${API_BASE}/auth/login/verify-2fa`, {
+    const apiBase = getApiBase();
+    const response = await fetch(`${apiBase}/auth/login/verify-2fa`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -165,7 +198,7 @@ export async function verify2FA(
 
     // Cookies are set by the backend
     // Fetch user info
-    const userResponse = await fetch(`${API_BASE}/auth/me`, {
+    const userResponse = await fetch(`${apiBase}/auth/me`, {
       credentials: "include",
     });
 
@@ -204,13 +237,33 @@ export async function verify2FA(
  * Logout - clears cookies and local storage.
  */
 export async function logout(): Promise<void> {
-  // Clear local storage
-  try {
-    localStorage.removeItem("tenant_id");
-    localStorage.removeItem("active_managed_tenant_id");
-  } catch {
-    // Ignore
-  }
+  // Clear stored identifiers/tokens across storage backends
+  const clearKeys = (storage: Storage | null, keys: string[]) => {
+    if (!storage) return;
+    keys.forEach((key) => {
+      try {
+        storage.removeItem(key);
+      } catch {
+        // Ignore storage errors
+      }
+    });
+  };
+
+  clearKeys(typeof window !== "undefined" ? window.localStorage : null, [
+    "tenant_id",
+    "active_managed_tenant_id",
+    "access_token",
+    "auth_token",
+  ]);
+  clearKeys(typeof window !== "undefined" ? window.sessionStorage : null, [
+    "tenant_id",
+    "active_managed_tenant_id",
+    "access_token",
+    "auth_token",
+  ]);
+
+  // Clear session/local auth token storage
+  clearOperatorAuthTokens();
 
   // Bypass mode - just clear storage
   if (isAuthBypassEnabled()) {
@@ -218,7 +271,8 @@ export async function logout(): Promise<void> {
   }
 
   try {
-    await fetch(`${API_BASE}/auth/logout`, {
+    const apiBase = getApiBase();
+    await fetch(`${apiBase}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
@@ -238,7 +292,8 @@ export async function getCurrentUser(): Promise<UserInfo | null> {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/auth/me`, {
+    const apiBase = getApiBase();
+    const response = await fetch(`${apiBase}/auth/me`, {
       credentials: "include",
     });
 
@@ -262,7 +317,8 @@ export async function refreshToken(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/auth/refresh`, {
+    const apiBase = getApiBase();
+    const response = await fetch(`${apiBase}/auth/refresh`, {
       method: "POST",
       credentials: "include",
     });
@@ -272,4 +328,3 @@ export async function refreshToken(): Promise<boolean> {
     return false;
   }
 }
-

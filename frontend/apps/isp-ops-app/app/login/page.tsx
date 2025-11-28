@@ -22,6 +22,15 @@ const branding = {
   logoUrl: envBrandLogoUrl || null,
 };
 
+function resolveBypassTenantId(): string {
+  return (
+    process.env["TENANT_ID"] ||
+    process.env["NEXT_PUBLIC_TENANT_ID"] ||
+    process.env["TENANT_SLUG"] ||
+    "default-tenant"
+  );
+}
+
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,6 +51,11 @@ export default function LoginPage() {
     // Auto-complete login in bypass mode without user interaction for e2e/local dev
     // Note: tenant_id is set by login() in loginService.ts for bypass mode
     if (authBypassEnabled) {
+      try {
+        localStorage.setItem("tenant_id", resolveBypassTenantId());
+      } catch {
+        // Ignore storage errors in bypass mode
+      }
       window.location.replace("/dashboard");
     }
   }, []);

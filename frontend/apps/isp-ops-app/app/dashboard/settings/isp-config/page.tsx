@@ -34,22 +34,10 @@ import { ServiceDefaultsSettings } from "./components/ServiceDefaultsSettings";
 import { TaxSettings } from "./components/TaxSettings";
 import { BillingSettings } from "./components/BillingSettings";
 import { BankAccountSettings } from "./components/BankAccountSettings";
+import { ispSettingsSchema, ispSettingsUpdateSchema } from "./validation";
+import type { z } from "zod";
 
-export interface ISPSettings {
-  is_initial_setup: boolean;
-  settings_version: number;
-  subscriber_id: any;
-  radius: any;
-  network: any;
-  compliance: any;
-  portal: any;
-  localization: any;
-  sla: any;
-  service_defaults: any;
-  tax: any;
-  billing: any;
-  bank_accounts: any;
-}
+export type ISPSettings = z.infer<typeof ispSettingsSchema>;
 
 export default function ISPConfigPage() {
   const queryClient = useQueryClient();
@@ -73,14 +61,16 @@ export default function ISPConfigPage() {
 
   // Update local state when data loads
   if (settings && !localSettings) {
-    setLocalSettings(settings);
+    const parsed = ispSettingsSchema.parse(settings);
+    setLocalSettings(parsed);
   }
 
   // Save settings mutation
   const saveMutation = useMutation({
     mutationFn: async (updates: Partial<ISPSettings>) => {
+      const validated = ispSettingsUpdateSchema.parse(updates);
       const response = await http.put("/isp-settings", {
-        updates,
+        updates: validated,
         validate_only: false,
       });
       return response.data;
@@ -160,7 +150,7 @@ export default function ISPConfigPage() {
 
     try {
       const text = await file.text();
-      const importedSettings = JSON.parse(text);
+      const importedSettings = ispSettingsSchema.parse(JSON.parse(text));
 
       const response = await http.post("/isp-settings/import", {
         settings: importedSettings,

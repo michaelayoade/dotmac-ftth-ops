@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { platformConfig } from "@/lib/config";
 import {
   clearPortalAuthToken,
   CUSTOMER_PORTAL_REFRESH_TOKEN_KEY,
@@ -10,8 +9,10 @@ import {
   getPortalAuthToken,
   setPortalAuthToken,
 } from "../../../../shared/utils/operatorAuth";
+import { platformConfig } from "@/lib/config";
+import { useToast } from "@dotmac/ui";
 
-const API_BASE = platformConfig.api.baseUrl;
+const buildApiUrl = platformConfig.api.buildUrl;
 
 // ============================================================================
 // Types
@@ -50,6 +51,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -66,7 +68,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Verify token and get user info
-        const response = await fetch(`${API_BASE}/api/v1/customer/profile`, {
+        const response = await fetch(buildApiUrl("/customer/profile"), {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -105,7 +107,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE}/api/v1/auth/customer/login`, {
+      const response = await fetch(buildApiUrl("/auth/customer/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -145,10 +147,39 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     // Clear tokens
     clearPortalAuthToken(CUSTOMER_PORTAL_TOKEN_KEY);
     clearPortalAuthToken(CUSTOMER_PORTAL_REFRESH_TOKEN_KEY);
+    clearPortalAuthToken(); // default key cleanup
+    // Clear any stray auth artifacts
+    try {
+      localStorage.removeItem("customer_access_token");
+      localStorage.removeItem("customer_refresh_token");
+    } catch {
+      // Ignore storage errors
+    }
+
+    // Attempt server-side logout to invalidate refresh tokens (best-effort)
+    try {
+      await fetch(buildApiUrl("/auth/customer/logout"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      toast({
+        title: "Signed out",
+        description: "You have been logged out of the customer portal.",
+      });
+    } catch {
+      toast({
+        title: "Signed out locally",
+        description: "Network issue while logging out from the server.",
+        variant: "destructive",
+      });
+    }
 
     // Clear user state
     setUser(null);
