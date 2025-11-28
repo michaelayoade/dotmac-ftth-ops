@@ -159,9 +159,7 @@ class DualStackMetricsCollector:
             filters.append(Subscriber.tenant_id == self.tenant_id)
 
         # Total subscribers
-        result = await self.session.execute(
-            select(func.count(Subscriber.id)).where(*filters)
-        )
+        result = await self.session.execute(select(func.count(Subscriber.id)).where(*filters))
         metrics.total_subscribers = result.scalar() or 0
 
         # Dual-stack subscribers (both IPv4 and IPv6)

@@ -72,9 +72,10 @@ class CommunicationMetricsService:
         try:
             # SQLite driver sometimes returns UUID columns as floats when round-tripping.
             # Skip storing user_id on SQLite to keep logging resilient in tests.
-            if getattr(getattr(self.db, "bind", None), "dialect", None) and getattr(
-                self.db.bind.dialect, "name", ""
-            ) == "sqlite":
+            if (
+                getattr(getattr(self.db, "bind", None), "dialect", None)
+                and getattr(self.db.bind.dialect, "name", "") == "sqlite"
+            ):
                 store_user_id = None
         except Exception:
             store_user_id = user_id
