@@ -484,7 +484,7 @@ async def create_template_endpoint(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.get("/templates", response_model=list[TemplateResponse])
+@router.get("/templates", response_model=TemplateListResponse)
 async def list_templates_endpoint(
     channel: str | None = None,
     is_active: bool | None = None,

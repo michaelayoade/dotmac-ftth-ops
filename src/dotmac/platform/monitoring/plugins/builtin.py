@@ -197,6 +197,11 @@ class WebhookChannelPlugin(AlertChannelPlugin):
             try:
                 template = Template(channel.custom_payload_template)
                 alert_data = alert.model_dump()
+                # Include computed properties in the template context
+                alert_data["alertname"] = alert.alertname
+                alert_data["severity"] = alert.severity
+                alert_data["description"] = alert.description
+                alert_data["tenant_id"] = alert.tenant_id
                 rendered = template.render(alert=alert_data, **alert_data)
                 try:
                     payload = json.loads(rendered)
