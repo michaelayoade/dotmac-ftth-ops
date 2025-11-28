@@ -14,6 +14,7 @@ import type {
 import { isAuthBypassEnabled, MOCK_USER } from "./bypass";
 import { getRuntimeConfigSnapshot } from "../../runtime/runtime-config";
 import { clearOperatorAuthTokens } from "../../utils/operatorAuth";
+import { fetchWithAuth } from "./fetchWithAuth";
 
 const DEFAULT_API_PREFIX = "/api/v1";
 
@@ -84,7 +85,7 @@ export async function login(
 
   try {
     const apiBase = getApiBase();
-    const response = await fetch(`${apiBase}/auth/login`, {
+    const response = await fetchWithAuth(`${apiBase}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -122,7 +123,7 @@ export async function login(
 
     // Cookies are set by the backend (httpOnly)
     // Fetch user info to get full user object
-    const userResponse = await fetch(`${apiBase}/auth/me`, {
+    const userResponse = await fetchWithAuth(`${apiBase}/auth/me`, {
       credentials: "include",
     });
 
@@ -175,7 +176,7 @@ export async function verify2FA(
 
   try {
     const apiBase = getApiBase();
-    const response = await fetch(`${apiBase}/auth/login/verify-2fa`, {
+    const response = await fetchWithAuth(`${apiBase}/auth/login/verify-2fa`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -198,7 +199,7 @@ export async function verify2FA(
 
     // Cookies are set by the backend
     // Fetch user info
-    const userResponse = await fetch(`${apiBase}/auth/me`, {
+    const userResponse = await fetchWithAuth(`${apiBase}/auth/me`, {
       credentials: "include",
     });
 
@@ -272,7 +273,7 @@ export async function logout(): Promise<void> {
 
   try {
     const apiBase = getApiBase();
-    await fetch(`${apiBase}/auth/logout`, {
+    await fetchWithAuth(`${apiBase}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
@@ -286,24 +287,34 @@ export async function logout(): Promise<void> {
  * Get current user info.
  */
 export async function getCurrentUser(): Promise<UserInfo | null> {
+  const { user } = await getCurrentUserWithStatus();
+  return user;
+}
+
+export async function getCurrentUserWithStatus(): Promise<{
+  user: UserInfo | null;
+  status?: number | undefined;
+}> {
   // Bypass mode
   if (isAuthBypassEnabled()) {
-    return MOCK_USER;
+    return { user: MOCK_USER, status: 200 };
   }
 
   try {
     const apiBase = getApiBase();
-    const response = await fetch(`${apiBase}/auth/me`, {
-      credentials: "include",
-    });
+  const response = await fetchWithAuth(`${apiBase}/auth/me`, {
+    credentials: "include",
+    retry: true,
+  });
 
     if (!response.ok) {
-      return null;
+      return { user: null, status: response.status };
     }
 
-    return await response.json();
+    const data = (await response.json()) as UserInfo;
+    return { user: data, status: response.status };
   } catch {
-    return null;
+    return { user: null };
   }
 }
 
@@ -318,10 +329,11 @@ export async function refreshToken(): Promise<boolean> {
 
   try {
     const apiBase = getApiBase();
-    const response = await fetch(`${apiBase}/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-    });
+  const response = await fetchWithAuth(`${apiBase}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+    retry: false,
+  });
 
     return response.ok;
   } catch {

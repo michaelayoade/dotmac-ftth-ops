@@ -7,6 +7,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { platformConfig } from "@/lib/config";
+import { setupRefreshInterceptor, defaultAuthFailureHandler } from "@shared/lib/auth";
 
 const DEFAULT_API_PREFIX = "/api/v1";
 
@@ -103,6 +104,8 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+setupRefreshInterceptor(apiClient as any, defaultAuthFailureHandler);
 
 /**
  * Generic GET request

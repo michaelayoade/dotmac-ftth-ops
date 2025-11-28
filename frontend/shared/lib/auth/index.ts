@@ -29,6 +29,7 @@ export { isAuthBypassEnabled, MOCK_USER, MOCK_ACTIVE_ORGANIZATION, getMockUser }
 
 // Interceptor
 export { setupRefreshInterceptor, defaultAuthFailureHandler } from "./refreshInterceptor";
+export { fetchWithAuth } from "./fetchWithAuth";
 
 // Types
 export type {

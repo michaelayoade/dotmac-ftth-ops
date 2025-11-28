@@ -21,7 +21,7 @@ import {
   login as loginApi,
   logout as logoutApi,
   verify2FA as verify2FAApi,
-  getCurrentUser,
+  getCurrentUserWithStatus,
 } from "./loginService";
 import { isAuthBypassEnabled, MOCK_USER } from "./bypass";
 import { useRuntimeConfigState } from "../../runtime/RuntimeConfigContext";
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { loading: runtimeLoading } = useRuntimeConfigState();
+  const { loading: runtimeLoading, runtimeConfig } = useRuntimeConfigState();
 
   const isAuthenticated = useMemo(() => user !== null, [user]);
 
@@ -49,6 +49,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     let cancelled = false;
+    let attempts = 0;
 
     const initAuth = async () => {
       setIsLoading(true);
@@ -64,9 +65,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         // Try to get current user (validates cookies)
-        const currentUser = await getCurrentUser();
+        const { user: currentUser, status } = await getCurrentUserWithStatus();
         if (!cancelled) {
           setUser(currentUser);
+          if (!currentUser) {
+            if (status === 401 || status === 403) {
+              redirectToLogin();
+            } else if (attempts < 2) {
+              attempts += 1;
+              setTimeout(initAuth, 500 * attempts);
+              return;
+            } else {
+              setError("Could not verify session. Please try again.");
+            }
+          }
         }
       } catch (err) {
         console.error("Auth init error:", err);
@@ -85,7 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       cancelled = true;
     };
-  }, [runtimeLoading]);
+  }, [runtimeLoading, runtimeConfig?.generatedAt]);
 
   /**
    * Login with email/username and password.
@@ -173,8 +185,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   const refreshUser = useCallback(async (): Promise<void> => {
     try {
-      const currentUser = await getCurrentUser();
+      const { user: currentUser, status } = await getCurrentUserWithStatus();
       setUser(currentUser);
+      if (!currentUser && (status === 401 || status === 403)) {
+        redirectToLogin();
+      }
     } catch (err) {
       console.error("Refresh user error:", err);
     }
@@ -195,6 +210,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+function redirectToLogin() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const isLoginPage = window.location.pathname === "/login";
+  if (!isLoginPage) {
+    const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/login?redirect=${redirect}`;
+  }
 }
 
 /**

@@ -49,6 +49,17 @@ class TestUserPermissions:
             result = await rbac_service.user_has_permission(user_id, "ticket.read")
             assert result is True
 
+    async def test_user_has_permission_wildcard_prefix_only(self, rbac_service):
+        """Wildcard should only match its own prefix, not other categories."""
+        user_id = uuid4()
+
+        with patch.object(rbac_service, "get_user_permissions", return_value={"billing.*"}):
+            assert await rbac_service.user_has_permission(user_id, "billing.read") is True
+            assert await rbac_service.user_has_permission(user_id, "billing") is True
+            assert await rbac_service.user_has_permission(user_id, "billing.invoices.read") is True
+            assert await rbac_service.user_has_permission(user_id, "users.read") is False
+            assert await rbac_service.user_has_permission(user_id, "foo.billing.read") is False
+
     async def test_user_has_permission_superadmin(self, rbac_service):
         """Test superadmin has all permissions."""
         user_id = uuid4()

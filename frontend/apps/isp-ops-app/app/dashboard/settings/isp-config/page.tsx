@@ -321,77 +321,77 @@ export default function ISPConfigPage() {
 
         <TabsContent value="subscriber-id" className="mt-6">
           <SubscriberIDSettings
-            settings={localSettings.subscriber_id}
+            settings={localSettings.subscriber_id as any}
             onChange={(updates) => handleSectionUpdate("subscriber_id", updates)}
           />
         </TabsContent>
 
         <TabsContent value="radius" className="mt-6">
           <RADIUSSettings
-            settings={localSettings.radius}
+            settings={localSettings.radius as any}
             onChange={(updates) => handleSectionUpdate("radius", updates)}
           />
         </TabsContent>
 
         <TabsContent value="network" className="mt-6">
           <NetworkSettings
-            settings={localSettings.network}
+            settings={localSettings.network as any}
             onChange={(updates) => handleSectionUpdate("network", updates)}
           />
         </TabsContent>
 
         <TabsContent value="compliance" className="mt-6">
           <ComplianceSettings
-            settings={localSettings.compliance}
+            settings={localSettings.compliance as any}
             onChange={(updates) => handleSectionUpdate("compliance", updates)}
           />
         </TabsContent>
 
         <TabsContent value="portal" className="mt-6">
           <PortalSettings
-            settings={localSettings.portal}
+            settings={localSettings.portal as any}
             onChange={(updates) => handleSectionUpdate("portal", updates)}
           />
         </TabsContent>
 
         <TabsContent value="localization" className="mt-6">
           <LocalizationSettings
-            settings={localSettings.localization}
+            settings={localSettings.localization as any}
             onChange={(updates) => handleSectionUpdate("localization", updates)}
           />
         </TabsContent>
 
         <TabsContent value="sla" className="mt-6">
           <SLASettings
-            settings={localSettings.sla}
+            settings={localSettings.sla as any}
             onChange={(updates) => handleSectionUpdate("sla", updates)}
           />
         </TabsContent>
 
         <TabsContent value="service" className="mt-6">
           <ServiceDefaultsSettings
-            settings={localSettings.service_defaults}
+            settings={localSettings.service_defaults as any}
             onChange={(updates) => handleSectionUpdate("service_defaults", updates)}
           />
         </TabsContent>
 
         <TabsContent value="tax" className="mt-6">
           <TaxSettings
-            settings={localSettings.tax}
+            settings={localSettings.tax as any}
             onChange={(updates) => handleSectionUpdate("tax", updates)}
           />
         </TabsContent>
 
         <TabsContent value="billing" className="mt-6">
           <BillingSettings
-            settings={localSettings.billing}
+            settings={localSettings.billing as any}
             onChange={(updates) => handleSectionUpdate("billing", updates)}
           />
         </TabsContent>
 
         <TabsContent value="bank" className="mt-6">
           <BankAccountSettings
-            settings={localSettings.bank_accounts}
+            settings={localSettings.bank_accounts as any}
             onChange={(updates) => handleSectionUpdate("bank_accounts", updates)}
           />
         </TabsContent>

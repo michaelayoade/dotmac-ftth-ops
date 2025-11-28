@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { handleError } from "@/lib/utils/error-handler";
 import { useToast } from "@dotmac/ui";
 import { isAuthBypassEnabled } from "@shared/lib/auth";
+import { useAuth } from "@shared/lib/auth";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -265,6 +266,7 @@ const RBACContext = createContext<RBACContextValue | undefined>(undefined);
  */
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
 
   const queryClient = useQueryClient();
 
@@ -273,6 +275,41 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const isE2ETest =
     (typeof window !== "undefined" && (window as any).__e2e_test__) || authBypassEnabled;
   const allowTestSuperuser = isE2ETest && process.env["NODE_ENV"] !== "production";
+
+  const initialPermissions = useMemo<UserPermissions | undefined>(() => {
+    if (!user?.permissions?.length) {
+      return undefined;
+    }
+
+    const toPermission = (name: string): Permission => {
+      const [maybeCategory, maybeAction] = name.split(".", 2);
+      const category = Object.values(PermissionCategory).includes(
+        maybeCategory as PermissionCategory,
+      )
+        ? (maybeCategory as PermissionCategory)
+        : PermissionCategory.SYSTEM;
+      return {
+        name,
+        display_name: name,
+        description: undefined,
+        category,
+        resource: undefined,
+        action: maybeAction ?? undefined,
+        is_system: false,
+      };
+    };
+
+    const isSuperuserPerm =
+      user.permissions.includes("*") || (user.roles || []).some((r) => r === "super_admin");
+
+    return {
+      user_id: user.id ?? "unknown",
+      roles: [],
+      direct_permissions: [],
+      effective_permissions: user.permissions.map(toPermission),
+      is_superuser: isSuperuserPerm,
+    };
+  }, [user]);
 
   // Fetch current user permissions (skip in E2E test mode)
   const {
@@ -293,6 +330,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       : rbacApi.fetchMyPermissions,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
+    enabled: !authLoading && Boolean(isAuthenticated || allowTestSuperuser),
+    initialData: initialPermissions,
+    initialDataUpdatedAt: () => (initialPermissions ? Date.now() : undefined),
   });
 
   // Fetch all roles (skip in E2E test mode)
@@ -300,6 +340,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     queryKey: ["rbac", "roles"],
     queryFn: allowTestSuperuser ? async () => [] : () => rbacApi.fetchRoles(true),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !authLoading && Boolean(isAuthenticated || allowTestSuperuser),
   });
 
   // Permission check functions
@@ -309,6 +350,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   );
   const assignedRoles = useMemo(() => permissions?.roles ?? [], [permissions]);
   const isSuperuser = permissions?.is_superuser ?? false;
+  const userId = permissions?.user_id;
 
   const hasPermission = useCallback(
     (permission: string): boolean => {
@@ -525,6 +567,23 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       });
     }
   }, [permissions]);
+
+  useEffect(() => {
+    if (!loading && error && !allowTestSuperuser) {
+      toast({
+        title: "Permissions unavailable",
+        description: "We could not load your access permissions. Some features may be hidden.",
+        variant: "destructive",
+      });
+    }
+  }, [loading, error, allowTestSuperuser, toast]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      refreshPermissions();
+      queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
+    }
+  }, [authLoading, userId, refreshPermissions, queryClient]);
 
   return <RBACContext.Provider value={contextValue}>{children}</RBACContext.Provider>;
 }

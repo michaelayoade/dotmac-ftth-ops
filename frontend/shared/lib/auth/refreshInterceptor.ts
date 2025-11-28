@@ -164,10 +164,12 @@ export function setupRefreshInterceptor(
  * Default auth failure handler - redirects to login.
  */
 export function defaultAuthFailureHandler(): void {
-  if (typeof window !== "undefined") {
-    const isLoginPage = window.location.pathname === "/login";
-    if (!isLoginPage) {
-      window.location.href = "/login";
-    }
+  if (typeof window === "undefined") {
+    return;
+  }
+  const isLoginPage = window.location.pathname === "/login";
+  if (!isLoginPage) {
+    const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/login?redirect=${redirect}`;
   }
 }
