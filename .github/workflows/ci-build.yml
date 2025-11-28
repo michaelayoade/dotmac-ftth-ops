@@ -312,9 +312,21 @@ jobs:
             --maxfail=10
 
   backend-e2e-tests:
-    name: "1. Backend E2E Tests"
+    name: "1. E2E Tests (${{ matrix.name }})"
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Core
+            tests: tests/e2e/test_platform_admin_e2e.py tests/e2e/test_customer_management_e2e.py
+          - name: Billing
+            tests: tests/e2e/test_billing_e2e.py
+          - name: Data
+            tests: tests/e2e/test_file_storage_e2e.py tests/e2e/test_data_transfer_e2e.py tests/e2e/test_secrets_e2e.py
+          - name: Communications
+            tests: tests/e2e/test_webhooks_e2e.py tests/e2e/test_communications_e2e.py
 
     services:
       postgres:
@@ -380,7 +392,7 @@ jobs:
         run: |
           poetry run alembic upgrade head
 
-      - name: Run E2E tests
+      - name: Run E2E tests (${{ matrix.name }})
         env:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:test_password@localhost:5432/dotmac_test
@@ -388,11 +400,10 @@ jobs:
           DOTMAC_REDIS_URL: redis://localhost:6379/0
           DOTMAC_AUTOSTART_SERVICES: "0"
         run: |
-          poetry run pytest tests/ -m e2e \
+          poetry run pytest ${{ matrix.tests }} -m e2e \
             --tb=short \
-            -n auto \
             -q \
-            --maxfail=10
+            --maxfail=5
         continue-on-error: true  # E2E tests may not exist yet
 
   # ============================================================================
