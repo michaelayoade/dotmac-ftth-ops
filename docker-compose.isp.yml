@@ -120,7 +120,19 @@ services:
       mongodb:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7557/devices?limit=1"]
+      # Use Node (available in the image) to avoid depending on curl/wget
+      test:
+        - CMD-SHELL
+        - >
+          node -e "const http=require('http');
+          http.get('http://localhost:7557/devices?limit=1',res=>{
+            if(res.statusCode<400)process.exit(0);
+            console.error('GenieACS healthcheck HTTP',res.statusCode);
+            process.exit(1);
+          }).on('error',err=>{
+            console.error('GenieACS healthcheck error',err.message);
+            process.exit(1);
+          });"
       interval: 30s
       timeout: 10s
       retries: 3
@@ -148,7 +160,7 @@ services:
       - freeradius_config:/etc/raddb
     healthcheck:
       # Check if radiusd process is running
-      test: ["CMD", "pgrep", "-x", "radiusd"]
+      test: ["CMD-SHELL", "pgrep -f 'freeradius|radiusd'"]
       interval: 30s
       timeout: 10s
       retries: 3

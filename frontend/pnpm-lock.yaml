@@ -1285,9 +1285,6 @@ importers:
       jest-environment-jsdom:
         specifier: ^29.7.0
         version: 29.7.0
-      next-intl:
-        specifier: ^4.5.5
-        version: 4.5.5(next@14.2.33(@babel/core@7.28.5)(@playwright/test@1.56.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
       react:
         specifier: 18.3.1
         version: 18.3.1

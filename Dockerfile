@@ -4,14 +4,16 @@ WORKDIR /app
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies with pinned versions
+# Install system dependencies
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        gcc="$(apt-cache policy gcc | awk '/Candidate/ {print $2}')" \
-        postgresql-client="$(apt-cache policy postgresql-client | awk '/Candidate/ {print $2}')" \
-        freeradius-utils="$(apt-cache policy freeradius-utils | awk '/Candidate/ {print $2}')" \
-        gosu="$(apt-cache policy gosu | awk '/Candidate/ {print $2}')"; \
+        gcc \
+        python3-dev \
+        libc6-dev \
+        postgresql-client \
+        freeradius-utils \
+        gosu; \
     rm -rf /var/lib/apt/lists/*; \
     # Verify installations
     radclient -v || echo "radclient installed successfully"; \

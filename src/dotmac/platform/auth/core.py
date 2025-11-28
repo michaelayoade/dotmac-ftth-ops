@@ -569,9 +569,10 @@ class SessionManager:
         ttl: int = 3600,
         ip_address: str | None = None,
         user_agent: str | None = None,
+        session_id: str | None = None,
     ) -> str:
         """Create new session with Redis or fallback."""
-        session_id = secrets.token_urlsafe(32)
+        session_id = session_id or secrets.token_urlsafe(32)
         session_key = f"session:{session_id}"
 
         now = datetime.now(UTC).isoformat()
@@ -659,7 +660,13 @@ class SessionManager:
         try:
             client = await self._get_redis()
             if not client:
-                # Return empty dict if Redis not available
+                # Fallback: scan in-memory store when enabled
+                if self._fallback_enabled:
+                    return {
+                        f"session:{sid}": data
+                        for sid, data in self._fallback_store.items()
+                        if data.get("user_id") == user_id
+                    }
                 return {}
 
             user_sessions_key = f"user_sessions:{user_id}"

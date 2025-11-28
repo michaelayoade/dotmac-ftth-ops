@@ -452,6 +452,9 @@ async def _authenticate_and_issue_tokens(
     client_ip = request.client.host if request.client else None
     await user_service.update_last_login(user.id, ip_address=client_ip, tenant_id=user.tenant_id)
 
+    # Create a stable session id used in both the session store and JWTs
+    session_id = secrets.token_urlsafe(32)
+
     # Create tokens
     access_token = jwt_service.create_access_token(
         subject=str(user.id),
@@ -462,10 +465,13 @@ async def _authenticate_and_issue_tokens(
             "permissions": user.permissions or [],
             "tenant_id": user.tenant_id,
             "is_platform_admin": getattr(user, "is_platform_admin", False),
+            "session_id": session_id,
         },
     )
 
-    refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
+    refresh_token = jwt_service.create_refresh_token(
+        subject=str(user.id), additional_claims={"session_id": session_id}
+    )
 
     # Create session
     await session_manager.create_session(
@@ -478,6 +484,7 @@ async def _authenticate_and_issue_tokens(
         },
         ip_address=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
+        session_id=session_id,
     )
 
     # Log successful login
@@ -538,6 +545,8 @@ async def _complete_cookie_login(
 
     await user_service.update_last_login(user.id, ip_address=client_ip, tenant_id=user.tenant_id)
 
+    session_id = secrets.token_urlsafe(32)
+
     access_token = jwt_service.create_access_token(
         subject=str(user.id),
         additional_claims={
@@ -547,10 +556,13 @@ async def _complete_cookie_login(
             "permissions": user.permissions or [],
             "tenant_id": user.tenant_id,
             "is_platform_admin": getattr(user, "is_platform_admin", False),
+            "session_id": session_id,
         },
     )
 
-    refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
+    refresh_token = jwt_service.create_refresh_token(
+        subject=str(user.id), additional_claims={"session_id": session_id}
+    )
 
     await session_manager.create_session(
         user_id=str(user.id),
@@ -562,6 +574,7 @@ async def _complete_cookie_login(
         },
         ip_address=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
+        session_id=session_id,
     )
 
     set_auth_cookies(response, access_token, refresh_token)
@@ -724,6 +737,8 @@ async def _complete_2fa_login(
     # Update last login
     await user_service.update_last_login(user.id, ip_address=client_ip, tenant_id=user.tenant_id)
 
+    session_id = secrets.token_urlsafe(32)
+
     # Create tokens
     access_token = jwt_service.create_access_token(
         subject=str(user.id),
@@ -734,10 +749,13 @@ async def _complete_2fa_login(
             "permissions": user.permissions or [],
             "tenant_id": user.tenant_id,
             "is_platform_admin": getattr(user, "is_platform_admin", False),
+            "session_id": session_id,
         },
     )
 
-    refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
+    refresh_token = jwt_service.create_refresh_token(
+        subject=str(user.id), additional_claims={"session_id": session_id}
+    )
 
     # Create session
     await session_manager.create_session(
@@ -750,6 +768,7 @@ async def _complete_2fa_login(
         },
         ip_address=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
+        session_id=session_id,
     )
 
     # Log successful login
@@ -906,6 +925,21 @@ async def login_cookie_only(
 
     if user.mfa_enabled:
         # Mirror the JSON login behaviour by issuing a 2FA challenge
+        pending_key = f"2fa_pending:{user.id}"
+        redis_client = await session_manager._get_redis()
+        session_data = {
+            "username": user.username,
+            "email": user.email,
+            "pending_2fa": True,
+            "ip_address": request.client.host if request.client else None,
+            "tenant_id": user.tenant_id,
+        }
+
+        if redis_client:
+            await redis_client.setex(f"session:{pending_key}", 300, json.dumps(session_data))
+        elif session_manager._fallback_enabled:
+            session_manager._fallback_store[pending_key] = session_data
+
         await log_user_activity(
             user_id=str(user.id),
             activity_type=ActivityType.USER_LOGIN,
@@ -1106,6 +1140,8 @@ async def register(
         user_permissions
     )  # user_permissions is already a set of permission strings
 
+    session_id = secrets.token_urlsafe(32)
+
     # Create tokens with RBAC roles/permissions
     access_token = jwt_service.create_access_token(
         subject=str(new_user.id),
@@ -1115,10 +1151,13 @@ async def register(
             "roles": role_names,  # RBAC roles from user_roles table
             "permissions": permission_names,  # RBAC permissions
             "tenant_id": new_user.tenant_id,
+            "session_id": session_id,
         },
     )
 
-    refresh_token = jwt_service.create_refresh_token(subject=str(new_user.id))
+    refresh_token = jwt_service.create_refresh_token(
+        subject=str(new_user.id), additional_claims={"session_id": session_id}
+    )
 
     # Create session with RBAC roles
     await session_manager.create_session(
@@ -1131,6 +1170,7 @@ async def register(
         },
         ip_address=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
+        session_id=session_id,
     )
 
     # Log successful registration
@@ -1230,6 +1270,8 @@ async def refresh_token(
                 detail="User not found or disabled",
             )
 
+        session_id = payload.get("session_id") or secrets.token_urlsafe(32)
+
         # Revoke old refresh token
         try:
             await jwt_service.revoke_token(refresh_token_value)
@@ -1246,10 +1288,30 @@ async def refresh_token(
                 "permissions": user.permissions or [],
                 "tenant_id": user.tenant_id,
                 "is_platform_admin": getattr(user, "is_platform_admin", False),
+                "session_id": session_id,
             },
         )
 
-        new_refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
+        new_refresh_token = jwt_service.create_refresh_token(
+            subject=str(user.id), additional_claims={"session_id": session_id}
+        )
+
+        # Refresh session TTL/metadata to keep server-side session aligned with tokens
+        try:
+            await session_manager.create_session(
+                user_id=str(user.id),
+                data={
+                    "username": user.username,
+                    "email": user.email,
+                    "roles": user.roles or [],
+                    "access_token": access_token,
+                },
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent"),
+                session_id=session_id,
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Failed to refresh session metadata", error=str(exc))
 
         # Set new HttpOnly authentication cookies
         set_auth_cookies(response, access_token, new_refresh_token)
@@ -1348,6 +1410,7 @@ async def logout(
 
 @auth_router.get("/me/sessions")
 async def list_active_sessions(
+    request: Request,
     user_info: UserInfo = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
@@ -1361,14 +1424,30 @@ async def list_active_sessions(
     - User agent
     """
     try:
+        current_session_id = None
+        try:
+            token = None
+            auth_header = request.headers.get("authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header[7:]
+            else:
+                token = get_token_from_cookie(request, "access_token")
+
+            if token:
+                payload = jwt_service.verify_token(token)
+                current_session_id = payload.get("session_id")
+        except Exception:
+            current_session_id = None
+
         # Get all sessions for user
         sessions = await session_manager.get_user_sessions(user_info.user_id)
 
         # Format session data
         formatted_sessions = []
         for session_key, session_data in sessions.items():
-            # Extract session ID from key (format: "session:{user_id}:{session_id}")
-            session_id = session_key.split(":")[-1] if ":" in session_key else session_key
+            session_id = session_data.get("session_id") or (
+                session_key.split(":")[-1] if ":" in session_key else session_key
+            )
 
             formatted_sessions.append(
                 {
@@ -1377,7 +1456,7 @@ async def list_active_sessions(
                     "last_accessed": session_data.get("last_accessed"),
                     "ip_address": session_data.get("ip_address"),
                     "user_agent": session_data.get("user_agent"),
-                    "is_current": session_data.get("session_id") == session_key,
+                    "is_current": session_id == current_session_id,
                 }
             )
 
@@ -1434,8 +1513,7 @@ async def revoke_session(
             )
 
         # Delete the session
-        session_key = f"session:{user_info.user_id}:{session_id}"
-        deleted = await session_manager.delete_session(session_key)
+        deleted = await session_manager.delete_session(session_id)
 
         if not deleted:
             raise HTTPException(
@@ -1506,11 +1584,13 @@ async def revoke_all_sessions(
 
         # Delete all sessions except current
         revoked_count = 0
-        for session_key in sessions.keys():
-            session_id = session_key.split(":")[-1] if ":" in session_key else session_key
+        for session_key, session_data in sessions.items():
+            session_id = session_data.get("session_id") or (
+                session_key.split(":")[-1] if ":" in session_key else session_key
+            )
 
             if session_id != current_session_id:
-                deleted = await session_manager.delete_session(session_key)
+                deleted = await session_manager.delete_session(session_id)
                 if deleted:
                     revoked_count += 1
 

@@ -15,6 +15,12 @@ const authBypassEnabled = isAuthBypassEnabled();
 
 // Default branding for bypass mode
 const defaultBranding = { productName: "DotMac" };
+const envBrandName = process.env.NEXT_PUBLIC_BRAND_NAME;
+const envBrandLogoUrl = process.env.NEXT_PUBLIC_BRAND_LOGO_URL;
+const branding = {
+  productName: envBrandName || defaultBranding.productName,
+  logoUrl: envBrandLogoUrl || null,
+};
 
 export default function LoginPage() {
   const [error, setError] = useState("");
@@ -22,9 +28,6 @@ export default function LoginPage() {
   const [requires2FA, setRequires2FA] = useState(false);
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const [twoFAError, setTwoFAError] = useState<string | null>(null);
-
-  // Skip branding hook in bypass mode
-  const branding = authBypassEnabled ? defaultBranding : { productName: "DotMac" };
 
   const {
     register,
@@ -156,7 +159,16 @@ export default function LoginPage() {
             ← Back to home
           </Link>
           <div className="flex items-center justify-center mb-4">
-            <span className="text-3xl">🌐</span>
+            {branding.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt={`${branding.productName} logo`}
+                className="h-12 w-auto"
+                loading="lazy"
+              />
+            ) : (
+              <span className="text-3xl">🌐</span>
+            )}
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Network Operations Portal</h1>
           <p className="text-muted-foreground">

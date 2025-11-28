@@ -21,11 +21,23 @@ def config_app():
 
     # Provide deterministic settings with all feature flags enabled for the public list
     features = Settings.FeatureFlags(**{flag: True for flag in Settings.FeatureFlags.model_fields})
+    brand = Settings.BrandSettings(
+        product_name="Runtime Product",
+        product_tagline="Runtime Tagline",
+        company_name="Runtime Co",
+        support_email="support@runtime.test",
+        success_email="success@runtime.test",
+        operations_email="ops@runtime.test",
+        partner_support_email="partners@runtime.test",
+        notification_domain="runtime.test",
+    )
     settings = Settings(
         features=features,
         environment=Environment.DEVELOPMENT,
         app_name="TestApp",
         app_version="1.0.0",
+        TENANT_ID="tenant-public",
+        brand=brand,
     )
 
     app.dependency_overrides[get_settings] = lambda: settings
@@ -58,3 +70,17 @@ async def test_runtime_config_cache_and_paths(config_client: AsyncClient):
     data = resp.json()
     assert data["api"]["rest_path"] == "/api/v1"
     assert "features" in data and all(flag in data["features"] for flag in PUBLIC_FEATURE_FLAGS)
+
+
+@pytest.mark.asyncio
+async def test_public_branding_endpoint(config_client: AsyncClient):
+    resp = await config_client.get("/api/v1/branding")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert data["tenant_id"] == "tenant-public"
+    assert data["branding"]["product_name"] == "Runtime Product"
+    assert data["branding"]["company_name"] == "Runtime Co"
+    assert data["branding"]["support_email"] == "support@runtime.test"
+    assert data["branding"]["success_email"] == "success@runtime.test"
+    assert data["branding"]["operations_email"] == "ops@runtime.test"

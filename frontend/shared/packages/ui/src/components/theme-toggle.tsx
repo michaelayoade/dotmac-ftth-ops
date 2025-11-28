@@ -1,16 +1,43 @@
 "use client";
 
 import { Moon, Sun, Monitor } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import * as React from "react";
 
 import { cn } from "../lib/utils";
 
-export function ThemeToggle({ className = "" }: { className?: string }) {
+// Default labels used when next-intl is not available
+const defaultLabels = {
+  light: "Light",
+  dark: "Dark",
+  system: "System",
+  switchTo: (theme: string) => `Switch to ${theme} mode`,
+  modeTitle: (theme: string) => `${theme} mode`,
+};
+
+interface ThemeToggleProps {
+  className?: string;
+  labels?: {
+    light?: string;
+    dark?: string;
+    system?: string;
+    switchTo?: (theme: string) => string;
+    modeTitle?: (theme: string) => string;
+  };
+}
+
+export function ThemeToggle({ className = "", labels }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-  const t = useTranslations("theme");
+
+  // Merge provided labels with defaults
+  const t = {
+    light: labels?.light ?? defaultLabels.light,
+    dark: labels?.dark ?? defaultLabels.dark,
+    system: labels?.system ?? defaultLabels.system,
+    switchTo: labels?.switchTo ?? defaultLabels.switchTo,
+    modeTitle: labels?.modeTitle ?? defaultLabels.modeTitle,
+  };
 
   // Prevent hydration mismatch
   React.useEffect(() => {
@@ -23,14 +50,12 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   }
 
   const themes = [
-    { value: "light", icon: Sun, label: t("light") },
-    { value: "dark", icon: Moon, label: t("dark") },
-    { value: "system", icon: Monitor, label: t("system") },
+    { value: "light", icon: Sun, label: t.light },
+    { value: "dark", icon: Moon, label: t.dark },
+    { value: "system", icon: Monitor, label: t.system },
   ];
 
   const currentTheme = theme || "system";
-  const getSwitchLabel = (label: string) => t("switchTo", { theme: label });
-  const getModeTitle = (label: string) => t("modeTitle", { theme: label });
 
   return (
     <div className={cn("flex items-center gap-1 p-1 rounded-lg bg-secondary", className)}>
@@ -45,8 +70,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
               ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
               : "text-muted-foreground hover:text-foreground",
           )}
-          aria-label={getSwitchLabel(label)}
-          title={getModeTitle(label)}
+          aria-label={t.switchTo(label)}
+          title={t.modeTitle(label)}
         >
           <Icon className="h-4 w-4" />
         </button>
@@ -55,10 +80,25 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   );
 }
 
-export function ThemeToggleButton({ className = "" }: { className?: string }) {
+interface ThemeToggleButtonProps {
+  className?: string;
+  labels?: {
+    light?: string;
+    dark?: string;
+    switchTo?: (theme: string) => string;
+  };
+}
+
+export function ThemeToggleButton({ className = "", labels }: ThemeToggleButtonProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-  const t = useTranslations("theme");
+
+  // Merge provided labels with defaults
+  const t = {
+    light: labels?.light ?? defaultLabels.light,
+    dark: labels?.dark ?? defaultLabels.dark,
+    switchTo: labels?.switchTo ?? defaultLabels.switchTo,
+  };
 
   React.useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -70,7 +110,7 @@ export function ThemeToggleButton({ className = "" }: { className?: string }) {
   }
 
   const isDark = theme === "dark";
-  const targetLabel = isDark ? t("light") : t("dark");
+  const targetLabel = isDark ? t.light : t.dark;
 
   return (
     <button
@@ -81,7 +121,7 @@ export function ThemeToggleButton({ className = "" }: { className?: string }) {
         "text-muted-foreground hover:text-foreground",
         className,
       )}
-      aria-label={t("switchTo", { theme: targetLabel })}
+      aria-label={t.switchTo(targetLabel)}
     >
       {isDark ? (
         <Sun className="h-5 w-5 transition-transform duration-200 rotate-0 scale-100" />

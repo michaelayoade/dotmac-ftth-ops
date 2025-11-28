@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Response
 
 from ..settings import Settings, get_settings
 from ..settings import settings as runtime_settings
+from ..tenant.schemas import TenantBrandingConfig, TenantBrandingResponse
 
 router = APIRouter(prefix="/platform")
 
@@ -119,6 +120,19 @@ def _build_branding_payload(settings: Settings) -> dict[str, Any]:
         "partnerSupportEmail": brand.partner_support_email,
         "notificationDomain": brand.notification_domain,
     }
+
+
+def _build_tenant_branding_from_settings(settings: Settings) -> TenantBrandingConfig:
+    """Build tenant-friendly branding config from runtime settings."""
+    return TenantBrandingConfig(
+        product_name=settings.brand.product_name,
+        product_tagline=settings.brand.product_tagline,
+        company_name=settings.brand.company_name,
+        support_email=settings.brand.support_email,
+        success_email=settings.brand.success_email,
+        operations_email=settings.brand.operations_email,
+        partner_support_email=settings.brand.partner_support_email,
+    )
 
 
 @router.get("/runtime-config", include_in_schema=False)
@@ -242,6 +256,24 @@ async def platform_health() -> dict[str, str]:
         dict with status indicator
     """
     return {"status": "healthy"}
+
+
+@health_router.get(
+    "/branding",
+    response_model=TenantBrandingResponse,
+    include_in_schema=False,
+)
+async def get_public_branding(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> TenantBrandingResponse:
+    """
+    Public branding endpoint that does not require tenant context.
+
+    Returns the same runtime branding defaults used by /platform/runtime-config.
+    """
+    branding = _build_tenant_branding_from_settings(settings)
+    tenant_id = settings.TENANT_ID or settings.tenant.default_tenant_id
+    return TenantBrandingResponse(tenant_id=tenant_id, branding=branding, updated_at=None)
 
 
 @health_router.get("/health")
