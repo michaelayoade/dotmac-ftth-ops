@@ -292,7 +292,7 @@ exclude = [
 "alembic/env.py" = ["E402", "F401", "F403"]
 "tests/billing/usage/test_usage_billing_integration.py" = ["F821", "E402"]  # Skipped test - module not implemented
 "src/dotmac/platform/db/__init__.py" = ["F401"]  # JSONBCompat is in __all__ but ruff can't detect it
-"tests/**/*.py" = ["B017"]  # Allow broad exception catches in tests
+"tests/**/*.py" = ["B017", "E402"]  # Allow broad exception catches in tests, and pytestmark before imports
 
 [tool.ruff.lint]
 select = [
