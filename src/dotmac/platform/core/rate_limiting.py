@@ -58,7 +58,7 @@ def _create_limiter() -> Limiter:
             storage_uri = cache_url
 
     if storage_uri:
-        normalized_storage = storage_uri
+        normalized_storage: str | None = storage_uri
         if storage_uri.startswith("redis://"):
             try:
                 import redis

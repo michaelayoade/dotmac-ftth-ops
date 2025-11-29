@@ -41,8 +41,9 @@ logger = structlog.get_logger(__name__)
 
 
 def rate_limit_handler(request: Request, exc: Exception) -> Response:
-    """Handle rate limit exceeded exceptions."""
-    return _rate_limit_exceeded_handler(request, exc)
+    """Handle rate limit exceeded exceptions with proper typing."""
+    # Cast to RateLimitExceeded since we know it will be that type when called
+    return _rate_limit_exceeded_handler(request, exc)  # type: ignore[arg-type]
 
 
 @asynccontextmanager

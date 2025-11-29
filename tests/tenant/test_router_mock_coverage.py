@@ -6,11 +6,17 @@ Targets uncovered error handlers and edge cases.
 """
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+
+# Patch settings before importing modules that trigger rate limiting
+from dotmac.platform.settings import settings as runtime_settings
+
+# Set DEPLOYMENT_MODE to single_tenant to avoid Redis requirement in tests
+runtime_settings.DEPLOYMENT_MODE = "single_tenant"
 
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.db import get_async_session
@@ -21,6 +27,16 @@ from dotmac.platform.tenant.service import (
     TenantNotFoundError,
     TenantService,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset rate limiter before each test to avoid cached state."""
+    from dotmac.platform.core import rate_limiting
+
+    rate_limiting.reset_limiter()
+    yield
+    rate_limiting.reset_limiter()
 
 
 @pytest.mark.unit
@@ -103,7 +119,7 @@ class TestTenantRouterPropertyAssignments:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/platform/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -166,7 +182,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/platform/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -218,7 +234,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/platform/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -262,7 +278,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/platform/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -308,7 +324,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/platform/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)

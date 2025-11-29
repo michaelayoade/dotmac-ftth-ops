@@ -7,6 +7,12 @@ import pytest
 from fastapi import Request, Response
 from starlette.datastructures import Headers
 
+# Patch settings before importing modules that trigger rate limiting
+from dotmac.platform.settings import settings as runtime_settings
+
+# Set DEPLOYMENT_MODE to single_tenant to avoid Redis requirement in tests
+runtime_settings.DEPLOYMENT_MODE = "single_tenant"
+
 from dotmac.platform.api.gateway import APIGateway
 from dotmac.platform.api.middleware import (
     CircuitBreakerMiddleware,
@@ -255,7 +261,8 @@ class TestCircuitBreakerMiddleware:
         request = Mock(spec=Request)
         request.method = "GET"
         request.url = Mock()
-        request.url.path = "/api/v1/billing/invoices"
+        # Use new path format: /api/platform/v1/{service}/...
+        request.url.path = "/api/platform/v1/billing/invoices"
         request.headers = Headers({})
         request.state = Mock()
         return request
@@ -323,7 +330,7 @@ class TestCircuitBreakerMiddleware:
         request = Mock(spec=Request)
         request.method = "GET"
         request.url = Mock()
-        request.url.path = "/api/v1"  # Too short, no service
+        request.url.path = "/api/platform/v1"  # Too short, no service
         request.headers = Headers({})
         request.state = Mock()
 
@@ -386,7 +393,7 @@ class TestMiddlewareIntegration:
         request = Mock(spec=Request)
         request.method = "GET"
         request.url = Mock()
-        request.url.path = "/api/v1/test/endpoint"
+        request.url.path = "/api/platform/v1/test/endpoint"
         request.headers = Headers({})
         request.state = Mock()
 

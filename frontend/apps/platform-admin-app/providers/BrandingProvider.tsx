@@ -57,7 +57,14 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
 
   useEffect(() => {
     applyBrandingConfig(brandingSnapshot, { theme: themeMode });
-    updateFavicon(brandingSnapshot.faviconUrl);
+    // Handle both camelCase (from branding) and snake_case (from API)
+    const faviconUrl =
+      "faviconUrl" in brandingSnapshot
+        ? brandingSnapshot.faviconUrl
+        : "favicon_url" in brandingSnapshot
+          ? brandingSnapshot.favicon_url
+          : undefined;
+    updateFavicon(faviconUrl ?? undefined);
   }, [brandingSnapshot, themeMode]);
 
   useEffect(() => {
