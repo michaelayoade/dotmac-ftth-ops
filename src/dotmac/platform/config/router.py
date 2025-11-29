@@ -13,7 +13,7 @@ from ..settings import Settings, get_settings
 from ..settings import settings as runtime_settings
 from ..tenant.schemas import TenantBrandingConfig, TenantBrandingResponse
 
-router = APIRouter(prefix="/platform")
+router = APIRouter()
 
 # Separate router for endpoints without /platform prefix
 health_router = APIRouter(prefix="")
@@ -213,7 +213,9 @@ async def get_runtime_frontend_config(
 
 
 @router.get("/branding", include_in_schema=False)
-async def get_branding_config(settings: Annotated[Settings, Depends(get_settings)]) -> dict[str, Any]:
+async def get_branding_config(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, Any]:
     """
     Public branding configuration for frontends.
 

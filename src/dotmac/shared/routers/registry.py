@@ -44,8 +44,8 @@ class ServiceScope(Enum):
     """Service scope for router registration."""
 
     CONTROLPLANE = "controlplane"  # Platform admin service (/api/platform/v1/*)
-    ISP = "isp"                    # ISP operations service (/api/isp/v1/*)
-    SHARED = "shared"              # Shared by both services
+    ISP = "isp"  # ISP operations service (/api/isp/v1/*)
+    SHARED = "shared"  # Shared by both services
 
 
 @dataclass(frozen=True)
@@ -96,7 +96,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
     # SHARED ROUTERS - Registered on BOTH platform_app and isp_app
     # These provide common functionality like auth, health, config
     # =========================================================================
-
     RouterEntry(
         module_path="dotmac.platform.config.router",
         router_name="health_router",
@@ -214,12 +213,10 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="PWA push notification subscriptions and sending",
     ),
-
     # =========================================================================
     # CONTROL-PLANE ROUTERS - Platform Administration
     # Mounted at /api/platform/v1, prefixes are relative to that
     # =========================================================================
-
     RouterEntry(
         module_path="dotmac.platform.auth.platform_admin_router",
         router_name="router",
@@ -382,12 +379,10 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="Vault/OpenBao secrets management",
     ),
-
     # =========================================================================
     # ISP ROUTERS - ISP Operations
     # Mounted at /api/isp/v1, prefixes are relative to that
     # =========================================================================
-
     # --- Customer Management ---
     RouterEntry(
         module_path="dotmac.platform.customer_management.router",
@@ -445,7 +440,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=False,
         description="Public order creation and status checking (no auth required)",
     ),
-
     # --- Billing ---
     RouterEntry(
         module_path="dotmac.platform.billing.router",
@@ -573,7 +567,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=False,
         description="Billing webhook handlers (Stripe, Paystack, etc.)",
     ),
-
     # --- Network & AAA ---
     RouterEntry(
         module_path="dotmac.platform.radius.router",
@@ -683,7 +676,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="WireGuard VPN server and peer management",
     ),
-
     # --- Service Lifecycle ---
     RouterEntry(
         module_path="dotmac.platform.services.router",
@@ -712,7 +704,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="ISP internet service plan management with validation and testing",
     ),
-
     # --- Support & Partners ---
     RouterEntry(
         module_path="dotmac.platform.ticketing.router",
@@ -772,7 +763,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="Partner multi-tenant account management (MSP/Enterprise HQ)",
     ),
-
     # --- Infrastructure & Operations ---
     RouterEntry(
         module_path="dotmac.platform.fault_management.router",
@@ -828,7 +818,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="ISP metrics and KPIs with caching",
     ),
-
     # --- Field Service ---
     RouterEntry(
         module_path="dotmac.platform.field_service.router",
@@ -884,7 +873,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="Geocoding and routing services using OpenStreetMap",
     ),
-
     # --- Integrations & Utilities ---
     RouterEntry(
         module_path="dotmac.platform.webhooks.router",
@@ -985,7 +973,6 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="ISP-specific configuration settings",
     ),
-
     # --- Metrics Routers ---
     RouterEntry(
         module_path="dotmac.platform.monitoring_metrics_router",
@@ -1146,7 +1133,9 @@ def validate_registry() -> tuple[list[str], list[str]]:
     for entry in ROUTER_REGISTRY:
         key = (entry.module_path, entry.router_name, entry.prefix)
         if key in seen:
-            errors.append(f"Duplicate router: {entry.module_path}:{entry.router_name} at {entry.prefix}")
+            errors.append(
+                f"Duplicate router: {entry.module_path}:{entry.router_name} at {entry.prefix}"
+            )
         seen.add(key)
 
     # Check for deprecated routers
@@ -1183,6 +1172,7 @@ def register_routers_for_scope(
     if auth_dependency is None:
         try:
             from dotmac.platform.auth.dependencies import get_current_user
+
             auth_dependency = get_current_user
         except ImportError:
             logger.warning("Could not import get_current_user, auth will not be enforced")

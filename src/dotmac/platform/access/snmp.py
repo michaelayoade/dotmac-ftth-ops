@@ -179,12 +179,8 @@ async def _pysnmp_collect(
         if error_indication:
             raise SNMPCollectionError(str(error_indication))
         if error_status:
-            error_loc = (
-                request_args[int(error_index) - 1][0] if error_index else '?'
-            )
-            raise SNMPCollectionError(
-                f"{error_status.prettyPrint()} at {error_loc}"
-            )
+            error_loc = request_args[int(error_index) - 1][0] if error_index else "?"
+            raise SNMPCollectionError(f"{error_status.prettyPrint()} at {error_loc}")
 
         values: dict[str, Any] = {}
         for (_name, value), metric_key in zip(var_binds, oids.keys(), strict=False):

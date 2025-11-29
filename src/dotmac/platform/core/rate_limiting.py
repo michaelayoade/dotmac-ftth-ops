@@ -82,7 +82,9 @@ def _create_limiter() -> Limiter:
 
         if normalized_storage:
             logger.debug("rate_limit.storage.initialized", storage=normalized_storage)
-            return Limiter(key_func=get_remote_address, storage_uri=normalized_storage, enabled=enabled)
+            return Limiter(
+                key_func=get_remote_address, storage_uri=normalized_storage, enabled=enabled
+            )
 
     # SECURITY: In production, fail fast if Redis is not available
     # to prevent silent degradation to per-process rate limiting
