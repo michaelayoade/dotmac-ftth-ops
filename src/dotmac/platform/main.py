@@ -59,6 +59,7 @@ from dotmac.platform.monitoring.error_middleware import (
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
 from dotmac.platform.platform_app import platform_app
 from dotmac.platform.redis_client import init_redis, redis_manager, shutdown_redis
+
 # API info for documentation
 from dotmac.platform.routers import get_api_info
 from dotmac.platform.secrets import load_secrets_from_vault_sync
