@@ -22,6 +22,15 @@ const buildApiUrl = (path: string, options: BuildApiUrlOptions = {}): string => 
   return combineApiUrl(apiBaseUrl, apiPrefix, path, options);
 };
 
+const FEATURE_FLAG_KEY_MAP: Record<string, string> = {
+  graphql_enabled: "enableGraphQL",
+  analytics_enabled: "enableAnalytics",
+  banking_enabled: "enableBanking",
+  payments_enabled: "enablePayments",
+  network_enabled: "enableNetwork",
+  automation_enabled: "enableAutomation",
+};
+
 /**
  * Platform configuration (alias for backwards compatibility)
  */
@@ -207,8 +216,18 @@ function hydrateFeatures(features?: RuntimeConfig["features"]) {
   }
 
   Object.entries(features).forEach(([flag, value]) => {
-    if (flag in platformConfig.features && typeof value === "boolean") {
+    if (typeof value !== "boolean") {
+      return;
+    }
+
+    if (flag in platformConfig.features) {
       (platformConfig.features as Record<string, boolean>)[flag] = value;
+      return;
+    }
+
+    const mapped = FEATURE_FLAG_KEY_MAP[flag];
+    if (mapped && mapped in platformConfig.features) {
+      (platformConfig.features as Record<string, boolean>)[mapped] = value;
     }
   });
 }

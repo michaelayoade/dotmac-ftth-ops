@@ -13,14 +13,21 @@ pytestmark = pytest.mark.integration
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.voltha.router import router as voltha_router, get_voltha_service
-from dotmac.platform.voltha.schemas import AlarmOperationResponse, AlarmAcknowledgeRequest, AlarmClearRequest
-from dotmac.platform.settings import Settings, get_settings
 from dotmac.platform.auth.rbac_dependencies import require_permission
+from dotmac.platform.settings import Settings, get_settings
+from dotmac.platform.voltha.router import get_voltha_service
+from dotmac.platform.voltha.router import router as voltha_router
+from dotmac.platform.voltha.schemas import (
+    AlarmAcknowledgeRequest,
+    AlarmClearRequest,
+    AlarmOperationResponse,
+)
 
 
 class FakeVOLTHAService:
-    async def acknowledge_alarm(self, alarm_id: str, request: AlarmAcknowledgeRequest) -> AlarmOperationResponse:
+    async def acknowledge_alarm(
+        self, alarm_id: str, request: AlarmAcknowledgeRequest
+    ) -> AlarmOperationResponse:
         return AlarmOperationResponse(
             success=True,
             message="acknowledged",
@@ -29,7 +36,9 @@ class FakeVOLTHAService:
             timestamp="2023-01-01T00:00:00Z",
         )
 
-    async def clear_alarm(self, alarm_id: str, request: AlarmClearRequest) -> AlarmOperationResponse:
+    async def clear_alarm(
+        self, alarm_id: str, request: AlarmClearRequest
+    ) -> AlarmOperationResponse:
         return AlarmOperationResponse(
             success=True,
             message="cleared",

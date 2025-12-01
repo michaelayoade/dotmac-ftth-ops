@@ -307,9 +307,9 @@ function createCustomerPortalApi(buildUrl: BuildApiUrl) {
       return response.json();
     },
 
-    setDefaultPaymentMethod: async (paymentMethodId: string): Promise<void> => {
+    setDefaultPaymentMethod: async (paymentMethodId: string): Promise<CustomerPaymentMethod> => {
       const response = await customerPortalFetch(
-        buildUrl(`/customer/payment-methods/${paymentMethodId}/set-default`),
+        buildUrl(`/customer/payment-methods/${paymentMethodId}/default`),
         {
           method: "POST",
         },
@@ -317,6 +317,7 @@ function createCustomerPortalApi(buildUrl: BuildApiUrl) {
       if (!response.ok) {
         throw new Error("Failed to set default payment method");
       }
+      return response.json();
     },
 
     removePaymentMethod: async (paymentMethodId: string): Promise<void> => {
@@ -331,17 +332,17 @@ function createCustomerPortalApi(buildUrl: BuildApiUrl) {
       }
     },
 
-    toggleAutoPay: async (paymentMethodId: string, enabled: boolean): Promise<void> => {
+    toggleAutoPay: async (paymentMethodId: string): Promise<CustomerPaymentMethod> => {
       const response = await customerPortalFetch(
-        buildUrl(`/customer/payment-methods/${paymentMethodId}/auto-pay`),
+        buildUrl(`/customer/payment-methods/${paymentMethodId}/toggle-autopay`),
         {
-          method: "PUT",
-          body: JSON.stringify({ enabled }),
+          method: "POST",
         },
       );
       if (!response.ok) {
         throw new Error("Failed to toggle auto pay");
       }
+      return response.json();
     },
   };
 }
@@ -767,9 +768,9 @@ export function useCustomerPaymentMethods(): {
   error: string | null;
   refetch: () => void;
   addPaymentMethod: (request: any) => Promise<CustomerPaymentMethod>;
-  setDefaultPaymentMethod: (paymentMethodId: string) => Promise<void>;
+  setDefaultPaymentMethod: (paymentMethodId: string) => Promise<CustomerPaymentMethod>;
   removePaymentMethod: (paymentMethodId: string) => Promise<void>;
-  toggleAutoPay: (paymentMethodId: string, enabled: boolean) => Promise<void>;
+  toggleAutoPay: (paymentMethodId: string) => Promise<CustomerPaymentMethod>;
 } {
   const queryClient = useQueryClient();
   const { portalApi, apiBaseUrl, apiPrefix } = useCustomerPortalApiContext();
@@ -802,9 +803,13 @@ export function useCustomerPaymentMethods(): {
 
   const setDefaultMutation = useMutation({
     mutationFn: (paymentMethodId: string) => portalApi.setDefaultPaymentMethod(paymentMethodId),
-    onSuccess: (_, paymentMethodId) => {
+    onSuccess: (updated, paymentMethodId) => {
       queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) =>
-        old.map((pm) => ({ ...pm, is_default: pm.payment_method_id === paymentMethodId })),
+        old.map((pm) => ({
+          ...pm,
+          is_default: pm.payment_method_id === paymentMethodId,
+          auto_pay_enabled: pm.payment_method_id === paymentMethodId ? updated.auto_pay_enabled : pm.auto_pay_enabled,
+        })),
       );
       queryClient.invalidateQueries({ queryKey });
       logger.info("Default payment method updated");
@@ -829,13 +834,14 @@ export function useCustomerPaymentMethods(): {
   });
 
   const toggleAutoPayMutation = useMutation({
-    mutationFn: ({ paymentMethodId, enabled }: { paymentMethodId: string; enabled: boolean }) =>
-      portalApi.toggleAutoPay(paymentMethodId, enabled),
-    onSuccess: (_, { paymentMethodId, enabled }) => {
+    mutationFn: (paymentMethodId: string) => portalApi.toggleAutoPay(paymentMethodId),
+    onSuccess: (updated) => {
       queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) =>
-        old.map((pm) =>
-          pm.payment_method_id === paymentMethodId ? { ...pm, auto_pay_enabled: enabled } : pm,
-        ),
+        old.map((pm) => ({
+          ...pm,
+          auto_pay_enabled: pm.payment_method_id === updated.payment_method_id ? updated.auto_pay_enabled : false,
+          is_default: pm.payment_method_id === updated.payment_method_id ? updated.is_default : pm.is_default,
+        })),
       );
       queryClient.invalidateQueries({ queryKey });
       logger.info("Auto pay toggled successfully");
@@ -859,7 +865,6 @@ export function useCustomerPaymentMethods(): {
     addPaymentMethod: addMutation.mutateAsync,
     setDefaultPaymentMethod: setDefaultMutation.mutateAsync,
     removePaymentMethod: removeMutation.mutateAsync,
-    toggleAutoPay: (paymentMethodId: string, enabled: boolean) =>
-      toggleAutoPayMutation.mutateAsync({ paymentMethodId, enabled }),
+    toggleAutoPay: (paymentMethodId: string) => toggleAutoPayMutation.mutateAsync(paymentMethodId),
   };
 }

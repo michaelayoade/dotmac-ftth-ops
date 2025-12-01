@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from "react-leaflet";
+import type { Map as LeafletMap } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Badge } from "@dotmac/ui";
@@ -114,9 +115,9 @@ export default function TechnicianMap({
   selectedTechnicianId,
   onSelectTechnician,
 }: TechnicianMapProps) {
-  const mapRef = useRef<L.Map>(null);
-  const [center, setCenter] = useState<[number, number]>([6.5244, 3.3792]); // Lagos default
-  const [zoom, setZoom] = useState(12);
+  const mapRef = useRef<LeafletMap>(null);
+  const [center] = useState<L.LatLngExpression>([6.5244, 3.3792]); // Lagos default
+  const [zoom] = useState(12);
 
   // Auto-center on selected technician
   useEffect(() => {

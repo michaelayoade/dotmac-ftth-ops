@@ -162,7 +162,11 @@ class TestWireGuardPeerDualStack:
             # 3. Get used IPv6 addresses (no peer_ipv6 provided, so auto-allocate)
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = []
-            mock_session.execute.side_effect = [mock_pubkey_result, mock_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [
+                mock_pubkey_result,
+                mock_ipv4_result,
+                mock_ipv6_result,
+            ]
 
             # Mock IP allocation
             mock_client.allocate_peer_ip.side_effect = ["10.8.0.2/32", "fd00:8::2/128"]
@@ -278,7 +282,11 @@ class TestWireGuardPeerDualStack:
             # 3. Check if IPv6 already exists (peer_ipv6 provided)
             existing_ipv6_result = MagicMock()
             existing_ipv6_result.first.return_value = None
-            mock_session.execute.side_effect = [mock_pubkey_result, existing_ipv4_result, existing_ipv6_result]
+            mock_session.execute.side_effect = [
+                mock_pubkey_result,
+                existing_ipv4_result,
+                existing_ipv6_result,
+            ]
 
             mock_peer_instance = MagicMock()
             MockPeer.return_value = mock_peer_instance
@@ -337,7 +345,11 @@ class TestWireGuardPeerDualStack:
             # 3. Get used IPv6 addresses (no peer_ipv6 provided)
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = []
-            mock_session.execute.side_effect = [mock_pubkey_result, mock_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [
+                mock_pubkey_result,
+                mock_ipv4_result,
+                mock_ipv6_result,
+            ]
 
             mock_client.allocate_peer_ip.side_effect = ["10.8.0.2/32", "fd00:8::2/128"]
 
@@ -469,7 +481,11 @@ class TestWireGuardIPAllocationEdgeCases:
                 ("fd00:8::4/128",),
             ]
 
-            mock_session.execute.side_effect = [mock_pubkey_result, mock_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [
+                mock_pubkey_result,
+                mock_ipv4_result,
+                mock_ipv6_result,
+            ]
 
             mock_client.allocate_peer_ip.side_effect = ["10.8.0.4/32", "fd00:8::5/128"]
 
@@ -529,7 +545,11 @@ class TestWireGuardIPAllocationEdgeCases:
             # 3. Get used IPv6 addresses (peer_ipv6 not provided, so auto-allocate)
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = []
-            mock_session.execute.side_effect = [mock_pubkey_result, existing_ipv4_result, mock_ipv6_result]
+            mock_session.execute.side_effect = [
+                mock_pubkey_result,
+                existing_ipv4_result,
+                mock_ipv6_result,
+            ]
 
             # Mock IPv6 allocation (IPv4 already provided)
             mock_client.allocate_peer_ip.return_value = "fd00:8::2/128"

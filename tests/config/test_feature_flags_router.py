@@ -9,8 +9,9 @@ from httpx import ASGITransport, AsyncClient
 
 pytestmark = pytest.mark.integration
 
-from dotmac.platform.config.router import router as config_router, health_router, PUBLIC_FEATURE_FLAGS
-from dotmac.platform.settings import Settings, Environment, get_settings
+from dotmac.platform.config.router import PUBLIC_FEATURE_FLAGS, health_router
+from dotmac.platform.config.router import router as config_router
+from dotmac.platform.settings import Environment, Settings, get_settings
 
 
 @pytest.fixture
@@ -20,16 +21,16 @@ def config_app():
     app.include_router(health_router, prefix="/api/v1")
 
     # Provide deterministic settings with all feature flags enabled for the public list
-    features = Settings.FeatureFlags(**{flag: True for flag in Settings.FeatureFlags.model_fields})
+    features = Settings.FeatureFlags(**dict.fromkeys(Settings.FeatureFlags.model_fields, True))
     brand = Settings.BrandSettings(
         product_name="Runtime Product",
         product_tagline="Runtime Tagline",
         company_name="Runtime Co",
-        support_email="support@runtime.test",
-        success_email="success@runtime.test",
-        operations_email="ops@runtime.test",
-        partner_support_email="partners@runtime.test",
-        notification_domain="runtime.test",
+        support_email="support@example.com",
+        success_email="success@example.com",
+        operations_email="ops@example.com",
+        partner_support_email="partners@example.com",
+        notification_domain="example.com",
     )
     settings = Settings(
         features=features,
@@ -68,7 +69,7 @@ async def test_runtime_config_cache_and_paths(config_client: AsyncClient):
     assert resp.status_code == 200
     assert "Cache-Control" in resp.headers
     data = resp.json()
-    assert data["api"]["rest_path"] == "/api/v1"
+    assert data["api"]["rest_path"] == "/api/platform/v1/admin"
     assert "features" in data and all(flag in data["features"] for flag in PUBLIC_FEATURE_FLAGS)
 
 
@@ -81,6 +82,6 @@ async def test_public_branding_endpoint(config_client: AsyncClient):
     assert data["tenant_id"] == "tenant-public"
     assert data["branding"]["product_name"] == "Runtime Product"
     assert data["branding"]["company_name"] == "Runtime Co"
-    assert data["branding"]["support_email"] == "support@runtime.test"
-    assert data["branding"]["success_email"] == "success@runtime.test"
-    assert data["branding"]["operations_email"] == "ops@runtime.test"
+    assert data["branding"]["support_email"] == "support@example.com"
+    assert data["branding"]["success_email"] == "success@example.com"
+    assert data["branding"]["operations_email"] == "ops@example.com"

@@ -4,9 +4,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.plugins import schema
 from dotmac.platform.plugins.router import get_registry, router
-from dotmac.platform.auth.dependencies import get_current_user
 
 pytestmark = pytest.mark.integration
 

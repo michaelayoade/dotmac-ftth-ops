@@ -9,7 +9,17 @@ import enum
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base as BaseRuntime
@@ -49,14 +59,16 @@ class Workflow(Base, TimestampMixin):
     """
 
     __tablename__ = "workflows"
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_workflows_tenant_name"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     definition: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     version: Mapped[str] = mapped_column(String(20), default="1.0.0")
     tags: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    tenant_id: Mapped[str | None] = mapped_column(String(255), ForeignKey("tenants.id"), index=True)
 
     # Relationships
     executions: Mapped[list[WorkflowExecution]] = relationship(

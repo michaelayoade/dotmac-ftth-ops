@@ -106,6 +106,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 "/api",
                 "/api/v1/platform/config",
                 "/api/v1/platform/runtime-config",  # Frontend SSR needs this before tenant context exists
+                "/api/platform/v1/admin/runtime-config",  # Platform-admin runtime config path
                 "/api/v1/branding",  # Public branding for frontend bootstrapping
                 "/api/v1/platform/health",
                 "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
@@ -119,6 +120,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/realtime/tickets",
             "/api/v1/realtime/subscribers",
             "/api/v1/realtime/radius-sessions",
+            "/api/v1/realtime/events",
+            "/api/platform/v1/admin/realtime",  # Admin router mount (platform app)
+            "/api/isp/v1/admin/realtime",  # Admin router mount (ISP app)
         }
         # Override config's require_tenant if explicitly provided
         if require_tenant is not None:

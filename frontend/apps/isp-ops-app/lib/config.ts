@@ -28,6 +28,16 @@ const buildApiPath = (path: string, options: BuildApiUrlOptions = {}): string =>
   return combineApiUrl("", apiPrefix, path, options);
 };
 
+const FEATURE_FLAG_KEY_MAP: Record<string, string> = {
+  graphql_enabled: "enableGraphQL",
+  analytics_enabled: "enableAnalytics",
+  banking_enabled: "enableBanking",
+  payments_enabled: "enablePayments",
+  network_enabled: "enableNetwork",
+  automation_enabled: "enableAutomation",
+  radius_enabled: "enableRadius",
+};
+
 /**
  * Platform configuration (alias for backwards compatibility)
  */
@@ -187,6 +197,8 @@ export function applyPlatformRuntimeConfig(runtimeConfig: RuntimeConfig | null |
 
 export default platformConfig;
 
+const IS_ISP_PORTAL = process.env["NEXT_PUBLIC_PORTAL_TYPE"] === "isp";
+
 function hydrateApiConfig(api?: RuntimeConfig["api"]) {
   if (!api) {
     return;
@@ -198,7 +210,12 @@ function hydrateApiConfig(api?: RuntimeConfig["api"]) {
   }
 
   if (typeof api.restPath === "string") {
-    apiPrefix = normalizeApiPrefix(api.restPath);
+    const shouldApplyRestPath = !(
+      IS_ISP_PORTAL && api.restPath.startsWith("/api/platform/")
+    );
+    if (shouldApplyRestPath) {
+      apiPrefix = normalizeApiPrefix(api.restPath);
+    }
   }
 
   platformConfig.api.prefix = apiPrefix;
@@ -211,8 +228,18 @@ function hydrateFeatures(features?: RuntimeConfig["features"]) {
   }
 
   Object.entries(features).forEach(([flag, value]) => {
-    if (flag in platformConfig.features && typeof value === "boolean") {
+    if (typeof value !== "boolean") {
+      return;
+    }
+
+    if (flag in platformConfig.features) {
       (platformConfig.features as Record<string, boolean>)[flag] = value;
+      return;
+    }
+
+    const mapped = FEATURE_FLAG_KEY_MAP[flag];
+    if (mapped && mapped in platformConfig.features) {
+      (platformConfig.features as Record<string, boolean>)[mapped] = value;
     }
   });
 }

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
@@ -11,11 +9,11 @@ from httpx import ASGITransport, AsyncClient
 
 pytestmark = pytest.mark.integration
 
-from dotmac.platform.access.router import router as access_router
 from dotmac.platform.access.router import get_access_service
+from dotmac.platform.access.router import router as access_router
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.settings import Settings, get_settings
+from dotmac.platform.settings import get_settings
 
 
 class FakeAccessService:

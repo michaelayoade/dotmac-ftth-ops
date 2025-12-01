@@ -2,23 +2,23 @@
  * @fileoverview Tests for usePermissions hook
  */
 
+import React from "react";
 import { renderHook, act } from "@testing-library/react";
-import { usePermissions } from "../index";
+import { RBACProvider, usePermissions } from "../index";
 
 describe("usePermissions", () => {
-  let consoleLogSpy: jest.SpyInstance;
-
-  beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
-  });
-
-  afterEach(() => {
-    consoleLogSpy.mockRestore();
-  });
+  const wrapper =
+    (initialPermissions: string[] = ["users:read", "admin.*"], roles: string[] = ["admin"]) =>
+    ({ children }: { children: React.ReactNode }) =>
+      React.createElement(
+        RBACProvider,
+        { initialPermissions, initialRoles: roles },
+        children,
+      );
 
   describe("hasPermission", () => {
     it("should check permission and return true", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper() });
 
       let hasPermission: boolean = false;
 
@@ -26,33 +26,26 @@ describe("usePermissions", () => {
         hasPermission = result.current.hasPermission("users:read");
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking permission:", "users:read");
       expect(hasPermission).toBe(true);
     });
 
     it("should handle different permission formats", () => {
-      const { result } = renderHook(() => usePermissions());
+      const perms = ["users:read", "users:write", "users:delete", "posts:create", "posts:update"];
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper(perms) });
 
-      const permissions = [
-        "users:read",
-        "users:write",
-        "users:delete",
-        "posts:create",
-        "posts:update",
-        "admin:*",
-      ];
-
-      permissions.forEach((permission) => {
+      perms.forEach((permission) => {
         act(() => {
           result.current.hasPermission(permission);
         });
 
-        expect(consoleLogSpy).toHaveBeenCalledWith("Checking permission:", permission);
+        expect(result.current.hasPermission(permission)).toBe(true);
       });
     });
 
     it("should handle wildcard permissions", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), {
+        wrapper: wrapper(["*", "users.*", "*.read"]),
+      });
 
       act(() => {
         result.current.hasPermission("*");
@@ -60,15 +53,20 @@ describe("usePermissions", () => {
         result.current.hasPermission("*:read");
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking permission:", "*");
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking permission:", "users:*");
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking permission:", "*:read");
+      expect(result.current.hasPermission("anything")).toBe(true);
+      expect(result.current.hasPermission("users:delete")).toBe(true);
+      expect(result.current.hasPermission("orders:read")).toBe(true);
+    });
+
+    it("should return false for missing permission", () => {
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper(["users:read"]) });
+      expect(result.current.hasPermission("billing:write")).toBe(false);
     });
   });
 
   describe("hasRole", () => {
     it("should check role and return true", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper() });
 
       let hasRole: boolean = false;
 
@@ -76,42 +74,35 @@ describe("usePermissions", () => {
         hasRole = result.current.hasRole("admin");
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking role:", "admin");
       expect(hasRole).toBe(true);
     });
 
     it("should handle different role names", () => {
-      const { result } = renderHook(() => usePermissions());
-
       const roles = ["admin", "user", "moderator", "guest", "super-admin"];
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper(["*"], roles) });
 
-      roles.forEach((role) => {
-        act(() => {
-          result.current.hasRole(role);
-        });
-
-        expect(consoleLogSpy).toHaveBeenCalledWith("Checking role:", role);
-      });
+      roles.forEach((role) => expect(result.current.hasRole(role)).toBe(true));
     });
 
     it("should handle case-sensitive roles", () => {
-      const { result } = renderHook(() => usePermissions());
-
-      act(() => {
-        result.current.hasRole("Admin");
-        result.current.hasRole("ADMIN");
-        result.current.hasRole("admin");
+      const { result } = renderHook(() => usePermissions(), {
+        wrapper: wrapper(["*"], ["Admin", "ADMIN", "admin"]),
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking role:", "Admin");
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking role:", "ADMIN");
-      expect(consoleLogSpy).toHaveBeenCalledWith("Checking role:", "admin");
+      expect(result.current.hasRole("Admin")).toBe(true);
+      expect(result.current.hasRole("ADMIN")).toBe(true);
+      expect(result.current.hasRole("admin")).toBe(true);
+    });
+
+    it("should return false for missing role", () => {
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper(["*"], ["user"]) });
+      expect(result.current.hasRole("admin")).toBe(false);
     });
   });
 
   describe("hook stability", () => {
     it("should return stable functions across re-renders", () => {
-      const { result, rerender } = renderHook(() => usePermissions());
+      const { result, rerender } = renderHook(() => usePermissions(), { wrapper: wrapper() });
 
       const firstHasPermission = result.current.hasPermission;
       const firstHasRole = result.current.hasRole;
@@ -125,7 +116,7 @@ describe("usePermissions", () => {
 
   describe("edge cases", () => {
     it("should handle empty string permission", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper() });
 
       expect(() => {
         act(() => {
@@ -135,7 +126,7 @@ describe("usePermissions", () => {
     });
 
     it("should handle empty string role", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper() });
 
       expect(() => {
         act(() => {
@@ -145,7 +136,9 @@ describe("usePermissions", () => {
     });
 
     it("should handle special characters in permissions", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), {
+        wrapper: wrapper(["resource-name:action", "resource_name:action", "resource.name:action"]),
+      });
 
       const permissions = [
         "resource-name:action",
@@ -166,7 +159,7 @@ describe("usePermissions", () => {
 
   describe("return values", () => {
     it("should always return boolean for hasPermission", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper() });
 
       let returnValue: boolean;
 
@@ -178,7 +171,7 @@ describe("usePermissions", () => {
     });
 
     it("should always return boolean for hasRole", () => {
-      const { result } = renderHook(() => usePermissions());
+      const { result } = renderHook(() => usePermissions(), { wrapper: wrapper() });
 
       let returnValue: boolean;
 

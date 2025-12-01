@@ -14,7 +14,6 @@ from dotmac.platform.communications.email_service import (
     get_email_service,
     send_email,
 )
-from dotmac.platform.settings import settings
 
 pytestmark = pytest.mark.asyncio
 

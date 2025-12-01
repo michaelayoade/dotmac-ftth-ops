@@ -87,8 +87,11 @@ def _create_limiter() -> Limiter:
             )
 
     # SECURITY: In production, fail fast if Redis is not available
-    # to prevent silent degradation to per-process rate limiting
-    if settings.DEPLOYMENT_MODE == "multi_tenant" or settings.DEPLOYMENT_MODE == "hybrid":
+    # to prevent silent degradation to per-process rate limiting.
+    # In dev/test, allow a memory fallback so the app can start without Redis.
+    env = getattr(settings, "environment", None)
+    env_value = getattr(env, "value", str(env)).lower() if env else ""
+    if settings.DEPLOYMENT_MODE in ("multi_tenant", "hybrid") and env_value == "production":
         logger.error(
             "rate_limit.storage.redis_required",
             message="Redis is required for rate limiting in multi-tenant/hybrid mode",
@@ -180,12 +183,41 @@ def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
     return decorator
 
 
+def rate_limit_ip(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """Rate limit using client IP as the key (explicit helper for security-sensitive routes)."""
+
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        limiter_instance = get_limiter()
+
+        if inspect.iscoroutinefunction(func):
+
+            @wraps(func)
+            async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+                limited_callable = limiter_instance.limit(limit, key_func=get_remote_address)(func)
+                result = limited_callable(*args, **kwargs)
+                if inspect.isawaitable(result):
+                    return cast(R, await result)
+                return cast(R, result)
+
+            return cast(Callable[P, R], async_wrapper)
+
+        @wraps(func)
+        def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            limited_callable = limiter_instance.limit(limit, key_func=get_remote_address)(func)
+            return cast(R, limited_callable(*args, **kwargs))
+
+        return cast(Callable[P, R], sync_wrapper)
+
+    return decorator
+
+
 # Export SlowAPI components directly - use established library
 __all__ = [
     "limiter",
     "get_limiter",
     "reset_limiter",
     "rate_limit",
+    "rate_limit_ip",
     "RateLimitExceeded",
     "get_remote_address",
     "_rate_limit_exceeded_handler",

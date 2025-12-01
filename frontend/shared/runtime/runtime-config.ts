@@ -173,7 +173,7 @@ export function serializeRuntimeConfig(config: RuntimeConfig): string {
 }
 
 async function fetchRuntimeConfigFromApi(): Promise<RuntimeConfig> {
-  const response = await fetch("/api/platform/v1/admin/runtime-config", {
+  const response = await fetch("/api/v1/platform/runtime-config", {
     cache: "no-store",
     next: {
       revalidate: 60,

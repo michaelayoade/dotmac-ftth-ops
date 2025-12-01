@@ -3,15 +3,21 @@
 Ensures list/detail/health endpoints respond with minimal expected structure.
 """
 
+from dataclasses import dataclass
+
 import pytest
 import pytest_asyncio
-from dataclasses import dataclass
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.integrations import IntegrationConfig, IntegrationHealth, IntegrationStatus, IntegrationType
+from dotmac.platform.integrations import (
+    IntegrationConfig,
+    IntegrationHealth,
+    IntegrationStatus,
+    IntegrationType,
+)
 from dotmac.platform.integrations.router import integrations_router
 
 pytestmark = pytest.mark.integration
@@ -73,7 +79,9 @@ def integrations_app(monkeypatch):
         return registry
 
     app.dependency_overrides[get_current_user] = override_user
-    monkeypatch.setattr("dotmac.platform.integrations.router.get_integration_registry", override_registry)
+    monkeypatch.setattr(
+        "dotmac.platform.integrations.router.get_integration_registry", override_registry
+    )
 
     return app
 

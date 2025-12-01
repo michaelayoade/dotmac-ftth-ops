@@ -452,7 +452,12 @@ class TestStorageBackends:
     def test_unknown_backend_defaults_to_local(self, tmp_path):
         """Test unknown backend falls back to local."""
         # Use tmp_path to avoid permission issues with /var/lib/dotmac
-        with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+        with patch.object(
+            LocalFileStorage,
+            "__init__",
+            lambda self, base_path=None: setattr(self, "base_path", tmp_path)
+            or setattr(self, "_files", {}),
+        ):
             service = FileStorageService(backend="unknown")
 
             # Backend should be LocalFileStorage even if backend_type stays as "unknown"
@@ -957,7 +962,12 @@ class TestFileStorageServiceMinio:
         with patch("dotmac.platform.file_storage.service.MinIOFileStorage") as mock_minio:
             mock_minio.side_effect = Exception("MinIO connection failed")
             # Also patch LocalFileStorage to use tmp_path
-            with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+            with patch.object(
+                LocalFileStorage,
+                "__init__",
+                lambda self, base_path=None: setattr(self, "base_path", tmp_path)
+                or setattr(self, "_files", {}),
+            ):
                 service = FileStorageService(backend=StorageBackend.MINIO)
 
                 # Should fallback to local storage
@@ -1050,8 +1060,9 @@ class TestGetStorageService:
 
         # Patch get_storage_service to return a proper FileStorageService instance
         # The global infrastructure patcher may override this, so we patch at module level
-        with patch.object(service_module, 'get_storage_service', return_value=mock_service):
+        with patch.object(service_module, "get_storage_service", return_value=mock_service):
             from dotmac.platform.file_storage.service import get_storage_service
+
             service = get_storage_service()
 
             # Should return a FileStorageService instance (via mock spec)
@@ -1066,7 +1077,12 @@ class TestGetStorageService:
         service_module._storage_service = None
 
         # Patch LocalFileStorage to use tmp_path to avoid permission issues
-        with patch.object(LocalFileStorage, '__init__', lambda self, base_path=None: setattr(self, 'base_path', tmp_path) or setattr(self, '_files', {})):
+        with patch.object(
+            LocalFileStorage,
+            "__init__",
+            lambda self, base_path=None: setattr(self, "base_path", tmp_path)
+            or setattr(self, "_files", {}),
+        ):
             # Get service twice
             service1 = get_storage_service()
             service2 = get_storage_service()

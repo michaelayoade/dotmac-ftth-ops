@@ -208,9 +208,7 @@ class TestAppBoundaryMiddleware:
             await middleware.dispatch(mock_request, self.call_next)
 
         assert exc_info.value.status_code == 403
-        assert "Insufficient permissions for ISP operations" in str(
-            exc_info.value.detail["error"]
-        )
+        assert "Insufficient permissions for ISP operations" in str(exc_info.value.detail["error"])
 
     @pytest.mark.asyncio
     async def test_isp_route_accepts_isp_scope(self, middleware, mock_request):

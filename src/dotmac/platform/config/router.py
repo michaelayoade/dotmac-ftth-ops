@@ -9,6 +9,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Response
 
+from ..auth.dependencies import get_current_user
 from ..settings import Settings, get_settings
 from ..settings import settings as runtime_settings
 from ..tenant.schemas import TenantBrandingConfig, TenantBrandingResponse
@@ -77,7 +78,7 @@ _PLATFORM_HEALTH_SUMMARY: dict[str, str] = {
 }
 
 _RUNTIME_CONFIG_CACHE_SECONDS = 60
-_DEFAULT_API_PREFIX = "/api/v1"
+_DEFAULT_API_PREFIX = "/api/platform/v1/admin"
 
 
 def _sanitize_base_url(value: str | None) -> str:
@@ -137,6 +138,7 @@ def _build_tenant_branding_from_settings(settings: Settings) -> TenantBrandingCo
     )
 
 
+@router.get("/platform/runtime-config", include_in_schema=False)
 @router.get("/runtime-config", include_in_schema=False)
 async def get_runtime_frontend_config(
     response: Response,
@@ -212,7 +214,7 @@ async def get_runtime_frontend_config(
     return runtime_payload
 
 
-@router.get("/branding", include_in_schema=False)
+@router.get("/platform/branding", include_in_schema=False)
 async def get_branding_config(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> dict[str, Any]:
@@ -225,6 +227,7 @@ async def get_branding_config(
     return _build_branding_payload(settings)
 
 
+@router.get("/platform/config")
 @router.get("/config")
 async def get_platform_config(
     settings: Annotated[Settings, Depends(get_settings)],
@@ -262,7 +265,7 @@ async def get_platform_config(
     }
 
 
-@router.get("/health")
+@router.get("/platform/health")
 async def platform_health() -> dict[str, str]:
     """
     Basic platform health check.
@@ -271,6 +274,53 @@ async def platform_health() -> dict[str, str]:
         dict with status indicator
     """
     return {"status": "healthy"}
+
+
+@router.get("/platform/config/introspection", include_in_schema=False)
+@router.get("/config/introspection", include_in_schema=False)
+async def get_config_introspection(
+    settings: Annotated[Settings, Depends(get_settings)],
+    user: Annotated[Any, Depends(get_current_user)],
+) -> dict[str, Any]:
+    """
+    Authenticated view of sanitized runtime configuration (no secrets).
+    """
+    _ = user  # Enforce auth; actual payload is sanitized
+
+    features_payload = {flag: getattr(settings.features, flag) for flag in PUBLIC_FEATURE_FLAGS}
+
+    api_base = _sanitize_base_url(settings.frontend_api_base_url)
+    rest_path = _DEFAULT_API_PREFIX
+    rest_url = _join_url(api_base, rest_path) if api_base else rest_path
+
+    return {
+        "app": {
+            "name": settings.app_name,
+            "version": settings.app_version,
+            "environment": settings.environment.value,
+        },
+        "deployment": {
+            "mode": settings.DEPLOYMENT_MODE,
+            "tenant_id": settings.TENANT_ID,
+            "platform_routes_enabled": settings.ENABLE_PLATFORM_ROUTES,
+        },
+        "routing": {
+            "rest_path": rest_path,
+            "rest_url": rest_url,
+            "graphql_url": _join_url(rest_url, "/graphql"),
+            "realtime_ws_url": _join_url(rest_url, "/realtime/ws"),
+            "realtime_sse_url": _join_url(rest_url, "/realtime/events"),
+        },
+        "database": {
+            "pool_size": settings.database.pool_size,
+            "max_overflow": settings.database.max_overflow,
+            "pool_timeout": settings.database.pool_timeout,
+        },
+        "redis": {
+            "max_connections": settings.redis.max_connections,
+        },
+        "features": features_payload,
+    }
 
 
 @health_router.get(

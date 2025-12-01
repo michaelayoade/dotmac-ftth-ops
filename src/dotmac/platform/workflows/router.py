@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.rbac_dependencies import require_permission
 from ..db import get_async_db
+from ..tenant import get_current_tenant_id
 from .builtin_workflows import get_all_builtin_workflows
 from .models import WorkflowStatus
 from .schemas import (
@@ -46,6 +47,7 @@ def get_workflow_service(db: AsyncSession = Depends(get_async_db)) -> WorkflowSe
 )
 async def create_workflow(
     workflow_data: WorkflowCreate,
+    tenant_id: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowResponse:
     """
@@ -60,6 +62,7 @@ async def create_workflow(
             description=workflow_data.description,
             version=workflow_data.version,
             tags=workflow_data.tags,
+            tenant_id=workflow_data.tenant_id or tenant_id,
         )
         return WorkflowResponse.model_validate(workflow)
     except Exception as e:
@@ -77,6 +80,7 @@ async def create_workflow(
 )
 async def list_workflows(
     is_active: bool | None = Query(None, description="Filter by active status"),
+    tenant_id: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowListResponse:
     """
@@ -84,7 +88,7 @@ async def list_workflows(
 
     Required permission: workflows:read
     """
-    workflows = await service.list_workflows(is_active=is_active)
+    workflows = await service.list_workflows(is_active=is_active, tenant_id=tenant_id)
     return WorkflowListResponse(
         workflows=[WorkflowResponse.model_validate(w) for w in workflows],
         total=len(workflows),
@@ -120,6 +124,7 @@ async def list_executions(
         None, alias="status", description="Filter by status"
     ),
     tenant_id: str | None = Query(None, description="Filter by tenant ID"),
+    tenant_ctx: str | None = Depends(get_current_tenant_id),
     limit: int = Query(100, ge=1, le=1000, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Results offset"),
     service: WorkflowService = Depends(get_workflow_service),
@@ -132,7 +137,7 @@ async def list_executions(
     executions = await service.list_executions(
         workflow_id=workflow_id,
         status=status_filter,
-        tenant_id=tenant_id,
+        tenant_id=tenant_id or tenant_ctx,
         limit=limit,
         offset=offset,
     )
@@ -150,6 +155,7 @@ async def list_executions(
 async def get_workflow_stats(
     workflow_id: int | None = Query(None, description="Filter by workflow ID"),
     tenant_id: str | None = Query(None, description="Filter by tenant ID"),
+    tenant_ctx: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowStatsResponse:
     """
@@ -159,7 +165,7 @@ async def get_workflow_stats(
     """
     stats = await service.get_execution_stats(
         workflow_id=workflow_id,
-        tenant_id=tenant_id,
+        tenant_id=tenant_id or tenant_ctx,
     )
     return WorkflowStatsResponse(**stats)
 
@@ -171,6 +177,7 @@ async def get_workflow_stats(
 )
 async def get_workflow(
     workflow_id: int,
+    tenant_id: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowResponse:
     """
@@ -178,7 +185,7 @@ async def get_workflow(
 
     Required permission: workflows:read
     """
-    workflow = await service.get_workflow(workflow_id)
+    workflow = await service.get_workflow(workflow_id, tenant_id=tenant_id)
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -195,6 +202,7 @@ async def get_workflow(
 async def update_workflow(
     workflow_id: int,
     workflow_data: WorkflowUpdate,
+    tenant_id: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowResponse:
     """
@@ -209,6 +217,7 @@ async def update_workflow(
             description=workflow_data.description,
             is_active=workflow_data.is_active,
             tags=workflow_data.tags,
+            tenant_id=tenant_id,
         )
         return WorkflowResponse.model_validate(workflow)
     except ValueError as e:
@@ -231,6 +240,7 @@ async def update_workflow(
 )
 async def delete_workflow(
     workflow_id: int,
+    tenant_id: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> None:
     """
@@ -239,7 +249,7 @@ async def delete_workflow(
     Required permission: workflows:delete
     """
     try:
-        await service.delete_workflow(workflow_id)
+        await service.delete_workflow(workflow_id, tenant_id=tenant_id)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -258,6 +268,7 @@ async def delete_workflow(
 )
 async def execute_workflow(
     request: WorkflowExecuteRequest,
+    tenant_ctx: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowExecutionResponse:
     """
@@ -271,7 +282,7 @@ async def execute_workflow(
             context=request.context,
             trigger_type=request.trigger_type,
             trigger_source=request.trigger_source,
-            tenant_id=request.tenant_id,
+            tenant_id=request.tenant_id or tenant_ctx,
         )
         return WorkflowExecutionResponse.model_validate(execution)
     except ValueError as e:
@@ -299,6 +310,7 @@ async def execute_workflow_by_id(
     trigger_type: str = "manual",
     trigger_source: str | None = None,
     tenant_id: str | None = None,
+    tenant_ctx: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowExecutionResponse:
     """
@@ -312,7 +324,7 @@ async def execute_workflow_by_id(
             context=context,
             trigger_type=trigger_type,
             trigger_source=trigger_source,
-            tenant_id=tenant_id,
+            tenant_id=tenant_id or tenant_ctx,
         )
         return WorkflowExecutionResponse.model_validate(execution)
     except ValueError as e:
@@ -336,6 +348,7 @@ async def execute_workflow_by_id(
 async def get_execution(
     execution_id: int,
     include_steps: bool = Query(False, description="Include step details"),
+    tenant_id: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowExecutionResponse:
     """
@@ -343,7 +356,9 @@ async def get_execution(
 
     Required permission: workflows:read
     """
-    execution = await service.get_execution(execution_id, include_steps=include_steps)
+    execution = await service.get_execution(
+        execution_id, include_steps=include_steps, tenant_id=tenant_id
+    )
     if not execution:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -359,6 +374,7 @@ async def get_execution(
 )
 async def cancel_execution(
     execution_id: int,
+    tenant_id: str | None = Depends(get_current_tenant_id),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> None:
     """
@@ -367,7 +383,7 @@ async def cancel_execution(
     Required permission: workflows:execute
     """
     try:
-        await service.cancel_execution(execution_id)
+        await service.cancel_execution(execution_id, tenant_id=tenant_id)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

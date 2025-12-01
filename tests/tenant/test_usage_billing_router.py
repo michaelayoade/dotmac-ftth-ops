@@ -325,7 +325,9 @@ class TestUsageOveragesEndpoint:
         """Test getting overages without specifying period (current period)."""
         tenant = await create_test_tenant(test_client_with_auth, "overages-basic")
 
-        response = await test_client_with_auth.get(f"/api/platform/v1/tenants/{tenant['id']}/usage/overages")
+        response = await test_client_with_auth.get(
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/overages"
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -359,7 +361,9 @@ class TestUsageOveragesEndpoint:
         """Test getting overages when tenant is within limits."""
         tenant = await create_test_tenant(test_client_with_auth, "no-overages")
 
-        response = await test_client_with_auth.get(f"/api/platform/v1/tenants/{tenant['id']}/usage/overages")
+        response = await test_client_with_auth.get(
+            f"/api/platform/v1/tenants/{tenant['id']}/usage/overages"
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()

@@ -165,7 +165,7 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         prefix="",  # /realtime at service root
         tags=("Real-Time",),
         scope=ServiceScope.SHARED,
-        requires_auth=False,
+        requires_auth=True,
         description="Real-time updates via SSE and WebSocket",
     ),
     RouterEntry(
@@ -704,6 +704,15 @@ ROUTER_REGISTRY: tuple[RouterEntry, ...] = (
         requires_auth=True,
         description="ISP internet service plan management with validation and testing",
     ),
+    RouterEntry(
+        module_path="dotmac.platform.subscribers.router",
+        router_name="router",
+        prefix="/subscribers",
+        tags=("Subscribers",),
+        scope=ServiceScope.ISP,
+        requires_auth=True,
+        description="Subscriber management (CRUD + RADIUS/Billing integration)",
+    ),
     # --- Support & Partners ---
     RouterEntry(
         module_path="dotmac.platform.ticketing.router",
@@ -1152,6 +1161,7 @@ def register_routers_for_scope(
     include_shared: bool = True,
     auth_dependency: Any = None,
     default_base_prefix: str = "",
+    prefix: str = "",
 ) -> tuple[int, int]:
     """
     Register all routers for a specific service scope with a FastAPI app.
@@ -1162,6 +1172,7 @@ def register_routers_for_scope(
         include_shared: Include SHARED scope routers
         default_base_prefix: Base prefix to prepend when an entry doesn't specify one (e.g., "/admin")
         auth_dependency: Authentication dependency to use (if None, uses default)
+        prefix: Optional outer prefix applied to every router (e.g., mount path)
 
     Returns:
         Tuple of (registered_count, failed_count).
@@ -1182,6 +1193,15 @@ def register_routers_for_scope(
     registered = 0
     failed = 0
 
+    def _combine_prefixes(*parts: str) -> str:
+        combined = ""
+        for part in parts:
+            if not part:
+                continue
+            normalized = part if part.startswith("/") else f"/{part}"
+            combined = f"{combined.rstrip('/')}{normalized}"
+        return combined
+
     for entry in routers:
         try:
             # Dynamically import the module
@@ -1195,7 +1215,7 @@ def register_routers_for_scope(
 
             # Build full prefix: default base prefix + entry-specific base prefix + router prefix
             base_prefix = entry.base_prefix or default_base_prefix
-            full_prefix = f"{base_prefix}{entry.prefix}"
+            full_prefix = _combine_prefixes(prefix, base_prefix, entry.prefix)
 
             # Register the router
             app.include_router(

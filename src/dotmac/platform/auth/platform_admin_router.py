@@ -8,6 +8,7 @@ Provides endpoints for SaaS platform administrators to:
 - Manage platform-level configurations
 """
 
+import secrets
 from typing import Any
 
 import structlog
@@ -18,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.db import get_async_session
 
-from .core import UserInfo
+from .core import UserInfo, jwt_service, session_manager
 from .platform_admin import (
     PLATFORM_PERMISSIONS,
     platform_audit,
@@ -721,9 +722,9 @@ async def create_impersonation_token(
         details={"duration_minutes": duration_minutes},
     )
 
-    from .core import jwt_service
+    # Create a session for the impersonation token so session validation passes
+    session_id = secrets.token_urlsafe(32)
 
-    # Create a token with the target tenant
     token = jwt_service.create_access_token(
         subject=admin.user_id,
         additional_claims={
@@ -732,8 +733,22 @@ async def create_impersonation_token(
             "is_platform_admin": True,  # Maintain admin status
             "impersonating": True,
             "original_tenant": admin.tenant_id,
+            "session_id": session_id,
         },
         expire_minutes=duration_minutes,
+    )
+
+    # Tie the session to the impersonation window
+    await session_manager.create_session(
+        user_id=str(admin.user_id),
+        data={
+            "impersonating": True,
+            "target_tenant": tenant_id,
+            "roles": admin.roles or [],
+            "email": admin.email,
+        },
+        session_id=session_id,
+        ttl=duration_minutes * 60,
     )
 
     logger.warning(

@@ -72,11 +72,15 @@ class PermissionChecker:
 
         if self.mode == PermissionMode.ALL:
             has_permission = await rbac_service.user_has_all_permissions(
-                current_user.user_id, self.permissions
+                current_user.user_id,
+                self.permissions,
+                tenant_id=current_user.effective_tenant_id if hasattr(current_user, "effective_tenant_id") else current_user.tenant_id,
             )
         else:  # ANY
             has_permission = await rbac_service.user_has_any_permission(
-                current_user.user_id, self.permissions
+                current_user.user_id,
+                self.permissions,
+                tenant_id=current_user.effective_tenant_id if hasattr(current_user, "effective_tenant_id") else current_user.tenant_id,
             )
 
         if not has_permission:
@@ -336,7 +340,7 @@ class ResourcePermissionChecker:
 
         # Check general permission
         has_permission = await rbac_service.user_has_permission(
-            current_user.user_id, self.permission
+            current_user.user_id, self.permission, tenant_id=current_user.tenant_id
         )
 
         # If no general permission, check ownership
@@ -350,7 +354,7 @@ class ResourcePermissionChecker:
                 # Check if user has the "own" version of the permission
                 own_permission = self.permission.replace(".all", ".own")
                 has_permission = await rbac_service.user_has_permission(
-                    current_user.user_id, own_permission
+                    current_user.user_id, own_permission, tenant_id=current_user.tenant_id
                 )
 
         if not has_permission:

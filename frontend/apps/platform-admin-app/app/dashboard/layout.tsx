@@ -64,6 +64,8 @@ interface NavSection {
 
 type DisplayUser = Pick<UserInfo, "email" | "username" | "full_name" | "roles">;
 
+const ADMIN_PERMISSION = "platform:admin";
+
 const platformAdminSectionIds = new Set<string>([
   "overview",
   "tenants",
@@ -81,16 +83,33 @@ const allSections: NavSection[] = [
     label: "Overview",
     icon: LayoutDashboard,
     href: "/dashboard",
+    permission: ADMIN_PERMISSION,
   },
   {
     id: "tenants",
     label: "Tenants",
     icon: Building2,
     href: "/dashboard/platform-admin/tenants",
+    permission: ADMIN_PERMISSION,
     items: [
-      { name: "Tenant Directory", href: "/dashboard/platform-admin/tenants", icon: Building2 },
-      { name: "Licensing & Plans", href: "/dashboard/platform-admin/licensing", icon: BarChart3 },
-      { name: "Cross-Tenant Search", href: "/dashboard/platform-admin/search", icon: Search },
+      {
+        name: "Tenant Directory",
+        href: "/dashboard/platform-admin/tenants",
+        icon: Building2,
+        permission: ADMIN_PERMISSION,
+      },
+      {
+        name: "Licensing & Plans",
+        href: "/dashboard/platform-admin/licensing",
+        icon: BarChart3,
+        permission: ADMIN_PERMISSION,
+      },
+      {
+        name: "Cross-Tenant Search",
+        href: "/dashboard/platform-admin/search",
+        icon: Search,
+        permission: ADMIN_PERMISSION,
+      },
     ],
   },
   {
@@ -98,14 +117,20 @@ const allSections: NavSection[] = [
     label: "Platform Configuration",
     icon: Settings,
     href: "/dashboard/platform-admin/system",
+    permission: ADMIN_PERMISSION,
     items: [
-      { name: "System Settings", href: "/dashboard/platform-admin/system", icon: Settings },
-      { name: "Feature Flags", href: "/dashboard/feature-flags", icon: ToggleLeft },
-      { name: "Security & Access", href: "/dashboard/security-access", icon: Shield },
-      { name: "Integrations", href: "/dashboard/integrations", icon: Plug },
-      { name: "Webhooks", href: "/dashboard/webhooks", icon: Webhook },
-      { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-      { name: "Account & Billing", href: "/dashboard/settings", icon: CreditCard },
+      {
+        name: "System Settings",
+        href: "/dashboard/platform-admin/system",
+        icon: Settings,
+        permission: ADMIN_PERMISSION,
+      },
+      { name: "Feature Flags", href: "/dashboard/feature-flags", icon: ToggleLeft, permission: ADMIN_PERMISSION },
+      { name: "Security & Access", href: "/dashboard/security-access", icon: Shield, permission: ADMIN_PERMISSION },
+      { name: "Integrations", href: "/dashboard/integrations", icon: Plug, permission: ADMIN_PERMISSION },
+      { name: "Webhooks", href: "/dashboard/webhooks", icon: Webhook, permission: ADMIN_PERMISSION },
+      { name: "Notifications", href: "/dashboard/notifications", icon: Bell, permission: ADMIN_PERMISSION },
+      { name: "Account & Billing", href: "/dashboard/settings", icon: CreditCard, permission: ADMIN_PERMISSION },
     ],
   },
   {
@@ -113,17 +138,31 @@ const allSections: NavSection[] = [
     label: "Analytics & Insights",
     icon: BarChart3,
     href: "/dashboard/analytics",
-    items: [{ name: "Analytics Overview", href: "/dashboard/analytics", icon: BarChart3 }],
+    permission: ADMIN_PERMISSION,
+    items: [
+      { name: "Analytics Overview", href: "/dashboard/analytics", icon: BarChart3, permission: ADMIN_PERMISSION },
+    ],
   },
   {
     id: "audit",
     label: "Audit & Compliance",
     icon: FileText,
     href: "/dashboard/platform-admin/audit",
+    permission: ADMIN_PERMISSION,
     items: [
-      { name: "Audit Trail", href: "/dashboard/platform-admin/audit", icon: FileText },
-      { name: "Security Events", href: "/dashboard/security-access/permissions", icon: Shield },
-      { name: "Notification History", href: "/dashboard/notifications/history", icon: Mail },
+      { name: "Audit Trail", href: "/dashboard/platform-admin/audit", icon: FileText, permission: ADMIN_PERMISSION },
+      {
+        name: "Security Events",
+        href: "/dashboard/security-access/permissions",
+        icon: Shield,
+        permission: ADMIN_PERMISSION,
+      },
+      {
+        name: "Notification History",
+        href: "/dashboard/notifications/history",
+        icon: Mail,
+        permission: ADMIN_PERMISSION,
+      },
     ],
   },
   {
@@ -131,21 +170,24 @@ const allSections: NavSection[] = [
     label: "Automation",
     icon: Activity,
     href: "/dashboard/jobs",
-    items: [{ name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity }],
+    permission: ADMIN_PERMISSION,
+    items: [{ name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity, permission: ADMIN_PERMISSION }],
   },
   {
     id: "communications",
     label: "Communications",
     icon: Mail,
     href: "/dashboard/communications",
+    permission: ADMIN_PERMISSION,
     items: [
-      { name: "Campaigns", href: "/dashboard/communications", icon: Mail },
+      { name: "Campaigns", href: "/dashboard/communications", icon: Mail, permission: ADMIN_PERMISSION },
       {
         name: "Notification Templates",
         href: "/dashboard/notifications/templates",
         icon: FileText,
+        permission: ADMIN_PERMISSION,
       },
-      { name: "Support", href: "/dashboard/ticketing", icon: LifeBuoy },
+      { name: "Support", href: "/dashboard/ticketing", icon: LifeBuoy, permission: ADMIN_PERMISSION },
     ],
   },
   {
@@ -153,9 +195,10 @@ const allSections: NavSection[] = [
     label: "Integrations & Marketplace",
     icon: Package,
     href: "/dashboard/plugins",
+    permission: ADMIN_PERMISSION,
     items: [
-      { name: "Plugin Catalog", href: "/dashboard/plugins", icon: Package },
-      { name: "Partner Integrations", href: "/dashboard/partners", icon: Handshake },
+      { name: "Plugin Catalog", href: "/dashboard/plugins", icon: Package, permission: ADMIN_PERMISSION },
+      { name: "Partner Integrations", href: "/dashboard/partners", icon: Handshake, permission: ADMIN_PERMISSION },
     ],
   },
 ];
@@ -167,14 +210,15 @@ const tenantPortalSection: NavSection = {
   label: "Tenant Portal",
   icon: Building2,
   href: "/tenant-portal",
+  permission: ADMIN_PERMISSION,
   items: [
-    { name: "Overview", href: "/tenant-portal", icon: LayoutDashboard },
-    { name: "Customers", href: "/tenant-portal/customers", icon: Users },
-    { name: "Billing", href: "/tenant-portal/billing", icon: CreditCard },
-    { name: "Usage & Limits", href: "/tenant-portal/usage", icon: BarChart3 },
-    { name: "Integrations", href: "/tenant-portal/integrations", icon: Plug },
-    { name: "Support", href: "/tenant-portal/support", icon: LifeBuoy },
-    { name: "User Access", href: "/tenant-portal/users", icon: UserCheck },
+    { name: "Overview", href: "/tenant-portal", icon: LayoutDashboard, permission: ADMIN_PERMISSION },
+    { name: "Customers", href: "/tenant-portal/customers", icon: Users, permission: ADMIN_PERMISSION },
+    { name: "Billing", href: "/tenant-portal/billing", icon: CreditCard, permission: ADMIN_PERMISSION },
+    { name: "Usage & Limits", href: "/tenant-portal/usage", icon: BarChart3, permission: ADMIN_PERMISSION },
+    { name: "Integrations", href: "/tenant-portal/integrations", icon: Plug, permission: ADMIN_PERMISSION },
+    { name: "Support", href: "/tenant-portal/support", icon: LifeBuoy, permission: ADMIN_PERMISSION },
+    { name: "User Access", href: "/tenant-portal/users", icon: UserCheck, permission: ADMIN_PERMISSION },
   ],
 };
 

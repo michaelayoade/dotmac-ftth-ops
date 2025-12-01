@@ -4,18 +4,13 @@ Real-Time API Router
 FastAPI endpoints for SSE streams and WebSocket connections.
 """
 
-from fastapi import APIRouter, Depends, Request, WebSocket
+from fastapi import APIRouter, Depends, WebSocket
 from sse_starlette.sse import EventSourceResponse
 
-from dotmac.platform.auth.core import (
-    TokenType,
-    UserInfo,
-    _claims_to_user_info,
-    _verify_token_with_fallback,
-)
-from dotmac.platform.auth.dependencies import get_current_user_optional
+from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.realtime.sse import (
     create_alert_stream,
+    create_combined_event_stream,
     create_onu_status_stream,
     create_radius_session_stream,
     create_subscriber_stream,
@@ -42,13 +37,30 @@ router = APIRouter(prefix="/realtime", tags=["Real-Time"])
 
 
 @router.get(
+    "/events",
+    summary="Stream Combined Events",
+    description=(
+        "Aggregated SSE stream for alerts, device status, tickets, subscribers, and RADIUS sessions."
+    ),
+)
+async def stream_combined_events(
+    redis: RedisClientType = Depends(get_redis_client),
+    current_user: UserInfo = Depends(get_current_user),
+) -> EventSourceResponse:
+    """
+    Single SSE endpoint that multiplexes all tenant-scoped real-time channels.
+    """
+    return await create_combined_event_stream(redis, current_user.tenant_id)
+
+
+@router.get(
     "/onu-status",
     summary="Stream ONU Status Updates",
     description="Server-Sent Events stream for real-time ONU status changes",
 )
 async def stream_onu_status(
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
     Stream ONU status events via SSE.
@@ -60,7 +72,7 @@ async def stream_onu_status(
 
     The connection stays open and pushes events as they occur.
     """
-    tenant_id = current_user.tenant_id if current_user else None
+    tenant_id = current_user.tenant_id
     response: EventSourceResponse = await create_onu_status_stream(redis, tenant_id)
     return response
 
@@ -72,7 +84,7 @@ async def stream_onu_status(
 )
 async def stream_alerts(
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
     Stream alert events via SSE.
@@ -84,7 +96,7 @@ async def stream_alerts(
 
     The connection stays open and pushes events as they occur.
     """
-    tenant_id = current_user.tenant_id if current_user else None
+    tenant_id = current_user.tenant_id
     response: EventSourceResponse = await create_alert_stream(redis, tenant_id)
     return response
 
@@ -96,7 +108,7 @@ async def stream_alerts(
 )
 async def stream_tickets(
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
     Stream ticket events via SSE.
@@ -109,7 +121,7 @@ async def stream_tickets(
 
     The connection stays open and pushes events as they occur.
     """
-    tenant_id = current_user.tenant_id if current_user else None
+    tenant_id = current_user.tenant_id
     response: EventSourceResponse = await create_ticket_stream(redis, tenant_id)
     return response
 
@@ -120,9 +132,8 @@ async def stream_tickets(
     description="Server-Sent Events stream for subscriber lifecycle events",
 )
 async def stream_subscribers(
-    request: Request,
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
     Stream subscriber lifecycle events via SSE.
@@ -135,17 +146,8 @@ async def stream_subscribers(
 
     The connection stays open and pushes events as they occur.
     """
-    if current_user is None:
-        auth_header = request.headers.get("Authorization", "")
-        token = None
-        if auth_header.lower().startswith("bearer "):
-            token = auth_header.split(None, 1)[1]
-        if token:
-            claims = await _verify_token_with_fallback(token, TokenType.ACCESS)
-            current_user = _claims_to_user_info(claims)
-
     response: EventSourceResponse = await create_subscriber_stream(
-        redis, current_user.tenant_id if current_user else None
+        redis, current_user.tenant_id
     )
     return response
 
@@ -156,9 +158,8 @@ async def stream_subscribers(
     description="Server-Sent Events stream for real-time RADIUS session tracking",
 )
 async def stream_radius_sessions(
-    request: Request,
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
     Stream RADIUS session events via SSE.
@@ -184,17 +185,8 @@ async def stream_radius_sessions(
         "timestamp": "2025-01-15T10:30:00Z"
     }
     """
-    if current_user is None:
-        auth_header = request.headers.get("Authorization", "")
-        token = None
-        if auth_header.lower().startswith("bearer "):
-            token = auth_header.split(None, 1)[1]
-        if token:
-            claims = await _verify_token_with_fallback(token, TokenType.ACCESS)
-            current_user = _claims_to_user_info(claims)
-
     response: EventSourceResponse = await create_radius_session_stream(
-        redis, current_user.tenant_id if current_user else None
+        redis, current_user.tenant_id
     )
     return response
 

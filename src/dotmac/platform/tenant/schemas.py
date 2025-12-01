@@ -184,8 +184,35 @@ class TenantBrandingConfig(BaseModel):  # BaseModel resolves to Any in isolation
         None, description="Partner escalation contact email"
     )
     primary_color: str | None = Field(None, description="Primary brand color (hex/RGB)")
+    primary_hover_color: str | None = Field(None, description="Primary hover color (hex/RGB)")
+    primary_foreground_color: str | None = Field(
+        None, description="Primary foreground (text) color"
+    )
     secondary_color: str | None = Field(None, description="Secondary brand color")
+    secondary_hover_color: str | None = Field(None, description="Secondary hover color")
+    secondary_foreground_color: str | None = Field(
+        None, description="Secondary foreground (text) color"
+    )
     accent_color: str | None = Field(None, description="Accent brand color")
+    background_color: str | None = Field(None, description="Background brand color")
+    foreground_color: str | None = Field(None, description="Foreground/text brand color")
+    primary_color_dark: str | None = Field(None, description="Dark theme primary brand color")
+    primary_hover_color_dark: str | None = Field(
+        None, description="Dark theme primary hover color"
+    )
+    primary_foreground_color_dark: str | None = Field(
+        None, description="Dark theme primary foreground (text) color"
+    )
+    secondary_color_dark: str | None = Field(None, description="Dark theme secondary brand color")
+    secondary_hover_color_dark: str | None = Field(
+        None, description="Dark theme secondary hover color"
+    )
+    secondary_foreground_color_dark: str | None = Field(
+        None, description="Dark theme secondary foreground (text) color"
+    )
+    accent_color_dark: str | None = Field(None, description="Dark theme accent brand color")
+    background_color_dark: str | None = Field(None, description="Dark theme background color")
+    foreground_color_dark: str | None = Field(None, description="Dark theme foreground/text color")
     logo_light_url: str | None = Field(None, description="Light theme logo URL")
     logo_dark_url: str | None = Field(None, description="Dark theme logo URL")
     favicon_url: str | None = Field(None, description="Favicon URL")

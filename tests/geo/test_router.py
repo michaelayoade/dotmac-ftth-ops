@@ -11,15 +11,16 @@ def test_geo_router_import():
 
     assert router is not None
     # The module exports an APIRouter instance named 'router'
-    assert hasattr(router, 'router')
+    assert hasattr(router, "router")
     # The router instance has routes
-    assert hasattr(router.router, 'routes')
+    assert hasattr(router.router, "routes")
 
 
 def test_geocoding_service_available():
     """Test that geocoding services are available."""
     try:
         from dotmac.platform.geo import service
+
         assert service is not None
     except ImportError:
         # Service might not be implemented yet

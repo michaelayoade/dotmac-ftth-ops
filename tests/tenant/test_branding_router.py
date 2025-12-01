@@ -48,6 +48,8 @@ def _build_branding_response() -> TenantBrandingResponse:
             product_name="Tenant ISP",
             support_email="support@tenant-isp.example.com",
             logo_light_url="https://cdn.example.com/logo.svg",
+            primary_hover_color="#0ea5e9",
+            primary_color_dark="#0f172a",
         ),
     )
 
@@ -88,6 +90,7 @@ async def test_get_branding_success(tenant_user: UserInfo):
         data = resp.json()
         assert data["tenant_id"] == "tenant-123"
         assert data["branding"]["product_name"] == "Tenant ISP"
+        assert data["branding"]["primary_color_dark"] == "#0f172a"
         service.get_tenant_branding.assert_awaited_once_with("tenant-123")
 
 

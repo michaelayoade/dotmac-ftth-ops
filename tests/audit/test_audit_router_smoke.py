@@ -7,17 +7,11 @@ pytestmark = pytest.mark.unit
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+from dotmac.platform.audit.router import router
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.audit.models import (
-    AuditActivity,
-    AuditActivityCreate,
-    ActivitySeverity,
-    ActivityType,
-)
-from dotmac.platform.audit.router import router
-from dotmac.platform.audit.service import AuditService
-from dotmac.platform.db import AsyncSessionLocal, Base as DbBase
+from dotmac.platform.db import AsyncSessionLocal
+from dotmac.platform.db import Base as DbBase
 from dotmac.platform.tenant import get_current_tenant_id
 
 

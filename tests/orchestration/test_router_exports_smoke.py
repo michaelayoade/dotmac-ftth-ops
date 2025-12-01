@@ -13,13 +13,14 @@ pytestmark = pytest.mark.integration
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.orchestration.router import router as orchestration_router, get_orchestration_service
+from dotmac.platform.orchestration.models import WorkflowStatus, WorkflowStepStatus, WorkflowType
+from dotmac.platform.orchestration.router import get_orchestration_service
+from dotmac.platform.orchestration.router import router as orchestration_router
 from dotmac.platform.orchestration.schemas import (
     WorkflowResponse,
     WorkflowStatsResponse,
     WorkflowStepResponse,
 )
-from dotmac.platform.orchestration.models import WorkflowStatus, WorkflowStepStatus, WorkflowType
 
 
 def _now() -> datetime:
@@ -56,7 +57,12 @@ class FakeOrchestrationService:
         )
 
     async def list_workflows(self, **_kwargs):
-        return {"workflows": [self.workflow], "total": 1, "limit": _kwargs.get("limit", 1000), "offset": 0}
+        return {
+            "workflows": [self.workflow],
+            "total": 1,
+            "limit": _kwargs.get("limit", 1000),
+            "offset": 0,
+        }
 
     async def get_workflow_statistics(self) -> WorkflowStatsResponse:
         return WorkflowStatsResponse(
@@ -93,7 +99,9 @@ def orchestration_app():
         return test_user
 
     app.dependency_overrides[get_current_user] = override_user
-    app.dependency_overrides[get_orchestration_service] = lambda request=None, db=None, current_user=None: FakeOrchestrationService()  # type: ignore[arg-type]
+    app.dependency_overrides[get_orchestration_service] = (
+        lambda request=None, db=None, current_user=None: FakeOrchestrationService()
+    )  # type: ignore[arg-type]
     return app
 
 
@@ -114,7 +122,9 @@ async def test_export_workflows_csv(orchestration_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_export_workflows_json(orchestration_client: AsyncClient):
-    resp = await orchestration_client.get("/api/v1/orchestration/export/json", follow_redirects=True)
+    resp = await orchestration_client.get(
+        "/api/v1/orchestration/export/json", follow_redirects=True
+    )
     assert resp.status_code == 200
     assert "application/json" in resp.headers.get("content-type", "")
     data = resp.json()

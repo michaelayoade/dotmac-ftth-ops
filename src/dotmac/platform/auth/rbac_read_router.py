@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.models import Role
+from dotmac.platform.auth.rbac_service import RBACService
 from dotmac.platform.db import get_session_dependency
 
 router = APIRouter(prefix="", tags=["RBAC"])
@@ -54,6 +55,22 @@ class UserPermissionsResponse(BaseModel):
     direct_permissions: list[PermissionInfo]
     effective_permissions: list[PermissionInfo]
     is_superuser: bool = False
+
+
+class PermissionCheckRequest(BaseModel):
+    """Permission check request body."""
+
+    model_config = ConfigDict()
+
+    permissions: list[str]
+
+
+class PermissionCheckResponse(BaseModel):
+    """Permission check response body."""
+
+    model_config = ConfigDict()
+
+    results: dict[str, bool]
 
 
 @router.get("/my-permissions")
@@ -115,19 +132,23 @@ async def get_my_permissions(
         if "." in perm_name:
             parts = perm_name.split(".")
             # "a.b.c" -> category=a, resource=b, action=c
-            # "a.b"   -> category=a, action=b
+            # "a.b"   -> category=a, resource=b, action=""
+            # "a"     -> category=a, resource="", action=""
             category = parts[0] if len(parts) > 0 else ""
             if len(parts) >= 3:
                 resource = parts[1]
                 action = parts[2]
             elif len(parts) == 2:
-                resource = ""
-                action = parts[1]
+                resource = parts[1]
+                action = ""
         elif ":" in perm_name:
             # Support older "category:action" style
             parts = perm_name.split(":")
             category = parts[0] if len(parts) > 0 else ""
             action = parts[1] if len(parts) > 1 else ""
+        else:
+            # Single word permission - treat as category
+            category = perm_name
 
         permissions.append(
             PermissionInfo(
@@ -185,3 +206,25 @@ async def get_roles(
 async def get_my_roles(current_user: UserInfo = Depends(get_current_user)) -> list[str]:
     """Get current user's roles."""
     return current_user.roles or []
+
+
+@router.post("/check", response_model=PermissionCheckResponse)
+async def check_permissions(
+    request: PermissionCheckRequest,
+    current_user: UserInfo = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session_dependency),
+) -> PermissionCheckResponse:
+    """Check a list of permissions for the current user."""
+    rbac_service = RBACService(db)
+    tenant_scope = getattr(current_user, "effective_tenant_id", None) or current_user.tenant_id
+
+    results: dict[str, bool] = {}
+    for perm in request.permissions:
+        results[perm] = await rbac_service.user_has_permission(
+            current_user.user_id,
+            perm,
+            is_platform_admin=current_user.is_platform_admin,
+            tenant_id=tenant_scope,
+        )
+
+    return PermissionCheckResponse(results=results)

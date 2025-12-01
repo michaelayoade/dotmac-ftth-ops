@@ -352,6 +352,8 @@ def create_platform_admin_token(
         "permissions": all_permissions,
         "tenant_id": None,  # Platform admins don't belong to a tenant
         "is_platform_admin": True,
+        # Platform-issued tokens created outside the login flow skip session validation
+        "session_optional": True,
     }
 
     return jwt_service.create_access_token(user_id, additional_claims=claims)

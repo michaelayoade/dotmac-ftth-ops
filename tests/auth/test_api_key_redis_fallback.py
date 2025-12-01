@@ -8,7 +8,7 @@ falls back to in-memory storage and still returns expected UserInfo.
 import hashlib
 import json
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -166,9 +166,7 @@ class TestAPIKeyMetadataValidation:
             side_effect=lambda key: {
                 f"api_key:{api_key_hash}": json.dumps(api_key_data),
                 f"api_key_lookup:{api_key_hash}": "key_123",
-                "api_key_meta:key_123": json.dumps(
-                    {"is_active": True, "expires_at": expired_time}
-                ),
+                "api_key_meta:key_123": json.dumps({"is_active": True, "expires_at": expired_time}),
             }.get(key)
         )
 

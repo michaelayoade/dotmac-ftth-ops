@@ -27,7 +27,7 @@ from dotmac.platform.auth.models import (
     user_roles,
 )
 from dotmac.platform.auth.rbac_audit import rbac_audit_logger
-from dotmac.platform.core.caching import cache_delete, cache_get, cache_set
+from dotmac.platform.core.caching import cache_clear, cache_delete, cache_get, cache_set
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
 
@@ -111,24 +111,43 @@ class RBACService:
         self._permission_cache: dict[str, Permission] = {}
         self._role_cache: dict[str, Role] = {}
 
-    def _invalidate_user_permission_cache(self, user_id: UUID | str) -> None:
+    def _invalidate_user_permission_cache(self, user_id: UUID | str, tenant_id: str | None = None) -> None:
         """Remove cached permissions for a user (clears legacy and new cache keys)."""
+        # Legacy keys (no tenant)
         cache_delete(f"user_perms:{user_id}")
         cache_delete(f"user_perms:{user_id}:expired=False")
         cache_delete(f"user_perms:{user_id}:expired=True")
+        # Namespaced keys (with tenant)
+        tenant_scope = tenant_id or "none"
+        cache_delete(f"user_perms:{user_id}:tenant:{tenant_scope}:expired=False")
+        cache_delete(f"user_perms:{user_id}:tenant:{tenant_scope}:expired=True")
+        # Best-effort clear of any other tracked cache entries for this user
+        cache_clear(f"user_perms:{user_id}")
 
     # ==================== User Permissions ====================
 
+    def _resolve_tenant_scope(self, tenant_id: str | None = None) -> str | None:
+        """Resolve tenant scope for permission checks."""
+        if tenant_id:
+            return tenant_id
+        try:
+            return get_current_tenant_id()
+        except Exception:
+            return None
+
     async def get_user_permissions(
-        self, user_id: UUID | str, include_expired: bool = False
+        self, user_id: UUID | str, include_expired: bool = False, tenant_id: str | None = None
     ) -> PermissionSnapshot:
         """Get all permissions for a user (from roles and direct grants)"""
         # Convert string to UUID if needed
         if isinstance(user_id, str):
             user_id = UUID(user_id)
 
+        tenant_scope = self._resolve_tenant_scope(tenant_id)
+        tenant_cache_key = tenant_scope or "none"
+
         # Include include_expired flag in cache key to prevent cache poisoning
-        cache_key = f"user_perms:{user_id}:expired={include_expired}"
+        cache_key = f"user_perms:{user_id}:tenant:{tenant_cache_key}:expired={include_expired}"
 
         # Check cache first
         cached = cache_get(cache_key)
@@ -141,15 +160,21 @@ class RBACService:
         now = datetime.now(UTC)
 
         # Get permissions from roles
+        from dotmac.platform.user_management.models import User
+
         query = (
             select(Permission.name)
             .join(role_permissions)
             .join(Role)
             .join(user_roles)
+            .join(User, User.id == user_roles.c.user_id)
             .where(user_roles.c.user_id == user_id)
             .where(Role.is_active)
             .where(Permission.is_active)
         )
+
+        if tenant_scope:
+            query = query.where(User.tenant_id == tenant_scope)
 
         if not include_expired:
             query = query.where(
@@ -163,9 +188,13 @@ class RBACService:
         direct_query = (
             select(Permission.name, user_permissions.c.granted)
             .join(user_permissions)
+            .join(User, User.id == user_permissions.c.user_id)
             .where(user_permissions.c.user_id == user_id)
             .where(Permission.is_active)
         )
+
+        if tenant_scope:
+            direct_query = direct_query.where(User.tenant_id == tenant_scope)
 
         if not include_expired:
             direct_query = direct_query.where(
@@ -193,7 +222,11 @@ class RBACService:
         return snapshot
 
     async def user_has_permission(
-        self, user_id: UUID | str, permission: str, is_platform_admin: bool = False
+        self,
+        user_id: UUID | str,
+        permission: str,
+        is_platform_admin: bool = False,
+        tenant_id: str | None = None,
     ) -> bool:
         """Check if user has a specific permission.
 
@@ -209,33 +242,37 @@ class RBACService:
         if is_platform_admin:
             return True
 
-        user_perms = await self.get_user_permissions(user_id)
+        user_perms = await self.get_user_permissions(user_id, tenant_id=tenant_id)
 
         return self._permission_matches(user_perms, permission)
 
-    async def user_has_any_permission(self, user_id: UUID | str, permissions: list[str]) -> bool:
+    async def user_has_any_permission(
+        self, user_id: UUID | str, permissions: list[str], tenant_id: str | None = None
+    ) -> bool:
         """Check if user has any of the specified permissions"""
         # Preserve behaviour for mocked services that override user_has_permission
         bound_impl = getattr(self.user_has_permission, "__func__", None)
         if bound_impl is not RBACService.user_has_permission:
             for perm in permissions:
-                if await self.user_has_permission(user_id, perm):
+                if await self.user_has_permission(user_id, perm, tenant_id=tenant_id):
                     return True
             return False
 
-        user_perms = await self.get_user_permissions(user_id)
+        user_perms = await self.get_user_permissions(user_id, tenant_id=tenant_id)
         return any(self._permission_matches(user_perms, perm) for perm in permissions)
 
-    async def user_has_all_permissions(self, user_id: UUID | str, permissions: list[str]) -> bool:
+    async def user_has_all_permissions(
+        self, user_id: UUID | str, permissions: list[str], tenant_id: str | None = None
+    ) -> bool:
         """Check if user has all specified permissions"""
         bound_impl = getattr(self.user_has_permission, "__func__", None)
         if bound_impl is not RBACService.user_has_permission:
             for perm in permissions:
-                if not await self.user_has_permission(user_id, perm):
+                if not await self.user_has_permission(user_id, perm, tenant_id=tenant_id):
                     return False
             return True
 
-        user_perms = await self.get_user_permissions(user_id)
+        user_perms = await self.get_user_permissions(user_id, tenant_id=tenant_id)
         return all(self._permission_matches(user_perms, perm) for perm in permissions)
 
     @staticmethod

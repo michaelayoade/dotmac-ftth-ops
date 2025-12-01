@@ -5,18 +5,18 @@ These tests verify the Mikrotik driver implementation for PPPoE subscriber
 management, queue-based bandwidth control, and device health monitoring.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-from dotmac.platform.access.drivers.mikrotik import (
-    MikrotikDriverConfig,
-    MikrotikRouterOSDriver,
-)
+import pytest
+
 from dotmac.platform.access.drivers.base import (
     DriverContext,
     ONUProvisionRequest,
 )
-
+from dotmac.platform.access.drivers.mikrotik import (
+    MikrotikDriverConfig,
+    MikrotikRouterOSDriver,
+)
 
 pytestmark = pytest.mark.unit
 

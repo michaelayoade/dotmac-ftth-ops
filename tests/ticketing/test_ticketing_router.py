@@ -14,13 +14,6 @@ from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.dependencies import get_current_user_optional
-from dotmac.platform.customer_management.models import (
-    CommunicationChannel,
-    Customer,
-    CustomerStatus,
-    CustomerTier,
-    CustomerType,
-)
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.partner_management.models import (
     CommissionModel,
@@ -30,10 +23,16 @@ from dotmac.platform.partner_management.models import (
     PartnerUser,
 )
 from dotmac.platform.tenant import get_current_tenant_id
-from dotmac.platform.ticketing.models import Ticket, TicketActorType, TicketPriority, TicketStatus, TicketType
+from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
+from dotmac.platform.ticketing.models import (
+    Ticket,
+    TicketActorType,
+    TicketPriority,
+    TicketStatus,
+    TicketType,
+)
 from dotmac.platform.ticketing.router import router as ticketing_router
 from dotmac.platform.user_management.models import User
-from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
 pytestmark = pytest.mark.integration
 
@@ -374,8 +373,16 @@ async def test_ticket_metrics_endpoint(async_db_session, ticketing_app):
 
     tickets = [
         make_ticket("TCK-1", TicketStatus.OPEN, TicketPriority.NORMAL, TicketType.OUTAGE),
-        make_ticket("TCK-2", TicketStatus.IN_PROGRESS, TicketPriority.HIGH, TicketType.TECHNICAL_SUPPORT),
-        make_ticket("TCK-3", TicketStatus.RESOLVED, TicketPriority.URGENT, TicketType.OUTAGE, sla_breached=True),
+        make_ticket(
+            "TCK-2", TicketStatus.IN_PROGRESS, TicketPriority.HIGH, TicketType.TECHNICAL_SUPPORT
+        ),
+        make_ticket(
+            "TCK-3",
+            TicketStatus.RESOLVED,
+            TicketPriority.URGENT,
+            TicketType.OUTAGE,
+            sla_breached=True,
+        ),
     ]
     async_db_session.add_all(tickets)
     await async_db_session.commit()

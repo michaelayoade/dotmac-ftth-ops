@@ -44,6 +44,7 @@ class WorkflowService:
         description: str | None = None,
         version: str = "1.0.0",
         tags: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
     ) -> Workflow:
         """
         Create a new workflow template.
@@ -65,6 +66,7 @@ class WorkflowService:
             version=version,
             tags=tags,
             is_active=True,
+            tenant_id=tenant_id,
         )
         self.db.add(workflow)
         await self.db.commit()
@@ -80,6 +82,7 @@ class WorkflowService:
         description: str | None = None,
         is_active: bool | None = None,
         tags: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
     ) -> Workflow:
         """
         Update an existing workflow template.
@@ -94,7 +97,7 @@ class WorkflowService:
         Returns:
             Updated Workflow instance
         """
-        workflow = await self.db.get(Workflow, workflow_id)
+        workflow = await self.get_workflow(workflow_id, tenant_id=tenant_id)
         if not workflow:
             raise ValueError(f"Workflow {workflow_id} not found")
 
@@ -113,35 +116,70 @@ class WorkflowService:
         logger.info(f"Updated workflow {workflow_id} '{workflow.name}'")
         return workflow
 
-    async def get_workflow(self, workflow_id: int) -> Workflow | None:
+    async def get_workflow(
+        self,
+        workflow_id: int,
+        tenant_id: str | None = None,
+        include_global: bool = False,
+    ) -> Workflow | None:
         """
         Get workflow by ID.
 
         Args:
             workflow_id: Workflow ID
+            tenant_id: Tenant ID for filtering (required for tenant isolation)
+            include_global: If True, also include global workflows (tenant_id IS NULL).
+                           Only platform admins should set this to True.
 
         Returns:
             Workflow instance or None
         """
-        return await self.db.get(Workflow, workflow_id)
+        query = select(Workflow).where(Workflow.id == workflow_id)
+        if tenant_id is not None:
+            if include_global:
+                # Include both tenant-specific and global workflows
+                query = query.where((Workflow.tenant_id == tenant_id) | (Workflow.tenant_id.is_(None)))
+            else:
+                # Strict tenant isolation - only return tenant's own workflows
+                query = query.where(Workflow.tenant_id == tenant_id)
 
-    async def get_workflow_by_name(self, name: str) -> Workflow | None:
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_workflow_by_name(
+        self,
+        name: str,
+        tenant_id: str | None = None,
+        include_global: bool = False,
+    ) -> Workflow | None:
         """
         Get workflow by name.
 
         Args:
             name: Workflow name
+            tenant_id: Tenant ID for filtering (required for tenant isolation)
+            include_global: If True, also include global workflows (tenant_id IS NULL).
+                           Only platform admins should set this to True.
 
         Returns:
             Workflow instance or None
         """
-        result = await self.db.execute(select(Workflow).where(Workflow.name == name))
+        query = select(Workflow).where(Workflow.name == name)
+        if tenant_id is not None:
+            if include_global:
+                query = query.where((Workflow.tenant_id == tenant_id) | (Workflow.tenant_id.is_(None)))
+            else:
+                # Strict tenant isolation
+                query = query.where(Workflow.tenant_id == tenant_id)
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def list_workflows(
         self,
         is_active: bool | None = None,
         tags: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        include_global: bool = False,
     ) -> list[Workflow]:
         """
         List all workflows with optional filtering.
@@ -149,6 +187,9 @@ class WorkflowService:
         Args:
             is_active: Filter by active status
             tags: Filter by tags (exact match)
+            tenant_id: Tenant ID for filtering (required for tenant isolation)
+            include_global: If True, also include global workflows (tenant_id IS NULL).
+                           Only platform admins should set this to True.
 
         Returns:
             List of Workflow instances
@@ -162,10 +203,17 @@ class WorkflowService:
             # Note: PostgreSQL JSON containment operator
             query = query.where(Workflow.tags.contains(tags))
 
-        result = await self.db.execute(query)
+        if tenant_id is not None:
+            if include_global:
+                query = query.where((Workflow.tenant_id == tenant_id) | (Workflow.tenant_id.is_(None)))
+            else:
+                # Strict tenant isolation - only return tenant's own workflows
+                query = query.where(Workflow.tenant_id == tenant_id)
+
+        result = await self.db.execute(query.order_by(Workflow.created_at.desc()))
         return list(result.scalars().all())
 
-    async def delete_workflow(self, workflow_id: int) -> None:
+    async def delete_workflow(self, workflow_id: int, tenant_id: str | None = None) -> None:
         """
         Delete a workflow template.
 
@@ -175,7 +223,7 @@ class WorkflowService:
         Note:
             This will cascade delete all associated executions.
         """
-        workflow = await self.db.get(Workflow, workflow_id)
+        workflow = await self.get_workflow(workflow_id, tenant_id=tenant_id)
         if not workflow:
             raise ValueError(f"Workflow {workflow_id} not found")
 
@@ -208,7 +256,7 @@ class WorkflowService:
         Raises:
             ValueError: If workflow not found or not active
         """
-        workflow = await self.get_workflow_by_name(workflow_name)
+        workflow = await self.get_workflow_by_name(workflow_name, tenant_id=tenant_id)
         if not workflow:
             raise ValueError(f"Workflow '{workflow_name}' not found")
 
@@ -251,7 +299,7 @@ class WorkflowService:
         Raises:
             ValueError: If workflow not found or not active
         """
-        workflow = await self.get_workflow(workflow_id)
+        workflow = await self.get_workflow(workflow_id, tenant_id=tenant_id)
         if not workflow:
             raise ValueError(f"Workflow {workflow_id} not found")
 
@@ -274,6 +322,7 @@ class WorkflowService:
         self,
         execution_id: int,
         include_steps: bool = False,
+        tenant_id: str | None = None,
     ) -> WorkflowExecution | None:
         """
         Get workflow execution by ID.
@@ -286,6 +335,9 @@ class WorkflowService:
             WorkflowExecution instance or None
         """
         query = select(WorkflowExecution).where(WorkflowExecution.id == execution_id)
+
+        if tenant_id is not None:
+            query = query.where(WorkflowExecution.tenant_id == tenant_id)
 
         if include_steps:
             query = query.options(selectinload(WorkflowExecution.steps))
@@ -330,7 +382,7 @@ class WorkflowService:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def cancel_execution(self, execution_id: int) -> None:
+    async def cancel_execution(self, execution_id: int, tenant_id: str | None = None) -> None:
         """
         Cancel a running workflow execution.
 
@@ -340,6 +392,12 @@ class WorkflowService:
         Raises:
             ValueError: If execution not found or not cancellable
         """
+        # Ensure execution belongs to tenant (if provided) before canceling
+        if tenant_id is not None:
+            execution = await self.get_execution(execution_id, tenant_id=tenant_id)
+            if execution is None:
+                raise ValueError(f"Execution {execution_id} not found")
+
         engine = WorkflowEngine(self.db, self.event_publisher, self.service_registry)
         await engine.cancel_execution(execution_id)
 

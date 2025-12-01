@@ -7,6 +7,7 @@ Provides REST endpoints for file storage operations.
 import posixpath
 from datetime import UTC, datetime
 from typing import Any
+import mimetypes
 
 import structlog
 from fastapi import (
@@ -65,6 +66,22 @@ class _StorageServiceProxy:
 
 storage_service: FileStorageService = _StorageServiceProxy()  # type: ignore[assignment]
 
+ALLOWED_CONTENT_TYPES: set[str] = {
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/gif",
+    "image/svg+xml",
+    "text/plain",
+    "text/csv",
+    "application/json",
+    "application/pdf",
+    "application/zip",
+    "application/x-zip-compressed",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+}
+
 
 def _resolve_tenant_id(request: Request, current_user: UserInfo) -> str:
     """Resolve tenant context, allowing platform admin overrides."""
@@ -94,6 +111,48 @@ def _resolve_tenant_id(request: Request, current_user: UserInfo) -> str:
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Tenant context not found for file storage operation.",
+    )
+
+
+def _sanitize_path(path: str | None) -> str | None:
+    """Normalize a user-provided path and prevent traversal/absolute paths."""
+    if not path:
+        return None
+
+    normalized = posixpath.normpath(path.strip())
+    normalized = normalized.lstrip("/")
+
+    if normalized in ("", "."):
+        return None
+
+    if normalized.startswith(".."):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid path",
+        )
+
+    return normalized
+
+
+def _validate_content_type(upload: UploadFile) -> str:
+    """
+    Ensure the uploaded file matches an allowed content type.
+
+    Returns normalized content type.
+    Raises HTTPException on disallowed types.
+    """
+    # Prefer client-provided content type but validate against allowlist.
+    content_type = (upload.content_type or "").lower().strip()
+    if not content_type or content_type == "application/octet-stream":
+        guessed, _ = mimetypes.guess_type(upload.filename or "")
+        content_type = (guessed or "").lower()
+
+    if content_type and content_type in ALLOWED_CONTENT_TYPES:
+        return content_type
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Unsupported file type",
     )
 
 
@@ -163,6 +222,8 @@ async def upload_file(
 
         # Generate file path
         tenant_id = _resolve_tenant_id(request, current_user)
+        path = _sanitize_path(path)
+        safe_content_type = _validate_content_type(file)
 
         if not path:
             path = f"uploads/{tenant_id}/{current_user.user_id}/{datetime.now(UTC).strftime('%Y/%m/%d')}"
@@ -172,7 +233,7 @@ async def upload_file(
         file_id = await service.store_file(
             file_data=contents,
             file_name=file.filename or "unnamed",
-            content_type=file.content_type or "application/octet-stream",
+            content_type=safe_content_type or file.content_type or "application/octet-stream",
             path=path,
             metadata={
                 "uploaded_by": current_user.user_id,

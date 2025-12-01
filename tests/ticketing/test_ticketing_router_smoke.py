@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import UUID, uuid4
 
 import pytest
@@ -14,6 +14,7 @@ pytestmark = pytest.mark.integration
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.tenant import set_current_tenant_id
 from dotmac.platform.ticketing.dependencies import get_ticket_service
 from dotmac.platform.ticketing.router import router
 from dotmac.platform.ticketing.schemas import (
@@ -21,13 +22,12 @@ from dotmac.platform.ticketing.schemas import (
     TicketCountStats,
     TicketDetail,
     TicketMessageRead,
-    TicketMessageResponse,
+    TicketPriority,
     TicketStats,
     TicketStatus,
+    TicketSummary,
 )
 from dotmac.platform.ticketing.schemas import TicketActorType as ActorType
-from dotmac.platform.ticketing.schemas import TicketPriority, TicketSummary
-from dotmac.platform.tenant import set_current_tenant_id
 
 
 def _now() -> datetime:
@@ -224,7 +224,9 @@ async def test_ticket_crud_and_messages(ticketing_client: AsyncClient):
         "target_type": "platform",
         "priority": "high",
     }
-    create_resp = await ticketing_client.post("/api/v1/tickets/", json=payload, follow_redirects=True)
+    create_resp = await ticketing_client.post(
+        "/api/v1/tickets/", json=payload, follow_redirects=True
+    )
     assert create_resp.status_code == 201
     created = create_resp.json()
     ticket_id = created["id"]
@@ -266,9 +268,7 @@ async def test_ticket_list_and_stats(ticketing_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_agent_performance(ticketing_client: AsyncClient):
-    resp = await ticketing_client.get(
-        "/api/v1/tickets/agents/performance", follow_redirects=True
-    )
+    resp = await ticketing_client.get("/api/v1/tickets/agents/performance", follow_redirects=True)
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 
 from dotmac.platform.network_monitoring.schemas import AlertSeverity, NetworkAlertResponse
 from dotmac.platform.network_monitoring.service import NetworkMonitoringService
-from datetime import datetime, timezone
-
 
 pytestmark = pytest.mark.unit
 
@@ -33,7 +33,7 @@ async def test_network_overview_aggregates_devices_and_alerts(monkeypatch):
                 device_id="1",
                 device_name="OLT-1",
                 device_type="olt",
-                triggered_at=datetime.now(tz=timezone.utc),
+                triggered_at=datetime.now(tz=UTC),
                 acknowledged_at=None,
                 resolved_at=None,
                 is_active=True,

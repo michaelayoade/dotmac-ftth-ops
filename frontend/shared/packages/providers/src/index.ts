@@ -9,8 +9,8 @@ export { UniversalProviders } from "./UniversalProviders";
 // Local components only - avoiding problematic external re-exports for now
 export { ErrorBoundary } from "./components/ErrorBoundary";
 
-// Re-export hooks from RBAC (only exports that actually exist)
-export { usePermissions, useRBAC, checkPermission } from "@dotmac/rbac";
+// Re-export RBAC provider and hooks
+export { RBACProvider, usePermissions, useRBAC, checkPermission } from "@dotmac/rbac";
 
 // Re-export types from RBAC
 export type { Role, Permission, User } from "@dotmac/rbac";

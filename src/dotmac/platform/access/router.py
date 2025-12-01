@@ -24,7 +24,8 @@ from dotmac.platform.access.drivers import (
 )
 from dotmac.platform.access.registry import AccessDriverRegistry
 from dotmac.platform.access.service import AccessNetworkService, OLTOverview
-from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.settings import Settings, get_settings
 from dotmac.platform.voltha.schemas import (
     DeviceDetailResponse,
@@ -87,18 +88,24 @@ AccessServiceDep = Annotated[AccessNetworkService, Depends(get_access_service)]
 
 
 @router.get("/health", response_model=VOLTHAHealthResponse)
-async def get_health(service: AccessServiceDep) -> VOLTHAHealthResponse:
+async def get_health(
+    service: AccessServiceDep, _: UserInfo = Depends(require_permission("isp.network.access.read"))
+) -> VOLTHAHealthResponse:
     return await service.health()
 
 
 @router.get("/logical-devices", response_model=LogicalDeviceListResponse)
-async def list_logical_devices(service: AccessServiceDep) -> LogicalDeviceListResponse:
+async def list_logical_devices(
+    service: AccessServiceDep, _: UserInfo = Depends(require_permission("isp.network.access.read"))
+) -> LogicalDeviceListResponse:
     return await service.list_logical_devices()
 
 
 @router.get("/logical-devices/{device_id}", response_model=LogicalDeviceDetailResponse)
 async def get_logical_device(
-    device_id: str, service: AccessServiceDep
+    device_id: str,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
 ) -> LogicalDeviceDetailResponse:
     detail = await service.get_logical_device(device_id)
     if not detail:
@@ -109,12 +116,18 @@ async def get_logical_device(
 
 
 @router.get("/devices", response_model=DeviceListResponse)
-async def list_devices(service: AccessServiceDep) -> DeviceListResponse:
+async def list_devices(
+    service: AccessServiceDep, _: UserInfo = Depends(require_permission("isp.network.access.read"))
+) -> DeviceListResponse:
     return await service.list_devices()
 
 
 @router.get("/devices/{device_id}", response_model=DeviceDetailResponse)
-async def get_device(device_id: str, service: AccessServiceDep) -> DeviceDetailResponse:
+async def get_device(
+    device_id: str,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
+) -> DeviceDetailResponse:
     detail = await service.get_device(device_id)
     if not detail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
@@ -127,6 +140,7 @@ async def operate_device(
     operation: str,
     service: AccessServiceDep,
     olt_id: str | None = None,
+    _: UserInfo = Depends(require_permission("isp.network.access.write")),
 ) -> dict[str, bool]:
     success = await service.operate_device(device_id, operation, olt_id)
     if not success:
@@ -137,12 +151,18 @@ async def operate_device(
 
 
 @router.get("/alarms", response_model=VOLTHAAlarmListResponse)
-async def get_alarms_v2(service: AccessServiceDep) -> VOLTHAAlarmListResponse:
+async def get_alarms_v2(
+    service: AccessServiceDep, _: UserInfo = Depends(require_permission("isp.network.access.read"))
+) -> VOLTHAAlarmListResponse:
     return await service.get_alarms_v2()
 
 
 @router.get("/devices/{device_id}/alarms", response_model=VOLTHAAlarmListResponse)
-async def get_device_alarms(device_id: str, service: AccessServiceDep) -> VOLTHAAlarmListResponse:
+async def get_device_alarms(
+    device_id: str,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
+) -> VOLTHAAlarmListResponse:
     alarms = await service.get_alarms_v2()
     filtered = [alarm for alarm in alarms.alarms if alarm.resource_id == device_id]
     active = sum(1 for alarm in filtered if alarm.state != "CLEARED")
@@ -157,7 +177,7 @@ async def acknowledge_alarm(
     alarm_id: str,
     service: AccessServiceDep,
     olt_id: str | None = None,
-    current_user: UserInfo | None = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_permission("isp.network.access.write")),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
     """
@@ -191,7 +211,7 @@ async def clear_alarm(
     alarm_id: str,
     service: AccessServiceDep,
     olt_id: str | None = None,
-    current_user: UserInfo | None = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_permission("isp.network.access.write")),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
     """
@@ -221,27 +241,44 @@ async def clear_alarm(
 
 
 @router.get("/devices/{olt_id}/ports/{port_no}/statistics")
-async def get_port_statistics(olt_id: str, port_no: int, service: AccessServiceDep) -> dict:
+async def get_port_statistics(
+    olt_id: str,
+    port_no: int,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
+) -> dict:
     return await service.get_port_statistics(olt_id, port_no)
 
 
 @router.get("/statistics", response_model=PONStatistics)
-async def get_pon_statistics(service: AccessServiceDep) -> PONStatistics:
+async def get_pon_statistics(
+    service: AccessServiceDep, _: UserInfo = Depends(require_permission("isp.network.access.read"))
+) -> PONStatistics:
     return await service.get_statistics()
 
 
 @router.get("/olts/{olt_id}/overview", response_model=OLTOverview)
-async def get_olt_overview(olt_id: str, service: AccessServiceDep) -> OLTOverview:
+async def get_olt_overview(
+    olt_id: str,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
+) -> OLTOverview:
     return await service.get_olt_overview(olt_id)
 
 
 @router.get("/discover-onus", response_model=list[DeviceDiscovery])
-async def discover_all_onus(service: AccessServiceDep) -> list[DeviceDiscovery]:
+async def discover_all_onus(
+    service: AccessServiceDep, _: UserInfo = Depends(require_permission("isp.network.access.read"))
+) -> list[DeviceDiscovery]:
     return await service.discover_all_onus()
 
 
 @router.get("/olts/{olt_id}/onus", response_model=list[DeviceDiscovery])
-async def list_onus(olt_id: str, service: AccessServiceDep) -> list[DeviceDiscovery]:
+async def list_onus(
+    olt_id: str,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
+) -> list[DeviceDiscovery]:
     try:
         return await service.list_onus(olt_id)
     except NotImplementedError as exc:
@@ -252,7 +289,11 @@ async def list_onus(olt_id: str, service: AccessServiceDep) -> list[DeviceDiscov
 
 
 @router.get("/olts/{olt_id}/metrics", response_model=OltMetrics)
-async def collect_metrics(olt_id: str, service: AccessServiceDep) -> OltMetrics:
+async def collect_metrics(
+    olt_id: str,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
+) -> OltMetrics:
     try:
         return await service.collect_metrics(olt_id)
     except NotImplementedError as exc:
@@ -263,7 +304,11 @@ async def collect_metrics(olt_id: str, service: AccessServiceDep) -> OltMetrics:
 
 
 @router.get("/olts/{olt_id}/alarms", response_model=list[OLTAlarm])
-async def fetch_alarms(olt_id: str, service: AccessServiceDep) -> list[OLTAlarm]:
+async def fetch_alarms(
+    olt_id: str,
+    service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.read")),
+) -> list[OLTAlarm]:
     try:
         return await service.fetch_alarms(olt_id)
     except NotImplementedError as exc:
@@ -278,6 +323,7 @@ async def provision_onu(
     olt_id: str,
     payload: ProvisionPayload,
     service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.write")),
 ) -> ONUProvisionResult:
     request = ONUProvisionRequest(
         onu_id=f"{payload.olt_device_id}:{payload.serial_number}",
@@ -318,6 +364,7 @@ async def apply_service_profile(
     onu_id: str,
     profile: dict,
     service: AccessServiceDep,
+    _: UserInfo = Depends(require_permission("isp.network.access.write")),
 ) -> ONUProvisionResult:
     try:
         return await service.apply_service_profile(olt_id, onu_id, profile)

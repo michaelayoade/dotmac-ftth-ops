@@ -49,6 +49,7 @@ async def clean_rate_limit_redis():
         return
 
     try:
+
         async def _clear_keys() -> None:
             keys = []
             async for key in redis_client.scan_iter(match="ratelimit:*"):

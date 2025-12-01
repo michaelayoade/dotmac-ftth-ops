@@ -8,7 +8,7 @@ import json
 import os
 import secrets
 from collections.abc import AsyncGenerator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 import structlog
@@ -36,6 +36,7 @@ from dotmac.platform.auth.core import (
     hash_password,
     jwt_service,
     session_manager,
+    TOKEN_EXP_LEEWAY_SECONDS,
     verify_password,
 )
 from dotmac.platform.auth.email_service import get_auth_email_service
@@ -46,7 +47,7 @@ from dotmac.platform.communications.models import (
     CommunicationStatus,
     CommunicationType,
 )
-from dotmac.platform.core.rate_limiting import rate_limit
+from dotmac.platform.core.rate_limiting import rate_limit_ip
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.integrations import IntegrationStatus, get_integration_async
 from dotmac.platform.settings import settings
@@ -79,6 +80,29 @@ def _tenant_scope_kwargs(
     if user_info.is_platform_admin:
         return {"tenant_id": None}
     return {"tenant_id": user_info.tenant_id}
+
+
+PASSWORD_COMPLEXITY_MSG = (
+    "Password must be at least 12 characters and include upper, lower, number, and symbol."
+)
+
+
+def _validate_password_strength(password: str) -> str:
+    """Enforce a reasonable password complexity policy."""
+    import re
+
+    if len(password) < 12:
+        raise ValueError(PASSWORD_COMPLEXITY_MSG)
+    if not re.search(r"[A-Z]", password):
+        raise ValueError(PASSWORD_COMPLEXITY_MSG)
+    if not re.search(r"[a-z]", password):
+        raise ValueError(PASSWORD_COMPLEXITY_MSG)
+    if not re.search(r"[0-9]", password):
+        raise ValueError(PASSWORD_COMPLEXITY_MSG)
+    if not re.search(r"[^A-Za-z0-9]", password):
+        raise ValueError(PASSWORD_COMPLEXITY_MSG)
+
+    return password
 
 
 # ========================================
@@ -238,6 +262,11 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, description="Password")
     full_name: str | None = Field(None, description="Full name")
 
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return _validate_password_strength(value)
+
 
 class TokenResponse(BaseModel):
     """Token response model."""
@@ -286,6 +315,11 @@ class PasswordResetConfirm(BaseModel):
 
     token: str = Field(..., description="Reset token")
     new_password: str = Field(..., min_length=8, description="New password")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, value: str) -> str:
+        return _validate_password_strength(value)
 
 
 async def _authenticate_and_issue_tokens(
@@ -424,7 +458,11 @@ async def _authenticate_and_issue_tokens(
             await redis_client.setex(f"session:{pending_key}", 300, json.dumps(session_data))
         else:
             # Fallback to in-memory if Redis not available
+            # SECURITY FIX: Add TTL to fallback store to prevent indefinite persistence
             if session_manager._fallback_enabled:
+                session_data["expires_at"] = (
+                    datetime.now(UTC) + timedelta(seconds=300)
+                ).isoformat()
                 session_manager._fallback_store[pending_key] = session_data
 
         # Log 2FA challenge issued
@@ -599,7 +637,7 @@ async def _complete_cookie_login(
 
 
 @auth_router.post("/login", response_model=TokenResponse)
-@rate_limit("5/minute")  # SECURITY: Prevent brute force attacks
+@rate_limit_ip("5/minute")  # SECURITY: Prevent brute force attacks per client IP
 async def login(
     login_request: LoginRequest,
     request: Request,
@@ -797,6 +835,7 @@ async def _complete_2fa_login(
 
 
 @auth_router.post("/login/verify-2fa", response_model=TokenResponse)
+@rate_limit_ip("5/minute")  # SECURITY: Prevent brute-force on 2FA codes per IP
 async def verify_2fa_login(
     verify_request: Verify2FALoginRequest,
     request: Request,
@@ -807,7 +846,14 @@ async def verify_2fa_login(
     Verify 2FA code and complete login.
 
     Accepts either TOTP code (6 digits) or backup code (XXXX-XXXX format).
+
+    SECURITY: Rate limited to 5 attempts per minute. After 5 failed attempts,
+    the 2FA pending session is invalidated and the user must re-authenticate.
     """
+    # SECURITY: Track failed 2FA attempts per user to prevent brute-force
+    max_attempts = 5
+    attempts_key = f"2fa_attempts:{verify_request.user_id}"
+
     try:
         user_service = UserService(session)
         pending_session = await session_manager.get_session(f"2fa_pending:{verify_request.user_id}")
@@ -839,6 +885,23 @@ async def verify_2fa_login(
                 detail="2FA session expired. Please login again.",
             )
 
+        # SECURITY: Check and enforce attempt limits
+        redis_client = await session_manager._get_redis()
+        if redis_client:
+            current_attempts = await redis_client.get(attempts_key)
+            if current_attempts and int(current_attempts) >= max_attempts:
+                # Too many attempts - invalidate the 2FA session
+                await redis_client.delete(f"session:2fa_pending:{verify_request.user_id}")
+                await redis_client.delete(attempts_key)
+                logger.warning(
+                    "2FA session invalidated due to too many failed attempts",
+                    user_id=str(verify_request.user_id),
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Too many failed 2FA attempts. Please login again.",
+                )
+
         # Verify the code (backup code or TOTP)
         if verify_request.is_backup_code:
             code_valid = await _verify_backup_code_and_log(
@@ -850,6 +913,11 @@ async def verify_2fa_login(
             )
 
         if not code_valid:
+            # SECURITY: Increment failed attempt counter
+            if redis_client:
+                await redis_client.incr(attempts_key)
+                await redis_client.expire(attempts_key, 300)  # 5 minute window
+
             await _log_2fa_verification_failure(
                 user, verify_request.is_backup_code, request, session
             )
@@ -857,6 +925,10 @@ async def verify_2fa_login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid 2FA code",
             )
+
+        # SECURITY: Clear attempt counter on success
+        if redis_client:
+            await redis_client.delete(attempts_key)
 
         # Complete login process
         return await _complete_2fa_login(user, request, response, session)
@@ -872,7 +944,7 @@ async def verify_2fa_login(
 
 
 @auth_router.post("/login/cookie", response_model=LoginSuccessResponse)
-@rate_limit("5/minute")
+@rate_limit_ip("5/minute")
 async def login_cookie_only(
     login_request: LoginRequest,
     request: Request,
@@ -938,6 +1010,7 @@ async def login_cookie_only(
         if redis_client:
             await redis_client.setex(f"session:{pending_key}", 300, json.dumps(session_data))
         elif session_manager._fallback_enabled:
+            session_data["expires_at"] = (datetime.now(UTC) + timedelta(seconds=300)).isoformat()
             session_manager._fallback_store[pending_key] = session_data
 
         await log_user_activity(
@@ -986,7 +1059,7 @@ async def issue_token(
 
 
 @auth_router.post("/register", response_model=TokenResponse)
-@rate_limit("3/minute")  # SECURITY: Prevent mass account creation
+@rate_limit_ip("3/minute")  # SECURITY: Prevent mass account creation per IP
 async def register(
     register_request: RegisterRequest,
     request: Request,
@@ -1221,7 +1294,7 @@ async def register(
 
 
 @auth_router.post("/refresh", response_model=TokenResponse)
-@rate_limit("10/minute")  # SECURITY: Reasonable limit for token refresh
+@rate_limit_ip("10/minute")  # SECURITY: Reasonable limit for token refresh per IP
 async def refresh_token(
     request: Request,
     response: Response,
@@ -1247,7 +1320,11 @@ async def refresh_token(
         # Verify refresh token with type validation
         from dotmac.platform.auth.core import TokenType
 
-        payload = jwt_service.verify_token(refresh_token_value, expected_type=TokenType.REFRESH)
+        payload = jwt_service.verify_token(
+            refresh_token_value,
+            expected_type=TokenType.REFRESH,
+            leeway_seconds=TOKEN_EXP_LEEWAY_SECONDS,
+        )
 
         user_id = payload.get("sub")
         if not user_id:
@@ -1270,7 +1347,27 @@ async def refresh_token(
                 detail="User not found or disabled",
             )
 
-        session_id = payload.get("session_id") or secrets.token_urlsafe(32)
+        session_id = payload.get("session_id")
+        if not session_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token",
+            )
+
+        # SECURITY FIX: Validate that the session still exists before issuing new tokens
+        # This prevents refresh tokens from working after logout/session revocation
+        existing_session = await session_manager.get_session(session_id)
+        if not existing_session or str(existing_session.get("user_id")) != str(user.id):
+            logger.warning(
+                "Refresh token rejected: session no longer exists",
+                session_id=session_id[:8] + "..." if session_id else None,
+                user_id=user_id,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Session has been invalidated. Please login again.",
+            )
+        await session_manager.touch_session(session_id)
 
         # Revoke old refresh token
         try:
@@ -1370,6 +1467,16 @@ async def logout(
             # Revoke the access token
             if token:
                 await jwt_service.revoke_token(token)
+
+            # SECURITY FIX: Also revoke the refresh token from the cookie immediately
+            # This prevents the specific refresh token from being reused even if
+            # revoke_user_tokens fails
+            refresh_token = get_token_from_cookie(request, "refresh_token")
+            if refresh_token:
+                try:
+                    await jwt_service.revoke_token(refresh_token)
+                except Exception:
+                    logger.warning("Failed to revoke refresh token cookie", exc_info=True)
 
             # Delete all user sessions (which should include refresh tokens)
             deleted_sessions = await session_manager.delete_user_sessions(user_id)
@@ -1644,7 +1751,7 @@ async def verify_token(
 
 
 @auth_router.post("/password-reset")
-@rate_limit("3/minute")  # SECURITY: Prevent abuse of password reset
+@rate_limit_ip("3/minute")  # SECURITY: Prevent abuse of password reset per IP
 async def request_password_reset(
     reset_request: PasswordResetRequest,
     request: Request,
@@ -1912,6 +2019,11 @@ class ChangePasswordRequest(BaseModel):
 
     current_password: str = Field(..., description="Current password")
     new_password: str = Field(..., min_length=8, description="New password")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, value: str) -> str:
+        return _validate_password_strength(value)
 
 
 @auth_router.get("/me")

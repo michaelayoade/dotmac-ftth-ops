@@ -67,7 +67,9 @@ async def test_list_and_schema_endpoints(plugins_client):
         assert inst_resp.status_code == 200
 
         # Toggle (no-op) endpoint
-        toggle_resp = await plugins_client.patch(f"/api/v1/plugins/{plugin_id}", json={"enabled": True})
+        toggle_resp = await plugins_client.patch(
+            f"/api/v1/plugins/{plugin_id}", json={"enabled": True}
+        )
         assert toggle_resp.status_code in (200, 404)
 
 

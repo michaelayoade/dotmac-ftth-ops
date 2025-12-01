@@ -123,7 +123,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -159,7 +161,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -195,7 +199,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -228,7 +234,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -265,7 +273,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -301,7 +311,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -337,7 +349,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -358,7 +372,9 @@ class TestBillingStatusRecommendations:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get("/api/platform/v1/tenants/nonexistent-123/usage/billing-status")
+            response = await client.get(
+                "/api/platform/v1/tenants/nonexistent-123/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_404_NOT_FOUND
             assert "not found" in response.json()["detail"].lower()
@@ -391,7 +407,9 @@ class TestBillingStatusResponseStructure:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -442,7 +460,9 @@ class TestBillingStatusResponseStructure:
         async with create_test_client_with_mock_tenant_service(
             test_app, async_db_session, mock_tenant_service
         ) as client:
-            response = await client.get(f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status")
+            response = await client.get(
+                f"/api/platform/v1/tenants/{tenant.id}/usage/billing-status"
+            )
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()

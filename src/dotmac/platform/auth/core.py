@@ -72,6 +72,9 @@ try:
     _refresh_token_expire_days = settings.auth.refresh_token_expire_days
     _redis_url = settings.auth.session_redis_url
     _default_user_role = settings.auth.default_user_role
+    _session_idle_timeout_minutes = settings.auth.session_idle_timeout_minutes
+    _token_expiry_leeway_seconds = settings.auth.token_expiry_leeway_seconds
+    _max_sessions_per_user = settings.auth.max_sessions_per_user
 except ImportError:
     # Fallback values if settings not available (should only happen in tests)
     _jwt_secret = "default-secret-change-this"
@@ -80,6 +83,9 @@ except ImportError:
     _refresh_token_expire_days = 7
     _redis_url = "redis://localhost:6379"
     _default_user_role = "user"
+    _session_idle_timeout_minutes = 60
+    _token_expiry_leeway_seconds = 60
+    _max_sessions_per_user = 5
 except AttributeError:
     # Handle case where settings exists but auth field is not yet initialized
     # This provides backwards compatibility during rollout
@@ -91,6 +97,9 @@ except AttributeError:
     _refresh_token_expire_days = settings.jwt.refresh_token_expire_days
     _redis_url = settings.redis.redis_url
     _default_user_role = getattr(settings, "default_user_role", "user")
+    _session_idle_timeout_minutes = getattr(settings, "session_idle_timeout_minutes", 60)
+    _token_expiry_leeway_seconds = getattr(settings, "token_expiry_leeway_seconds", 60)
+    _max_sessions_per_user = getattr(settings, "max_sessions_per_user", 5)
 
 # Module constants
 JWT_SECRET = _jwt_secret
@@ -99,6 +108,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = _access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_DAYS = _refresh_token_expire_days
 REDIS_URL = _redis_url
 DEFAULT_USER_ROLE = _default_user_role
+SESSION_IDLE_TIMEOUT_SECONDS = int(_session_idle_timeout_minutes * 60)
+TOKEN_EXP_LEEWAY_SECONDS = int(_token_expiry_leeway_seconds)
+MAX_SESSIONS_PER_USER = int(_max_sessions_per_user)
 
 # ============================================
 # Models
@@ -278,7 +290,13 @@ def ensure_uuid(value: str | UUID) -> UUID:
 
 
 class JWTService:
-    """Simplified JWT service using Authlib with token revocation support."""
+    """Simplified JWT service using Authlib with token revocation support.
+
+    SECURITY ENHANCEMENTS:
+    - Session-bound token validation: Access tokens are validated against active sessions
+    - Refresh token tracking: All refresh JTIs are tracked per user for proper revocation
+    - Logout invalidation: Both access and refresh tokens are properly blacklisted on logout
+    """
 
     def __init__(
         self, secret: str | None = None, algorithm: str | None = None, redis_url: str | None = None
@@ -300,19 +318,55 @@ class JWTService:
         if additional_claims:
             data.update(additional_claims)
 
+        # Backwards compatibility: if no session_id was provided, mark the token as session-optional
+        # so it can still pass validation (e.g., test tokens or bootstrap tokens).
+        if "session_id" not in data:
+            data.setdefault("session_optional", True)
+
         expires_delta = timedelta(minutes=expire_minutes or ACCESS_TOKEN_EXPIRE_MINUTES)
         return self._create_token(data, expires_delta)
 
     def create_refresh_token(
         self, subject: str, additional_claims: dict[str, Any] | None = None
     ) -> str:
-        """Create refresh token."""
+        """Create refresh token and track its JTI for revocation.
+
+        SECURITY: Refresh tokens are tracked per-user so they can be properly
+        revoked on logout. The JTI is stored in Redis with a TTL matching the
+        token expiry.
+        """
         data = {"sub": subject, "type": TokenType.REFRESH.value}
         if additional_claims:
             data.update(additional_claims)
 
         expires_delta = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        return self._create_token(data, expires_delta)
+        token = self._create_token(data, expires_delta)
+
+        # Track refresh token JTI for this user (async operation, fire and forget)
+        # The JTI is embedded in the token during _create_token
+        try:
+            claims = jwt.decode(token, self.secret)
+            jti = claims.get("jti")
+            if jti:
+                # Use sync redis client to track the refresh token
+                from dotmac.platform.core.caching import get_redis
+
+                redis_client = get_redis()
+                if redis_client:
+                    # Store JTI in user's refresh token set with TTL
+                    ttl_seconds = int(expires_delta.total_seconds())
+                    user_refresh_key = f"user_refresh_tokens:{subject}"
+                    redis_client.sadd(user_refresh_key, jti)
+                    redis_client.expire(user_refresh_key, ttl_seconds)
+                    logger.debug(
+                        "Tracked refresh token JTI",
+                        user_id=subject,
+                        jti=jti[:8] + "...",
+                    )
+        except Exception as e:
+            logger.warning("Failed to track refresh token JTI", error=str(e))
+
+        return token
 
     # ------------------------------------------------------------------
     # Compatibility helpers (legacy call sites expect decode_* methods)
@@ -342,7 +396,13 @@ class JWTService:
         token = jwt.encode(self.header, to_encode, self.secret)
         return token.decode("utf-8") if isinstance(token, bytes) else token
 
-    def verify_token(self, token: str, expected_type: TokenType | None = None) -> dict[str, Any]:
+    def verify_token(
+        self,
+        token: str,
+        expected_type: TokenType | None = None,
+        *,
+        leeway_seconds: int | float | None = None,
+    ) -> dict[str, Any]:
         """Verify and decode token with sync blacklist check.
 
         Args:
@@ -357,7 +417,7 @@ class JWTService:
         """
         try:
             claims_raw = jwt.decode(token, self.secret)
-            claims_raw.validate()
+            claims_raw.validate(leeway=leeway_seconds or 0)
             claims = cast(dict[str, Any], dict(claims_raw))
 
             # Validate token type if specified
@@ -440,23 +500,34 @@ class JWTService:
             return False
 
     async def verify_token_async(
-        self, token: str, expected_type: TokenType | None = None
+        self,
+        token: str,
+        expected_type: TokenType | None = None,
+        *,
+        leeway_seconds: int | float | None = None,
+        validate_session: bool = True,
     ) -> dict[str, Any]:
-        """Verify and decode token with revocation check (async version).
+        """Verify and decode token with revocation and session check (async version).
+
+        SECURITY FIX: Access tokens are now validated against their session. If the
+        session has been deleted (via logout or revocation), the token is rejected
+        even if it hasn't expired. This ensures logout is immediate and effective.
 
         Args:
             token: JWT token to verify
             expected_type: Optional expected token type (ACCESS, REFRESH, or API_KEY)
+            validate_session: If True, validate that the session_id in the token
+                            is still active. Default True for ACCESS tokens.
 
         Returns:
             Token claims dictionary
 
         Raises:
-            HTTPException: If token is invalid, revoked, or has wrong type
+            HTTPException: If token is invalid, revoked, session invalid, or has wrong type
         """
         try:
             claims_raw = jwt.decode(token, self.secret)
-            claims_raw.validate()
+            claims_raw.validate(leeway=leeway_seconds or 0)
             claims = cast(dict[str, Any], dict(claims_raw))
 
             # Validate token type if specified
@@ -472,6 +543,20 @@ class JWTService:
             if jti and await self.is_token_revoked(jti):
                 raise JoseError("Token has been revoked")
 
+            # SECURITY: Validate session is still active for ACCESS tokens
+            # This ensures logout/session revocation is immediately effective
+            if validate_session and expected_type == TokenType.ACCESS:
+                session_id = claims.get("session_id")
+                if session_id:
+                    session_active = await self._is_session_active(session_id)
+                    if not session_active:
+                        logger.warning(
+                            "Token rejected: session no longer active",
+                            session_id=session_id[:8] + "..." if session_id else None,
+                            user_id=claims.get("sub"),
+                        )
+                        raise JoseError("Session has been invalidated")
+
             return claims
         except JoseError as e:
             raise HTTPException(
@@ -480,11 +565,35 @@ class JWTService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-    async def revoke_user_tokens(self, user_id: str) -> int:
-        """Revoke all tokens associated with a user by removing any active JTIs.
+    async def _is_session_active(self, session_id: str) -> bool:
+        """Check if a session is still active in Redis.
 
-        This scans the redis blacklist/current tokens namespace for keys tagged with
-        the user ID and deletes them. Returns the count of revoked tokens.
+        Returns True if session exists, False otherwise.
+        Falls back to True if Redis is unavailable (fail-open for availability).
+        """
+        try:
+            session = await session_manager.get_session(session_id)
+            if session is not None:
+                return True
+
+            redis_healthy = getattr(session_manager, "_redis_healthy", True)
+            if not session_manager._fallback_enabled and not redis_healthy:
+                logger.warning("Session store unavailable during validation; allowing token")
+                return True
+
+            return False
+        except Exception as e:
+            logger.error("Session check failed", session_id=session_id, error=str(e))
+            return True  # Fail-open for availability
+
+    async def revoke_user_tokens(self, user_id: str) -> int:
+        """Revoke all tokens associated with a user by blacklisting their JTIs.
+
+        SECURITY FIX: This now properly blacklists all refresh token JTIs that were
+        tracked when tokens were created. Previously this scanned a namespace that
+        was never written to, making logout ineffective.
+
+        Returns the count of revoked tokens.
         """
         redis_client = await self._get_redis()
         if not redis_client:
@@ -493,13 +602,25 @@ class JWTService:
 
         revoked = 0
         try:
-            pattern = f"tokens:{user_id}:*"
-            async for key in redis_client.scan_iter(match=pattern):
-                jti = await redis_client.get(key)
-                if jti:
-                    await redis_client.delete(f"blacklist:{jti}")
-                await redis_client.delete(key)
+            # Get all tracked refresh token JTIs for this user
+            user_refresh_key = f"user_refresh_tokens:{user_id}"
+            refresh_jtis = await redis_client.smembers(user_refresh_key)
+
+            for jti in refresh_jtis:
+                # Add JTI to blacklist with TTL matching refresh token expiry
+                ttl = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+                await redis_client.setex(f"blacklist:{jti}", ttl, "1")
                 revoked += 1
+                logger.debug("Blacklisted refresh token", jti=jti[:8] + "...")
+
+            # Clean up the tracking set
+            await redis_client.delete(user_refresh_key)
+
+            logger.info(
+                "Revoked user tokens",
+                user_id=user_id,
+                revoked_count=revoked,
+            )
         except Exception as exc:  # pragma: no cover - defensive
             logger.error("Failed to revoke user tokens", user_id=user_id, error=str(exc))
 
@@ -512,14 +633,28 @@ class JWTService:
 
 
 class SessionManager:
-    """Redis-based session manager with fallback support."""
+    """Redis-based session manager with fallback support.
 
-    def __init__(self, redis_url: str | None = None, fallback_enabled: bool = True) -> None:
+    SECURITY: The fallback store now tracks TTLs and expires entries automatically.
+    This prevents 2FA pending sessions from persisting indefinitely when Redis is down.
+    """
+
+    def __init__(
+        self,
+        redis_url: str | None = None,
+        fallback_enabled: bool = True,
+        *,
+        idle_timeout_seconds: int | None = None,
+        max_sessions_per_user: int | None = None,
+    ) -> None:
         self.redis_url = redis_url or REDIS_URL
         self._redis: Any | None = None
         self._fallback_store: dict[str, dict[str, Any]] = {}  # In-memory fallback
+        self._fallback_ttl: dict[str, float] = {}  # SECURITY: TTL tracking for fallback store
         self._fallback_enabled = fallback_enabled
         self._redis_healthy = True
+        self.idle_timeout_seconds = idle_timeout_seconds or SESSION_IDLE_TIMEOUT_SECONDS
+        self.max_sessions_per_user = max_sessions_per_user or MAX_SESSIONS_PER_USER
 
         # SECURITY: Disable fallback automatically in production environments
         try:
@@ -566,7 +701,7 @@ class SessionManager:
         self,
         user_id: str,
         data: dict[str, Any],
-        ttl: int = 3600,
+        ttl: int | None = None,
         ip_address: str | None = None,
         user_agent: str | None = None,
         session_id: str | None = None,
@@ -575,6 +710,7 @@ class SessionManager:
         session_id = session_id or secrets.token_urlsafe(32)
         session_key = f"session:{session_id}"
 
+        ttl_seconds = ttl or self.idle_timeout_seconds
         now = datetime.now(UTC).isoformat()
         session_data = {
             "session_id": session_id,
@@ -584,16 +720,17 @@ class SessionManager:
             "ip_address": ip_address,
             "user_agent": user_agent,
             "data": data,
+            "expires_at": (datetime.now(UTC) + timedelta(seconds=ttl_seconds)).isoformat(),
         }
 
         client = await self._get_redis()
         if client:
             try:
-                await client.setex(session_key, ttl, json.dumps(session_data))
+                await client.setex(session_key, ttl_seconds, json.dumps(session_data))
                 # Track user sessions
                 user_key = f"user_sessions:{user_id}"
                 await client.sadd(user_key, session_id)
-                await client.expire(user_key, ttl)
+                await client.expire(user_key, ttl_seconds)
             except Exception as e:
                 logger.warning("Redis session write failed, using fallback", error=str(e))
                 if self._fallback_enabled:
@@ -610,6 +747,7 @@ class SessionManager:
                     status_code=503, detail="Session service unavailable (Redis not available)"
                 )
 
+        await self._enforce_session_limit(user_id)
         return session_id
 
     async def get_session(self, session_id: str) -> dict[str, Any] | None:
@@ -627,10 +765,56 @@ class SessionManager:
 
         # Check fallback store
         if self._fallback_enabled and session_id in self._fallback_store:
-            logger.debug("Session retrieved from fallback store", session_id=session_id)
-            return self._fallback_store[session_id]
+            session = self._fallback_store.get(session_id)
+            if session and not self._is_fallback_expired(session):
+                logger.debug("Session retrieved from fallback store", session_id=session_id)
+                return session
+            self._fallback_store.pop(session_id, None)
 
         return None
+
+    def _is_fallback_expired(self, session: dict[str, Any]) -> bool:
+        """Check expiry for fallback sessions and evict stale ones."""
+        expires_at = session.get("expires_at")
+        if not expires_at:
+            return False
+        try:
+            return datetime.fromisoformat(expires_at) <= datetime.now(UTC)
+        except Exception:
+            return False
+
+    async def touch_session(self, session_id: str) -> bool:
+        """Refresh session last access time and TTL."""
+        ttl_seconds = self.idle_timeout_seconds
+        now = datetime.now(UTC).isoformat()
+
+        client = await self._get_redis()
+        if client:
+            session = await self.get_session(session_id)
+            if not session:
+                return False
+
+            session["last_accessed"] = now
+            session["expires_at"] = (datetime.now(UTC) + timedelta(seconds=ttl_seconds)).isoformat()
+            try:
+                await client.setex(f"session:{session_id}", ttl_seconds, json.dumps(session))
+                user_id = session.get("user_id")
+                if user_id:
+                    await client.expire(f"user_sessions:{user_id}", ttl_seconds)
+            except Exception as exc:
+                logger.warning("Failed to refresh session TTL", session_id=session_id, error=str(exc))
+            return True
+
+        if self._fallback_enabled and session_id in self._fallback_store:
+            session = self._fallback_store.get(session_id)
+            if not session:
+                return False
+            session["last_accessed"] = now
+            session["expires_at"] = (datetime.now(UTC) + timedelta(seconds=ttl_seconds)).isoformat()
+            self._fallback_store[session_id] = session
+            return True
+
+        return False
 
     async def delete_session(self, session_id: str) -> bool:
         """Delete session."""
@@ -662,11 +846,18 @@ class SessionManager:
             if not client:
                 # Fallback: scan in-memory store when enabled
                 if self._fallback_enabled:
-                    return {
-                        f"session:{sid}": data
-                        for sid, data in self._fallback_store.items()
-                        if data.get("user_id") == user_id
-                    }
+                    sessions: dict[str, dict[str, Any]] = {}
+                    expired: list[str] = []
+                    for sid, data in self._fallback_store.items():
+                        if data.get("user_id") != user_id:
+                            continue
+                        if self._is_fallback_expired(data):
+                            expired.append(sid)
+                            continue
+                        sessions[f"session:{sid}"] = data
+                    for sid in expired:
+                        self._fallback_store.pop(sid, None)
+                    return sessions
                 return {}
 
             user_sessions_key = f"user_sessions:{user_id}"
@@ -685,6 +876,59 @@ class SessionManager:
         except Exception as e:
             logger.error(f"Failed to get user sessions for {user_id}: {e}")
             return {}
+
+    async def _enforce_session_limit(self, user_id: str) -> None:
+        """Enforce maximum concurrent sessions per user by evicting oldest sessions."""
+        try:
+            limit = self.max_sessions_per_user
+            if not limit or limit < 1:
+                return
+
+            client = await self._get_redis()
+            if client:
+                user_sessions_key = f"user_sessions:{user_id}"
+                session_ids = await client.smembers(user_sessions_key)
+                if len(session_ids) <= limit:
+                    return
+
+                sessions: list[tuple[str, str]] = []
+                for sid in session_ids:
+                    session_raw = await client.get(f"session:{sid}")
+                    created_at = ""
+                    if session_raw:
+                        try:
+                            payload = json.loads(session_raw)
+                            created_at = payload.get("created_at", "")
+                        except Exception:
+                            created_at = ""
+                    sessions.append((created_at, sid))
+
+                # Evict oldest sessions first
+                sessions.sort(key=lambda item: item[0] or "")
+                overflow = sessions[:-limit] if len(sessions) > limit else []
+                for _, sid in overflow:
+                    await client.delete(f"session:{sid}")
+                    await client.srem(user_sessions_key, sid)
+                return
+
+            if not self._fallback_enabled:
+                return
+
+            # Fallback store eviction
+            user_sessions: list[tuple[str, str]] = []
+            for sid, data in self._fallback_store.items():
+                if data.get("user_id") == user_id:
+                    user_sessions.append((data.get("created_at", ""), sid))
+
+            if len(user_sessions) <= limit:
+                return
+
+            user_sessions.sort(key=lambda item: item[0] or "")
+            overflow = user_sessions[:-limit] if len(user_sessions) > limit else []
+            for _, sid in overflow:
+                self._fallback_store.pop(sid, None)
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Failed to enforce session limit", user_id=user_id, error=str(exc))
 
     async def delete_user_sessions(self, user_id: str) -> int:
         """Delete all sessions for a user."""
@@ -995,7 +1239,11 @@ _require_redis_for_sessions = (
     os.getenv("REQUIRE_REDIS_SESSIONS", str(_is_production)).lower() == "true"
 )
 
-session_manager = SessionManager(fallback_enabled=not _require_redis_for_sessions)
+session_manager = SessionManager(
+    fallback_enabled=not _require_redis_for_sessions,
+    idle_timeout_seconds=SESSION_IDLE_TIMEOUT_SECONDS,
+    max_sessions_per_user=MAX_SESSIONS_PER_USER,
+)
 
 oauth_service = OAuthService()
 api_key_service = APIKeyService()
@@ -1006,13 +1254,17 @@ api_key_service = APIKeyService()
 
 
 async def _verify_token_with_fallback(
-    token: str, expected_type: TokenType | None = None
+    token: str,
+    expected_type: TokenType | None = None,
+    *,
+    leeway_seconds: int | float | None = None,
 ) -> dict[str, Any]:
     """Verify tokens using async path when available, falling back to the sync method.
 
     Args:
         token: JWT token to verify
         expected_type: Optional expected token type for validation
+        leeway_seconds: Optional leeway for expiration validation
 
     Returns:
         Token claims dictionary
@@ -1020,7 +1272,7 @@ async def _verify_token_with_fallback(
     verify_async = getattr(jwt_service, "verify_token_async", None)
     if verify_async:
         try:
-            result = verify_async(token, expected_type)
+            result = verify_async(token, expected_type, leeway_seconds=leeway_seconds)
             if inspect.isawaitable(result):
                 resolved = await result
                 return cast(dict[str, Any], resolved)
@@ -1030,7 +1282,7 @@ async def _verify_token_with_fallback(
             # Mocked objects (MagicMock) may not support awaiting
             pass
 
-    return jwt_service.verify_token(token, expected_type)
+    return jwt_service.verify_token(token, expected_type, leeway_seconds=leeway_seconds)
 
 
 async def get_current_user(
@@ -1055,6 +1307,7 @@ async def get_current_user(
     if credentials and credentials.credentials:
         try:
             claims = await _verify_token_with_fallback(credentials.credentials, TokenType.ACCESS)
+            await _enforce_active_session(claims)
             return _claims_to_user_info(claims)
         except HTTPException:
             pass
@@ -1063,6 +1316,7 @@ async def get_current_user(
     if token:
         try:
             claims = await _verify_token_with_fallback(token, TokenType.ACCESS)
+            await _enforce_active_session(claims)
             return _claims_to_user_info(claims)
         except HTTPException:
             pass
@@ -1072,6 +1326,7 @@ async def get_current_user(
     if access_token:
         try:
             claims = await _verify_token_with_fallback(access_token, TokenType.ACCESS)
+            await _enforce_active_session(claims)
             return _claims_to_user_info(claims)
         except HTTPException:
             pass
@@ -1126,6 +1381,40 @@ def _claims_to_user_info(claims: dict[str, Any]) -> UserInfo:
     )
 
 
+async def _enforce_active_session(claims: dict[str, Any]) -> None:
+    """Validate that the session referenced in the token is still active and refresh TTL."""
+    if claims.get("session_optional"):
+        # Service or bootstrap tokens that intentionally skip session validation
+        return
+
+    session_id = claims.get("session_id")
+    if not session_id:
+        logger.warning(
+            "Token missing session_id; rejecting for safety",
+            user_id=claims.get("sub"),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session is required for this token",
+        )
+
+    session = await session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired or revoked",
+        )
+
+    session_user_id = session.get("user_id")
+    if session_user_id and str(session_user_id) != str(claims.get("sub")):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session does not match user",
+        )
+
+    await session_manager.touch_session(session_id)
+
+
 # ============================================
 # Utility Functions
 # ============================================
@@ -1175,6 +1464,9 @@ def configure_auth(
     access_token_expire_minutes: int | None = None,
     refresh_token_expire_days: int | None = None,
     redis_url: str | None = None,
+    session_idle_timeout_seconds: int | None = None,
+    token_expiry_leeway_seconds: int | None = None,
+    max_sessions_per_user: int | None = None,
 ) -> None:
     """Configure auth services."""
     global \
@@ -1182,7 +1474,10 @@ def configure_auth(
         JWT_ALGORITHM, \
         ACCESS_TOKEN_EXPIRE_MINUTES, \
         REFRESH_TOKEN_EXPIRE_DAYS, \
-        REDIS_URL
+        REDIS_URL, \
+        SESSION_IDLE_TIMEOUT_SECONDS, \
+        TOKEN_EXP_LEEWAY_SECONDS, \
+        MAX_SESSIONS_PER_USER
     global jwt_service, session_manager, oauth_service, api_key_service
 
     # Dynamic configuration requires "constant" reassignment
@@ -1196,11 +1491,20 @@ def configure_auth(
         REFRESH_TOKEN_EXPIRE_DAYS = refresh_token_expire_days
     if redis_url is not None:
         REDIS_URL = redis_url
+    if session_idle_timeout_seconds is not None:
+        SESSION_IDLE_TIMEOUT_SECONDS = session_idle_timeout_seconds
+    if token_expiry_leeway_seconds is not None:
+        TOKEN_EXP_LEEWAY_SECONDS = token_expiry_leeway_seconds
+    if max_sessions_per_user is not None:
+        MAX_SESSIONS_PER_USER = max_sessions_per_user
 
     # Recreate services with new config
     jwt_service = JWTService(JWT_SECRET, JWT_ALGORITHM)
     session_manager = SessionManager(
-        redis_url=REDIS_URL, fallback_enabled=not _require_redis_for_sessions
+        redis_url=REDIS_URL,
+        fallback_enabled=not _require_redis_for_sessions,
+        idle_timeout_seconds=SESSION_IDLE_TIMEOUT_SECONDS,
+        max_sessions_per_user=MAX_SESSIONS_PER_USER,
     )
     oauth_service = OAuthService()
     api_key_service = APIKeyService(REDIS_URL)

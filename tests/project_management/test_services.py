@@ -22,11 +22,11 @@ async def test_project_service_create_project():
         _project_data = {
             "name": "Network Expansion",
             "description": "Expand to new area",
-            "status": "planning"
+            "status": "planning",
         }
 
         # Service should have create method
-        assert hasattr(service, 'create_project') or hasattr(service, 'create')
+        assert hasattr(service, "create_project") or hasattr(service, "create")
     except ImportError:
         pytest.skip("Project service not yet implemented")
 
@@ -42,7 +42,7 @@ async def test_task_assignment():
         service = TaskService(mock_db, tenant_id)
 
         # Service should handle task assignments
-        assert hasattr(service, 'assign_task') or hasattr(service, 'assign')
+        assert hasattr(service, "assign_task") or hasattr(service, "assign")
     except ImportError:
         pytest.skip("Task service not yet implemented")
 
@@ -58,6 +58,10 @@ async def test_template_builder_service():
         service = TemplateBuilderService(mock_db, tenant_id)
 
         # Service should build projects from templates
-        assert hasattr(service, 'build_from_template') or hasattr(service, 'create_from_template') or hasattr(service, 'create_template')
+        assert (
+            hasattr(service, "build_from_template")
+            or hasattr(service, "create_from_template")
+            or hasattr(service, "create_template")
+        )
     except ImportError:
         pytest.skip("Template builder service not yet implemented")

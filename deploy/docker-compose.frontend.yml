@@ -1,0 +1,196 @@
+# =============================================================================
+# DotMac Frontend Applications - Docker Compose
+# =============================================================================
+# This compose file runs all 6 frontend applications with Nginx routing.
+#
+# Usage:
+#   docker-compose -f deploy/docker-compose.frontend.yml up --build
+#
+# Port Assignments:
+#   - 3001: isp-ops-app (ISP Admin)
+#   - 3002: platform-admin-app (Platform Admin)
+#   - 3003: platform-tenant (ISP Owner Portal)
+#   - 3004: platform-reseller (Channel Partner Portal)
+#   - 3005: isp-reseller (Sales Agent Portal)
+#   - 3006: isp-customer (Customer Self-Service)
+#   - 80/443: Nginx (reverse proxy)
+#
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # Platform Tier Applications
+  # ===========================================================================
+
+  platform-admin-app:
+    build:
+      context: ../frontend
+      dockerfile: apps/platform-admin-app/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://backend:8000}
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dotmac-network
+    depends_on:
+      - backend
+
+  platform-reseller:
+    build:
+      context: ../frontend
+      dockerfile: apps/platform-reseller/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://backend:8000}
+    ports:
+      - "3004:3004"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3004/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dotmac-network
+    depends_on:
+      - backend
+
+  platform-tenant:
+    build:
+      context: ../frontend
+      dockerfile: apps/platform-tenant/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://backend:8000}
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3003/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dotmac-network
+    depends_on:
+      - backend
+
+  # ===========================================================================
+  # ISP Tier Applications
+  # ===========================================================================
+
+  isp-ops-app:
+    build:
+      context: ../frontend
+      dockerfile: apps/isp-ops-app/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://backend:8000}
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dotmac-network
+    depends_on:
+      - backend
+
+  isp-reseller:
+    build:
+      context: ../frontend
+      dockerfile: apps/isp-reseller/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://backend:8000}
+    ports:
+      - "3005:3005"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3005/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dotmac-network
+    depends_on:
+      - backend
+
+  isp-customer:
+    build:
+      context: ../frontend
+      dockerfile: apps/isp-customer/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://backend:8000}
+    ports:
+      - "3006:3006"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3006/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dotmac-network
+    depends_on:
+      - backend
+
+  # ===========================================================================
+  # Infrastructure
+  # ===========================================================================
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/frontend-apps.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    restart: unless-stopped
+    networks:
+      - dotmac-network
+    depends_on:
+      - platform-admin-app
+      - platform-reseller
+      - platform-tenant
+      - isp-ops-app
+      - isp-reseller
+      - isp-customer
+
+  backend:
+    image: dotmac/backend:latest
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SECRET_KEY=${SECRET_KEY}
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - dotmac-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  dotmac-network:
+    driver: bridge
+
+volumes:
+  ssl-certs:

@@ -18,8 +18,8 @@ from tests.helpers import (
     build_not_found_result,
     build_success_result,
     create_entity_test_helper,
-    update_entity_test_helper,
     delete_entity_test_helper,
+    update_entity_test_helper,
 )
 
 pytestmark = pytest.mark.asyncio

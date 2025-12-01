@@ -144,7 +144,9 @@ class TestEventBus:
 
         monkeypatch.setattr("dotmac.platform.core.caching.get_redis", raise_on_get)
 
-        bus = get_event_bus(storage=EventStorage(use_redis=False), redis_client=None, enable_persistence=False)
+        bus = get_event_bus(
+            storage=EventStorage(use_redis=False), redis_client=None, enable_persistence=False
+        )
 
         assert isinstance(bus, EventBus)
         assert bus._redis is None  # type: ignore[attr-defined]

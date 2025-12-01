@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from dotmac.platform.network_monitoring.schemas import DeviceType, TrafficStatsResponse
 from dotmac.platform.network_monitoring.service import NetworkMonitoringService
-from dotmac.platform.network_monitoring.schemas import TrafficStatsResponse
-from dotmac.platform.network_monitoring.schemas import DeviceType
 from dotmac.platform.tenant.oss_config import ServiceConfig
-
 
 pytestmark = pytest.mark.unit
 

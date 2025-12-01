@@ -1,0 +1,42 @@
+{
+  "name": "@dotmac/isp-customer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3006",
+    "build": "next build",
+    "start": "next start -p 3006",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dotmac/primitives": "workspace:*",
+    "@dotmac/ui": "workspace:*",
+    "@tanstack/react-query": "^5.90.5",
+    "axios": "^1.6.7",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "lucide-react": "^0.378.0",
+    "next": "^14.2.25",
+    "next-themes": "^0.3.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "recharts": "^2.15.4",
+    "tailwind-merge": "^2.5.5",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@dotmac/eslint-config": "workspace:*",
+    "@dotmac/typescript-config": "workspace:*",
+    "@types/node": "^20.11.19",
+    "@types/react": "^18.2.57",
+    "@types/react-dom": "^18.2.19",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.2.25",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
+  }
+}

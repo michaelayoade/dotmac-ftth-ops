@@ -134,6 +134,8 @@ def create_isp_service() -> FastAPI:
     register_exception_handlers(app)
 
     # Register ISP + SHARED routers at /api/isp/v1
+    # NOTE: Routes that need /admin prefix specify it via base_prefix in registry.py
+    # Do NOT use default_base_prefix here - it breaks frontend API paths
     logger.info("isp_service.registering_routers")
     registered, failed = register_routers_for_scope(
         app,

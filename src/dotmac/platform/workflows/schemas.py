@@ -22,6 +22,7 @@ class WorkflowCreate(BaseModel):
     definition: dict[str, Any] = Field(..., description="Workflow definition with steps")
     version: str = Field(default="1.0.0", description="Workflow version")
     tags: dict[str, Any] | None = Field(None, description="Metadata tags")
+    tenant_id: str | None = Field(None, description="Tenant ID for scoping the workflow")
 
 
 class WorkflowUpdate(BaseModel):
@@ -43,6 +44,7 @@ class WorkflowResponse(BaseModel):
     is_active: bool
     version: str
     tags: dict[str, Any] | None
+    tenant_id: str | None
     created_at: datetime
     updated_at: datetime
 

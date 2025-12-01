@@ -524,12 +524,16 @@ def _should_run_integration(config: pytest.Config) -> bool:
             print("[DEBUG] _should_run_integration: True ('integration' word in mark_expr)")  # noqa: T201
             return True
         if "integration" in normalized:
-            print(f"[DEBUG] _should_run_integration: True ('integration' substring in mark_expr={mark_expr})")  # noqa: T201
+            print(
+                f"[DEBUG] _should_run_integration: True ('integration' substring in mark_expr={mark_expr})"
+            )  # noqa: T201
             return True
 
     invocation_args = getattr(getattr(config, "invocation_params", None), "args", None) or []
     explicit_args = getattr(config, "args", []) or []
-    print(f"[DEBUG] _should_run_integration: invocation_args={invocation_args}, explicit_args={explicit_args}")  # noqa: T201
+    print(
+        f"[DEBUG] _should_run_integration: invocation_args={invocation_args}, explicit_args={explicit_args}"
+    )  # noqa: T201
     for arg in (*invocation_args, *explicit_args):
         arg_str = str(arg)
         if arg_str.startswith("-"):

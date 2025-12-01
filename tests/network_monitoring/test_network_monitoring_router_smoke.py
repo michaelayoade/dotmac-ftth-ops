@@ -12,7 +12,8 @@ from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import require_user
-from dotmac.platform.network_monitoring.router import router as monitoring_router, get_monitoring_service
+from dotmac.platform.network_monitoring.router import get_monitoring_service
+from dotmac.platform.network_monitoring.router import router as monitoring_router
 from dotmac.platform.network_monitoring.schemas import (
     AcknowledgeAlertRequest,
     AlertRuleResponse,
@@ -91,13 +92,17 @@ class FakeMonitoringService:
             return [d for d in devices if d.device_type == device_type]
         return devices
 
-    async def get_device_health(self, device_id: str, device_type: DeviceType | None, tenant_id: str):
+    async def get_device_health(
+        self, device_id: str, device_type: DeviceType | None, tenant_id: str
+    ):
         for d in await self.get_all_devices(tenant_id):
             if d.device_id == device_id:
                 return d
         return None
 
-    async def get_device_metrics(self, device_id: str, device_type: DeviceType | None, tenant_id: str):
+    async def get_device_metrics(
+        self, device_id: str, device_type: DeviceType | None, tenant_id: str
+    ):
         health = await self.get_device_health(device_id, device_type, tenant_id)
         if not health:
             return None
@@ -111,7 +116,9 @@ class FakeMonitoringService:
             custom_metrics={"cpu_usage_percent": 42.0},
         )
 
-    async def get_traffic_stats(self, device_id: str, device_type: DeviceType | None, tenant_id: str):
+    async def get_traffic_stats(
+        self, device_id: str, device_type: DeviceType | None, tenant_id: str
+    ):
         return TrafficStatsResponse(
             device_id=device_id,
             device_name="OLT-1",
@@ -150,7 +157,9 @@ class FakeMonitoringService:
         )
         return [alert]
 
-    async def acknowledge_alert(self, alert_id: str, tenant_id: str, user_id: str, note: str | None):
+    async def acknowledge_alert(
+        self, alert_id: str, tenant_id: str, user_id: str, note: str | None
+    ):
         return NetworkAlertResponse(
             alert_id=alert_id,
             severity=AlertSeverity.INFO,
@@ -227,8 +236,10 @@ def monitoring_app():
         return test_user
 
     app.dependency_overrides[require_user] = override_user
-    app.dependency_overrides[get_monitoring_service] = lambda current_user=test_user: FakeMonitoringService(
-        tenant_id=current_user.tenant_id or "tenant-1"
+    app.dependency_overrides[get_monitoring_service] = (
+        lambda current_user=test_user: FakeMonitoringService(
+            tenant_id=current_user.tenant_id or "tenant-1"
+        )
     )
     return app
 
@@ -252,11 +263,17 @@ async def test_overview_and_devices(monitoring_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_device_health_metrics_and_traffic(monitoring_client: AsyncClient):
-    health = await monitoring_client.get("/api/v1/network/devices/dev-1/health", follow_redirects=True)
+    health = await monitoring_client.get(
+        "/api/v1/network/devices/dev-1/health", follow_redirects=True
+    )
     assert health.status_code == 200
-    metrics = await monitoring_client.get("/api/v1/network/devices/dev-1/metrics", follow_redirects=True)
+    metrics = await monitoring_client.get(
+        "/api/v1/network/devices/dev-1/metrics", follow_redirects=True
+    )
     assert metrics.status_code == 200
-    traffic = await monitoring_client.get("/api/v1/network/devices/dev-1/traffic", follow_redirects=True)
+    traffic = await monitoring_client.get(
+        "/api/v1/network/devices/dev-1/traffic", follow_redirects=True
+    )
     assert traffic.status_code == 200
 
 

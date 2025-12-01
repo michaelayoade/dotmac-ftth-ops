@@ -134,6 +134,7 @@ async def async_client(e2e_db_engine, tenant_id, user_id):
 
     # Ensure helper context managers inside the app use the per-test session maker
     import dotmac.platform._db_legacy as legacy_db
+
     import dotmac.platform.db as platform_db
 
     original_session_maker = legacy_db._async_session_maker

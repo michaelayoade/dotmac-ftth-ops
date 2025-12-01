@@ -9,6 +9,7 @@ import { NotificationProvider } from "./components/NotificationProvider";
 import { FeatureProvider } from "./components/FeatureProvider";
 import { TenantProvider } from "./components/TenantProvider";
 import { createPortalQueryClient } from "./utils/queryClients";
+import { RBACProvider } from "@dotmac/rbac";
 
 // Portal types formerly defined in @dotmac/auth
 export type PortalType = "admin" | "customer" | "reseller" | "technician" | "management";
@@ -109,16 +110,18 @@ export function UniversalProviders({
         <ThemeProvider portal={portal} theme={portalConfig.theme}>
           {/* Note: AuthProvider is included at app level, not here */}
           <TenantProvider variant={tenantVariant} portal={portal}>
-            <FeatureProvider features={mergedFeatures}>
-              {mergedFeatures.notifications && (
-                <NotificationProvider
-                  maxNotifications={portalConfig.notifications.max}
-                  defaultDuration={portalConfig.notifications.duration}
-                  position={portalConfig.notifications.position}
-                />
-              )}
-              {children}
-            </FeatureProvider>
+            <RBACProvider>
+              <FeatureProvider features={mergedFeatures}>
+                {mergedFeatures.notifications && (
+                  <NotificationProvider
+                    maxNotifications={portalConfig.notifications.max}
+                    defaultDuration={portalConfig.notifications.duration}
+                    position={portalConfig.notifications.position}
+                  />
+                )}
+                {children}
+              </FeatureProvider>
+            </RBACProvider>
           </TenantProvider>
         </ThemeProvider>
 

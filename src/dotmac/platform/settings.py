@@ -34,6 +34,34 @@ def _default_storage_path() -> str:
     )
 
 
+def _adaptive_pool_size() -> int:
+    """
+    Derive a safe default DB pool size from CPU/worker hints when no explicit value is set.
+
+    Uses WORKERS/UVICORN_WORKERS/GUNICORN_WORKERS if provided; otherwise scales with CPU cores.
+    """
+    cpu_count = os.cpu_count() or 2
+
+    def _parse_int(name: str) -> int | None:
+        raw = os.getenv(name)
+        if raw is None:
+            return None
+        try:
+            return int(raw)
+        except ValueError:
+            return None
+
+    workers = (
+        _parse_int("WORKERS")
+        or _parse_int("UVICORN_WORKERS")
+        or _parse_int("GUNICORN_WORKERS")
+        or 0
+    )
+
+    baseline = max(cpu_count, workers if workers > 0 else cpu_count)
+    return min(32, max(5, baseline * 2))
+
+
 class Environment(str, Enum):
     """Application environment."""
 
@@ -435,6 +463,25 @@ class AuthSettings(BaseModel):  # BaseModel resolves to Any in isolation
         description="Maximum avatar upload size in MB",
     )
 
+    # Session / Auth Hardening
+    session_idle_timeout_minutes: int = Field(
+        default_factory=lambda: int(os.getenv("SESSION_IDLE_TIMEOUT_MINUTES", "60")),
+        ge=5,
+        le=24 * 60,
+        description="Maximum idle time for sessions before expiration (minutes)",
+    )
+    token_expiry_leeway_seconds: int = Field(
+        default_factory=lambda: int(os.getenv("TOKEN_EXPIRY_LEEWAY_SECONDS", "60")),
+        ge=0,
+        le=300,
+        description="Leeway window to accept recently expired tokens (seconds)",
+    )
+    max_sessions_per_user: int = Field(
+        default_factory=lambda: int(os.getenv("MAX_SESSIONS_PER_USER", "5")),
+        ge=1,
+        description="Maximum concurrent sessions allowed per user",
+    )
+
     def __init__(self, **data: Any):
         """Initialize with environment variable overrides."""
         super().__init__(**data)
@@ -753,7 +800,7 @@ class Settings(BaseSettings):
 
         # Connection pool (environment variable overrides for test tuning)
         pool_size: int = Field(
-            10,
+            default_factory=_adaptive_pool_size,
             description="Connection pool size (override with PG_POOL_SIZE env var)",
             validation_alias="PG_POOL_SIZE",
         )

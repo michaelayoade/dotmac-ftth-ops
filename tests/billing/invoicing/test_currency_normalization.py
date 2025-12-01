@@ -53,7 +53,9 @@ async def test_normalize_currency_disabled(invoice_service: InvoiceService, monk
 
 
 @pytest.mark.asyncio
-async def test_normalize_currency_same_as_default(invoice_service: InvoiceService, monkeypatch) -> None:
+async def test_normalize_currency_same_as_default(
+    invoice_service: InvoiceService, monkeypatch
+) -> None:
     """If the invoice currency already matches default currency, no normalization occurs."""
     monkeypatch.setattr(settings.billing, "enable_multi_currency", True)
     monkeypatch.setattr(settings.billing, "default_currency", "USD")
@@ -67,7 +69,9 @@ async def test_normalize_currency_same_as_default(invoice_service: InvoiceServic
 
 
 @pytest.mark.asyncio
-async def test_normalize_currency_converts_components(invoice_service: InvoiceService, monkeypatch) -> None:
+async def test_normalize_currency_converts_components(
+    invoice_service: InvoiceService, monkeypatch
+) -> None:
     """Currency conversion details are returned when normalization runs successfully."""
     monkeypatch.setattr(settings.billing, "enable_multi_currency", True)
     monkeypatch.setattr(settings.billing, "default_currency", "USD")
@@ -83,9 +87,11 @@ async def test_normalize_currency_converts_components(invoice_service: InvoiceSe
         "total_amount": 1150,
     }
 
-    conversion_details, normalized_total, normalized_currency = (
-        await invoice_service._normalize_currency_components("EUR", amounts)
-    )
+    (
+        conversion_details,
+        normalized_total,
+        normalized_currency,
+    ) = await invoice_service._normalize_currency_components("EUR", amounts)
 
     assert normalized_currency == "USD"
     assert normalized_total == 2300  # doubled total
@@ -94,4 +100,3 @@ async def test_normalize_currency_converts_components(invoice_service: InvoiceSe
     assert total_component["original_minor_units"] == 1150
     assert total_component["converted_minor_units"] == 2300
     assert Decimal(total_component["converted_amount"]) == Decimal("23")  # 11.5 doubled
-

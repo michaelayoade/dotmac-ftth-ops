@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from httpx import AsyncClient
 
 from dotmac.platform.analytics.router import (
     _ensure_utc,
@@ -198,13 +197,19 @@ class TestSecurityAndOperationsEndpoints:
     """Integration-style checks for analytics security and operations endpoints."""
 
     async def test_security_metrics_maps_cached_data(self):
-        with patch(
-            "dotmac.platform.analytics.router._get_auth_metrics_cached", new_callable=AsyncMock
-        ) as mock_auth, patch(
-            "dotmac.platform.analytics.router._get_api_key_metrics_cached", new_callable=AsyncMock
-        ) as mock_keys, patch(
-            "dotmac.platform.analytics.router._get_secrets_metrics_cached", new_callable=AsyncMock
-        ) as mock_secrets:
+        with (
+            patch(
+                "dotmac.platform.analytics.router._get_auth_metrics_cached", new_callable=AsyncMock
+            ) as mock_auth,
+            patch(
+                "dotmac.platform.analytics.router._get_api_key_metrics_cached",
+                new_callable=AsyncMock,
+            ) as mock_keys,
+            patch(
+                "dotmac.platform.analytics.router._get_secrets_metrics_cached",
+                new_callable=AsyncMock,
+            ) as mock_secrets,
+        ):
             mock_auth.return_value = {
                 "active_users": 10,
                 "failed_logins": 2,
@@ -243,17 +248,23 @@ class TestSecurityAndOperationsEndpoints:
             assert data["compliance"]["issues"] == 1
 
     async def test_operations_metrics_combines_sources(self):
-        with patch(
-            "dotmac.platform.analytics.router._get_customer_metrics_cached", new_callable=AsyncMock
-        ) as mock_customers, patch(
-            "dotmac.platform.analytics.router._get_communication_stats_cached",
-            new_callable=AsyncMock,
-        ) as mock_comms, patch(
-            "dotmac.platform.analytics.router._get_file_stats_cached", new_callable=AsyncMock
-        ) as mock_files, patch(
-            "dotmac.platform.analytics.router._get_monitoring_metrics_cached",
-            new_callable=AsyncMock,
-        ) as mock_monitoring:
+        with (
+            patch(
+                "dotmac.platform.analytics.router._get_customer_metrics_cached",
+                new_callable=AsyncMock,
+            ) as mock_customers,
+            patch(
+                "dotmac.platform.analytics.router._get_communication_stats_cached",
+                new_callable=AsyncMock,
+            ) as mock_comms,
+            patch(
+                "dotmac.platform.analytics.router._get_file_stats_cached", new_callable=AsyncMock
+            ) as mock_files,
+            patch(
+                "dotmac.platform.analytics.router._get_monitoring_metrics_cached",
+                new_callable=AsyncMock,
+            ) as mock_monitoring,
+        ):
             mock_customers.return_value = {
                 "total_customers": 100,
                 "new_customers_this_month": 5,

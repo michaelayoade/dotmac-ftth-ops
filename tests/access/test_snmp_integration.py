@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+
 import pytest
 
 from dotmac.platform.access import snmp
-
 
 pytestmark = pytest.mark.unit
 
@@ -21,7 +21,12 @@ async def test_collect_snmp_metrics_prefers_hook_over_pysnmp(monkeypatch):
         return {"pon_ports_total": 4, "onu_online": 3}
 
     # If pysnmp is invoked we want the test to fail
-    monkeypatch.setattr(snmp, "_pysnmp_collect", lambda **kwargs: (_ for _ in ()).throw(AssertionError("pysnmp should not be used")), raising=True)
+    monkeypatch.setattr(
+        snmp,
+        "_pysnmp_collect",
+        lambda **kwargs: (_ for _ in ()).throw(AssertionError("pysnmp should not be used")),
+        raising=True,
+    )
 
     result = await snmp.collect_snmp_metrics(
         host="127.0.0.1",

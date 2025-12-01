@@ -4,6 +4,7 @@ This module extends the existing JWT functionality to include permissions
 """
 
 import logging
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
@@ -13,7 +14,7 @@ from jwt.exceptions import InvalidTokenError as JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from dotmac.platform.auth.core import JWTService, UserInfo, get_current_user
+from dotmac.platform.auth.core import JWTService, UserInfo, get_current_user, session_manager
 from dotmac.platform.auth.exceptions import InvalidToken
 from dotmac.platform.auth.rbac_service import RBACService
 from dotmac.platform.core.caching import cache_get, cache_set
@@ -59,6 +60,8 @@ class RBACTokenService:
                 str(user.tenant_id) if hasattr(user, "tenant_id") and user.tenant_id else None
             ),
         }
+        session_id = secrets.token_urlsafe(32)
+        claims["session_id"] = session_id
 
         # Enrich token with partner metadata if user belongs to a partner
         partner_metadata = await self._get_partner_metadata(user, db_session)
@@ -76,6 +79,22 @@ class RBACTokenService:
 
         # Create token
         token: str = self.jwt_service._create_token(claims, expire_delta)
+
+        # Create backing session so session validation passes
+        try:
+            await session_manager.create_session(
+                user_id=str(user.id),
+                data={
+                    "username": user.username,
+                    "email": user.email,
+                    "roles": role_names,
+                    "rbac_token": True,
+                },
+                session_id=session_id,
+                ttl=int(expire_delta.total_seconds()),
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Failed to create session for RBAC token", error=str(exc))
 
         # Cache the token metadata for quick validation
         cache_key = f"token:{user.id}:{token[:20]}"  # Use first 20 chars as identifier

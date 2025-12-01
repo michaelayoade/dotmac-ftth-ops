@@ -1,6 +1,5 @@
 """Field service test fixtures."""
 
-
 import pytest
 
 

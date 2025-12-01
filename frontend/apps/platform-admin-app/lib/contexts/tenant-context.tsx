@@ -6,7 +6,15 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useMemo,
+  useCallback,
+} from "react";
 import { apiClient } from "@/lib/api/client";
 import { useAuth } from "@shared/lib/auth";
 import { setTenantIdentifiers } from "@/lib/tenant-storage";
@@ -48,7 +56,7 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
   const { isLoading: authLoading, user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  const refreshTenant = async () => {
+  const refreshTenant = useCallback(async () => {
     if (!isAuthenticated) {
       setTenant(null);
       setError(null);
@@ -76,14 +84,14 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
     } finally {
       setLoading(false);
     }
-  };
+  }, [initialTenant, isAuthenticated]);
 
   // Load tenant when auth is ready or user changes
   useEffect(() => {
     if (!authLoading) {
       refreshTenant();
     }
-  }, [authLoading, isAuthenticated, user?.tenant_id]);
+  }, [authLoading, isAuthenticated, user?.tenant_id, refreshTenant]);
 
   useEffect(() => {
     if (!tenant?.id) {
@@ -104,7 +112,7 @@ export function TenantProvider({ children, initialTenant = null }: TenantProvide
       setTenant,
       refreshTenant,
     }),
-    [availableTenants, error, loading, tenant],
+    [availableTenants, error, loading, tenant, refreshTenant],
   );
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
