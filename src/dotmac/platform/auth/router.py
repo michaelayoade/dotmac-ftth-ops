@@ -371,23 +371,6 @@ async def _authenticate_and_issue_tokens(
     tenant_config = get_tenant_config()
     default_tenant_id = tenant_config.default_tenant_id if tenant_config else None
 
-    # In multi-tenant mode with required tenant headers, refuse login when no tenant is provided.
-    if (
-        tenant_config
-        and tenant_config.is_multi_tenant
-        and tenant_config.require_tenant_header
-        and current_tenant_id is None
-    ):
-        logger.warning(
-            "auth.login.missing_tenant",
-            username=username,
-            tenant_required=True,
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tenant identifier is required for login",
-        )
-
     # Try to find user by username or email within the current tenant
     # This prevents multiple results if same username exists in different tenants
     user = await user_service.get_user_by_username(username, tenant_id=current_tenant_id)
@@ -410,17 +393,21 @@ async def _authenticate_and_issue_tokens(
             if candidate.is_platform_admin or candidate.tenant_id in fallback_tenant_scope:
                 user = candidate
             else:
-                # Reject cross-tenant login attempts when tenant context is missing.
-                logger.warning(
-                    "auth.login.cross_tenant_blocked",
-                    username=username,
-                    tenant_context=current_tenant_id,
-                    candidate_tenant=candidate.tenant_id,
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Tenant context is required for this account",
-                )
+                # Allow login when identifier uniquely maps to a single tenant.
+                identifier = username.lower() if "@" in username else username
+                if "@" in username:
+                    uniqueness_query = (
+                        select(User.id).where(func.lower(User.email) == identifier).limit(2)
+                    )
+                else:
+                    uniqueness_query = select(User.id).where(User.username == identifier).limit(2)
+
+                result = await session.execute(uniqueness_query)
+                matches = result.scalars().all()
+
+                if len(matches) == 1:
+                    user = candidate
+                    current_tenant_id = candidate.tenant_id
 
     if not user or not verify_password(password, user.password_hash):
         # Log failed login attempt

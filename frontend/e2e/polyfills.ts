@@ -1,22 +1,8 @@
-/**
- * Idempotent localStorage/sessionStorage polyfill for Node-based Playwright workers.
- * MSW v2.12+ touches localStorage during setup, so we need a Storage-like object
- * with string semantics.
- */
-export function ensureStoragePolyfill(): void {
-  if (typeof globalThis === "undefined") {
-    return;
-  }
-
-  const g = globalThis as any;
-  const hasStorage =
-    typeof g.localStorage?.getItem === "function" &&
-    typeof g.sessionStorage?.getItem === "function";
-
-  if (hasStorage) {
-    return;
-  }
-
+console.log("Polyfilling localStorage...");
+if (
+  typeof global !== "undefined" &&
+  (!global.localStorage || typeof (global as any).localStorage?.getItem !== "function")
+) {
   class LocalStoragePolyfill {
     private store: Map<string, string>;
 
@@ -29,7 +15,7 @@ export function ensureStoragePolyfill(): void {
     }
 
     setItem(key: string, value: string): void {
-      this.store.set(key, String(value));
+      this.store.set(key, value);
     }
 
     removeItem(key: string): void {
@@ -50,18 +36,6 @@ export function ensureStoragePolyfill(): void {
     }
   }
 
-  const storage = new LocalStoragePolyfill();
-  const session = new LocalStoragePolyfill();
-
-  g.localStorage = storage;
-  g.sessionStorage = session;
-
-  // Keep Node's global in sync for libraries that reference it directly.
-  if (typeof global !== "undefined") {
-    (global as any).localStorage = storage;
-    (global as any).sessionStorage = session;
-  }
+  (global as any).localStorage = new LocalStoragePolyfill();
+  (global as any).sessionStorage = new LocalStoragePolyfill();
 }
-
-// Apply on import for convenience in side-effect usage.
-ensureStoragePolyfill();

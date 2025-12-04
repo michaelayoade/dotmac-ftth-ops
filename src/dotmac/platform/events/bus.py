@@ -73,11 +73,7 @@ class EventBus:
         self._pattern_handlers: dict[str, list[EventHandler]] = defaultdict(list)
 
         # Injected dependencies
-        # Only create storage if persistence is enabled
-        if enable_persistence and storage is None:
-            self._storage = EventStorage(use_redis=redis_client is not None)
-        else:
-            self._storage = storage  # type: ignore[assignment]
+        self._storage = storage or EventStorage(use_redis=redis_client is not None)
         self._redis = redis_client
         self._enable_persistence = enable_persistence
 
@@ -399,19 +395,7 @@ def get_event_bus(
     Returns:
         EventBus instance
     """
-    import os
-
     global _event_bus
-
-    # During migrations, skip Redis and use minimal in-memory event bus
-    if os.environ.get("DOTMAC_MIGRATIONS") == "1":
-        if _event_bus is None:
-            _event_bus = EventBus(
-                storage=None,
-                redis_client=None,
-                enable_persistence=False,
-            )
-        return _event_bus
 
     if _event_bus is None:
         # If redis_client not provided, get from caching module

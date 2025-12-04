@@ -1,0 +1,230 @@
+"""
+Invoice service tests - extracted from comprehensive test file.
+"""
+
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    TransactionEntity,
+)
+from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
+    PaymentStatus,
+    TransactionType,
+)
+from dotmac.platform.billing.core.exceptions import (
+    InvalidInvoiceStatusError,
+    InvoiceNotFoundError,
+)
+from dotmac.platform.billing.core.models import Invoice, InvoiceLineItem
+from dotmac.platform.billing.invoicing.service import InvoiceService
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestInvoiceServiceCreation:
+    """Test invoice creation functionality"""
+
+    @pytest.mark.asyncio
+    async def test_create_invoice_success(
+        self,
+        invoice_service,
+        mock_db_session,
+        sample_tenant_id,
+        sample_customer_id,
+        sample_line_items,
+        sample_billing_address,
+        mock_invoice_entity,
+    ):
+        """Test successful invoice creation"""
+        # Mock database queries
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None  # No existing invoice
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Mock refresh to populate the entity with required fields
+        def mock_refresh_entity(entity, attribute_names=None):
+            entity.invoice_id = str(uuid4())
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
+            entity.total_credits_applied = 0
+            entity.credit_applications = []
+            # Set line item IDs
+            for item in entity.line_items:
+                item.line_item_id = str(uuid4())
+
+        mock_db_session.refresh = AsyncMock(side_effect=mock_refresh_entity)
+
+        # Create invoice
+        result = await invoice_service.create_invoice(
+            tenant_id=sample_tenant_id,
+            customer_id=sample_customer_id,
+            billing_email="customer@example.com",
+            billing_address=sample_billing_address,
+            line_items=sample_line_items,
+            currency="USD",
+            due_days=30,
+            notes="Test invoice",
+            internal_notes="Internal note",
+            created_by="test-user",
+            extra_data={"custom": "data"},
+        )
+
+        # Verify database operations
+        assert mock_db_session.add.call_count == 2  # Invoice + Transaction
+        mock_db_session.commit.assert_called()
+        mock_db_session.refresh.assert_called()
+
+        # Verify the added invoice entity
+        added_invoice = mock_db_session.add.call_args_list[0][0][0]
+        assert added_invoice.tenant_id == sample_tenant_id
+        assert added_invoice.customer_id == sample_customer_id
+        assert added_invoice.billing_email == "customer@example.com"
+        assert added_invoice.subtotal == 17500
+        assert added_invoice.tax_amount == 1750
+        assert added_invoice.discount_amount == 375
+        assert added_invoice.total_amount == 18875
+        assert added_invoice.remaining_balance == 18875
+        assert added_invoice.status == InvoiceStatus.DRAFT
+        assert added_invoice.payment_status == PaymentStatus.PENDING
+        assert added_invoice.notes == "Test invoice"
+        assert added_invoice.internal_notes == "Internal note"
+        assert added_invoice.extra_data == {"custom": "data"}
+        assert len(added_invoice.line_items) == 2
+
+        # Verify transaction creation
+        added_transaction = mock_db_session.add.call_args_list[1][0][0]
+        assert isinstance(added_transaction, TransactionEntity)
+        assert added_transaction.tenant_id == sample_tenant_id
+        assert added_transaction.amount == 18875
+        assert added_transaction.transaction_type == TransactionType.CHARGE
+
+    @pytest.mark.asyncio
+    async def test_create_invoice_with_idempotency(
+        self,
+        invoice_service,
+        mock_db_session,
+        sample_tenant_id,
+        sample_customer_id,
+        sample_line_items,
+        sample_billing_address,
+        mock_invoice_entity,
+    ):
+        """Test idempotent invoice creation"""
+        idempotency_key = "test-idempotency-key"
+
+        # Mock existing invoice with same idempotency key
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to create invoice with same idempotency key
+        result = await invoice_service.create_invoice(
+            tenant_id=sample_tenant_id,
+            customer_id=sample_customer_id,
+            billing_email="customer@example.com",
+            billing_address=sample_billing_address,
+            line_items=sample_line_items,
+            idempotency_key=idempotency_key,
+        )
+
+        # Verify no new invoice was created
+        mock_db_session.add.assert_not_called()
+        mock_db_session.commit.assert_not_called()
+
+        # Verify returned existing invoice
+        assert result.invoice_id == mock_invoice_entity.invoice_id
+        assert result.invoice_number == mock_invoice_entity.invoice_number
+
+    @pytest.mark.asyncio
+    async def test_create_invoice_with_subscription(
+        self,
+        invoice_service,
+        mock_db_session,
+        sample_tenant_id,
+        sample_customer_id,
+        sample_line_items,
+        sample_billing_address,
+    ):
+        """Test invoice creation with subscription reference"""
+        subscription_id = str(uuid4())
+
+        # Mock database queries
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        def mock_refresh_entity(entity, attribute_names=None):
+            entity.invoice_id = str(uuid4())
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
+            entity.total_credits_applied = 0
+            entity.credit_applications = []
+            for item in entity.line_items:
+                item.line_item_id = str(uuid4())
+
+        mock_db_session.refresh = AsyncMock(side_effect=mock_refresh_entity)
+
+        # Create invoice with subscription
+        result = await invoice_service.create_invoice(
+            tenant_id=sample_tenant_id,
+            customer_id=sample_customer_id,
+            billing_email="customer@example.com",
+            billing_address=sample_billing_address,
+            line_items=sample_line_items,
+            subscription_id=subscription_id,
+        )
+
+        # Verify subscription ID was set
+        added_invoice = mock_db_session.add.call_args_list[0][0][0]
+        assert added_invoice.subscription_id == subscription_id
+
+    @pytest.mark.asyncio
+    async def test_create_invoice_with_custom_due_date(
+        self,
+        invoice_service,
+        mock_db_session,
+        sample_tenant_id,
+        sample_customer_id,
+        sample_line_items,
+        sample_billing_address,
+    ):
+        """Test invoice creation with custom due date"""
+        custom_due_date = datetime.now(timezone.utc) + timedelta(days=45)
+
+        # Mock database queries
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        def mock_refresh_entity(entity, attribute_names=None):
+            entity.invoice_id = str(uuid4())
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
+            entity.total_credits_applied = 0
+            entity.credit_applications = []
+            for item in entity.line_items:
+                item.line_item_id = str(uuid4())
+
+        mock_db_session.refresh = AsyncMock(side_effect=mock_refresh_entity)
+
+        # Create invoice with custom due date
+        result = await invoice_service.create_invoice(
+            tenant_id=sample_tenant_id,
+            customer_id=sample_customer_id,
+            billing_email="customer@example.com",
+            billing_address=sample_billing_address,
+            line_items=sample_line_items,
+            due_date=custom_due_date,
+        )
+
+        # Verify due date was set correctly
+        added_invoice = mock_db_session.add.call_args_list[0][0][0]
+        assert added_invoice.due_date == custom_due_date

@@ -9,11 +9,6 @@
  * Note: localStorage polyfill is provided in global-setup.ts
  */
 
-import { ensureStoragePolyfill } from "./polyfills";
-
-// Ensure storage exists for MSW cookie persistence in Node workers
-ensureStoragePolyfill();
-
 import { setupServer } from "msw/node";
 import { handlers, mockHandlers } from "./handlers";
 

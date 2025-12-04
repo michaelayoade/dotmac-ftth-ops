@@ -37,90 +37,60 @@ describe("InventoryApiClient", () => {
     } as Response);
   };
 
-  const mockLocation: InventoryLocation = {
-    type: "WAREHOUSE",
-    location_id: "wh_main",
-    location_name: "Main Warehouse",
-    address: "123 Storage Ave, City, State",
-    coordinates: { latitude: 40.7128, longitude: -74.006 },
-    zone: "A",
-    bin_location: "A-15-C",
-  };
-
-  const mockPurchaseInfo: PurchaseInfo = {
-    vendor: "TechSupply Inc",
-    purchase_order: "PO-2024-0156",
-    purchase_date: "2024-01-10T00:00:00Z",
-    purchase_price: 125.0,
-    invoice_number: "INV-TS-2024-0234",
-  };
-
-  const mockWarranty: WarrantyInfo = {
-    warranty_period: 36,
-    warranty_start: "2024-01-15T00:00:00Z",
-    warranty_end: "2027-01-15T00:00:00Z",
-    warranty_provider: "Manufacturer",
-    warranty_terms: "3-year limited hardware warranty",
-  };
-
-  const mockInventoryItem: InventoryItem = {
-    id: "item_123",
-    sku: "RT-AC68U-001",
-    name: "ASUS RT-AC68U Wireless Router",
-    description: "Dual-band AC1900 wireless router",
-    category: "ROUTER",
-    manufacturer: "ASUS",
-    model: "RT-AC68U",
-    serial_number: "ASN123456789",
-    mac_address: "00:1A:2B:3C:4D:5E",
-    status: "IN_STOCK",
-    condition: "NEW",
-    location: mockLocation,
-    purchase_info: mockPurchaseInfo,
-    warranty_info: mockWarranty,
-    specifications: {
-      wireless_standard: "802.11ac",
-      max_speed: "1900 Mbps",
-      ports: 4,
-      frequency_bands: ["2.4GHz", "5GHz"],
-    },
-    cost: 125.0,
-    retail_price: 179.99,
-    created_at: "2024-01-15T08:00:00Z",
-    updated_at: "2024-01-15T08:00:00Z",
-  };
-
-  const mockWorkOrder: WorkOrder = {
-    id: "wo_123",
-    work_order_number: "WO-2024-1234",
-    type: "INSTALLATION",
-    customer_id: "cust_456",
-    customer_name: "Alice Johnson",
-    address: "456 Oak Street, Springfield, ST 12345",
-    scheduled_date: "2024-01-17T09:00:00Z",
-    technician_id: "tech_789",
-    technician_name: "John Doe",
-    status: "SCHEDULED",
-    required_equipment: [
-      {
-        sku: "RT-AC68U-001",
-        quantity: 1,
-        required: true,
-        alternatives: ["RT-AC66U-001"],
-      },
-      {
-        sku: "CBL-CAT6-100",
-        quantity: 2,
-        required: true,
-      },
-    ],
-    assigned_equipment: [],
-    notes: "Fiber installation with router setup",
-    created_at: "2024-01-15T10:00:00Z",
-    updated_at: "2024-01-16T08:00:00Z",
-  };
-
   describe("Inventory Items Management", () => {
+    const mockLocation: InventoryLocation = {
+      type: "WAREHOUSE",
+      location_id: "wh_main",
+      location_name: "Main Warehouse",
+      address: "123 Storage Ave, City, State",
+      coordinates: { latitude: 40.7128, longitude: -74.006 },
+      zone: "A",
+      bin_location: "A-15-C",
+    };
+
+    const mockPurchaseInfo: PurchaseInfo = {
+      vendor: "TechSupply Inc",
+      purchase_order: "PO-2024-0156",
+      purchase_date: "2024-01-10T00:00:00Z",
+      purchase_price: 125.0,
+      invoice_number: "INV-TS-2024-0234",
+    };
+
+    const mockWarranty: WarrantyInfo = {
+      warranty_period: 36,
+      warranty_start: "2024-01-15T00:00:00Z",
+      warranty_end: "2027-01-15T00:00:00Z",
+      warranty_provider: "Manufacturer",
+      warranty_terms: "3-year limited hardware warranty",
+    };
+
+    const mockInventoryItem: InventoryItem = {
+      id: "item_123",
+      sku: "RT-AC68U-001",
+      name: "ASUS RT-AC68U Wireless Router",
+      description: "Dual-band AC1900 wireless router",
+      category: "ROUTER",
+      manufacturer: "ASUS",
+      model: "RT-AC68U",
+      serial_number: "ASN123456789",
+      mac_address: "00:1A:2B:3C:4D:5E",
+      status: "IN_STOCK",
+      condition: "NEW",
+      location: mockLocation,
+      purchase_info: mockPurchaseInfo,
+      warranty_info: mockWarranty,
+      specifications: {
+        wireless_standard: "802.11ac",
+        max_speed: "1900 Mbps",
+        ports: 4,
+        frequency_bands: ["2.4GHz", "5GHz"],
+      },
+      cost: 125.0,
+      retail_price: 179.99,
+      created_at: "2024-01-15T08:00:00Z",
+      updated_at: "2024-01-15T08:00:00Z",
+    };
+
     it("should get inventory items with filtering", async () => {
       mockResponse({
         data: [mockInventoryItem],
@@ -480,6 +450,36 @@ describe("InventoryApiClient", () => {
   });
 
   describe("Work Order Management", () => {
+    const mockWorkOrder: WorkOrder = {
+      id: "wo_123",
+      work_order_number: "WO-2024-1234",
+      type: "INSTALLATION",
+      customer_id: "cust_456",
+      customer_name: "Alice Johnson",
+      address: "456 Oak Street, Springfield, ST 12345",
+      scheduled_date: "2024-01-17T09:00:00Z",
+      technician_id: "tech_789",
+      technician_name: "John Doe",
+      status: "SCHEDULED",
+      required_equipment: [
+        {
+          sku: "RT-AC68U-001",
+          quantity: 1,
+          required: true,
+          alternatives: ["RT-AC66U-001"],
+        },
+        {
+          sku: "CBL-CAT6-100",
+          quantity: 2,
+          required: true,
+        },
+      ],
+      assigned_equipment: [],
+      notes: "Fiber installation with router setup",
+      created_at: "2024-01-15T10:00:00Z",
+      updated_at: "2024-01-16T08:00:00Z",
+    };
+
     it("should create work order with equipment requirements", async () => {
       const workOrderData = {
         type: "INSTALLATION" as const,

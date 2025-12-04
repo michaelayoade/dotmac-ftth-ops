@@ -4,13 +4,8 @@ Notifications Module.
 User notification system with multi-channel delivery support.
 """
 
-import os
-
 # Import event listeners to register them with the event bus
-# Skip during migrations to avoid side effects
-if os.environ.get("DOTMAC_MIGRATIONS") != "1":
-    from dotmac.platform.notifications import event_listeners  # noqa: F401
-
+from dotmac.platform.notifications import event_listeners  # noqa: F401
 from dotmac.platform.notifications.models import (
     Notification,
     NotificationChannel,

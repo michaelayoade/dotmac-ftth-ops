@@ -26,12 +26,7 @@ function RuntimeConfigApplier({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (runtimeConfig) {
-      try {
-        applyPlatformRuntimeConfig(runtimeConfig);
-      } catch (err) {
-        // Prevent runtime-config application failures from crashing the page
-        console.error("[runtime-config] apply failed", err);
-      }
+      applyPlatformRuntimeConfig(runtimeConfig);
     }
   }, [runtimeConfig]);
 
@@ -43,8 +38,8 @@ function RuntimeConfigApplier({ children }: { children: ReactNode }) {
     <>
       {children}
       {showFallback ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 pointer-events-none">
-          <div className="pointer-events-auto w-full max-w-md rounded-lg border border-border bg-card shadow-xl p-6 space-y-3">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/80 backdrop-blur-sm px-6">
+          <div className="w-full max-w-md rounded-lg border border-border bg-card shadow-xl p-6 space-y-3">
             <div className="text-lg font-semibold text-foreground">Unable to load configuration</div>
             <p className="text-sm text-muted-foreground">
               We could not fetch the runtime settings required for this app. Please try again. If the

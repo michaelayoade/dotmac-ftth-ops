@@ -14,14 +14,11 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Enum,
-    CheckConstraint,
     ForeignKey,
-    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
-    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -62,37 +59,16 @@ class Workflow(Base, TimestampMixin):
     """
 
     __tablename__ = "workflows"
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "name", name="uq_workflows_tenant_name"),
-        Index(
-            "uq_workflows_global_name",
-            "name",
-            unique=True,
-            postgresql_where=text("tenant_id IS NULL AND is_global IS TRUE"),
-        ),
-        CheckConstraint(
-            "(is_global = TRUE AND tenant_id IS NULL) "
-            "OR (is_global = FALSE AND tenant_id IS NOT NULL)",
-            name="ck_workflows_scope",
-        ),
-    )
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_workflows_tenant_name"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     definition: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_global: Mapped[bool] = mapped_column(
-        Boolean, default=False, server_default=text("false"), nullable=False
-    )
     version: Mapped[str] = mapped_column(String(20), default="1.0.0")
     tags: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
-    tenant_id: Mapped[str | None] = mapped_column(
-        String(255),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        index=True,
-        nullable=True,
-    )
+    tenant_id: Mapped[str | None] = mapped_column(String(255), ForeignKey("tenants.id"), index=True)
 
     # Relationships
     executions: Mapped[list[WorkflowExecution]] = relationship(

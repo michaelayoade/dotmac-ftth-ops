@@ -1,0 +1,237 @@
+"""
+Invoice service tests - extracted from comprehensive test file.
+"""
+
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    TransactionEntity,
+)
+from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
+    PaymentStatus,
+    TransactionType,
+)
+from dotmac.platform.billing.core.exceptions import (
+    InvalidInvoiceStatusError,
+    InvoiceNotFoundError,
+)
+from dotmac.platform.billing.core.models import Invoice, InvoiceLineItem
+from dotmac.platform.billing.invoicing.service import InvoiceService
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestInvoiceServiceRetrieval:
+    """Test invoice retrieval functionality"""
+
+    @pytest.mark.asyncio
+    async def test_get_invoice_with_line_items(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test getting invoice with line items"""
+        # Mock database query
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Get invoice
+        result = await invoice_service.get_invoice(
+            sample_tenant_id, mock_invoice_entity.invoice_id, include_line_items=True
+        )
+
+        # Verify result
+        assert result.invoice_id == mock_invoice_entity.invoice_id
+        assert result.tenant_id == sample_tenant_id
+        assert len(result.line_items) == 2
+
+    @pytest.mark.asyncio
+    async def test_get_invoice_without_line_items(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test getting invoice without line items"""
+        # Mock database query
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Get invoice
+        result = await invoice_service.get_invoice(
+            sample_tenant_id, mock_invoice_entity.invoice_id, include_line_items=False
+        )
+
+        # Verify result
+        assert result.invoice_id == mock_invoice_entity.invoice_id
+        mock_db_session.execute.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_invoice_not_found(self, invoice_service, mock_db_session, sample_tenant_id):
+        """Test getting non-existent invoice"""
+        # Mock database query - invoice not found
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Get invoice
+        result = await invoice_service.get_invoice(sample_tenant_id, str(uuid4()))
+
+        # Verify result is None
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_list_invoices_with_filters(
+        self, invoice_service, mock_db_session, sample_tenant_id, sample_customer_id
+    ):
+        """Test listing invoices with various filters"""
+        # Create mock invoices with all required fields
+        mock_invoices = []
+        for i in range(3):
+            entity = MagicMock(spec=InvoiceEntity)
+            entity.tenant_id = sample_tenant_id
+            entity.invoice_id = str(uuid4())
+            entity.invoice_number = f"INV-2024-00000{i+1}"
+            entity.customer_id = sample_customer_id
+            entity.status = InvoiceStatus.OPEN
+            entity.payment_status = PaymentStatus.PENDING
+            entity.total_amount = 10000 * (i + 1)
+            entity.issue_date = datetime.now(timezone.utc) - timedelta(days=i)
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
+            entity.total_credits_applied = 0
+            entity.credit_applications = []
+            # Create mock line items
+            line_items = []
+            for j in range(2):
+                item = MagicMock()
+                item.line_item_id = str(uuid4())
+                item.description = f"Item {j+1}"
+                item.quantity = 1
+                item.unit_price = 5000
+                item.total_price = 5000
+                item.tax_rate = 0
+                item.tax_amount = 0
+                item.discount_percentage = 0
+                item.discount_amount = 0
+                item.product_id = None
+                item.subscription_id = None
+                item.extra_data = {}
+                line_items.append(item)
+            entity.line_items = line_items
+            entity.currency = "USD"
+            entity.billing_email = "test@example.com"
+            entity.billing_address = {}
+            entity.due_date = datetime.now(timezone.utc) + timedelta(days=30)
+            entity.subtotal = 10000 * (i + 1)
+            entity.tax_amount = 0
+            entity.discount_amount = 0
+            entity.remaining_balance = 10000 * (i + 1)
+            entity.notes = None
+            entity.internal_notes = None
+            entity.extra_data = {}
+            entity.paid_at = None
+            entity.voided_at = None
+            entity.created_by = "system"
+            entity.idempotency_key = None
+            entity.subscription_id = None
+            entity.proforma_invoice_id = None
+            mock_invoices.append(entity)
+
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = mock_invoices
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # List invoices with filters
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
+        end_date = datetime.now(timezone.utc)
+
+        result = await invoice_service.list_invoices(
+            tenant_id=sample_tenant_id,
+            customer_id=sample_customer_id,
+            status=InvoiceStatus.OPEN,
+            payment_status=PaymentStatus.PENDING,
+            start_date=start_date,
+            end_date=end_date,
+            limit=10,
+            offset=0,
+        )
+
+        # Verify results
+        assert len(result) == 3
+        assert all(inv.tenant_id == sample_tenant_id for inv in result)
+        assert all(inv.customer_id == sample_customer_id for inv in result)
+
+    @pytest.mark.asyncio
+    async def test_list_invoices_no_filters(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test listing invoices without filters"""
+        # Create mock invoices with all required fields
+        mock_invoices = []
+        for _ in range(5):
+            inv = MagicMock(spec=InvoiceEntity)
+            inv.tenant_id = sample_tenant_id
+            inv.invoice_id = str(uuid4())
+            inv.invoice_number = f"INV-2024-{uuid4().hex[:6]}"
+            inv.customer_id = "customer-123"
+            inv.status = InvoiceStatus.OPEN
+            inv.payment_status = PaymentStatus.PENDING
+            inv.created_at = datetime.now(timezone.utc)
+            inv.updated_at = datetime.now(timezone.utc)
+            inv.total_credits_applied = 0
+            inv.credit_applications = []
+            # Create mock line items
+            line_items = []
+            for j in range(2):
+                item = MagicMock()
+                item.line_item_id = str(uuid4())
+                item.description = f"Item {j+1}"
+                item.quantity = 1
+                item.unit_price = 5000
+                item.total_price = 5000
+                item.tax_rate = 0
+                item.tax_amount = 0
+                item.discount_percentage = 0
+                item.discount_amount = 0
+                item.product_id = None
+                item.subscription_id = None
+                item.extra_data = {}
+                line_items.append(item)
+            inv.line_items = line_items
+            inv.currency = "USD"
+            inv.billing_email = "test@example.com"
+            inv.billing_address = {}
+            inv.issue_date = datetime.now(timezone.utc)
+            inv.due_date = datetime.now(timezone.utc) + timedelta(days=30)
+            inv.subtotal = 10000
+            inv.tax_amount = 0
+            inv.discount_amount = 0
+            inv.total_amount = 10000
+            inv.remaining_balance = 10000
+            inv.notes = None
+            inv.internal_notes = None
+            inv.extra_data = {}
+            inv.paid_at = None
+            inv.voided_at = None
+            inv.created_by = "system"
+            inv.idempotency_key = None
+            inv.subscription_id = None
+            inv.proforma_invoice_id = None
+            mock_invoices.append(inv)
+
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = mock_invoices
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # List all invoices for tenant
+        result = await invoice_service.list_invoices(tenant_id=sample_tenant_id)
+
+        # Verify results
+        assert len(result) == 5
+        mock_db_session.execute.assert_called_once()

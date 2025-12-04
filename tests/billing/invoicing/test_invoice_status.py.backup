@@ -1,0 +1,178 @@
+"""
+Invoice service tests - extracted from comprehensive test file.
+"""
+
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    TransactionEntity,
+)
+from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
+    PaymentStatus,
+    TransactionType,
+)
+from dotmac.platform.billing.core.exceptions import (
+    InvalidInvoiceStatusError,
+    InvoiceNotFoundError,
+)
+from dotmac.platform.billing.core.models import Invoice, InvoiceLineItem
+from dotmac.platform.billing.invoicing.service import InvoiceService
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestInvoiceServiceStatusManagement:
+    """Test invoice status management functionality"""
+
+    @pytest.mark.asyncio
+    async def test_finalize_invoice_success(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test finalizing a draft invoice"""
+        # Set invoice to draft status
+        mock_invoice_entity.status = InvoiceStatus.DRAFT
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Finalize invoice
+        result = await invoice_service.finalize_invoice(
+            sample_tenant_id, mock_invoice_entity.invoice_id
+        )
+
+        # Verify status update
+        assert mock_invoice_entity.status == InvoiceStatus.OPEN
+        mock_db_session.commit.assert_called()
+        mock_db_session.refresh.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_finalize_invoice_not_found(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test finalizing non-existent invoice"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to finalize non-existent invoice
+        with pytest.raises(InvoiceNotFoundError):
+            await invoice_service.finalize_invoice(sample_tenant_id, str(uuid4()))
+
+    @pytest.mark.asyncio
+    async def test_finalize_invoice_invalid_status(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test finalizing invoice with invalid status"""
+        # Set invoice to open status (not draft)
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to finalize non-draft invoice
+        with pytest.raises(InvalidInvoiceStatusError):
+            await invoice_service.finalize_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
+
+    @pytest.mark.asyncio
+    async def test_void_invoice_success(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test voiding an invoice"""
+        # Set invoice to open status
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+        mock_invoice_entity.payment_status = PaymentStatus.PENDING
+        mock_invoice_entity.internal_notes = ""
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Void invoice
+        result = await invoice_service.void_invoice(
+            sample_tenant_id,
+            mock_invoice_entity.invoice_id,
+            reason="Test void",
+            voided_by="user123",
+        )
+
+        # Verify status update
+        assert mock_invoice_entity.status == InvoiceStatus.VOID
+        assert mock_invoice_entity.voided_at is not None
+        assert "Voided: Test void" in mock_invoice_entity.internal_notes
+        assert mock_invoice_entity.updated_by == "user123"
+        mock_db_session.commit.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_void_invoice_already_voided(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test voiding already voided invoice"""
+        # Set invoice to void status
+        mock_invoice_entity.status = InvoiceStatus.VOID
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Void already voided invoice - should return without error
+        result = await invoice_service.void_invoice(
+            sample_tenant_id, mock_invoice_entity.invoice_id
+        )
+
+        # Verify invoice is returned unchanged
+        assert result.status == InvoiceStatus.VOID
+
+    @pytest.mark.asyncio
+    async def test_void_paid_invoice_fails(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test voiding a paid invoice fails"""
+        # Set invoice to paid status
+        mock_invoice_entity.status = InvoiceStatus.PAID
+        mock_invoice_entity.payment_status = PaymentStatus.SUCCEEDED
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to void paid invoice
+        with pytest.raises(InvalidInvoiceStatusError):
+            await invoice_service.void_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
+
+    @pytest.mark.asyncio
+    async def test_void_partially_refunded_invoice_fails(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test voiding a partially refunded invoice fails"""
+        # Set invoice to partially refunded status
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+        mock_invoice_entity.payment_status = PaymentStatus.PARTIALLY_REFUNDED
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to void partially refunded invoice
+        with pytest.raises(InvalidInvoiceStatusError):
+            await invoice_service.void_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
+
+    @pytest.mark.asyncio
+    async def test_void_invoice_not_found(self, invoice_service, mock_db_session, sample_tenant_id):
+        """Test voiding non-existent invoice"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to void non-existent invoice
+        with pytest.raises(InvoiceNotFoundError):
+            await invoice_service.void_invoice(sample_tenant_id, str(uuid4()))

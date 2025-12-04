@@ -8,7 +8,6 @@ import { getRuntimeConfigSnapshot } from "../../../shared/runtime/runtime-config
  */
 
 const DEFAULT_API_PREFIX = "/api/isp/v1/admin";
-const IS_ISP_PORTAL = process.env["NEXT_PUBLIC_PORTAL_TYPE"] === "isp";
 
 const rawApiBaseUrl =
   process.env["NEXT_PUBLIC_API_BASE_URL"] ??
@@ -44,59 +43,51 @@ const FEATURE_FLAG_KEY_MAP: Record<string, string> = {
  */
 const defaultBranding = buildBrandingConfig();
 
-const appConfig = {
-  name: process.env["NEXT_PUBLIC_APP_NAME"] || "DotMac Platform",
-  version: process.env["NEXT_PUBLIC_APP_VERSION"] || "1.0.0",
-  environment: process.env["NEXT_PUBLIC_ENVIRONMENT"] || "development",
-};
-
-const tenantConfig = {
-  id: process.env["NEXT_PUBLIC_TENANT_ID"] || null,
-  slug: process.env["TENANT_SLUG"] || null,
-  name:
-    process.env["NEXT_PUBLIC_TENANT_NAME"] ||
-    process.env["NEXT_PUBLIC_PRODUCT_NAME"] ||
-    "DotMac Platform",
-};
-
-const apiConfig = {
-  // Empty string - all API calls use full paths like /api/isp/v1/admin/...
-  // Next.js rewrites in next.config.mjs proxy these to the backend
-  baseUrl: apiBaseUrl,
-  prefix: apiPrefix,
-  timeout: 30000,
-  buildUrl: buildApiUrl,
-  buildPath: buildApiPath,
-  graphqlEndpoint: buildApiUrl("/graphql"),
-};
-
-const featuresConfig = {
-  enableGraphQL: process.env["NEXT_PUBLIC_ENABLE_GRAPHQL"] === "true",
-  enableAnalytics: process.env["NEXT_PUBLIC_ENABLE_ANALYTICS"] === "true",
-  enableBanking: process.env["NEXT_PUBLIC_ENABLE_BANKING"] === "true",
-  enablePayments: process.env["NEXT_PUBLIC_ENABLE_PAYMENTS"] === "true",
-  enableRadius: process.env["NEXT_PUBLIC_ENABLE_RADIUS"] !== "false",
-  enableNetwork: process.env["NEXT_PUBLIC_ENABLE_NETWORK"] !== "false",
-  enableAutomation: process.env["NEXT_PUBLIC_ENABLE_AUTOMATION"] !== "false",
-};
-
 export const platformConfig = {
   /**
    * API configuration
    */
-  api: apiConfig,
+  api: {
+    // Empty string - all API calls use full paths like /api/isp/v1/admin/...
+    // Next.js rewrites in next.config.mjs proxy these to the backend
+    baseUrl: apiBaseUrl,
+    prefix: apiPrefix,
+    timeout: 30000,
+    buildUrl: buildApiUrl,
+    buildPath: buildApiPath,
+    graphqlEndpoint: buildApiUrl("/graphql"),
+  },
 
   /**
    * Feature flags
    */
-  features: featuresConfig,
+  features: {
+    enableGraphQL: process.env["NEXT_PUBLIC_ENABLE_GRAPHQL"] === "true",
+    enableAnalytics: process.env["NEXT_PUBLIC_ENABLE_ANALYTICS"] === "true",
+    enableBanking: process.env["NEXT_PUBLIC_ENABLE_BANKING"] === "true",
+    enablePayments: process.env["NEXT_PUBLIC_ENABLE_PAYMENTS"] === "true",
+    enableRadius: process.env["NEXT_PUBLIC_ENABLE_RADIUS"] !== "false",
+    enableNetwork: process.env["NEXT_PUBLIC_ENABLE_NETWORK"] !== "false",
+    enableAutomation: process.env["NEXT_PUBLIC_ENABLE_AUTOMATION"] !== "false",
+  },
 
   /**
    * Application metadata
    */
-  app: appConfig,
+  app: {
+    name: process.env["NEXT_PUBLIC_APP_NAME"] || "DotMac Platform",
+    version: process.env["NEXT_PUBLIC_APP_VERSION"] || "1.0.0",
+    environment: process.env["NEXT_PUBLIC_ENVIRONMENT"] || "development",
+  },
 
-  tenant: tenantConfig,
+  tenant: {
+    id: process.env["NEXT_PUBLIC_TENANT_ID"] || null,
+    slug: process.env["TENANT_SLUG"] || null,
+    name:
+      process.env["NEXT_PUBLIC_TENANT_NAME"] ||
+      process.env["NEXT_PUBLIC_PRODUCT_NAME"] ||
+      "DotMac Platform",
+  },
 
   /**
    * Banking configuration
@@ -165,13 +156,11 @@ export function applyPlatformRuntimeConfig(runtimeConfig: RuntimeConfig | null |
   hydrateFeatures(runtimeConfig.features);
   hydrateBranding(runtimeConfig.branding);
 
-  if (runtimeConfig.app) {
-    platformConfig.app = {
-      ...platformConfig.app,
-      ...runtimeConfig.app,
-      name: runtimeConfig.app.name ?? platformConfig.app.name,
-      environment: runtimeConfig.app.environment ?? platformConfig.app.environment,
-    };
+  if (runtimeConfig.app?.name) {
+    platformConfig.app.name = runtimeConfig.app.name;
+  }
+  if (runtimeConfig.app?.environment) {
+    platformConfig.app.environment = runtimeConfig.app.environment;
   }
 
   if (runtimeConfig.tenant) {
@@ -181,37 +170,34 @@ export function applyPlatformRuntimeConfig(runtimeConfig: RuntimeConfig | null |
   }
 
   if (runtimeConfig.realtime) {
-    platformConfig.realtime = {
-      ...platformConfig.realtime,
-      wsUrl: runtimeConfig.realtime.wsUrl || platformConfig.realtime.wsUrl,
-      sseUrl: runtimeConfig.realtime.sseUrl || platformConfig.realtime.sseUrl,
-      alertsChannel: runtimeConfig.realtime.alertsChannel || platformConfig.realtime.alertsChannel,
-    };
+    platformConfig.realtime.wsUrl = runtimeConfig.realtime.wsUrl || platformConfig.realtime.wsUrl;
+    platformConfig.realtime.sseUrl =
+      runtimeConfig.realtime.sseUrl || platformConfig.realtime.sseUrl;
+    platformConfig.realtime.alertsChannel =
+      runtimeConfig.realtime.alertsChannel || platformConfig.realtime.alertsChannel;
   }
 
   if (runtimeConfig.deployment) {
-    platformConfig.deployment = {
-      ...platformConfig.deployment,
-      mode: runtimeConfig.deployment.mode || platformConfig.deployment.mode,
-      tenantId: runtimeConfig.deployment.tenantId ?? platformConfig.deployment.tenantId,
-      platformRoutesEnabled:
-        runtimeConfig.deployment.platformRoutesEnabled ??
-        platformConfig.deployment.platformRoutesEnabled,
-    };
+    platformConfig.deployment.mode =
+      runtimeConfig.deployment.mode || platformConfig.deployment.mode;
+    platformConfig.deployment.tenantId =
+      runtimeConfig.deployment.tenantId ?? platformConfig.deployment.tenantId;
+    platformConfig.deployment.platformRoutesEnabled =
+      runtimeConfig.deployment.platformRoutesEnabled ??
+      platformConfig.deployment.platformRoutesEnabled;
   }
 
   if (runtimeConfig.license) {
-    platformConfig.license = {
-      ...platformConfig.license,
-      allowMultiTenant:
-        runtimeConfig.license.allowMultiTenant ?? platformConfig.license.allowMultiTenant,
-      enforcePlatformAdmin:
-        runtimeConfig.license.enforcePlatformAdmin ?? platformConfig.license.enforcePlatformAdmin,
-    };
+    platformConfig.license.allowMultiTenant =
+      runtimeConfig.license.allowMultiTenant ?? platformConfig.license.allowMultiTenant;
+    platformConfig.license.enforcePlatformAdmin =
+      runtimeConfig.license.enforcePlatformAdmin ?? platformConfig.license.enforcePlatformAdmin;
   }
 }
 
 export default platformConfig;
+
+const IS_ISP_PORTAL = process.env["NEXT_PUBLIC_PORTAL_TYPE"] === "isp";
 
 function hydrateApiConfig(api?: RuntimeConfig["api"]) {
   if (!api) {
@@ -224,22 +210,16 @@ function hydrateApiConfig(api?: RuntimeConfig["api"]) {
   }
 
   if (typeof api.restPath === "string") {
-    const shouldApplyRestPath = !(IS_ISP_PORTAL && api.restPath.startsWith("/api/platform/"));
+    const shouldApplyRestPath = !(
+      IS_ISP_PORTAL && api.restPath.startsWith("/api/platform/")
+    );
     if (shouldApplyRestPath) {
       apiPrefix = normalizeApiPrefix(api.restPath);
     }
   }
 
-  // Enforce ISP admin prefix to avoid drifting to platform endpoints
-  if (!apiPrefix.startsWith(DEFAULT_API_PREFIX)) {
-    apiPrefix = DEFAULT_API_PREFIX;
-  }
-
-  platformConfig.api = {
-    ...platformConfig.api,
-    prefix: apiPrefix,
-    graphqlEndpoint: api.graphqlUrl || buildApiUrl("/graphql"),
-  };
+  platformConfig.api.prefix = apiPrefix;
+  platformConfig.api.graphqlEndpoint = api.graphqlUrl || buildApiUrl("/graphql");
 }
 
 function hydrateFeatures(features?: RuntimeConfig["features"]) {
@@ -452,36 +432,21 @@ function sanitizeBaseUrl(value?: string | null): string {
   }
 
   const withoutTrailingSlash = trimmed.replace(/\/+$/, "");
-  // Strip common API prefixes if they were embedded in the base URL
-  return withoutTrailingSlash.replace(
-    /(\/api(?:\/(platform|isp)\/v1\/(admin|partners|portal))?)$/i,
-    "",
-  );
+  return withoutTrailingSlash.replace(/\/api(?:\/v1)?$/i, "");
 }
 
 function normalizeApiPrefix(value: string): string {
-  const fallback = DEFAULT_API_PREFIX;
-
   if (!value) {
-    return fallback;
+    return DEFAULT_API_PREFIX;
   }
 
   const trimmed = value.trim();
   if (!trimmed) {
-    return fallback;
+    return DEFAULT_API_PREFIX;
   }
 
   const withLeadingSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-  // Collapse duplicate admin prefixes that may arise from misconfigured env vars
-  const deduped = withLeadingSlash
-    .replace(/(\/api\/isp\/v1\/admin)+(\/?)/i, "/api/isp/v1/admin$2")
-    .replace(/(\/api\/platform\/v1\/admin)+(\/?)/i, "/api/platform/v1/admin$2");
-
-  if (IS_ISP_PORTAL && deduped.startsWith("/api/platform/")) {
-    return fallback;
-  }
-
-  return deduped.replace(/\/+$/, "") || fallback;
+  return withLeadingSlash.replace(/\/+$/, "");
 }
 
 function ensureLeadingSlash(path: string): string {

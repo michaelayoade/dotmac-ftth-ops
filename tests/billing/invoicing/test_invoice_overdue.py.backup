@@ -1,0 +1,119 @@
+"""
+Invoice service tests - extracted from comprehensive test file.
+"""
+
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    TransactionEntity,
+)
+from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
+    PaymentStatus,
+    TransactionType,
+)
+from dotmac.platform.billing.core.exceptions import (
+    InvalidInvoiceStatusError,
+    InvoiceNotFoundError,
+)
+from dotmac.platform.billing.core.models import Invoice, InvoiceLineItem
+from dotmac.platform.billing.invoicing.service import InvoiceService
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestInvoiceServiceOverdueManagement:
+    """Test invoice overdue management functionality"""
+
+    @pytest.mark.asyncio
+    async def test_check_overdue_invoices(self, invoice_service, mock_db_session, sample_tenant_id):
+        """Test checking and updating overdue invoices"""
+        # Create mock overdue invoices with all required fields
+        overdue_invoices = []
+        for i in range(3):
+            entity = MagicMock(spec=InvoiceEntity)
+            entity.tenant_id = sample_tenant_id
+            entity.invoice_id = str(uuid4())
+            entity.invoice_number = f"INV-2024-OVERDUE-{i+1}"
+            entity.status = InvoiceStatus.OPEN
+            entity.due_date = datetime.now(timezone.utc) - timedelta(days=10)
+            entity.payment_status = PaymentStatus.PENDING
+            entity.customer_id = "customer-123"
+            entity.created_at = datetime.now(timezone.utc) - timedelta(days=20)
+            entity.updated_at = datetime.now(timezone.utc)
+            entity.total_credits_applied = 0
+            entity.credit_applications = []
+            # Create mock line items
+            line_items = []
+            for j in range(2):
+                item = MagicMock()
+                item.line_item_id = str(uuid4())
+                item.description = f"Item {j+1}"
+                item.quantity = 1
+                item.unit_price = 5000
+                item.total_price = 5000
+                item.tax_rate = 0
+                item.tax_amount = 0
+                item.discount_percentage = 0
+                item.discount_amount = 0
+                item.product_id = None
+                item.subscription_id = None
+                item.extra_data = {}
+                line_items.append(item)
+            entity.line_items = line_items
+            entity.currency = "USD"
+            entity.billing_email = "test@example.com"
+            entity.billing_address = {}
+            entity.issue_date = datetime.now(timezone.utc) - timedelta(days=40)
+            entity.subtotal = 10000
+            entity.tax_amount = 0
+            entity.discount_amount = 0
+            entity.total_amount = 10000
+            entity.remaining_balance = 10000
+            entity.notes = None
+            entity.internal_notes = None
+            entity.extra_data = {}
+            entity.paid_at = None
+            entity.voided_at = None
+            entity.created_by = "system"
+            entity.idempotency_key = None
+            entity.subscription_id = None
+            entity.proforma_invoice_id = None
+            overdue_invoices.append(entity)
+
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = overdue_invoices
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Check overdue invoices
+        result = await invoice_service.check_overdue_invoices(sample_tenant_id)
+
+        # Verify status updates
+        assert len(result) == 3
+        for entity in overdue_invoices:
+            assert entity.status == InvoiceStatus.OVERDUE
+            assert entity.updated_at is not None
+        mock_db_session.commit.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_check_overdue_invoices_none_found(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test checking overdue invoices when none exist"""
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Check overdue invoices
+        result = await invoice_service.check_overdue_invoices(sample_tenant_id)
+
+        # Verify no invoices returned
+        assert len(result) == 0
+        mock_db_session.commit.assert_not_called()

@@ -7,15 +7,6 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const stripApiPrefix = (value) => {
-  if (!value) return value;
-  const withoutTrailingSlash = value.replace(/\/+$/, '');
-  return withoutTrailingSlash.replace(
-    /(\/api(?:\/(platform|isp)\/v1\/(admin|partners|portal))?)$/i,
-    '',
-  );
-};
-
 /** @type {import('next').NextConfig} */
 const sharedPackageAliases = {
   '@shared': '../../shared',
@@ -67,17 +58,8 @@ const nextConfig = {
   async rewrites() {
     // Use INTERNAL_API_URL for server-side rewrites (container-to-container)
     // Falls back to NEXT_PUBLIC_API_BASE_URL for local dev
-    const rawBackend =
-      process.env['INTERNAL_API_URL'] ||
-      process.env['NEXT_PUBLIC_API_BASE_URL'] ||
-      'http://localhost:8001';
-    const backendUrl = stripApiPrefix(rawBackend);
+    const backendUrl = process.env['INTERNAL_API_URL'] || process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8001';
     return [
-      {
-        // Normalize accidental double-prefixes (e.g., /api/platform/v1/admin/api/v1/platform/...)
-        source: '/api/platform/v1/admin/api/v1/platform/:path*',
-        destination: `${backendUrl}/api/platform/v1/admin/:path*`,
-      },
       {
         source: '/api/v1/platform/:path*',
         destination: `${backendUrl}/api/platform/v1/admin/:path*`,

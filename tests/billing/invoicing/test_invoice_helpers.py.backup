@@ -1,0 +1,171 @@
+"""
+Invoice service tests - extracted from comprehensive test file.
+"""
+
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    TransactionEntity,
+)
+from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
+    PaymentStatus,
+    TransactionType,
+)
+from dotmac.platform.billing.core.exceptions import (
+    InvalidInvoiceStatusError,
+    InvoiceNotFoundError,
+)
+from dotmac.platform.billing.core.models import Invoice, InvoiceLineItem
+from dotmac.platform.billing.invoicing.service import InvoiceService
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestInvoiceServiceHelpers:
+    """Test invoice service helper methods"""
+
+    @pytest.mark.asyncio
+    async def test_generate_invoice_number_first(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test generating first invoice number for tenant"""
+        # Mock no existing invoices
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Generate invoice number
+        invoice_number = await invoice_service._generate_invoice_number(sample_tenant_id)
+
+        # Verify format
+        year = datetime.now(timezone.utc).year
+        assert invoice_number == f"INV-{year}-000001"
+
+    @pytest.mark.asyncio
+    async def test_generate_invoice_number_sequential(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test generating sequential invoice numbers"""
+        year = datetime.now(timezone.utc).year
+
+        # Mock existing invoice
+        mock_invoice = MagicMock()
+        mock_invoice.invoice_number = f"INV-{year}-000042"
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Generate next invoice number
+        invoice_number = await invoice_service._generate_invoice_number(sample_tenant_id)
+
+        # Verify sequential increment
+        assert invoice_number == f"INV-{year}-000043"
+
+    @pytest.mark.asyncio
+    async def test_get_invoice_entity_found(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test getting invoice entity by ID"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Get invoice entity
+        entity = await invoice_service._get_invoice_entity(
+            sample_tenant_id, mock_invoice_entity.invoice_id
+        )
+
+        # Verify entity returned
+        assert entity == mock_invoice_entity
+        mock_db_session.execute.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_invoice_entity_not_found(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test getting non-existent invoice entity"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Get invoice entity
+        entity = await invoice_service._get_invoice_entity(sample_tenant_id, str(uuid4()))
+
+        # Verify None returned
+        assert entity is None
+
+    @pytest.mark.asyncio
+    async def test_get_invoice_by_idempotency_key_found(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test getting invoice by idempotency key"""
+        idempotency_key = "test-key"
+        mock_invoice_entity.idempotency_key = idempotency_key
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Get invoice by idempotency key
+        entity = await invoice_service._get_invoice_by_idempotency_key(
+            sample_tenant_id, idempotency_key
+        )
+
+        # Verify entity returned
+        assert entity == mock_invoice_entity
+        assert entity.idempotency_key == idempotency_key
+
+    @pytest.mark.asyncio
+    async def test_create_invoice_transaction(
+        self, invoice_service, mock_db_session, mock_invoice_entity
+    ):
+        """Test creating invoice transaction"""
+        await invoice_service._create_invoice_transaction(mock_invoice_entity)
+
+        # Verify transaction was added
+        mock_db_session.add.assert_called_once()
+        added_transaction = mock_db_session.add.call_args[0][0]
+        assert isinstance(added_transaction, TransactionEntity)
+        assert added_transaction.tenant_id == mock_invoice_entity.tenant_id
+        assert added_transaction.amount == mock_invoice_entity.total_amount
+        assert added_transaction.transaction_type == TransactionType.CHARGE
+        assert added_transaction.customer_id == mock_invoice_entity.customer_id
+        assert added_transaction.invoice_id == mock_invoice_entity.invoice_id
+        mock_db_session.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_create_void_transaction(
+        self, invoice_service, mock_db_session, mock_invoice_entity
+    ):
+        """Test creating void transaction"""
+        await invoice_service._create_void_transaction(mock_invoice_entity)
+
+        # Verify void transaction was added
+        mock_db_session.add.assert_called_once()
+        added_transaction = mock_db_session.add.call_args[0][0]
+        assert isinstance(added_transaction, TransactionEntity)
+        assert added_transaction.tenant_id == mock_invoice_entity.tenant_id
+        assert (
+            added_transaction.amount == -mock_invoice_entity.total_amount
+        )  # Negative amount for void
+        assert added_transaction.transaction_type == TransactionType.ADJUSTMENT
+        assert added_transaction.customer_id == mock_invoice_entity.customer_id
+        assert added_transaction.invoice_id == mock_invoice_entity.invoice_id
+        assert added_transaction.extra_data["action"] == "void"
+        mock_db_session.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_send_invoice_notification(self, invoice_service, mock_invoice_entity):
+        """Test send invoice notification (placeholder)"""
+        # This is currently a placeholder method
+        await invoice_service._send_invoice_notification(mock_invoice_entity)
+        # No assertions needed as it's a placeholder

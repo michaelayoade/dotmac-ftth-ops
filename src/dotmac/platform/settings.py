@@ -1404,16 +1404,6 @@ class Settings(BaseSettings):
             None, description="Storage URL for distributed rate limiting"
         )
         key_prefix: str = Field("rate_limit", description="Key prefix for storage")
-        test_mode: bool = Field(
-            False,
-            description="Increase rate limits for automated tests (disabled in production)",
-        )
-        test_mode_multiplier: int = Field(
-            20,
-            ge=1,
-            le=1000,
-            description="Multiplier applied to limits when test_mode is enabled",
-        )
 
         # Per-endpoint limits
         endpoint_limits: dict[str, str] = Field(

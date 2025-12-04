@@ -1,8 +1,6 @@
-import { ensureStoragePolyfill } from "./polyfills";
+import "./polyfills";
 import { test as base, expect, type Page } from "@playwright/test";
 import { server } from "./msw-setup";
-
-ensureStoragePolyfill();
 
 type TestFixtures = {
   login: (page: Page) => Promise<void>;
@@ -30,7 +28,6 @@ export const test = base.extend<TestFixtures>({
 });
 
 test.beforeEach(async () => {
-  ensureStoragePolyfill();
   server.resetHandlers();
 });
 

@@ -1,0 +1,911 @@
+# ============================================================================
+# Customer Management GraphQL Queries
+# ============================================================================
+# These queries replace REST API calls in useCustomersQuery.ts
+# with efficient batched loading and conditional field loading.
+#
+# Backend: src/dotmac/platform/graphql/queries/customer.py
+# DataLoaders: customer_activity_loader, customer_note_loader
+# ============================================================================
+
+# ============================================================================
+# Customer List Query
+# ============================================================================
+# Replaces: GET /customers
+# Benefits:
+# - Single query vs multiple REST calls
+# - Conditional loading of activities/notes
+# - Batched loading prevents N+1 queries
+# ============================================================================
+
+query CustomerList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $status: CustomerStatusEnum
+  $search: String
+  $includeActivities: Boolean = false
+  $includeNotes: Boolean = false
+) {
+  customers(
+    limit: $limit
+    offset: $offset
+    status: $status
+    search: $search
+    includeActivities: $includeActivities
+    includeNotes: $includeNotes
+  ) {
+    customers {
+      id
+      customerNumber
+
+      # Basic information
+      firstName
+      lastName
+      middleName
+      displayName
+      companyName
+
+      # Account information
+      status
+      customerType
+      tier
+
+      # Contact information
+      email
+      emailVerified
+      phone
+      phoneVerified
+      mobile
+
+      # Address
+      addressLine1
+      addressLine2
+      city
+      stateProvince
+      postalCode
+      country
+
+      # Business info
+      taxId
+      industry
+      employeeCount
+
+      # Metrics
+      lifetimeValue
+      totalPurchases
+      averageOrderValue
+      lastPurchaseDate
+
+      # Dates
+      createdAt
+      updatedAt
+      acquisitionDate
+      lastContactDate
+
+      # Conditionally loaded relationships
+      activities @include(if: $includeActivities) {
+        id
+        customerId
+        activityType
+        title
+        description
+        performedBy
+        createdAt
+      }
+
+      notes @include(if: $includeNotes) {
+        id
+        customerId
+        subject
+        content
+        isInternal
+        createdById
+        createdAt
+        updatedAt
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+# ============================================================================
+# Customer Detail Query
+# ============================================================================
+# Replaces:
+# - GET /customers/{id}
+# - GET /customers/{id}/activities
+# - GET /customers/{id}/notes
+#
+# Benefits:
+# - 3 REST calls → 1 GraphQL query (66% reduction)
+# - Activities and notes batched via DataLoaders
+# ============================================================================
+
+query CustomerDetail($id: ID!) {
+  customer(id: $id, includeActivities: true, includeNotes: true) {
+    id
+    customerNumber
+
+    # Basic information
+    firstName
+    lastName
+    middleName
+    displayName
+    companyName
+
+    # Account information
+    status
+    customerType
+    tier
+
+    # Contact information
+    email
+    emailVerified
+    phone
+    phoneVerified
+    mobile
+
+    # Address
+    addressLine1
+    addressLine2
+    city
+    stateProvince
+    postalCode
+    country
+
+    # Business info
+    taxId
+    industry
+    employeeCount
+
+    # Metrics
+    lifetimeValue
+    totalPurchases
+    averageOrderValue
+    lastPurchaseDate
+
+    # Dates
+    createdAt
+    updatedAt
+    acquisitionDate
+    lastContactDate
+
+    # Relationships (always loaded for detail view)
+    activities {
+      id
+      customerId
+      activityType
+      title
+      description
+      performedBy
+      createdAt
+    }
+
+    notes {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+# ============================================================================
+# Customer Metrics Query
+# ============================================================================
+# Replaces: Custom aggregation logic in components
+# Benefits:
+# - Server-side aggregation
+# - Real-time metrics
+# - Single efficient query
+# ============================================================================
+
+query CustomerMetrics {
+  customerMetrics {
+    totalCustomers
+    activeCustomers
+    newCustomers
+    churnedCustomers
+    totalCustomerValue
+    averageCustomerValue
+  }
+}
+
+# ============================================================================
+# Customer Activities Query
+# ============================================================================
+# Replaces: GET /customers/{id}/activities
+# Used when only activities are needed without full customer data
+# ============================================================================
+
+query CustomerActivities($id: ID!) {
+  customer(id: $id, includeActivities: true, includeNotes: false) {
+    id
+    activities {
+      id
+      customerId
+      activityType
+      title
+      description
+      performedBy
+      createdAt
+    }
+  }
+}
+
+# ============================================================================
+# Customer Notes Query
+# ============================================================================
+# Replaces: GET /customers/{id}/notes
+# Used when only notes are needed without full customer data
+# ============================================================================
+
+query CustomerNotes($id: ID!) {
+  customer(id: $id, includeActivities: false, includeNotes: true) {
+    id
+    notes {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+# ============================================================================
+# Customer List with Metrics (Dashboard View)
+# ============================================================================
+# Combined query for dashboard that needs both list and metrics
+# Benefits:
+# - 2+ REST calls → 1 GraphQL query
+# - Single round trip
+# ============================================================================
+
+query CustomerDashboard(
+  $limit: Int = 20
+  $offset: Int = 0
+  $status: CustomerStatusEnum
+  $search: String
+) {
+  customers(
+    limit: $limit
+    offset: $offset
+    status: $status
+    search: $search
+    includeActivities: false
+    includeNotes: false
+  ) {
+    customers {
+      id
+      customerNumber
+      firstName
+      lastName
+      companyName
+      email
+      phone
+      status
+      customerType
+      tier
+      lifetimeValue
+      totalPurchases
+      lastContactDate
+      createdAt
+    }
+    totalCount
+    hasNextPage
+  }
+
+  customerMetrics {
+    totalCustomers
+    activeCustomers
+    newCustomers
+    churnedCustomers
+    totalCustomerValue
+    averageCustomerValue
+  }
+}
+
+# ============================================================================
+# Customer 360° View Queries
+# ============================================================================
+# These queries support the comprehensive customer detail modal with all tabs
+# ============================================================================
+
+# ============================================================================
+# Customer Subscriptions Query
+# ============================================================================
+# Replaces: GET /customers/{id}/subscriptions
+# For: CustomerSubscriptions.tsx component
+# ============================================================================
+
+query CustomerSubscriptions($customerId: ID!) {
+  customerSubscriptions(customerId: $customerId) {
+    # Current active subscription
+    currentSubscription {
+      id
+      status
+      planName
+      planDescription
+      bandwidthMbps
+      monthlyFee
+      billingCycle
+      startDate
+      endDate
+      autoRenew
+      trialEndDate
+      canceledAt
+      pausedAt
+    }
+
+    # Subscription history
+    subscriptionHistory {
+      id
+      planName
+      status
+      startDate
+      endDate
+      monthlyFee
+      billingCycle
+      autoRenew
+      cancelReason
+    }
+
+    # Summary metrics
+    totalSubscriptions
+    activeSubscriptions
+    totalRevenue
+  }
+}
+
+# ============================================================================
+# Customer Network Info Query
+# ============================================================================
+# Replaces:
+# - GET /customers/{id}/network-info
+# - GET /customers/{id}/network-stats
+# For: CustomerNetwork.tsx component
+# ============================================================================
+
+query CustomerNetworkInfo($customerId: ID!) {
+  customerNetworkInfo(customerId: $customerId) {
+    # Connection status
+    connectionStatus
+    lastSeenAt
+
+    # IP and network configuration
+    ipv4Address
+    ipv6Address
+    macAddress
+    vlanId
+
+    # Signal quality
+    signalStrength
+    signalQuality
+    uptimeSeconds
+    uptimePercentage
+
+    # Performance metrics
+    bandwidthUsageMbps
+    downloadSpeedMbps
+    uploadSpeedMbps
+    packetLoss
+    latencyMs
+    jitter
+
+    # Service location
+    serviceAddress
+    serviceCity
+    serviceState
+    servicePostalCode
+    installationDate
+    installationTechnician
+    installationNotes
+
+    # OLT/PON Configuration
+    oltDevice
+    ponPort
+    ontSerial
+    ontDistance
+    ontRxPower
+    ontTxPower
+    oltRxPower
+
+    # Connection type
+    connectionType
+    serviceStatus
+  }
+}
+
+# ============================================================================
+# Customer Devices Query
+# ============================================================================
+# Replaces: GET /customers/{id}/devices
+# For: CustomerDevices.tsx component
+# ============================================================================
+
+query CustomerDevices($customerId: ID!) {
+  customerDevices(customerId: $customerId) {
+    devices {
+      id
+      deviceType
+      deviceName
+      manufacturer
+      model
+      serialNumber
+      macAddress
+      ipAddress
+
+      # Status and health
+      status
+      healthStatus
+      isOnline
+      lastSeenAt
+
+      # Firmware and configuration
+      firmwareVersion
+      latestFirmwareVersion
+      needsFirmwareUpdate
+      configStatus
+
+      # Performance metrics
+      signalStrength
+      temperature
+      cpuUsage
+      memoryUsage
+      uptimeSeconds
+
+      # Capabilities
+      supportsRemoteReboot
+      supportsRemoteConfig
+
+      # Dates
+      installedAt
+      lastRebootAt
+      createdAt
+    }
+
+    # Summary
+    totalDevices
+    onlineDevices
+    offlineDevices
+    needingUpdates
+  }
+}
+
+# ============================================================================
+# Customer Tickets Query
+# ============================================================================
+# Replaces: GET /customers/{id}/tickets
+# For: CustomerTickets.tsx component
+# ============================================================================
+
+query CustomerTickets(
+  $customerId: ID!
+  $limit: Int = 50
+  $offset: Int = 0
+  $status: String
+) {
+  customerTickets(
+    customerId: $customerId
+    limit: $limit
+    offset: $offset
+    status: $status
+  ) {
+    tickets {
+      id
+      ticketNumber
+      title
+      description
+      status
+      priority
+      category
+      subCategory
+
+      # Assignment
+      assignedTo
+      assignedToName
+      assignedTeam
+
+      # Dates
+      createdAt
+      updatedAt
+      resolvedAt
+      closedAt
+      dueDate
+
+      # Customer info
+      customerId
+      customerName
+
+      # Metrics
+      responseTimeMinutes
+      resolutionTimeMinutes
+      reopenCount
+    }
+
+    # Summary
+    totalCount
+    openCount
+    closedCount
+    hasNextPage
+
+    # Quick stats
+    criticalCount
+    highCount
+    overdueCount
+  }
+}
+
+# ============================================================================
+# Customer Billing Query
+# ============================================================================
+# Replaces:
+# - GET /customers/{id}/invoices
+# - GET /customers/{id}/payments
+# - GET /customers/{id}/billing-summary
+# For: CustomerBilling.tsx component
+# ============================================================================
+
+query CustomerBilling($customerId: ID!, $limit: Int = 50) {
+  customerBilling(customerId: $customerId, limit: $limit) {
+    # Billing summary
+    summary {
+      totalRevenue
+      outstandingBalance
+      overdueBalance
+      creditBalance
+      lastPaymentDate
+      lastPaymentAmount
+      nextBillingDate
+      averageMonthlyRevenue
+    }
+
+    # Invoices
+    invoices {
+      id
+      invoiceNumber
+      status
+      totalAmount
+      paidAmount
+      dueAmount
+      dueDate
+      paidDate
+      issuedDate
+      description
+      currency
+
+      # Items
+      items {
+        description
+        quantity
+        unitPrice
+        amount
+      }
+
+      # Payment info
+      paymentMethod
+      paymentReference
+      isPastDue
+      isOverdue
+    }
+
+    # Payment history
+    payments {
+      id
+      paymentDate
+      amount
+      currency
+      paymentMethod
+      status
+      reference
+      invoiceNumber
+      description
+    }
+
+    # Summary metrics
+    totalInvoices
+    paidInvoices
+    unpaidInvoices
+    overdueInvoices
+    totalPayments
+  }
+}
+
+# ============================================================================
+# Customer 360° Complete View
+# ============================================================================
+# Combined query that fetches all customer data in one request
+# For: Initial load of customer detail modal
+# Benefits: 8+ REST calls → 1 GraphQL query (87% reduction)
+# ============================================================================
+
+query Customer360View($customerId: ID!) {
+  # Basic customer info
+  customer(id: $customerId, includeActivities: true, includeNotes: true) {
+    id
+    customerNumber
+    firstName
+    lastName
+    middleName
+    displayName
+    companyName
+    status
+    customerType
+    tier
+    email
+    emailVerified
+    phone
+    phoneVerified
+    mobile
+    addressLine1
+    addressLine2
+    city
+    stateProvince
+    postalCode
+    country
+    lifetimeValue
+    totalPurchases
+    createdAt
+    updatedAt
+
+    activities {
+      id
+      customerId
+      activityType
+      title
+      description
+      performedBy
+      createdAt
+    }
+
+    notes {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdAt
+      updatedAt
+    }
+  }
+
+  # Subscriptions
+  customerSubscriptions(customerId: $customerId) {
+    currentSubscription {
+      id
+      status
+      planName
+      bandwidthMbps
+      monthlyFee
+      billingCycle
+      autoRenew
+    }
+    totalSubscriptions
+    activeSubscriptions
+  }
+
+  # Network info
+  customerNetworkInfo(customerId: $customerId) {
+    connectionStatus
+    ipv4Address
+    signalStrength
+    uptimePercentage
+    serviceStatus
+  }
+
+  # Devices
+  customerDevices(customerId: $customerId) {
+    totalDevices
+    onlineDevices
+    offlineDevices
+  }
+
+  # Tickets
+  customerTickets(customerId: $customerId, limit: 10) {
+    openCount
+    closedCount
+    criticalCount
+  }
+
+  # Billing
+  customerBilling(customerId: $customerId, limit: 10) {
+    summary {
+      totalRevenue
+      outstandingBalance
+      overdueBalance
+      lastPaymentDate
+    }
+    totalInvoices
+    unpaidInvoices
+  }
+}
+
+# ============================================================================
+# Real-Time GraphQL Subscriptions
+# ============================================================================
+# WebSocket-based real-time updates for Customer 360° view
+# ============================================================================
+
+# ============================================================================
+# Network Status Subscription
+# ============================================================================
+# Real-time network connectivity updates (sub-second latency)
+# Updates pushed when connection status, signal, or performance changes
+# ============================================================================
+
+subscription CustomerNetworkStatusUpdated($customerId: ID!) {
+  customerNetworkStatusUpdated(customerId: $customerId) {
+    customerId
+    connectionStatus
+    lastSeenAt
+
+    # Network configuration
+    ipv4Address
+    ipv6Address
+    macAddress
+    vlanId
+
+    # Signal quality
+    signalStrength
+    signalQuality
+    uptimeSeconds
+    uptimePercentage
+
+    # Performance metrics
+    bandwidthUsageMbps
+    downloadSpeedMbps
+    uploadSpeedMbps
+    packetLoss
+    latencyMs
+    jitter
+
+    # OLT/PON metrics
+    ontRxPower
+    ontTxPower
+    oltRxPower
+
+    # Status
+    serviceStatus
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Device Status Subscription
+# ============================================================================
+# Real-time device health monitoring
+# Updates when device status, health, or performance changes
+# ============================================================================
+
+subscription CustomerDevicesUpdated($customerId: ID!) {
+  customerDevicesUpdated(customerId: $customerId) {
+    customerId
+    deviceId
+    deviceType
+    deviceName
+
+    # Status
+    status
+    healthStatus
+    isOnline
+    lastSeenAt
+
+    # Performance
+    signalStrength
+    temperature
+    cpuUsage
+    memoryUsage
+    uptimeSeconds
+
+    # Firmware
+    firmwareVersion
+    needsFirmwareUpdate
+
+    # Change information
+    changeType
+    previousValue
+    newValue
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Ticket Updates Subscription
+# ============================================================================
+# Real-time ticket notifications
+# Updates when tickets are created, updated, assigned, or resolved
+# ============================================================================
+
+subscription CustomerTicketUpdated($customerId: ID!) {
+  customerTicketUpdated(customerId: $customerId) {
+    customerId
+    action
+
+    ticket {
+      id
+      ticketNumber
+      title
+      description
+      status
+      priority
+      category
+      subCategory
+
+      assignedTo
+      assignedToName
+      assignedTeam
+
+      createdAt
+      updatedAt
+      resolvedAt
+      closedAt
+
+      customerId
+      customerName
+    }
+
+    changedBy
+    changedByName
+    changes
+    comment
+    updatedAt
+  }
+}
+
+# ============================================================================
+# Activity Updates Subscription
+# ============================================================================
+# Real-time activity timeline updates
+# ============================================================================
+
+subscription CustomerActivityAdded($customerId: ID!) {
+  customerActivityAdded(customerId: $customerId) {
+    id
+    customerId
+    activityType
+    title
+    description
+    performedBy
+    performedByName
+    createdAt
+  }
+}
+
+# ============================================================================
+# Note Updates Subscription
+# ============================================================================
+# Real-time note notifications
+# ============================================================================
+
+subscription CustomerNoteUpdated($customerId: ID!) {
+  customerNoteUpdated(customerId: $customerId) {
+    customerId
+    action
+
+    note {
+      id
+      customerId
+      subject
+      content
+      isInternal
+      createdById
+      createdByName
+      createdAt
+      updatedAt
+    }
+
+    changedBy
+    changedByName
+    updatedAt
+  }
+}

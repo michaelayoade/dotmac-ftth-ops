@@ -808,10 +808,7 @@ export function useCustomerPaymentMethods(): {
         old.map((pm) => ({
           ...pm,
           is_default: pm.payment_method_id === paymentMethodId,
-          auto_pay_enabled:
-            pm.payment_method_id === paymentMethodId
-              ? Boolean(updated.auto_pay_enabled)
-              : Boolean(pm.auto_pay_enabled),
+          auto_pay_enabled: pm.payment_method_id === paymentMethodId ? updated.auto_pay_enabled : pm.auto_pay_enabled,
         })),
       );
       queryClient.invalidateQueries({ queryKey });
@@ -842,12 +839,8 @@ export function useCustomerPaymentMethods(): {
       queryClient.setQueryData<CustomerPaymentMethod[]>(queryKey, (old = []) =>
         old.map((pm) => ({
           ...pm,
-          auto_pay_enabled:
-            pm.payment_method_id === updated.payment_method_id
-              ? Boolean(updated.auto_pay_enabled)
-              : Boolean(pm.auto_pay_enabled),
-          is_default:
-            pm.payment_method_id === updated.payment_method_id ? updated.is_default : pm.is_default,
+          auto_pay_enabled: pm.payment_method_id === updated.payment_method_id ? updated.auto_pay_enabled : false,
+          is_default: pm.payment_method_id === updated.payment_method_id ? updated.is_default : pm.is_default,
         })),
       );
       queryClient.invalidateQueries({ queryKey });

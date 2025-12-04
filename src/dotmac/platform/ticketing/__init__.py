@@ -2,13 +2,8 @@
 Ticketing package exports.
 """
 
-import os
-
 # Import handlers to ensure they're registered with @subscribe decorator
-# Skip during migrations to avoid side effects
-if os.environ.get("DOTMAC_MIGRATIONS") != "1":
-    from . import handlers  # noqa: F401
-
+from . import handlers  # noqa: F401
 from .events import TicketingEvents
 from .models import (
     Ticket,

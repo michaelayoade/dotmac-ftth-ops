@@ -155,7 +155,6 @@ export function AIChatWidget({
               onClick={handleToggle}
               className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
               size="icon"
-              aria-label="Open AI Assistant"
             >
               <Bot className="h-6 w-6" />
             </Button>
@@ -189,7 +188,6 @@ export function AIChatWidget({
             size="icon"
             onClick={handleToggle}
             className="h-8 w-8 text-white hover:bg-white/20"
-            aria-label="Minimize chat"
           >
             <Minimize2 className="h-4 w-4" />
           </Button>
@@ -249,7 +247,6 @@ export function AIChatWidget({
               size="icon"
               className="h-6 w-6"
               onClick={() => handleFeedback(5)}
-              aria-label="Rate conversation helpful"
             >
               <ThumbsUp className="h-4 w-4" />
             </Button>
@@ -258,7 +255,6 @@ export function AIChatWidget({
               size="icon"
               className="h-6 w-6"
               onClick={() => handleFeedback(1)}
-              aria-label="Rate conversation not helpful"
             >
               <ThumbsDown className="h-4 w-4" />
             </Button>
@@ -279,7 +275,6 @@ export function AIChatWidget({
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
-            aria-label="Send message"
           >
             <Send className="h-4 w-4" />
           </Button>

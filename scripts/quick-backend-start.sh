@@ -9,9 +9,7 @@ cd "$(dirname "$0")/.."
 # Load environment
 if [ -f .env.local ]; then
   echo "Loading .env.local..."
-  set -a  # Enable export for all variables
   source .env.local
-  set +a  # Disable auto-export
 else
   echo "ERROR: .env.local not found!"
   echo "Run: cp .env.local.example .env.local"

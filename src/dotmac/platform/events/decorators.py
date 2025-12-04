@@ -1,6 +1,5 @@
 """Event handler decorators."""
 
-import os
 from collections.abc import Callable
 
 from dotmac.platform.events.bus import EventHandler, get_event_bus
@@ -25,10 +24,6 @@ def subscribe(event_type: str) -> Callable[[EventHandler], EventHandler]:
     """
 
     def decorator(handler: EventHandler) -> EventHandler:
-        # Skip registration during migrations to avoid side effects
-        if os.environ.get("DOTMAC_MIGRATIONS") == "1":
-            return handler
-
         # Register handler with event bus
         event_bus = get_event_bus()
         event_bus.subscribe(event_type, handler)

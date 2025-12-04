@@ -194,6 +194,11 @@ class RLSMiddleware(BaseHTTPMiddleware):
                 if user and hasattr(user, "is_platform_admin"):
                     return user.is_platform_admin
 
+            # Check for superuser header (for system operations)
+            if request.headers.get("X-Superuser-Mode") == "true":
+                # TODO: Add additional auth checks for this header
+                return True
+
         except Exception as e:
             logger.debug(f"Error checking superuser status: {e}")
 

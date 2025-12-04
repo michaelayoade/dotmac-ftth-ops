@@ -1,0 +1,209 @@
+"""
+Invoice service tests - extracted from comprehensive test file.
+"""
+
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    TransactionEntity,
+)
+from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
+    PaymentStatus,
+    TransactionType,
+)
+from dotmac.platform.billing.core.exceptions import (
+    InvalidInvoiceStatusError,
+    InvoiceNotFoundError,
+)
+from dotmac.platform.billing.core.models import Invoice, InvoiceLineItem
+from dotmac.platform.billing.invoicing.service import InvoiceService
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestInvoiceServicePaymentManagement:
+    """Test invoice payment management functionality"""
+
+    @pytest.mark.asyncio
+    async def test_mark_invoice_paid_success(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity, mock_metrics
+    ):
+        """Test marking invoice as paid"""
+        # Set invoice to open status
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+        mock_invoice_entity.payment_status = PaymentStatus.PENDING
+        mock_invoice_entity.remaining_balance = 10000
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Mark invoice as paid
+        result = await invoice_service.mark_invoice_paid(
+            sample_tenant_id, mock_invoice_entity.invoice_id, payment_id=str(uuid4())
+        )
+
+        # Verify status update
+        assert mock_invoice_entity.payment_status == PaymentStatus.SUCCEEDED
+        assert mock_invoice_entity.status == InvoiceStatus.PAID
+        assert mock_invoice_entity.paid_at is not None
+        assert mock_invoice_entity.remaining_balance == 0
+        mock_db_session.commit.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_mark_invoice_paid_not_found(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test marking non-existent invoice as paid"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to mark non-existent invoice as paid
+        with pytest.raises(InvoiceNotFoundError):
+            await invoice_service.mark_invoice_paid(sample_tenant_id, str(uuid4()))
+
+    @pytest.mark.asyncio
+    async def test_apply_credit_to_invoice_partial(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test applying partial credit to invoice"""
+        # Set initial invoice state
+        mock_invoice_entity.total_amount = 10000
+        mock_invoice_entity.total_credits_applied = 0
+        mock_invoice_entity.remaining_balance = 10000
+        mock_invoice_entity.credit_applications = []
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        credit_amount = 5000
+        credit_application_id = str(uuid4())
+
+        # Apply credit
+        result = await invoice_service.apply_credit_to_invoice(
+            sample_tenant_id, mock_invoice_entity.invoice_id, credit_amount, credit_application_id
+        )
+
+        # Verify credit application
+        assert mock_invoice_entity.total_credits_applied == 5000
+        assert mock_invoice_entity.remaining_balance == 5000
+        assert credit_application_id in mock_invoice_entity.credit_applications
+        assert mock_invoice_entity.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+
+        # Verify transaction creation
+        assert mock_db_session.add.called
+        added_transaction = mock_db_session.add.call_args[0][0]
+        assert isinstance(added_transaction, TransactionEntity)
+        assert added_transaction.transaction_type == TransactionType.CREDIT
+        assert added_transaction.amount == credit_amount
+
+    @pytest.mark.asyncio
+    async def test_apply_credit_to_invoice_full(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test applying full credit to invoice"""
+        # Set initial invoice state
+        mock_invoice_entity.total_amount = 10000
+        mock_invoice_entity.total_credits_applied = 0
+        mock_invoice_entity.remaining_balance = 10000
+        mock_invoice_entity.credit_applications = []
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        credit_amount = 10000
+        credit_application_id = str(uuid4())
+
+        # Apply full credit
+        result = await invoice_service.apply_credit_to_invoice(
+            sample_tenant_id, mock_invoice_entity.invoice_id, credit_amount, credit_application_id
+        )
+
+        # Verify full credit application
+        assert mock_invoice_entity.total_credits_applied == 10000
+        assert mock_invoice_entity.remaining_balance == 0
+        assert mock_invoice_entity.payment_status == PaymentStatus.SUCCEEDED
+        assert mock_invoice_entity.status == InvoiceStatus.PAID
+
+    @pytest.mark.asyncio
+    async def test_apply_credit_to_invoice_not_found(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test applying credit to non-existent invoice"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to apply credit to non-existent invoice
+        with pytest.raises(InvoiceNotFoundError):
+            await invoice_service.apply_credit_to_invoice(
+                sample_tenant_id, str(uuid4()), 5000, str(uuid4())
+            )
+
+    @pytest.mark.asyncio
+    async def test_update_invoice_payment_status_succeeded(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test updating invoice payment status to succeeded"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Update payment status
+        result = await invoice_service.update_invoice_payment_status(
+            sample_tenant_id, mock_invoice_entity.invoice_id, PaymentStatus.SUCCEEDED
+        )
+
+        # Verify updates
+        assert mock_invoice_entity.payment_status == PaymentStatus.SUCCEEDED
+        assert mock_invoice_entity.status == InvoiceStatus.PAID
+        assert mock_invoice_entity.paid_at is not None
+        assert mock_invoice_entity.remaining_balance == 0
+        mock_db_session.commit.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_update_invoice_payment_status_partially_refunded(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test updating invoice payment status to partially refunded"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Update payment status
+        result = await invoice_service.update_invoice_payment_status(
+            sample_tenant_id, mock_invoice_entity.invoice_id, PaymentStatus.PARTIALLY_REFUNDED
+        )
+
+        # Verify updates
+        assert mock_invoice_entity.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert mock_invoice_entity.status == InvoiceStatus.PARTIALLY_PAID
+        mock_db_session.commit.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_update_invoice_payment_status_not_found(
+        self, invoice_service, mock_db_session, sample_tenant_id
+    ):
+        """Test updating payment status for non-existent invoice"""
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Try to update payment status for non-existent invoice
+        with pytest.raises(InvoiceNotFoundError):
+            await invoice_service.update_invoice_payment_status(
+                sample_tenant_id, str(uuid4()), PaymentStatus.SUCCEEDED
+            )

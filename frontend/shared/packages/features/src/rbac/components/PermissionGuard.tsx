@@ -5,7 +5,7 @@
  */
 
 import { AlertCircle, Lock } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 // Note: PermissionCategory and PermissionAction are enums in the RBAC context
 // We use string here to allow compatibility with enum values
@@ -146,13 +146,17 @@ export function createPermissionGuard(deps: PermissionGuardDependencies) {
     const router = deps.useRouter();
     const { permissions, loading, hasPermission, hasAnyPermission, hasRole, canAccess } =
       deps.useRBAC();
-    const [isRedirecting, setIsRedirecting] = useState(false);
-    const [isMounted, setIsMounted] = useState(false);
 
-    // Track client-side mount to prevent SSR issues with router
-    useEffect(() => {
-      setIsMounted(true);
-    }, []);
+    // Show loading while checking permissions
+    if (loading) {
+      return <LoadingPermissions />;
+    }
+
+    // No user permissions loaded (not authenticated)
+    if (!permissions) {
+      router.push("/login");
+      return <LoadingPermissions />;
+    }
 
     // Check permissions
     let hasAccess = false;
@@ -168,24 +172,6 @@ export function createPermissionGuard(deps: PermissionGuardDependencies) {
     } else {
       // No specific permission required
       hasAccess = true;
-    }
-
-    // Handle redirect to login when not authenticated (must be in useEffect for SSR)
-    useEffect(() => {
-      if (isMounted && !loading && !permissions && !isRedirecting) {
-        setIsRedirecting(true);
-        router.push("/login");
-      }
-    }, [isMounted, loading, permissions, router, isRedirecting]);
-
-    // Show loading while checking permissions, redirecting, or during SSR
-    if (!isMounted || loading || isRedirecting) {
-      return <LoadingPermissions />;
-    }
-
-    // No user permissions loaded (not authenticated) - show loading while redirect happens
-    if (!permissions) {
-      return <LoadingPermissions />;
     }
 
     if (!hasAccess) {

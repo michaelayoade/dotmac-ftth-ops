@@ -5,7 +5,6 @@ Replaces custom rate limiting implementations with industry standard.
 """
 
 import inspect
-import re
 from collections.abc import Callable
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar, cast
@@ -148,35 +147,6 @@ class _LimiterProxy:
 limiter = _LimiterProxy()
 
 
-def _scale_limit_for_test_mode(limit: str) -> str:
-    """
-    Optionally scale limits when RATE_LIMIT__TEST_MODE is enabled.
-
-    Only applies outside production to avoid silently weakening protections in prod.
-    """
-    from dotmac.platform.settings import settings
-
-    if settings.is_production:
-        return limit
-
-    rate_limit_settings = getattr(settings, "rate_limit", None)
-    if not rate_limit_settings or not getattr(rate_limit_settings, "test_mode", False):
-        return limit
-
-    multiplier = max(1, int(getattr(rate_limit_settings, "test_mode_multiplier", 1)))
-    match = re.match(r"\s*(\d+)\s*(.*)", limit)
-    if not match:
-        return limit
-
-    try:
-        base = int(match.group(1))
-    except ValueError:
-        return limit
-
-    suffix = match.group(2) or ""
-    return f"{base * multiplier}{suffix}"
-
-
 def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Rate limiting decorator using SlowAPI.
@@ -189,14 +159,13 @@ def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
         async def my_endpoint():
             return {"message": "success"}
     """
-    scaled_limit = _scale_limit_for_test_mode(limit)
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         if inspect.iscoroutinefunction(func):
 
             @wraps(func)
             async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-                limited_callable = get_limiter().limit(scaled_limit)(func)
+                limited_callable = get_limiter().limit(limit)(func)
                 result = limited_callable(*args, **kwargs)
                 if inspect.isawaitable(result):
                     return cast(R, await result)
@@ -206,7 +175,7 @@ def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
 
         @wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            limited_callable = get_limiter().limit(scaled_limit)(func)
+            limited_callable = get_limiter().limit(limit)(func)
             return cast(R, limited_callable(*args, **kwargs))
 
         return cast(Callable[P, R], sync_wrapper)
@@ -216,7 +185,6 @@ def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
 
 def rate_limit_ip(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Rate limit using client IP as the key (explicit helper for security-sensitive routes)."""
-    scaled_limit = _scale_limit_for_test_mode(limit)
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         limiter_instance = get_limiter()
@@ -225,9 +193,7 @@ def rate_limit_ip(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
 
             @wraps(func)
             async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-                limited_callable = limiter_instance.limit(
-                    scaled_limit, key_func=get_remote_address
-                )(func)
+                limited_callable = limiter_instance.limit(limit, key_func=get_remote_address)(func)
                 result = limited_callable(*args, **kwargs)
                 if inspect.isawaitable(result):
                     return cast(R, await result)
@@ -237,9 +203,7 @@ def rate_limit_ip(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
 
         @wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            limited_callable = limiter_instance.limit(
-                scaled_limit, key_func=get_remote_address
-            )(func)
+            limited_callable = limiter_instance.limit(limit, key_func=get_remote_address)(func)
             return cast(R, limited_callable(*args, **kwargs))
 
         return cast(Callable[P, R], sync_wrapper)

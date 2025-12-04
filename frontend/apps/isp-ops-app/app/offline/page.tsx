@@ -120,7 +120,7 @@ export default function OfflinePage() {
 
           {/* Actions */}
           <div className="space-y-2 pt-2">
-            <Button onClick={handleRetry} disabled={isChecking} className="w-full" size="lg" aria-label="Retry connection">
+            <Button onClick={handleRetry} disabled={isChecking} className="w-full" size="lg">
               {isChecking ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -134,7 +134,7 @@ export default function OfflinePage() {
               )}
             </Button>
 
-            <Button onClick={() => window.history.back()} variant="outline" className="w-full" aria-label="Go back to previous page">
+            <Button onClick={() => window.history.back()} variant="outline" className="w-full">
               Go Back
             </Button>
           </div>

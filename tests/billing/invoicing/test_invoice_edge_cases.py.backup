@@ -1,0 +1,147 @@
+"""
+Invoice service tests - extracted from comprehensive test file.
+"""
+
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    TransactionEntity,
+)
+from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
+    PaymentStatus,
+    TransactionType,
+)
+from dotmac.platform.billing.core.exceptions import (
+    InvalidInvoiceStatusError,
+    InvoiceNotFoundError,
+)
+from dotmac.platform.billing.core.models import Invoice, InvoiceLineItem
+from dotmac.platform.billing.invoicing.service import InvoiceService
+
+pytestmark = pytest.mark.asyncio
+
+
+class TestInvoiceServiceEdgeCases:
+    """Test edge cases and error handling"""
+
+    @pytest.mark.asyncio
+    async def test_create_invoice_with_zero_amounts(
+        self,
+        invoice_service,
+        mock_db_session,
+        sample_tenant_id,
+        sample_customer_id,
+        sample_billing_address,
+    ):
+        """Test creating invoice with zero amounts"""
+        # Line items with zero amounts
+        zero_line_items = [
+            {
+                "description": "Free Product",
+                "quantity": 1,
+                "unit_price": 0,
+                "total_price": 0,
+                "tax_rate": 0.0,
+                "tax_amount": 0,
+                "discount_percentage": 0.0,
+                "discount_amount": 0,
+            }
+        ]
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        def mock_refresh_entity(entity, attribute_names=None):
+            entity.invoice_id = str(uuid4())
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
+            entity.total_credits_applied = 0
+            entity.credit_applications = []
+            if hasattr(entity, "line_items"):
+                for item in entity.line_items:
+                    item.line_item_id = str(uuid4())
+
+        mock_db_session.refresh = AsyncMock(side_effect=mock_refresh_entity)
+
+        # Create invoice with zero amounts
+        result = await invoice_service.create_invoice(
+            tenant_id=sample_tenant_id,
+            customer_id=sample_customer_id,
+            billing_email="customer@example.com",
+            billing_address=sample_billing_address,
+            line_items=zero_line_items,
+        )
+
+        # Verify invoice created with zero amounts
+        added_invoice = mock_db_session.add.call_args_list[0][0][0]
+        assert added_invoice.subtotal == 0
+        assert added_invoice.tax_amount == 0
+        assert added_invoice.total_amount == 0
+        assert added_invoice.remaining_balance == 0
+
+    @pytest.mark.asyncio
+    async def test_apply_credit_exceeding_invoice_amount(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity
+    ):
+        """Test applying credit exceeding invoice amount"""
+        # Set initial invoice state
+        mock_invoice_entity.total_amount = 10000
+        mock_invoice_entity.total_credits_applied = 0
+        mock_invoice_entity.remaining_balance = 10000
+        mock_invoice_entity.credit_applications = []
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        credit_amount = 15000  # More than invoice amount
+        credit_application_id = str(uuid4())
+
+        # Apply excessive credit
+        result = await invoice_service.apply_credit_to_invoice(
+            sample_tenant_id, mock_invoice_entity.invoice_id, credit_amount, credit_application_id
+        )
+
+        # Verify remaining balance doesn't go negative
+        assert mock_invoice_entity.total_credits_applied == 15000
+        assert mock_invoice_entity.remaining_balance == 0  # Capped at 0
+        assert mock_invoice_entity.payment_status == PaymentStatus.SUCCEEDED
+        assert mock_invoice_entity.status == InvoiceStatus.PAID
+
+    @pytest.mark.asyncio
+    async def test_mark_invoice_paid_error_in_line_273(
+        self, invoice_service, mock_db_session, sample_tenant_id, mock_invoice_entity, mock_metrics
+    ):
+        """Test the specific error case at line 273 in mark_invoice_paid"""
+        # Set invoice to open status
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+        mock_invoice_entity.payment_status = PaymentStatus.PENDING
+        mock_invoice_entity.total_amount = 10000
+        mock_invoice_entity.currency = "USD"
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_invoice_entity
+        mock_db_session.execute = AsyncMock(return_value=mock_result)
+
+        # Test the mark_invoice_paid method
+        # Note: The original code has a bug at line 273 where it references undefined 'payment_status'
+        # We'll test that the method still completes successfully despite this
+        result = await invoice_service.mark_invoice_paid(
+            sample_tenant_id, mock_invoice_entity.invoice_id, payment_id=str(uuid4())
+        )
+
+        # Verify the invoice was marked as paid
+        assert mock_invoice_entity.payment_status == PaymentStatus.SUCCEEDED
+        assert mock_invoice_entity.status == InvoiceStatus.PAID
+        assert mock_invoice_entity.paid_at is not None
+        assert mock_invoice_entity.remaining_balance == 0
+        mock_db_session.commit.assert_called()

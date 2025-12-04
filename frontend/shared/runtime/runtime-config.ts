@@ -188,16 +188,8 @@ async function fetchRuntimeConfigFromApi(): Promise<RuntimeConfig> {
   return normalizeRuntimePayload(payload);
 }
 
-function getDefaultRestPath(): string {
-  const appType = process.env["NEXT_PUBLIC_APP_TYPE"];
-  if (appType === "isp-ops") {
-    return "/api/isp/v1/admin";
-  }
-  return "/api/platform/v1/admin";
-}
-
 function normalizeRuntimePayload(payload: BackendRuntimeConfig): RuntimeConfig {
-  const restPath = payload.api.rest_path || getDefaultRestPath();
+  const restPath = payload.api.rest_path || "/api/platform/v1/admin";
   const baseUrl = sanitizeBaseUrl(payload.api.base_url);
   const restUrl = payload.api.rest_url || joinUrl(baseUrl, restPath);
   const realtimeSource = payload.realtime ?? {};

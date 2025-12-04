@@ -32,69 +32,293 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-def load_metadata():
-    """
-    Load SQLAlchemy metadata without triggering application side-effects.
+# Auth and user management
+from dotmac.platform.auth.models import *  # noqa: F401,F403,E402
 
-    We set a guard env var so any import-time hooks can skip heavy work during migrations,
-    then import model modules carefully to register tables on Base.metadata.
-    """
-    # IMPORTANT: Set migration guard BEFORE any imports
-    os.environ["DOTMAC_MIGRATIONS"] = "1"
+# Core and base models
+from dotmac.platform.core.models import *  # noqa: F401,F403,E402
+from dotmac.platform.db import Base  # noqa: E402
 
-    from dotmac.platform.db import Base
-
-    # Import only the model files that define SQLAlchemy tables,
-    # avoiding modules that trigger services/handlers at import time.
-    # Each model file just defines classes inheriting from Base.
-    model_modules = [
-        "dotmac.platform.tenant.models",
-        "dotmac.platform.auth.models",
-        "dotmac.platform.user_management.models",
-        "dotmac.platform.customer_management.models",
-        "dotmac.platform.subscribers.models",
-        "dotmac.platform.billing.core.models",
-        "dotmac.platform.radius.models",
-        "dotmac.platform.ticketing.models",
-        "dotmac.platform.notifications.models",
-        "dotmac.platform.audit.models",
-        "dotmac.platform.analytics.models",
-        "dotmac.platform.communications.models",
-        "dotmac.platform.deployment.models",
-        "dotmac.platform.webhooks.models",
-        "dotmac.platform.wireless.models",
-        "dotmac.platform.workflows.models",
-        "dotmac.platform.crm.models",
-        "dotmac.platform.jobs.models",
-        "dotmac.platform.orchestration.models",
-        "dotmac.platform.contacts.models",
-        "dotmac.platform.services.internet_plans.models",
-        "dotmac.platform.billing.subscriptions.models",
-        "dotmac.platform.billing.catalog.models",
-        "dotmac.platform.billing.pricing.models",
-        "dotmac.platform.billing.dunning.models",
-        "dotmac.platform.billing.bank_accounts.models",
-        "dotmac.platform.project_management.models",
-        "dotmac.platform.project_management.resource_models",
-        "dotmac.platform.project_management.time_tracking_models",
-        "dotmac.platform.field_service.models",
-    ]
-
-    import importlib
-    for module_name in model_modules:
-        try:
-            importlib.import_module(module_name)
-        except ImportError:
-            # Module might not exist, that's OK
-            pass
-        except Exception as exc:
-            print(f"[alembic] Warning: failed to import {module_name}: {exc}")
-
-    return Base.metadata
+# Import all models to ensure they're registered with Base.metadata
+# This ensures alembic autogenerate can detect all tables
 
 
-# Use Base.metadata for autogeneration (lazy-loaded to avoid side-effects at module import)
-target_metadata = load_metadata()
+try:
+    from dotmac.platform.user_management.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass  # Skip if circular import issues
+
+from dotmac.platform.billing.bank_accounts.entities import *  # noqa: F401,F403,E402
+from dotmac.platform.billing.bank_accounts.models import *  # noqa: F401,F403,E402
+from dotmac.platform.billing.catalog.models import *  # noqa: F401,F403,E402
+from dotmac.platform.billing.core.entities import *  # noqa: F401,F403,E402
+
+# Billing (comprehensive)
+from dotmac.platform.billing.core.models import *  # noqa: F401,F403,E402
+from dotmac.platform.billing.pricing.models import *  # noqa: F401,F403,E402
+from dotmac.platform.billing.receipts.models import *  # noqa: F401,F403,E402
+from dotmac.platform.billing.settings.models import *  # noqa: F401,F403,E402
+from dotmac.platform.billing.subscriptions.models import *  # noqa: F401,F403,E402
+from dotmac.platform.contacts.models import *  # noqa: F401,F403,E402
+
+# Customer and contacts
+from dotmac.platform.customer_management.models import *  # noqa: F401,F403,E402
+from dotmac.platform.partner_management.models import *  # noqa: F401,F403,E402
+from dotmac.platform.subscribers.models import *  # noqa: F401,F403,E402
+
+try:
+    from dotmac.platform.billing.money_models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Analytics and audit
+from dotmac.platform.analytics.models import *  # noqa: F401,F403,E402
+from dotmac.platform.audit.models import *  # noqa: F401,F403,E402
+
+# Communications and webhooks
+from dotmac.platform.communications.models import *  # noqa: F401,F403,E402
+
+# Data operations
+from dotmac.platform.data_transfer.models import *  # noqa: F401,F403,E402
+from dotmac.platform.webhooks.models import *  # noqa: F401,F403,E402
+
+try:
+    from dotmac.platform.data_import.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Admin and services
+try:
+    from dotmac.platform.admin.settings.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+try:
+    from dotmac.platform.service_registry.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+try:
+    from dotmac.platform.ticketing.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# WireGuard VPN
+try:
+    from dotmac.platform.wireguard.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Wireless Infrastructure
+try:
+    from dotmac.platform.wireless.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Fiber Infrastructure
+try:
+    from dotmac.platform.fiber.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Licensing Framework
+try:
+    from dotmac.platform.licensing.framework import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.licensing.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# RADIUS
+try:
+    from dotmac.platform.radius.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Network and IP Management
+try:
+    from dotmac.platform.network.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.ip_management.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Services
+try:
+    from dotmac.platform.services.internet_plans.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.services.lifecycle.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Orchestration and Workflows
+try:
+    from dotmac.platform.orchestration.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.workflows.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.deployment.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Monitoring and Diagnostics
+try:
+    from dotmac.platform.monitoring.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.diagnostics.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.fault_management.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Jobs and Scheduling
+try:
+    from dotmac.platform.jobs.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Project and Field Service Management
+try:
+    from dotmac.platform.project_management.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.field_service.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# CRM and Sales
+try:
+    from dotmac.platform.crm.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.sales.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Additional Billing Modules
+try:
+    from dotmac.platform.billing.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.addons.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.currency.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.dunning.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.payment_methods.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.billing.usage.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Notifications and Push
+try:
+    from dotmac.platform.notifications.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.push.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# GenieACS and Device Management
+try:
+    from dotmac.platform.genieacs.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# AI and ML
+try:
+    from dotmac.platform.ai.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Cache and Events
+try:
+    from dotmac.platform.cache.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.events.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Integrations and Versioning
+try:
+    from dotmac.platform.integrations.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.versioning.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Tenant and Rate Limiting
+try:
+    from dotmac.platform.tenant.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+try:
+    from dotmac.platform.rate_limit.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Timeseries
+try:
+    from dotmac.platform.timeseries.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Main platform models
+try:
+    from dotmac.platform.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Use Base.metadata for autogeneration
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -158,8 +382,8 @@ def run_migrations_online() -> None:
     with connectable.connect() as connection:
         try:
             if connection.dialect.name == "postgresql":
-                connection.exec_driver_sql("SET lock_timeout = '30s'")
-                connection.exec_driver_sql("SET statement_timeout = '600s'")
+                connection.exec_driver_sql("SET lock_timeout = '5s'")
+                connection.exec_driver_sql("SET statement_timeout = '60s'")
         except Exception as e:
             print(f"[alembic] Could not set session timeouts: {e}")
         context.configure(
