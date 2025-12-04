@@ -1,0 +1,242 @@
+@import "leaflet/dist/leaflet.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme colors */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 210 40% 98%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 199 89% 43%; /* Improved contrast: 4.5:1 on white */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
+
+    /* DotMac legacy variables for compatibility */
+    --dotmac-background: #ffffff;
+    --dotmac-foreground: #0f172a;
+    --dotmac-card: #f8fafc;
+    --dotmac-card-foreground: #0f172a;
+    --dotmac-border: #e2e8f0;
+    --dotmac-primary: #0ea5e9;
+    --dotmac-primary-foreground: #ffffff;
+
+    /* Branding defaults */
+    --brand-primary: #0ea5e9;
+    --brand-primary-foreground: #ffffff;
+    --brand-primary-hover: #0284c7;
+    --brand-accent: #0ea5e9;
+    --brand-accent-foreground: #0f172a;
+    --brand-product-name: 'DotMac Platform';
+    --brand-product-tagline: 'Reusable SaaS backend and APIs to launch faster.';
+    --brand-company-name: 'DotMac Platform';
+    --brand-support-email: 'support@example.com';
+    --brand-logo-light: '';
+    --brand-logo-dark: '';
+    --brand-logo-icon: '';
+    --brand-favicon: '/favicon.ico';
+
+    /* Typography and radii tokens */
+    --brand-font-heading: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --brand-font-body: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --radius-lg: 0.5rem;
+    --radius-md: 0.375rem;
+    --radius-sm: 0.25rem;
+  }
+
+  .dark {
+    /* Dark theme colors */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 28% 32%;
+    --input: 215 28% 32%;
+    --ring: 199 89% 48%;
+
+    /* DotMac legacy variables for compatibility */
+    --dotmac-background: #0f172a;
+    --dotmac-foreground: #f8fafc;
+    --dotmac-card: #1e293b;
+    --dotmac-card-foreground: #f8fafc;
+    --dotmac-border: #334155;
+    --dotmac-primary: #0ea5e9;
+    --dotmac-primary-foreground: #ffffff;
+
+    /* Branding defaults (dark mode shares base colors by default) */
+    --brand-primary: #0ea5e9;
+    --brand-primary-foreground: #ffffff;
+    --brand-primary-hover: #38bdf8;
+    --brand-accent: #38bdf8;
+    --brand-accent-foreground: #0f172a;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--brand-font-body);
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--brand-font-heading);
+  }
+
+  /* Light mode gradient */
+  body {
+    background: radial-gradient(circle at top, rgba(14,165,233,0.05), transparent 55%),
+      linear-gradient(180deg, rgba(14,165,233,0.02), transparent 55%),
+      hsl(var(--background));
+  }
+
+  /* Dark mode gradient */
+  .dark body {
+    background: radial-gradient(circle at top, rgba(14,165,233,0.08), transparent 55%),
+      linear-gradient(180deg, rgba(14,165,233,0.03), transparent 55%),
+      hsl(var(--background));
+  }
+}
+
+@layer components {
+  /* Page containers */
+  .page-container {
+    @apply min-h-screen p-4 sm:p-6 lg:p-8 bg-background;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm;
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b border-border;
+  }
+
+  .card-content {
+    @apply px-6 py-4;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .btn-ghost {
+    @apply btn hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .btn-brand {
+    background-color: var(--brand-primary);
+    color: var(--brand-primary-foreground);
+    @apply btn;
+  }
+
+  .btn-brand:hover {
+    background-color: var(--brand-primary-hover);
+  }
+
+  .text-brand {
+    color: var(--brand-accent);
+  }
+
+  .badge-brand {
+    background-color: var(--brand-accent);
+    color: var(--brand-accent-foreground);
+    border: 1px solid var(--brand-accent);
+  }
+
+  /* Inputs */
+  .input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Tables */
+  .table {
+    @apply w-full border-collapse;
+  }
+
+  .table-header {
+    @apply bg-muted/50;
+  }
+
+  .table-row {
+    @apply border-b border-border transition-colors hover:bg-muted/50;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-left align-middle;
+  }
+
+  .table-head {
+    @apply px-4 py-3 text-left align-middle font-medium text-muted-foreground;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-md px-3 py-2;
+  }
+
+  .nav-link-active {
+    @apply bg-primary/10 text-primary;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors;
+  }
+
+  .badge-default {
+    @apply badge bg-primary text-primary-foreground;
+  }
+
+  .badge-secondary {
+    @apply badge bg-secondary text-secondary-foreground;
+  }
+
+  .badge-outline {
+    @apply badge border border-border bg-background text-foreground;
+  }
+}

@@ -1,0 +1,342 @@
+/**
+ * Virtualized Table Styles
+ * 
+ * Provides styling for the high-performance virtualized table component
+ * with accessibility and responsive design considerations.
+ */
+
+.virtualized-table-container {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Header Styles */
+.virtualized-table-header {
+  display: flex;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  z-index: 10;
+}
+
+.virtualized-table-header.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+/* Cell Styles */
+.virtualized-table-cell {
+  padding: 0.75rem 1rem;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.virtualized-table-cell:last-child {
+  border-right: none;
+}
+
+/* Header Cell Specific */
+.header-cell {
+  background-color: #f8fafc;
+  position: relative;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: default;
+}
+
+.header-content.sortable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.header-content.sortable:hover {
+  background-color: #e2e8f0;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  margin: -0.25rem -0.5rem;
+}
+
+.header-content.sortable:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.sort-indicator {
+  margin-left: 0.5rem;
+  opacity: 0.6;
+  font-size: 0.75rem;
+}
+
+.header-content.sortable .sort-indicator {
+  opacity: 1;
+}
+
+/* Filter Input */
+.filter-input {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background-color: white;
+  outline: none;
+}
+
+.filter-input:focus {
+  border-top-color: #3b82f6;
+  box-shadow: 0 -1px 0 0 #3b82f6;
+}
+
+/* Row Styles */
+.virtualized-table-row {
+  display: flex;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+  cursor: default;
+}
+
+.virtualized-table-row:hover {
+  background-color: #f8fafc;
+}
+
+.virtualized-table-row:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+  background-color: #eff6ff;
+}
+
+.virtualized-table-row.selected {
+  background-color: #dbeafe;
+}
+
+.virtualized-table-row.selected:hover {
+  background-color: #bfdbfe;
+}
+
+/* Selection Cell */
+.select-cell {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.select-cell input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select-cell input[type='checkbox']:checked {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3E%3C/svg%3E");
+}
+
+.select-cell input[type='checkbox']:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.select-cell input[type='checkbox']:indeterminate {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z'/%3E%3C/svg%3E");
+}
+
+/* Sticky Columns */
+.sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background-color: inherit;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-right {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+  background-color: inherit;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Text Alignment */
+.virtualized-table-cell[style*='text-align: center'] {
+  justify-content: center;
+}
+
+.virtualized-table-cell[style*='text-align: right'] {
+  justify-content: flex-end;
+}
+
+/* Loading and Empty States */
+.loading-container,
+.empty-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fafafa;
+  border-top: 1px solid #e2e8f0;
+}
+
+.loading-container {
+  color: #6b7280;
+}
+
+.empty-container {
+  color: #9ca3af;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .virtualized-table-cell {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .header-cell {
+    font-size: 0.75rem;
+  }
+
+  .filter-input {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.6875rem;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .virtualized-table-container {
+    border-color: #000000;
+    border-width: 2px;
+  }
+
+  .virtualized-table-cell {
+    border-right-color: #000000;
+  }
+
+  .virtualized-table-header {
+    border-bottom-color: #000000;
+  }
+
+  .virtualized-table-row {
+    border-bottom-color: #000000;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .virtualized-table-row,
+  .header-content.sortable,
+  .select-cell input[type='checkbox'] {
+    transition: none;
+  }
+}
+
+/* Focus Visible (for better keyboard navigation) */
+@supports selector(:focus-visible) {
+  .header-content.sortable:focus {
+    outline: none;
+  }
+
+  .header-content.sortable:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .virtualized-table-row:focus {
+    outline: none;
+  }
+
+  .virtualized-table-row:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .virtualized-table-container {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+
+  .virtualized-table-header {
+    background-color: #111827;
+    border-bottom-color: #374151;
+    color: #e5e7eb;
+  }
+
+  .header-cell {
+    background-color: #111827;
+  }
+
+  .header-content.sortable:hover {
+    background-color: #374151;
+  }
+
+  .virtualized-table-cell {
+    border-right-color: #374151;
+  }
+
+  .virtualized-table-row {
+    border-bottom-color: #374151;
+  }
+
+  .virtualized-table-row:hover {
+    background-color: #374151;
+  }
+
+  .virtualized-table-row.selected {
+    background-color: #1e40af;
+  }
+
+  .virtualized-table-row.selected:hover {
+    background-color: #1d4ed8;
+  }
+
+  .filter-input {
+    background-color: #374151;
+    color: #f9fafb;
+    border-top-color: #4b5563;
+  }
+
+  .filter-input:focus {
+    border-top-color: #60a5fa;
+  }
+
+  .loading-container,
+  .empty-container {
+    background-color: #374151;
+    color: #9ca3af;
+  }
+}

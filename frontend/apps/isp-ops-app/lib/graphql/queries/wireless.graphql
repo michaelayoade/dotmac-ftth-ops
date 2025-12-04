@@ -1,0 +1,576 @@
+# ============================================================================
+# Wireless Infrastructure GraphQL Queries
+# ============================================================================
+# These queries replace REST API calls for wireless network management.
+#
+# Backend: src/dotmac/platform/graphql/queries/wireless.py
+# Generated hooks: useAccessPointsQuery, useWirelessClientsQuery, etc.
+# ============================================================================
+
+# ============================================================================
+# Access Point Queries
+# ============================================================================
+
+query AccessPointList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $siteId: String
+  $status: AccessPointStatus
+  $frequencyBand: FrequencyBand
+  $search: String
+) {
+  accessPoints(
+    limit: $limit
+    offset: $offset
+    siteId: $siteId
+    status: $status
+    frequencyBand: $frequencyBand
+    search: $search
+  ) {
+    accessPoints {
+      id
+      name
+      macAddress
+      ipAddress
+      serialNumber
+      status
+      isOnline
+      lastSeenAt
+      model
+      manufacturer
+      firmwareVersion
+      ssid
+      frequencyBand
+      channel
+      channelWidth
+      transmitPower
+      maxClients
+      securityType
+      location {
+        siteName
+        building
+        floor
+        room
+        mountingType
+        coordinates {
+          latitude
+          longitude
+          altitude
+        }
+      }
+      rfMetrics {
+        signalStrengthDbm
+        noiseFloorDbm
+        signalToNoiseRatio
+        channelUtilizationPercent
+        interferenceLevel
+        txPowerDbm
+        rxPowerDbm
+      }
+      performance {
+        txBytes
+        rxBytes
+        txPackets
+        rxPackets
+        txRateMbps
+        rxRateMbps
+        txErrors
+        rxErrors
+        connectedClients
+        cpuUsagePercent
+        memoryUsagePercent
+        uptimeSeconds
+      }
+      siteId
+      controllerName
+      siteName
+      createdAt
+      updatedAt
+      lastRebootAt
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+query AccessPointDetail($id: ID!) {
+  accessPoint(id: $id) {
+    id
+    name
+    macAddress
+    ipAddress
+    serialNumber
+    status
+    isOnline
+    lastSeenAt
+    model
+    manufacturer
+    firmwareVersion
+    hardwareRevision
+    ssid
+    frequencyBand
+    channel
+    channelWidth
+    transmitPower
+    maxClients
+    securityType
+    location {
+      siteName
+      building
+      floor
+      room
+      mountingType
+      coordinates {
+        latitude
+        longitude
+        altitude
+        accuracy
+      }
+    }
+    rfMetrics {
+      signalStrengthDbm
+      noiseFloorDbm
+      signalToNoiseRatio
+      channelUtilizationPercent
+      interferenceLevel
+      txPowerDbm
+      rxPowerDbm
+    }
+    performance {
+      txBytes
+      rxBytes
+      txPackets
+      rxPackets
+      txRateMbps
+      rxRateMbps
+      txErrors
+      rxErrors
+      txDropped
+      rxDropped
+      retries
+      retryRatePercent
+      connectedClients
+      authenticatedClients
+      authorizedClients
+      cpuUsagePercent
+      memoryUsagePercent
+      uptimeSeconds
+    }
+    controllerId
+    controllerName
+    siteId
+    siteName
+    createdAt
+    updatedAt
+    lastRebootAt
+    isMeshEnabled
+    isBandSteeringEnabled
+    isLoadBalancingEnabled
+  }
+}
+
+query AccessPointsBySite($siteId: String!) {
+  accessPointsBySite(siteId: $siteId) {
+    id
+    name
+    macAddress
+    ipAddress
+    status
+    isOnline
+    ssid
+    frequencyBand
+    channel
+    siteId
+    siteName
+    performance {
+      connectedClients
+      cpuUsagePercent
+      memoryUsagePercent
+    }
+    rfMetrics {
+      signalStrengthDbm
+      channelUtilizationPercent
+    }
+  }
+}
+
+# ============================================================================
+# Wireless Client Queries
+# ============================================================================
+
+query WirelessClientList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $accessPointId: String
+  $customerId: String
+  $frequencyBand: FrequencyBand
+  $search: String
+) {
+  wirelessClients(
+    limit: $limit
+    offset: $offset
+    accessPointId: $accessPointId
+    customerId: $customerId
+    frequencyBand: $frequencyBand
+    search: $search
+  ) {
+    clients {
+      id
+      macAddress
+      hostname
+      ipAddress
+      manufacturer
+      accessPointId
+      accessPointName
+      ssid
+      connectionType
+      frequencyBand
+      channel
+      isAuthenticated
+      isAuthorized
+      signalStrengthDbm
+      signalQuality {
+        rssiDbm
+        snrDb
+        noiseFloorDbm
+        signalStrengthPercent
+        linkQualityPercent
+      }
+      noiseFloorDbm
+      snr
+      txRateMbps
+      rxRateMbps
+      txBytes
+      rxBytes
+      connectedAt
+      lastSeenAt
+      uptimeSeconds
+      customerId
+      customerName
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+query WirelessClientDetail($id: ID!) {
+  wirelessClient(id: $id) {
+    id
+    macAddress
+    hostname
+    ipAddress
+    manufacturer
+    accessPointId
+    accessPointName
+    ssid
+    connectionType
+    frequencyBand
+    channel
+    isAuthenticated
+    isAuthorized
+    authMethod
+    signalStrengthDbm
+    signalQuality {
+      rssiDbm
+      snrDb
+      noiseFloorDbm
+      signalStrengthPercent
+      linkQualityPercent
+    }
+    noiseFloorDbm
+    snr
+    txRateMbps
+    rxRateMbps
+    txBytes
+    rxBytes
+    txPackets
+    rxPackets
+    txRetries
+    rxRetries
+    connectedAt
+    lastSeenAt
+    uptimeSeconds
+    idleTimeSeconds
+    supports80211k
+    supports80211r
+    supports80211v
+    maxPhyRateMbps
+    customerId
+    customerName
+  }
+}
+
+query WirelessClientsByAccessPoint($accessPointId: String!) {
+  wirelessClientsByAccessPoint(accessPointId: $accessPointId) {
+    id
+    macAddress
+    hostname
+    ipAddress
+    accessPointId
+    ssid
+    signalStrengthDbm
+    signalQuality {
+      rssiDbm
+      snrDb
+      noiseFloorDbm
+      signalStrengthPercent
+      linkQualityPercent
+    }
+    txRateMbps
+    rxRateMbps
+    connectedAt
+    customerId
+    customerName
+  }
+}
+
+query WirelessClientsByCustomer($customerId: String!) {
+  wirelessClientsByCustomer(customerId: $customerId) {
+    id
+    macAddress
+    hostname
+    ipAddress
+    customerId
+    accessPointName
+    ssid
+    frequencyBand
+    signalStrengthDbm
+    signalQuality {
+      rssiDbm
+      snrDb
+      noiseFloorDbm
+      signalStrengthPercent
+      linkQualityPercent
+    }
+    isAuthenticated
+    connectedAt
+    lastSeenAt
+  }
+}
+
+# ============================================================================
+# Coverage Zone Queries
+# ============================================================================
+
+query CoverageZoneList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $siteId: String
+  $areaType: String
+) {
+  coverageZones(
+    limit: $limit
+    offset: $offset
+    siteId: $siteId
+    areaType: $areaType
+  ) {
+    zones {
+      id
+      name
+      description
+      siteId
+      siteName
+      floor
+      areaType
+      coverageAreaSqm
+      signalStrengthMinDbm
+      signalStrengthMaxDbm
+      signalStrengthAvgDbm
+      accessPointIds
+      accessPointCount
+      interferenceLevel
+      channelUtilizationAvg
+      noiseFloorAvgDbm
+      connectedClients
+      maxClientCapacity
+      clientDensityPerAp
+      coveragePolygon
+      createdAt
+      updatedAt
+      lastSurveyedAt
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+query CoverageZoneDetail($id: ID!) {
+  coverageZone(id: $id) {
+    id
+    name
+    description
+    siteId
+    siteName
+    floor
+    areaType
+    coverageAreaSqm
+    signalStrengthMinDbm
+    signalStrengthMaxDbm
+    signalStrengthAvgDbm
+    accessPointIds
+    accessPointCount
+    interferenceLevel
+    channelUtilizationAvg
+    noiseFloorAvgDbm
+    connectedClients
+    maxClientCapacity
+    clientDensityPerAp
+    coveragePolygon
+    createdAt
+    updatedAt
+    lastSurveyedAt
+  }
+}
+
+query CoverageZonesBySite($siteId: String!) {
+  coverageZonesBySite(siteId: $siteId) {
+    id
+    name
+    siteId
+    siteName
+    floor
+    areaType
+    coverageAreaSqm
+    accessPointCount
+    connectedClients
+    maxClientCapacity
+    signalStrengthAvgDbm
+  }
+}
+
+# ============================================================================
+# RF Analytics Queries
+# ============================================================================
+
+query RFAnalytics($siteId: String!) {
+  rfAnalytics(siteId: $siteId) {
+    siteId
+    siteName
+    analysisTimestamp
+    channelUtilization24ghz {
+      channel
+      frequencyMhz
+      band
+      utilizationPercent
+      interferenceLevel
+      accessPointsCount
+    }
+    channelUtilization5ghz {
+      channel
+      frequencyMhz
+      band
+      utilizationPercent
+      interferenceLevel
+      accessPointsCount
+    }
+    channelUtilization6ghz {
+      channel
+      frequencyMhz
+      band
+      utilizationPercent
+      interferenceLevel
+      accessPointsCount
+    }
+    recommendedChannels24ghz
+    recommendedChannels5ghz
+    recommendedChannels6ghz
+    interferenceSources {
+      sourceType
+      frequencyMhz
+      strengthDbm
+      affectedChannels
+    }
+    totalInterferenceScore
+    averageSignalStrengthDbm
+    averageSnr
+    coverageQualityScore
+    clientsPerBand24ghz
+    clientsPerBand5ghz
+    clientsPerBand6ghz
+    bandUtilizationBalanceScore
+  }
+}
+
+query ChannelUtilization($siteId: String!, $frequencyBand: FrequencyBand!) {
+  channelUtilization(siteId: $siteId, frequencyBand: $frequencyBand) {
+    channel
+    frequencyMhz
+    band
+    utilizationPercent
+    interferenceLevel
+    accessPointsCount
+  }
+}
+
+# ============================================================================
+# Dashboard and Metrics Queries
+# ============================================================================
+
+query WirelessSiteMetrics($siteId: String!) {
+  wirelessSiteMetrics(siteId: $siteId) {
+    siteId
+    siteName
+    totalAps
+    onlineAps
+    offlineAps
+    degradedAps
+    totalClients
+    clients24ghz
+    clients5ghz
+    clients6ghz
+    averageSignalStrengthDbm
+    averageSnr
+    totalThroughputMbps
+    totalCapacity
+    capacityUtilizationPercent
+    overallHealthScore
+    rfHealthScore
+    clientExperienceScore
+  }
+}
+
+query WirelessDashboard {
+  wirelessDashboard {
+    totalSites
+    totalAccessPoints
+    totalClients
+    totalCoverageZones
+    onlineAps
+    offlineAps
+    degradedAps
+    clientsByBand24ghz
+    clientsByBand5ghz
+    clientsByBand6ghz
+    topApsByClients {
+      id
+      name
+      siteName
+      performance {
+        connectedClients
+      }
+    }
+    topApsByThroughput {
+      id
+      name
+      siteName
+      performance {
+        txRateMbps
+        rxRateMbps
+      }
+    }
+    sitesWithIssues {
+      siteId
+      siteName
+      offlineAps
+      degradedAps
+      overallHealthScore
+    }
+    totalThroughputMbps
+    averageSignalStrengthDbm
+    averageClientExperienceScore
+    clientCountTrend
+    throughputTrendMbps
+    offlineEventsCount
+    generatedAt
+  }
+}

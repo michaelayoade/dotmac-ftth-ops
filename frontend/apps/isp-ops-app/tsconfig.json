@@ -1,0 +1,69 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/types/*": ["./types/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/components/ui/*": ["../../shared/packages/ui/src/components/*"],
+      "@/components/ui": ["../../shared/packages/ui/src/index.ts"],
+      "@/components/*": ["./components/*"],
+      "@/providers/*": ["./providers/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/contexts/*": ["./contexts/*"],
+      "@/*": ["./*"],
+      "@dotmac/auth": ["../../shared/lib/auth/index.ts"],
+      "@dotmac/auth/*": ["../../shared/lib/auth/*"],
+      "@shared/*": ["../../shared/*"],
+      "@dotmac/*": ["../../shared/packages/*/src"],
+      "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
+      "@dotmac/primitives/*": ["../../shared/packages/primitives/src/*"],
+      "@dotmac/testing-utils/*": ["../../shared/packages/testing-utils/src/*"],
+      "zod": ["./node_modules/zod"],
+      "zod/*": ["./node_modules/zod/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "types/**/*.d.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "../../shared/**/dist",
+    "../../shared/**/node_modules",
+    "../../shared/**/*.stories.ts",
+    "../../shared/**/*.stories.tsx",
+    "../../shared/examples/**",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.stories.ts",
+    "**/*.stories.tsx"
+  ]
+}

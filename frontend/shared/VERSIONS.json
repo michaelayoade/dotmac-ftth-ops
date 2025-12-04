@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Pinned versions for DotMac shared packages. Update this file when releasing new versions.",
+  "baseline": "2024.11.29",
+  "packages": {
+    "@dotmac/ui": "1.0.0",
+    "@dotmac/primitives": "1.0.0",
+    "@dotmac/providers": "1.0.0",
+    "@dotmac/rbac": "0.1.0",
+    "@dotmac/http-client": "1.0.0",
+    "@dotmac/graphql": "1.0.0",
+    "@dotmac/headless": "1.0.0",
+    "@dotmac/utils": "1.0.0",
+    "@dotmac/notifications": "1.0.0",
+    "@dotmac/analytics": "0.1.0",
+    "@dotmac/features": "0.1.0",
+    "@dotmac/design-system": "0.1.0",
+    "@dotmac/eslint-config": "1.0.0",
+    "@dotmac/eslint-plugin": "1.0.0",
+    "@dotmac/typescript-config": "1.0.0",
+    "@dotmac/testing-utils": "0.1.0"
+  },
+  "runtime": {
+    "node": ">=18.0.0 <21.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "python": {
+    "required": ">=3.11,<3.13",
+    "note": "asyncpg 0.29.0 does not build on Python 3.13"
+  }
+}

@@ -1,0 +1,83 @@
+# Shared Development Configuration
+# This file is used by both backend and frontend during local development
+
+api:
+  host: localhost
+  port: 8000
+  base_url: http://localhost:8000
+  ws_url: ws://localhost:8000
+
+frontend:
+  host: localhost
+  port: 3000
+  base_url: http://localhost:3000
+
+cors:
+  enabled: true
+  origins:
+    - http://localhost:3000
+    - http://127.0.0.1:3000
+    - http://localhost:8000
+    - http://127.0.0.1:8000
+  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+  headers: ["*"]
+  max_age: 3600
+
+database:
+  host: localhost
+  port: 5432
+  database: dotmac_dev
+  username: dotmac
+  password: dotmac
+  url: postgresql://dotmac:dotmac@localhost:5432/dotmac_dev
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  url: redis://localhost:6379/0
+  cache_db: 1
+  session_db: 2
+  pubsub_db: 3
+  fallback_enabled: true
+
+vault:
+  enabled: false  # Vault is optional in dev - system uses .env defaults when disabled
+  url: http://localhost:8200
+  token: dev-token
+  mount_path: secret
+  # To enable: docker-compose up -d vault && set VAULT__ENABLED=true in .env
+
+storage:
+  provider: minio
+  enabled: true
+  endpoint: localhost:9000
+  access_key: minioadmin
+  secret_key: minioadmin
+  bucket: dotmac-dev
+  use_ssl: false
+  # Note: If MinIO signature mismatch occurs, system automatically falls back to local storage (/tmp/storage)
+  # This is expected behavior in dev. To use real MinIO, ensure docker-compose MinIO service is running
+
+jwt:
+  secret_key: dev-secret-key-change-in-production
+  algorithm: HS256
+  access_token_expire_minutes: 30
+  refresh_token_expire_days: 30
+
+observability:
+  enabled: true
+  log_level: DEBUG
+  otel_enabled: true
+  otel_endpoint: http://localhost:4318
+  enable_metrics: true
+  enable_tracing: true
+
+feature_flags:
+  mfa_enabled: false
+  search_enabled: true
+  storage_enabled: true
+  email_enabled: true
+  celery_enabled: true

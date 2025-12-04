@@ -1,0 +1,61 @@
+
+> @dotmac/frontend-shared@1.0.0 test:coverage /Users/michaelayoade/Downloads/Projects/dotmac-ftth-ops/frontend
+> pnpm -r --filter "./shared/packages/**" run test --coverage && pnpm --filter @dotmac/isp-ops-app test:coverage && pnpm --filter @dotmac/platform-admin-app test:coverage
+
+Scope: 16 of 24 workspace projects
+shared/packages/http-client test$ jest --coverage
+shared/packages/eslint-plugin test$ jest --coverage
+shared/packages/testing-utils test$ echo "No tests for testing-utils" --coverage
+shared/packages/testing-utils test: No tests for testing-utils --coverage
+shared/packages/testing-utils test: Done
+shared/packages/http-client test: PASS src/__tests__/http-client.tenant-header.test.ts
+shared/packages/http-client test:   HttpClient tenant header injection
+shared/packages/http-client test:     ✓ adds X-Tenant-ID header from hostname (22 ms)
+shared/packages/http-client test: ---------------------|---------|----------|---------|---------|---------------------------------------------
+shared/packages/http-client test: File                 | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                           
+shared/packages/http-client test: ---------------------|---------|----------|---------|---------|---------------------------------------------
+shared/packages/http-client test: All files            |   21.91 |     8.82 |   26.56 |   22.68 |                                             
+shared/packages/http-client test:  auth-interceptor.ts |    1.98 |        0 |       0 |    2.02 | 22-261                                      
+shared/packages/http-client test:  error-normalizer.ts |    2.38 |        0 |       0 |    2.85 | 6-134                                       
+shared/packages/http-client test:  http-client.ts      |   56.66 |     37.5 |   40.74 |   55.93 | 62,69-78,87-113,126-142,168,182,189-202,213 
+shared/packages/http-client test:  retry-handler.ts    |    23.8 |       25 |   28.57 |      25 | 20-54                                       
+shared/packages/http-client test:  tenant-resolver.ts  |   48.14 |    20.83 |   57.14 |      52 | 16,22-28,43-56,69                           
+shared/packages/http-client test: ---------------------|---------|----------|---------|---------|---------------------------------------------
+shared/packages/http-client test: Test Suites: 1 passed, 1 total
+shared/packages/http-client test: Tests:       1 passed, 1 total
+shared/packages/http-client test: Snapshots:   0 total
+shared/packages/http-client test: Time:        2.356 s
+shared/packages/http-client test: Ran all test suites.
+shared/packages/http-client test: Done
+shared/packages/eslint-plugin test: PASS __tests__/no-cross-portal-imports.test.js
+shared/packages/eslint-plugin test: PASS __tests__/require-component-registration.test.js
+shared/packages/eslint-plugin test: -----------------------------------|---------|----------|---------|---------|---------------------------------------------------
+shared/packages/eslint-plugin test: File                               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                 
+shared/packages/eslint-plugin test: -----------------------------------|---------|----------|---------|---------|---------------------------------------------------
+shared/packages/eslint-plugin test: All files                          |   76.51 |    67.07 |   89.28 |   75.86 |                                                   
+shared/packages/eslint-plugin test:  no-cross-portal-imports.js        |   68.65 |    65.27 |   77.77 |   68.18 | 86-90,104,110,117,120,126,140,154,164,199,219-238 
+shared/packages/eslint-plugin test:  require-component-registration.js |   82.92 |    68.47 |   94.73 |   82.27 | 89-93,102-103,138-147,163,203                     
+shared/packages/eslint-plugin test: -----------------------------------|---------|----------|---------|---------|---------------------------------------------------
+shared/packages/eslint-plugin test: Test Suites: 2 passed, 2 total
+shared/packages/eslint-plugin test: Tests:       11 passed, 11 total
+shared/packages/eslint-plugin test: Snapshots:   0 total
+shared/packages/eslint-plugin test: Time:        3.189 s
+shared/packages/eslint-plugin test: Ran all test suites.
+shared/packages/eslint-plugin test: Done
+shared/packages/eslint-config test$ jest --coverage
+shared/packages/analytics test$ jest --coverage
+shared/packages/primitives test$ jest --runInBand --coverage
+shared/packages/rbac test$ jest --coverage
+shared/packages/eslint-config test: No tests found, exiting with code 1
+shared/packages/eslint-config test: Run with `--passWithNoTests` to exit with code 0
+shared/packages/eslint-config test: In /Users/michaelayoade/Downloads/Projects/dotmac-ftth-ops/frontend/shared/packages/eslint-config
+shared/packages/eslint-config test:   5 files checked.
+shared/packages/eslint-config test:   testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 0 matches
+shared/packages/eslint-config test:   testPathIgnorePatterns: /node_modules/ - 5 matches
+shared/packages/eslint-config test:   testRegex:  - 0 matches
+shared/packages/eslint-config test: Pattern:  - 0 matches
+shared/packages/eslint-config test: Failed
+/Users/michaelayoade/Downloads/Projects/dotmac-ftth-ops/frontend/shared/packages/eslint-config:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @dotmac/eslint-config@1.0.0 test: `jest --coverage`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.

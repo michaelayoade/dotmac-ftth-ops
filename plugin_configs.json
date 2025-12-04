@@ -1,0 +1,97 @@
+{
+  "instances": [
+    {
+      "id": "71446d25-301b-4d2e-a0c2-86d01c0bfc71",
+      "plugin_name": "Test Notification",
+      "instance_name": "Test",
+      "config_schema": {
+        "name": "Test Notification",
+        "type": "notification",
+        "version": "1.0.0",
+        "description": "Test notification plugin",
+        "author": null,
+        "homepage": null,
+        "fields": [
+          {
+            "key": "api_key",
+            "label": "API Key",
+            "type": "secret",
+            "description": null,
+            "required": true,
+            "default": null,
+            "validation_rules": [],
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "pattern": null,
+            "options": [],
+            "placeholder": null,
+            "help_text": null,
+            "group": null,
+            "order": 0,
+            "is_secret": true
+          },
+          {
+            "key": "endpoint",
+            "label": "Endpoint URL",
+            "type": "url",
+            "description": null,
+            "required": true,
+            "default": null,
+            "validation_rules": [],
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "pattern": null,
+            "options": [],
+            "placeholder": null,
+            "help_text": null,
+            "group": null,
+            "order": 0,
+            "is_secret": false
+          },
+          {
+            "key": "timeout",
+            "label": "Timeout",
+            "type": "integer",
+            "description": null,
+            "required": false,
+            "default": 30,
+            "validation_rules": [],
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "pattern": null,
+            "options": [],
+            "placeholder": null,
+            "help_text": null,
+            "group": null,
+            "order": 0,
+            "is_secret": false
+          }
+        ],
+        "dependencies": [],
+        "tags": [],
+        "supports_health_check": true,
+        "supports_test_connection": true
+      },
+      "status": "active",
+      "last_health_check": null,
+      "last_error": null,
+      "has_configuration": true,
+      "configuration_version": null
+    }
+  ],
+  "configurations": {
+    "71446d25-301b-4d2e-a0c2-86d01c0bfc71": {
+      "api_key": {
+        "__secret__": true,
+        "path": "plugins/71446d25-301b-4d2e-a0c2-86d01c0bfc71/api_key"
+      },
+      "endpoint": "https://test.com"
+    }
+  }
+}

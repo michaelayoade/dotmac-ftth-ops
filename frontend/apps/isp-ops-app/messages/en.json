@@ -1,0 +1,413 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "refresh": "Refresh",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "apply": "Apply",
+    "download": "Download",
+    "upload": "Upload",
+    "view": "View",
+    "viewDetails": "View Details",
+    "actions": "Actions",
+    "status": "Status",
+    "type": "Type",
+    "name": "Name",
+    "description": "Description",
+    "date": "Date",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "other": "Other",
+    "noData": "No data available",
+    "noResults": "No results found",
+    "selectOption": "Select an option",
+    "required": "Required",
+    "optional": "Optional",
+    "selectLanguage": "Select language"
+  },
+
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "notFound": "The requested resource was not found.",
+    "unauthorized": "You are not authorized to access this resource.",
+    "forbidden": "You do not have permission to perform this action.",
+    "validationFailed": "Please check your input and try again.",
+    "serverError": "A server error occurred. Our team has been notified.",
+    "timeout": "The request timed out. Please try again.",
+    "retry": "Please try again",
+    "contactSupport": "If this problem persists, please contact support.",
+    "field": {
+      "required": "{field} is required",
+      "invalid": "{field} is invalid",
+      "tooShort": "{field} is too short",
+      "tooLong": "{field} is too long",
+      "email": "Please enter a valid email address",
+      "phone": "Please enter a valid phone number",
+      "url": "Please enter a valid URL"
+    }
+  },
+
+  "navigation": {
+    "dashboard": "Dashboard",
+    "customers": "Customers",
+    "billing": "Billing",
+    "network": "Network",
+    "support": "Support",
+    "settings": "Settings",
+    "logout": "Logout",
+    "profile": "Profile",
+    "help": "Help",
+    "documentation": "Documentation"
+  },
+
+  "auth": {
+    "login": "Log In",
+    "logout": "Log Out",
+    "signUp": "Sign Up",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "changePassword": "Change Password",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "rememberMe": "Remember me",
+    "loginSuccess": "Successfully logged in",
+    "logoutSuccess": "Successfully logged out",
+    "loginError": "Invalid email or password",
+    "sessionExpired": "Your session has expired. Please log in again.",
+    "twoFactor": {
+      "title": "Two-Factor Authentication",
+      "enable": "Enable 2FA",
+      "disable": "Disable 2FA",
+      "verify": "Verify Code",
+      "enterCode": "Enter your 2FA code",
+      "backupCodes": "Backup Codes",
+      "regenerateBackupCodes": "Regenerate Backup Codes",
+      "enabled": "Two-factor authentication enabled",
+      "disabled": "Two-factor authentication disabled",
+      "required": "Two-factor authentication is required"
+    }
+  },
+
+  "customers": {
+    "title": "Customers",
+    "createCustomer": "Create Customer",
+    "editCustomer": "Edit Customer",
+    "deleteCustomer": "Delete Customer",
+    "customerDetails": "Customer Details",
+    "viewCustomer": "View Customer",
+    "searchCustomers": "Search customers...",
+    "totalCustomers": "Total Customers",
+    "activeCustomers": "Active Customers",
+    "inactiveCustomers": "Inactive Customers",
+    "fields": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "city": "City",
+      "state": "State",
+      "zipCode": "ZIP Code",
+      "country": "Country",
+      "status": "Status",
+      "type": "Customer Type",
+      "tier": "Customer Tier",
+      "notes": "Notes"
+    },
+    "status": {
+      "prospect": "Prospect",
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "churned": "Churned",
+      "archived": "Archived"
+    },
+    "type": {
+      "individual": "Individual",
+      "business": "Business",
+      "enterprise": "Enterprise",
+      "partner": "Partner",
+      "vendor": "Vendor"
+    },
+    "messages": {
+      "created": "Customer created successfully",
+      "updated": "Customer updated successfully",
+      "deleted": "Customer deleted successfully",
+      "deleteConfirm": "Are you sure you want to delete this customer?"
+    }
+  },
+
+  "jobs": {
+    "title": "Jobs",
+    "viewJob": "View Job",
+    "cancelJob": "Cancel Job",
+    "retryJob": "Retry Job",
+    "jobDetails": "Job Details",
+    "status": {
+      "pending": "Pending",
+      "assigned": "Assigned",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "retrying": "Retrying",
+      "timeout": "Timeout"
+    },
+    "type": {
+      "bulkImport": "Bulk Import",
+      "bulkExport": "Bulk Export",
+      "dataMigration": "Data Migration",
+      "firmwareUpgrade": "Firmware Upgrade",
+      "batchProvisioning": "Batch Provisioning",
+      "batchDeprovisioning": "Batch Deprovisioning",
+      "reportGeneration": "Report Generation",
+      "auditExport": "Audit Export",
+      "custom": "Custom"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "fields": {
+      "jobId": "Job ID",
+      "jobName": "Job Name",
+      "jobType": "Job Type",
+      "status": "Status",
+      "priority": "Priority",
+      "progress": "Progress",
+      "startedAt": "Started At",
+      "completedAt": "Completed At",
+      "duration": "Duration",
+      "error": "Error"
+    },
+    "messages": {
+      "cancelled": "Job cancelled successfully",
+      "retried": "Job retry initiated",
+      "cancelConfirm": "Are you sure you want to cancel this job?"
+    }
+  },
+
+  "billing": {
+    "title": "Billing",
+    "invoices": "Invoices",
+    "payments": "Payments",
+    "subscriptions": "Subscriptions",
+    "paymentMethods": "Payment Methods",
+    "createInvoice": "Create Invoice",
+    "viewInvoice": "View Invoice",
+    "payInvoice": "Pay Invoice",
+    "invoice": {
+      "status": {
+        "draft": "Draft",
+        "open": "Open",
+        "paid": "Paid",
+        "void": "Void",
+        "overdue": "Overdue",
+        "partiallyPaid": "Partially Paid"
+      }
+    },
+    "payment": {
+      "status": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "refunded": "Refunded",
+        "partiallyRefunded": "Partially Refunded",
+        "cancelled": "Cancelled"
+      }
+    },
+    "fields": {
+      "invoiceNumber": "Invoice Number",
+      "amount": "Amount",
+      "dueDate": "Due Date",
+      "paidDate": "Paid Date",
+      "customer": "Customer",
+      "description": "Description",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "discount": "Discount"
+    },
+    "messages": {
+      "invoiceCreated": "Invoice created successfully",
+      "paymentProcessed": "Payment processed successfully",
+      "paymentFailed": "Payment failed. Please try again."
+    }
+  },
+
+  "tickets": {
+    "title": "Support Tickets",
+    "createTicket": "Create Ticket",
+    "viewTicket": "View Ticket",
+    "updateTicket": "Update Ticket",
+    "closeTicket": "Close Ticket",
+    "status": {
+      "open": "Open",
+      "inProgress": "In Progress",
+      "waiting": "Waiting",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "type": {
+      "generalInquiry": "General Inquiry",
+      "billingIssue": "Billing Issue",
+      "technicalSupport": "Technical Support",
+      "installationRequest": "Installation Request",
+      "outageReport": "Outage Report",
+      "serviceUpgrade": "Service Upgrade",
+      "serviceDowngrade": "Service Downgrade",
+      "cancellationRequest": "Cancellation Request",
+      "equipmentIssue": "Equipment Issue",
+      "speedIssue": "Speed Issue",
+      "networkIssue": "Network Issue",
+      "connectivityIssue": "Connectivity Issue",
+      "fault": "Fault",
+      "outage": "Outage",
+      "maintenance": "Maintenance"
+    },
+    "fields": {
+      "ticketNumber": "Ticket Number",
+      "subject": "Subject",
+      "description": "Description",
+      "status": "Status",
+      "priority": "Priority",
+      "type": "Type",
+      "assignedTo": "Assigned To",
+      "createdBy": "Created By",
+      "lastUpdated": "Last Updated"
+    },
+    "messages": {
+      "created": "Ticket created successfully",
+      "updated": "Ticket updated successfully",
+      "closed": "Ticket closed successfully",
+      "closeConfirm": "Are you sure you want to close this ticket?"
+    }
+  },
+
+  "forms": {
+    "validation": {
+      "required": "This field is required",
+      "email": "Please enter a valid email address",
+      "minLength": "Must be at least {min} characters",
+      "maxLength": "Must not exceed {max} characters",
+      "pattern": "Please match the requested format",
+      "number": "Please enter a valid number",
+      "positive": "Please enter a positive number",
+      "url": "Please enter a valid URL",
+      "phone": "Please enter a valid phone number"
+    },
+    "messages": {
+      "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?",
+      "saveSuccess": "Changes saved successfully",
+      "saveError": "Failed to save changes"
+    }
+  },
+
+  "pagination": {
+    "showing": "Showing {start} to {end} of {total} results",
+    "page": "Page {page} of {total}",
+    "rowsPerPage": "Rows per page:",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page"
+  },
+
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "switchTo": "Switch to {theme} theme",
+    "modeTitle": "{theme} theme"
+  },
+
+  "time": {
+    "now": "Just now",
+    "minutesAgo": "{count, plural, =1 {1 minute ago} other {# minutes ago}}",
+    "hoursAgo": "{count, plural, =1 {1 hour ago} other {# hours ago}}",
+    "daysAgo": "{count, plural, =1 {1 day ago} other {# days ago}}",
+    "weeksAgo": "{count, plural, =1 {1 week ago} other {# weeks ago}}",
+    "monthsAgo": "{count, plural, =1 {1 month ago} other {# months ago}}",
+    "yearsAgo": "{count, plural, =1 {1 year ago} other {# years ago}}"
+  },
+
+  "accessibility": {
+    "skipToMainContent": "Skip to main content",
+    "statusLabel": "Status: {status}",
+    "editItem": "Edit {item}",
+    "deleteItem": "Delete {item}",
+    "viewItem": "View {item}",
+    "cancelItem": "Cancel {item}",
+    "retryItem": "Retry {item}",
+    "goToPage": "Go to page {page}",
+    "firstPage": "Go to first page",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "lastPage": "Go to last page",
+    "sortBy": "Sort by {column}",
+    "sortedBy": "Sorted by {column}, {direction}",
+    "ascending": "ascending",
+    "descending": "descending",
+    "searchEntity": "Search {entity}",
+    "filterBy": "Filter by {filter}",
+    "filterByWithCount": "Filter by {filter}, {count} active",
+    "requiredField": "This field is required",
+    "minLength": "Minimum {min} characters",
+    "maxLength": "Maximum {max} characters",
+    "format": {
+      "email": "Must be a valid email address",
+      "phone": "Must be a valid phone number",
+      "url": "Must be a valid URL",
+      "date": "Must be a valid date",
+      "number": "Must be a number"
+    },
+    "progressLabel": "{action} progress: {progress}%",
+    "loadingEntity": "Loading {entity}...",
+    "closeDialog": "Close {title} dialog",
+    "close": "Close",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "rowsPerPage": "Rows per page",
+    "of": "of"
+  }
+}

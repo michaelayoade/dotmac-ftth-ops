@@ -1,0 +1,186 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: {{ compose_project_name }}-postgres
+    environment:
+      POSTGRES_USER: tenant_{{ tenant_id }}_user
+      POSTGRES_PASSWORD: {{ db_password }}
+      POSTGRES_DB: tenant_{{ tenant_id }}
+    volumes:
+      - {{ data_dir }}/postgres:/var/lib/postgresql/data
+      - {{ data_dir }}/radius/schema.sql:/tmp/radius-schema.sql:ro
+    ports:
+      - "{{ db_port | default('5432') }}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tenant_{{ tenant_id }}_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ resources.postgres_cpu_limit | default("2.0") }}'
+          memory: {{ resources.postgres_memory_limit | default("2G") }}
+        reservations:
+          cpus: '{{ resources.postgres_cpu_reservation | default("0.5") }}'
+          memory: {{ resources.postgres_memory_reservation | default("512M") }}
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: {{ compose_project_name }}-redis
+    command: redis-server --requirepass {{ redis_password }} --maxmemory {{ resources.redis_max_memory | default('256mb') }} --maxmemory-policy allkeys-lru
+    volumes:
+      - {{ data_dir }}/redis:/data
+    ports:
+      - "{{ redis_port }}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ resources.redis_cpu_limit | default("1.0") }}'
+          memory: {{ resources.redis_memory_limit | default("512M") }}
+        reservations:
+          cpus: '{{ resources.redis_cpu_reservation | default("0.25") }}'
+          memory: {{ resources.redis_memory_reservation | default("128M") }}
+
+  # FreeRADIUS Server
+  radius:
+    image: freeradius/freeradius-server:latest
+    container_name: {{ compose_project_name }}-radius
+    environment:
+      RADIUS_SECRET: {{ radius_secret }}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: tenant_{{ tenant_id }}
+      DB_USER: tenant_{{ tenant_id }}_user
+      DB_PASSWORD: {{ db_password }}
+    volumes:
+      - {{ install_dir }}/radius/radiusd.conf:/etc/freeradius/3.0/radiusd.conf:ro
+      - {{ install_dir }}/radius/clients.conf:/etc/freeradius/3.0/clients.conf:ro
+      - {{ install_dir }}/radius/mods-enabled/sql:/etc/freeradius/3.0/mods-enabled/sql:ro
+      - {{ data_dir }}/logs:/var/log/freeradius
+    ports:
+      - "{{ radius_port }}:1812/udp"
+      - "{{ radius_acct_port | default(radius_port | int + 1) }}:1813/udp"
+      - "{{ radius_coa_port }}:3799/udp"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ resources.radius_cpu_limit | default("1.0") }}'
+          memory: {{ resources.radius_memory_limit | default("512M") }}
+        reservations:
+          cpus: '{{ resources.radius_cpu_reservation | default("0.25") }}'
+          memory: {{ resources.radius_memory_reservation | default("128M") }}
+
+  # Backend API
+  api:
+    image: {{ docker_registry | default('ghcr.io') }}/{{ docker_image_name | default('dotmac/platform') }}:{{ version }}
+    container_name: {{ compose_project_name }}-api
+    env_file:
+      - {{ install_dir }}/.env
+    volumes:
+      - {{ data_dir }}/uploads:/app/uploads
+      - {{ data_dir }}/logs:/app/logs
+    ports:
+      - "{{ app_port }}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ resources.api_cpu_limit | default("2.0") }}'
+          memory: {{ resources.api_memory_limit | default("2G") }}
+        reservations:
+          cpus: '{{ resources.api_cpu_reservation | default("0.5") }}'
+          memory: {{ resources.api_memory_reservation | default("512M") }}
+
+  # Celery Worker
+  celery-worker:
+    image: {{ docker_registry | default('ghcr.io') }}/{{ docker_image_name | default('dotmac/platform') }}:{{ version }}
+    container_name: {{ compose_project_name }}-celery-worker
+    command: celery -A dotmac.platform.celery_app worker --loglevel={{ log_level | default('info') }} --concurrency={{ resources.celery_workers | default('4') }}
+    env_file:
+      - {{ install_dir }}/.env
+    volumes:
+      - {{ data_dir }}/uploads:/app/uploads
+      - {{ data_dir }}/logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ resources.celery_cpu_limit | default("2.0") }}'
+          memory: {{ resources.celery_memory_limit | default("2G") }}
+        reservations:
+          cpus: '{{ resources.celery_cpu_reservation | default("0.5") }}'
+          memory: {{ resources.celery_memory_reservation | default("512M") }}
+
+  # Frontend (Next.js)
+  frontend:
+    image: {{ docker_registry | default('ghcr.io') }}/{{ docker_image_name | default('dotmac/platform') }}-frontend:{{ version }}
+    container_name: {{ compose_project_name }}-frontend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: https://{{ tenant_subdomain }}.{{ domain }}
+      NEXT_PUBLIC_WS_URL: wss://{{ tenant_subdomain }}.{{ domain }}/ws
+      NEXT_PUBLIC_ENVIRONMENT: {{ environment }}
+    volumes:
+      - {{ data_dir }}/frontend/.next:/app/.next
+    ports:
+      - "{{ frontend_port | default('3000') }}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ resources.frontend_cpu_limit | default("1.0") }}'
+          memory: {{ resources.frontend_memory_limit | default("1G") }}
+        reservations:
+          cpus: '{{ resources.frontend_cpu_reservation | default("0.25") }}'
+          memory: {{ resources.frontend_memory_reservation | default("256M") }}
+
+networks:
+  default:
+    name: {{ compose_project_name }}-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

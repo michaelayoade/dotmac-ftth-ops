@@ -1,0 +1,36 @@
+# Grafana Dashboard Provisioning
+# Auto-load dashboards from filesystem
+
+apiVersion: 1
+
+providers:
+  - name: 'ISP Platform Dashboards'
+    orgId: 1
+    folder: 'ISP Platform'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true
+
+  - name: 'Infrastructure'
+    orgId: 1
+    folder: 'Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/infrastructure
+
+  - name: 'Network Services'
+    orgId: 1
+    folder: 'Network Services'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/network

@@ -1,0 +1,32 @@
+---
+- name: "Provision DotMac tenant environment"
+  hosts: "{{ target_hosts | default('all') }}"
+  gather_facts: true
+  vars:
+    provisioning_requested_at: "{{ lookup('pipe', 'date -Iseconds') }}"
+
+  pre_tasks:
+    - name: "Validate required variables"
+      ansible.builtin.assert:
+        that:
+          - tenant_id is defined
+          - deployment_mode is defined
+          - deployment_mode in ['dotmac_hosted', 'customer_hosted']
+        fail_msg: "Required variables missing: tenant_id, deployment_mode"
+
+  tasks:
+    # Import full deployment playbook based on mode
+    - name: "Import full deployment playbook for customer-hosted"
+      ansible.builtin.import_playbook: deployment/provision-tenant.yml
+      when: deployment_mode == 'customer_hosted'
+
+    - name: "Import Docker Compose deployment for dotmac-hosted"
+      ansible.builtin.import_playbook: deployment/provision-docker.yml
+      when: deployment_mode == 'dotmac_hosted'
+
+  roles:
+    # Common tasks still run for both modes
+    - role: tenant_common
+
+    # Post-provisioning callbacks
+    - role: tenant_post_provision

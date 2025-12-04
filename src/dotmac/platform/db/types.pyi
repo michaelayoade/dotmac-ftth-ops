@@ -1,0 +1,6 @@
+from typing import Any
+
+from sqlalchemy.types import TypeDecorator
+
+class JSONBCompat(TypeDecorator[Any]): ...
+class ArrayCompat(TypeDecorator[Any]): ...

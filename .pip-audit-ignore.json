@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Accepted security vulnerabilities with documented risk assessment",
+  "vulnerabilities": [
+    {
+      "id": "GHSA-4xh5-x5gv-qwph",
+      "aliases": ["CVE-2025-8869"],
+      "package": "pip",
+      "affected_versions": ["<=25.2"],
+      "reason": "Tarfile symbolic link escape vulnerability. Fix pending in pip 25.3 (not yet released). RISK ASSESSMENT: LOW-MODERATE for our use case. Mitigations: (1) Poetry lock file prevents unexpected package changes, (2) Only install from trusted PyPI, (3) No dynamic package installation from user input, (4) Controlled deployment environment. ACCEPTANCE CRITERIA: This exception expires when pip 25.3 is released. See PIP_AUDIT_SECURITY_ASSESSMENT.md for full analysis.",
+      "expires": "2025-12-31",
+      "added_by": "Security Team",
+      "added_date": "2025-10-07",
+      "review_date": "2025-11-07",
+      "action_required": "Update to pip 25.3 immediately when released. Monitor weekly: https://pypi.org/project/pip/#history"
+    },
+    {
+      "id": "GHSA-wj6h-64fc-37mp",
+      "package": "ecdsa",
+      "affected_versions": ["0.19.1"],
+      "reason": "Minerva timing attack on P-256 ECDSA signing operations (CVSS 7.4). NO FIX PLANNED - maintainers consider side-channel attacks out of scope. RISK ASSESSMENT: LOW for our use case. Rationale: (1) Transitive dependency via sendgrid (we don't directly use ecdsa), (2) We use HMAC-SHA256 for JWT signing (not ECDSA), (3) SendGrid likely uses ecdsa for signature verification (unaffected by timing attack), (4) Timing attack requires local/adjacent attacker, (5) No user-controlled ECDSA operations. ACCEPTANCE CRITERIA: Accepted as long as (a) we don't implement ECDSA signing, (b) sendgrid doesn't expose signing operations. REVISIT IF: We add webhook signature verification, hardware wallet support, or any feature using ECDSA signing. See PIP_AUDIT_SECURITY_ASSESSMENT.md for full analysis.",
+      "expires": null,
+      "added_by": "Security Team",
+      "added_date": "2025-10-07",
+      "review_date": "2026-01-07",
+      "action_required": "Monitor for SendGrid updates or alternative libraries. Quarterly review of ECDSA usage in codebase."
+    }
+  ]
+}

@@ -1,0 +1,307 @@
+# Alert Rules for DotMac Platform Monitoring
+
+groups:
+  # Application Performance Alerts
+  - name: application_performance
+    interval: 30s
+    rules:
+      # High Response Time
+      - alert: HighApiResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High API response time ({{ $labels.instance }})"
+          description: "95th percentile response time is {{ $value }}s (threshold: 1s)"
+
+      - alert: CriticalApiResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 3
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "Critical API response time ({{ $labels.instance }})"
+          description: "95th percentile response time is {{ $value }}s (threshold: 3s)"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High error rate ({{ $labels.instance }})"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      - alert: CriticalErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "Critical error rate ({{ $labels.instance }})"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      # Request Rate Anomaly
+      - alert: AbnormalRequestRate
+        expr: |
+          abs(rate(http_requests_total[5m]) - rate(http_requests_total[5m] offset 1h))
+          / rate(http_requests_total[5m] offset 1h) > 2
+        for: 10m
+        labels:
+          severity: info
+          service: api
+        annotations:
+          summary: "Abnormal request rate detected"
+          description: "Request rate changed by {{ $value | humanizePercentage }} compared to 1 hour ago"
+
+  # Resource Utilization Alerts
+  - name: resource_utilization
+    interval: 30s
+    rules:
+      # CPU Usage
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          resource: cpu
+        annotations:
+          summary: "High CPU usage in {{ $labels.container_name }}"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      - alert: CriticalCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          resource: cpu
+        annotations:
+          summary: "Critical CPU usage in {{ $labels.container_name }}"
+          description: "CPU usage is {{ $value }}% (threshold: 95%)"
+
+      # Memory Usage
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          resource: memory
+        annotations:
+          summary: "High memory usage in {{ $labels.container_name }}"
+          description: "Memory usage is {{ $value }}% (threshold: 80%)"
+
+      - alert: CriticalMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          resource: memory
+        annotations:
+          summary: "Critical memory usage in {{ $labels.container_name }}"
+          description: "Memory usage is {{ $value }}% (threshold: 95%)"
+
+      # Memory Leak Detection
+      - alert: PotentialMemoryLeak
+        expr: |
+          rate(container_memory_usage_bytes[30m]) > 0 and
+          predict_linear(container_memory_usage_bytes[30m], 3600) > container_spec_memory_limit_bytes
+        for: 15m
+        labels:
+          severity: warning
+          resource: memory
+        annotations:
+          summary: "Potential memory leak in {{ $labels.container_name }}"
+          description: "Memory usage is growing and will exceed limit in ~1 hour at current rate"
+
+  # Database Performance Alerts
+  - name: database_performance
+    interval: 30s
+    rules:
+      # Database Connection Pool
+      - alert: HighDatabaseConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "High database connection usage"
+          description: "{{ $value }}% of max connections are in use (threshold: 80%)"
+
+      # Slow Queries
+      - alert: SlowDatabaseQueries
+        expr: rate(pg_stat_statements_mean_time_seconds[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query time is {{ $value }}s (threshold: 0.5s)"
+
+      # Database Locks
+      - alert: DatabaseDeadlocks
+        expr: increase(pg_stat_database_deadlocks[5m]) > 0
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "Database deadlocks detected"
+          description: "{{ $value }} deadlocks in the last 5 minutes"
+
+      # Replication Lag (if applicable)
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag_seconds > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "Database replication lag"
+          description: "Replication lag is {{ $value }}s (threshold: 10s)"
+
+  # Redis Performance Alerts
+  - name: redis_performance
+    interval: 30s
+    rules:
+      # Redis Memory Usage
+      - alert: HighRedisMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value }}% (threshold: 80%)"
+
+      # Redis Connection Issues
+      - alert: RedisConnectionRefused
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis connection refused"
+          description: "Unable to connect to Redis instance"
+
+      # Redis Hit Rate
+      - alert: LowRedisCacheHitRate
+        expr: |
+          redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) < 0.8
+        for: 10m
+        labels:
+          severity: info
+          service: redis
+        annotations:
+          summary: "Low Redis cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 80%)"
+
+  # Service Availability Alerts
+  - name: service_availability
+    interval: 15s
+    rules:
+      # Service Down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute"
+
+      # Container Restart
+      - alert: ContainerRestarting
+        expr: rate(container_restart_count[5m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container_name }} is restarting"
+          description: "Container has restarted {{ $value }} times in the last 5 minutes"
+
+      # Health Check Failures
+      - alert: HealthCheckFailure
+        expr: http_health_check_status != 200
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Health check failing for {{ $labels.service }}"
+          description: "Health check has been failing for 2 minutes"
+
+  # Celery/Background Tasks Alerts
+  - name: celery_performance
+    interval: 30s
+    rules:
+      # Task Queue Backlog
+      - alert: HighTaskQueueSize
+        expr: celery_queue_length > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "High task queue size"
+          description: "{{ $value }} tasks in queue (threshold: 1000)"
+
+      # Task Failure Rate
+      - alert: HighTaskFailureRate
+        expr: rate(celery_task_failed[5m]) / rate(celery_task_sent[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "High task failure rate"
+          description: "Task failure rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      # Worker Availability
+      - alert: NoActiveCeleryWorkers
+        expr: celery_workers_active == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: celery
+        annotations:
+          summary: "No active Celery workers"
+          description: "All Celery workers are down"
+
+  # Blue-Green Deployment Alerts
+  - name: blue_green_deployment
+    interval: 30s
+    rules:
+      # Canary Deployment Issues
+      - alert: CanaryDeploymentHighErrorRate
+        expr: |
+          rate(http_requests_total{status=~"5..", deployment_color="green"}[5m]) >
+          rate(http_requests_total{status=~"5..", deployment_color="blue"}[5m]) * 2
+        for: 5m
+        labels:
+          severity: critical
+          deployment: canary
+        annotations:
+          summary: "New deployment has higher error rate"
+          description: "Green deployment error rate is 2x higher than blue"
+
+      # Traffic Distribution Anomaly
+      - alert: UnbalancedTrafficDistribution
+        expr: |
+          abs(
+            sum(rate(http_requests_total{deployment_color="blue"}[5m])) -
+            sum(rate(http_requests_total{deployment_color="green"}[5m]))
+          ) / sum(rate(http_requests_total[5m])) > 0.7
+        for: 10m
+        labels:
+          severity: warning
+          deployment: blue_green
+        annotations:
+          summary: "Unbalanced traffic between deployments"
+          description: "Traffic distribution is not balanced as expected"

@@ -1,0 +1,3 @@
+"""
+WireGuard VPN tests.
+"""

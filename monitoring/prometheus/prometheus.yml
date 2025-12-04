@@ -1,0 +1,174 @@
+# Prometheus Configuration for DotMac Platform
+# ⚠️  WARNING: This is a COMPREHENSIVE PRODUCTION CONFIGURATION
+# ⚠️  Most services referenced here are NOT included in docker-compose files
+# ⚠️  Using this config without deploying all exporters will cause ServiceDown alerts
+#
+# For development/testing, use the root /prometheus.yml instead
+# See README.md in this directory for details
+#
+# Required services for this config:
+#   - node-exporter, cadvisor, postgres-exporter, redis-exporter
+#   - alertmanager, statsd-exporter, traefik, flower
+#   - app-blue/green deployment variants
+#
+# If you want to use this config, deploy all missing services first!
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'dotmac-platform'
+    environment: '${ENVIRONMENT:-production}'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter - System metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+).*'
+        replacement: '${1}'
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metric_relabel_configs:
+      # Only keep important metrics to reduce cardinality
+      - source_labels: [__name__]
+        regex: '(container_cpu_usage_seconds_total|container_memory_usage_bytes|container_network_receive_bytes_total|container_network_transmit_bytes_total|container_fs_usage_bytes)'
+        action: keep
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres'
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'redis'
+
+  # Application metrics - FastAPI
+  - job_name: 'dotmac-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+          - 'app:8000'
+          - 'app-blue:8000'
+          - 'app-green:8000'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: 'app-(.+):.*'
+        target_label: deployment_color
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: 'app:.*'
+        target_label: deployment_color
+        replacement: 'primary'
+
+  # Frontend metrics - Next.js
+  - job_name: 'dotmac-frontend'
+    metrics_path: '/api/metrics'
+    static_configs:
+      - targets:
+          - 'frontend:3000'
+          - 'frontend-blue:3000'
+          - 'frontend-green:3000'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: 'frontend-(.+):.*'
+        target_label: deployment_color
+        replacement: '${1}'
+
+  # Celery metrics
+  - job_name: 'celery'
+    static_configs:
+      - targets: ['flower:5555']
+    metrics_path: '/metrics'
+
+  # Traefik metrics (for blue-green deployments)
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:8080']
+    metrics_path: '/metrics'
+
+  # StatsD Exporter - Custom application metrics
+  - job_name: 'statsd'
+    static_configs:
+      - targets: ['statsd-exporter:9102']
+
+  # Docker daemon metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+
+# Service discovery for dynamic environments
+  # Kubernetes service discovery (if deployed to K8s)
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+# Remote write for long-term storage (optional)
+# Uncomment and set PROMETHEUS_REMOTE_WRITE_URL environment variable to enable
+# Example: PROMETHEUS_REMOTE_WRITE_URL=https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+#
+# remote_write:
+#   - url: "${PROMETHEUS_REMOTE_WRITE_URL}"
+#     queue_config:
+#       capacity: 10000
+#       max_shards: 20
+#       min_shards: 1
+#       max_samples_per_send: 5000
+#       batch_send_deadline: 5s
+#       max_retries: 3
+#       min_backoff: 30ms
+#       max_backoff: 100ms

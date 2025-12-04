@@ -1,0 +1,54 @@
+{
+  "name": "@dotmac/http-client",
+  "version": "1.0.0",
+  "description": "Centralized HTTP client with X-Tenant-ID injection, auth, retries, and error normalization",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "echo 'Linting disabled pending ESLint configuration'",
+    "lint:fix": "echo 'Linting disabled pending ESLint configuration'",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.5",
+    "axios": "^1.6.2",
+    "js-cookie": "^3.0.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/js-cookie": "^3.0.6",
+    "@types/uuid": "^9.0.7",
+    "eslint": "^8.57.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.5",
+    "tsup": "^8.3.5",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotmac-framework/frontend.git",
+    "directory": "packages/http-client"
+  },
+  "keywords": [
+    "http",
+    "client",
+    "axios",
+    "tenant",
+    "auth",
+    "retry",
+    "error-handling",
+    "dotmac"
+  ],
+  "author": "DotMac Framework Team",
+  "license": "MIT"
+}

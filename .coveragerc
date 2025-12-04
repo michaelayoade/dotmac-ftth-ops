@@ -1,0 +1,184 @@
+# Coverage configuration for risk-based testing strategy
+# See: docs/TESTING_STRATEGY.md for rationale
+
+[run]
+branch = True
+source = src/dotmac
+parallel = False
+concurrency = thread
+disable_warnings = trace-changed
+omit =
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */migrations/*
+    */examples/*
+    */scripts/*
+    */__main__.py
+
+[report]
+# Base threshold (raised gradually via diff coverage)
+fail_under = 75
+precision = 2
+skip_covered = False
+show_missing = True
+
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    if typing.TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+    except ImportError:
+    # nocov
+    # pragma: no cover
+    if 0:
+    if False:
+    assert False
+
+[html]
+directory = htmlcov
+
+# Module-specific thresholds (enforced by scripts/check_coverage.py)
+#
+# Critical Security Modules (90%+):
+[coverage:path.auth]
+path = src/dotmac/platform/auth
+target = 90
+
+[coverage:path.secrets]
+path = src/dotmac/platform/secrets
+target = 90
+
+[coverage:path.tenant]
+path = src/dotmac/platform/tenant
+target = 90
+
+[coverage:path.webhooks]
+path = src/dotmac/platform/webhooks
+target = 90
+
+# Core Business Logic (80%+):
+[coverage:path.billing]
+path = src/dotmac/platform/billing
+target = 80
+
+[coverage:path.customer_management]
+path = src/dotmac/platform/customer_management
+target = 80
+
+[coverage:path.partner_management]
+path = src/dotmac/platform/partner_management
+target = 80
+
+[coverage:path.user_management]
+path = src/dotmac/platform/user_management
+target = 80
+
+[coverage:path.audit]
+path = src/dotmac/platform/audit
+target = 80
+
+[coverage:path.core]
+path = src/dotmac/platform/core
+target = 80
+
+# Adapters & Integrations (contract tests + 70%):
+[coverage:path.communications]
+path = src/dotmac/platform/communications
+target = 70
+
+[coverage:path.file_storage]
+path = src/dotmac/platform/file_storage
+target = 70
+
+[coverage:path.search]
+path = src/dotmac/platform/search
+target = 70
+
+[coverage:path.integrations]
+path = src/dotmac/platform/integrations
+target = 70
+
+# Supporting Modules (70%):
+[coverage:path.analytics]
+path = src/dotmac/platform/analytics
+target = 70
+
+[coverage:path.monitoring]
+path = src/dotmac/platform/monitoring
+target = 70
+
+[coverage:path.observability]
+path = src/dotmac/platform/observability
+target = 70
+
+[coverage:path.data_transfer]
+path = src/dotmac/platform/data_transfer
+target = 70
+
+[coverage:path.feature_flags]
+path = src/dotmac/platform/feature_flags
+target = 70
+
+[coverage:path.contacts]
+path = src/dotmac/platform/contacts
+target = 70
+
+[coverage:path.plugins]
+path = src/dotmac/platform/plugins
+target = 70
+
+[coverage:path.ticketing]
+path = src/dotmac/platform/ticketing
+target = 70
+
+# ISP Operations Support Systems - Critical Infrastructure (85-90%):
+[coverage:path.radius]
+path = src/dotmac/platform/radius
+target = 85
+
+[coverage:path.orchestration]
+path = src/dotmac/platform/orchestration
+target = 90
+
+[coverage:path.workflows]
+path = src/dotmac/platform/workflows
+target = 90
+
+[coverage:path.netbox]
+path = src/dotmac/platform/netbox
+target = 80
+
+[coverage:path.genieacs]
+path = src/dotmac/platform/genieacs
+target = 80
+
+[coverage:path.voltha]
+path = src/dotmac/platform/voltha
+target = 80
+
+[coverage:path.wireless]
+path = src/dotmac/platform/wireless
+target = 75
+
+[coverage:path.wireguard]
+path = src/dotmac/platform/wireguard
+target = 75
+
+[coverage:path.network_monitoring]
+path = src/dotmac/platform/network_monitoring
+target = 70
+
+[coverage:path.fault_management]
+path = src/dotmac/platform/fault_management
+target = 75
+
+[coverage:path.diagnostics]
+path = src/dotmac/platform/diagnostics
+target = 70

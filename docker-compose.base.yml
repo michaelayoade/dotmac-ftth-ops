@@ -1,0 +1,110 @@
+services:
+  platform-backend:
+    build:
+      context: .
+      dockerfile: ${PLATFORM_BACKEND_DOCKERFILE:-Dockerfile}
+    command: ${PLATFORM_BACKEND_COMMAND:-uvicorn dotmac.platform.main:app --host 0.0.0.0 --port 8000}
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-[]}
+      DATABASE__HOST: ${DATABASE__HOST:-dotmac-postgres}
+      DATABASE__PORT: ${DATABASE__PORT:-5432}
+      DATABASE__DATABASE: ${DATABASE__DATABASE:-dotmac}
+      DATABASE__USERNAME: ${DATABASE__USERNAME:-dotmac_user}
+      DATABASE__PASSWORD: ${DATABASE__PASSWORD:-dev_local_pg_password_123}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:dev_local_pg_password_123@dotmac-postgres:5432/dotmac}
+      REDIS__HOST: ${REDIS__HOST:-dotmac-redis}
+      REDIS__PORT: ${REDIS__PORT:-6379}
+      REDIS__DB: ${REDIS__DB:-0}
+      REDIS__PASSWORD: ${REDIS__PASSWORD:-dev_local_redis_password_123}
+      STORAGE__ENDPOINT: ${STORAGE__ENDPOINT:-http://dotmac-minio:9000}
+      STORAGE__ACCESS_KEY: ${STORAGE__ACCESS_KEY:-minioadmin}
+      STORAGE__SECRET_KEY: ${STORAGE__SECRET_KEY:-dev_local_minio_root_pw}
+      STORAGE__BUCKET: ${STORAGE__BUCKET:-dotmac}
+      STORAGE__USE_SSL: ${STORAGE__USE_SSL:-false}
+      VAULT__ENABLED: ${VAULT__ENABLED:-false}
+      VAULT__URL: ${VAULT__URL:-http://dotmac-vault:8200}
+      VAULT__TOKEN: ${VAULT__TOKEN:-dev-token-12345}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-me-min-32-chars}
+      AUTH__JWT_SECRET_KEY: ${JWT_SECRET:-dev-jwt-secret-key-change-me-min-32-chars}
+      CELERY__BROKER_URL: ${CELERY__BROKER_URL:-redis://dotmac-redis:6379/2}
+      CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://dotmac-redis:6379/3}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://dotmac-jaeger:4317}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dotmac-platform}
+      OBSERVABILITY__OTEL_ENDPOINT: ${OBSERVABILITY__OTEL_ENDPOINT:-http://dotmac-jaeger:4318}
+      OBSERVABILITY__ALERTMANAGER_BASE_URL: ${OBSERVABILITY__ALERTMANAGER_BASE_URL:-http://dotmac-alertmanager:9093}
+      OBSERVABILITY__PROMETHEUS_BASE_URL: ${OBSERVABILITY__PROMETHEUS_BASE_URL:-http://dotmac-prometheus:9090}
+      OBSERVABILITY__GRAFANA_BASE_URL: ${OBSERVABILITY__GRAFANA_BASE_URL:-http://dotmac-grafana:3000}
+      SESSION_REDIS_URL: ${SESSION_REDIS_URL:-redis://:dev_local_redis_password_123@dotmac-redis:6379/1}
+      REQUIRE_REDIS_SESSIONS: ${REQUIRE_REDIS_SESSIONS:-false}
+      # CORS Configuration - add your server IP/domain here
+      CORS__ENABLED: ${CORS__ENABLED:-true}
+      CORS__ORIGINS: ${CORS__ORIGINS:-["http://localhost:3000","http://localhost:3001","http://localhost:3002","http://localhost:8000","http://localhost:8001","http://127.0.0.1:3000","http://127.0.0.1:3002","http://149.102.135.97:3001","http://149.102.135.97:3002","http://149.102.135.97:8000","http://149.102.135.97:8001"]}
+      CORS__CREDENTIALS: ${CORS__CREDENTIALS:-true}
+      # Platform admin should be able to render without per-tenant headers
+      REQUIRE_TENANT_HEADER: ${REQUIRE_TENANT_HEADER:-false}
+      # Expose a public API base URL to frontends via runtime-config when provided; defaults to relative
+      FRONTEND_API_BASE_URL: ${PLATFORM_FRONTEND_API_BASE_URL:-}
+    ports:
+      - "${PLATFORM_BACKEND_PORT:-8001}:8000"
+    volumes:
+      - platform_storage:/var/lib/dotmac
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - default
+
+  platform-frontend:
+    build:
+      context: ./frontend
+      dockerfile: apps/platform-admin-app/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${PLATFORM_NEXT_PUBLIC_API_BASE_URL:-}
+        NEXT_PUBLIC_WS_URL: ${PLATFORM_NEXT_PUBLIC_WS_URL:-ws://localhost:8001}
+        INTERNAL_API_URL: ${PLATFORM_INTERNAL_API_URL:-http://platform-backend:8000}
+        NEXT_PUBLIC_PRODUCT_NAME: ${PLATFORM_NEXT_PUBLIC_PRODUCT_NAME:-DotMac Platform Admin}
+        NEXT_PUBLIC_PRODUCT_TAGLINE: ${PLATFORM_NEXT_PUBLIC_PRODUCT_TAGLINE:-Control plane for multi-tenant ISPs}
+        NEXT_PUBLIC_FAVICON: ${PLATFORM_NEXT_PUBLIC_FAVICON:-/favicon.ico}
+        NEXT_PUBLIC_MOCK_API: ${PLATFORM_NEXT_PUBLIC_MOCK_API:-false}
+        NEXT_PUBLIC_USE_MOCK_DATA: ${PLATFORM_NEXT_PUBLIC_USE_MOCK_DATA:-false}
+        NEXT_PUBLIC_APP_TYPE: ${PLATFORM_NEXT_PUBLIC_APP_TYPE:-platform-admin}
+        NEXT_PUBLIC_PORTAL_TYPE: ${PLATFORM_NEXT_PUBLIC_PORTAL_TYPE:-admin}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${PLATFORM_FRONTEND_NODE_ENV:-production}
+      # Use relative API calls by default to avoid leaking localhost/host-specific URLs to browsers.
+      # Override PLATFORM_NEXT_PUBLIC_API_BASE_URL in env/CI for deployments that need an absolute URL.
+      NEXT_PUBLIC_API_BASE_URL: ${PLATFORM_NEXT_PUBLIC_API_BASE_URL:-}
+      INTERNAL_API_URL: ${PLATFORM_INTERNAL_API_URL:-http://platform-backend:8000}
+      NEXT_PUBLIC_WS_URL: ${PLATFORM_NEXT_PUBLIC_WS_URL:-ws://localhost:8001}
+      NEXT_PUBLIC_PRODUCT_NAME: ${PLATFORM_NEXT_PUBLIC_PRODUCT_NAME:-DotMac Platform Admin}
+      NEXT_PUBLIC_PRODUCT_TAGLINE: ${PLATFORM_NEXT_PUBLIC_PRODUCT_TAGLINE:-Control plane for multi-tenant ISPs}
+      NEXT_PUBLIC_FAVICON: ${PLATFORM_NEXT_PUBLIC_FAVICON:-/favicon.ico}
+      NEXT_PUBLIC_MOCK_API: ${PLATFORM_NEXT_PUBLIC_MOCK_API:-false}
+      NEXT_PUBLIC_USE_MOCK_DATA: ${PLATFORM_NEXT_PUBLIC_USE_MOCK_DATA:-false}
+      NEXT_PUBLIC_APP_TYPE: ${PLATFORM_NEXT_PUBLIC_APP_TYPE:-platform-admin}
+      NEXT_PUBLIC_PORTAL_TYPE: ${PLATFORM_NEXT_PUBLIC_PORTAL_TYPE:-admin}
+      NEXT_RUNTIME_LOG: ${PLATFORM_NEXT_RUNTIME_LOG:-debug}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:dev_local_pg_password_123@dotmac-postgres:5432/dotmac}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key-change-me-min-32-chars}
+    ports:
+      - "${PLATFORM_FRONTEND_PORT:-3002}:3000"
+    depends_on:
+      - platform-backend
+    networks:
+      - default
+
+volumes:
+  platform_storage:
+
+networks:
+  default:
+    name: dotmac-network
+    external: true

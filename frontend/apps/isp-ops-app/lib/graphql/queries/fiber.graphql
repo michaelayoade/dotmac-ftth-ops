@@ -1,0 +1,730 @@
+# ============================================================================
+# Fiber Infrastructure GraphQL Queries
+# ============================================================================
+# These queries replace REST API calls for fiber optic network management.
+#
+# Backend: src/dotmac/platform/graphql/queries/fiber.py
+# Generated hooks: useFiberCablesQuery, useSplicePointsQuery, etc.
+# ============================================================================
+
+# ============================================================================
+# Fiber Cable Queries
+# ============================================================================
+
+query FiberCableList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $status: FiberCableStatus
+  $fiberType: FiberType
+  $installationType: CableInstallationType
+  $siteId: String
+  $search: String
+) {
+  fiberCables(
+    limit: $limit
+    offset: $offset
+    status: $status
+    fiberType: $fiberType
+    installationType: $installationType
+    siteId: $siteId
+    search: $search
+  ) {
+    cables {
+      id
+      cableId
+      name
+      description
+      status
+      isActive
+      fiberType
+      totalStrands
+      availableStrands
+      usedStrands
+      manufacturer
+      model
+      installationType
+      route {
+        totalDistanceMeters
+        startPoint {
+          latitude
+          longitude
+          altitude
+        }
+        endPoint {
+          latitude
+          longitude
+          altitude
+        }
+      }
+      lengthMeters
+      startDistributionPointId
+      endDistributionPointId
+      startPointName
+      endPointName
+      capacityUtilizationPercent
+      bandwidthCapacityGbps
+      spliceCount
+      totalLossDb
+      averageAttenuationDbPerKm
+      maxAttenuationDbPerKm
+      isLeased
+      installedAt
+      createdAt
+      updatedAt
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+query FiberCableDetail($id: ID!) {
+  fiberCable(id: $id) {
+    id
+    cableId
+    name
+    description
+    status
+    isActive
+    fiberType
+    totalStrands
+    availableStrands
+    usedStrands
+    manufacturer
+    model
+    installationType
+    route {
+      pathGeojson
+      totalDistanceMeters
+      startPoint {
+        latitude
+        longitude
+        altitude
+      }
+      endPoint {
+        latitude
+        longitude
+        altitude
+      }
+      intermediatePoints {
+        latitude
+        longitude
+        altitude
+      }
+      elevationChangeMeters
+      undergroundDistanceMeters
+      aerialDistanceMeters
+    }
+    lengthMeters
+    strands {
+      strandId
+      colorCode
+      isActive
+      isAvailable
+      customerId
+      customerName
+      serviceId
+      attenuationDb
+      lossDb
+      spliceCount
+    }
+    startDistributionPointId
+    endDistributionPointId
+    startPointName
+    endPointName
+    capacityUtilizationPercent
+    bandwidthCapacityGbps
+    splicePointIds
+    spliceCount
+    totalLossDb
+    averageAttenuationDbPerKm
+    maxAttenuationDbPerKm
+    conduitId
+    ductNumber
+    armored
+    fireRated
+    ownerId
+    ownerName
+    isLeased
+    installedAt
+    testedAt
+    createdAt
+    updatedAt
+  }
+}
+
+query FiberCablesByRoute($startPointId: String!, $endPointId: String!) {
+  fiberCablesByRoute(startPointId: $startPointId, endPointId: $endPointId) {
+    id
+    cableId
+    name
+    status
+    totalStrands
+    availableStrands
+    lengthMeters
+    capacityUtilizationPercent
+  }
+}
+
+query FiberCablesByDistributionPoint($distributionPointId: String!) {
+  fiberCablesByDistributionPoint(distributionPointId: $distributionPointId) {
+    id
+    cableId
+    name
+    status
+    totalStrands
+    availableStrands
+    lengthMeters
+  }
+}
+
+# ============================================================================
+# Splice Point Queries
+# ============================================================================
+
+query SplicePointList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $status: SpliceStatus
+  $cableId: String
+  $distributionPointId: String
+) {
+  splicePoints(
+    limit: $limit
+    offset: $offset
+    status: $status
+    cableId: $cableId
+    distributionPointId: $distributionPointId
+  ) {
+    splicePoints {
+      id
+      spliceId
+      cableId
+      name
+      description
+      status
+      isActive
+      location {
+        latitude
+        longitude
+        altitude
+      }
+      closureType
+      manufacturer
+      model
+      trayCount
+      trayCapacity
+      cablesConnected
+      cableCount
+      totalSplices
+      activeSplices
+      averageSpliceLossDb
+      maxSpliceLossDb
+      passingSplices
+      failingSplices
+      accessType
+      requiresSpecialAccess
+      installedAt
+      lastTestedAt
+      lastMaintainedAt
+      createdAt
+      updatedAt
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+query SplicePointDetail($id: ID!) {
+  splicePoint(id: $id) {
+    id
+    spliceId
+    name
+    description
+    status
+    isActive
+    location {
+      latitude
+      longitude
+      altitude
+    }
+    address {
+      streetAddress
+      city
+      stateProvince
+      postalCode
+      country
+    }
+    distributionPointId
+    closureType
+    manufacturer
+    model
+    trayCount
+    trayCapacity
+    cablesConnected
+    cableCount
+    spliceConnections {
+      cableAId
+      cableAStrand
+      cableBId
+      cableBStrand
+      spliceType
+      lossDb
+      reflectanceDb
+      isPassing
+      testResult
+      testedAt
+      testedBy
+    }
+    totalSplices
+    activeSplices
+    averageSpliceLossDb
+    maxSpliceLossDb
+    passingSplices
+    failingSplices
+    accessType
+    requiresSpecialAccess
+    accessNotes
+    installedAt
+    lastTestedAt
+    lastMaintainedAt
+    createdAt
+    updatedAt
+  }
+}
+
+query SplicePointsByCable($cableId: String!) {
+  splicePointsByCable(cableId: $cableId) {
+    id
+    spliceId
+    cableId
+    name
+    status
+    totalSplices
+    activeSplices
+    averageSpliceLossDb
+    passingSplices
+  }
+}
+
+# ============================================================================
+# Distribution Point Queries
+# ============================================================================
+
+query DistributionPointList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $pointType: DistributionPointType
+  $status: FiberCableStatus
+  $siteId: String
+  $nearCapacity: Boolean
+) {
+  distributionPoints(
+    limit: $limit
+    offset: $offset
+    pointType: $pointType
+    status: $status
+    siteId: $siteId
+    nearCapacity: $nearCapacity
+  ) {
+    distributionPoints {
+      id
+      siteId
+      name
+      description
+      pointType
+      status
+      isActive
+      location {
+        latitude
+        longitude
+        altitude
+      }
+      manufacturer
+      model
+      totalCapacity
+      availableCapacity
+      usedCapacity
+      portCount
+      incomingCables
+      outgoingCables
+      totalCablesConnected
+      splicePointCount
+      hasPower
+      batteryBackup
+      environmentalMonitoring
+      temperatureCelsius
+      humidityPercent
+      capacityUtilizationPercent
+      fiberStrandCount
+      availableStrandCount
+      servesCustomerCount
+      accessType
+      requiresKey
+      installedAt
+      lastInspectedAt
+      lastMaintainedAt
+      createdAt
+      updatedAt
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+query DistributionPointDetail($id: ID!) {
+  distributionPoint(id: $id) {
+    id
+    siteId
+    name
+    description
+    pointType
+    status
+    isActive
+    location {
+      latitude
+      longitude
+      altitude
+    }
+    address {
+      streetAddress
+      city
+      stateProvince
+      postalCode
+      country
+    }
+    siteName
+    manufacturer
+    model
+    totalCapacity
+    availableCapacity
+    usedCapacity
+    ports {
+      portNumber
+      isAllocated
+      isActive
+      cableId
+      strandId
+      customerId
+      customerName
+      serviceId
+    }
+    portCount
+    incomingCables
+    outgoingCables
+    totalCablesConnected
+    splicePoints
+    splicePointCount
+    hasPower
+    batteryBackup
+    environmentalMonitoring
+    temperatureCelsius
+    humidityPercent
+    capacityUtilizationPercent
+    fiberStrandCount
+    availableStrandCount
+    serviceAreaIds
+    servesCustomerCount
+    accessType
+    requiresKey
+    securityLevel
+    accessNotes
+    installedAt
+    lastInspectedAt
+    lastMaintainedAt
+    createdAt
+    updatedAt
+  }
+}
+
+query DistributionPointsBySite($siteId: String!) {
+  distributionPointsBySite(siteId: $siteId) {
+    id
+    siteId
+    name
+    pointType
+    status
+    totalCapacity
+    availableCapacity
+    capacityUtilizationPercent
+    totalCablesConnected
+    servesCustomerCount
+  }
+}
+
+# ============================================================================
+# Service Area Queries
+# ============================================================================
+
+query ServiceAreaList(
+  $limit: Int = 50
+  $offset: Int = 0
+  $areaType: ServiceAreaType
+  $isServiceable: Boolean
+  $constructionStatus: String
+) {
+  serviceAreas(
+    limit: $limit
+    offset: $offset
+    areaType: $areaType
+    isServiceable: $isServiceable
+    constructionStatus: $constructionStatus
+  ) {
+    serviceAreas {
+      id
+      areaId
+      name
+      description
+      areaType
+      isActive
+      isServiceable
+      boundaryGeojson
+      areaSqkm
+      city
+      stateProvince
+      postalCodes
+      streetCount
+      homesPassed
+      homesConnected
+      businessesPassed
+      businessesConnected
+      penetrationRatePercent
+      distributionPointCount
+      totalFiberKm
+      totalCapacity
+      usedCapacity
+      availableCapacity
+      capacityUtilizationPercent
+      maxBandwidthGbps
+      estimatedPopulation
+      householdDensityPerSqkm
+      constructionStatus
+      constructionCompletePercent
+      targetCompletionDate
+      plannedAt
+      constructionStartedAt
+      activatedAt
+      createdAt
+      updatedAt
+    }
+    totalCount
+    hasNextPage
+  }
+}
+
+query ServiceAreaDetail($id: ID!) {
+  serviceArea(id: $id) {
+    id
+    areaId
+    name
+    description
+    areaType
+    isActive
+    isServiceable
+    boundaryGeojson
+    areaSqkm
+    city
+    stateProvince
+    postalCodes
+    streetCount
+    homesPassed
+    homesConnected
+    businessesPassed
+    businessesConnected
+    penetrationRatePercent
+    distributionPointIds
+    distributionPointCount
+    totalFiberKm
+    totalCapacity
+    usedCapacity
+    availableCapacity
+    capacityUtilizationPercent
+    maxBandwidthGbps
+    averageDistanceToDistributionMeters
+    estimatedPopulation
+    householdDensityPerSqkm
+    constructionStatus
+    constructionCompletePercent
+    targetCompletionDate
+    plannedAt
+    constructionStartedAt
+    activatedAt
+    createdAt
+    updatedAt
+  }
+}
+
+query ServiceAreasByPostalCode($postalCode: String!) {
+  serviceAreasByPostalCode(postalCode: $postalCode) {
+    id
+    areaId
+    name
+    city
+    stateProvince
+    isServiceable
+    postalCodes
+    homesPassed
+    homesConnected
+    penetrationRatePercent
+    maxBandwidthGbps
+  }
+}
+
+# ============================================================================
+# Fiber Analytics Queries
+# ============================================================================
+
+query FiberHealthMetrics($cableId: String, $healthStatus: FiberHealthStatus) {
+  fiberHealthMetrics(cableId: $cableId, healthStatus: $healthStatus) {
+    cableId
+    cableName
+    healthStatus
+    healthScore
+    totalLossDb
+    averageLossPerKmDb
+    maxLossPerKmDb
+    reflectanceDb
+    averageSpliceLossDb
+    maxSpliceLossDb
+    failingSplicesCount
+    totalStrands
+    activeStrands
+    degradedStrands
+    failedStrands
+    lastTestedAt
+    testPassRatePercent
+    daysSinceLastTest
+    activeAlarms
+    warningCount
+    requiresMaintenance
+  }
+}
+
+query OTDRTestResults($cableId: String!, $strandId: Int, $limit: Int = 10) {
+  otdrTestResults(cableId: $cableId, strandId: $strandId, limit: $limit) {
+    testId
+    cableId
+    strandId
+    testedAt
+    testedBy
+    wavelengthNm
+    pulseWidthNs
+    totalLossDb
+    totalLengthMeters
+    averageAttenuationDbPerKm
+    spliceCount
+    connectorCount
+    bendCount
+    breakCount
+    isPassing
+    passThresholdDb
+    marginDb
+    traceFileUrl
+  }
+}
+
+query FiberNetworkAnalytics {
+  fiberNetworkAnalytics {
+    totalFiberKm
+    totalCables
+    totalStrands
+    totalDistributionPoints
+    totalSplicePoints
+    totalCapacity
+    usedCapacity
+    availableCapacity
+    capacityUtilizationPercent
+    cablesByStatus
+    cablesByType
+    healthyCables
+    degradedCables
+    failedCables
+    networkHealthScore
+    totalServiceAreas
+    activeServiceAreas
+    homesPassed
+    homesConnected
+    penetrationRatePercent
+    averageCableLossDbPerKm
+    averageSpliceLossDb
+    cablesDueForTesting
+    cablesActive
+    cablesInactive
+    cablesUnderConstruction
+    cablesMaintenance
+    cablesWithHighLoss
+    distributionPointsNearCapacity
+    serviceAreasNeedsExpansion
+    generatedAt
+  }
+}
+
+query FiberDashboard {
+  fiberDashboard {
+    analytics {
+      totalFiberKm
+      totalCables
+      totalStrands
+      totalDistributionPoints
+      totalSplicePoints
+      capacityUtilizationPercent
+      networkHealthScore
+      homesPassed
+      homesConnected
+      penetrationRatePercent
+    }
+    topCablesByUtilization {
+      id
+      cableId
+      name
+      capacityUtilizationPercent
+      totalStrands
+      usedStrands
+    }
+    topDistributionPointsByCapacity {
+      id
+      name
+      capacityUtilizationPercent
+      totalCapacity
+      usedCapacity
+    }
+    topServiceAreasByPenetration {
+      id
+      name
+      city
+      penetrationRatePercent
+      homesPassed
+      homesConnected
+    }
+    cablesRequiringAttention {
+      id
+      cableId
+      cableName
+      healthStatus
+      healthScore
+      requiresMaintenance
+    }
+    recentTestResults {
+      testId
+      cableId
+      strandId
+      testedAt
+      isPassing
+      totalLossDb
+    }
+    distributionPointsNearCapacity {
+      id
+      name
+      capacityUtilizationPercent
+    }
+    serviceAreasExpansionCandidates {
+      id
+      name
+      penetrationRatePercent
+      homesPassed
+    }
+    newConnectionsTrend
+    capacityUtilizationTrend
+    networkHealthTrend
+    generatedAt
+  }
+}

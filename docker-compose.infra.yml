@@ -1,0 +1,265 @@
+services:
+  # =================================================================
+  # CORE INFRASTRUCTURE
+  # =================================================================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: dotmac-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dotmac
+      POSTGRES_USER: dotmac_user
+      POSTGRES_PASSWORD: dev_local_pg_password_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dotmac_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dotmac-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: dotmac-redis
+    restart: unless-stopped
+    command: redis-server --requirepass dev_local_redis_password_123
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dotmac-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: dotmac-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: dev_local_minio_root_pw
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # IPAM / DCIM (NetBox)
+  # =================================================================
+
+  netbox-postgres:
+    image: postgres:15-alpine
+    container_name: dotmac-netbox-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: netbox
+      POSTGRES_USER: netbox
+      POSTGRES_PASSWORD: dev_local_netbox_pg_password
+    volumes:
+      - netbox_postgres_data:/var/lib/postgresql/data
+    networks:
+      - dotmac-network
+
+  netbox-redis-cache:
+    image: redis:7-alpine
+    container_name: dotmac-netbox-redis-cache
+    restart: unless-stopped
+    command: redis-server --requirepass dev_local_netbox_redis_password
+    networks:
+      - dotmac-network
+
+  netbox:
+    image: netboxcommunity/netbox:latest
+    container_name: dotmac-netbox
+    restart: unless-stopped
+    environment:
+      DB_HOST: netbox-postgres
+      DB_NAME: netbox
+      DB_USER: netbox
+      DB_PASSWORD: dev_local_netbox_pg_password
+      REDIS_HOST: netbox-redis-cache
+      REDIS_PASSWORD: dev_local_netbox_redis_password
+      SECRET_KEY: dev_local_netbox_secret_key_that_is_longer_than_50_chars!!
+      SUPERUSER_NAME: admin
+      SUPERUSER_EMAIL: admin@example.com
+      SUPERUSER_PASSWORD: admin
+      SKIP_SUPERUSER: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - netbox_media:/opt/netbox/netbox/media
+    depends_on:
+      - netbox-postgres
+      - netbox-redis-cache
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # SEARCH SERVICES
+  # =================================================================
+
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: dotmac-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: dev_local_meili_master_key
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # MONITORING & OBSERVABILITY
+  # =================================================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: dotmac-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    networks:
+      - dotmac-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dotmac-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - dotmac-network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: dotmac-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - dotmac-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: dotmac-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: :9411
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"  # UI
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - dotmac-network
+
+  # =================================================================
+  # SECRETS MANAGEMENT
+  # =================================================================
+
+  openbao:
+    image: openbao/openbao:latest
+    container_name: dotmac-openbao
+    restart: unless-stopped
+    command: server -dev -dev-listen-address=0.0.0.0:8200
+    environment:
+      BAO_DEV_ROOT_TOKEN_ID: ${VAULT__TOKEN:-dev-token-12345}
+      BAO_ADDR: http://0.0.0.0:8200
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    healthcheck:
+      test: ["CMD", "sh", "-c", "BAO_ADDR=http://127.0.0.1:8200 bao status"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dotmac-network
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: dotmac-alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - "9093:9093"
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      - dotmac-network
+
+volumes:
+  # Core
+  postgres_data:
+  redis_data:
+  minio_data:
+
+  # NetBox
+  netbox_postgres_data:
+  netbox_media:
+
+  # Search
+  meilisearch_data:
+
+  # Monitoring
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  alertmanager_data:
+
+networks:
+  dotmac-network:
+    name: dotmac-network
+    driver: bridge

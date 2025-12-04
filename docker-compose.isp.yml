@@ -1,0 +1,181 @@
+services:
+  isp-backend:
+    build:
+      context: .
+      dockerfile: ${ISP_BACKEND_DOCKERFILE:-Dockerfile}
+    command: ${ISP_BACKEND_COMMAND:-uvicorn dotmac.platform.main:app --host 0.0.0.0 --port 8000}
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ISP_ENVIRONMENT:-development}
+      LOG_LEVEL: ${ISP_LOG_LEVEL:-debug}
+      DATABASE__HOST: ${ISP_DATABASE__HOST:-dotmac-postgres}
+      DATABASE__PORT: ${ISP_DATABASE__PORT:-5432}
+      DATABASE__DATABASE: ${ISP_DATABASE__DATABASE:-dotmac}
+      DATABASE__USERNAME: ${ISP_DATABASE__USERNAME:-dotmac_user}
+      DATABASE__PASSWORD: ${ISP_DATABASE__PASSWORD:-dev_local_pg_password_123}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:dev_local_pg_password_123@dotmac-postgres:5432/dotmac}
+      REDIS__HOST: ${ISP_REDIS__HOST:-dotmac-redis}
+      REDIS__PORT: ${ISP_REDIS__PORT:-6379}
+      REDIS__DB: ${ISP_REDIS__DB:-0}
+      REDIS__PASSWORD: ${ISP_REDIS__PASSWORD:-dev_local_redis_password_123}
+      STORAGE__ENDPOINT: ${ISP_STORAGE__ENDPOINT:-http://dotmac-minio:9000}
+      STORAGE__ACCESS_KEY: ${ISP_STORAGE__ACCESS_KEY:-minioadmin}
+      STORAGE__SECRET_KEY: ${ISP_STORAGE__SECRET_KEY:-dev_local_minio_root_pw}
+      STORAGE__BUCKET: ${ISP_STORAGE__BUCKET:-dotmac}
+      STORAGE__USE_SSL: ${ISP_STORAGE__USE_SSL:-false}
+      VAULT__ENABLED: ${ISP_VAULT__ENABLED:-false}
+      VAULT__URL: ${ISP_VAULT__URL:-http://dotmac-vault:8200}
+      VAULT__TOKEN: ${ISP_VAULT__TOKEN:-dev-token-12345}
+      SECRET_KEY: ${ISP_SECRET_KEY:-dev-secret-key-change-me-min-32-chars}
+      AUTH__JWT_SECRET_KEY: ${JWT_SECRET:-dev-jwt-secret-key-change-me-min-32-chars}
+      CELERY__BROKER_URL: ${ISP_CELERY__BROKER_URL:-redis://dotmac-redis:6379/2}
+      CELERY__RESULT_BACKEND: ${ISP_CELERY__RESULT_BACKEND:-redis://dotmac-redis:6379/3}
+      REQUIRE_REDIS_SESSIONS: ${ISP_REQUIRE_REDIS_SESSIONS:-false}
+      # CORS Configuration - add your server IP/domain here
+      CORS__ENABLED: ${CORS__ENABLED:-true}
+      CORS__ORIGINS: ${CORS__ORIGINS:-["http://localhost:3000","http://localhost:3001","http://localhost:3002","http://localhost:8000","http://127.0.0.1:3000","http://127.0.0.1:3001","http://149.102.135.97:3001","http://149.102.135.97:3002","http://149.102.135.97:8000"]}
+      CORS__CREDENTIALS: ${CORS__CREDENTIALS:-true}
+      # OpenTelemetry configuration
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://dotmac-jaeger:4318}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-isp-backend}
+      OBSERVABILITY__OTEL_ENDPOINT: ${OBSERVABILITY__OTEL_ENDPOINT:-http://dotmac-jaeger:4318}
+    ports:
+      - "${ISP_BACKEND_PORT:-8000}:8000"
+    volumes:
+      - isp_storage:/var/lib/dotmac
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - default
+
+  isp-frontend:
+    build:
+      context: ./frontend
+      dockerfile: apps/isp-ops-app/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:8000}
+        INTERNAL_API_URL: ${INTERNAL_API_URL:-http://isp-backend:8000}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${ISP_FRONTEND_NODE_ENV:-production}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://isp-backend:8000}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:dev_local_pg_password_123@dotmac-postgres:5432/dotmac}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key-change-me-min-32-chars}
+    ports:
+      - "${ISP_FRONTEND_PORT:-3001}:3000"
+    depends_on:
+      - isp-backend
+    networks:
+      - default
+
+  # ISP-only MongoDB for GenieACS
+  # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: dev_local_mongo_password
+      MONGO_INITDB_DATABASE: genieacs
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+  # ISP-only GenieACS (TR-069 ACS for CPE management)
+  # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
+  genieacs:
+    image: drumsergio/genieacs:latest
+    restart: unless-stopped
+    environment:
+      GENIEACS_CWMP_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-cwmp-access.log
+      GENIEACS_NBI_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-nbi-access.log
+      GENIEACS_FS_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-fs-access.log
+      GENIEACS_UI_ACCESS_LOG_FILE: /var/log/genieacs/genieacs-ui-access.log
+      GENIEACS_DEBUG_FILE: /var/log/genieacs/genieacs-debug.yaml
+      GENIEACS_MONGODB_CONNECTION_URL: mongodb://admin:dev_local_mongo_password@mongodb:27017/genieacs?authSource=admin
+    ports:
+      - "7547:7547"
+      - "7557:7557"
+      - "7567:7567"
+      - "7577:7577"
+    volumes:
+      - genieacs_data:/opt/genieacs/ext
+      - genieacs_logs:/var/log/genieacs
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      # Use Node (available in the image) to avoid depending on curl/wget
+      test:
+        - CMD-SHELL
+        - >
+          node -e "const http=require('http');
+          http.get('http://localhost:7557/devices?limit=1',res=>{
+            if(res.statusCode<400)process.exit(0);
+            console.error('GenieACS healthcheck HTTP',res.statusCode);
+            process.exit(1);
+          }).on('error',err=>{
+            console.error('GenieACS healthcheck error',err.message);
+            process.exit(1);
+          });"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - default
+
+  # ISP-only RADIUS (FreeRADIUS)
+  # Stack Placement: ISP-ONLY - Do NOT include in platform-admin stack
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    container_name: isp-freeradius
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: ${ISP_RADIUS_POSTGRES_HOST:-dotmac-postgres}
+      POSTGRES_PORT: ${ISP_RADIUS_POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${ISP_RADIUS_POSTGRES_DB:-dotmac}
+      POSTGRES_USER: ${ISP_RADIUS_POSTGRES_USER:-dotmac_user}
+      POSTGRES_PASSWORD: ${ISP_RADIUS_POSTGRES_PASSWORD:-dev_local_pg_password_123}
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+      - "3799:3799/udp"
+    volumes:
+      - freeradius_config:/etc/raddb
+    healthcheck:
+      # Check if radiusd process is running
+      test: ["CMD-SHELL", "pgrep -f 'freeradius|radiusd'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - default
+
+volumes:
+  isp_storage:
+  freeradius_config:
+  mongodb_data:
+  genieacs_data:
+  genieacs_logs:
+
+networks:
+  default:
+    name: dotmac-network
+    external: true

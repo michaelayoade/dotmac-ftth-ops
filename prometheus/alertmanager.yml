@@ -1,0 +1,71 @@
+# Alertmanager Configuration
+# Routes alerts to DotMac's dynamic webhook router
+
+global:
+  resolve_timeout: 5m
+
+# Templates for notification formatting
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route all alerts to our dynamic webhook router
+route:
+  # Default receiver for all alerts
+  receiver: 'dotmac-webhook'
+
+  # Group alerts by these labels to reduce noise
+  group_by: ['alertname', 'tenant_id', 'severity']
+
+  # Wait before sending initial notification (allows grouping)
+  group_wait: 10s
+
+  # Wait before sending updates about existing alerts
+  group_interval: 5m
+
+  # Resend alerts if not resolved
+  repeat_interval: 4h
+
+  # Routes for specific alert types (optional - can be configured later)
+  routes:
+    # Critical alerts - send immediately, no grouping delay
+    - match:
+        severity: critical
+      receiver: 'dotmac-webhook'
+      group_wait: 0s
+      repeat_interval: 30m
+
+    # Info/recovery alerts - less frequent
+    - match:
+        severity: info
+      receiver: 'dotmac-webhook'
+      repeat_interval: 12h
+
+# Receivers
+receivers:
+  # Dynamic webhook receiver
+  # Routes to our FastAPI endpoint which handles dynamic channel routing
+  - name: 'dotmac-webhook'
+    webhook_configs:
+      - url: '${ALERTMANAGER_WEBHOOK_URL}'
+        send_resolved: true
+        http_config:
+          headers:
+            Authorization: "Bearer ${ALERTMANAGER_WEBHOOK_SECRET}"
+            X-Alertmanager-Token: '${ALERTMANAGER_WEBHOOK_SECRET}'
+        max_alerts: 0  # Send all alerts (no truncation)
+
+# Inhibition rules (prevent redundant alerts)
+inhibit_rules:
+  # Don't send warning if critical is already firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'tenant_id', 'instance']
+
+  # Don't send resolved alerts if firing alerts exist
+  - source_match:
+      alertname: 'HighErrorRate'
+    target_match:
+      alertname: 'ErrorRateRecovered'
+    equal: ['tenant_id']

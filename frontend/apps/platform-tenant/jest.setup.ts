@@ -1,0 +1,95 @@
+import "@testing-library/jest-dom";
+import { TextEncoder, TextDecoder } from "util";
+
+// Mock tenant config
+jest.mock("@/lib/config", () => ({
+  tenantConfig: {
+    api: {
+      baseUrl: "http://localhost:3000",
+      prefix: "/api/platform/v1/tenant",
+      timeout: 30000,
+      buildUrl: (path: string) => {
+        const normalized = path.startsWith("/") ? path : `/${path}`;
+        const prefixed = normalized.startsWith("/api/platform/v1/tenant") ? normalized : `/api/platform/v1/tenant${normalized}`;
+        return `http://localhost:3000${prefixed}`;
+      },
+    },
+    app: {
+      name: "Tenant Portal",
+      version: "1.0.0",
+      environment: "test",
+    },
+  },
+}));
+
+// Polyfills
+if (!(global as any).TextEncoder) {
+  (global as any).TextEncoder = TextEncoder;
+}
+if (!(global as any).TextDecoder) {
+  (global as any).TextDecoder = TextDecoder as typeof TextDecoder;
+}
+
+// Mock Next.js router
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      push: jest.fn(),
+      replace: jest.fn(),
+      prefetch: jest.fn(),
+      back: jest.fn(),
+      pathname: "/",
+      query: {},
+      asPath: "/",
+    };
+  },
+  usePathname() {
+    return "/";
+  },
+  useSearchParams() {
+    return new URLSearchParams();
+  },
+}));
+
+// Mock window.matchMedia
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  takeRecords() {
+    return [];
+  }
+  unobserve() {}
+} as any;
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  unobserve() {}
+} as any;
+
+// Mock fetch
+global.fetch = jest.fn();
+
+// Reset mocks between tests
+beforeEach(() => {
+  jest.clearAllMocks();
+  (global.fetch as jest.Mock).mockReset();
+});

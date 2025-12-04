@@ -1,0 +1,32 @@
+# Prometheus configuration for DotMac Platform
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'dotmac-alertmanager:9093'
+
+# Load alerting rules
+rule_files:
+  - '/etc/prometheus/alerts/*.yml'
+
+scrape_configs:
+  # Scrape OTEL collector metrics (requires 'observability' profile)
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8888']
+        labels:
+          service: 'otel-collector'
+
+  # Scrape platform API metrics
+  - job_name: 'dotmac-platform'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['app:8000']
+        labels:
+          service: 'platform-api'

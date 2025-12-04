@@ -1,0 +1,19 @@
+#
+# FreeRADIUS authorize file for LOCAL TESTING ONLY
+#
+# WARNING: This file contains a test user that bypasses authentication.
+# NEVER mount this file in production!
+#
+# Usage:
+#   docker-compose.override.yml (create your own override file):
+#     volumes:
+#       - ./config/radius/authorize.test:/etc/raddb/mods-config/files/authorize
+#
+
+# Test user for healthcheck and smoke tests (LOCAL ONLY)
+test    Cleartext-Password := "test"
+        Reply-Message = "Hello from FreeRADIUS (TEST MODE)"
+
+# DEFAULT - Fall through to SQL database for all other users
+DEFAULT Auth-Type := SQL
+        Fall-Through = Yes

@@ -1,0 +1,49 @@
+services:
+  platform-worker:
+    image: ${PLATFORM_WORKER_IMAGE:-dotmac/platform-worker:latest}
+    command: ${PLATFORM_WORKER_COMMAND:-worker}
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:change-me@dotmac-postgres:5432/dotmac}
+      REDIS__HOST: ${REDIS__HOST:-dotmac-redis}
+      REDIS__PORT: ${REDIS__PORT:-6379}
+      REDIS__PASSWORD: ${REDIS__PASSWORD:-dev_local_redis_password_123}
+      CELERY__BROKER_URL: ${CELERY__BROKER_URL:-redis://:dev_local_redis_password_123@dotmac-redis:6379/2}
+      CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://:dev_local_redis_password_123@dotmac-redis:6379/3}
+      CELERY_APP: ${CELERY_APP:-dotmac.platform.tasks.celery_app}
+      CELERY_LOGLEVEL: ${CELERY_LOGLEVEL:-info}
+      CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-4}
+      CELERY_MAX_TASKS_PER_CHILD: ${CELERY_MAX_TASKS_PER_CHILD:-1000}
+      CELERY_TASK_SOFT_TIME_LIMIT: ${CELERY_TASK_SOFT_TIME_LIMIT:-300}
+      CELERY_TASK_TIME_LIMIT: ${CELERY_TASK_TIME_LIMIT:-600}
+      CELERY_QUEUES: ${CELERY_QUEUES:-celery,priority,background}
+      CELERY_HOSTNAME: ${CELERY_HOSTNAME:-worker@%h}
+      STORAGE__ENDPOINT: ${STORAGE__ENDPOINT:-http://dotmac-minio:9000}
+      STORAGE__ACCESS_KEY: ${STORAGE__ACCESS_KEY:-minioadmin}
+      STORAGE__SECRET_KEY: ${STORAGE__SECRET_KEY:-dev_local_minio_root_pw}
+      STORAGE__BUCKET: ${STORAGE__BUCKET:-dotmac}
+      VAULT__ENABLED: ${VAULT__ENABLED:-false}
+      VAULT__URL: ${VAULT__URL:-http://dotmac-vault:8200}
+      VAULT__TOKEN: ${VAULT__TOKEN:-dev-token-12345}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://dotmac-jaeger:4317}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dotmac-platform-worker}
+      OBSERVABILITY__OTEL_ENDPOINT: ${OBSERVABILITY__OTEL_ENDPOINT:-http://dotmac-jaeger:4318}
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A ${CELERY_APP:-dotmac.platform.tasks.celery_app} inspect ping || exit 1"]
+      interval: 60s
+      timeout: 30s
+      start_period: 120s
+      retries: 3
+    depends_on:
+      - platform-backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  default:
+    name: dotmac-network
+    external: true

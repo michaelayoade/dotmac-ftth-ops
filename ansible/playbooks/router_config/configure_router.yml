@@ -1,0 +1,174 @@
+---
+# Router Configuration Playbook
+# Configures customer premise routers (CPE) for ISP services
+
+- name: Configure Customer Router
+  hosts: "{{ target_router }}"
+  gather_facts: yes
+  vars:
+    router_id: "{{ router_device_id }}"
+    customer_id: "{{ customer_id }}"
+    wan_interface: "{{ wan_interface_name | default('ge-0/0/0') }}"
+    lan_interface: "{{ lan_interface_name | default('ge-0/0/1') }}"
+    wan_ip: "{{ assigned_wan_ip }}"
+    wan_gateway: "{{ isp_gateway_ip }}"
+    wan_vlan: "{{ service_vlan | default(omit) }}"
+    dns_servers: "{{ dns_server_list | default(['8.8.8.8', '8.8.4.4']) }}"
+    dhcp_enabled: "{{ enable_dhcp | default(true) }}"
+    dhcp_range_start: "{{ dhcp_start | default('192.168.1.100') }}"
+    dhcp_range_end: "{{ dhcp_end | default('192.168.1.200') }}"
+    wifi_enabled: "{{ enable_wifi | default(true) }}"
+    wifi_ssid: "{{ wifi_network_name }}"
+    wifi_password: "{{ wifi_network_password }}"
+
+  tasks:
+    - name: Validate router connectivity
+      wait_for_connection:
+        timeout: 60
+      tags: [validate]
+
+    - name: Get router facts
+      ios_facts:
+      register: router_facts
+      when: ansible_network_os == 'ios'
+      tags: [facts]
+
+    - name: Configure WAN interface (no VLAN)
+      ios_config:
+        lines:
+          - description "ISP WAN - Service {{ service_id }}"
+          - ip address {{ wan_ip }} {{ wan_netmask }}
+          - no shutdown
+        parents: interface {{ wan_interface }}
+      when: wan_vlan is not defined and ansible_network_os == 'ios'
+      tags: [wan]
+
+    - name: Configure WAN interface (with VLAN)
+      ios_config:
+        lines:
+          - description "ISP WAN VLAN {{ wan_vlan }}"
+          - encapsulation dot1Q {{ wan_vlan }}
+          - ip address {{ wan_ip }} {{ wan_netmask }}
+          - no shutdown
+        parents: interface {{ wan_interface }}.{{ wan_vlan }}
+      when: wan_vlan is defined and ansible_network_os == 'ios'
+      tags: [wan, vlan]
+
+    - name: Configure default route
+      ios_config:
+        lines:
+          - ip route 0.0.0.0 0.0.0.0 {{ wan_gateway }}
+      when: ansible_network_os == 'ios'
+      tags: [routing]
+
+    - name: Configure DNS servers
+      ios_config:
+        lines: "{{ dns_servers | map('regex_replace', '^(.*)$', 'ip name-server \\1') | list }}"
+      when: ansible_network_os == 'ios'
+      tags: [dns]
+
+    - name: Configure LAN interface
+      ios_config:
+        lines:
+          - description "LAN Interface"
+          - ip address {{ lan_ip }} {{ lan_netmask }}
+          - no shutdown
+        parents: interface {{ lan_interface }}
+      when: ansible_network_os == 'ios'
+      tags: [lan]
+
+    - name: Configure DHCP pool
+      ios_config:
+        lines:
+          - network {{ lan_network }} {{ lan_netmask }}
+          - default-router {{ lan_ip }}
+          - dns-server {{ dns_servers | join(' ') }}
+        parents: ip dhcp pool LAN_POOL
+      when: dhcp_enabled and ansible_network_os == 'ios'
+      tags: [dhcp]
+
+    - name: Configure DHCP excluded addresses
+      ios_config:
+        lines:
+          - ip dhcp excluded-address {{ lan_ip }} {{ dhcp_range_start }}
+      when: dhcp_enabled and ansible_network_os == 'ios'
+      tags: [dhcp]
+
+    - name: Configure NAT
+      ios_config:
+        lines:
+          - ip nat inside source list 1 interface {{ wan_interface }} overload
+          - access-list 1 permit {{ lan_network }} {{ lan_wildcard }}
+      when: ansible_network_os == 'ios'
+      tags: [nat]
+
+    - name: Apply NAT to interfaces
+      ios_config:
+        lines:
+          - ip nat inside
+        parents: interface {{ lan_interface }}
+      when: ansible_network_os == 'ios'
+      tags: [nat]
+
+    - name: Apply NAT to WAN interface
+      ios_config:
+        lines:
+          - ip nat outside
+        parents: interface {{ wan_interface }}
+      when: ansible_network_os == 'ios'
+      tags: [nat]
+
+    - name: Configure WiFi SSID (if applicable)
+      ios_config:
+        lines:
+          - ssid {{ wifi_ssid }}
+          - authentication open
+          - authentication key-management wpa version 2
+          - wpa-psk ascii {{ wifi_password }}
+          - guest-mode
+        parents: dot11 ssid {{ wifi_ssid }}
+      when: wifi_enabled and ansible_network_os == 'ios'
+      tags: [wifi]
+
+    - name: Enable WiFi radio
+      ios_config:
+        lines:
+          - no shutdown
+        parents: interface Dot11Radio0
+      when: wifi_enabled and ansible_network_os == 'ios'
+      tags: [wifi]
+
+    - name: Save configuration
+      ios_config:
+        save_when: always
+      when: ansible_network_os == 'ios'
+      tags: [save]
+
+    - name: Verify connectivity
+      ios_command:
+        commands:
+          - ping {{ wan_gateway }} repeat 3
+      register: ping_result
+      when: ansible_network_os == 'ios'
+      tags: [verify]
+
+    - name: Report configuration status
+      uri:
+        url: "{{ callback_url }}/api/v1/ansible/router-config-complete"
+        method: POST
+        body_format: json
+        body:
+          router_id: "{{ router_id }}"
+          customer_id: "{{ customer_id }}"
+          status: "{{ 'success' if ping_result.failed == false else 'failed' }}"
+          wan_ip: "{{ wan_ip }}"
+          configuration_timestamp: "{{ ansible_date_time.iso8601 }}"
+        headers:
+          Authorization: "Bearer {{ api_token }}"
+      when: callback_url is defined
+      tags: [notify]
+
+  post_tasks:
+    - name: Log configuration completion
+      debug:
+        msg: "Router {{ router_id }} configured successfully for customer {{ customer_id }}"

@@ -1,0 +1,20 @@
+{
+  "extends": "../typescript-config/base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dotmac/utils": ["src/index.ts"],
+      "@dotmac/utils/*": ["src/*"]
+    }
+  },
+  "files": ["src/index.ts", "src/observability.ts", "src/a11y-dev-warnings.ts"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.*", "**/*.spec.*", "**/*.stories.*"]
+}

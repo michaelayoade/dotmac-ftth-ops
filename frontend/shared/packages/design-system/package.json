@@ -1,0 +1,31 @@
+{
+  "name": "@dotmac/design-system",
+  "version": "0.1.0",
+  "description": "Design system components for DotMac platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "react",
+    "design-system",
+    "components",
+    "dotmac"
+  ],
+  "author": "DotMac Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@dotmac/typescript-config": "workspace:*",
+    "typescript": "^5.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}

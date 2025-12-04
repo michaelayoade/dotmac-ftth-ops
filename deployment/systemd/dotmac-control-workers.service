@@ -1,0 +1,41 @@
+[Unit]
+Description=DotMac WebSocket Control Workers
+After=network.target redis.service postgresql.service
+Wants=redis.service postgresql.service
+
+[Service]
+Type=simple
+User=dotmac
+Group=dotmac
+WorkingDirectory=/opt/dotmac
+
+# Load credentials from environment file
+# Create /etc/dotmac/control-workers.env with actual credentials
+# Example:
+#   DATABASE_URL=postgresql://dotmac_user:your_password@localhost:5432/dotmac
+#   REDIS_URL=redis://localhost:6379/0
+#   LOG_LEVEL=INFO
+Environment="PYTHONPATH=/opt/dotmac/src"
+Environment="LOG_LEVEL=INFO"
+# Fallback defaults load first; EnvironmentFile can override them
+EnvironmentFile=-/etc/dotmac/control-workers.env
+# Note: DATABASE_URL and REDIS_URL MUST be provided via EnvironmentFile
+
+# Run the control workers
+ExecStart=/opt/dotmac/.venv/bin/python -m dotmac.platform.realtime.control_workers
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Resource limits
+LimitNOFILE=65536
+Nice=0
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dotmac-control-workers
+
+[Install]
+WantedBy=multi-user.target

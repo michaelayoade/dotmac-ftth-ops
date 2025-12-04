@@ -1,0 +1,94 @@
+# RFC 5176 - Dynamic Authorization Extensions to RADIUS
+#
+# CoA (Change of Authorization) and DM (Disconnect Messages)
+# https://tools.ietf.org/html/rfc5176
+#
+# This dictionary defines packet types and attributes for RADIUS
+# dynamic authorization operations.
+
+# ============================================================================
+# CoA/DM Packet Types
+# ============================================================================
+
+# CoA-Request (43)
+# Sent by DAC (Dynamic Authorization Client) to NAS
+# Requests a change in authorization for an active session
+VALUE	Packet-Type			CoA-Request		43
+
+# CoA-ACK (44)
+# Sent by NAS in response to CoA-Request
+# Indicates successful processing of CoA-Request
+VALUE	Packet-Type			CoA-ACK			44
+
+# CoA-NAK (45)
+# Sent by NAS in response to CoA-Request
+# Indicates CoA-Request could not be processed
+VALUE	Packet-Type			CoA-NAK			45
+
+# Disconnect-Request (40)
+# Sent by DAC to NAS
+# Requests immediate termination of user session
+VALUE	Packet-Type			Disconnect-Request	40
+
+# Disconnect-ACK (41)
+# Sent by NAS in response to Disconnect-Request
+# Indicates successful session disconnection
+VALUE	Packet-Type			Disconnect-ACK		41
+
+# Disconnect-NAK (42)
+# Sent by NAS in response to Disconnect-Request
+# Indicates session could not be disconnected
+VALUE	Packet-Type			Disconnect-NAK		42
+
+# ============================================================================
+# CoA/DM Specific Attributes
+# ============================================================================
+
+# Error-Cause (101)
+# Indicates reason for NAK response
+ATTRIBUTE	Error-Cause			101	integer
+
+# Error-Cause Values
+VALUE	Error-Cause			Residual-Session-Context-Removed	201
+VALUE	Error-Cause			Invalid-EAP-Packet	202
+VALUE	Error-Cause			Unsupported-Attribute	401
+VALUE	Error-Cause			Missing-Attribute	402
+VALUE	Error-Cause			NAS-Identification-Mismatch	403
+VALUE	Error-Cause			Invalid-Request		404
+VALUE	Error-Cause			Unsupported-Service	405
+VALUE	Error-Cause			Unsupported-Extension	406
+VALUE	Error-Cause			Invalid-Attribute-Value	407
+VALUE	Error-Cause			Administratively-Prohibited	501
+VALUE	Error-Cause			Request-Not-Routable	502
+VALUE	Error-Cause			Session-Context-Not-Found	503
+VALUE	Error-Cause			Session-Context-Not-Removable	504
+VALUE	Error-Cause			Other-Proxy-Processing-Error	505
+VALUE	Error-Cause			Resources-Unavailable	506
+VALUE	Error-Cause			Request-Initiated	507
+VALUE	Error-Cause			Multiple-Session-Selection-Unsupported	508
+
+# ============================================================================
+# Session Identification Attributes (from base RADIUS)
+# ============================================================================
+
+# These attributes are used to identify the session to modify/disconnect:
+# - User-Name (1) - Username
+# - NAS-IP-Address (4) - NAS IP address
+# - Acct-Session-Id (44) - Accounting session ID
+# - Framed-IP-Address (8) - Client IP address
+# - Called-Station-Id (30) - NAS port/MAC
+# - Calling-Station-Id (31) - Client MAC/phone number
+
+# ============================================================================
+# Usage Notes
+# ============================================================================
+
+# CoA-Request Example:
+#   User-Name = "user@example.com"
+#   NAS-IP-Address = 192.168.1.1
+#   Filter-Id = "100000/50000"  # Download/Upload in Kbps
+#
+# Disconnect-Request Example:
+#   User-Name = "user@example.com"
+#   NAS-IP-Address = 192.168.1.1
+#   Acct-Session-Id = "ABC123456"

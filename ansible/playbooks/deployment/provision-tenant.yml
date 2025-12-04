@@ -1,0 +1,561 @@
+---
+# Ansible Playbook: Provision Tenant Deployment
+#
+# This playbook provisions a complete DotMac ISP Operations deployment
+# for a tenant on on-premises infrastructure.
+#
+# Variables required:
+#   - tenant_id: Tenant identifier
+#   - instance_id: Deployment instance ID
+#   - environment: Environment name (production, staging, dev)
+#   - version: Platform version to deploy
+#   - config: Deployment configuration dictionary
+#   - resources: Resource allocation (cpu_cores, memory_gb, storage_gb)
+
+- name: Provision Tenant Deployment
+  hosts: app_servers
+  become: yes
+  vars:
+    install_dir: "/opt/dotmac/tenant-{{ tenant_id }}"
+    data_dir: "/var/lib/dotmac/tenant-{{ tenant_id }}"
+    venv_dir: "{{ install_dir }}/venv"
+    app_user: "dotmac-{{ tenant_id }}"
+    app_group: "dotmac"
+
+  tasks:
+    # ========================================================================
+    # Prerequisites & System Packages
+    # ========================================================================
+    - name: Install system packages
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - postgresql-client
+          - redis-server
+          - redis-tools
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+          - freeradius
+          - freeradius-postgresql
+          - freeradius-utils
+          - nodejs
+          - npm
+          - git
+          - rsync
+        state: present
+        update_cache: yes
+
+    - name: Install pnpm package manager
+      npm:
+        name: pnpm
+        global: yes
+        state: present
+
+    # ========================================================================
+    # Generate Required Variables (if not provided)
+    # ========================================================================
+    - name: Generate database password
+      set_fact:
+        db_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: db_password is not defined
+
+    - name: Generate Redis password
+      set_fact:
+        redis_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: redis_password is not defined
+
+    - name: Generate RADIUS secret
+      set_fact:
+        radius_secret: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: radius_secret is not defined
+
+    - name: Generate JWT secret key
+      set_fact:
+        jwt_secret_key: "{{ lookup('password', '/dev/null length=64 chars=ascii_letters,digits') }}"
+      when: jwt_secret_key is not defined
+
+    - name: Generate secret key
+      set_fact:
+        secret_key: "{{ lookup('password', '/dev/null length=64 chars=ascii_letters,digits') }}"
+      when: secret_key is not defined
+
+    - name: Capture numeric tenant suffix for port allocation
+      set_fact:
+        tenant_numeric_suffix: "{{ tenant_id | regex_search('\\d+') }}"
+
+    - name: Normalize tenant numeric suffix
+      set_fact:
+        tenant_numeric_suffix_clean: "{{ tenant_numeric_suffix | default('', true) }}"
+
+    - name: Derive tenant port offset
+      set_fact:
+        tenant_port_offset: >-
+          {{
+            (tenant_port_offset | int)
+            if (tenant_port_offset is defined)
+            else (
+              (tenant_numeric_suffix_clean | int)
+              if (tenant_numeric_suffix_clean | length > 0)
+              else (((tenant_id | hash('md5'))[:4]) | int(base=16))
+            )
+          }}
+
+    - name: Set default API port
+      set_fact:
+        app_port: "{{ 8000 + ((tenant_port_offset % 400) * 10) }}"
+      when: app_port is not defined
+
+    - name: Set default frontend port
+      set_fact:
+        frontend_port: "{{ app_port + 1000 }}"
+      when: frontend_port is not defined
+
+    - name: Set default Redis port
+      set_fact:
+        redis_port: "{{ 15000 + (tenant_port_offset % 400) }}"
+      when: redis_port is not defined
+
+    - name: Set default RADIUS auth port
+      set_fact:
+        radius_port: "{{ 1812 + (tenant_port_offset % 200) }}"
+      when: radius_port is not defined
+
+    - name: Set default RADIUS accounting port
+      set_fact:
+        radius_acct_port: "{{ 1813 + (tenant_port_offset % 200) }}"
+      when: radius_acct_port is not defined
+
+    - name: Set default RADIUS CoA port
+      set_fact:
+        radius_coa_port: "{{ 3799 + (tenant_port_offset % 200) }}"
+      when: radius_coa_port is not defined
+
+    - name: Set default configuration values
+      set_fact:
+        db_host: "{{ db_host | default('localhost') }}"
+        db_port: "{{ db_port | default('5432') }}"
+        redis_host: "{{ redis_host | default('127.0.0.1') }}"
+        radius_host: "{{ radius_host | default('127.0.0.1') }}"
+        tenant_name: "{{ tenant_name | default('Tenant ' + tenant_id) }}"
+        environment: "{{ environment | default('production') }}"
+        log_level: "{{ log_level | default('INFO') }}"
+        debug: "{{ debug | default('false') }}"
+        vault_addr: "{{ vault_addr | default('') }}"
+        vault_token: "{{ vault_token | default('') }}"
+        netbox_url: "{{ netbox_url | default('') }}"
+        netbox_api_token: "{{ netbox_api_token | default('') }}"
+        genieacs_url: "{{ genieacs_url | default('') }}"
+        genieacs_username: "{{ genieacs_username | default('') }}"
+        genieacs_password: "{{ genieacs_password | default('') }}"
+        awx_url: "{{ awx_url | default('') }}"
+        awx_api_token: "{{ awx_api_token | default('') }}"
+        smtp_host: "{{ smtp_host | default('localhost') }}"
+        smtp_port: "{{ smtp_port | default('587') }}"
+        smtp_user: "{{ smtp_user | default('') }}"
+        smtp_password: "{{ smtp_password | default('') }}"
+        custom_domain: "{{ custom_domain | default('') }}"
+        ssl_enabled: "{{ ssl_enabled | default(true) }}"
+        frontend_deploy_mode: "{{ frontend_deploy_mode | default('build') }}"
+
+    - name: Set default resource limits
+      set_fact:
+        resources: "{{ resources | default({}) | combine({'max_workers': 4, 'celery_workers': 4, 'redis_max_memory': '256mb'}, recursive=True) }}"
+
+    - name: Set default features
+      set_fact:
+        features: "{{ features | default({}) | combine({'radius_enabled': true, 'billing_enabled': true, 'graphql_enabled': true, 'webhooks_enabled': true, 'wireguard_enabled': false}, recursive=True) }}"
+
+    # ========================================================================
+    # User & Directory Setup
+    # ========================================================================
+    - name: Create application group
+      group:
+        name: "{{ app_group }}"
+        system: yes
+
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        group: "{{ app_group }}"
+        system: yes
+        create_home: no
+        shell: /bin/false
+
+    - name: Create installation directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+      loop:
+        - "{{ install_dir }}"
+        - "{{ data_dir }}"
+        - "{{ data_dir }}/logs"
+        - "{{ data_dir }}/uploads"
+        - "{{ data_dir }}/redis"
+        - "{{ data_dir }}/radius"
+        - "{{ data_dir }}/frontend"
+
+    - name: Ensure Redis data directory permissions
+      file:
+        path: "{{ data_dir }}/redis"
+        state: directory
+        owner: redis
+        group: redis
+        mode: '0750'
+
+    - name: Ensure RADIUS data directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: freerad
+        group: freerad
+        mode: '0750'
+      loop:
+        - "{{ data_dir }}/radius"
+        - "{{ data_dir }}/radius/logs"
+        - "{{ data_dir }}/radius/radacct"
+
+    - name: Install Python virtual environment
+      command: python3 -m venv "{{ venv_dir }}"
+      args:
+        creates: "{{ venv_dir }}/bin/python"
+      become_user: "{{ app_user }}"
+
+    - name: Install DotMac platform
+      pip:
+        name: "dotmac-platform=={{ version }}"
+        virtualenv: "{{ venv_dir }}"
+      become_user: "{{ app_user }}"
+
+    - name: Create database
+      postgresql_db:
+        name: "tenant_{{ tenant_id }}"
+        encoding: UTF-8
+        template: template0
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] }}"
+
+    - name: Create database user
+      postgresql_user:
+        name: "tenant_{{ tenant_id }}_user"
+        password: "{{ db_password }}"
+        db: "tenant_{{ tenant_id }}"
+        priv: ALL
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] }}"
+
+    # ========================================================================
+    # Redis Setup (Per-Tenant Instance)
+    # ========================================================================
+    - name: Create Redis configuration for tenant
+      template:
+        src: redis-tenant.conf.j2
+        dest: "/etc/redis/redis-tenant-{{ tenant_id }}.conf"
+        owner: redis
+        group: redis
+        mode: '0640'
+
+    - name: Create Redis systemd service for tenant
+      template:
+        src: redis-tenant.service.j2
+        dest: "/etc/systemd/system/redis-tenant-{{ tenant_id }}.service"
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable and start Redis for tenant
+      systemd:
+        name: "redis-tenant-{{ tenant_id }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Wait for Redis to be ready
+      wait_for:
+        host: 127.0.0.1
+        port: "{{ redis_port }}"
+        state: started
+        timeout: 30
+
+    # ========================================================================
+    # FreeRADIUS Setup (Per-Tenant Instance)
+    # ========================================================================
+    - name: Create RADIUS configuration directory for tenant
+      file:
+        path: "/etc/freeradius/3.0/sites-available/tenant-{{ tenant_id }}"
+        state: directory
+        owner: freerad
+        group: freerad
+        mode: '0755'
+
+    - name: Deploy RADIUS SQL schema
+      template:
+        src: radius-schema.sql.j2
+        dest: "{{ data_dir }}/radius/schema.sql"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Initialize RADIUS database schema
+      postgresql_query:
+        db: "tenant_{{ tenant_id }}"
+        login_user: "tenant_{{ tenant_id }}_user"
+        login_password: "{{ db_password }}"
+        login_host: "{{ db_host }}"
+        query: "{{ lookup('template', 'radius-schema.sql.j2') }}"
+
+    - name: Deploy RADIUS server configuration
+      template:
+        src: radiusd-tenant.conf.j2
+        dest: "/etc/freeradius/3.0/radiusd-tenant-{{ tenant_id }}.conf"
+        owner: freerad
+        group: freerad
+        mode: '0640'
+        vars:
+          radius_sql_module_name: "sql-tenant-{{ tenant_id }}"
+
+    - name: Deploy RADIUS clients configuration
+      template:
+        src: radius-clients.conf.j2
+        dest: "/etc/freeradius/3.0/clients-tenant-{{ tenant_id }}.conf"
+        owner: freerad
+        group: freerad
+        mode: '0640'
+
+    - name: Deploy RADIUS SQL module configuration
+      template:
+        src: radius-sql.conf.j2
+        dest: "/etc/freeradius/3.0/mods-available/sql-tenant-{{ tenant_id }}"
+        owner: freerad
+        group: freerad
+        mode: '0640'
+
+    - name: Enable RADIUS SQL module
+      file:
+        src: "/etc/freeradius/3.0/mods-available/sql-tenant-{{ tenant_id }}"
+        dest: "/etc/freeradius/3.0/mods-enabled/sql-tenant-{{ tenant_id }}"
+        state: link
+
+    - name: Deploy RADIUS site configuration
+      template:
+        src: radius-site.conf.j2
+        dest: "/etc/freeradius/3.0/sites-available/tenant-{{ tenant_id }}"
+        owner: freerad
+        group: freerad
+        mode: '0640'
+
+    - name: Enable RADIUS site
+      file:
+        src: "/etc/freeradius/3.0/sites-available/tenant-{{ tenant_id }}"
+        dest: "/etc/freeradius/3.0/sites-enabled/tenant-{{ tenant_id }}"
+        state: link
+
+    - name: Create RADIUS systemd service for tenant
+      template:
+        src: freeradius-tenant.service.j2
+        dest: "/etc/systemd/system/freeradius-tenant-{{ tenant_id }}.service"
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable and start RADIUS for tenant
+      systemd:
+        name: "freeradius-tenant-{{ tenant_id }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Wait for RADIUS to be ready
+      wait_for:
+        host: 127.0.0.1
+        port: "{{ radius_port }}"
+        state: started
+        timeout: 30
+
+    # ========================================================================
+    # Backend API & Configuration
+    # ========================================================================
+    - name: Deploy configuration file
+      template:
+        src: config.env.j2
+        dest: "{{ install_dir }}/.env"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0600'
+
+    - name: Run database migrations
+      command: "{{ venv_dir }}/bin/alembic upgrade head"
+      args:
+        chdir: "{{ install_dir }}"
+      environment:
+        DATABASE_URL: "postgresql://tenant_{{ tenant_id }}_user:{{ db_password }}@{{ db_host }}/tenant_{{ tenant_id }}"
+      become_user: "{{ app_user }}"
+
+    - name: Deploy systemd service file
+      template:
+        src: tenant-service.service.j2
+        dest: "/etc/systemd/system/dotmac-tenant-{{ tenant_id }}.service"
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable and start service
+      systemd:
+        name: "dotmac-tenant-{{ tenant_id }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Configure nginx reverse proxy
+      template:
+        src: nginx-site.conf.j2
+        dest: "/etc/nginx/sites-available/tenant-{{ tenant_id }}.conf"
+        mode: '0644'
+      notify: Reload nginx
+
+    - name: Enable nginx site
+      file:
+        src: "/etc/nginx/sites-available/tenant-{{ tenant_id }}.conf"
+        dest: "/etc/nginx/sites-enabled/tenant-{{ tenant_id }}.conf"
+        state: link
+      notify: Reload nginx
+
+    # ========================================================================
+    # Celery Worker Service
+    # ========================================================================
+    - name: Deploy Celery worker systemd service
+      template:
+        src: celery-worker.service.j2
+        dest: "/etc/systemd/system/celery-worker-tenant-{{ tenant_id }}.service"
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable and start Celery worker
+      systemd:
+        name: "celery-worker-tenant-{{ tenant_id }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    # ========================================================================
+    # Frontend Build & Deployment
+    # ========================================================================
+    - name: Clone frontend repository
+      git:
+        repo: "{{ frontend_repo_url | default('https://github.com/yourusername/dotmac-ftth-ops.git') }}"
+        dest: "{{ install_dir }}/frontend"
+        version: "{{ version }}"
+        force: yes
+      become_user: "{{ app_user }}"
+      when: frontend_deploy_mode == 'build'
+
+    - name: Install frontend dependencies
+      command: pnpm install
+      args:
+        chdir: "{{ install_dir }}/frontend/frontend/apps/isp-ops-app"
+      become_user: "{{ app_user }}"
+      when: frontend_deploy_mode == 'build'
+
+    - name: Build ISP Ops frontend
+      command: pnpm build
+      args:
+        chdir: "{{ install_dir }}/frontend/frontend/apps/isp-ops-app"
+      environment:
+        NEXT_PUBLIC_API_BASE_URL: "https://{{ tenant_subdomain }}.{{ domain }}"
+        NEXT_PUBLIC_WS_URL: "wss://{{ tenant_subdomain }}.{{ domain }}/ws"
+        NEXT_PUBLIC_ENVIRONMENT: "{{ environment }}"
+      become_user: "{{ app_user }}"
+      when: frontend_deploy_mode == 'build'
+
+    - name: Copy entire frontend project to deployment directory
+      synchronize:
+        src: "{{ install_dir }}/frontend/frontend/apps/isp-ops-app/"
+        dest: "{{ data_dir }}/frontend/"
+        delete: yes
+        rsync_opts:
+          - "--exclude=node_modules"
+          - "--exclude=.git"
+      delegate_to: "{{ inventory_hostname }}"
+      when: frontend_deploy_mode == 'build'
+
+    - name: Install production dependencies in deployment directory
+      command: pnpm install --prod
+      args:
+        chdir: "{{ data_dir }}/frontend"
+      become_user: "{{ app_user }}"
+      when: frontend_deploy_mode == 'build'
+
+    - name: Deploy frontend systemd service
+      template:
+        src: frontend.service.j2
+        dest: "/etc/systemd/system/frontend-tenant-{{ tenant_id }}.service"
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable and start frontend service
+      systemd:
+        name: "frontend-tenant-{{ tenant_id }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    # ========================================================================
+    # SSL/TLS Certificate Provisioning
+    # ========================================================================
+    - name: Check if certificate already exists
+      stat:
+        path: "/etc/letsencrypt/live/{{ tenant_subdomain }}.{{ domain }}/fullchain.pem"
+      register: cert_exists
+
+    - name: Obtain SSL certificate with certbot
+      command: >
+        certbot --nginx
+        --non-interactive
+        --agree-tos
+        --email {{ ssl_admin_email | default('admin@' + domain) }}
+        -d {{ tenant_subdomain }}.{{ domain }}
+        {% if custom_domain %}
+        -d {{ custom_domain }}
+        {% endif %}
+      when: not cert_exists.stat.exists and ssl_enabled | default(true)
+
+    - name: Setup certificate renewal cron job
+      cron:
+        name: "Renew SSL certificate for tenant {{ tenant_id }}"
+        minute: "0"
+        hour: "3"
+        day: "*/7"
+        job: "/usr/bin/certbot renew --quiet --nginx --deploy-hook 'systemctl reload nginx'"
+        user: root
+      when: ssl_enabled | default(true)
+
+    # ========================================================================
+    # Health Checks & Verification
+    # ========================================================================
+    - name: Wait for application to be ready
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 30
+      delay: 5
+
+    - name: Set endpoint facts
+      set_fact:
+        endpoints:
+          api: "https://{{ tenant_subdomain }}.{{ domain }}/api/v1"
+          ui: "https://{{ tenant_subdomain }}.{{ domain }}"
+          health: "https://{{ tenant_subdomain }}.{{ domain }}/health"
+
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

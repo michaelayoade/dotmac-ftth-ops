@@ -1,0 +1,337 @@
+"""
+Test fixtures for fault management tests
+"""
+
+from datetime import UTC, datetime, timedelta
+from uuid import uuid4
+
+import pytest
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.db import Base
+from dotmac.platform.fault_management.models import (
+    Alarm,
+    AlarmRule,
+    AlarmSeverity,
+    AlarmSource,
+    AlarmStatus,
+    SLADefinition,
+    SLAInstance,
+    SLAStatus,
+)
+
+pytestmark = pytest.mark.integration
+
+_FAULT_TABLE_NAMES = [
+    "alarms",
+    "alarm_notes",
+    "alarm_rules",
+    "sla_definitions",
+    "sla_instances",
+    "sla_breaches",
+    "maintenance_windows",
+    "oncall_schedules",
+    "oncall_rotations",
+]
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def ensure_fault_management_tables(async_db_engine):
+    """Ensure fault management tables exist for each test run."""
+    async with async_db_engine.begin() as conn:
+        fault_tables = [
+            Base.metadata.tables[name]
+            for name in _FAULT_TABLE_NAMES
+            if name in Base.metadata.tables
+        ]
+        if fault_tables:
+            await conn.run_sync(
+                lambda sync_conn: Base.metadata.create_all(
+                    sync_conn, tables=fault_tables, checkfirst=True
+                )
+            )
+
+
+@pytest.fixture
+def session(async_db_session):
+    """Alias for async_db_session to match test expectations.
+
+    This fixture provides a consistent session interface for all fault_management
+    tests that request 'session: AsyncSession' parameter.
+    """
+    return async_db_session
+
+
+@pytest_asyncio.fixture
+async def override_db_session_for_services(async_db_engine):
+    """Override the global AsyncSessionLocal to use test database.
+
+    This ensures that all services, tasks, and other code that creates their own
+    database sessions will use the test database instead of production database.
+
+    NOTE: This fixture is now explicit (not autouse) to avoid unintended side effects.
+    Tests that need this behavior should explicitly request this fixture.
+    """
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    from dotmac.platform import db as db_module
+
+    # Save original session maker
+    original_session_maker = db_module.AsyncSessionLocal
+
+    # Create test session maker bound to test engine
+    test_session_maker = async_sessionmaker(
+        async_db_engine, expire_on_commit=False, class_=AsyncSession
+    )
+
+    # Override global session maker
+    db_module.AsyncSessionLocal = test_session_maker
+    db_module._async_session_maker = test_session_maker
+
+    yield
+
+    # Restore original session maker after test
+    db_module.AsyncSessionLocal = original_session_maker
+    db_module._async_session_maker = original_session_maker
+
+
+@pytest.fixture
+def mock_notification_service(mocker):
+    """Mock NotificationService for integration tests.
+
+    Returns a mock that simulates successful notification creation.
+    Tests can customize the mock behavior as needed.
+    """
+    from unittest.mock import AsyncMock
+    from uuid import uuid4
+
+    # Create mock notification object
+    mock_notification = mocker.MagicMock()
+    mock_notification.id = uuid4()
+    mock_notification.tenant_id = "test-tenant"
+    mock_notification.user_id = uuid4()
+
+    # Create mock service
+    mock_service = mocker.MagicMock()
+    mock_service.create_notification = AsyncMock(return_value=mock_notification)
+    mock_service.send_notification = AsyncMock(return_value=True)
+
+    # Patch the NotificationService class
+    mocker.patch(
+        "dotmac.platform.fault_management.tasks.NotificationService",
+        return_value=mock_service,
+    )
+
+    return mock_service
+
+
+@pytest.fixture
+def sample_alarm_data():
+    """Sample alarm creation data"""
+    return {
+        "alarm_id": "test-alarm-001",
+        "severity": AlarmSeverity.CRITICAL,
+        "source": AlarmSource.NETWORK_DEVICE,
+        "alarm_type": "device.down",
+        "title": "Test Device Down",
+        "description": "Test device is not responding",
+        "resource_type": "device",
+        "resource_id": "device-001",
+        "resource_name": "Test Device",
+        "subscriber_count": 10,
+        "probable_cause": "Network connectivity issue",
+        "recommended_action": "Check device connectivity",
+    }
+
+
+@pytest_asyncio.fixture
+async def sample_alarm(session: AsyncSession, test_tenant: str) -> Alarm:
+    """Create sample alarm in database"""
+    alarm = Alarm(
+        tenant_id=test_tenant,
+        alarm_id="test-alarm-001",
+        severity=AlarmSeverity.CRITICAL,
+        source=AlarmSource.NETWORK_DEVICE,
+        status=AlarmStatus.ACTIVE,
+        alarm_type="device.down",
+        title="Test Device Down",
+        description="Test device is not responding",
+        resource_type="device",
+        resource_id="device-001",
+        resource_name="Test Device",
+        subscriber_count=10,
+        correlation_id=uuid4(),
+        is_root_cause=True,
+        first_occurrence=datetime.now(UTC),
+        last_occurrence=datetime.now(UTC),
+        occurrence_count=1,
+    )
+    session.add(alarm)
+    await session.commit()
+    await session.refresh(alarm)
+    return alarm
+
+
+@pytest_asyncio.fixture
+async def sample_correlation_rule(session: AsyncSession, test_tenant: str) -> AlarmRule:
+    """Create sample correlation rule"""
+    rule = AlarmRule(
+        tenant_id=test_tenant,
+        name="OLT to ONT Correlation",
+        rule_type="correlation",
+        enabled=True,
+        priority=1,
+        conditions={
+            "parent_alarm_type": "olt.down",
+            "child_alarm_type": "ont.offline",
+            "time_window_minutes": 5,
+        },
+        actions={
+            "correlation_action": "correlate",
+            "mark_root_cause": True,
+        },
+    )
+    session.add(rule)
+    await session.commit()
+    await session.refresh(rule)
+    return rule
+
+
+@pytest_asyncio.fixture
+async def sample_sla_definition(session: AsyncSession, test_tenant: str) -> SLADefinition:
+    """Create sample SLA definition"""
+    definition = SLADefinition(
+        tenant_id=test_tenant,
+        name="Enterprise SLA",
+        description="99.9% uptime guarantee",
+        service_type="fiber",
+        availability_target=0.999,  # 0-1 scale
+        # Note: response_time_critical/major/minor have defaults, don't need to specify
+    )
+    session.add(definition)
+    await session.commit()
+    await session.refresh(definition)
+    return definition
+
+
+@pytest_asyncio.fixture
+async def sample_sla_instance(
+    session: AsyncSession,
+    test_tenant: str,
+    sample_sla_definition: SLADefinition,
+) -> SLAInstance:
+    """Create sample SLA instance"""
+    customer_id = uuid4()
+
+    instance = SLAInstance(
+        tenant_id=test_tenant,
+        sla_definition_id=sample_sla_definition.id,
+        customer_id=customer_id,
+        customer_name="Test Customer",
+        service_id=uuid4(),
+        service_name="Internet 100Mbps",
+        status=SLAStatus.COMPLIANT,
+        enabled=True,
+        start_date=datetime.now(UTC),
+        current_availability=99.95,
+        total_downtime=0,
+        unplanned_downtime=0,
+        planned_downtime=0,
+    )
+    session.add(instance)
+    await session.commit()
+    await session.refresh(instance)
+    return instance
+
+
+@pytest_asyncio.fixture
+async def multiple_alarms(session: AsyncSession, test_tenant: str) -> list[Alarm]:
+    """Create multiple alarms for testing queries"""
+    alarms = [
+        # Critical device alarm
+        Alarm(
+            tenant_id=test_tenant,
+            alarm_id="alarm-001",
+            severity=AlarmSeverity.CRITICAL,
+            source=AlarmSource.NETWORK_DEVICE,
+            status=AlarmStatus.ACTIVE,
+            alarm_type="device.down",
+            title="Device 1 Down",
+            resource_type="device",
+            resource_id="device-001",
+            resource_name="Device 1",
+            subscriber_count=50,
+            first_occurrence=datetime.now(UTC) - timedelta(hours=2),
+            last_occurrence=datetime.now(UTC) - timedelta(hours=2),
+            occurrence_count=1,
+        ),
+        # Major service alarm
+        Alarm(
+            tenant_id=test_tenant,
+            alarm_id="alarm-002",
+            severity=AlarmSeverity.MAJOR,
+            source=AlarmSource.SERVICE,
+            status=AlarmStatus.ACKNOWLEDGED,
+            alarm_type="service.degraded",
+            title="Service Degraded",
+            resource_type="service",
+            resource_id="service-001",
+            resource_name="Service 1",
+            subscriber_count=10,
+            first_occurrence=datetime.now(UTC) - timedelta(hours=1),
+            last_occurrence=datetime.now(UTC) - timedelta(hours=1),
+            occurrence_count=1,
+        ),
+        # Minor monitoring alarm
+        Alarm(
+            tenant_id=test_tenant,
+            alarm_id="alarm-003",
+            severity=AlarmSeverity.MINOR,
+            source=AlarmSource.MONITORING,
+            status=AlarmStatus.ACTIVE,
+            alarm_type="threshold.cpu",
+            title="CPU High",
+            resource_type="device",
+            resource_id="device-002",
+            resource_name="Device 2",
+            subscriber_count=0,
+            first_occurrence=datetime.now(UTC) - timedelta(minutes=30),
+            last_occurrence=datetime.now(UTC) - timedelta(minutes=30),
+            occurrence_count=1,
+        ),
+        # Cleared alarm
+        Alarm(
+            tenant_id=test_tenant,
+            alarm_id="alarm-004",
+            severity=AlarmSeverity.MAJOR,
+            source=AlarmSource.CPE,
+            status=AlarmStatus.CLEARED,
+            alarm_type="cpe.offline",
+            title="CPE Offline",
+            resource_type="cpe",
+            resource_id="cpe-001",
+            resource_name="CPE 1",
+            subscriber_count=1,
+            first_occurrence=datetime.now(UTC) - timedelta(days=1),
+            last_occurrence=datetime.now(UTC) - timedelta(days=1),
+            cleared_at=datetime.now(UTC) - timedelta(hours=12),
+            occurrence_count=1,
+        ),
+    ]
+
+    for alarm in alarms:
+        session.add(alarm)
+
+    await session.commit()
+
+    for alarm in alarms:
+        await session.refresh(alarm)
+
+    return alarms
+
+
+@pytest.fixture
+def test_tenant() -> str:
+    """Test tenant ID"""
+    return f"test-tenant-{uuid4().hex[:8]}"

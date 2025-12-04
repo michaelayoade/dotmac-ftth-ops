@@ -1,0 +1,413 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "update": "Actualizar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "refresh": "Actualizar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "submit": "Enviar",
+    "reset": "Restablecer",
+    "clear": "Limpiar",
+    "apply": "Aplicar",
+    "download": "Descargar",
+    "upload": "Subir",
+    "view": "Ver",
+    "viewDetails": "Ver Detalles",
+    "actions": "Acciones",
+    "status": "Estado",
+    "type": "Tipo",
+    "name": "Nombre",
+    "description": "Descripción",
+    "date": "Fecha",
+    "createdAt": "Creado El",
+    "updatedAt": "Actualizado El",
+    "yes": "Sí",
+    "no": "No",
+    "all": "Todos",
+    "none": "Ninguno",
+    "other": "Otro",
+    "noData": "No hay datos disponibles",
+    "noResults": "No se encontraron resultados",
+    "selectOption": "Seleccione una opción",
+    "required": "Requerido",
+    "optional": "Opcional",
+    "selectLanguage": "Seleccionar idioma"
+  },
+
+  "errors": {
+    "generic": "Ocurrió un error. Por favor, inténtelo de nuevo.",
+    "network": "Error de red. Por favor, verifique su conexión.",
+    "notFound": "El recurso solicitado no fue encontrado.",
+    "unauthorized": "No está autorizado para acceder a este recurso.",
+    "forbidden": "No tiene permiso para realizar esta acción.",
+    "validationFailed": "Por favor, verifique su entrada e inténtelo de nuevo.",
+    "serverError": "Ocurrió un error del servidor. Nuestro equipo ha sido notificado.",
+    "timeout": "La solicitud ha expirado. Por favor, inténtelo de nuevo.",
+    "retry": "Por favor, inténtelo de nuevo",
+    "contactSupport": "Si este problema persiste, por favor contacte a soporte.",
+    "field": {
+      "required": "{field} es requerido",
+      "invalid": "{field} no es válido",
+      "tooShort": "{field} es demasiado corto",
+      "tooLong": "{field} es demasiado largo",
+      "email": "Por favor ingrese una dirección de correo válida",
+      "phone": "Por favor ingrese un número de teléfono válido",
+      "url": "Por favor ingrese una URL válida"
+    }
+  },
+
+  "navigation": {
+    "dashboard": "Panel",
+    "customers": "Clientes",
+    "billing": "Facturación",
+    "network": "Red",
+    "support": "Soporte",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión",
+    "profile": "Perfil",
+    "help": "Ayuda",
+    "documentation": "Documentación"
+  },
+
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "signUp": "Registrarse",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "resetPassword": "Restablecer Contraseña",
+    "changePassword": "Cambiar Contraseña",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "rememberMe": "Recuérdame",
+    "loginSuccess": "Sesión iniciada correctamente",
+    "logoutSuccess": "Sesión cerrada correctamente",
+    "loginError": "Correo electrónico o contraseña inválidos",
+    "sessionExpired": "Su sesión ha expirado. Por favor, inicie sesión nuevamente.",
+    "twoFactor": {
+      "title": "Autenticación de Dos Factores",
+      "enable": "Activar 2FA",
+      "disable": "Desactivar 2FA",
+      "verify": "Verificar Código",
+      "enterCode": "Ingrese su código 2FA",
+      "backupCodes": "Códigos de Respaldo",
+      "regenerateBackupCodes": "Regenerar Códigos de Respaldo",
+      "enabled": "Autenticación de dos factores activada",
+      "disabled": "Autenticación de dos factores desactivada",
+      "required": "Se requiere autenticación de dos factores"
+    }
+  },
+
+  "customers": {
+    "title": "Clientes",
+    "createCustomer": "Crear Cliente",
+    "editCustomer": "Editar Cliente",
+    "deleteCustomer": "Eliminar Cliente",
+    "customerDetails": "Detalles del Cliente",
+    "viewCustomer": "Ver Cliente",
+    "searchCustomers": "Buscar clientes...",
+    "totalCustomers": "Total de Clientes",
+    "activeCustomers": "Clientes Activos",
+    "inactiveCustomers": "Clientes Inactivos",
+    "fields": {
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "city": "Ciudad",
+      "state": "Estado/Provincia",
+      "zipCode": "Código Postal",
+      "country": "País",
+      "status": "Estado",
+      "type": "Tipo de Cliente",
+      "tier": "Nivel de Cliente",
+      "notes": "Notas"
+    },
+    "status": {
+      "prospect": "Prospecto",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "suspended": "Suspendido",
+      "churned": "Perdido",
+      "archived": "Archivado"
+    },
+    "type": {
+      "individual": "Individual",
+      "business": "Empresa",
+      "enterprise": "Corporativo",
+      "partner": "Socio",
+      "vendor": "Proveedor"
+    },
+    "messages": {
+      "created": "Cliente creado exitosamente",
+      "updated": "Cliente actualizado exitosamente",
+      "deleted": "Cliente eliminado exitosamente",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este cliente?"
+    }
+  },
+
+  "jobs": {
+    "title": "Trabajos",
+    "viewJob": "Ver Trabajo",
+    "cancelJob": "Cancelar Trabajo",
+    "retryJob": "Reintentar Trabajo",
+    "jobDetails": "Detalles del Trabajo",
+    "status": {
+      "pending": "Pendiente",
+      "assigned": "Asignado",
+      "running": "En Ejecución",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "cancelled": "Cancelado",
+      "retrying": "Reintentando",
+      "timeout": "Tiempo Agotado"
+    },
+    "type": {
+      "bulkImport": "Importación Masiva",
+      "bulkExport": "Exportación Masiva",
+      "dataMigration": "Migración de Datos",
+      "firmwareUpgrade": "Actualización de Firmware",
+      "batchProvisioning": "Aprovisionamiento por Lotes",
+      "batchDeprovisioning": "Desaprovisionamiento por Lotes",
+      "reportGeneration": "Generación de Reportes",
+      "auditExport": "Exportación de Auditoría",
+      "custom": "Personalizado"
+    },
+    "priority": {
+      "low": "Baja",
+      "normal": "Normal",
+      "high": "Alta",
+      "critical": "Crítica"
+    },
+    "fields": {
+      "jobId": "ID del Trabajo",
+      "jobName": "Nombre del Trabajo",
+      "jobType": "Tipo de Trabajo",
+      "status": "Estado",
+      "priority": "Prioridad",
+      "progress": "Progreso",
+      "startedAt": "Iniciado En",
+      "completedAt": "Completado En",
+      "duration": "Duración",
+      "error": "Error"
+    },
+    "messages": {
+      "cancelled": "Trabajo cancelado exitosamente",
+      "retried": "Reintento de trabajo iniciado",
+      "cancelConfirm": "¿Está seguro de que desea cancelar este trabajo?"
+    }
+  },
+
+  "billing": {
+    "title": "Facturación",
+    "invoices": "Facturas",
+    "payments": "Pagos",
+    "subscriptions": "Suscripciones",
+    "paymentMethods": "Métodos de Pago",
+    "createInvoice": "Crear Factura",
+    "viewInvoice": "Ver Factura",
+    "payInvoice": "Pagar Factura",
+    "invoice": {
+      "status": {
+        "draft": "Borrador",
+        "open": "Abierta",
+        "paid": "Pagada",
+        "void": "Anulada",
+        "overdue": "Vencida",
+        "partiallyPaid": "Parcialmente Pagada"
+      }
+    },
+    "payment": {
+      "status": {
+        "pending": "Pendiente",
+        "processing": "Procesando",
+        "succeeded": "Exitoso",
+        "failed": "Fallido",
+        "refunded": "Reembolsado",
+        "partiallyRefunded": "Parcialmente Reembolsado",
+        "cancelled": "Cancelado"
+      }
+    },
+    "fields": {
+      "invoiceNumber": "Número de Factura",
+      "amount": "Monto",
+      "dueDate": "Fecha de Vencimiento",
+      "paidDate": "Fecha de Pago",
+      "customer": "Cliente",
+      "description": "Descripción",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "tax": "Impuesto",
+      "discount": "Descuento"
+    },
+    "messages": {
+      "invoiceCreated": "Factura creada exitosamente",
+      "paymentProcessed": "Pago procesado exitosamente",
+      "paymentFailed": "El pago falló. Por favor, inténtelo de nuevo."
+    }
+  },
+
+  "tickets": {
+    "title": "Tickets de Soporte",
+    "createTicket": "Crear Ticket",
+    "viewTicket": "Ver Ticket",
+    "updateTicket": "Actualizar Ticket",
+    "closeTicket": "Cerrar Ticket",
+    "status": {
+      "open": "Abierto",
+      "inProgress": "En Progreso",
+      "waiting": "Esperando",
+      "resolved": "Resuelto",
+      "closed": "Cerrado"
+    },
+    "priority": {
+      "low": "Baja",
+      "normal": "Normal",
+      "high": "Alta",
+      "urgent": "Urgente"
+    },
+    "type": {
+      "generalInquiry": "Consulta General",
+      "billingIssue": "Problema de Facturación",
+      "technicalSupport": "Soporte Técnico",
+      "installationRequest": "Solicitud de Instalación",
+      "outageReport": "Reporte de Interrupción",
+      "serviceUpgrade": "Actualización de Servicio",
+      "serviceDowngrade": "Degradación de Servicio",
+      "cancellationRequest": "Solicitud de Cancelación",
+      "equipmentIssue": "Problema de Equipo",
+      "speedIssue": "Problema de Velocidad",
+      "networkIssue": "Problema de Red",
+      "connectivityIssue": "Problema de Conectividad",
+      "fault": "Falla",
+      "outage": "Interrupción",
+      "maintenance": "Mantenimiento"
+    },
+    "fields": {
+      "ticketNumber": "Número de Ticket",
+      "subject": "Asunto",
+      "description": "Descripción",
+      "status": "Estado",
+      "priority": "Prioridad",
+      "type": "Tipo",
+      "assignedTo": "Asignado A",
+      "createdBy": "Creado Por",
+      "lastUpdated": "Última Actualización"
+    },
+    "messages": {
+      "created": "Ticket creado exitosamente",
+      "updated": "Ticket actualizado exitosamente",
+      "closed": "Ticket cerrado exitosamente",
+      "closeConfirm": "¿Está seguro de que desea cerrar este ticket?"
+    }
+  },
+
+  "forms": {
+    "validation": {
+      "required": "Este campo es requerido",
+      "email": "Por favor ingrese una dirección de correo válida",
+      "minLength": "Debe tener al menos {min} caracteres",
+      "maxLength": "No debe exceder {max} caracteres",
+      "pattern": "Por favor coincida con el formato solicitado",
+      "number": "Por favor ingrese un número válido",
+      "positive": "Por favor ingrese un número positivo",
+      "url": "Por favor ingrese una URL válida",
+      "phone": "Por favor ingrese un número de teléfono válido"
+    },
+    "messages": {
+      "unsavedChanges": "Tiene cambios sin guardar. ¿Está seguro de que desea salir?",
+      "saveSuccess": "Cambios guardados exitosamente",
+      "saveError": "Error al guardar los cambios"
+    }
+  },
+
+  "pagination": {
+    "showing": "Mostrando {start} a {end} de {total} resultados",
+    "page": "Página {page} de {total}",
+    "rowsPerPage": "Filas por página:",
+    "firstPage": "Primera página",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "lastPage": "Última página"
+  },
+
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "switchTo": "Cambiar al tema {theme}",
+    "modeTitle": "Tema {theme}"
+  },
+
+  "time": {
+    "now": "Justo ahora",
+    "minutesAgo": "{count, plural, =1 {hace 1 minuto} other {hace # minutos}}",
+    "hoursAgo": "{count, plural, =1 {hace 1 hora} other {hace # horas}}",
+    "daysAgo": "{count, plural, =1 {hace 1 día} other {hace # días}}",
+    "weeksAgo": "{count, plural, =1 {hace 1 semana} other {hace # semanas}}",
+    "monthsAgo": "{count, plural, =1 {hace 1 mes} other {hace # meses}}",
+    "yearsAgo": "{count, plural, =1 {hace 1 año} other {hace # años}}"
+  },
+
+  "accessibility": {
+    "skipToMainContent": "Saltar al contenido principal",
+    "statusLabel": "Estado: {status}",
+    "editItem": "Editar {item}",
+    "deleteItem": "Eliminar {item}",
+    "viewItem": "Ver {item}",
+    "cancelItem": "Cancelar {item}",
+    "retryItem": "Reintentar {item}",
+    "goToPage": "Ir a la página {page}",
+    "firstPage": "Ir a la primera página",
+    "previousPage": "Ir a la página anterior",
+    "nextPage": "Ir a la página siguiente",
+    "lastPage": "Ir a la última página",
+    "sortBy": "Ordenar por {column}",
+    "sortedBy": "Ordenado por {column}, {direction}",
+    "ascending": "ascendente",
+    "descending": "descendente",
+    "searchEntity": "Buscar {entity}",
+    "filterBy": "Filtrar por {filter}",
+    "filterByWithCount": "Filtrar por {filter}, {count} activos",
+    "requiredField": "Este campo es requerido",
+    "minLength": "Mínimo {min} caracteres",
+    "maxLength": "Máximo {max} caracteres",
+    "format": {
+      "email": "Debe ser una dirección de correo válida",
+      "phone": "Debe ser un número de teléfono válido",
+      "url": "Debe ser una URL válida",
+      "date": "Debe ser una fecha válida",
+      "number": "Debe ser un número"
+    },
+    "progressLabel": "Progreso de {action}: {progress}%",
+    "loadingEntity": "Cargando {entity}...",
+    "closeDialog": "Cerrar diálogo de {title}",
+    "close": "Cerrar",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "menu": "Menú",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "rowsPerPage": "Filas por página",
+    "of": "de"
+  }
+}

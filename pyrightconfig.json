@@ -1,0 +1,41 @@
+{
+  "include": [
+    "src/dotmac/platform/db.py",
+    "src/dotmac/platform/db/testing.py"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.venv",
+    "venv",
+    ".venv",
+    "build",
+    "dist",
+    "htmlcov",
+    ".pytest_cache",
+    ".coverage",
+    "tests"
+  ],
+  "extraPaths": [
+    "src"
+  ],
+  "stubPath": "stubs",
+  "typeCheckingMode": "standard",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "All",
+  "reportMissingImports": "error",
+  "reportDuplicateImport": "error",
+  "reportInvalidTypeForm": "error",
+  "reportInvalidTypeVarUse": "error",
+  "reportInvalidStubStatement": "error",
+  "reportUnsupportedDunderAll": "error",
+  "reportGeneralTypeIssues": "error",
+  "reportMissingTypeArgument": "none",
+  "reportUnknownParameterType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownMemberType": "none",
+  "reportMissingParameterType": "none",
+  "venvPath": ".",
+  "venv": ".venv"
+}

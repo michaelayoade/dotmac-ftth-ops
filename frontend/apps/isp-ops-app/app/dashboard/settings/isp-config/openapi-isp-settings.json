@@ -1,0 +1,1788 @@
+2025-11-28 18:53:01 [debug    ] EventStorage initialized       backend=redis
+2025-11-28 18:53:01 [info     ] EventBus initialized           persistence=True redis=True
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.invoice.created handler=handle_invoice_created total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.payment.succeeded handler=handle_payment_succeeded total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.payment.failed handler=handle_payment_failed total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.subscription.created handler=handle_subscription_created total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.subscription.cancelled handler=handle_subscription_cancelled total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=customer.created handler=handle_customer_created total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=customer.updated handler=handle_customer_updated total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=auth.user.login handler=handle_user_login total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=auth.user.logout handler=handle_user_logout total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=auth.password.reset handler=handle_password_reset total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=file.uploaded handler=handle_file_uploaded total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=file.deleted handler=handle_file_deleted total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=webhook.triggered handler=handle_webhook_triggered total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=webhook.failed handler=handle_webhook_failed total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=system.health.degraded handler=handle_system_degraded total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=system.error handler=handle_system_error total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=audit.activity.recorded handler=handle_audit_activity total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=export.started handler=handle_export_started total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=export.completed handler=handle_export_completed total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.invoice.created handler=track_invoice_analytics total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.payment.succeeded handler=track_payment_analytics total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=customer.created handler=track_customer_signup total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.invoice.created handler=send_invoice_notification total_handlers=3
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.payment.succeeded handler=send_payment_confirmation total_handlers=3
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.payment.failed handler=send_payment_failure_notification total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=auth.password.reset handler=send_password_reset_email total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.invoice.created handler=trigger_invoice_webhook total_handlers=4
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.payment.succeeded handler=trigger_payment_webhook total_handlers=4
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=customer.created handler=trigger_customer_webhook total_handlers=3
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.invoice.created handler=audit_invoice_creation total_handlers=5
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=auth.user.login handler=audit_user_login total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=customer.updated handler=audit_customer_update total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=file.uploaded handler=process_uploaded_file total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=file.uploaded handler=index_uploaded_file total_handlers=3
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=customer.updated handler=invalidate_customer_cache total_handlers=3
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=billing.invoice.updated handler=invalidate_invoice_cache total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=* handler=collect_event_metrics total_handlers=1
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=system.error handler=alert_on_system_error total_handlers=2
+2025-11-28 18:53:01 [info     ] Handler subscribed             event_type=webhook.failed handler=retry_failed_webhook total_handlers=2
+2025-11-28 18:53:01 [debug    ] Bulk email tasks not available
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ISP Settings API",
+    "description": "API for ISP Settings - used to generate TypeScript/Zod schemas",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/isp-settings": {
+      "get": {
+        "summary": "Get Isp Settings",
+        "description": "Get ISP settings - exposes ISPSettings schema.",
+        "operationId": "get_isp_settings_isp_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ISPSettings"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Isp Settings",
+        "description": "Update ISP settings - exposes update request/response schemas.",
+        "operationId": "update_isp_settings_isp_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isp-settings/{section}": {
+      "patch": {
+        "summary": "Update Isp Settings Section",
+        "description": "Update ISP settings section - exposes section update schema.",
+        "operationId": "update_isp_settings_section_isp_settings__section__patch",
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Section"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsSectionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isp-settings/validate": {
+      "post": {
+        "summary": "Validate Isp Settings",
+        "description": "Validate ISP settings - exposes validation schemas.",
+        "operationId": "validate_isp_settings_isp_settings_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsValidationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsValidationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isp-settings/import": {
+      "post": {
+        "summary": "Import Isp Settings",
+        "description": "Import ISP settings - exposes import schema.",
+        "operationId": "import_isp_settings_isp_settings_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BankAccountSettings": {
+        "properties": {
+          "default_bank_account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Bank Account Id",
+            "description": "ID of default bank account for payments"
+          },
+          "default_bank_account_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Bank Account Name",
+            "description": "Name of default bank account"
+          },
+          "payment_methods_enabled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Payment Methods Enabled",
+            "description": "Enabled payment methods (card, bank_transfer, check, cash, crypto)"
+          },
+          "stripe_enabled": {
+            "type": "boolean",
+            "title": "Stripe Enabled",
+            "description": "Enable Stripe payment gateway",
+            "default": false
+          },
+          "paypal_enabled": {
+            "type": "boolean",
+            "title": "Paypal Enabled",
+            "description": "Enable PayPal payment gateway",
+            "default": false
+          },
+          "paystack_enabled": {
+            "type": "boolean",
+            "title": "Paystack Enabled",
+            "description": "Enable Paystack payment gateway (Africa)",
+            "default": false
+          },
+          "flutterwave_enabled": {
+            "type": "boolean",
+            "title": "Flutterwave Enabled",
+            "description": "Enable Flutterwave payment gateway (Africa)",
+            "default": false
+          },
+          "bank_transfer_enabled": {
+            "type": "boolean",
+            "title": "Bank Transfer Enabled",
+            "description": "Accept bank transfers",
+            "default": true
+          },
+          "bank_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Name",
+            "description": "Bank name for customer transfers"
+          },
+          "bank_account_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Account Number",
+            "description": "Account number for customer transfers"
+          },
+          "bank_routing_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Routing Number",
+            "description": "Bank routing/sort code"
+          },
+          "bank_iban": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Iban",
+            "description": "IBAN for international transfers"
+          },
+          "bank_swift_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Swift Code",
+            "description": "SWIFT/BIC code"
+          },
+          "auto_reconcile_enabled": {
+            "type": "boolean",
+            "title": "Auto Reconcile Enabled",
+            "description": "Automatically reconcile bank statement imports",
+            "default": true
+          },
+          "require_payment_reference": {
+            "type": "boolean",
+            "title": "Require Payment Reference",
+            "description": "Require payment reference for bank transfers",
+            "default": true
+          },
+          "payment_reference_format": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Payment Reference Format",
+            "description": "Format for payment references",
+            "default": "INV-{invoice_number}"
+          }
+        },
+        "type": "object",
+        "title": "BankAccountSettings",
+        "description": "Bank account and payment gateway configuration.",
+        "example": {
+          "default_bank_account_name": "Main Operating Account",
+          "payment_methods_enabled": [
+            "card",
+            "bank_transfer"
+          ]
+        }
+      },
+      "BillingSettings": {
+        "properties": {
+          "invoice_numbering_format": {
+            "$ref": "#/components/schemas/InvoiceNumberingFormat",
+            "description": "Format for invoice numbers",
+            "default": "prefix_sequential"
+          },
+          "invoice_prefix": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 1,
+            "title": "Invoice Prefix",
+            "description": "Prefix for invoice numbers",
+            "default": "INV"
+          },
+          "invoice_sequence_start": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Invoice Sequence Start",
+            "description": "Starting number for invoice sequence",
+            "default": 1
+          },
+          "invoice_sequence_padding": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Invoice Sequence Padding",
+            "description": "Zero-padding for invoice numbers (e.g., 6 = 000001)",
+            "default": 6
+          },
+          "invoice_custom_pattern": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Custom Pattern",
+            "description": "Custom invoice number pattern (e.g., {prefix}-{year}-{sequence:05d})"
+          },
+          "default_payment_terms": {
+            "$ref": "#/components/schemas/PaymentTerms",
+            "description": "Default payment terms for invoices",
+            "default": "net_30"
+          },
+          "custom_payment_terms_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 365.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Payment Terms Days",
+            "description": "Custom payment terms in days (if payment_terms = custom)"
+          },
+          "late_fee_enabled": {
+            "type": "boolean",
+            "title": "Late Fee Enabled",
+            "description": "Charge late fees on overdue invoices",
+            "default": true
+          },
+          "late_fee_type": {
+            "type": "string",
+            "title": "Late Fee Type",
+            "description": "Type of late fee (percentage or fixed)",
+            "default": "percentage"
+          },
+          "late_fee_amount": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Late Fee Amount",
+            "description": "Late fee amount (percentage or fixed amount)",
+            "default": 5.0
+          },
+          "late_fee_grace_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "title": "Late Fee Grace Days",
+            "description": "Days after due date before late fee applies",
+            "default": 5
+          },
+          "late_fee_max_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Fee Max Amount",
+            "description": "Maximum late fee amount (null = no cap)"
+          },
+          "dunning_enabled": {
+            "type": "boolean",
+            "title": "Dunning Enabled",
+            "description": "Enable automated dunning for overdue invoices",
+            "default": true
+          },
+          "dunning_strategy": {
+            "$ref": "#/components/schemas/DunningStrategy",
+            "description": "Dunning escalation strategy",
+            "default": "moderate"
+          },
+          "dunning_first_notice_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "title": "Dunning First Notice Days",
+            "description": "Days after due date to send first dunning notice",
+            "default": 3
+          },
+          "dunning_escalation_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Dunning Escalation Days",
+            "description": "Days between escalating dunning notices",
+            "default": 7
+          },
+          "dunning_max_notices": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Dunning Max Notices",
+            "description": "Maximum number of dunning notices before suspension",
+            "default": 3
+          },
+          "invoice_logo_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Logo Url",
+            "description": "URL to company logo for invoices"
+          },
+          "invoice_footer_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Footer Text",
+            "description": "Footer text on invoices"
+          },
+          "invoice_notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Notes",
+            "description": "Default notes on invoices"
+          },
+          "auto_billing_enabled": {
+            "type": "boolean",
+            "title": "Auto Billing Enabled",
+            "description": "Automatically charge payment method on invoice due date",
+            "default": true
+          },
+          "auto_billing_retry_enabled": {
+            "type": "boolean",
+            "title": "Auto Billing Retry Enabled",
+            "description": "Retry failed auto-billing attempts",
+            "default": true
+          },
+          "auto_billing_retry_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Auto Billing Retry Days",
+            "description": "Days after failed attempt to retry auto-billing"
+          }
+        },
+        "type": "object",
+        "title": "BillingSettings",
+        "description": "Billing and invoicing configuration.",
+        "example": {
+          "invoice_numbering_format": "prefix_sequential",
+          "invoice_prefix": "INV",
+          "payment_terms": "net_30"
+        }
+      },
+      "ComplianceSettings": {
+        "properties": {
+          "data_residency_region": {
+            "$ref": "#/components/schemas/DataResidencyRegion",
+            "description": "Primary data residency region",
+            "default": "us"
+          },
+          "gdpr_enabled": {
+            "type": "boolean",
+            "title": "Gdpr Enabled",
+            "description": "Enable GDPR compliance features (EU)",
+            "default": false
+          },
+          "ccpa_enabled": {
+            "type": "boolean",
+            "title": "Ccpa Enabled",
+            "description": "Enable CCPA compliance features (California)",
+            "default": false
+          },
+          "hipaa_enabled": {
+            "type": "boolean",
+            "title": "Hipaa Enabled",
+            "description": "Enable HIPAA compliance features (Healthcare)",
+            "default": false
+          },
+          "audit_retention_days": {
+            "type": "integer",
+            "maximum": 2555.0,
+            "minimum": 30.0,
+            "title": "Audit Retention Days",
+            "description": "Audit log retention period in days",
+            "default": 90
+          },
+          "customer_data_retention_days": {
+            "type": "integer",
+            "maximum": 3650.0,
+            "minimum": 365.0,
+            "title": "Customer Data Retention Days",
+            "description": "Customer data retention after account closure",
+            "default": 2555
+          },
+          "pii_encryption_required": {
+            "type": "boolean",
+            "title": "Pii Encryption Required",
+            "description": "Require encryption for PII at rest",
+            "default": true
+          },
+          "data_export_format": {
+            "type": "string",
+            "title": "Data Export Format",
+            "description": "Default format for data exports (json, csv, xml)",
+            "default": "json"
+          },
+          "right_to_deletion": {
+            "type": "boolean",
+            "title": "Right To Deletion",
+            "description": "Enable customer data deletion requests",
+            "default": true
+          },
+          "right_to_access": {
+            "type": "boolean",
+            "title": "Right To Access",
+            "description": "Enable customer data access requests",
+            "default": true
+          },
+          "anonymize_on_deletion": {
+            "type": "boolean",
+            "title": "Anonymize On Deletion",
+            "description": "Anonymize data instead of hard delete",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ComplianceSettings",
+        "description": "Compliance and data residency settings.",
+        "example": {
+          "audit_retention_days": 90,
+          "data_residency_region": "eu",
+          "gdpr_enabled": true
+        }
+      },
+      "DataResidencyRegion": {
+        "type": "string",
+        "enum": [
+          "us",
+          "eu",
+          "uk",
+          "apac",
+          "canada",
+          "australia",
+          "middle_east",
+          "africa"
+        ],
+        "title": "DataResidencyRegion",
+        "description": "Data residency regions for compliance."
+      },
+      "DunningStrategy": {
+        "type": "string",
+        "enum": [
+          "gentle",
+          "moderate",
+          "aggressive",
+          "custom"
+        ],
+        "title": "DunningStrategy",
+        "description": "Dunning strategies for overdue payments."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IDGenerationFormat": {
+        "type": "string",
+        "enum": [
+          "uuid",
+          "sequential",
+          "prefix_sequential",
+          "custom_pattern",
+          "import_preserved"
+        ],
+        "title": "IDGenerationFormat",
+        "description": "Subscriber/Customer ID generation formats."
+      },
+      "ISPSettings": {
+        "properties": {
+          "is_initial_setup": {
+            "type": "boolean",
+            "title": "Is Initial Setup",
+            "description": "True if this is the initial tenant setup",
+            "default": true
+          },
+          "settings_version": {
+            "type": "integer",
+            "title": "Settings Version",
+            "description": "Settings schema version for migrations",
+            "default": 1
+          },
+          "subscriber_id": {
+            "$ref": "#/components/schemas/SubscriberIDSettings",
+            "description": "Subscriber/Customer ID generation settings"
+          },
+          "radius": {
+            "$ref": "#/components/schemas/RADIUSDefaultSettings",
+            "description": "RADIUS authentication defaults"
+          },
+          "network": {
+            "$ref": "#/components/schemas/NetworkProvisioningSettings",
+            "description": "Network provisioning defaults"
+          },
+          "compliance": {
+            "$ref": "#/components/schemas/ComplianceSettings",
+            "description": "Compliance and data residency settings"
+          },
+          "portal": {
+            "$ref": "#/components/schemas/PortalCustomizationSettings",
+            "description": "Customer portal customization"
+          },
+          "localization": {
+            "$ref": "#/components/schemas/LocalizationSettings",
+            "description": "Localization and currency settings"
+          },
+          "sla": {
+            "$ref": "#/components/schemas/SLASettings",
+            "description": "SLA and support settings"
+          },
+          "service_defaults": {
+            "$ref": "#/components/schemas/ServiceDefaultSettings",
+            "description": "Default service and plan settings"
+          },
+          "tax": {
+            "$ref": "#/components/schemas/TaxSettings",
+            "description": "Tax configuration and compliance"
+          },
+          "billing": {
+            "$ref": "#/components/schemas/BillingSettings",
+            "description": "Billing and invoicing settings"
+          },
+          "bank_accounts": {
+            "$ref": "#/components/schemas/BankAccountSettings",
+            "description": "Bank account and payment gateway configuration"
+          }
+        },
+        "type": "object",
+        "title": "ISPSettings",
+        "description": "Complete ISP configuration settings.\n\nThis is the master container for all ISP-specific settings. Some settings\nare typically configured once during initial setup (currency, compliance region),\nwhile others can be modified through the settings UI at any time.",
+        "example": {
+          "is_initial_setup": false,
+          "radius": {
+            "default_password_hash": "sha256"
+          },
+          "subscriber_id": {
+            "format": "uuid"
+          }
+        }
+      },
+      "InvoiceNumberingFormat": {
+        "type": "string",
+        "enum": [
+          "sequential",
+          "prefix_sequential",
+          "year_sequential",
+          "custom_pattern"
+        ],
+        "title": "InvoiceNumberingFormat",
+        "description": "Invoice numbering formats."
+      },
+      "LocalizationSettings": {
+        "properties": {
+          "default_currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Default Currency",
+            "description": "Default currency code (ISO 4217)",
+            "default": "USD"
+          },
+          "supported_currencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supported Currencies",
+            "description": "List of supported currency codes"
+          },
+          "currency_display_format": {
+            "type": "string",
+            "title": "Currency Display Format",
+            "description": "Currency display format",
+            "default": "{symbol}{amount:,.2f}"
+          },
+          "default_language": {
+            "type": "string",
+            "maxLength": 5,
+            "minLength": 2,
+            "title": "Default Language",
+            "description": "Default language code (ISO 639-1)",
+            "default": "en"
+          },
+          "supported_languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supported Languages",
+            "description": "List of supported language codes"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "Default timezone (IANA timezone name)",
+            "default": "UTC"
+          },
+          "date_format": {
+            "type": "string",
+            "title": "Date Format",
+            "description": "Date format string",
+            "default": "YYYY-MM-DD"
+          },
+          "time_format": {
+            "type": "string",
+            "title": "Time Format",
+            "description": "Time format string",
+            "default": "HH:mm:ss"
+          },
+          "decimal_separator": {
+            "type": "string",
+            "maxLength": 1,
+            "minLength": 1,
+            "title": "Decimal Separator",
+            "description": "Decimal separator character",
+            "default": "."
+          },
+          "thousands_separator": {
+            "type": "string",
+            "maxLength": 1,
+            "minLength": 1,
+            "title": "Thousands Separator",
+            "description": "Thousands separator character",
+            "default": ","
+          }
+        },
+        "type": "object",
+        "title": "LocalizationSettings",
+        "description": "Localization and regional settings.",
+        "example": {
+          "default_currency": "USD",
+          "default_language": "en",
+          "supported_currencies": [
+            "USD",
+            "EUR",
+            "GBP"
+          ],
+          "timezone": "America/New_York"
+        }
+      },
+      "NetworkProvisioningSettings": {
+        "properties": {
+          "vlan_range_start": {
+            "type": "integer",
+            "maximum": 4094.0,
+            "minimum": 1.0,
+            "title": "Vlan Range Start",
+            "description": "Start of VLAN range for subscribers",
+            "default": 100
+          },
+          "vlan_range_end": {
+            "type": "integer",
+            "maximum": 4094.0,
+            "minimum": 1.0,
+            "title": "Vlan Range End",
+            "description": "End of VLAN range for subscribers",
+            "default": 999
+          },
+          "ipv4_pool_prefix": {
+            "type": "string",
+            "title": "Ipv4 Pool Prefix",
+            "description": "IPv4 address pool in CIDR notation",
+            "default": "10.0.0.0/8"
+          },
+          "ipv6_pool_prefix": {
+            "type": "string",
+            "title": "Ipv6 Pool Prefix",
+            "description": "IPv6 address pool in CIDR notation",
+            "default": "2001:db8::/32"
+          },
+          "ipv6_prefix_length": {
+            "type": "integer",
+            "maximum": 128.0,
+            "minimum": 48.0,
+            "title": "Ipv6 Prefix Length",
+            "description": "IPv6 prefix length to assign to subscribers",
+            "default": 64
+          },
+          "auto_assign_ip": {
+            "type": "boolean",
+            "title": "Auto Assign Ip",
+            "description": "Automatically assign IP addresses",
+            "default": true
+          },
+          "require_static_ip": {
+            "type": "boolean",
+            "title": "Require Static Ip",
+            "description": "Require static IP assignment (no DHCP)",
+            "default": false
+          },
+          "enable_ipv6": {
+            "type": "boolean",
+            "title": "Enable Ipv6",
+            "description": "Enable IPv6 provisioning",
+            "default": true
+          },
+          "default_cpe_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Cpe Template",
+            "description": "Default CPE configuration template ID"
+          },
+          "auto_provision_cpe": {
+            "type": "boolean",
+            "title": "Auto Provision Cpe",
+            "description": "Automatically provision CPE on subscriber activation",
+            "default": true
+          },
+          "default_qos_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Qos Policy",
+            "description": "Default QoS policy name"
+          }
+        },
+        "type": "object",
+        "title": "NetworkProvisioningSettings",
+        "description": "Network provisioning defaults.",
+        "example": {
+          "ipv4_pool_prefix": "10.50.0.0/16",
+          "ipv6_pool_prefix": "2001:db8:1234::/48",
+          "vlan_range_end": 999,
+          "vlan_range_start": 100
+        }
+      },
+      "PasswordHashMethod": {
+        "type": "string",
+        "enum": [
+          "sha256",
+          "md5",
+          "bcrypt",
+          "cleartext"
+        ],
+        "title": "PasswordHashMethod",
+        "description": "RADIUS password hashing methods."
+      },
+      "PaymentTerms": {
+        "type": "string",
+        "enum": [
+          "due_on_receipt",
+          "net_7",
+          "net_15",
+          "net_30",
+          "net_60",
+          "custom"
+        ],
+        "title": "PaymentTerms",
+        "description": "Standard payment terms."
+      },
+      "PortalCustomizationSettings": {
+        "properties": {
+          "custom_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Domain",
+            "description": "Custom domain for customer portal"
+          },
+          "theme_primary_color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "title": "Theme Primary Color",
+            "description": "Primary brand color (hex)",
+            "default": "#0066cc"
+          },
+          "theme_secondary_color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme Secondary Color",
+            "description": "Secondary brand color (hex)"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url",
+            "description": "URL to company logo"
+          },
+          "favicon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Favicon Url",
+            "description": "URL to favicon"
+          },
+          "custom_css": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Css",
+            "description": "Custom CSS for portal styling"
+          },
+          "enable_self_service": {
+            "type": "boolean",
+            "title": "Enable Self Service",
+            "description": "Enable self-service features",
+            "default": true
+          },
+          "enable_ticket_creation": {
+            "type": "boolean",
+            "title": "Enable Ticket Creation",
+            "description": "Allow customers to create support tickets",
+            "default": true
+          },
+          "enable_payment_methods": {
+            "type": "boolean",
+            "title": "Enable Payment Methods",
+            "description": "Allow customers to manage payment methods",
+            "default": true
+          },
+          "enable_usage_monitoring": {
+            "type": "boolean",
+            "title": "Enable Usage Monitoring",
+            "description": "Show usage monitoring to customers",
+            "default": true
+          },
+          "welcome_message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Welcome Message",
+            "description": "Welcome message on portal homepage"
+          },
+          "support_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support Email",
+            "description": "Support contact email"
+          },
+          "support_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support Phone",
+            "description": "Support contact phone"
+          }
+        },
+        "type": "object",
+        "title": "PortalCustomizationSettings",
+        "description": "Customer portal customization settings.",
+        "example": {
+          "custom_domain": "portal.myisp.com",
+          "enable_self_service": true,
+          "theme_primary_color": "#0066cc"
+        }
+      },
+      "RADIUSDefaultSettings": {
+        "properties": {
+          "default_password_hash": {
+            "$ref": "#/components/schemas/PasswordHashMethod",
+            "description": "Default password hashing method for new subscribers",
+            "default": "sha256"
+          },
+          "session_timeout": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 60.0,
+            "title": "Session Timeout",
+            "description": "Default session timeout in seconds (1 hour default)",
+            "default": 3600
+          },
+          "idle_timeout": {
+            "type": "integer",
+            "maximum": 7200.0,
+            "minimum": 60.0,
+            "title": "Idle Timeout",
+            "description": "Default idle timeout in seconds (10 min default)",
+            "default": 600
+          },
+          "simultaneous_use": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Simultaneous Use",
+            "description": "Maximum simultaneous sessions per subscriber",
+            "default": 1
+          },
+          "acct_interim_interval": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 60.0,
+            "title": "Acct Interim Interval",
+            "description": "Accounting interim update interval in seconds",
+            "default": 300
+          },
+          "default_download_speed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Download Speed",
+            "description": "Default download speed (e.g., '100M', '1G')"
+          },
+          "default_upload_speed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Upload Speed",
+            "description": "Default upload speed (e.g., '50M', '500M')"
+          },
+          "custom_attributes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Custom Attributes",
+            "description": "Custom RADIUS reply attributes"
+          },
+          "nas_vendor_defaults": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Nas Vendor Defaults",
+            "description": "Per-vendor NAS configuration overrides"
+          }
+        },
+        "type": "object",
+        "title": "RADIUSDefaultSettings",
+        "description": "Default RADIUS settings for new subscribers.",
+        "example": {
+          "default_password_hash": "sha256",
+          "idle_timeout": 600,
+          "session_timeout": 3600,
+          "simultaneous_use": 1
+        }
+      },
+      "SLASettings": {
+        "properties": {
+          "priority_urgent_response_hours": {
+            "type": "number",
+            "maximum": 24.0,
+            "minimum": 0.1,
+            "title": "Priority Urgent Response Hours",
+            "description": "Response time for urgent tickets (hours)",
+            "default": 0.5
+          },
+          "priority_high_response_hours": {
+            "type": "number",
+            "maximum": 48.0,
+            "minimum": 0.1,
+            "title": "Priority High Response Hours",
+            "description": "Response time for high priority tickets (hours)",
+            "default": 1.0
+          },
+          "priority_medium_response_hours": {
+            "type": "number",
+            "maximum": 72.0,
+            "minimum": 0.5,
+            "title": "Priority Medium Response Hours",
+            "description": "Response time for medium priority tickets (hours)",
+            "default": 4.0
+          },
+          "priority_low_response_hours": {
+            "type": "number",
+            "maximum": 168.0,
+            "minimum": 1.0,
+            "title": "Priority Low Response Hours",
+            "description": "Response time for low priority tickets (hours)",
+            "default": 24.0
+          },
+          "priority_urgent_resolution_hours": {
+            "type": "number",
+            "maximum": 48.0,
+            "minimum": 1.0,
+            "title": "Priority Urgent Resolution Hours",
+            "description": "Resolution time for urgent tickets (hours)",
+            "default": 4.0
+          },
+          "priority_high_resolution_hours": {
+            "type": "number",
+            "maximum": 72.0,
+            "minimum": 1.0,
+            "title": "Priority High Resolution Hours",
+            "description": "Resolution time for high priority tickets (hours)",
+            "default": 8.0
+          },
+          "business_hours_start": {
+            "type": "string",
+            "format": "time",
+            "title": "Business Hours Start",
+            "description": "Business hours start time",
+            "default": "09:00:00"
+          },
+          "business_hours_end": {
+            "type": "string",
+            "format": "time",
+            "title": "Business Hours End",
+            "description": "Business hours end time",
+            "default": "17:00:00"
+          },
+          "business_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Business Days",
+            "description": "Business days (1=Monday, 7=Sunday)"
+          },
+          "auto_escalate": {
+            "type": "boolean",
+            "title": "Auto Escalate",
+            "description": "Automatically escalate tickets approaching SLA breach",
+            "default": true
+          },
+          "escalation_threshold_percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 50.0,
+            "title": "Escalation Threshold Percent",
+            "description": "Escalate when X% of SLA time elapsed",
+            "default": 80
+          }
+        },
+        "type": "object",
+        "title": "SLASettings",
+        "description": "SLA and support configuration.",
+        "example": {
+          "priority_high_response_hours": 1,
+          "priority_low_response_hours": 24,
+          "priority_medium_response_hours": 4
+        }
+      },
+      "ServiceDefaultSettings": {
+        "properties": {
+          "default_trial_days": {
+            "type": "integer",
+            "maximum": 90.0,
+            "minimum": 0.0,
+            "title": "Default Trial Days",
+            "description": "Default trial period in days (0 = no trial)",
+            "default": 0
+          },
+          "trial_requires_payment_method": {
+            "type": "boolean",
+            "title": "Trial Requires Payment Method",
+            "description": "Require payment method for trial activation",
+            "default": false
+          },
+          "default_data_cap_gb": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Data Cap Gb",
+            "description": "Default data cap in GB (null = unlimited)"
+          },
+          "throttle_policy": {
+            "$ref": "#/components/schemas/ThrottlePolicy",
+            "description": "Policy when data cap exceeded",
+            "default": "warn_only"
+          },
+          "throttle_speed_percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Throttle Speed Percent",
+            "description": "Throttled speed as % of original (if throttle policy)",
+            "default": 10
+          },
+          "default_credit_limit": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Default Credit Limit",
+            "description": "Default credit limit for new customers",
+            "default": 0.0
+          },
+          "auto_suspend_threshold": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Auto Suspend Threshold",
+            "description": "Auto-suspend when balance exceeds this amount",
+            "default": 0.0
+          },
+          "grace_period_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "title": "Grace Period Days",
+            "description": "Grace period before suspension (days)",
+            "default": 7
+          },
+          "reconnection_fee": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Reconnection Fee",
+            "description": "Fee to reconnect suspended service",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "title": "ServiceDefaultSettings",
+        "description": "Default service and plan settings.",
+        "example": {
+          "default_data_cap_gb": 1000,
+          "default_trial_days": 30,
+          "throttle_policy": "throttle"
+        }
+      },
+      "SettingsImportRequest": {
+        "properties": {
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings",
+            "description": "Settings dictionary to import"
+          },
+          "validate_only": {
+            "type": "boolean",
+            "title": "Validate Only",
+            "description": "If true, only validate without saving",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "settings"
+        ],
+        "title": "SettingsImportRequest",
+        "description": "Request to import settings."
+      },
+      "SettingsSectionUpdateRequest": {
+        "properties": {
+          "updates": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Updates",
+            "description": "Section-specific updates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updates"
+        ],
+        "title": "SettingsSectionUpdateRequest",
+        "description": "Request to update a specific settings section."
+      },
+      "SettingsUpdateRequest": {
+        "properties": {
+          "updates": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Updates",
+            "description": "Partial settings updates (nested dict)"
+          },
+          "validate_only": {
+            "type": "boolean",
+            "title": "Validate Only",
+            "description": "If true, only validate without saving",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "updates"
+        ],
+        "title": "SettingsUpdateRequest",
+        "description": "Request to update ISP settings."
+      },
+      "SettingsUpdateResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/ISPSettings"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "settings",
+          "message"
+        ],
+        "title": "SettingsUpdateResponse",
+        "description": "Response after updating settings."
+      },
+      "SettingsValidationRequest": {
+        "properties": {
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings",
+            "description": "Settings dictionary to validate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "settings"
+        ],
+        "title": "SettingsValidationRequest",
+        "description": "Request to validate settings schema."
+      },
+      "SettingsValidationResponse": {
+        "properties": {
+          "is_valid": {
+            "type": "boolean",
+            "title": "Is Valid"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_valid"
+        ],
+        "title": "SettingsValidationResponse",
+        "description": "Response from settings validation."
+      },
+      "SubscriberIDSettings": {
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/IDGenerationFormat",
+            "description": "ID generation format strategy",
+            "default": "uuid"
+          },
+          "prefix": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 1,
+            "title": "Prefix",
+            "description": "Prefix for sequential IDs",
+            "default": "SUB"
+          },
+          "sequence_start": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence Start",
+            "description": "Starting sequence number",
+            "default": 1
+          },
+          "sequence_padding": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Sequence Padding",
+            "description": "Zero-padding for sequence (e.g., 6 = '000001')",
+            "default": 6
+          },
+          "custom_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Pattern",
+            "description": "Custom pattern with variables: {prefix}, {year}, {month}, {sequence}"
+          },
+          "allow_custom_ids": {
+            "type": "boolean",
+            "title": "Allow Custom Ids",
+            "description": "Allow importing subscribers with existing IDs",
+            "default": false
+          },
+          "validate_imported_ids": {
+            "type": "boolean",
+            "title": "Validate Imported Ids",
+            "description": "Validate imported IDs match the configured format",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "SubscriberIDSettings",
+        "description": "Subscriber and customer ID generation settings.",
+        "example": {
+          "custom_pattern": "{prefix}-{year}-{sequence:05d}",
+          "format": "prefix_sequential",
+          "prefix": "SUB",
+          "sequence_padding": 6,
+          "sequence_start": 10000
+        }
+      },
+      "TaxCalculationMethod": {
+        "type": "string",
+        "enum": [
+          "inclusive",
+          "exclusive",
+          "compound"
+        ],
+        "title": "TaxCalculationMethod",
+        "description": "Methods for calculating tax."
+      },
+      "TaxSettings": {
+        "properties": {
+          "tax_enabled": {
+            "type": "boolean",
+            "title": "Tax Enabled",
+            "description": "Enable tax calculations on invoices",
+            "default": true
+          },
+          "default_tax_type": {
+            "$ref": "#/components/schemas/TaxType",
+            "description": "Default tax type for invoices",
+            "default": "vat"
+          },
+          "default_tax_rate": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Default Tax Rate",
+            "description": "Default tax rate as percentage (e.g., 15.0 for 15%)",
+            "default": 0.0
+          },
+          "tax_calculation_method": {
+            "$ref": "#/components/schemas/TaxCalculationMethod",
+            "description": "How tax is calculated on prices",
+            "default": "exclusive"
+          },
+          "require_tax_id": {
+            "type": "boolean",
+            "title": "Require Tax Id",
+            "description": "Require customers to provide tax ID",
+            "default": false
+          },
+          "tax_id_label": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Tax Id Label",
+            "description": "Label for tax ID field (e.g., 'VAT Number', 'GST Number')",
+            "default": "Tax ID"
+          },
+          "validate_tax_id_format": {
+            "type": "boolean",
+            "title": "Validate Tax Id Format",
+            "description": "Validate tax ID format based on country",
+            "default": false
+          },
+          "allow_tax_exemptions": {
+            "type": "boolean",
+            "title": "Allow Tax Exemptions",
+            "description": "Allow customers to claim tax exemption",
+            "default": true
+          },
+          "require_exemption_certificate": {
+            "type": "boolean",
+            "title": "Require Exemption Certificate",
+            "description": "Require exemption certificate upload for tax-exempt customers",
+            "default": true
+          },
+          "regional_tax_rates": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Regional Tax Rates",
+            "description": "Tax rates by region/state code (e.g., {'CA': 7.25, 'NY': 8.875})"
+          },
+          "tax_reporting_enabled": {
+            "type": "boolean",
+            "title": "Tax Reporting Enabled",
+            "description": "Enable tax reporting and filing features",
+            "default": false
+          },
+          "tax_registration_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Registration Number",
+            "description": "Company tax registration number"
+          }
+        },
+        "type": "object",
+        "title": "TaxSettings",
+        "description": "Tax configuration and compliance settings.",
+        "example": {
+          "default_tax_rate": 15.0,
+          "default_tax_type": "vat",
+          "tax_calculation_method": "exclusive"
+        }
+      },
+      "TaxType": {
+        "type": "string",
+        "enum": [
+          "vat",
+          "gst",
+          "sales_tax",
+          "custom"
+        ],
+        "title": "TaxType",
+        "description": "Tax types for billing."
+      },
+      "ThrottlePolicy": {
+        "type": "string",
+        "enum": [
+          "hard_cap",
+          "throttle",
+          "overage_billing",
+          "warn_only"
+        ],
+        "title": "ThrottlePolicy",
+        "description": "Bandwidth throttle policies when limit exceeded."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

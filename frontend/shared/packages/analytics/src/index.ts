@@ -1,0 +1,62 @@
+/**
+ * @fileoverview Analytics package for DotMac platform
+ * Provides React components and hooks for analytics and metrics tracking
+ */
+
+import { useCallback, useMemo } from "react";
+
+// Export types
+export interface AnalyticsEvent {
+  name: string;
+  properties?: Record<string, unknown>;
+  timestamp?: Date;
+}
+
+export interface MetricsData {
+  value: number;
+  unit?: string;
+  tags?: Record<string, string>;
+}
+
+// Export hooks and components (placeholder implementations)
+export const useAnalytics = () => {
+  const track = useCallback((event: AnalyticsEvent) => {
+    // Implementation will be added later
+    console.log("Tracking event:", event);
+  }, []);
+
+  const identify = useCallback((userId: string, traits?: Record<string, unknown>) => {
+    // Implementation will be added later
+    console.log("Identifying user:", userId, traits);
+  }, []);
+
+  return useMemo(
+    () => ({
+      track,
+      identify,
+    }),
+    [track, identify],
+  );
+};
+
+export const useMetrics = () => {
+  const record = useCallback((metric: string, data: MetricsData) => {
+    // Implementation will be added later
+    console.log("Recording metric:", metric, data);
+  }, []);
+
+  return useMemo(
+    () => ({
+      record,
+    }),
+    [record],
+  );
+};
+
+// Default export
+const Analytics = {
+  useAnalytics,
+  useMetrics,
+};
+
+export default Analytics;

@@ -1,0 +1,119 @@
+# Minimal RADIUS Dictionary for dotmac FTTH Platform
+#
+# This is a minimal RADIUS dictionary containing only the attributes needed
+# for CoA/DM operations in the dotmac platform.
+#
+# Based on FreeRADIUS dictionaries (https://github.com/FreeRADIUS/freeradius-server)
+# Licensed under GPL v2
+#
+# For production deployments, consider using full FreeRADIUS dictionaries from:
+# https://github.com/FreeRADIUS/freeradius-server/tree/v3.2.x/share
+
+# ============================================================================
+# Core RADIUS Attributes (RFC 2865)
+# ============================================================================
+
+# User identification
+ATTRIBUTE	User-Name				1	string
+ATTRIBUTE	User-Password				2	string
+ATTRIBUTE	CHAP-Password				3	octets
+ATTRIBUTE	NAS-IP-Address				4	ipaddr
+ATTRIBUTE	NAS-Port				5	integer
+
+# Service parameters
+ATTRIBUTE	Service-Type				6	integer
+ATTRIBUTE	Framed-Protocol				7	integer
+ATTRIBUTE	Framed-IP-Address			8	ipaddr
+ATTRIBUTE	Framed-IP-Netmask			9	ipaddr
+ATTRIBUTE	Framed-Routing				10	integer
+ATTRIBUTE	Filter-Id				11	string
+ATTRIBUTE	Framed-MTU				12	integer
+
+# Reply attributes
+ATTRIBUTE	Reply-Message				18	string
+ATTRIBUTE	Callback-Number				19	string
+ATTRIBUTE	Callback-Id				20	string
+
+# State management
+ATTRIBUTE	State					24	octets
+ATTRIBUTE	Class					25	octets
+
+# Vendor-Specific
+ATTRIBUTE	Vendor-Specific				26	octets
+
+# Session timeout
+ATTRIBUTE	Session-Timeout				27	integer
+ATTRIBUTE	Idle-Timeout				28	integer
+
+# Port management
+ATTRIBUTE	Termination-Action			29	integer
+ATTRIBUTE	Called-Station-Id			30	string
+ATTRIBUTE	Calling-Station-Id			31	string
+ATTRIBUTE	NAS-Identifier				32	string
+
+# Accounting
+ATTRIBUTE	Proxy-State				33	octets
+
+# Login services
+ATTRIBUTE	Login-LAT-Service			34	string
+ATTRIBUTE	Login-LAT-Node				35	string
+ATTRIBUTE	Login-LAT-Group				36	octets
+ATTRIBUTE	Framed-AppleTalk-Link			37	integer
+ATTRIBUTE	Framed-AppleTalk-Network		38	integer
+ATTRIBUTE	Framed-AppleTalk-Zone			39	string
+
+# Accounting (RFC 2866)
+ATTRIBUTE	Acct-Status-Type			40	integer
+ATTRIBUTE	Acct-Delay-Time				41	integer
+ATTRIBUTE	Acct-Input-Octets			42	integer
+ATTRIBUTE	Acct-Output-Octets			43	integer
+ATTRIBUTE	Acct-Session-Id				44	string
+ATTRIBUTE	Acct-Authentic				45	integer
+ATTRIBUTE	Acct-Session-Time			46	integer
+ATTRIBUTE	Acct-Input-Packets			47	integer
+ATTRIBUTE	Acct-Output-Packets			48	integer
+ATTRIBUTE	Acct-Terminate-Cause			49	integer
+ATTRIBUTE	Acct-Multi-Session-Id			50	string
+ATTRIBUTE	Acct-Link-Count				51	integer
+
+# ============================================================================
+# RADIUS Packet Types
+# ============================================================================
+
+# Pseudo-attribute used for mapping packet codes to names
+# (value is not transmitted on the wire)
+ATTRIBUTE	Packet-Type			0	integer
+
+VALUE	Acct-Status-Type		Start			1
+VALUE	Acct-Status-Type		Stop			2
+VALUE	Acct-Status-Type		Interim-Update		3
+VALUE	Acct-Status-Type		Accounting-On		7
+VALUE	Acct-Status-Type		Accounting-Off		8
+
+VALUE	Acct-Authentic			RADIUS			1
+VALUE	Acct-Authentic			Local			2
+
+VALUE	Service-Type			Login-User		1
+VALUE	Service-Type			Framed-User		2
+VALUE	Service-Type			Callback-Login-User	3
+VALUE	Service-Type			Callback-Framed-User	4
+VALUE	Service-Type			Outbound-User		5
+VALUE	Service-Type			Administrative-User	6
+VALUE	Service-Type			NAS-Prompt-User		7
+VALUE	Service-Type			Authenticate-Only	8
+VALUE	Service-Type			Callback-NAS-Prompt	9
+
+VALUE	Framed-Protocol			PPP			1
+VALUE	Framed-Protocol			SLIP			2
+
+VALUE	Framed-Routing			None			0
+VALUE	Framed-Routing			Send-Routing-Packets	1
+VALUE	Framed-Routing			Listen-For-Routing-Packets	2
+VALUE	Framed-Routing			Send-And-Listen		3
+
+# ============================================================================
+# RFC 5176 - CoA/DM Packet Types
+# ============================================================================
+
+# Include CoA/DM extensions
+$INCLUDE dictionary.rfc5176

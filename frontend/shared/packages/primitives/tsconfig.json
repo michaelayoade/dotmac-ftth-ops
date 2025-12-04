@@ -1,0 +1,26 @@
+{
+  "extends": "../typescript-config/base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    // Temporarily disable strict checking for experimental package
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dotmac/primitives": ["src/index.ts"],
+      "@dotmac/primitives/*": ["src/*"],
+      "@dotmac/testing": ["src/testing/index.ts"],
+      "@dotmac/headless": ["../headless/src/index.ts"],
+      "@dotmac/headless/*": ["../headless/src/*"]
+    },
+    "types": ["jest", "react", "react-dom", "node"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.*", "**/*.spec.*", "**/*.stories.*"]
+}

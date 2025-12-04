@@ -1,0 +1,267 @@
+/**
+ * API Client for making requests to the backend
+ *
+ * This module provides a configured API client instance for making
+ * HTTP requests to the DotMac platform backend.
+ */
+
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosAdapter,
+  InternalAxiosRequestConfig,
+} from "axios";
+import { platformConfig } from "@/lib/config";
+import { setupRefreshInterceptor, defaultAuthFailureHandler } from "@shared/lib/auth";
+
+const DEFAULT_API_PREFIX = "/api/platform/v1/admin";
+
+const resolveBaseUrl = (): string => {
+  const base = platformConfig.api.baseUrl;
+  const prefix = platformConfig.api.prefix || DEFAULT_API_PREFIX;
+
+  if (base) {
+    return `${base}${prefix}`;
+  }
+
+  return prefix;
+};
+
+/**
+ * Configured axios instance for API requests
+ */
+export const apiClient: AxiosInstance = axios.create({
+  baseURL: resolveBaseUrl(),
+  timeout: 30000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true, // Include cookies for authentication
+});
+
+// Request interceptor to keep baseURL in sync with config and add tenant headers
+apiClient.interceptors.request.use(
+  (config) => {
+    const resolvedBaseUrl = resolveBaseUrl();
+    config.baseURL = resolvedBaseUrl;
+    apiClient.defaults.baseURL = resolvedBaseUrl;
+
+    // Add tenant headers for multi-tenant support
+    if (typeof window !== "undefined") {
+      const tenantId = window.localStorage?.getItem("tenant_id");
+      if (tenantId && config.headers) {
+        config.headers["X-Tenant-ID"] = tenantId;
+      }
+
+      // Add X-Active-Tenant-Id header for partner multi-tenant access
+      const activeManagedTenantId = window.localStorage?.getItem("active_managed_tenant_id");
+      if (activeManagedTenantId && config.headers) {
+        config.headers["X-Active-Tenant-Id"] = activeManagedTenantId;
+      }
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // Server responded with error status
+      const { status, data } = error.response;
+
+      if (status === 401) {
+        // Log 401 errors in development only (avoid exposing sensitive info in production)
+        if (process.env["NODE_ENV"] !== "production") {
+          console.warn("[API Client] 401 Unauthorized", {
+            url: error.config?.url,
+            method: error.config?.method,
+          });
+        }
+
+        // Unauthorized - redirect to login (but not if already on login page or logging in)
+        if (typeof window !== "undefined") {
+          const isLoginPage = window.location.pathname === "/login";
+          const isLoginRequest = error.config?.url?.includes("/auth/login");
+
+          // Only redirect if not already on login page and not a login request
+          if (!isLoginPage && !isLoginRequest) {
+            window.location.href = "/login";
+          }
+        }
+      }
+
+      // Enhance error with API error details
+      error.apiError = {
+        status,
+        message: data?.message || data?.detail || "An error occurred",
+        code: data?.error || data?.code,
+        details: data?.details,
+      };
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+setupRefreshInterceptor(apiClient as any, defaultAuthFailureHandler);
+
+/**
+ * Generic GET request
+ */
+export async function get<T = unknown>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<AxiosResponse<T>> {
+  return apiClient.get<T>(url, config);
+}
+
+/**
+ * Generic POST request
+ */
+export async function post<T = unknown>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<AxiosResponse<T>> {
+  return apiClient.post<T>(url, data, config);
+}
+
+/**
+ * Generic PUT request
+ */
+export async function put<T = unknown>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<AxiosResponse<T>> {
+  return apiClient.put<T>(url, data, config);
+}
+
+/**
+ * Generic PATCH request
+ */
+export async function patch<T = unknown>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<AxiosResponse<T>> {
+  return apiClient.patch<T>(url, data, config);
+}
+
+/**
+ * Generic DELETE request
+ */
+export async function del<T = unknown>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<AxiosResponse<T>> {
+  return apiClient.delete<T>(url, config);
+}
+
+export default apiClient;
+function createFetchAdapter(): AxiosAdapter {
+  return async (config: InternalAxiosRequestConfig) => {
+    const method = (config.method || "get").toUpperCase();
+    const origin = typeof window === "undefined" ? "http://localhost" : window.location.origin;
+    const urlPath = config.url || "";
+    let targetUrl: URL;
+
+    if (config.baseURL && config.baseURL.length > 0) {
+      if (/^https?:\/\//i.test(config.baseURL)) {
+        targetUrl = new URL(urlPath, config.baseURL);
+      } else {
+        const normalizedBase = config.baseURL.startsWith("/")
+          ? config.baseURL
+          : `/${config.baseURL}`;
+        const normalizedPath = urlPath.startsWith("/") ? urlPath.substring(1) : urlPath;
+        const combined = `${normalizedBase.replace(/\/+$/, "")}/${normalizedPath}`;
+        targetUrl = new URL(combined, origin);
+      }
+    } else {
+      targetUrl = new URL(urlPath, origin);
+    }
+
+    const headers = new Headers();
+    Object.entries(config.headers || {}).forEach(([key, value]) => {
+      if (value !== undefined) {
+        headers.set(key, String(value));
+      }
+    });
+
+    let body = config.data;
+    if (
+      body &&
+      typeof body === "object" &&
+      !(body instanceof FormData) &&
+      !(body instanceof Blob)
+    ) {
+      body = JSON.stringify(body);
+      if (!headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+      }
+    }
+
+    const testNativeFetch = (
+      globalThis as typeof globalThis & { __JEST_NATIVE_FETCH__?: typeof fetch }
+    ).__JEST_NATIVE_FETCH__;
+    const fetchImpl = testNativeFetch || fetch;
+    const requestBody =
+      method === "GET" || method === "HEAD" ? null : ((body ?? null) as BodyInit | null);
+
+    const response = await fetchImpl(targetUrl, {
+      method,
+      headers,
+      body: requestBody,
+      credentials: config.withCredentials ? "include" : "same-origin",
+    });
+
+    const responseText = await response.text();
+    const responseHeaders = Object.fromEntries(response.headers.entries());
+    const contentType = response.headers.get("content-type") || "";
+    let parsedData: unknown = responseText;
+    if (contentType.includes("application/json")) {
+      try {
+        parsedData = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        parsedData = responseText;
+      }
+    }
+
+    const axiosResponse = {
+      data: parsedData,
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+      config,
+      request: {},
+    };
+
+    const validateStatus =
+      config.validateStatus || ((status: number) => status >= 200 && status < 300);
+
+    if (validateStatus(response.status)) {
+      return axiosResponse;
+    }
+
+    throw new AxiosError(
+      `Request failed with status code ${response.status}`,
+      undefined,
+      config,
+      undefined,
+      axiosResponse,
+    );
+  };
+}
+
+if (typeof process !== "undefined" && process.env["JEST_WORKER_ID"]) {
+  apiClient.defaults.adapter = createFetchAdapter();
+}

@@ -1,0 +1,52 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'dotmac-platform'
+    environment: 'development'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Platform backend
+  - job_name: 'platform-backend'
+    static_configs:
+      - targets: ['host.docker.internal:8001']
+        labels:
+          service: 'platform-backend'
+
+  # ISP backend
+  - job_name: 'isp-backend'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+        labels:
+          service: 'isp-backend'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # PostgreSQL (requires postgres_exporter)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # FreeRADIUS (if it exposes metrics)
+  # - job_name: 'freeradius'
+  #   static_configs:
+  #     - targets: ['freeradius:9812']

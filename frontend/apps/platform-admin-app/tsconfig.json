@@ -1,0 +1,86 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/types/*": ["./types/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/components/*": ["./components/*"],
+      "@/providers/*": ["./providers/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/contexts/*": ["./contexts/*"],
+      "@/*": ["./*"],
+      "@dotmac/auth": ["../../shared/lib/auth/index.ts"],
+      "@dotmac/auth/*": ["../../shared/lib/auth/*"],
+      "@shared/*": ["../../shared/*"],
+      "@dotmac/*": ["../../shared/packages/*/src"],
+      "@dotmac/ui": ["../../shared/packages/ui/src"],
+      "@dotmac/ui/*": ["../../shared/packages/ui/src/*"],
+      "@dotmac/graphql/generated/*": ["../../shared/packages/graphql/generated/*"],
+      "@dotmac/graphql/generated": ["../../shared/packages/graphql/generated/index"],
+      "@dotmac/graphql/generated/react-query": [
+        "../../shared/packages/graphql/generated/react-query"
+      ],
+      "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
+      "@dotmac/primitives/*": ["../../shared/packages/primitives/src/*"],
+      "zod": ["./node_modules/zod"],
+      "zod/*": ["./node_modules/zod/*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "types/**/*.d.ts",
+    "../../types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "../../shared/**/dist",
+    "../../shared/**/node_modules",
+    "../../shared/**/__tests__/**",
+    "../../shared/**/*.test.ts",
+    "../../shared/**/*.test.tsx",
+    "../../shared/**/*.spec.ts",
+    "../../shared/**/*.spec.tsx",
+    "../../shared/**/*.stories.ts",
+    "../../shared/**/*.stories.tsx",
+    "../../shared/examples/**",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.stories.ts",
+    "**/*.stories.tsx"
+  ]
+}

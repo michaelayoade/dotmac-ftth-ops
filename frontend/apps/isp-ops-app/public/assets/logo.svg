@@ -1,0 +1,20 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Network nodes icon -->
+  <circle cx="15" cy="30" r="8" fill="#3B82F6" opacity="0.9"/>
+  <circle cx="35" cy="20" r="6" fill="#3B82F6" opacity="0.7"/>
+  <circle cx="35" cy="40" r="6" fill="#3B82F6" opacity="0.7"/>
+
+  <!-- Connection lines -->
+  <line x1="15" y1="30" x2="35" y2="20" stroke="#3B82F6" stroke-width="2" opacity="0.5"/>
+  <line x1="15" y1="30" x2="35" y2="40" stroke="#3B82F6" stroke-width="2" opacity="0.5"/>
+
+  <!-- DotMac text -->
+  <text x="50" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1F2937">
+    DotMac
+  </text>
+
+  <!-- Platform subtitle -->
+  <text x="50" y="50" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">
+    ISP PLATFORM
+  </text>
+</svg>

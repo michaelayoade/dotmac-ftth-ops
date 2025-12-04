@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@dotmac/typescript-config/*": ["./shared/packages/typescript-config/*"],
+      "@dotmac/*": ["./shared/packages/*/src"],
+      "@dotmac/testing-utils/*": ["./shared/packages/testing-utils/src/*"],
+      "#e2e/*": ["./e2e/*"]
+    }
+  },
+  "references": [
+    { "path": "./shared/packages/typescript-config" },
+    { "path": "./shared/packages/analytics" },
+    { "path": "./shared/packages/design-system" },
+    { "path": "./shared/packages/headless" },
+    { "path": "./shared/packages/utils" },
+    { "path": "./shared/packages/primitives" },
+    { "path": "./shared/packages/rbac" },
+    { "path": "./shared/packages/providers" },
+    { "path": "./shared/packages/ui" },
+    { "path": "./shared/packages/testing-utils" }
+  ]
+}

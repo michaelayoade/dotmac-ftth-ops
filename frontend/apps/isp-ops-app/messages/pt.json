@@ -1,0 +1,413 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "warning": "Aviso",
+    "info": "Informação",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "update": "Atualizar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "refresh": "Atualizar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "submit": "Enviar",
+    "reset": "Redefinir",
+    "clear": "Limpar",
+    "apply": "Aplicar",
+    "download": "Baixar",
+    "upload": "Enviar",
+    "view": "Ver",
+    "viewDetails": "Ver Detalhes",
+    "actions": "Ações",
+    "status": "Status",
+    "type": "Tipo",
+    "name": "Nome",
+    "description": "Descrição",
+    "date": "Data",
+    "createdAt": "Criado em",
+    "updatedAt": "Atualizado em",
+    "yes": "Sim",
+    "no": "Não",
+    "all": "Todos",
+    "none": "Nenhum",
+    "other": "Outro",
+    "noData": "Nenhum dado disponível",
+    "noResults": "Nenhum resultado encontrado",
+    "selectOption": "Selecione uma opção",
+    "required": "Obrigatório",
+    "optional": "Opcional",
+    "selectLanguage": "Selecionar idioma"
+  },
+
+  "errors": {
+    "generic": "Ocorreu um erro. Por favor, tente novamente.",
+    "network": "Erro de rede. Por favor, verifique sua conexão.",
+    "notFound": "O recurso solicitado não foi encontrado.",
+    "unauthorized": "Você não está autorizado a acessar este recurso.",
+    "forbidden": "Você não tem permissão para executar esta ação.",
+    "validationFailed": "Por favor, verifique sua entrada e tente novamente.",
+    "serverError": "Ocorreu um erro no servidor. Nossa equipe foi notificada.",
+    "timeout": "A solicitação expirou. Por favor, tente novamente.",
+    "retry": "Por favor, tente novamente",
+    "contactSupport": "Se este problema persistir, entre em contato com o suporte.",
+    "field": {
+      "required": "{field} é obrigatório",
+      "invalid": "{field} é inválido",
+      "tooShort": "{field} é muito curto",
+      "tooLong": "{field} é muito longo",
+      "email": "Por favor, insira um endereço de e-mail válido",
+      "phone": "Por favor, insira um número de telefone válido",
+      "url": "Por favor, insira uma URL válida"
+    }
+  },
+
+  "navigation": {
+    "dashboard": "Painel",
+    "customers": "Clientes",
+    "billing": "Faturamento",
+    "network": "Rede",
+    "support": "Suporte",
+    "settings": "Configurações",
+    "logout": "Sair",
+    "profile": "Perfil",
+    "help": "Ajuda",
+    "documentation": "Documentação"
+  },
+
+  "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "signUp": "Cadastrar",
+    "forgotPassword": "Esqueceu a senha?",
+    "resetPassword": "Redefinir Senha",
+    "changePassword": "Alterar Senha",
+    "email": "E-mail",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha",
+    "rememberMe": "Lembrar de mim",
+    "loginSuccess": "Login realizado com sucesso",
+    "logoutSuccess": "Logout realizado com sucesso",
+    "loginError": "E-mail ou senha inválidos",
+    "sessionExpired": "Sua sessão expirou. Por favor, faça login novamente.",
+    "twoFactor": {
+      "title": "Autenticação de Dois Fatores",
+      "enable": "Ativar 2FA",
+      "disable": "Desativar 2FA",
+      "verify": "Verificar Código",
+      "enterCode": "Digite seu código 2FA",
+      "backupCodes": "Códigos de Backup",
+      "regenerateBackupCodes": "Gerar Novos Códigos de Backup",
+      "enabled": "Autenticação de dois fatores ativada",
+      "disabled": "Autenticação de dois fatores desativada",
+      "required": "A autenticação de dois fatores é obrigatória"
+    }
+  },
+
+  "customers": {
+    "title": "Clientes",
+    "createCustomer": "Criar Cliente",
+    "editCustomer": "Editar Cliente",
+    "deleteCustomer": "Excluir Cliente",
+    "customerDetails": "Detalhes do Cliente",
+    "viewCustomer": "Ver Cliente",
+    "searchCustomers": "Pesquisar clientes...",
+    "totalCustomers": "Total de Clientes",
+    "activeCustomers": "Clientes Ativos",
+    "inactiveCustomers": "Clientes Inativos",
+    "fields": {
+      "firstName": "Nome",
+      "lastName": "Sobrenome",
+      "email": "E-mail",
+      "phone": "Telefone",
+      "address": "Endereço",
+      "city": "Cidade",
+      "state": "Estado",
+      "zipCode": "CEP",
+      "country": "País",
+      "status": "Status",
+      "type": "Tipo de Cliente",
+      "tier": "Nível do Cliente",
+      "notes": "Notas"
+    },
+    "status": {
+      "prospect": "Prospecto",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "suspended": "Suspenso",
+      "churned": "Perdido",
+      "archived": "Arquivado"
+    },
+    "type": {
+      "individual": "Individual",
+      "business": "Empresa",
+      "enterprise": "Corporativo",
+      "partner": "Parceiro",
+      "vendor": "Fornecedor"
+    },
+    "messages": {
+      "created": "Cliente criado com sucesso",
+      "updated": "Cliente atualizado com sucesso",
+      "deleted": "Cliente excluído com sucesso",
+      "deleteConfirm": "Tem certeza de que deseja excluir este cliente?"
+    }
+  },
+
+  "jobs": {
+    "title": "Tarefas",
+    "viewJob": "Ver Tarefa",
+    "cancelJob": "Cancelar Tarefa",
+    "retryJob": "Tentar Novamente",
+    "jobDetails": "Detalhes da Tarefa",
+    "status": {
+      "pending": "Pendente",
+      "assigned": "Atribuído",
+      "running": "Em Execução",
+      "completed": "Concluído",
+      "failed": "Falhou",
+      "cancelled": "Cancelado",
+      "retrying": "Tentando Novamente",
+      "timeout": "Tempo Esgotado"
+    },
+    "type": {
+      "bulkImport": "Importação em Massa",
+      "bulkExport": "Exportação em Massa",
+      "dataMigration": "Migração de Dados",
+      "firmwareUpgrade": "Atualização de Firmware",
+      "batchProvisioning": "Provisionamento em Lote",
+      "batchDeprovisioning": "Desprovisionamento em Lote",
+      "reportGeneration": "Geração de Relatório",
+      "auditExport": "Exportação de Auditoria",
+      "custom": "Personalizado"
+    },
+    "priority": {
+      "low": "Baixa",
+      "normal": "Normal",
+      "high": "Alta",
+      "critical": "Crítica"
+    },
+    "fields": {
+      "jobId": "ID da Tarefa",
+      "jobName": "Nome da Tarefa",
+      "jobType": "Tipo de Tarefa",
+      "status": "Status",
+      "priority": "Prioridade",
+      "progress": "Progresso",
+      "startedAt": "Iniciado em",
+      "completedAt": "Concluído em",
+      "duration": "Duração",
+      "error": "Erro"
+    },
+    "messages": {
+      "cancelled": "Tarefa cancelada com sucesso",
+      "retried": "Nova tentativa de tarefa iniciada",
+      "cancelConfirm": "Tem certeza de que deseja cancelar esta tarefa?"
+    }
+  },
+
+  "billing": {
+    "title": "Faturamento",
+    "invoices": "Faturas",
+    "payments": "Pagamentos",
+    "subscriptions": "Assinaturas",
+    "paymentMethods": "Métodos de Pagamento",
+    "createInvoice": "Criar Fatura",
+    "viewInvoice": "Ver Fatura",
+    "payInvoice": "Pagar Fatura",
+    "invoice": {
+      "status": {
+        "draft": "Rascunho",
+        "open": "Aberta",
+        "paid": "Paga",
+        "void": "Anulada",
+        "overdue": "Vencida",
+        "partiallyPaid": "Parcialmente Paga"
+      }
+    },
+    "payment": {
+      "status": {
+        "pending": "Pendente",
+        "processing": "Processando",
+        "succeeded": "Bem-sucedido",
+        "failed": "Falhou",
+        "refunded": "Reembolsado",
+        "partiallyRefunded": "Parcialmente Reembolsado",
+        "cancelled": "Cancelado"
+      }
+    },
+    "fields": {
+      "invoiceNumber": "Número da Fatura",
+      "amount": "Valor",
+      "dueDate": "Data de Vencimento",
+      "paidDate": "Data de Pagamento",
+      "customer": "Cliente",
+      "description": "Descrição",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "tax": "Imposto",
+      "discount": "Desconto"
+    },
+    "messages": {
+      "invoiceCreated": "Fatura criada com sucesso",
+      "paymentProcessed": "Pagamento processado com sucesso",
+      "paymentFailed": "O pagamento falhou. Por favor, tente novamente."
+    }
+  },
+
+  "tickets": {
+    "title": "Tickets de Suporte",
+    "createTicket": "Criar Ticket",
+    "viewTicket": "Ver Ticket",
+    "updateTicket": "Atualizar Ticket",
+    "closeTicket": "Fechar Ticket",
+    "status": {
+      "open": "Aberto",
+      "inProgress": "Em Andamento",
+      "waiting": "Aguardando",
+      "resolved": "Resolvido",
+      "closed": "Fechado"
+    },
+    "priority": {
+      "low": "Baixa",
+      "normal": "Normal",
+      "high": "Alta",
+      "urgent": "Urgente"
+    },
+    "type": {
+      "generalInquiry": "Consulta Geral",
+      "billingIssue": "Problema de Faturamento",
+      "technicalSupport": "Suporte Técnico",
+      "installationRequest": "Solicitação de Instalação",
+      "outageReport": "Relato de Interrupção",
+      "serviceUpgrade": "Upgrade de Serviço",
+      "serviceDowngrade": "Downgrade de Serviço",
+      "cancellationRequest": "Solicitação de Cancelamento",
+      "equipmentIssue": "Problema de Equipamento",
+      "speedIssue": "Problema de Velocidade",
+      "networkIssue": "Problema de Rede",
+      "connectivityIssue": "Problema de Conectividade",
+      "fault": "Falha",
+      "outage": "Interrupção",
+      "maintenance": "Manutenção"
+    },
+    "fields": {
+      "ticketNumber": "Número do Ticket",
+      "subject": "Assunto",
+      "description": "Descrição",
+      "status": "Status",
+      "priority": "Prioridade",
+      "type": "Tipo",
+      "assignedTo": "Atribuído a",
+      "createdBy": "Criado por",
+      "lastUpdated": "Última Atualização"
+    },
+    "messages": {
+      "created": "Ticket criado com sucesso",
+      "updated": "Ticket atualizado com sucesso",
+      "closed": "Ticket fechado com sucesso",
+      "closeConfirm": "Tem certeza de que deseja fechar este ticket?"
+    }
+  },
+
+  "forms": {
+    "validation": {
+      "required": "Este campo é obrigatório",
+      "email": "Por favor, insira um endereço de e-mail válido",
+      "minLength": "Deve ter pelo menos {min} caracteres",
+      "maxLength": "Não deve exceder {max} caracteres",
+      "pattern": "Por favor, corresponda ao formato solicitado",
+      "number": "Por favor, insira um número válido",
+      "positive": "Por favor, insira um número positivo",
+      "url": "Por favor, insira uma URL válida",
+      "phone": "Por favor, insira um número de telefone válido"
+    },
+    "messages": {
+      "unsavedChanges": "Você tem alterações não salvas. Tem certeza de que deseja sair?",
+      "saveSuccess": "Alterações salvas com sucesso",
+      "saveError": "Falha ao salvar alterações"
+    }
+  },
+
+  "pagination": {
+    "showing": "Mostrando {start} a {end} de {total} resultados",
+    "page": "Página {page} de {total}",
+    "rowsPerPage": "Linhas por página:",
+    "firstPage": "Primeira página",
+    "previousPage": "Página anterior",
+    "nextPage": "Próxima página",
+    "lastPage": "Última página"
+  },
+
+  "theme": {
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema",
+    "switchTo": "Mudar para o tema {theme}",
+    "modeTitle": "Tema {theme}"
+  },
+
+  "time": {
+    "now": "Agora mesmo",
+    "minutesAgo": "{count, plural, =1 {há 1 minuto} other {há # minutos}}",
+    "hoursAgo": "{count, plural, =1 {há 1 hora} other {há # horas}}",
+    "daysAgo": "{count, plural, =1 {há 1 dia} other {há # dias}}",
+    "weeksAgo": "{count, plural, =1 {há 1 semana} other {há # semanas}}",
+    "monthsAgo": "{count, plural, =1 {há 1 mês} other {há # meses}}",
+    "yearsAgo": "{count, plural, =1 {há 1 ano} other {há # anos}}"
+  },
+
+  "accessibility": {
+    "skipToMainContent": "Pular para o conteúdo principal",
+    "statusLabel": "Status: {status}",
+    "editItem": "Editar {item}",
+    "deleteItem": "Excluir {item}",
+    "viewItem": "Ver {item}",
+    "cancelItem": "Cancelar {item}",
+    "retryItem": "Tentar novamente {item}",
+    "goToPage": "Ir para a página {page}",
+    "firstPage": "Ir para a primeira página",
+    "previousPage": "Ir para a página anterior",
+    "nextPage": "Ir para a próxima página",
+    "lastPage": "Ir para a última página",
+    "sortBy": "Ordenar por {column}",
+    "sortedBy": "Ordenado por {column}, {direction}",
+    "ascending": "crescente",
+    "descending": "decrescente",
+    "searchEntity": "Pesquisar {entity}",
+    "filterBy": "Filtrar por {filter}",
+    "filterByWithCount": "Filtrar por {filter}, {count} ativos",
+    "requiredField": "Este campo é obrigatório",
+    "minLength": "Mínimo {min} caracteres",
+    "maxLength": "Máximo {max} caracteres",
+    "format": {
+      "email": "Deve ser um endereço de e-mail válido",
+      "phone": "Deve ser um número de telefone válido",
+      "url": "Deve ser uma URL válida",
+      "date": "Deve ser uma data válida",
+      "number": "Deve ser um número"
+    },
+    "progressLabel": "Progresso de {action}: {progress}%",
+    "loadingEntity": "Carregando {entity}...",
+    "closeDialog": "Fechar diálogo de {title}",
+    "close": "Fechar",
+    "expand": "Expandir",
+    "collapse": "Recolher",
+    "menu": "Menu",
+    "openMenu": "Abrir menu",
+    "closeMenu": "Fechar menu",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
+    "rowsPerPage": "Linhas por página",
+    "of": "de"
+  }
+}

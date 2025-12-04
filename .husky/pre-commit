@@ -1,0 +1,63 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Python pre-commit checks
+echo "🔍 Running Python checks..."
+
+# Check for Python changes
+if git diff --cached --name-only | grep -q "\.py$"; then
+  echo "📝 Formatting Python code..."
+  poetry run black --check src/ tests/
+  if [ $? -ne 0 ]; then
+    echo "❌ Python formatting issues found. Run 'make format' to fix."
+    exit 1
+  fi
+
+  echo "🔍 Running Python linting..."
+  poetry run ruff check src/
+  if [ $? -ne 0 ]; then
+    echo "❌ Python linting issues found. Run 'make lint' to see details."
+    exit 1
+  fi
+
+  echo "🧪 Running fast Python tests..."
+  poetry run pytest tests/ -m "not integration and not slow" -x --tb=short -q
+  if [ $? -ne 0 ]; then
+    echo "❌ Python tests failed. Fix the tests before committing."
+    exit 1
+  fi
+fi
+
+# Check for TypeScript/JavaScript changes in frontend
+if git diff --cached --name-only | grep -q "^frontend/.*\.\(ts\|tsx\|js\|jsx\)$"; then
+  echo "📝 Running frontend checks..."
+
+  # Check for console.log statements (excluding test files and node_modules)
+  echo "🔍 Checking for console.log statements..."
+  CONSOLE_LOGS=$(git diff --cached --name-only | grep -E "^frontend/.*\.(ts|tsx)$" | grep -v "__tests__" | grep -v "\.test\." | grep -v "\.spec\." | grep -v "node_modules" | xargs grep -l "console\.log\|console\.debug\|console\.info" 2>/dev/null || true)
+
+  if [ -n "$CONSOLE_LOGS" ]; then
+    echo "❌ Found console.log/debug/info statements in the following files:"
+    echo "$CONSOLE_LOGS"
+    echo ""
+    echo "💡 Use console.warn or console.error for legitimate logging,"
+    echo "   or wrap with: if (process.env['NODE_ENV'] !== 'production') { console.log(...) }"
+    exit 1
+  fi
+
+  # Run ESLint on staged frontend files
+  echo "🔍 Running ESLint..."
+  cd frontend
+  STAGED_FILES=$(git diff --cached --name-only --relative | grep -E "\.(ts|tsx|js|jsx)$" || true)
+  if [ -n "$STAGED_FILES" ]; then
+    pnpm eslint $STAGED_FILES --max-warnings=0
+    if [ $? -ne 0 ]; then
+      echo "❌ ESLint checks failed. Fix the issues before committing."
+      cd ..
+      exit 1
+    fi
+  fi
+  cd ..
+fi
+
+echo "✅ All pre-commit checks passed!"

@@ -1,0 +1,174 @@
+/* Mobile Navigation Styles */
+
+.mobile-nav-tabs {
+  @apply bg-white border-b border-gray-200;
+}
+
+.mobile-nav-tabs .scrollbar-hide {
+  /* Hide scrollbars but maintain functionality */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+
+.mobile-nav-tabs .scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Enhanced tab navigation */
+.enhanced-tab-nav {
+  @apply bg-white border-b border-gray-200 relative;
+}
+
+.enhanced-tab-nav::before {
+  content: '';
+  @apply absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white to-transparent pointer-events-none z-10;
+}
+
+.enhanced-tab-nav::after {
+  content: '';
+  @apply absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white to-transparent pointer-events-none z-10;
+}
+
+/* Mobile drawer animations */
+.mobile-drawer-enter {
+  @apply transform -translate-x-full;
+}
+
+.mobile-drawer-enter-active {
+  @apply transform translate-x-0 transition-transform duration-300 ease-in-out;
+}
+
+.mobile-drawer-exit {
+  @apply transform translate-x-0;
+}
+
+.mobile-drawer-exit-active {
+  @apply transform -translate-x-full transition-transform duration-300 ease-in-out;
+}
+
+/* Responsive sidebar styles */
+.responsive-sidebar {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.responsive-sidebar.collapsed {
+  @apply w-16;
+}
+
+.responsive-sidebar.expanded {
+  @apply w-64;
+}
+
+.responsive-sidebar .nav-item {
+  @apply transition-all duration-150 ease-in-out;
+}
+
+.responsive-sidebar.collapsed .nav-item .nav-label {
+  @apply opacity-0 scale-95;
+}
+
+.responsive-sidebar.expanded .nav-item .nav-label {
+  @apply opacity-100 scale-100;
+}
+
+/* Status indicators */
+.status-indicator {
+  @apply inline-flex items-center justify-center w-2 h-2 rounded-full;
+}
+
+.status-indicator.status-online {
+  @apply bg-green-500;
+  animation: pulse-green 2s infinite;
+}
+
+.status-indicator.status-offline {
+  @apply bg-red-500;
+}
+
+.status-indicator.status-warning {
+  @apply bg-yellow-500;
+  animation: pulse-yellow 2s infinite;
+}
+
+.status-indicator.status-maintenance {
+  @apply bg-blue-500;
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    @apply opacity-100;
+  }
+  50% {
+    @apply opacity-50;
+  }
+}
+
+@keyframes pulse-yellow {
+  0%,
+  100% {
+    @apply opacity-100;
+  }
+  50% {
+    @apply opacity-60;
+  }
+}
+
+/* Focus ring improvements for mobile */
+@media (max-width: 768px) {
+  .focus\:ring-2:focus {
+    @apply ring-2 ring-blue-500 ring-offset-1;
+  }
+
+  /* Larger touch targets */
+  .mobile-touch-target {
+    @apply min-h-12 min-w-12;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nav-item:hover {
+    @apply bg-black text-white;
+  }
+
+  .nav-item.active {
+    @apply bg-black text-white border-2 border-white;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer-enter-active,
+  .mobile-drawer-exit-active,
+  .responsive-sidebar,
+  .nav-item,
+  .status-indicator {
+    @apply transition-none;
+  }
+
+  .status-indicator.status-online,
+  .status-indicator.status-warning {
+    animation: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .mobile-nav-tabs,
+  .enhanced-tab-nav {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .responsive-sidebar {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .nav-item {
+    @apply text-gray-300 hover:text-white hover:bg-gray-700;
+  }
+
+  .nav-item.active {
+    @apply bg-blue-600 text-white;
+  }
+}

@@ -1,0 +1,20 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+dist
+build
+.next
+out
+storybook-static
+
+# Test outputs
+coverage
+.nyc_output
+test-results
+playwright-report
+
+# Files with known Prettier parsing issues (Storybook meta declarations)
+**/useApiData.stories.tsx
+**/UniversalProviders.stories.tsx

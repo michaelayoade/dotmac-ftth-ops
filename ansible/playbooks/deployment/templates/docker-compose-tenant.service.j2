@@ -1,0 +1,32 @@
+[Unit]
+Description=Docker Compose Stack - DotMac Tenant {{ tenant_id }}
+After=docker.service network-online.target
+Wants=docker.service network-online.target
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ install_dir }}
+User={{ app_user }}
+Group={{ app_group }}
+
+# Start the stack
+ExecStart=/usr/bin/docker compose -p {{ compose_project_name }} up -d
+
+# Stop the stack
+ExecStop=/usr/bin/docker compose -p {{ compose_project_name }} down
+
+# Reload (restart changed containers)
+ExecReload=/usr/bin/docker compose -p {{ compose_project_name }} up -d --force-recreate
+
+# Timeout for operations
+TimeoutStartSec=0
+TimeoutStopSec=120
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

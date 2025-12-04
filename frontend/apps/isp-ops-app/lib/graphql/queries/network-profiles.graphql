@@ -1,0 +1,95 @@
+# ============================================================================
+# Network Profile GraphQL Queries
+# ============================================================================
+# Backend: src/dotmac/platform/graphql/queries/network_profile.py
+# ============================================================================
+
+# ============================================================================
+# Network Profile Fragment
+# ============================================================================
+
+fragment NetworkProfileFields on NetworkProfile {
+  id
+  subscriberId
+  tenantId
+
+  # Option 82 / Circuit Binding
+  circuitId
+  remoteId
+  option82Policy
+
+  # VLAN Configuration
+  serviceVlan
+  innerVlan
+  vlanPool
+  qinqEnabled
+
+  # IP Addressing
+  staticIpv4
+  staticIpv6
+  delegatedIpv6Prefix
+  ipv6PdSize
+  ipv6AssignmentMode
+
+  # Metadata
+  metadata
+  createdAt
+  updatedAt
+}
+
+# ============================================================================
+# Queries
+# ============================================================================
+
+query GetNetworkProfile($subscriberId: String!) {
+  networkProfile(subscriberId: $subscriberId) {
+    ...NetworkProfileFields
+  }
+}
+
+query GetNetworkProfileStats {
+  networkProfileStats {
+    totalProfiles
+    profilesWithStaticIpv4
+    profilesWithStaticIpv6
+    profilesWithVlans
+    profilesWithQinq
+    profilesWithOption82
+    option82EnforceCount
+    option82LogCount
+    option82IgnoreCount
+  }
+}
+
+query GetOption82Alerts($activeOnly: Boolean = true, $limit: Int = 50) {
+  option82Alerts(activeOnly: $activeOnly, limit: $limit) {
+    id
+    subscriberId
+    subscriberUsername
+    severity
+    alertType
+    message
+    expectedCircuitId
+    actualCircuitId
+    expectedRemoteId
+    actualRemoteId
+    triggeredAt
+    acknowledgedAt
+    resolvedAt
+    isActive
+  }
+}
+
+# ============================================================================
+# Mutations
+# ============================================================================
+
+mutation UpsertNetworkProfile($subscriberId: String!, $profile: NetworkProfileInput!) {
+  upsertNetworkProfile(subscriberId: $subscriberId, profile: $profile) {
+    ...NetworkProfileFields
+  }
+}
+
+mutation DeleteNetworkProfile($subscriberId: String!) {
+  deleteNetworkProfile(subscriberId: $subscriberId)
+}

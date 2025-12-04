@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ company_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .content h2 {
+            color: #667eea;
+            font-size: 22px;
+            margin-top: 0;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: #ffffff;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+        }
+        .steps {
+            list-style: none;
+            padding: 0;
+            counter-reset: step-counter;
+        }
+        .steps li {
+            counter-increment: step-counter;
+            margin: 20px 0;
+            padding-left: 50px;
+            position: relative;
+        }
+        .steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to {{ company_name }}!</h1>
+        </div>
+
+        <div class="content">
+            <h2>Hi {{ customer_name }},</h2>
+
+            <p>Thank you for choosing {{ company_name }} for your internet service! We're excited to have you onboard and look forward to providing you with reliable, high-speed connectivity.</p>
+
+            <div class="info-box">
+                <strong>Your Account Details:</strong>
+                Customer ID: {{ customer_id }}<br>
+                Account Number: {{ account_number }}<br>
+                Service Plan: {{ plan_name }}<br>
+                Bandwidth: {{ bandwidth_mbps }} Mbps<br>
+                Service Address: {{ service_address }}
+            </div>
+
+            <h2>What's Next?</h2>
+
+            <ul class="steps">
+                <li>
+                    <strong>License Activated</strong><br>
+                    Your service license has been issued and activated. License Key: {{ license_key }}
+                </li>
+                <li>
+                    <strong>Tenant Provisioned</strong><br>
+                    Your dedicated tenant environment is ready at: <a href="{{ tenant_url }}">{{ tenant_url }}</a>
+                </li>
+                <li>
+                    <strong>Installation Scheduled</strong><br>
+                    {% if installation_date %}
+                    Your installation is scheduled for {{ installation_date }}. A technician will arrive between {{ installation_time_window }}.
+                    {% else %}
+                    We'll contact you within 24-48 hours to schedule your installation.
+                    {% endif %}
+                </li>
+                <li>
+                    <strong>Welcome Call</strong><br>
+                    Our onboarding team will call you at {{ customer_phone }} to welcome you and answer any questions.
+                </li>
+            </ul>
+
+            <center>
+                <a href="{{ portal_url }}" class="button">Access Your Customer Portal</a>
+            </center>
+
+            <h2>Quick Links</h2>
+            <ul>
+                <li><a href="{{ portal_url }}/dashboard">Customer Dashboard</a> - View usage, bills, and service status</li>
+                <li><a href="{{ portal_url }}/tickets">Support Tickets</a> - Get help when you need it</li>
+                <li><a href="{{ portal_url }}/billing">Billing & Payments</a> - Manage your account and payments</li>
+                <li><a href="{{ support_url }}">Knowledge Base</a> - Find answers to common questions</li>
+            </ul>
+
+            <div class="info-box">
+                <strong>Need Help?</strong>
+                Contact our support team:<br>
+                Phone: {{ support_phone }}<br>
+                Email: <a href="mailto:{{ support_email }}">{{ support_email }}</a><br>
+                {% if ticket_number %}
+                Support Ticket: {{ ticket_number }} (already created for you!)
+                {% endif %}
+            </div>
+
+            <p>We're here to ensure you have the best experience possible. Don't hesitate to reach out if you have any questions!</p>
+
+            <p>Welcome aboard!<br>
+            <strong>The {{ company_name }} Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>{{ company_name }} | {{ company_address }}</p>
+            <p>
+                <a href="{{ portal_url }}/settings">Account Settings</a> |
+                <a href="{{ terms_url }}">Terms of Service</a> |
+                <a href="{{ privacy_url }}">Privacy Policy</a>
+            </p>
+            <p>© {{ current_year }} {{ company_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

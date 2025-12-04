@@ -1,0 +1,71 @@
+# Shared Production Configuration
+# Values here are defaults - override with environment variables
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  base_url: ${API_BASE_URL}  # Set via env: https://api.example.com
+  ws_url: ${WS_URL}           # Set via env: wss://api.example.com
+
+frontend:
+  host: 0.0.0.0
+  port: 3000
+  base_url: ${FRONTEND_URL}   # Set via env: https://app.example.com
+
+cors:
+  enabled: true
+  origins: ${CORS_ORIGINS}     # Set via env: ["https://app.example.com"]
+  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+  headers: ["*"]
+  max_age: 3600
+
+database:
+  url: ${DATABASE_URL}         # Set via env
+  pool_size: 20
+  max_overflow: 40
+  pool_timeout: 30
+  pool_recycle: 3600
+  pool_pre_ping: true
+
+redis:
+  url: ${REDIS_URL}            # Set via env
+  max_connections: 100
+  fallback_enabled: false      # Strict in production
+
+vault:
+  enabled: true
+  url: ${VAULT_URL}
+  token: ${VAULT_TOKEN}
+  mount_path: secret
+  kv_version: 2
+
+storage:
+  provider: s3
+  enabled: true
+  endpoint: ${S3_ENDPOINT}
+  access_key: ${S3_ACCESS_KEY}
+  secret_key: ${S3_SECRET_KEY}
+  bucket: ${S3_BUCKET}
+  use_ssl: true
+
+jwt:
+  secret_key: ${JWT_SECRET_KEY}  # MUST be set via Vault
+  algorithm: HS256
+  access_token_expire_minutes: 15
+  refresh_token_expire_days: 7
+
+observability:
+  enabled: true
+  log_level: INFO
+  otel_enabled: true
+  otel_endpoint: ${OTEL_ENDPOINT}
+  enable_metrics: true
+  enable_tracing: true
+
+feature_flags:
+  mfa_enabled: true
+  search_enabled: true
+  storage_enabled: true
+  email_enabled: true
+  celery_enabled: true

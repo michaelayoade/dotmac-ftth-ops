@@ -1,0 +1,6 @@
+from collections.abc import Awaitable, Callable
+from typing import Any
+
+class BaseHTTPMiddleware:
+    def __init__(self, app: Any) -> None: ...
+    async def dispatch(self, request: Any, call_next: Callable[[Any], Awaitable[Any]]) -> Any: ...

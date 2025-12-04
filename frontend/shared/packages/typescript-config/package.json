@@ -1,0 +1,27 @@
+{
+  "name": "@dotmac/typescript-config",
+  "version": "1.0.0",
+  "description": "Shared TypeScript configuration for DotMac applications",
+  "main": "base.json",
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "react-library.json",
+    "tsup.base.js"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./nextjs.json": "./nextjs.json",
+    "./react-library.json": "./react-library.json",
+    "./tsup.base": "./tsup.base.js"
+  },
+  "scripts": {
+    "lint": "echo 'No TypeScript files to lint in typescript-config package'"
+  },
+  "dependencies": {
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.25"
+  }
+}

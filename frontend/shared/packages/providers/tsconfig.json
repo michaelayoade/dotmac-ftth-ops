@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dotmac/primitives": ["../primitives/src"],
+      "@dotmac/primitives/*": ["../primitives/src/*"],
+      "@dotmac/ui": ["../ui/src"],
+      "@dotmac/ui/*": ["../ui/src/*"],
+      "@dotmac/headless": ["../headless/src"],
+      "@dotmac/headless/*": ["../headless/src/*"],
+      "@dotmac/rbac": ["../rbac/src"],
+      "@dotmac/rbac/*": ["../rbac/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.*",
+    "**/__tests__/**",
+    "**/*.stories.*",
+    "**/*.spec.*"
+  ]
+}

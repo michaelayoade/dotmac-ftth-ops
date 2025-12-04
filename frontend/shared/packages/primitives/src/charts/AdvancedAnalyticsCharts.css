@@ -1,0 +1,590 @@
+/**
+ * Advanced Analytics Charts Styles
+ * 
+ * Comprehensive styling for business intelligence charts
+ * with responsive design and accessibility features.
+ */
+
+.advanced-analytics-charts {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* Analytics Header */
+.analytics-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.chart-tabs {
+  display: flex;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.tab-button.active {
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.realtime-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.realtime-toggle input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.realtime-toggle input[type='checkbox']:checked {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.date-range-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.date-range-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Metrics Summary */
+.metrics-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.metric-card {
+  background: #ffffff;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.metric-header h3 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+}
+
+.trend-indicator {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.trend-indicator.up {
+  color: #10b981;
+}
+
+.trend-indicator.down {
+  color: #ef4444;
+}
+
+.trend-indicator.stable {
+  color: #6b7280;
+}
+
+.metric-value {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.metric-change {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.metric-change.positive {
+  color: #10b981;
+}
+
+.metric-change.negative {
+  color: #ef4444;
+}
+
+/* Chart Container */
+.chart-container {
+  padding: 1.5rem;
+}
+
+.chart-section {
+  margin-bottom: 2rem;
+}
+
+.chart-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.chart-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+/* Revenue Analytics */
+.revenue-analytics {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.analysis-panel {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.analysis-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stat value.positive {
+  color: #10b981;
+}
+
+.stat value.negative {
+  color: #ef4444;
+}
+
+/* Customer Analytics */
+.customer-analytics .chart-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.customer-metrics {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric-item label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.metric-item value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.metric-item value.success {
+  color: #10b981;
+}
+
+.metric-item value.warning {
+  color: #f59e0b;
+}
+
+/* Geographic Analytics */
+.geographic-analytics {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.geographic-summary {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.region-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.region-item {
+  display: grid;
+  grid-template-columns: 2rem 1fr auto auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.region-item .rank {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.region-item .name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.region-item .customers,
+.region-item .revenue {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.region-item .growth {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.region-item .growth.positive {
+  color: #10b981;
+}
+
+.region-item .growth.negative {
+  color: #ef4444;
+}
+
+/* Custom Tooltips */
+.analytics-tooltip {
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.875rem;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-entry {
+  margin: 0.25rem 0;
+  font-weight: 500;
+}
+
+.geo-tooltip {
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.875rem;
+}
+
+.geo-tooltip p {
+  margin: 0.25rem 0;
+}
+
+.geo-tooltip strong {
+  color: #1f2937;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .revenue-analytics,
+  .geographic-analytics {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-analytics .chart-row {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-summary {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-header {
+    padding: 1rem;
+  }
+
+  .header-controls {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .chart-tabs {
+    justify-content: center;
+  }
+
+  .tab-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+  }
+
+  .metrics-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .chart-container {
+    padding: 1rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .region-item {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .tab-button {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .date-range-select {
+    width: 100%;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .advanced-analytics-charts {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+
+  .analytics-header {
+    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+    border-bottom-color: #4b5563;
+  }
+
+  .chart-tabs {
+    background: #374151;
+  }
+
+  .tab-button {
+    color: #9ca3af;
+  }
+
+  .tab-button:hover {
+    color: #f9fafb;
+    background: #4b5563;
+  }
+
+  .tab-button.active {
+    background: #3b82f6;
+    color: #ffffff;
+  }
+
+  .metric-card,
+  .analysis-panel,
+  .customer-metrics,
+  .geographic-summary {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .metric-card:hover {
+    border-color: #6b7280;
+  }
+
+  .metric-value,
+  .stat value,
+  .metric-item value {
+    color: #f9fafb;
+  }
+
+  .date-range-select {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .region-item {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .analytics-tooltip,
+  .geo-tooltip {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .advanced-analytics-charts {
+    border: 2px solid #000000;
+  }
+
+  .metric-card,
+  .analysis-panel,
+  .customer-metrics,
+  .geographic-summary,
+  .region-item {
+    border-color: #000000;
+    border-width: 2px;
+  }
+
+  .tab-button.active {
+    background: #000000;
+    color: #ffffff;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .tab-button,
+  .metric-card {
+    transition: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .advanced-analytics-charts {
+    box-shadow: none;
+    border: 1px solid #000000;
+  }
+
+  .header-actions {
+    display: none;
+  }
+
+  .chart-tabs {
+    display: none;
+  }
+
+  .chart-container {
+    padding: 1rem 0;
+  }
+}

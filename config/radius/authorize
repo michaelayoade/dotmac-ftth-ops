@@ -1,0 +1,13 @@
+#
+# FreeRADIUS authorize file
+#
+# PRODUCTION: This file should be EMPTY or contain only non-authenticating
+# entries. All authentication must go through the SQL database to enforce
+# tenant isolation and RBAC.
+#
+# For local testing/healthcheck, mount a separate authorize.test file.
+#
+
+# DEFAULT - Fall through to SQL database for authentication
+DEFAULT Auth-Type := SQL
+        Fall-Through = Yes

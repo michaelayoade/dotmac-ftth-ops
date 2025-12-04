@@ -1,0 +1,173 @@
+# Production Dockerfile for DotMac Platform Services
+# Multi-stage build for optimized image size and security
+
+ARG PYTHON_VERSION=3.12
+ARG POETRY_VERSION=1.8.3
+ARG APP_VERSION=latest
+
+# Stage 1: Dependencies Builder
+FROM python:${PYTHON_VERSION}-slim AS dependencies
+
+ARG POETRY_VERSION
+
+WORKDIR /build
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install only essential build dependencies with pinned versions
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        gcc="$(apt-cache policy gcc | awk '/Candidate/ {print $2}')" \
+        g++="$(apt-cache policy g++ | awk '/Candidate/ {print $2}')" \
+        libpq-dev="$(apt-cache policy libpq-dev | awk '/Candidate/ {print $2}')"; \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock ./
+
+# Export and install dependencies to a target directory
+RUN pip install --no-cache-dir poetry==${POETRY_VERSION} && \
+    poetry config virtualenvs.create false && \
+    poetry export -f requirements.txt --output requirements.txt --without dev --without-hashes && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r requirements.txt && \
+    pip install --no-cache-dir --target=/install -r requirements.txt
+
+# Stage 2: Application Builder
+FROM python:${PYTHON_VERSION}-slim AS app-builder
+
+WORKDIR /build
+
+# Copy application source
+COPY src ./src
+COPY alembic.ini ./
+COPY alembic ./alembic
+
+# Compile Python files for optimization
+RUN python -m compileall -b src && \
+    find src -name "*.py" -delete && \
+    find src -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# Stage 3: Runtime Base
+FROM python:${PYTHON_VERSION}-slim AS runtime-base
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install only runtime dependencies with pinned versions
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        libpq5="$(apt-cache policy libpq5 | awk '/Candidate/ {print $2}')" \
+        curl="$(apt-cache policy curl | awk '/Candidate/ {print $2}')" \
+        netcat-openbsd="$(apt-cache policy netcat-openbsd | awk '/Candidate/ {print $2}')" \
+        ca-certificates="$(apt-cache policy ca-certificates | awk '/Candidate/ {print $2}')"; \
+    rm -rf /var/lib/apt/lists/*; \
+    apt-get clean
+
+# Create non-root user and necessary directories
+RUN groupadd -r -g 1001 dotmac && \
+    useradd -r -u 1001 -g dotmac -d /app -s /sbin/nologin dotmac && \
+    mkdir -p /app /app/logs /app/tmp && \
+    chown -R dotmac:dotmac /app
+
+# Stage 4: API Runtime
+FROM runtime-base AS api
+
+ARG APP_VERSION
+
+WORKDIR /app
+
+# Copy only the installed packages (not entire /usr/local)
+COPY --from=dependencies --chown=dotmac:dotmac /install /usr/local/lib/python3.12/site-packages
+
+# Copy compiled application
+COPY --from=app-builder --chown=dotmac:dotmac /build/src ./src
+COPY --from=app-builder --chown=dotmac:dotmac /build/alembic.ini ./
+COPY --from=app-builder --chown=dotmac:dotmac /build/alembic ./alembic
+
+# (Optional) CLI entry point removed in production image to reduce footprint
+
+# Add startup script for migrations and health checks
+COPY --chown=dotmac:dotmac scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Environment configuration with defaults
+ENV PYTHONPATH=/app/src:$PYTHONPATH \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
+    # Gunicorn configuration
+    GUNICORN_WORKERS=4 \
+    GUNICORN_WORKER_CLASS=uvicorn.workers.UvicornWorker \
+    GUNICORN_BIND=0.0.0.0:8000 \
+    GUNICORN_MAX_REQUESTS=1000 \
+    GUNICORN_MAX_REQUESTS_JITTER=50 \
+    GUNICORN_TIMEOUT=60 \
+    GUNICORN_KEEPALIVE=5 \
+    GUNICORN_ACCESS_LOG=- \
+    GUNICORN_ERROR_LOG=- \
+    GUNICORN_LOG_LEVEL=info
+
+# Labels for metadata
+LABEL org.opencontainers.image.title="DotMac Platform API" \
+      org.opencontainers.image.description="Production API service for DotMac Platform" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.authors="DotMac Team" \
+      org.opencontainers.image.source="https://github.com/dotmac/platform-services"
+
+USER dotmac
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["api"]
+
+# Stage 5: Celery Worker Runtime
+FROM runtime-base AS celery
+
+WORKDIR /app
+
+# Copy only the installed packages
+COPY --from=dependencies --chown=dotmac:dotmac /install /usr/local/lib/python3.12/site-packages
+
+# Copy compiled application
+COPY --from=app-builder --chown=dotmac:dotmac /build/src ./src
+
+# (Optional) CLI entry point removed in production image to reduce footprint
+
+# Add celery startup script
+COPY --chown=dotmac:dotmac scripts/celery-entrypoint.sh /celery-entrypoint.sh
+RUN chmod +x /celery-entrypoint.sh
+
+# Environment configuration
+ENV PYTHONPATH=/app/src:$PYTHONPATH \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
+    # Celery configuration
+    CELERY_APP=dotmac.platform.tasks.celery_app \
+    CELERY_LOGLEVEL=info \
+    CELERY_CONCURRENCY=4 \
+    CELERY_MAX_TASKS_PER_CHILD=1000 \
+    CELERY_TASK_SOFT_TIME_LIMIT=300 \
+    CELERY_TASK_TIME_LIMIT=600 \
+    CELERY_QUEUES=celery,priority,background \
+    CELERY_HOSTNAME=worker@%h
+
+# Labels for metadata
+LABEL org.opencontainers.image.title="DotMac Platform Celery" \
+      org.opencontainers.image.description="Production Celery worker for DotMac Platform" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.authors="DotMac Team" \
+      org.opencontainers.image.source="https://github.com/dotmac/platform-services"
+
+USER dotmac
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=3 \
+  CMD celery -A ${CELERY_APP} inspect ping || exit 1
+
+ENTRYPOINT ["/celery-entrypoint.sh"]
+CMD ["worker"]

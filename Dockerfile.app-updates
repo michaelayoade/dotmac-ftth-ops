@@ -1,0 +1,93 @@
+# Docker Build Instructions for BSS Phase 1 Dependencies
+#
+# Add these lines to your existing Dockerfile to support BSS Phase 1 features
+
+# =============================================================================
+# FreeRADIUS Client Tools (for RADIUS CoA/DM)
+# =============================================================================
+# Install radclient utility for sending CoA/Disconnect-Message packets
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        freeradius-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Verify installation
+RUN radclient -v || echo "radclient installed successfully"
+
+# =============================================================================
+# Optional: PostgreSQL Client Tools (for debugging)
+# =============================================================================
+# Uncomment if you need psql for database troubleshooting
+# RUN apt-get update && \
+#     apt-get install -y --no-install-recommends \
+#         postgresql-client \
+#     && rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Environment Variables
+# =============================================================================
+# These should be set in docker-compose.yml or .env, not hardcoded here
+
+# RADIUS CoA Configuration
+ENV RADIUS_SERVER_HOST=localhost
+ENV RADIUS_COA_PORT=3799
+ENV RADIUS_SECRET=changeme_radius_shared_secret
+
+# NetBox IPAM Configuration
+ENV NETBOX_URL=http://netbox:8080
+ENV NETBOX_API_TOKEN=changeme_netbox_api_token_here
+
+# Service Lifecycle Configuration
+ENV SERVICE_PROVISIONING_TIMEOUT=300
+ENV SERVICE_ACTIVATION_TIMEOUT=60
+
+# =============================================================================
+# Example: Complete Dockerfile
+# =============================================================================
+# FROM python:3.11-slim
+#
+# WORKDIR /app
+#
+# # Install system dependencies
+# RUN apt-get update && \
+#     apt-get install -y --no-install-recommends \
+#         gcc \
+#         libpq-dev \
+#         freeradius-utils \
+#     && rm -rf /var/lib/apt/lists/*
+#
+# # Install Python dependencies
+# COPY requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
+#
+# # Copy application code
+# COPY . .
+#
+# # Run migrations and start application
+# CMD ["sh", "-c", "alembic upgrade heads && uvicorn src.dotmac.platform.main:app --host 0.0.0.0 --port 8000"]
+
+# =============================================================================
+# Docker Compose Service Definition
+# =============================================================================
+# Add to docker-compose.yml:
+#
+# services:
+#   app:
+#     build: .
+#     ports:
+#       - "8000:8000"
+#     environment:
+#       - DATABASE_URL=${DATABASE_URL}
+#       - REDIS_URL=${REDIS_URL}
+#       - RADIUS_SERVER_HOST=${RADIUS_SERVER_HOST}
+#       - RADIUS_COA_PORT=${RADIUS_COA_PORT}
+#       - RADIUS_SECRET=${RADIUS_SECRET}
+#       - NETBOX_URL=${NETBOX_URL}
+#       - NETBOX_API_TOKEN=${NETBOX_API_TOKEN}
+#     depends_on:
+#       - postgres
+#       - redis
+#       - freeradius
+#       - netbox
+#     networks:
+#       - dotmac-network

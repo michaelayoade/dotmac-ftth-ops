@@ -1,0 +1,31 @@
+{
+  "extends": ["next", "next/core-web-vitals"],
+  "rules": {
+    "@next/next/no-html-link-for-pages": "off",
+    "react/no-unescaped-entities": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "clsx",
+            "message": "Use cn() from @/lib/utils instead. See MIGRATION_CLSX_SONNER.md"
+          },
+          {
+            "name": "sonner",
+            "message": "Use useToast() from @/components/ui/use-toast instead. See MIGRATION_CLSX_SONNER.md"
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/__tests__/**/*.{ts,tsx}", "**/*.test.{ts,tsx}"],
+      "rules": {
+        "react/display-name": "off"
+      }
+    }
+  ]
+}

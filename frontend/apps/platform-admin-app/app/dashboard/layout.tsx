@@ -1,0 +1,755 @@
+"use client";
+
+import { useState, useEffect, useMemo, useRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { SkipLink } from "@dotmac/ui";
+import {
+  Settings,
+  Users,
+  UserCheck,
+  Shield,
+  Activity,
+  Mail,
+  Search,
+  FileText,
+  ToggleLeft,
+  Menu,
+  X,
+  LogOut,
+  User,
+  ChevronDown,
+  ChevronRight,
+  Webhook,
+  CreditCard,
+  Package,
+  BarChart3,
+  Building2,
+  Handshake,
+  LifeBuoy,
+  LayoutDashboard,
+  Network as Bell,
+  Plug,
+} from "lucide-react";
+import { ThemeToggle } from "@dotmac/ui";
+import { Can } from "@/components/auth/PermissionGuard";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useBranding } from "@/hooks/useBranding";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { GlobalCommandPalette } from "@/components/global-command-palette";
+import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
+import { useSession, logout } from "@shared/lib/auth";
+import type { UserInfo } from "@shared/lib/auth";
+import { clearOperatorAuthTokens } from "../../../../shared/utils/operatorAuth";
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+  badge?: string;
+  permission?: string;
+  portals?: PortalType[];
+}
+
+interface NavSection {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  href: string;
+  items?: NavItem[];
+  permission?: string | string[];
+  portals?: PortalType[];
+}
+
+type DisplayUser = Pick<UserInfo, "email" | "username" | "full_name" | "roles">;
+
+const ADMIN_PERMISSION = "platform:admin";
+
+const platformAdminSectionIds = new Set<string>([
+  "overview",
+  "tenants",
+  "configuration",
+  "analytics",
+  "audit",
+  "automation",
+  "communications",
+  "marketplace",
+]);
+
+const allSections: NavSection[] = [
+  {
+    id: "overview",
+    label: "Overview",
+    icon: LayoutDashboard,
+    href: "/dashboard",
+    permission: ADMIN_PERMISSION,
+  },
+  {
+    id: "tenants",
+    label: "Tenants",
+    icon: Building2,
+    href: "/dashboard/platform-admin/tenants",
+    permission: ADMIN_PERMISSION,
+    items: [
+      {
+        name: "Tenant Directory",
+        href: "/dashboard/platform-admin/tenants",
+        icon: Building2,
+        permission: ADMIN_PERMISSION,
+      },
+      {
+        name: "Licensing & Plans",
+        href: "/dashboard/platform-admin/licensing",
+        icon: BarChart3,
+        permission: ADMIN_PERMISSION,
+      },
+      {
+        name: "Cross-Tenant Search",
+        href: "/dashboard/platform-admin/search",
+        icon: Search,
+        permission: ADMIN_PERMISSION,
+      },
+    ],
+  },
+  {
+    id: "configuration",
+    label: "Platform Configuration",
+    icon: Settings,
+    href: "/dashboard/platform-admin/system",
+    permission: ADMIN_PERMISSION,
+    items: [
+      {
+        name: "System Settings",
+        href: "/dashboard/platform-admin/system",
+        icon: Settings,
+        permission: ADMIN_PERMISSION,
+      },
+      { name: "Feature Flags", href: "/dashboard/feature-flags", icon: ToggleLeft, permission: ADMIN_PERMISSION },
+      { name: "Security & Access", href: "/dashboard/security-access", icon: Shield, permission: ADMIN_PERMISSION },
+      { name: "Integrations", href: "/dashboard/integrations", icon: Plug, permission: ADMIN_PERMISSION },
+      { name: "Webhooks", href: "/dashboard/webhooks", icon: Webhook, permission: ADMIN_PERMISSION },
+      { name: "Notifications", href: "/dashboard/notifications", icon: Bell, permission: ADMIN_PERMISSION },
+      { name: "Account & Billing", href: "/dashboard/settings", icon: CreditCard, permission: ADMIN_PERMISSION },
+    ],
+  },
+  {
+    id: "analytics",
+    label: "Analytics & Insights",
+    icon: BarChart3,
+    href: "/dashboard/analytics",
+    permission: ADMIN_PERMISSION,
+    items: [
+      { name: "Analytics Overview", href: "/dashboard/analytics", icon: BarChart3, permission: ADMIN_PERMISSION },
+    ],
+  },
+  {
+    id: "audit",
+    label: "Audit & Compliance",
+    icon: FileText,
+    href: "/dashboard/platform-admin/audit",
+    permission: ADMIN_PERMISSION,
+    items: [
+      { name: "Audit Trail", href: "/dashboard/platform-admin/audit", icon: FileText, permission: ADMIN_PERMISSION },
+      {
+        name: "Security Events",
+        href: "/dashboard/security-access/permissions",
+        icon: Shield,
+        permission: ADMIN_PERMISSION,
+      },
+      {
+        name: "Notification History",
+        href: "/dashboard/notifications/history",
+        icon: Mail,
+        permission: ADMIN_PERMISSION,
+      },
+    ],
+  },
+  {
+    id: "automation",
+    label: "Automation",
+    icon: Activity,
+    href: "/dashboard/jobs",
+    permission: ADMIN_PERMISSION,
+    items: [{ name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity, permission: ADMIN_PERMISSION }],
+  },
+  {
+    id: "communications",
+    label: "Communications",
+    icon: Mail,
+    href: "/dashboard/communications",
+    permission: ADMIN_PERMISSION,
+    items: [
+      { name: "Campaigns", href: "/dashboard/communications", icon: Mail, permission: ADMIN_PERMISSION },
+      {
+        name: "Notification Templates",
+        href: "/dashboard/notifications/templates",
+        icon: FileText,
+        permission: ADMIN_PERMISSION,
+      },
+      { name: "Support", href: "/dashboard/ticketing", icon: LifeBuoy, permission: ADMIN_PERMISSION },
+    ],
+  },
+  {
+    id: "marketplace",
+    label: "Integrations & Marketplace",
+    icon: Package,
+    href: "/dashboard/plugins",
+    permission: ADMIN_PERMISSION,
+    items: [
+      { name: "Plugin Catalog", href: "/dashboard/plugins", icon: Package, permission: ADMIN_PERMISSION },
+      { name: "Partner Integrations", href: "/dashboard/partners", icon: Handshake, permission: ADMIN_PERMISSION },
+    ],
+  },
+];
+
+const filteredSections = allSections.filter((section) => platformAdminSectionIds.has(section.id));
+
+const tenantPortalSection: NavSection = {
+  id: "tenant-portal",
+  label: "Tenant Portal",
+  icon: Building2,
+  href: "/tenant-portal",
+  permission: ADMIN_PERMISSION,
+  items: [
+    { name: "Overview", href: "/tenant-portal", icon: LayoutDashboard, permission: ADMIN_PERMISSION },
+    { name: "Customers", href: "/tenant-portal/customers", icon: Users, permission: ADMIN_PERMISSION },
+    { name: "Billing", href: "/tenant-portal/billing", icon: CreditCard, permission: ADMIN_PERMISSION },
+    { name: "Usage & Limits", href: "/tenant-portal/usage", icon: BarChart3, permission: ADMIN_PERMISSION },
+    { name: "Integrations", href: "/tenant-portal/integrations", icon: Plug, permission: ADMIN_PERMISSION },
+    { name: "Support", href: "/tenant-portal/support", icon: LifeBuoy, permission: ADMIN_PERMISSION },
+    { name: "User Access", href: "/tenant-portal/users", icon: UserCheck, permission: ADMIN_PERMISSION },
+  ],
+};
+
+const sections = [...filteredSections, tenantPortalSection];
+
+// Helper function to check if section should be visible
+function checkSectionVisibility(
+  section: NavSection,
+  hasPermission: (permission: string) => boolean,
+  hasAnyPermission: (permissions: string[]) => boolean,
+): boolean {
+  // If section has explicit permission requirement, check it
+  if (section.permission) {
+    if (Array.isArray(section.permission)) {
+      return hasAnyPermission(section.permission);
+    }
+    return hasPermission(section.permission);
+  }
+
+  // If section has no permission but has items, check if user has access to any item
+  if (section.items && section.items.length > 0) {
+    return section.items.some((item) => {
+      if (!item.permission) return true;
+      return hasPermission(item.permission);
+    });
+  }
+
+  // If no permission requirement and no items, show by default
+  return true;
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [navSearch, setNavSearch] = useState("");
+  const pathname = usePathname();
+  const router = useRouter();
+  const { hasPermission, hasAnyPermission } = useRBAC();
+  const { branding } = useBranding();
+  const portalType = getPortalType();
+  const { user, isLoading: authLoading, isAuthenticated } = useSession();
+  const userData = user as DisplayUser | undefined;
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const navLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    sections.forEach((section) => {
+      map.set(section.href, section.label);
+      section.items?.forEach((item) => map.set(item.href, item.name));
+    });
+    return map;
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  const portalScopedSections = useMemo(
+    () =>
+      sections
+        .filter((section) => portalAllows(section.portals, portalType))
+        .map((section) => ({
+          ...section,
+          ...(section.items && {
+            items: section.items.filter((item) => portalAllows(item.portals, portalType)),
+          }),
+        })),
+    [portalType],
+  );
+
+  // Filter sections based on permissions
+  const visibleSections = useMemo(
+    () =>
+      portalScopedSections
+        .filter((section) => checkSectionVisibility(section, hasPermission, hasAnyPermission))
+        .map((section) => {
+          if (!navSearch.trim()) return section;
+          const term = navSearch.toLowerCase();
+          const filteredItems =
+            section.items?.filter(
+              (item) =>
+                item.name.toLowerCase().includes(term) ||
+                item.href.toLowerCase().includes(term) ||
+                section.label.toLowerCase().includes(term),
+            ) || [];
+          const matchesSection = section.label.toLowerCase().includes(term);
+          if (matchesSection || filteredItems.length > 0) {
+            return { ...section, items: filteredItems.length > 0 ? filteredItems : section.items };
+          }
+          return null;
+        })
+        .filter(Boolean) as NavSection[],
+    [hasAnyPermission, hasPermission, navSearch, portalScopedSections],
+  );
+
+  const breadcrumbs = useMemo(() => {
+    const segments = pathname.split("/").filter(Boolean);
+    let currentPath = "";
+    return segments.map((segment) => {
+      currentPath += `/${segment}`;
+      const label =
+        navLabelMap.get(currentPath) ??
+        segment
+          .split("-")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" ");
+      return { href: currentPath || "/", label };
+    });
+  }, [navLabelMap, pathname]);
+
+  // Toggle section expansion
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  };
+
+  // Auto-expand active section
+  useEffect(() => {
+    const activeSections = new Set<string>();
+
+    visibleSections.forEach((section) => {
+      const hasActiveItem = section.items?.some(
+        (item) =>
+          pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href)),
+      );
+
+      if (hasActiveItem) {
+        activeSections.add(section.id);
+      }
+    });
+
+    if (activeSections.size === 0) {
+      return;
+    }
+
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+
+      activeSections.forEach((sectionId) => {
+        if (!next.has(sectionId)) {
+          next.add(sectionId);
+          changed = true;
+        }
+      });
+
+      return changed ? next : prev;
+    });
+  }, [pathname, visibleSections]);
+
+  useEffect(() => {
+    if (!navSearch.trim()) return;
+    const expandedIds = visibleSections
+      .filter((section) => section.items && section.items.length > 0)
+      .map((section) => section.id);
+    setExpandedSections(new Set(expandedIds));
+  }, [navSearch, visibleSections]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const nav = sidebarRef.current;
+      if (!nav) return;
+      if (!nav.contains(event.target as Node)) return;
+      const focusable = Array.from(
+        nav.querySelectorAll<HTMLElement>("[data-nav-link='true']"),
+      ).filter((el) => !el.hasAttribute("disabled"));
+      if (event.key === "Tab" && focusable.length > 0) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first && last) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last && first) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      const currentIndex = focusable.findIndex((el) => el === document.activeElement);
+      if (currentIndex === -1) return;
+      event.preventDefault();
+      if (event.key === "ArrowDown") {
+        const next = focusable[currentIndex + 1] ?? focusable[0];
+        next?.focus();
+      } else if (event.key === "ArrowUp") {
+        const prev = focusable[currentIndex - 1] ?? focusable[focusable.length - 1];
+        prev?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen]);
+
+  const handleLogout = async () => {
+    await logout();
+    clearOperatorAuthTokens();
+    router.push("/login");
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SkipLink />
+      {/* Top Navigation Bar */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border"
+        aria-label="Main navigation"
+      >
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center">
+            <button
+              type="button"
+              className="lg:hidden -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-muted-foreground hover:bg-accent min-h-[44px] min-w-[44px]"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle sidebar"
+              aria-expanded={sidebarOpen}
+            >
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            </button>
+            <div className="flex items-center ml-4 lg:ml-0">
+              {branding.logo.light || branding.logo.dark ? (
+                <div className="flex items-center h-6">
+                  {branding.logo.light ? (
+                    <Image
+                      src={branding.logo.light}
+                      alt={`${branding.productName} logo`}
+                      width={160}
+                      height={32}
+                      className={`h-6 w-auto ${branding.logo.dark ? "dark:hidden" : ""}`}
+                      priority
+                      unoptimized
+                    />
+                  ) : null}
+                  {branding.logo.dark ? (
+                    <Image
+                      src={branding.logo.dark}
+                      alt={`${branding.productName} logo`}
+                      width={160}
+                      height={32}
+                      className={
+                        branding.logo.light ? "hidden h-6 w-auto dark:block" : "h-6 w-auto"
+                      }
+                      priority
+                      unoptimized
+                    />
+                  ) : null}
+                </div>
+              ) : (
+                <div className="text-xl font-semibold text-foreground">{branding.productName}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Right side - Notifications, Theme toggle and User menu */}
+          <div className="flex items-center gap-4">
+            <NotificationCenter
+              maxNotifications={5}
+              refreshInterval={30000}
+              viewAllUrl="/dashboard/notifications"
+            />
+            <ThemeToggle />
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors min-h-[44px]"
+                aria-label="User menu"
+                aria-expanded={userMenuOpen}
+                aria-haspopup="true"
+              >
+                <User className="h-5 w-5" aria-hidden="true" />
+                <span className="hidden sm:block">{userData?.username || "User"}</span>
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-md bg-popover shadow-lg ring-1 ring-border">
+                  <div className="py-1">
+                    <div className="px-4 py-2 text-sm text-muted-foreground">
+                      <div className="font-semibold text-foreground">
+                        {userData?.full_name || userData?.username}
+                      </div>
+                      <div className="text-xs">{userData?.email}</div>
+                      <div className="text-xs mt-1">
+                        Role: {userData?.roles?.join(", ") || "User"}
+                      </div>
+                    </div>
+                    <hr className="my-1 border-border" />
+                    <Link
+                      href="/dashboard/profile"
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-accent"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Profile Settings
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent"
+                    >
+                      <div className="flex items-center gap-2">
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border pt-16 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Mobile close button */}
+        <div className="lg:hidden absolute top-20 right-4 z-10">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="rounded-md p-2 text-muted-foreground hover:bg-accent"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Navigation items - scrollable area */}
+        <nav
+          ref={sidebarRef}
+          className="flex-1 overflow-y-auto mt-8 px-4 pb-4"
+          aria-label="Sidebar"
+        >
+          <div className="mb-3">
+            <label className="sr-only" htmlFor="nav-search">
+              Filter navigation
+            </label>
+            <div className="relative">
+              <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                id="nav-search"
+                type="search"
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
+                placeholder="Filter navigation"
+                className="w-full rounded-md border border-input bg-card pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+          </div>
+          <ul className="space-y-1">
+            {visibleSections.map((section) => {
+              const isExpanded = expandedSections.has(section.id);
+              const isSectionActive =
+                pathname === section.href ||
+                (section.href !== "/dashboard" && pathname.startsWith(section.href));
+              const hasActiveChild = section.items?.some(
+                (item) =>
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href)),
+              );
+
+              return (
+                <li key={section.id}>
+                  <div>
+                    {/* Section header */}
+                    <div className="flex items-center">
+                      <Link
+                        href={section.href}
+                        className={`flex-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                          isSectionActive && !hasActiveChild
+                            ? "bg-primary/10 text-primary"
+                            : hasActiveChild
+                              ? "text-foreground"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        }`}
+                        onClick={() => setSidebarOpen(false)}
+                        data-nav-link="true"
+                        tabIndex={0}
+                      >
+                        <section.icon className="h-5 w-5 flex-shrink-0" />
+                        <span>{section.label}</span>
+                      </Link>
+                      {section.items && section.items.length > 0 && (
+                        <button
+                          onClick={() => toggleSection(section.id)}
+                          className="p-1 mr-1 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <ChevronRight
+                            className={`h-4 w-4 transform transition-transform ${
+                              isExpanded ? "rotate-90" : ""
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Section items */}
+                    {section.items && isExpanded && (
+                      <ul className="mt-1 ml-4 border-l border-border space-y-1">
+                        {section.items.map((item) => {
+                          const isItemActive =
+                            pathname === item.href ||
+                            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+                          // If item has permission requirement, wrap with Can component
+                          if (item.permission) {
+                            return (
+                              <Can key={item.href} I={item.permission}>
+                                <li>
+                                  <Link
+                                    href={item.href}
+                                    className={`flex items-center gap-3 rounded-lg px-3 py-1.5 ml-2 text-sm transition-colors ${
+                                      isItemActive
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                                    }`}
+                                    onClick={() => setSidebarOpen(false)}
+                                    data-nav-link="true"
+                                  >
+                                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                                    <span>{item.name}</span>
+                                    {item.badge && (
+                                      <span className="ml-auto bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">
+                                        {item.badge}
+                                      </span>
+                                    )}
+                                  </Link>
+                                </li>
+                              </Can>
+                            );
+                          }
+
+                          // No permission requirement, show by default
+                          return (
+                            <li key={item.href}>
+                              <Link
+                                href={item.href}
+                                className={`flex items-center gap-3 rounded-lg px-3 py-1.5 ml-2 text-sm transition-colors ${
+                                  isItemActive
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                                }`}
+                                onClick={() => setSidebarOpen(false)}
+                                data-nav-link="true"
+                              >
+                                <item.icon className="h-4 w-4 flex-shrink-0" />
+                                <span>{item.name}</span>
+                                {item.badge && (
+                                  <span className="ml-auto bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Bottom section with version info */}
+        <div className="flex-shrink-0 p-4 border-t border-border bg-card">
+          <div className="text-xs text-muted-foreground">
+            <div>Platform Version: 1.0.0</div>
+            <div>Environment: Development</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content area */}
+      <div className="pt-16 w-full lg:ml-[16rem] lg:w-[calc(100%-16rem)]">
+        <main
+          id="main-content"
+          className="min-h-screen p-4 sm:p-6 lg:p-8 bg-background"
+          aria-label="Main content"
+        >
+          <div
+            className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+            aria-label="Breadcrumb"
+          >
+            <Link href="/dashboard" className="hover:text-foreground">
+              Home
+            </Link>
+            {breadcrumbs.map((crumb, idx) => (
+              <div key={crumb.href} className="flex items-center gap-2">
+                <span aria-hidden="true">/</span>
+                {idx === breadcrumbs.length - 1 ? (
+                  <span className="text-foreground font-medium">{crumb.label}</span>
+                ) : (
+                  <Link href={crumb.href} className="hover:text-foreground">
+                    {crumb.label}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+          {children}
+        </main>
+      </div>
+
+      {/* Global Command Palette (⌘K) */}
+      <GlobalCommandPalette />
+
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 dark:bg-black/70 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.currentTarget.click();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        />
+      )}
+    </div>
+  );
+}

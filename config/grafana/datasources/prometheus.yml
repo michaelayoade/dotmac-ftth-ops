@@ -1,0 +1,66 @@
+# Grafana Datasources Configuration
+# Auto-provision Prometheus and Loki datasources
+
+apiVersion: 1
+
+datasources:
+  # Prometheus - Metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: POST
+    version: 1
+
+  # Loki - Logs
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+    version: 1
+
+  # Jaeger - Distributed Tracing
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    editable: true
+    version: 1
+
+  # PostgreSQL - Direct database access for debugging
+  - name: PostgreSQL
+    type: postgres
+    url: postgres:5432
+    database: dotmac
+    user: dotmac_user
+    editable: true
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1400
+      timescaledb: false
+    version: 1
+
+  # TimescaleDB - Time-series metrics database
+  - name: TimescaleDB
+    type: postgres
+    url: timescaledb:5432
+    database: metrics
+    user: timescale_user
+    editable: true
+    secureJsonData:
+      password: ${TIMESCALE_PASSWORD}
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1400
+      timescaledb: true
+    version: 1

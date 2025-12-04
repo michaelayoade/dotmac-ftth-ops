@@ -1,0 +1,4 @@
+packages:
+  - 'frontend/apps/*'
+  - 'frontend/shared/packages/*'
+  - 'frontend/e2e'

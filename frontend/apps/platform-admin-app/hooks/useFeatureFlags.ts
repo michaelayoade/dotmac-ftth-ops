@@ -1,0 +1,185 @@
+/**
+ * Feature Flags Hook - TanStack Query Version
+ *
+ * Migrated from direct API calls to TanStack Query for:
+ * - Automatic caching and deduplication
+ * - Background refetching
+ * - Optimistic updates
+ * - Better error handling
+ * - Reduced boilerplate (150 lines → 105 lines)
+ */
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
+
+export interface FeatureFlag {
+  name: string;
+  enabled: boolean;
+  context: Record<string, unknown>;
+  description?: string;
+  updated_at: number;
+  created_at?: number;
+}
+
+export interface FlagStatus {
+  total_flags: number;
+  enabled_flags: number;
+  disabled_flags: number;
+  cache_hits: number;
+  cache_misses: number;
+  last_sync?: string;
+}
+
+// Query key factory for feature flags
+export const featureFlagsKeys = {
+  all: ["feature-flags"] as const,
+  flags: (enabledOnly?: boolean) => [...featureFlagsKeys.all, "flags", { enabledOnly }] as const,
+  status: () => [...featureFlagsKeys.all, "status"] as const,
+};
+
+/**
+ * Helper to normalize feature flags response formats
+ */
+function normalizeFlagsResponse(response: unknown): FeatureFlag[] {
+  const resp = response as { data?: unknown };
+  if (Array.isArray(resp?.data)) {
+    return resp.data;
+  }
+  return Array.isArray(response) ? response : [];
+}
+
+/**
+ * Helper to normalize status response formats
+ */
+function normalizeStatusResponse(response: unknown): FlagStatus | null {
+  const resp = response as { data?: unknown };
+  return (resp?.data as FlagStatus | null) ?? null;
+}
+
+/**
+ * Hook to fetch feature flags
+ */
+export const useFeatureFlags = (enabledOnly = false) => {
+  const queryClient = useQueryClient();
+
+  // Fetch flags
+  const flagsQuery = useQuery({
+    queryKey: featureFlagsKeys.flags(enabledOnly),
+    queryFn: async ({ queryKey }) => {
+      const [, , params] = queryKey as ReturnType<typeof featureFlagsKeys.flags>;
+      const enabledParam = params.enabledOnly ?? false;
+      const response = await apiClient.get<FeatureFlag[]>(
+        `/feature-flags/flags${enabledParam ? "?enabled_only=true" : ""}`,
+      );
+      // Handle wrapped error responses
+      if ((response as any)?.error) {
+        throw new Error((response as any).error.message || "Failed to fetch feature flags");
+      }
+      return normalizeFlagsResponse(response);
+    },
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: true,
+  });
+
+  // Fetch status
+  const statusQuery = useQuery({
+    queryKey: featureFlagsKeys.status(),
+    queryFn: async () => {
+      const response = await apiClient.get<FlagStatus>("/feature-flags/status");
+      return normalizeStatusResponse(response);
+    },
+    staleTime: 30000,
+  });
+
+  // Toggle flag mutation
+  const toggleMutation = useMutation({
+    mutationFn: async ({ flagName, enabled }: { flagName: string; enabled: boolean }) => {
+      const response = await apiClient.put(`/feature-flags/flags/${flagName}`, { enabled });
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error("Failed to toggle flag");
+      }
+      return { flagName, enabled };
+    },
+    onSuccess: ({ flagName, enabled }) => {
+      // Optimistically update the cache
+      queryClient.setQueryData<FeatureFlag[]>(featureFlagsKeys.flags(enabledOnly), (old) =>
+        old?.map((flag) => (flag.name === flagName ? { ...flag, enabled } : flag)),
+      );
+      // Invalidate to refetch
+      queryClient.invalidateQueries({ queryKey: featureFlagsKeys.flags() });
+      queryClient.invalidateQueries({ queryKey: featureFlagsKeys.status() });
+    },
+    onError: (err) => {
+      logger.error("Failed to toggle flag", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
+
+  // Create flag mutation
+  const createMutation = useMutation({
+    mutationFn: async ({ flagName, data }: { flagName: string; data: Partial<FeatureFlag> }) => {
+      const response = await apiClient.post(`/feature-flags/flags/${flagName}`, data);
+      return response.data ?? null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: featureFlagsKeys.flags() });
+      queryClient.invalidateQueries({ queryKey: featureFlagsKeys.status() });
+    },
+    onError: (err) => {
+      logger.error("Failed to create flag", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
+
+  // Delete flag mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (flagName: string) => {
+      const response = await apiClient.delete(`/feature-flags/flags/${flagName}`);
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error("Failed to delete flag");
+      }
+      return flagName;
+    },
+    onSuccess: (flagName) => {
+      // Optimistically update the cache
+      queryClient.setQueryData<FeatureFlag[]>(featureFlagsKeys.flags(enabledOnly), (old) =>
+        old?.filter((flag) => flag.name !== flagName),
+      );
+      // Invalidate to refetch
+      queryClient.invalidateQueries({ queryKey: featureFlagsKeys.flags() });
+      queryClient.invalidateQueries({ queryKey: featureFlagsKeys.status() });
+    },
+    onError: (err) => {
+      logger.error("Failed to delete flag", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
+
+  // Extract error message from query errors
+  const errorMessage = flagsQuery.error
+    ? flagsQuery.error instanceof Error
+      ? flagsQuery.error.message
+      : "Failed to fetch feature flags"
+    : statusQuery.error
+      ? statusQuery.error instanceof Error
+        ? statusQuery.error.message
+        : "Failed to fetch flag status"
+      : null;
+
+  return {
+    flags: flagsQuery.data ?? [],
+    status: statusQuery.data ?? null,
+    loading: flagsQuery.isLoading || statusQuery.isLoading,
+    error: errorMessage,
+    fetchFlags: flagsQuery.refetch,
+    toggleFlag: async (flagName: string, enabled: boolean) => {
+      await toggleMutation.mutateAsync({ flagName, enabled });
+      return true;
+    },
+    createFlag: async (flagName: string, data: Partial<FeatureFlag>) => {
+      return await createMutation.mutateAsync({ flagName, data });
+    },
+    deleteFlag: async (flagName: string) => {
+      await deleteMutation.mutateAsync(flagName);
+      return true;
+    },
+    refreshFlags: flagsQuery.refetch,
+  };
+};

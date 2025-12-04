@@ -1,0 +1,51 @@
+[Unit]
+Description=Next.js Frontend - Tenant {{ tenant_id }} (ISP Ops)
+After=network.target dotmac-tenant-{{ tenant_id }}.service
+Wants=dotmac-tenant-{{ tenant_id }}.service
+PartOf=dotmac-tenant-{{ tenant_id }}.service
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ data_dir }}/frontend
+
+# Environment variables for Next.js
+Environment=NODE_ENV=production
+Environment=PORT={{ frontend_port | default('3000') }}
+Environment=HOSTNAME=0.0.0.0
+Environment=NEXT_PUBLIC_API_BASE_URL=https://{{ tenant_subdomain }}.{{ domain }}
+Environment=NEXT_PUBLIC_WS_URL=wss://{{ tenant_subdomain }}.{{ domain }}/ws
+Environment=NEXT_PUBLIC_ENVIRONMENT={{ environment }}
+
+# Start Next.js in production mode using next start
+ExecStart=/usr/bin/npx next start -p {{ frontend_port | default('3000') }}
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Resource limits
+{% if resources.frontend_cpu_limit is defined %}
+CPUQuota={{ resources.frontend_cpu_limit }}%
+{% endif %}
+{% if resources.frontend_memory_limit is defined %}
+MemoryLimit={{ resources.frontend_memory_limit }}
+{% endif %}
+TasksMax={{ resources.frontend_max_tasks | default('512') }}
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths={{ data_dir }}/frontend
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=frontend-tenant-{{ tenant_id }}
+
+[Install]
+WantedBy=multi-user.target
