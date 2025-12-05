@@ -4,7 +4,6 @@
  * security, and performance
  */
 
-import React from "react";
 import {
   render,
   renderA11y,
@@ -14,6 +13,7 @@ import {
   screen,
   fireEvent,
 } from "@dotmac/testing";
+import React from "react";
 
 import {
   AreaChart,

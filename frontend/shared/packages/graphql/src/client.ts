@@ -29,7 +29,7 @@ export interface GraphQLResponse<T = any> {
 export interface GraphQLClientConfig {
   /**
    * GraphQL endpoint URL
-   * Defaults to /api/platform/v1/admin/graphql (matching backend endpoint)
+   * Defaults to /api/platform/v1/graphql (matching backend endpoint)
    * Supports NEXT_PUBLIC_API_BASE_URL env var for absolute URLs (works in SSR/build/browser)
    */
   endpoint?: string;
@@ -55,7 +55,7 @@ export class GraphQLClient {
   private httpClient: InstanceType<typeof HttpClient>;
 
   constructor(config: GraphQLClientConfig = {}) {
-    // Default to /api/platform/v1/admin/graphql (matching backend route)
+    // Default to /api/platform/v1/graphql (matching backend route)
     // Support NEXT_PUBLIC_API_BASE_URL for absolute URLs (e.g., cross-domain)
     this.endpoint = config.endpoint || this.getDefaultEndpoint();
     this.headers = config.headers || {};
@@ -82,11 +82,11 @@ export class GraphQLClient {
       typeof process !== "undefined" ? process.env["NEXT_PUBLIC_API_BASE_URL"] : undefined;
 
     if (apiUrl) {
-      return `${apiUrl}/api/platform/v1/admin/graphql`;
+      return `${apiUrl}/api/platform/v1/graphql`;
     }
 
     // Default to relative path (works with Next.js rewrites)
-    return "/api/platform/v1/admin/graphql";
+    return "/api/platform/v1/graphql";
   }
 
   /**

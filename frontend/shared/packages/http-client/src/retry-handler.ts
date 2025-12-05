@@ -1,5 +1,5 @@
-import type { RetryConfig, ApiError } from "./types";
 import { ErrorNormalizer } from "./error-normalizer";
+import type { RetryConfig, ApiError } from "./types";
 
 export class RetryHandler {
   private config: RetryConfig;

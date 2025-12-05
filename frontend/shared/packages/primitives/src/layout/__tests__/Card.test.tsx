@@ -4,7 +4,6 @@
  * Tests accessibility, security, performance, and functionality
  */
 
-import React from "react";
 import {
   render,
   renderA11y,
@@ -15,6 +14,8 @@ import {
   fireEvent,
   userEvent,
 } from "@dotmac/testing";
+import React from "react";
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../Card";
 
 const CARD_PERFORMANCE_BUDGET_MS = 80;

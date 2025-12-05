@@ -5,22 +5,18 @@
 
 "use client";
 
-import React, { useMemo, useCallback, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  MapPin,
-  Wifi,
-  Users,
   AlertTriangle,
-  CheckCircle,
   Layers as LayersIcon,
   ZoomIn,
   ZoomOut,
   Maximize2,
-  Server,
-  Radio,
 } from "lucide-react";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
+
 import { cn } from "../utils/cn";
+
 import type {
   Coordinates,
   Bounds,
@@ -228,7 +224,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     if (modules || typeof window === "undefined") {
       return;
     }
-    void loadLeafletModules().then((loaded) => {
+    loadLeafletModules().then((loaded) => {
       if (!cancelled && loaded) {
         setModules(loaded);
       }
@@ -248,7 +244,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         style={{ height }}
       >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
           <p className="text-sm text-gray-600 dark:text-gray-400">Loading interactive map...</p>
         </div>
       </div>
@@ -334,7 +330,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         style={{ height }}
       >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
           <p className="text-sm text-gray-600 dark:text-gray-400">Loading map...</p>
         </div>
       </div>
@@ -538,7 +534,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     <div className="flex flex-wrap gap-2">
                       {Array.from(new Set(markers.map((m) => m.type))).map((type) => (
                         <div key={type} className="flex items-center gap-1">
-                          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                          <div className="w-3 h-3 rounded-full bg-blue-500" />
                           <span className="text-gray-600 dark:text-gray-400 capitalize">
                             {type}
                           </span>
@@ -554,11 +550,11 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500" />
                         <span className="text-gray-600 dark:text-gray-400">Online</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-red-500" />
                         <span className="text-gray-600 dark:text-gray-400">Error</span>
                       </div>
                     </div>
@@ -582,7 +578,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                                     ? "#8B5CF6"
                                     : "#10B981",
                             }}
-                          ></div>
+                           />
                           <span className="text-gray-600 dark:text-gray-400 capitalize">
                             {type}
                           </span>

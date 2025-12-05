@@ -5,10 +5,13 @@
  */
 
 import React from "react";
-import { renderQuick, screen, fireEvent } from "@dotmac/testing";
 import { ConnectionStatusIndicator, CompactConnectionStatus } from "../ConnectionStatusIndicator";
 import type { ConnectionStatus } from "@/types/realtime";
 
+// Debug import wiring for renderQuick (jest module mapping)
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const testingModule = require("@dotmac/testing");
+const { renderQuick, screen, fireEvent } = testingModule;
 // Mock hooks and components
 const mockUseRealtimeHealth = jest.fn();
 

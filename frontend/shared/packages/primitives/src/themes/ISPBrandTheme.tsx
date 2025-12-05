@@ -7,6 +7,7 @@
 
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
+
 import { cn } from "../utils/cn";
 
 // Brand Colors - ISP specific color palette
@@ -210,8 +211,8 @@ export function ISPBrandHeader({
       {/* Decorative elements */}
       {theme.showBrandElements && (
         <>
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10"></div>
-          <div className="absolute bottom-0 left-0 -mb-6 -ml-6 h-32 w-32 rounded-full bg-white/5"></div>
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10" />
+          <div className="absolute bottom-0 left-0 -mb-6 -ml-6 h-32 w-32 rounded-full bg-white/5" />
         </>
       )}
     </div>

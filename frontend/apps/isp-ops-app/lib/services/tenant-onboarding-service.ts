@@ -91,7 +91,7 @@ class TenantOnboardingService {
    * Onboard a new or existing tenant
    */
   async onboardTenant(request: TenantOnboardingRequest): Promise<TenantOnboardingResponse> {
-    const response = await fetch(`${this.baseUrl}/api/platform/v1/admin/tenants/onboarding`, {
+    const response = await fetch(`${this.baseUrl}/api/platform/v1/tenants/onboarding`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(request),
@@ -109,7 +109,7 @@ class TenantOnboardingService {
    * Get onboarding status for a tenant
    */
   async getOnboardingStatus(tenantId: string): Promise<OnboardingStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/onboarding/status`, {
+    const response = await fetch(`${this.baseUrl}/api/platform/v1/tenants/${tenantId}/onboarding/status`, {
       headers: this.getAuthHeaders(),
     });
 

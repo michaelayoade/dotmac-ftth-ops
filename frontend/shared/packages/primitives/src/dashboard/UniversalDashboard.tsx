@@ -5,10 +5,10 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ComponentType, ReactNode } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { useState, type ComponentType, type ReactNode } from "react";
+
 import { cn } from "../utils/cn";
 
 export interface DashboardVariant {
@@ -170,7 +170,7 @@ export function UniversalDashboard({
   error = null,
   onRefresh,
   loadingMessage = "Loading dashboard...",
-  emptyStateMessage = "No data available",
+  emptyStateMessage: _emptyStateMessage = "No data available",
   maxWidth = "7xl",
   padding = "md",
   spacing = "normal",

@@ -5,7 +5,6 @@
  * accessibility, security, and performance
  */
 
-import React from "react";
 import {
   render,
   renderA11y,
@@ -16,6 +15,8 @@ import {
   fireEvent,
   waitFor,
 } from "@dotmac/testing";
+import React from "react";
+
 import {
   AdvancedDataTable,
   type AdvancedColumn,

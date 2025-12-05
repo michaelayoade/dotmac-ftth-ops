@@ -52,35 +52,36 @@ interface StatusBadgeProps {
   showDot?: boolean;
 }
 
+// Dark mode uses *-300 instead of *-400 for yellow/orange/gray to meet WCAG AA contrast (4.5:1)
 const variantStyles: Record<StatusVariant, string> = {
   success:
-    "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
+    "bg-green-100 text-green-800 dark:bg-green-950/30 dark:text-green-300 border-green-200 dark:border-green-800/30",
   warning:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/20",
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/30",
   error:
-    "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
-  info: "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200 dark:border-blue-900/20",
+    "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-300 border-red-200 dark:border-red-800/30",
+  info: "bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300 border-blue-200 dark:border-blue-800/30",
   pending:
-    "bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400 border-orange-200 dark:border-orange-900/20",
+    "bg-orange-100 text-orange-800 dark:bg-orange-950/30 dark:text-orange-300 border-orange-200 dark:border-orange-800/30",
   active:
-    "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
+    "bg-green-100 text-green-800 dark:bg-green-950/30 dark:text-green-300 border-green-200 dark:border-green-800/30",
   inactive:
-    "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
+    "bg-gray-100 text-gray-800 dark:bg-gray-950/30 dark:text-gray-300 border-gray-200 dark:border-gray-700/30",
   suspended:
-    "bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400 border-orange-200 dark:border-orange-900/20",
+    "bg-orange-100 text-orange-800 dark:bg-orange-950/30 dark:text-orange-300 border-orange-200 dark:border-orange-800/30",
   terminated:
-    "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
-  paid: "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
+    "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-300 border-red-200 dark:border-red-800/30",
+  paid: "bg-green-100 text-green-800 dark:bg-green-950/30 dark:text-green-300 border-green-200 dark:border-green-800/30",
   unpaid:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/20",
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/30",
   overdue:
-    "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
+    "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-300 border-red-200 dark:border-red-800/30",
   draft:
-    "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
+    "bg-gray-100 text-gray-800 dark:bg-gray-950/30 dark:text-gray-300 border-gray-200 dark:border-gray-700/30",
   published:
-    "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200 dark:border-blue-900/20",
+    "bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300 border-blue-200 dark:border-blue-800/30",
   archived:
-    "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
+    "bg-gray-100 text-gray-800 dark:bg-gray-950/30 dark:text-gray-300 border-gray-200 dark:border-gray-700/30",
   default: "bg-muted text-muted-foreground border-border",
 };
 
@@ -92,16 +93,16 @@ const sizeStyles = {
 
 const dotStyles: Record<StatusVariant, string> = {
   success: "bg-green-600 dark:bg-green-400",
-  warning: "bg-yellow-600 dark:bg-yellow-400",
+  warning: "bg-yellow-600 dark:bg-yellow-300",
   error: "bg-red-600 dark:bg-red-400",
   info: "bg-blue-600 dark:bg-blue-400",
-  pending: "bg-orange-600 dark:bg-orange-400",
+  pending: "bg-orange-600 dark:bg-orange-300",
   active: "bg-green-600 dark:bg-green-400",
   inactive: "bg-gray-600 dark:bg-gray-400",
-  suspended: "bg-orange-600 dark:bg-orange-400",
+  suspended: "bg-orange-600 dark:bg-orange-300",
   terminated: "bg-red-600 dark:bg-red-400",
   paid: "bg-green-600 dark:bg-green-400",
-  unpaid: "bg-yellow-600 dark:bg-yellow-400",
+  unpaid: "bg-yellow-600 dark:bg-yellow-300",
   overdue: "bg-red-600 dark:bg-red-400",
   draft: "bg-gray-600 dark:bg-gray-400",
   published: "bg-blue-600 dark:bg-blue-400",

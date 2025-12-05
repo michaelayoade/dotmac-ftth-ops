@@ -344,11 +344,11 @@ function getWebSocketUrl(): string {
   if (typeof window !== "undefined") {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host; // includes port if present
-    return `${protocol}//${host}/api/platform/v1/admin/ws`;
+    return `${protocol}//${host}/api/platform/v1/ws`;
   }
 
   // SSR fallback
-  return "ws://localhost:8000/api/platform/v1/admin/ws";
+  return "ws://localhost:8000/api/platform/v1/ws";
 }
 
 /**

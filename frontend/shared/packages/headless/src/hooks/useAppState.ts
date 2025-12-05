@@ -453,6 +453,7 @@ export const usePagination = (context: string) => {
 // Contextual selection hook
 export const useSelection = <T = any>(context: string) => {
   const selectionState = useAppStore((state) => state.getSelectionState<T>(context));
+  const getSelectionState = useAppStore((state) => state.getSelectionState);
   const updateSelection = useAppStore((state) => state.updateSelection);
   const selectItem = useAppStore((state) => state.selectItem);
   const deselectItem = useAppStore((state) => state.deselectItem);
@@ -475,14 +476,19 @@ export const useSelection = <T = any>(context: string) => {
 
   const toggleItem = useCallback(
     (item: T, multiple = false) => {
-      const isSelected = selectionState.selectedItems.includes(item);
-      if (isSelected) {
-        deselect(item);
+      // Get current state to avoid stale closure
+      const currentState = getSelectionState<T>(context);
+      // Use find with JSON comparison for objects, or direct comparison for primitives
+      const isCurrentlySelected = currentState.selectedItems.some(
+        (selected) => selected === item || JSON.stringify(selected) === JSON.stringify(item)
+      );
+      if (isCurrentlySelected) {
+        deselectItem<T>(context, item);
       } else {
-        select(item, multiple);
+        selectItem<T>(context, item, multiple);
       }
     },
-    [selectionState.selectedItems, select, deselect],
+    [context, getSelectionState, selectItem, deselectItem],
   );
 
   const toggleAll = useCallback(
@@ -567,9 +573,21 @@ export const useLoading = (context: string) => {
   };
 };
 
+// Default preferences values
+const defaultPreferences = {
+  theme: "light" as const,
+  language: "en",
+  timezone: "UTC",
+  compactMode: false,
+  advancedFeatures: false,
+};
+
 // Preferences hook
 export const usePreferences = () => {
-  const preferences = useAppStore((state) => state.preferences);
+  const storePreferences = useAppStore((state) => state.preferences);
+  // Theme is stored in ui state, not preferences
+  const uiTheme = useAppStore((state) => state.ui?.theme);
+  const preferences = storePreferences ?? defaultPreferences;
   const updatePreferences = useAppStore((state) => state.updatePreferences);
   const setTheme = useAppStore((state) => state.setTheme);
   const setLanguage = useAppStore((state) => state.setLanguage);
@@ -578,7 +596,11 @@ export const usePreferences = () => {
   const toggleAdvancedFeatures = useAppStore((state) => state.toggleAdvancedFeatures);
 
   return {
+    ...defaultPreferences,
     ...preferences,
+    // Override theme from UI state
+    theme: uiTheme ?? defaultPreferences.theme,
+    compactMode: preferences?.compactMode ?? defaultPreferences.compactMode,
     updatePreferences,
     setTheme,
     setLanguage,

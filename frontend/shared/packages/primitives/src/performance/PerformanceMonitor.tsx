@@ -2,8 +2,8 @@
  * Real-time Performance Monitor
  * Tracks Core Web Vitals, React performance, and user experience metrics
  */
-import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Activity, Clock, Zap, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 
 interface PerformanceMetrics {
   // Core Web Vitals
@@ -82,7 +82,10 @@ export function PerformanceMonitor({
   const observerRef = useRef<PerformanceObserver | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const mergedThresholds = { ...defaultThresholds, ...thresholds };
+  const mergedThresholds = useMemo(
+    () => ({ ...defaultThresholds, ...thresholds }),
+    [thresholds],
+  );
 
   // Collect Core Web Vitals
   const collectWebVitals = useCallback(() => {

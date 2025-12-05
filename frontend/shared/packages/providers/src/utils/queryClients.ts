@@ -1,4 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
+
 import type { PortalType } from "../UniversalProviders";
 
 export function createPortalQueryClient(_portal: PortalType): QueryClient {

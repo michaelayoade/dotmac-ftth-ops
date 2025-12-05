@@ -189,7 +189,7 @@ async function fetchRuntimeConfigFromApi(): Promise<RuntimeConfig> {
 }
 
 function normalizeRuntimePayload(payload: BackendRuntimeConfig): RuntimeConfig {
-  const restPath = payload.api.rest_path || "/api/platform/v1/admin";
+  const restPath = payload.api.rest_path || "/api/platform/v1";
   const baseUrl = sanitizeBaseUrl(payload.api.base_url);
   const restUrl = payload.api.rest_url || joinUrl(baseUrl, restPath);
   const realtimeSource = payload.realtime ?? {};

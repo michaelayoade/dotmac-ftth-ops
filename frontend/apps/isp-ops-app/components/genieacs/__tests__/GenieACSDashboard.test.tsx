@@ -5,7 +5,8 @@
  */
 
 import React from "react";
-import { renderQuick, screen, fireEvent } from "@dotmac/testing";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { renderQuick, screen, fireEvent } = require("@dotmac/testing");
 import { GenieACSDashboard } from "../GenieACSDashboard";
 
 // Mock child components

@@ -32,6 +32,7 @@ export function useClientEffect(effect: () => void | (() => void), deps?: React.
     if (isHydrated) {
       return effect();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, ...(deps || [])]);
 }
 

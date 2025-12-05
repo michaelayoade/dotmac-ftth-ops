@@ -151,6 +151,36 @@ class TestSessionManagerProductionMode:
             # ASSERTION: Session creation fails when Redis required
             assert exc_info.value.status_code == 503
 
+    @pytest.mark.asyncio
+    async def test_production_session_validation_fails_closed(self, restore_test_environment):
+        """
+        SECURITY: Session validation should fail closed when Redis is unavailable in production.
+        """
+        import importlib
+
+        from dotmac.platform import settings as settings_module
+
+        # Need to set REQUIRE_REDIS_SESSIONS=true explicitly since _is_production
+        # is determined by settings.is_production which requires settings reload
+        with patch.dict(
+            os.environ,
+            {"ENVIRONMENT": "production", "REQUIRE_REDIS_SESSIONS": "true"},
+        ):
+            from dotmac.platform.auth import core
+
+            # Reset settings singleton and reload to pick up production env
+            settings_module._settings = None
+            importlib.reload(settings_module)
+            importlib.reload(core)
+            assert core._require_redis_for_sessions is True
+
+            core.session_manager.get_session = AsyncMock(return_value=None)
+            core.session_manager._redis_healthy = False
+            core.session_manager._fallback_enabled = False
+
+            result = await core.jwt_service._is_session_active("session-deadbeef")
+            assert result is False
+
 
 @pytest.mark.integration
 class TestSessionRevocationCrosssWorker:

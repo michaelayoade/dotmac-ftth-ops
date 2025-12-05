@@ -30,7 +30,7 @@ jest.mock("@tanstack/react-query", () => jest.requireActual("@tanstack/react-que
 
 const buildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const prefixed = normalized.startsWith("/api/platform/v1/admin") ? normalized : `/api/platform/v1/admin${normalized}`;
+  const prefixed = normalized.startsWith("/api/platform/v1") ? normalized : `/api/platform/v1${normalized}`;
   return `${prefixed}`;
 };
 
@@ -38,7 +38,7 @@ jest.mock("@/providers/AppConfigContext", () => ({
   useAppConfig: () => ({
     api: {
       baseUrl: "",
-      prefix: "/api/platform/v1/admin",
+      prefix: "/api/platform/v1",
       buildUrl,
     },
     features: {},

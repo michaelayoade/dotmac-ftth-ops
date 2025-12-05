@@ -13,7 +13,7 @@ const config = {
     "^@dotmac/headless$": "<rootDir>/src",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     // Provide shared testing utilities + MSW server
-    "^@dotmac/testing$": "<rootDir>/../primitives/src/testing/index.ts",
+    "^@dotmac/testing$": "<rootDir>/../primitives/src/testing/index.tsx",
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",

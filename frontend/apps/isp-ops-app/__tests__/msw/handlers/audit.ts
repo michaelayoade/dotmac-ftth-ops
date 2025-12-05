@@ -176,9 +176,11 @@ function applyFilters(items: AuditActivity[], filters: AuditFilterParams): Audit
 // MSW Handlers
 // ============================================
 
+const ADMIN_BASE = "*/api/isp/v1";
+
 export const auditHandlers = [
   // Export audit logs
-  http.post("*/api/v1/audit/export", async ({ request }) => {
+  http.post(`${ADMIN_BASE}/audit/export`, async ({ request }) => {
     const body = (await request.json()) as AuditExportRequest;
     if (!body.format) {
       return HttpResponse.json({ detail: "Invalid format" }, { status: 400 });
@@ -192,26 +194,11 @@ export const auditHandlers = [
       expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
     };
     exportRequests.set(exportId, response);
-    console.log("[MSW] POST /api/v1/audit/export", { format: fmt });
-    return HttpResponse.json(response);
-  }),
-  // Export audit logs
-  http.post("*/api/v1/audit/export", async ({ request }) => {
-    const body = (await request.json()) as AuditExportRequest;
-    const exportId = `export-${Date.now()}`;
-    const fmt = body.format || "csv";
-    const response: AuditExportResponse = {
-      export_id: exportId,
-      status: "completed",
-      download_url: `/downloads/audit-export-${exportId}.${fmt}`,
-      expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-    };
-    exportRequests.set(exportId, response);
-    console.log("[MSW] POST /api/v1/audit/export", { format: fmt });
+    console.log("[MSW] POST /api/isp/v1/audit/export", { format: fmt });
     return HttpResponse.json(response);
   }),
   // Compliance report
-  http.get("*/api/v1/audit/compliance", ({ request }) => {
+  http.get(`${ADMIN_BASE}/audit/compliance`, ({ request }) => {
     const url = new URL(request.url);
     const from_date = url.searchParams.get("from_date") || "";
     const to_date = url.searchParams.get("to_date") || "";
@@ -219,15 +206,15 @@ export const auditHandlers = [
       period_start: from_date,
       period_end: to_date,
     });
-    console.log("[MSW] GET /api/v1/audit/compliance", { from_date, to_date });
+    console.log("[MSW] GET /api/isp/v1/audit/compliance", { from_date, to_date });
     return HttpResponse.json(report);
   }),
   // Get activity summary - MUST come before /activities/:activityId
-  http.get("*/api/v1/audit/activities/summary", ({ request, params }) => {
+  http.get(`${ADMIN_BASE}/audit/activities/summary`, ({ request, params }) => {
     const url = new URL(request.url);
     const days = parseInt(url.searchParams.get("days") || "7");
 
-    console.log("[MSW] GET /api/v1/audit/activities/summary", { days });
+    console.log("[MSW] GET /api/isp/v1/audit/activities/summary", { days });
 
     // Filter by days
     const cutoffDate = new Date();
@@ -278,12 +265,12 @@ export const auditHandlers = [
   }),
 
   // Get recent audit activities - MUST come before /activities/:activityId
-  http.get("*/api/v1/audit/activities/recent", ({ request, params }) => {
+  http.get(`${ADMIN_BASE}/audit/activities/recent`, ({ request, params }) => {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "20");
     const days = parseInt(url.searchParams.get("days") || "7");
 
-    console.log("[MSW] GET /api/v1/audit/activities/recent", { limit, days });
+    console.log("[MSW] GET /api/isp/v1/audit/activities/recent", { limit, days });
 
     // Filter by days
     const cutoffDate = new Date();
@@ -300,13 +287,13 @@ export const auditHandlers = [
   }),
 
   // Get user audit activities - MUST come before /activities/:activityId
-  http.get("*/api/v1/audit/activities/user/:userId", ({ request, params }) => {
+  http.get(`${ADMIN_BASE}/audit/activities/user/:userId`, ({ request, params }) => {
     const { userId } = params;
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const days = parseInt(url.searchParams.get("days") || "30");
 
-    console.log("[MSW] GET /api/v1/audit/activities/user/:userId", {
+    console.log("[MSW] GET /api/isp/v1/audit/activities/user/:userId", {
       userId,
       limit,
       days,
@@ -329,7 +316,7 @@ export const auditHandlers = [
   }),
 
   // List audit activities with pagination and filters
-  http.get("*/api/v1/audit/activities", ({ request, params }) => {
+  http.get(`${ADMIN_BASE}/audit/activities`, ({ request }) => {
     const url = new URL(request.url);
     const filters: AuditFilterParams = {
       user_id: url.searchParams.get("user_id") || undefined,
@@ -342,12 +329,9 @@ export const auditHandlers = [
       per_page: url.searchParams.get("per_page") ? parseInt(url.searchParams.get("per_page")!) : 20,
     };
 
-    console.log("[MSW] GET /api/v1/audit/activities", filters);
+    console.log("[MSW] GET /api/isp/v1/audit/activities", filters);
 
-    // Apply filters
     const filtered = applyFilters(activities, filters);
-
-    // Pagination
     const page = filters.page || 1;
     const perPage = filters.per_page || 20;
     const total = filtered.length;
@@ -355,23 +339,20 @@ export const auditHandlers = [
     const offset = (page - 1) * perPage;
     const paginated = filtered.slice(offset, offset + perPage);
 
-    const response: AuditActivityList = {
+    return HttpResponse.json({
       activities: paginated,
       total,
       page,
       per_page: perPage,
       total_pages: totalPages,
-    };
-
-    console.log(`[MSW] Returning ${paginated.length}/${total} activities`);
-    return HttpResponse.json(response);
+    });
   }),
 
   // Get single activity details - MUST come after specific routes
-  http.get("*/api/v1/audit/activities/:activityId", ({ request, params }) => {
+  http.get(`${ADMIN_BASE}/audit/activities/:activityId`, ({ request, params }) => {
     const { activityId } = params;
 
-    console.log("[MSW] GET /api/v1/audit/activities/:activityId", { activityId });
+    console.log("[MSW] GET /api/isp/v1/audit/activities/:activityId", { activityId });
 
     const activity = activities.find((a) => a.id === activityId);
 
@@ -380,72 +361,5 @@ export const auditHandlers = [
     }
 
     return HttpResponse.json(activity);
-  }),
-
-  // Export audit logs
-  http.post("*/api/v1/audit/export", async ({ request, params }) => {
-    const exportRequest = await request.json<AuditExportRequest>();
-
-    console.log("[MSW] POST /api/v1/audit/export", {
-      format: exportRequest.format,
-      filters: exportRequest.filters,
-    });
-
-    // Simulate export with validation
-    if (!exportRequest.format) {
-      return HttpResponse.json(
-        { error: "Format is required", code: "VALIDATION_ERROR" },
-        { status: 400 },
-      );
-    }
-
-    const exportId = `export-${Date.now()}`;
-    const exportResponse: AuditExportResponse = {
-      export_id: exportId,
-      status: "completed",
-      download_url: `https://api.example.com/downloads/${exportId}.${exportRequest.format}`,
-      expires_at: new Date(Date.now() + 3600000).toISOString(),
-    };
-
-    exportRequests.set(exportId, exportResponse);
-
-    return HttpResponse.json(exportResponse);
-  }),
-
-  // Get compliance report
-  http.get("*/api/v1/audit/compliance", ({ request, params }) => {
-    const url = new URL(request.url);
-    const fromDate = url.searchParams.get("from_date") || "";
-    const toDate = url.searchParams.get("to_date") || "";
-
-    console.log("[MSW] GET /api/v1/audit/compliance", { fromDate, toDate });
-
-    if (!fromDate || !toDate) {
-      return HttpResponse.json(
-        {
-          error: "From and to dates are required",
-          code: "VALIDATION_ERROR",
-        },
-        { status: 400 },
-      );
-    }
-
-    // Filter activities by date range
-    const start = new Date(fromDate);
-    const end = new Date(toDate);
-    const filtered = activities.filter((a) => {
-      const timestamp = new Date(a.timestamp);
-      return timestamp >= start && timestamp <= end;
-    });
-
-    const report = createMockComplianceReport({
-      period_start: fromDate,
-      period_end: toDate,
-      total_events: filtered.length,
-      critical_events: filtered.filter((a) => a.severity === ActivitySeverity.CRITICAL).length,
-    });
-
-    console.log(`[MSW] Returning compliance report for ${filtered.length} events`);
-    return HttpResponse.json(report);
   }),
 ];

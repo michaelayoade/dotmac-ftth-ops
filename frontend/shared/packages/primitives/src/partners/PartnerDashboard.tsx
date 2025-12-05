@@ -3,7 +3,6 @@
  * Configurable commission structures - no hardcoded rates
  */
 
-import React, { useState, useEffect } from "react";
 import {
   Users,
   TrendingUp,
@@ -14,13 +13,14 @@ import {
   Search,
   MoreVertical,
 } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
-import { Card } from "../layout/Card";
+import { UniversalKPISection } from "../dashboard/UniversalKPISection";
+import { UniversalTable } from "../data-display/Table";
 import { Button } from "../forms/Button";
 import { Input } from "../forms/Input";
-import { UniversalTable } from "../data-display/Table";
 import { StatusIndicators } from "../indicators/StatusIndicators";
-import { UniversalKPISection } from "../dashboard/UniversalKPISection";
+import { Card } from "../layout/Card";
 
 interface Partner {
   id: string;
@@ -53,7 +53,7 @@ interface PartnerDashboardProps {
 }
 
 export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
-  apiEndpoint = "/api/isp/v1/admin/partners",
+  apiEndpoint = "/api/isp/v1/partners",
   onPartnerSelect,
   showCommissionConfig = true,
 }) => {
@@ -88,7 +88,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
 
   const loadCommissionConfigs = async () => {
     try {
-      const response = await fetch("/api/isp/v1/admin/commission-config");
+      const response = await fetch("/api/isp/v1/commission-config");
       const configs = await response.json();
       setCommissionConfigs(configs);
     } catch (error) {

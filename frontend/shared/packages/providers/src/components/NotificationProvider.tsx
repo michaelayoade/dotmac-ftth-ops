@@ -17,9 +17,9 @@ interface Props {
 
 export function NotificationProvider({
   children,
-  maxNotifications,
-  defaultDuration,
-  position,
+  maxNotifications: _maxNotifications,
+  defaultDuration: _defaultDuration,
+  position: _position,
 }: Props) {
   // Stub implementation - notification context would be provided here
   return <>{children}</>;

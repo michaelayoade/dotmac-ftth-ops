@@ -1,5 +1,5 @@
-import Cookies from "js-cookie";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import Cookies from "js-cookie";
 
 export interface AuthConfig {
   tokenSource: "cookie" | "localStorage" | "sessionStorage";
@@ -58,7 +58,7 @@ export class AuthInterceptor {
               `${this.config.headerPrefix} ${newToken}`;
             return await this.retryRequest(originalRequest);
           }
-        } catch (refreshError) {
+        } catch (_refreshError) {
           this.clearTokens();
           // Redirect to login or dispatch logout action
           this.handleAuthFailure();
@@ -241,7 +241,7 @@ export class AuthInterceptor {
     }
   }
 
-  private async retryRequest(config: InternalAxiosRequestConfig): Promise<any> {
+  private async retryRequest(_config: InternalAxiosRequestConfig): Promise<any> {
     // This would need to be handled by the main HttpClient instance
     throw new Error("Retry request needs to be handled by HttpClient");
   }

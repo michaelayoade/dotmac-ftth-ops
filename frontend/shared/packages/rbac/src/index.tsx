@@ -60,17 +60,17 @@ export interface RBACState {
 const RBACContext = createContext<RBACState | null>(null);
 
 const hasWildcardMatch = (permission: string, candidate: string): boolean => {
-  if (candidate === "*" || candidate === permission) return true;
+  // Global wildcards - check these first
+  if (candidate === "*" || candidate === "*:*" || candidate === permission) return true;
 
   // Support dot or colon namespace wildcards (foo.* or foo:*)
   if (candidate.endsWith(".*") || candidate.endsWith(":*")) {
     const prefix = candidate.slice(0, -2);
+    // Skip if prefix is just "*" (already handled above as "*:*")
+    if (prefix === "*") return true;
     const separator = candidate.endsWith(".*") ? "." : ":";
     return permission === prefix || permission.startsWith(`${prefix}${separator}`);
   }
-
-  // Treat "*:*" as a global wildcard as well
-  if (candidate === "*:*") return true;
 
   return false;
 };
@@ -79,7 +79,7 @@ const resolveDefaultEndpoint = () => {
   const portalType = process.env["NEXT_PUBLIC_PORTAL_TYPE"] ?? "";
   const runtimeConfig = getRuntimeConfigSnapshot();
   const restPath = runtimeConfig?.api?.restPath;
-  const fallbackRestPath = portalType === "isp" ? "/api/isp/v1/admin" : "/api/platform/v1/admin";
+  const fallbackRestPath = portalType === "isp" ? "/api/isp/v1" : "/api/platform/v1";
 
   const safeRestPath =
     restPath && !(portalType === "isp" && restPath.startsWith("/api/platform/"))
@@ -211,7 +211,7 @@ export const useRBAC = () => {
       const permission = `${resource}:${action}`;
       return perms.hasPermission(permission);
     },
-    [perms],
+    [perms.hasPermission],
   );
 
   return useMemo(() => ({ ...perms, canAccess }), [perms, canAccess]);

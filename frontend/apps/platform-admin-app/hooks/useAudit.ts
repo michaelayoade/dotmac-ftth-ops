@@ -48,7 +48,7 @@ export const auditKeys = {
 
 /**
  * Get paginated list of audit activities
- * GET /api/platform/v1/admin/audit/activities
+ * GET /api/platform/v1/audit/activities
  */
 export function useAuditActivities(filters: AuditFilterParams = {}, enabled = true) {
   return useQuery<AuditActivityList, Error, AuditActivityList, any>({
@@ -62,7 +62,7 @@ export function useAuditActivities(filters: AuditFilterParams = {}, enabled = tr
 
 /**
  * Get recent audit activities
- * GET /api/platform/v1/admin/audit/activities/recent
+ * GET /api/platform/v1/audit/activities/recent
  */
 export function useRecentActivities(limit = 20, days = 7, enabled = true) {
   return useQuery<AuditActivity[], Error, AuditActivity[], any>({
@@ -77,7 +77,7 @@ export function useRecentActivities(limit = 20, days = 7, enabled = true) {
 
 /**
  * Get audit activities for a specific user
- * GET /api/platform/v1/admin/audit/activities/user/{userId}
+ * GET /api/platform/v1/audit/activities/user/{userId}
  */
 export function useUserActivities(userId: string, limit = 50, days = 30, enabled = true) {
   return useQuery<AuditActivity[], Error, AuditActivity[], any>({
@@ -91,7 +91,7 @@ export function useUserActivities(userId: string, limit = 50, days = 30, enabled
 
 /**
  * Get details for a specific audit activity
- * GET /api/platform/v1/admin/audit/activities/{activityId}
+ * GET /api/platform/v1/audit/activities/{activityId}
  */
 export function useActivityDetails(activityId: string, enabled = true) {
   return useQuery<AuditActivity, Error, AuditActivity, any>({
@@ -107,7 +107,7 @@ export function useActivityDetails(activityId: string, enabled = true) {
 
 /**
  * Get activity summary statistics
- * GET /api/platform/v1/admin/audit/activities/summary
+ * GET /api/platform/v1/audit/activities/summary
  */
 export function useActivitySummary(days = 7, enabled = true) {
   return useQuery<ActivitySummary, Error, ActivitySummary, any>({
@@ -137,7 +137,7 @@ export function useResourceHistory(resourceType: string, resourceId: string, ena
 
 /**
  * Export audit logs
- * POST /api/platform/v1/admin/audit/export
+ * POST /api/platform/v1/audit/export
  */
 export function useExportAuditLogs(options?: {
   onSuccess?: (data: AuditExportResponse) => void;
@@ -162,7 +162,7 @@ export function useExportAuditLogs(options?: {
 
 /**
  * Get compliance report
- * GET /api/platform/v1/admin/audit/compliance
+ * GET /api/platform/v1/audit/compliance
  */
 export function useComplianceReport(fromDate: string, toDate: string, enabled = true) {
   return useQuery<ComplianceReport, Error, ComplianceReport, any>({

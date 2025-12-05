@@ -192,12 +192,14 @@ class RLSMiddleware(BaseHTTPMiddleware):
             if hasattr(request.state, "user"):
                 user = request.state.user
                 if user and hasattr(user, "is_platform_admin"):
-                    return user.is_platform_admin
+                    return bool(user.is_platform_admin)
 
-            # Check for superuser header (for system operations)
-            if request.headers.get("X-Superuser-Mode") == "true":
-                # TODO: Add additional auth checks for this header
-                return True
+            # Explicitly ignore legacy header-based superuser bypass
+            if request.headers.get("X-Superuser-Mode"):
+                logger.warning(
+                    "X-Superuser-Mode header present but ignored; platform admin token required",
+                    path=str(request.url.path),
+                )
 
         except Exception as e:
             logger.debug(f"Error checking superuser status: {e}")

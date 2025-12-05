@@ -55,7 +55,7 @@ export function CustomerBilling({ customerId }: Props) {
   const { toast } = useToast();
 
   const fetchData = async () => {
-    const response = await apiClient.get(`/api/isp/v1/admin/customers/${customerId}`);
+    const response = await apiClient.get(`/api/isp/v1/customers/${customerId}`);
     // ...
   };
 
@@ -90,7 +90,7 @@ export default function CustomerBilling({
   const { toast } = useToast();
 
   const fetchData = async () => {
-    const response = await apiClient.get(`/api/isp/v1/admin/customers/${customerId}`);
+    const response = await apiClient.get(`/api/isp/v1/customers/${customerId}`);
     // ...
   };
 
@@ -186,7 +186,7 @@ export default function CustomerBilling({
     const fetchInvoices = async () => {
       try {
         const response = await apiClient.get<{ invoices: Invoice[] }>(
-          `/api/isp/v1/admin/customers/${customerId}/invoices`
+          `/api/isp/v1/customers/${customerId}/invoices`
         );
         setInvoices(response.data.invoices);
       } catch (error) {
@@ -630,7 +630,7 @@ export default function CustomerList({
     const fetchCustomers = async () => {
       try {
         const response = await apiClient.get<{ customers: Customer[] }>(
-          "/api/isp/v1/admin/customers"
+          "/api/isp/v1/customers"
         );
         setCustomers(response.data.customers);
       } catch (error) {

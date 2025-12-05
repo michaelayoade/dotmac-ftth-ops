@@ -217,7 +217,7 @@ async function syncTimeEntries() {
     // Sync each entry
     for (const entry of entries) {
       try {
-        const response = await fetch("/api/isp/v1/admin/time/entries", {
+        const response = await fetch("/api/isp/v1/time/entries", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -253,7 +253,7 @@ async function syncTechnicianLocation() {
 
     for (const location of locations) {
       try {
-        const response = await fetch("/api/isp/v1/admin/field-service/technicians/location", {
+        const response = await fetch("/api/isp/v1/field-service/technicians/location", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -392,7 +392,7 @@ async function updateTechnicianLocation() {
 
     const { latitude, longitude } = position.coords;
 
-    await fetch("/api/isp/v1/admin/field-service/technicians/location", {
+    await fetch("/api/isp/v1/field-service/technicians/location", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

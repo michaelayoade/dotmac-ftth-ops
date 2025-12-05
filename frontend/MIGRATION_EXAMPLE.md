@@ -32,7 +32,7 @@ export function JobsList() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/isp/v1/admin/jobs');
+      const response = await fetch('/api/isp/v1/jobs');
 
       if (!response.ok) {
         throw new Error('Failed to fetch jobs');
@@ -148,7 +148,7 @@ interface JobsResponse {
 }
 
 async function fetchJobs(): Promise<JobsResponse> {
-  const response = await fetch('/api/isp/v1/admin/jobs');
+  const response = await fetch('/api/isp/v1/jobs');
 
   if (!response.ok) {
     throw new Error('Failed to fetch jobs');
@@ -241,7 +241,7 @@ export function CreateCustomerForm() {
     setSubmitError(null);
 
     try {
-      const response = await fetch('/api/isp/v1/admin/customers', {
+      const response = await fetch('/api/isp/v1/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name }),
@@ -343,7 +343,7 @@ export function CreateCustomerForm() {
     try {
       clearError();
 
-      const response = await fetch('/api/isp/v1/admin/customers', {
+      const response = await fetch('/api/isp/v1/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

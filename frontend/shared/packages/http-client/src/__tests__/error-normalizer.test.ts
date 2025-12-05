@@ -1,5 +1,6 @@
-import { ErrorNormalizer } from "../error-normalizer";
 import type { AxiosError } from "axios";
+
+import { ErrorNormalizer } from "../error-normalizer";
 
 describe("ErrorNormalizer", () => {
   describe("normalize", () => {

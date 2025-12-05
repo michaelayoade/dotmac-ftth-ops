@@ -24,8 +24,7 @@ jest.mock("@/hooks/useApiKeys", () => ({
 }));
 
 jest.mock("@/components/api-keys/CreateApiKeyModal", () => ({
-  CreateApiKeyModal: ({ open }: { open: boolean }) =>
-    open ? <div data-testid="create-modal" /> : null,
+  CreateApiKeyModal: () => <div data-testid="create-modal" />,
 }));
 
 jest.mock("@/components/api-keys/ApiKeyDetailModal", () => ({

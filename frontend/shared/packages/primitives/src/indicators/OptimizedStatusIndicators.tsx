@@ -7,7 +7,19 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { useMemo, useCallback, memo, useState, useRef, useEffect } from "react";
+
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import type { StatusBadgeProps, UptimeIndicatorProps, StatusSize, UptimeStatus } from "../types/status";
+import {
+  generateStatusText,
+  useReducedMotion,
+  announceToScreenReader,
+  generateId,
+  ARIA_ROLES,
+  COLOR_CONTRAST,
+} from "../utils/a11y";
 import { cn } from "../utils/cn";
+import { useRenderProfiler, useThrottledState, useDebouncedState } from "../utils/performance";
 import { sanitizeText, validateClassName, validateData } from "../utils/security";
 import {
   uptimeSchema,
@@ -15,37 +27,6 @@ import {
   serviceTierSchema,
   alertSeveritySchema,
 } from "../utils/security";
-import {
-  generateStatusText,
-  useKeyboardNavigation,
-  useFocusManagement,
-  useReducedMotion,
-  useScreenReader,
-  announceToScreenReader,
-  generateId,
-  ARIA_ROLES,
-  COLOR_CONTRAST,
-} from "../utils/a11y";
-import {
-  useRenderProfiler,
-  useThrottledState,
-  useDebouncedState,
-  useDeepMemo,
-  createMemoizedSelector,
-} from "../utils/performance";
-import type {
-  StatusBadgeProps,
-  UptimeIndicatorProps,
-  NetworkPerformanceProps,
-  ServiceTierProps,
-  AlertSeverityProps,
-  StatusSize,
-  UptimeStatus,
-  NetworkMetrics,
-  ServiceTierConfig,
-  AlertSeverityConfig,
-} from "../types/status";
-import { ErrorBoundary } from "../components/ErrorBoundary";
 
 // Memoized status badge variants
 const statusBadgeVariants = cva(

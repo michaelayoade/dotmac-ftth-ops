@@ -4,7 +4,6 @@
  * Tests accessibility, security, performance, and functionality
  */
 
-import React from "react";
 import {
   render,
   renderA11y,
@@ -16,6 +15,8 @@ import {
   waitFor,
   userEvent,
 } from "@dotmac/testing";
+import React from "react";
+
 import { Input } from "../Input";
 
 describe("Input Component", () => {

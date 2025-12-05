@@ -12,8 +12,8 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "echo 'Linting disabled pending ESLint configuration'",
-    "lint:fix": "echo 'Linting disabled pending ESLint configuration'",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch"

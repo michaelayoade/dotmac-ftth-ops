@@ -5,7 +5,8 @@
  */
 
 import React from "react";
-import { screen, fireEvent, waitFor, render } from "@dotmac/testing";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { screen, fireEvent, waitFor, render } = require("@dotmac/testing");
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { VOLTHADashboard } from "../VOLTHADashboard";
 

@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/role-supports-aria-props */
 /**
  * Unstyled, composable Form primitives with React Hook Form integration
  *
@@ -29,7 +30,6 @@
 
 import * as React from "react";
 const { createContext, useContext, forwardRef } = React;
-
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
 import type { VariantProps } from "class-variance-authority";

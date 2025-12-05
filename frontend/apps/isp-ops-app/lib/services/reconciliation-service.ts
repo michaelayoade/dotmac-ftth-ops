@@ -5,7 +5,7 @@
 
 import { platformConfig } from "../config";
 
-const ADMIN_PREFIX = "/api/isp/v1/admin";
+const ADMIN_PREFIX = "/api/isp/v1";
 
 // ============================================
 // Types matching backend schemas

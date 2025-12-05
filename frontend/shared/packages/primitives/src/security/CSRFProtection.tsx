@@ -5,7 +5,7 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
 
 interface CSRFContextValue {
@@ -67,39 +67,46 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
     setToken(initialToken);
 
     // Store in session storage for validation
+    // eslint-disable-next-line no-restricted-globals
     sessionStorage.setItem("csrf-token", initialToken);
 
     // Set up cleanup
     return () => {
+      // eslint-disable-next-line no-restricted-globals
       sessionStorage.removeItem("csrf-token");
     };
   }, []);
 
-  const generateToken = (): string => {
+  const generateToken = useCallback((): string => {
     const newToken = generateSecureToken();
     setToken(newToken);
+    // eslint-disable-next-line no-restricted-globals
     sessionStorage.setItem("csrf-token", newToken);
     return newToken;
-  };
+  }, []);
 
-  const validateToken = (tokenToValidate: string): boolean => {
+  const validateToken = useCallback((tokenToValidate: string): boolean => {
     // Check against both client and server tokens
+    // eslint-disable-next-line no-restricted-globals
     const storedToken = sessionStorage.getItem("csrf-token");
     return (
       tokenToValidate === storedToken || (serverToken !== null && tokenToValidate === serverToken)
     );
-  };
+  }, [serverToken]);
 
-  const refreshToken = () => {
+  const refreshToken = useCallback(() => {
     generateToken();
-  };
+  }, [generateToken]);
 
-  const contextValue: CSRFContextValue = {
-    token: serverToken ?? token,
-    generateToken,
-    validateToken,
-    refreshToken,
-  };
+  const contextValue = useMemo<CSRFContextValue>(
+    () => ({
+      token: serverToken ?? token,
+      generateToken,
+      validateToken,
+      refreshToken,
+    }),
+    [serverToken, token, generateToken, validateToken, refreshToken]
+  );
 
   return <CSRFContext.Provider value={contextValue}>{children}</CSRFContext.Provider>;
 }

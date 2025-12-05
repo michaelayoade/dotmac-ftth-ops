@@ -4,11 +4,12 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import type { HttpClientConfig, RequestConfig, ApiResponse, HttpMethod } from "./types";
-import { TenantResolver } from "./tenant-resolver";
+
+import { AuthInterceptor, type AuthConfig } from "./auth-interceptor";
 import { ErrorNormalizer } from "./error-normalizer";
 import { RetryHandler } from "./retry-handler";
-import { AuthInterceptor, type AuthConfig } from "./auth-interceptor";
+import { TenantResolver } from "./tenant-resolver";
+import type { HttpClientConfig, RequestConfig, ApiResponse, HttpMethod } from "./types";
 
 export class HttpClient {
   private axiosInstance: AxiosInstance;

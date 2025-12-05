@@ -77,7 +77,7 @@ class DomainVerificationService {
     request: InitiateVerificationRequest,
   ): Promise<DomainVerificationResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains/verify`,
+      `${this.baseUrl}/api/platform/v1/tenants/${tenantId}/domains/verify`,
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -101,7 +101,7 @@ class DomainVerificationService {
     request: CheckVerificationRequest,
   ): Promise<DomainVerificationResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains/check`,
+      `${this.baseUrl}/api/platform/v1/tenants/${tenantId}/domains/check`,
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -121,7 +121,7 @@ class DomainVerificationService {
    * Get current domain verification status
    */
   async getStatus(tenantId: string): Promise<DomainVerificationStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains/status`, {
+    const response = await fetch(`${this.baseUrl}/api/platform/v1/tenants/${tenantId}/domains/status`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -137,7 +137,7 @@ class DomainVerificationService {
    * Remove verified domain
    */
   async removeDomain(tenantId: string): Promise<DomainRemovalResponse> {
-    const response = await fetch(`${this.baseUrl}/api/platform/v1/admin/tenants/${tenantId}/domains`, {
+    const response = await fetch(`${this.baseUrl}/api/platform/v1/tenants/${tenantId}/domains`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });

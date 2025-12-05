@@ -488,7 +488,7 @@ export class ApiClient {
       tenant: unknown;
     }>
   > {
-    return this.request("/api/isp/v1/admin/auth/login", {
+    return this.request("/api/isp/v1/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),
     });
@@ -501,7 +501,7 @@ export class ApiClient {
         refreshToken: string;
         expiresAt: number;
       }>
-    >("/api/isp/v1/admin/auth/refresh", {
+    >("/api/isp/v1/auth/refresh", {
       method: "POST",
       body: JSON.stringify({ refreshToken }),
     });
@@ -522,13 +522,13 @@ export class ApiClient {
   }
 
   async logout(): Promise<ApiResponse<Record<string, never>>> {
-    return this.request("/api/isp/v1/admin/auth/logout", {
+    return this.request("/api/isp/v1/auth/logout", {
       method: "POST",
     });
   }
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
-    return this.request("/api/isp/v1/admin/auth/me");
+    return this.request("/api/isp/v1/auth/me");
   }
 
   // Customers
@@ -543,31 +543,31 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/customers${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/customers${query ? `?${query}` : ""}`);
   }
 
   async getCustomer(id: string): Promise<ApiResponse<Customer>> {
-    return this.request(`/api/isp/v1/admin/customers/${id}`);
+    return this.request(`/api/isp/v1/customers/${id}`);
   }
 
   async createCustomer(
     customer: Omit<Customer, "id" | "createdAt" | "updatedAt">,
   ): Promise<ApiResponse<Customer>> {
-    return this.request("/api/isp/v1/admin/customers", {
+    return this.request("/api/isp/v1/customers", {
       method: "POST",
       body: JSON.stringify(customer),
     });
   }
 
   async updateCustomer(id: string, updates: Partial<Customer>): Promise<ApiResponse<Customer>> {
-    return this.request(`/api/isp/v1/admin/customers/${id}`, {
+    return this.request(`/api/isp/v1/customers/${id}`, {
       method: "PUT",
       body: JSON.stringify(updates),
     });
   }
 
   async deleteCustomer(id: string): Promise<ApiResponse<Record<string, never>>> {
-    return this.request(`/api/isp/v1/admin/customers/${id}`, {
+    return this.request(`/api/isp/v1/customers/${id}`, {
       method: "DELETE",
     });
   }
@@ -590,17 +590,17 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/billing/invoices${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/billing/invoices${query ? `?${query}` : ""}`);
   }
 
   async getInvoice(id: string): Promise<ApiResponse<Invoice>> {
-    return this.request(`/api/isp/v1/admin/billing/invoices/${id}`);
+    return this.request(`/api/isp/v1/billing/invoices/${id}`);
   }
 
   async createInvoice(
     invoice: Omit<Invoice, "id" | "createdAt" | "updatedAt">,
   ): Promise<ApiResponse<Invoice>> {
-    return this.request("/api/isp/v1/admin/billing/invoices", {
+    return this.request("/api/isp/v1/billing/invoices", {
       method: "POST",
       body: JSON.stringify(invoice),
     });
@@ -610,7 +610,7 @@ export class ApiClient {
     id: string,
     paymentData: { method: string; amount: number },
   ): Promise<ApiResponse<Invoice>> {
-    return this.request(`/api/isp/v1/admin/billing/invoices/${id}/pay`, {
+    return this.request(`/api/isp/v1/billing/invoices/${id}/pay`, {
       method: "POST",
       body: JSON.stringify(paymentData),
     });
@@ -628,18 +628,18 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/network/devices${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/network/devices${query ? `?${query}` : ""}`);
   }
 
   async getNetworkDevice(id: string): Promise<ApiResponse<NetworkDevice>> {
-    return this.request(`/api/isp/v1/admin/network/devices/${id}`);
+    return this.request(`/api/isp/v1/network/devices/${id}`);
   }
 
   async updateNetworkDevice(
     id: string,
     updates: Partial<NetworkDevice>,
   ): Promise<ApiResponse<NetworkDevice>> {
-    return this.request(`/api/isp/v1/admin/network/devices/${id}`, {
+    return this.request(`/api/isp/v1/network/devices/${id}`, {
       method: "PUT",
       body: JSON.stringify(updates),
     });
@@ -656,17 +656,17 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/network/alerts${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/network/alerts${query ? `?${query}` : ""}`);
   }
 
   async acknowledgeAlert(id: string): Promise<ApiResponse<NetworkAlert>> {
-    return this.request(`/api/isp/v1/admin/network/alerts/${id}/acknowledge`, {
+    return this.request(`/api/isp/v1/network/alerts/${id}/acknowledge`, {
       method: "POST",
     });
   }
 
   async resolveAlert(id: string, resolution?: string): Promise<ApiResponse<NetworkAlert>> {
-    return this.request(`/api/isp/v1/admin/network/alerts/${id}/resolve`, {
+    return this.request(`/api/isp/v1/network/alerts/${id}/resolve`, {
       method: "POST",
       body: JSON.stringify({ resolution }),
     });
@@ -684,15 +684,15 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/chat/sessions${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/chat/sessions${query ? `?${query}` : ""}`);
   }
 
   async getChatSession(id: string): Promise<ApiResponse<ChatSession>> {
-    return this.request(`/api/isp/v1/admin/chat/sessions/${id}`);
+    return this.request(`/api/isp/v1/chat/sessions/${id}`);
   }
 
   async createChatSession(customerId: string, subject?: string): Promise<ApiResponse<ChatSession>> {
-    return this.request("/api/isp/v1/admin/chat/sessions", {
+    return this.request("/api/isp/v1/chat/sessions", {
       method: "POST",
       body: JSON.stringify({ customerId, subject }),
     });
@@ -703,7 +703,7 @@ export class ApiClient {
     rating?: number,
     feedback?: string,
   ): Promise<ApiResponse<ChatSession>> {
-    return this.request(`/api/isp/v1/admin/chat/sessions/${id}/close`, {
+    return this.request(`/api/isp/v1/chat/sessions/${id}/close`, {
       method: "POST",
       body: JSON.stringify({ rating, feedback }),
     });
@@ -721,16 +721,16 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/services/plans${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/services/plans${query ? `?${query}` : ""}`);
   }
 
   async getServicePlan(id: string): Promise<ApiResponse<ServicePlan>> {
-    return this.request(`/api/isp/v1/admin/services/plans/${id}`);
+    return this.request(`/api/isp/v1/services/plans/${id}`);
   }
 
   // Dashboard
   async getDashboardMetrics(): Promise<ApiResponse<DashboardMetrics>> {
-    return this.request("/api/isp/v1/admin/dashboard/metrics");
+    return this.request("/api/isp/v1/dashboard/metrics");
   }
 
   // File uploads
@@ -739,7 +739,7 @@ export class ApiClient {
     formData.append("file", file);
     formData.append("purpose", purpose);
 
-    return this.request("/api/isp/v1/admin/files/upload", {
+    return this.request("/api/isp/v1/files/upload", {
       method: "POST",
       body: formData,
       headers: {
@@ -750,52 +750,52 @@ export class ApiClient {
 
   // Customer Portal APIs
   async getCustomerDashboard(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/dashboard");
+    return this.request("/api/isp/v1/customer/dashboard");
   }
 
   async getCustomerServices(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/services");
+    return this.request("/api/isp/v1/customer/services");
   }
 
   async getCustomerBilling(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/billing");
+    return this.request("/api/isp/v1/customer/billing");
   }
 
   async getCustomerUsage(period?: string): Promise<ApiResponse<unknown>> {
     const query = period ? `?period=${period}` : "";
-    return this.request(`/api/isp/v1/admin/customer/usage${query}`);
+    return this.request(`/api/isp/v1/customer/usage${query}`);
   }
 
   async getCustomerDocuments(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/documents");
+    return this.request("/api/isp/v1/customer/documents");
   }
 
   async getCustomerSupportTickets(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/support/tickets");
+    return this.request("/api/isp/v1/customer/support/tickets");
   }
 
   async createSupportTicket(data: unknown): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/support/tickets", {
+    return this.request("/api/isp/v1/customer/support/tickets", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async replySupportTicket(ticketId: string, message: string): Promise<ApiResponse<unknown>> {
-    return this.request(`/api/isp/v1/admin/customer/support/tickets/${ticketId}/reply`, {
+    return this.request(`/api/isp/v1/customer/support/tickets/${ticketId}/reply`, {
       method: "POST",
       body: JSON.stringify({ message }),
     });
   }
 
   async runSpeedTest(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/services/speed-test", {
+    return this.request("/api/isp/v1/customer/services/speed-test", {
       method: "POST",
     });
   }
 
   async requestServiceUpgrade(upgradeId: string): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/customer/services/upgrade", {
+    return this.request("/api/isp/v1/customer/services/upgrade", {
       method: "POST",
       body: JSON.stringify({ upgradeId }),
     });
@@ -803,28 +803,28 @@ export class ApiClient {
 
   // Admin Portal APIs
   async getAdminDashboard(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/admin/dashboard");
+    return this.request("/api/isp/v1/dashboard");
   }
 
   async getSystemAlerts(): Promise<ApiResponse<any[]>> {
-    return this.request("/api/isp/v1/admin/admin/system/alerts");
+    return this.request("/api/isp/v1/system/alerts");
   }
 
   async getNetworkStatus(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/admin/network/status");
+    return this.request("/api/isp/v1/network/status");
   }
 
   // Reseller Portal APIs
   async getResellerDashboard(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/reseller/dashboard");
+    return this.request("/api/isp/v1/reseller/dashboard");
   }
 
   async getResellerCommissions(): Promise<ApiResponse<unknown>> {
-    return this.request("/api/isp/v1/admin/reseller/commissions");
+    return this.request("/api/isp/v1/reseller/commissions");
   }
 
   async getResellerCustomers(): Promise<ApiResponse<any[]>> {
-    return this.request("/api/isp/v1/admin/reseller/customers");
+    return this.request("/api/isp/v1/reseller/customers");
   }
 
   // Plugin Management APIs
@@ -855,11 +855,11 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/plugins/catalog${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/plugins/catalog${query ? `?${query}` : ""}`);
   }
 
   async getPluginDetails(pluginId: string): Promise<ApiResponse<PluginCatalogItem>> {
-    return this.request(`/api/isp/v1/admin/plugins/catalog/${pluginId}`);
+    return this.request(`/api/isp/v1/plugins/catalog/${pluginId}`);
   }
 
   async installPlugin(
@@ -903,7 +903,7 @@ export class ApiClient {
       }
     }
 
-    return this.request("/api/isp/v1/admin/plugins/install", {
+    return this.request("/api/isp/v1/plugins/install", {
       method: "POST",
       body: JSON.stringify(request),
     });
@@ -912,7 +912,7 @@ export class ApiClient {
   async getPluginInstallationStatus(
     installationId: string,
   ): Promise<ApiResponse<PluginInstallationResponse>> {
-    return this.request(`/api/isp/v1/admin/plugins/installations/${installationId}/status`);
+    return this.request(`/api/isp/v1/plugins/installations/${installationId}/status`);
   }
 
   async getInstalledPlugins(
@@ -928,21 +928,21 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/plugins/installed${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/plugins/installed${query ? `?${query}` : ""}`);
   }
 
   async getInstalledPlugin(installationId: string): Promise<ApiResponse<InstalledPlugin>> {
-    return this.request(`/api/isp/v1/admin/plugins/installed/${installationId}`);
+    return this.request(`/api/isp/v1/plugins/installed/${installationId}`);
   }
 
   async enablePlugin(installationId: string): Promise<ApiResponse<InstalledPlugin>> {
-    return this.request(`/api/isp/v1/admin/plugins/installed/${installationId}/enable`, {
+    return this.request(`/api/isp/v1/plugins/installed/${installationId}/enable`, {
       method: "POST",
     });
   }
 
   async disablePlugin(installationId: string): Promise<ApiResponse<InstalledPlugin>> {
-    return this.request(`/api/isp/v1/admin/plugins/installed/${installationId}/disable`, {
+    return this.request(`/api/isp/v1/plugins/installed/${installationId}/disable`, {
       method: "POST",
     });
   }
@@ -951,7 +951,7 @@ export class ApiClient {
     installationId: string,
     configuration: Record<string, any>,
   ): Promise<ApiResponse<InstalledPlugin>> {
-    return this.request(`/api/isp/v1/admin/plugins/installed/${installationId}/configure`, {
+    return this.request(`/api/isp/v1/plugins/installed/${installationId}/configure`, {
       method: "PUT",
       body: JSON.stringify({ configuration }),
     });
@@ -961,7 +961,7 @@ export class ApiClient {
     installationId: string,
     options?: { backup?: boolean; force?: boolean },
   ): Promise<ApiResponse<{ success: boolean; message: string }>> {
-    return this.request(`/api/isp/v1/admin/plugins/installed/${installationId}/uninstall`, {
+    return this.request(`/api/isp/v1/plugins/installed/${installationId}/uninstall`, {
       method: "DELETE",
       body: JSON.stringify(options || {}),
     });
@@ -971,8 +971,8 @@ export class ApiClient {
     installationId?: string,
   ): Promise<ApiResponse<Record<string, PluginUpdateInfo>>> {
     const endpoint = installationId
-      ? `/api/isp/v1/admin/plugins/installed/${installationId}/updates`
-      : "/api/isp/v1/admin/plugins/updates";
+      ? `/api/isp/v1/plugins/installed/${installationId}/updates`
+      : "/api/isp/v1/plugins/updates";
     return this.request(endpoint);
   }
 
@@ -1028,7 +1028,7 @@ export class ApiClient {
       sanitizedOptions.configuration = parsedConfig;
     }
 
-    return this.request(`/api/isp/v1/admin/plugins/installed/${sanitizedId}/update`, {
+    return this.request(`/api/isp/v1/plugins/installed/${sanitizedId}/update`, {
       method: "POST",
       body: JSON.stringify(sanitizedOptions),
     });
@@ -1047,22 +1047,22 @@ export class ApiClient {
     }>
   > {
     const query = period ? `?period=${period}` : "";
-    return this.request(`/api/isp/v1/admin/plugins/installed/${installationId}/usage${query}`);
+    return this.request(`/api/isp/v1/plugins/installed/${installationId}/usage${query}`);
   }
 
   async getPluginHealth(
     installationId?: string,
   ): Promise<ApiResponse<InstalledPlugin["health"] | Record<string, InstalledPlugin["health"]>>> {
     const endpoint = installationId
-      ? `/api/isp/v1/admin/plugins/installed/${installationId}/health`
-      : "/api/isp/v1/admin/plugins/health";
+      ? `/api/isp/v1/plugins/installed/${installationId}/health`
+      : "/api/isp/v1/plugins/health";
     return this.request(endpoint);
   }
 
   async requestPluginPermissions(
     request: PluginPermissionRequest,
   ): Promise<ApiResponse<{ request_id: string; status: string }>> {
-    return this.request("/api/isp/v1/admin/plugins/permissions/request", {
+    return this.request("/api/isp/v1/plugins/permissions/request", {
       method: "POST",
       body: JSON.stringify(request),
     });
@@ -1085,21 +1085,21 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/isp/v1/admin/plugins/backups${query ? `?${query}` : ""}`);
+    return this.request(`/api/isp/v1/plugins/backups${query ? `?${query}` : ""}`);
   }
 
   async createPluginBackup(
     installationId: string,
     type: "manual" | "pre_update" = "manual",
   ): Promise<ApiResponse<PluginBackup>> {
-    return this.request("/api/isp/v1/admin/plugins/backups", {
+    return this.request("/api/isp/v1/plugins/backups", {
       method: "POST",
       body: JSON.stringify({ installation_id: installationId, type }),
     });
   }
 
   async restorePluginBackup(backupId: string): Promise<ApiResponse<PluginInstallationResponse>> {
-    return this.request(`/api/isp/v1/admin/plugins/backups/${backupId}/restore`, {
+    return this.request(`/api/isp/v1/plugins/backups/${backupId}/restore`, {
       method: "POST",
     });
   }

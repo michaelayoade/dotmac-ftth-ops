@@ -99,7 +99,7 @@ function DeviceDetailsPageContent() {
   const { data: device, isLoading } = useQuery<DeviceDetails>({
     queryKey: ["device", deviceId, refreshKey],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
@@ -113,7 +113,7 @@ function DeviceDetailsPageContent() {
   const { data: events = [] } = useQuery<DeviceEvent[]>({
     queryKey: ["device-events", deviceId, refreshKey],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/events`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}/events`, {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
@@ -125,7 +125,7 @@ function DeviceDetailsPageContent() {
   // Refresh device
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/refresh`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}/refresh`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -149,7 +149,7 @@ function DeviceDetailsPageContent() {
   // Reboot device
   const rebootMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/reboot`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}/reboot`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

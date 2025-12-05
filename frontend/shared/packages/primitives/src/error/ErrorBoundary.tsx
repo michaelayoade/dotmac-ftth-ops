@@ -1,3 +1,4 @@
+/* eslint-disable react/sort-comp */
 "use client";
 
 import { AlertTriangle, Home, MessageSquare, RefreshCw } from "lucide-react";

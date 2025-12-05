@@ -21,7 +21,7 @@ jest.mock("@dotmac/ui", () => ({
 
 const buildUrl = (path: string) => {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const prefixed = normalized.startsWith("/api/platform/v1/admin") ? normalized : `/api/platform/v1/admin${normalized}`;
+  const prefixed = normalized.startsWith("/api/platform/v1") ? normalized : `/api/platform/v1${normalized}`;
   return `https://api.example.com${prefixed}`;
 };
 
@@ -29,7 +29,7 @@ jest.mock("@/providers/AppConfigContext", () => ({
   useAppConfig: () => ({
     api: {
       baseUrl: "https://api.example.com",
-      prefix: "/api/platform/v1/admin",
+      prefix: "/api/platform/v1",
       buildUrl,
     },
     features: {},
@@ -101,7 +101,7 @@ describe("Platform Admin useDataImport hook", () => {
     const jobsQuery = renderHook(() => JobsHook(), { wrapper });
 
     await waitFor(() => expect(jobsQuery.result.current.data?.jobs).toHaveLength(1));
-    expect(fetchMock).toHaveBeenCalledWith("https://api.example.com/api/platform/v1/admin/data-import/jobs?", {
+    expect(fetchMock).toHaveBeenCalledWith("https://api.example.com/api/platform/v1/data-import/jobs?", {
       credentials: "include",
     });
   });

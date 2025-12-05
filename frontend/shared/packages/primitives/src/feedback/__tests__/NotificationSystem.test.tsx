@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * NotificationSystem Component Tests
  *
@@ -7,6 +8,7 @@
  */
 
 import React from "react";
+
 import {
   render,
   renderA11y,

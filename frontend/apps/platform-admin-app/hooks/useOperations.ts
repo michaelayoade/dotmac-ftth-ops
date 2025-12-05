@@ -2,8 +2,8 @@
  * React Query hooks for operations monitoring
  *
  * Connects to backend monitoring APIs:
- * - GET /api/platform/v1/admin/monitoring/metrics - Get system metrics
- * - GET /api/platform/v1/admin/monitoring/logs/stats - Get log statistics
+ * - GET /api/platform/v1/monitoring/metrics - Get system metrics
+ * - GET /api/platform/v1/monitoring/logs/stats - Get log statistics
  * - GET /health - Get system health status
  */
 

@@ -5,10 +5,10 @@
 
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
-import type { HTMLMotionProps } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
+import type { ComponentType } from "react";
+
 import { cn } from "../utils/cn";
 
 export interface MetricTrend {
@@ -34,7 +34,7 @@ export interface UniversalMetricCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: ComponentType<{ className?: string }>;
 
   // Visual Options
   variant?: "default" | "compact" | "featured";
@@ -166,10 +166,12 @@ export function UniversalMetricCard({
         return `${(numValue / 3600).toFixed(precision)}h`;
 
       case "bytes":
-        const sizes = ["B", "KB", "MB", "GB", "TB"];
-        if (numValue === 0) return "0 B";
-        const i = Math.floor(Math.log(numValue) / Math.log(1024));
-        return `${(numValue / Math.pow(1024, i)).toFixed(precision)} ${sizes[i]}`;
+        {
+          const sizes = ["B", "KB", "MB", "GB", "TB"];
+          if (numValue === 0) return "0 B";
+          const i = Math.floor(Math.log(numValue) / Math.log(1024));
+          return `${(numValue / Math.pow(1024, i)).toFixed(precision)} ${sizes[i]}`;
+        }
 
       case "number":
       default:

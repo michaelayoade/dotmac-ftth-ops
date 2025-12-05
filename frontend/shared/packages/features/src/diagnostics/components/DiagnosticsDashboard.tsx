@@ -140,27 +140,27 @@ export function DiagnosticsDashboard({
 
       switch (diagnosticType) {
         case DiagnosticType.CONNECTIVITY_CHECK:
-          endpoint = `/api/isp/v1/admin/diagnostics/subscribers/${subscriberId}/connectivity`;
+          endpoint = `/api/isp/v1/diagnostics/subscribers/${subscriberId}/connectivity`;
           method = "post";
           break;
         case DiagnosticType.RADIUS_SESSION:
-          endpoint = `/api/isp/v1/admin/diagnostics/subscribers/${subscriberId}/radius-sessions`;
+          endpoint = `/api/isp/v1/diagnostics/subscribers/${subscriberId}/radius-sessions`;
           break;
         case DiagnosticType.ONU_STATUS:
-          endpoint = `/api/isp/v1/admin/diagnostics/subscribers/${subscriberId}/onu-status`;
+          endpoint = `/api/isp/v1/diagnostics/subscribers/${subscriberId}/onu-status`;
           break;
         case DiagnosticType.CPE_STATUS:
-          endpoint = `/api/isp/v1/admin/diagnostics/subscribers/${subscriberId}/cpe-status`;
+          endpoint = `/api/isp/v1/diagnostics/subscribers/${subscriberId}/cpe-status`;
           break;
         case DiagnosticType.IP_VERIFICATION:
-          endpoint = `/api/isp/v1/admin/diagnostics/subscribers/${subscriberId}/ip-verification`;
+          endpoint = `/api/isp/v1/diagnostics/subscribers/${subscriberId}/ip-verification`;
           break;
         case DiagnosticType.CPE_RESTART:
-          endpoint = `/api/isp/v1/admin/diagnostics/subscribers/${subscriberId}/restart-cpe`;
+          endpoint = `/api/isp/v1/diagnostics/subscribers/${subscriberId}/restart-cpe`;
           method = "post";
           break;
         case DiagnosticType.HEALTH_CHECK:
-          endpoint = `/api/isp/v1/admin/diagnostics/subscribers/${subscriberId}/health-check`;
+          endpoint = `/api/isp/v1/diagnostics/subscribers/${subscriberId}/health-check`;
           break;
       }
 

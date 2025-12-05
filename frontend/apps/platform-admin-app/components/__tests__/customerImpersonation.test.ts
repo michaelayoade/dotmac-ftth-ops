@@ -39,7 +39,7 @@ describe("customer impersonation", () => {
     ).resolves.toBe("token-123");
 
     expect(fetchImpl).toHaveBeenCalledWith(
-      "https://api.example.com/api/isp/v1/admin/customers/cust-1/impersonate",
+      "https://api.example.com/api/isp/v1/customers/cust-1/impersonate",
       expect.objectContaining({ method: "POST", credentials: "include" }),
     );
     expect(mockSetPortalAuthToken).toHaveBeenCalledWith("token-123", CUSTOMER_PORTAL_TOKEN_KEY);

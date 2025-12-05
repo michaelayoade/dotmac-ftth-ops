@@ -41,12 +41,12 @@ const nextConfig = {
     const baseRewrites = [
       {
         source: '/api/v1/platform/:path*',
-        destination: `${backendUrl}/api/platform/v1/admin/:path*`,
+        destination: `${backendUrl}/api/platform/v1/:path*`,
       },
       // ISP admin API
       {
-        source: '/api/isp/v1/admin/:path*',
-        destination: `${backendUrl}/api/isp/v1/admin/:path*`,
+        source: '/api/isp/v1/:path*',
+        destination: `${backendUrl}/api/isp/v1/:path*`,
       },
       // ISP partner portal
       {

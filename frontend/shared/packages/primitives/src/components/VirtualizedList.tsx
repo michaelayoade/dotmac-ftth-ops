@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * High-Performance Virtualized List Component
  * Optimized for large datasets with accessibility and performance focus
@@ -7,14 +6,11 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect, memo } from "react";
-import { useVirtualizedList, useRenderProfiler } from "../utils/performance";
-import {
-  useKeyboardNavigation,
-  announceToScreenReader,
-  generateId,
-  ARIA_ROLES,
-} from "../utils/a11y";
+
+import { useKeyboardNavigation, announceToScreenReader, generateId } from "../utils/a11y";
+import { useRenderProfiler } from "../utils/performance";
 import { validateClassName } from "../utils/security";
+
 import { ErrorBoundary } from "./ErrorBoundary";
 
 // Types for virtualized list
@@ -33,8 +29,6 @@ export interface VirtualizedListProps<T> {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   role?: string;
-  // Performance props
-  throttleMs?: number;
   enableKeyboardNavigation?: boolean;
 }
 
@@ -72,7 +66,6 @@ export const VirtualizedList = memo(
     "aria-label": ariaLabel,
     "aria-labelledby": ariaLabelledby,
     role = "list",
-    throttleMs = 16,
     enableKeyboardNavigation = true,
   }: VirtualizedListProps<T>) => {
     // Performance monitoring
@@ -167,7 +160,7 @@ export const VirtualizedList = memo(
       for (let i = visibleRange.start; i < visibleRange.end; i++) {
         if (i >= items.length) break;
 
-        const item = items[i];
+        const item = items[i]!;
         const key = getItemKey ? getItemKey(item, i) : i;
         const offset = itemMetrics.getItemOffset(i);
         const size = itemMetrics.getItemSize(i);
@@ -188,6 +181,19 @@ export const VirtualizedList = memo(
 
       return result;
     }, [items, visibleRange, getItemKey, itemMetrics]);
+
+    const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+    const navigationItems = visibleItems
+      .map(({ index }) => ({
+        element: itemRefs.current[index],
+        dataIndex: index,
+      }))
+      .filter((entry): entry is { element: HTMLDivElement; dataIndex: number } =>
+        Boolean(entry.element),
+      );
+
+    const keyboardTargets = navigationItems.map((entry) => entry.element);
 
     // Throttled scroll handler
     const handleScroll = useCallback(
@@ -215,14 +221,14 @@ export const VirtualizedList = memo(
     );
 
     // Keyboard navigation setup
-    const visibleElements = useMemo(() => {
-      return visibleItems.map(() => null);
-    }, [visibleItems.length]);
-
-    const { handleKeyDown } = useKeyboardNavigation(visibleElements as HTMLElement[], {
+    const { handleKeyDown } = useKeyboardNavigation(keyboardTargets, {
       orientation: "vertical",
       onSelect: (index) => {
-        const actualIndex = visibleRange.start + index;
+        const target = navigationItems[index];
+        if (!target) {
+          return;
+        }
+        const actualIndex = target.dataIndex;
         const offset = itemMetrics.getItemOffset(actualIndex);
 
         // Scroll to selected item
@@ -233,6 +239,12 @@ export const VirtualizedList = memo(
       },
       disabled: !enableKeyboardNavigation,
     });
+    const handleContainerKeyDown = useCallback(
+      (event: React.KeyboardEvent<HTMLDivElement>) => {
+        handleKeyDown(event.nativeEvent);
+      },
+      [handleKeyDown],
+    );
 
     // Report visible items to parent
     useEffect(() => {
@@ -281,7 +293,7 @@ export const VirtualizedList = memo(
           className={`overflow-auto ${safeClassName}`}
           style={{ height, width }}
           onScroll={handleScroll}
-          onKeyDown={enableKeyboardNavigation ? handleKeyDown : undefined}
+          onKeyDown={enableKeyboardNavigation ? handleContainerKeyDown : undefined}
           role={role}
           aria-label={ariaLabel || `List with ${items.length} items`}
           aria-labelledby={ariaLabelledby}
@@ -300,6 +312,9 @@ export const VirtualizedList = memo(
                 role={role === "list" ? "listitem" : undefined}
                 aria-rowindex={index + 1}
                 aria-setsize={items.length}
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
               >
                 {renderItem(item, index, style)}
               </div>
@@ -380,7 +395,7 @@ export const VirtualizedGrid = memo(
         startRow: visibleStartRow,
         endRow: visibleEndRow,
       };
-    }, [scrollTop, scrollLeft, height, width, itemHeight, itemWidth, overscan, gridMetrics]);
+    }, [scrollTop, scrollLeft, height, width, itemHeight, itemWidth, overscan, gridMetrics, items.length]);
 
     // Generate visible grid items
     const visibleItems = useMemo(() => {
@@ -389,7 +404,7 @@ export const VirtualizedGrid = memo(
       for (let i = visibleRange.start; i < visibleRange.end; i++) {
         if (i >= items.length) break;
 
-        const item = items[i];
+        const item = items[i]!;
         const key = getItemKey ? getItemKey(item, i) : i;
         const row = Math.floor(i / gridMetrics.columnsPerRow);
         const col = i % gridMetrics.columnsPerRow;
@@ -521,16 +536,26 @@ export const VirtualizedTable = memo(
     const renderRow = useCallback(
       (item: T, index: number, style: React.CSSProperties) => {
         const handleRowClick = onRowClick ? () => onRowClick(item, index) : undefined;
+        const handleRowKeyDown = onRowClick
+          ? (e: React.KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onRowClick(item, index);
+              }
+            }
+          : undefined;
 
         return (
           <div
             style={{ ...style, display: "flex" }}
             className={`border-b border-gray-200 ${onRowClick ? "hover:bg-gray-50 cursor-pointer" : ""}`}
             onClick={handleRowClick}
+            onKeyDown={handleRowKeyDown}
             role="row"
             tabIndex={onRowClick ? 0 : -1}
+            aria-label={onRowClick ? `Row ${index + 1}, press Enter to select` : undefined}
           >
-            {columns.map((column, colIndex) => (
+            {columns.map((column) => (
               <div
                 key={String(column.key)}
                 style={{ width: column.width }}
@@ -591,14 +616,14 @@ export const VirtualizedTable = memo(
           data-render-count={renderCount}
         >
           {tableHeader}
-          <VirtualizedList
+          <VirtualizedList<T>
             items={items}
             itemHeight={rowHeight}
             height={height - rowHeight} // Account for header
             renderItem={renderRow}
-            getItemKey={getRowKey}
             role="rowgroup"
             overscan={overscan}
+            {...(getRowKey ? { getItemKey: (item, index) => getRowKey(item, index) } : {})}
           />
         </div>
       </ErrorBoundary>
@@ -608,4 +633,3 @@ export const VirtualizedTable = memo(
 
 // Export all virtualized components
 export default { VirtualizedList, VirtualizedGrid, VirtualizedTable };
-// @ts-nocheck

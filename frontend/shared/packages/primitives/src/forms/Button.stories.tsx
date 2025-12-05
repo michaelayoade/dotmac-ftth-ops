@@ -4,10 +4,12 @@
  * Comprehensive documentation and examples for the Button component
  */
 
+/* eslint-disable no-alert */
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { Button } from "./Button";
 import { Loader2, Download, Plus, Trash2 } from "lucide-react";
+
+import { Button } from "./Button";
 
 const meta = {
   title: "Primitives/Forms/Button",
@@ -326,6 +328,7 @@ export const FormPrevention: Story = {
   render: (args) => (
     <form
       onSubmit={(e) => {
+        e.preventDefault();
         console.log("Form would have been submitted");
         alert("Form submission prevented!");
       }}

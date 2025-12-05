@@ -3,7 +3,6 @@
  * Testing table structure, variants, accessibility, security, and performance
  */
 
-import React from "react";
 import {
   render,
   renderA11y,
@@ -12,6 +11,7 @@ import {
   renderComprehensive,
   screen,
 } from "@dotmac/testing";
+import React from "react";
 
 import {
   Table,

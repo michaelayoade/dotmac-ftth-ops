@@ -16,12 +16,12 @@
     "prebuild": "echo 'Type checking handled by tsup'",
     "build": "tsup && pnpm exec tsc -p tsconfig.build.json",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "echo 'Linting disabled pending chart component type fixes'",
-    "type-check": "tsc -p tsconfig.json --emitDeclarationOnly",
+    "lint": "eslint . --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
-    "lint:fix": "echo 'Linting disabled pending chart component type fixes'",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "echo 'No formatter configured for primitives package'"
   },
   "dependencies": {
@@ -67,6 +67,7 @@
     "@types/react": "18.3.26",
     "@types/react-dom": "18.3.5",
     "@types/react-window": "^1.8.5",
+    "eslint": "^8.57.1",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",
     "jest-axe": "^9.0.0",

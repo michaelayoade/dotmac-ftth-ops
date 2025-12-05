@@ -26,6 +26,7 @@ import { logger } from "@/lib/logger";
 jest.mock("@/lib/api/client", () => ({
   __esModule: true,
   default: {
+    patch: jest.fn(),
     post: jest.fn(),
     get: jest.fn(),
     delete: jest.fn(),
@@ -40,6 +41,11 @@ jest.mock("@/lib/logger", () => ({
     error: jest.fn(),
   },
 }));
+
+// Simple auth service stub for logging expectations
+const authService = {
+  updateProfile: jest.fn(),
+};
 
 const createWrapper = () => {
   const queryClient = new QueryClient({

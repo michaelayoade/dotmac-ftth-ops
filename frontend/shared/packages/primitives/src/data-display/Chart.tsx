@@ -4,21 +4,20 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
-import type React from "react";
-import { forwardRef } from "react";
+import { forwardRef, type ReactNode } from "react";
 import * as Recharts from "recharts";
 
 const ResponsiveContainer =
   Recharts.ResponsiveContainer ??
-  (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+  (({ children }: { children?: ReactNode }) => <div>{children}</div>);
 const RechartsLineChart =
-  Recharts.LineChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+  Recharts.LineChart ?? (({ children }: { children?: ReactNode }) => <div>{children}</div>);
 const RechartsBarChart =
-  Recharts.BarChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+  Recharts.BarChart ?? (({ children }: { children?: ReactNode }) => <div>{children}</div>);
 const RechartsAreaChart =
-  Recharts.AreaChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+  Recharts.AreaChart ?? (({ children }: { children?: ReactNode }) => <div>{children}</div>);
 const RechartsPieChart =
-  Recharts.PieChart ?? (({ children }: { children?: React.ReactNode }) => <div>{children}</div>);
+  Recharts.PieChart ?? (({ children }: { children?: ReactNode }) => <div>{children}</div>);
 const CartesianGrid =
   Recharts.CartesianGrid ?? (() => <div data-testid="cartesian-grid-fallback" />);
 const XAxis =

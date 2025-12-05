@@ -21,7 +21,7 @@ interface ReferralInput {
 }
 
 async function submitReferral(partnerId: string, data: ReferralInput): Promise<void> {
-  const response = await fetch(`${API_BASE}/api/isp/v1/admin/partners/referrals`, {
+  const response = await fetch(`${API_BASE}/api/isp/v1/partners/referrals`, {
     method: "POST",
     credentials: "include",
     headers: {

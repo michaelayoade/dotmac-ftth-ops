@@ -122,7 +122,7 @@ describe("usePartners", () => {
       expect(result.current.data?.partners[0].company_name).toBe("Partner Company");
       expect(result.current.data?.total).toBe(1);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners?page=1&page_size=50"),
+        expect.stringContaining("/api/isp/v1/partners?page=1&page_size=50"),
         expect.objectContaining({
           credentials: "include",
         }),
@@ -382,7 +382,7 @@ describe("usePartners", () => {
 
       expect(result.current.data).toEqual(mockPartner);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1"),
         expect.objectContaining({
           credentials: "include",
         }),
@@ -460,7 +460,7 @@ describe("usePartners", () => {
 
       expect(createdPartner).toEqual(mockCreatedPartner);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners"),
+        expect.stringContaining("/api/isp/v1/partners"),
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify(createData),
@@ -644,7 +644,7 @@ describe("usePartners", () => {
 
       expect(updatedPartner).toEqual(mockUpdatedPartner);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1"),
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify(updateData),
@@ -766,7 +766,7 @@ describe("usePartners", () => {
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1"),
         expect.objectContaining({
           method: "DELETE",
         }),
@@ -883,7 +883,7 @@ describe("usePartners", () => {
 
       expect(quotaResult).toEqual(mockQuotaResult);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1/quota/check"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1/quota/check"),
         expect.objectContaining({
           credentials: "include",
         }),
@@ -997,7 +997,7 @@ describe("usePartners", () => {
 
       expect(customerResult).toEqual(mockCustomerResult);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1/customers"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1/customers"),
         expect.objectContaining({
           method: "POST",
         }),
@@ -1127,7 +1127,7 @@ describe("usePartners", () => {
 
       expect(allocationResult).toEqual(mockAllocationResult);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1/licenses/allocate"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1/licenses/allocate"),
         expect.objectContaining({
           method: "POST",
         }),
@@ -1261,7 +1261,7 @@ describe("usePartners", () => {
 
       expect(tenantResult).toEqual(mockTenantResult);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1/tenants/provision"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1/tenants/provision"),
         expect.objectContaining({
           method: "POST",
         }),
@@ -1372,7 +1372,7 @@ describe("usePartners", () => {
 
       expect(commissionResult).toEqual(mockCommissionResult);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/partner-1/commissions"),
+        expect.stringContaining("/api/isp/v1/partners/partner-1/commissions"),
         expect.objectContaining({
           method: "POST",
         }),
@@ -1540,7 +1540,7 @@ describe("usePartners", () => {
 
       expect(onboardingResult).toEqual(mockOnboardingResult);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/isp/v1/admin/partners/onboarding/complete"),
+        expect.stringContaining("/api/isp/v1/partners/onboarding/complete"),
         expect.objectContaining({
           method: "POST",
         }),

@@ -1,13 +1,11 @@
-// @ts-nocheck
 /**
  * Advanced data table with filtering, sorting, grouping, and virtual scrolling
  */
 
+import { cva } from "class-variance-authority";
 import { clsx } from "clsx";
-import type React from "react";
-import { forwardRef, useCallback, useMemo, useState } from "react";
+import { forwardRef, useCallback, useMemo, useState, type ComponentType } from "react";
 
-import { cva, type VariantProps } from "class-variance-authority";
 
 import { type Column, DataTable } from "./Table";
 
@@ -17,7 +15,7 @@ export interface AdvancedColumn<T = Record<string, unknown>> extends Column<T> {
   filterable?: boolean;
   filterType?: "text" | "select" | "date" | "number" | "boolean" | "custom";
   filterOptions?: Array<{ label: string; value: T[keyof T] }>;
-  filterComponent?: React.ComponentType<{
+  filterComponent?: ComponentType<{
     value: T[keyof T];
     onChange: (value: T[keyof T]) => void;
     column: AdvancedColumn<T>;
@@ -37,7 +35,7 @@ export interface AdvancedColumn<T = Record<string, unknown>> extends Column<T> {
 
   // Cell editing
   editable?: boolean;
-  editComponent?: React.ComponentType<{
+  editComponent?: ComponentType<{
     value: T[keyof T];
     onChange: (value: T[keyof T]) => void;
     record: T;
@@ -530,7 +528,6 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
             type="button"
             onClick={() => onExport?.("csv")}
             className="export-button"
-            type="button"
           >
             Export CSV
           </button>
@@ -538,7 +535,6 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
             type="button"
             onClick={() => onExport?.("excel")}
             className="export-button"
-            type="button"
           >
             Export Excel
           </button>

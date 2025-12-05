@@ -8,11 +8,11 @@
  * - Type safety improvements
  *
  * Connects to backend admin settings API:
- * - GET /api/platform/v1/admin/settings/categories - List all categories
- * - GET /api/platform/v1/admin/settings/category/{category} - Get category settings
- * - PUT /api/platform/v1/admin/settings/category/{category} - Update category settings
- * - POST /api/platform/v1/admin/settings/validate - Validate settings
- * - GET /api/platform/v1/admin/settings/audit-logs - Get audit logs
+ * - GET /api/platform/v1/settings/categories - List all categories
+ * - GET /api/platform/v1/settings/category/{category} - Get category settings
+ * - PUT /api/platform/v1/settings/category/{category} - Update category settings
+ * - POST /api/platform/v1/settings/validate - Validate settings
+ * - GET /api/platform/v1/settings/audit-logs - Get audit logs
  */
 
 import {

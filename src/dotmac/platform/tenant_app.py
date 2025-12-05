@@ -75,7 +75,7 @@ def create_tenant_app() -> FastAPI:
         app,
         scope=ServiceScope.ISP,
         include_shared=True,
-        default_base_prefix="/admin",
+        default_base_prefix="",
     )
 
     logger.info(

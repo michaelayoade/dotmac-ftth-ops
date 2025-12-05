@@ -192,7 +192,6 @@ function notificationReducer(
     case "CLEANUP_EXPIRED": {
       const now = new Date();
       const notifications = state.notifications.filter((n) => !n.expiresAt || n.expiresAt > now);
-      const expiredCount = state.notifications.length - notifications.length;
       const expiredUnread = state.notifications.filter(
         (n) => n.expiresAt && n.expiresAt <= now && !n.read,
       ).length;
@@ -602,6 +601,15 @@ function NotificationItem({
         ${!notification.read ? "ring-2 ring-blue-500 ring-opacity-30" : ""}
       `}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Notification: ${notification.title}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-2 flex-1">

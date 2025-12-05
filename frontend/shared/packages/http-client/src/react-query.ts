@@ -7,9 +7,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { httpClient } from "./index";
-import type { ApiError, HttpClientConfig } from "./types";
 import { HttpClient } from "./http-client";
+import type { ApiError, HttpClientConfig } from "./types";
 
 interface RequestDescriptor<TResponse> {
   execute: () => Promise<TResponse>;

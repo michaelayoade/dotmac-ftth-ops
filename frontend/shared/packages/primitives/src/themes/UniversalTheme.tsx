@@ -5,10 +5,12 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
-import { ISPColors, ISPGradients, ISPThemeUtils } from "./ISPBrandTheme";
+
 import { cn } from "../utils/cn";
+
+import { ISPColors, ISPGradients, ISPThemeUtils } from "./ISPBrandTheme";
 
 // Extended theme configuration for all portal variants
 interface UniversalThemeConfig {
@@ -145,11 +147,11 @@ export function UniversalThemeProvider({ children, config = {} }: UniversalTheme
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  const updateConfig = (updates: Partial<UniversalThemeConfig>) => {
+  const updateConfig = useCallback((updates: Partial<UniversalThemeConfig>) => {
     setThemeConfig((prev) => ({ ...prev, ...updates }));
-  };
+  }, []);
 
-  const getThemeClasses = () => {
+  const getThemeClasses = useCallback(() => {
     return cn(
       "universal-theme",
       `theme-${themeConfig.variant}`,
@@ -159,9 +161,9 @@ export function UniversalThemeProvider({ children, config = {} }: UniversalTheme
       themeConfig.reducedMotion && "reduced-motion",
       !themeConfig.animationsEnabled && "no-animations",
     );
-  };
+  }, [themeConfig]);
 
-  const getCSSVariables = () => {
+  const getCSSVariables = useCallback(() => {
     const variables: Record<string, string> = {
       // Portal-specific colors
       "--theme-primary": portalTheme.primaryColor,
@@ -214,7 +216,7 @@ export function UniversalThemeProvider({ children, config = {} }: UniversalTheme
     };
 
     return variables;
-  };
+  }, [themeConfig, portalTheme]);
 
   // Apply CSS variables to document root
   useEffect(() => {
@@ -240,15 +242,18 @@ export function UniversalThemeProvider({ children, config = {} }: UniversalTheme
         root.style.removeProperty(property);
       });
     };
-  }, [themeConfig, portalTheme]);
+  }, [themeConfig, portalTheme, getCSSVariables, getThemeClasses]);
 
-  const contextValue = {
-    config: themeConfig,
-    portalTheme,
-    updateConfig,
-    getThemeClasses,
-    getCSSVariables,
-  };
+  const contextValue = useMemo(
+    () => ({
+      config: themeConfig,
+      portalTheme,
+      updateConfig,
+      getThemeClasses,
+      getCSSVariables,
+    }),
+    [themeConfig, portalTheme, updateConfig, getThemeClasses, getCSSVariables]
+  );
 
   return (
     <UniversalThemeContext.Provider value={contextValue}>

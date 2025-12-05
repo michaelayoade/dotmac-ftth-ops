@@ -3,6 +3,7 @@
  */
 
 import Cookies from "js-cookie";
+
 import { TenantResolver } from "../tenant-resolver";
 
 // Mock js-cookie

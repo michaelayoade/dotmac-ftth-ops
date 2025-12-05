@@ -91,7 +91,7 @@ function JobsPageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (typeFilter !== "all") params.append("job_type", typeFilter);
 
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/jobs?${params.toString()}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/jobs?${params.toString()}`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch jobs");
@@ -116,7 +116,7 @@ function JobsPageContent() {
   const { data: statsData } = useQuery({
     queryKey: ["job-statistics"],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/jobs/statistics`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/jobs/statistics`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch statistics");
@@ -136,7 +136,7 @@ function JobsPageContent() {
   // Cancel job mutation
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/jobs/${jobId}/cancel`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/jobs/${jobId}/cancel`, {
         method: "POST",
         credentials: "include",
       });

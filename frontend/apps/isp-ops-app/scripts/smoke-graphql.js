@@ -2,7 +2,7 @@
 
 // Lightweight smoke test for tenant GraphQL (customers + metrics).
 // Usage:
-//   GRAPHQL_URL=http://localhost:8000/api/isp/v1/admin/graphql \
+//   GRAPHQL_URL=http://localhost:8000/api/isp/v1/graphql \
 //   AUTH_TOKEN="Bearer <token>" \
 //   node scripts/smoke-graphql.js
 //
@@ -10,7 +10,7 @@
 
 const axios = require("axios");
 
-const GRAPHQL_URL = process.env.GRAPHQL_URL || "http://localhost:8000/api/isp/v1/admin/graphql";
+const GRAPHQL_URL = process.env.GRAPHQL_URL || "http://localhost:8000/api/isp/v1/graphql";
 const AUTH_TOKEN = process.env.AUTH_TOKEN || process.env.BEARER_TOKEN || "";
 const CUSTOMER_ID = process.env.CUSTOMER_ID;
 

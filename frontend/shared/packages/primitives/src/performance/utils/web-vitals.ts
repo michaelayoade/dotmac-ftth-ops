@@ -13,14 +13,12 @@ export interface Metric {
 
 export type ReportCallback = (metric: Metric) => void;
 
-let supportsPerfNow = false;
 let supportsPerformanceObserver = false;
 
 // Feature detection
 try {
-  supportsPerfNow = typeof performance !== "undefined" && typeof performance.now === "function";
   supportsPerformanceObserver = typeof PerformanceObserver !== "undefined";
-} catch (e) {
+} catch {
   // Ignore errors in environments where these APIs don't exist
 }
 
@@ -32,13 +30,6 @@ function generateUniqueID(): string {
 }
 
 /**
- * Get the current timestamp
- */
-function now(): number {
-  return supportsPerfNow ? performance.now() : Date.now();
-}
-
-/**
  * Cumulative Layout Shift (CLS)
  * Measures visual stability
  */
@@ -46,10 +37,9 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
   if (!supportsPerformanceObserver) return;
 
   let clsValue = 0;
-  let clsEntries: PerformanceEntry[] = [];
   let sessionValue = 0;
   let sessionEntries: PerformanceEntry[] = [];
-  let reportedMetricIDs: { [key: string]: boolean } = {};
+  const reportedMetricIDs: { [key: string]: boolean } = {};
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
@@ -78,10 +68,9 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
         }
 
         // If the current session value is larger than the current CLS value,
-        // update CLS and the entries contributing to it.
+        // update CLS.
         if (sessionValue > clsValue) {
           clsValue = sessionValue;
-          clsEntries = [...sessionEntries];
 
           const id = generateUniqueID();
           const metric: Metric = {
@@ -103,7 +92,7 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
 
   try {
     observer.observe({ type: "layout-shift", buffered: true });
-  } catch (e) {
+  } catch {
     // Silently fail if layout-shift is not supported
   }
 
@@ -153,7 +142,7 @@ export function getFCP(onReport: ReportCallback): void {
 
   try {
     observer.observe({ type: "paint", buffered: true });
-  } catch (e) {
+  } catch {
     // Paint timing not supported
   }
 }
@@ -188,7 +177,7 @@ export function getFID(onReport: ReportCallback): void {
 
   try {
     observer.observe({ type: "first-input", buffered: true });
-  } catch (e) {
+  } catch {
     // First input timing not supported
   }
 }
@@ -201,7 +190,7 @@ export function getLCP(onReport: ReportCallback, reportAllChanges = false): void
   if (!supportsPerformanceObserver) return;
 
   let lcpValue = 0;
-  let reportedMetricIDs: { [key: string]: boolean } = {};
+  const reportedMetricIDs: { [key: string]: boolean } = {};
 
   const observer = new PerformanceObserver((list) => {
     const lastEntry = list.getEntries().pop() as any;
@@ -225,7 +214,7 @@ export function getLCP(onReport: ReportCallback, reportAllChanges = false): void
 
   try {
     observer.observe({ type: "largest-contentful-paint", buffered: true });
-  } catch (e) {
+  } catch {
     // LCP not supported
   }
 

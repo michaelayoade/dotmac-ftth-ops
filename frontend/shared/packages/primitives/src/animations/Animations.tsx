@@ -5,9 +5,9 @@
 
 "use client";
 
-import { motion, AnimatePresence, useInView, useAnimation } from "framer-motion";
-import type { HTMLMotionProps } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { motion, useInView, type HTMLMotionProps } from "framer-motion";
+import { useRef } from "react";
+
 import { cn } from "../utils/cn";
 
 // Fade in animation variants

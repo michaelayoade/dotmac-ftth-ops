@@ -62,7 +62,7 @@ function PluginsPageContent() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["plugin-instances", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/plugins/instances`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/plugins/instances`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch plugin instances");
@@ -128,7 +128,7 @@ function PluginsPageContent() {
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/plugins/instances/${pluginId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/plugins/instances/${pluginId}`, {
         method: "DELETE",
         credentials: "include",
       });

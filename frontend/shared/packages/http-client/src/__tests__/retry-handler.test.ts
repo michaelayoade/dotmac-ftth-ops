@@ -1,5 +1,5 @@
-import { RetryHandler } from "../retry-handler";
 import { ErrorNormalizer } from "../error-normalizer";
+import { RetryHandler } from "../retry-handler";
 
 // Mock timers for testing delays
 jest.useFakeTimers();

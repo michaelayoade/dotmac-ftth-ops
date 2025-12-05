@@ -399,7 +399,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/platform/v1/admin/deployment/stats": {
+  "/api/platform/v1/deployment/stats": {
     parameters: {
       query?: never;
       header?: never;
@@ -438,7 +438,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/platform/v1/admin/deployment/stats/templates": {
+  "/api/platform/v1/deployment/stats/templates": {
     parameters: {
       query?: never;
       header?: never;
@@ -474,7 +474,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/platform/v1/admin/deployment/stats/resources": {
+  "/api/platform/v1/deployment/stats/resources": {
     parameters: {
       query?: never;
       header?: never;

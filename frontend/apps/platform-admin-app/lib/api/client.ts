@@ -16,7 +16,7 @@ import axios, {
 import { platformConfig } from "@/lib/config";
 import { setupRefreshInterceptor, defaultAuthFailureHandler } from "@shared/lib/auth";
 
-const DEFAULT_API_PREFIX = "/api/platform/v1/admin";
+const DEFAULT_API_PREFIX = "/api/platform/v1";
 
 const resolveBaseUrl = (): string => {
   const base = platformConfig.api.baseUrl;

@@ -123,6 +123,10 @@ export interface PartnerPayoutRecord {
 }
 
 type BuildApiUrl = PlatformConfig["api"]["buildUrl"];
+const PARTNER_PORTAL_PREFIX = "/api/isp/v1/partners/portal";
+
+const buildPortalUrl = (buildUrl: BuildApiUrl, path: string) =>
+  buildUrl(`${PARTNER_PORTAL_PREFIX}${path}`, { skipPrefix: true });
 
 function normaliseDecimal(value: unknown): number {
   if (typeof value === "number") {
@@ -140,7 +144,7 @@ function normaliseDecimal(value: unknown): number {
 
 // API Functions
 async function fetchPartnerDashboard(buildUrl: BuildApiUrl): Promise<PartnerDashboardStats> {
-  const response = await fetch(buildUrl("/partners/portal/dashboard"), {
+  const response = await fetch(buildPortalUrl(buildUrl, "/dashboard"), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -155,7 +159,7 @@ async function fetchPartnerDashboard(buildUrl: BuildApiUrl): Promise<PartnerDash
 }
 
 async function fetchPartnerProfile(buildUrl: BuildApiUrl): Promise<PartnerProfile> {
-  const response = await fetch(buildUrl("/partners/portal/profile"), {
+  const response = await fetch(buildPortalUrl(buildUrl, "/profile"), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -173,7 +177,7 @@ async function updatePartnerProfile(
   buildUrl: BuildApiUrl,
   data: Partial<PartnerProfile>,
 ): Promise<PartnerProfile> {
-  const response = await fetch(buildUrl("/partners/portal/profile"), {
+  const response = await fetch(buildPortalUrl(buildUrl, "/profile"), {
     method: "PATCH",
     credentials: "include",
     headers: {
@@ -199,8 +203,9 @@ async function fetchPartnerReferrals(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = buildUrl(
-    `/partners/portal/referrals${params.toString() ? `?${params.toString()}` : ""}`,
+  const url = buildPortalUrl(
+    buildUrl,
+    `/referrals${params.toString() ? `?${params.toString()}` : ""}`,
   );
   const response = await fetch(url, {
     credentials: "include",
@@ -227,7 +232,7 @@ async function submitReferral(
     notes?: string;
   },
 ): Promise<PartnerReferral> {
-  const response = await fetch(buildUrl("/partners/portal/referrals"), {
+  const response = await fetch(buildPortalUrl(buildUrl, "/referrals"), {
     method: "POST",
     credentials: "include",
     headers: {
@@ -253,8 +258,9 @@ async function fetchPartnerCommissions(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = buildUrl(
-    `/partners/portal/commissions${params.toString() ? `?${params.toString()}` : ""}`,
+  const url = buildPortalUrl(
+    buildUrl,
+    `/commissions${params.toString() ? `?${params.toString()}` : ""}`,
   );
   const response = await fetch(url, {
     credentials: "include",
@@ -279,8 +285,9 @@ async function fetchPartnerCustomers(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = buildUrl(
-    `/partners/portal/customers${params.toString() ? `?${params.toString()}` : ""}`,
+  const url = buildPortalUrl(
+    buildUrl,
+    `/customers${params.toString() ? `?${params.toString()}` : ""}`,
   );
   const response = await fetch(url, {
     credentials: "include",
@@ -305,8 +312,9 @@ async function fetchPartnerStatements(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = buildUrl(
-    `/partners/portal/statements${params.toString() ? `?${params.toString()}` : ""}`,
+  const url = buildPortalUrl(
+    buildUrl,
+    `/statements${params.toString() ? `?${params.toString()}` : ""}`,
   );
   const response = await fetch(url, {
     credentials: "include",
@@ -347,8 +355,9 @@ async function fetchPartnerPayoutHistory(
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
 
-  const url = buildUrl(
-    `/partners/portal/payouts${params.toString() ? `?${params.toString()}` : ""}`,
+  const url = buildPortalUrl(
+    buildUrl,
+    `/payouts${params.toString() ? `?${params.toString()}` : ""}`,
   );
   const response = await fetch(url, {
     credentials: "include",

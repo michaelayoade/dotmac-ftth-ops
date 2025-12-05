@@ -349,7 +349,7 @@ export class ManagementApiClient extends BaseApiClient {
     if (cached) return cached;
 
     const config: RequestConfig = { params: filters };
-    const result = await this.get<EntityListResponse<T>>(`/api/platform/v1/admin/entities/${entityType}`, config);
+    const result = await this.get<EntityListResponse<T>>(`/api/platform/v1/entities/${entityType}`, config);
 
     this.setCache(cacheKey, result);
     return result;
@@ -362,7 +362,7 @@ export class ManagementApiClient extends BaseApiClient {
     const cached = this.getFromCache<T>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.get<T>(`/api/platform/v1/admin/entities/${entityType}/${entityId}`);
+    const result = await this.get<T>(`/api/platform/v1/entities/${entityType}/${entityId}`);
 
     this.setCache(cacheKey, result);
     return result;
@@ -374,7 +374,7 @@ export class ManagementApiClient extends BaseApiClient {
     await this.checkRateLimit();
 
     try {
-      const result = await this.post<EntityOperationResult<T>>("/api/platform/v1/admin/entities", request);
+      const result = await this.post<EntityOperationResult<T>>("/api/platform/v1/entities", request);
 
       // Invalidate related caches
       this.invalidateCache(`entities/${request.entity_type}`);
@@ -398,7 +398,7 @@ export class ManagementApiClient extends BaseApiClient {
 
     try {
       const result = await this.put<EntityOperationResult<T>>(
-        `/api/platform/v1/admin/entities/${entityType}/${entityId}`,
+        `/api/platform/v1/entities/${entityType}/${entityId}`,
         request,
       );
 
@@ -420,7 +420,7 @@ export class ManagementApiClient extends BaseApiClient {
     await this.checkRateLimit();
 
     try {
-      await this.delete(`/api/platform/v1/admin/entities/${entityType}/${entityId}`);
+      await this.delete(`/api/platform/v1/entities/${entityType}/${entityId}`);
 
       // Invalidate related caches
       this.invalidateCache(`entities/${entityType}`);
@@ -449,7 +449,7 @@ export class ManagementApiClient extends BaseApiClient {
     if (cached) return cached;
 
     const config: RequestConfig = { params: period };
-    const result = await this.get<BillingData>(`/api/isp/v1/admin/billing/${entityId}`, config);
+    const result = await this.get<BillingData>(`/api/isp/v1/billing/${entityId}`, config);
 
     this.setCache(cacheKey, result, 600); // Cache for 10 minutes
     return result;
@@ -458,7 +458,7 @@ export class ManagementApiClient extends BaseApiClient {
   async processPayment(entityId: string, amount: number, paymentData: any): Promise<PaymentResult> {
     await this.checkRateLimit();
 
-    const result = await this.post<PaymentResult>(`/api/isp/v1/admin/billing/${entityId}/payments`, {
+    const result = await this.post<PaymentResult>(`/api/isp/v1/billing/${entityId}/payments`, {
       amount,
       ...paymentData,
     });
@@ -472,7 +472,7 @@ export class ManagementApiClient extends BaseApiClient {
   async generateInvoice(entityId: string, services: any[], options: any = {}): Promise<Invoice> {
     await this.checkRateLimit();
 
-    const result = await this.post<Invoice>(`/api/isp/v1/admin/billing/${entityId}/invoices`, {
+    const result = await this.post<Invoice>(`/api/isp/v1/billing/${entityId}/invoices`, {
       services,
       ...options,
     });
@@ -491,7 +491,7 @@ export class ManagementApiClient extends BaseApiClient {
     if (cached) return cached;
 
     const config: RequestConfig = { params: filters };
-    const result = await this.get<Invoice[]>(`/api/isp/v1/admin/billing/${entityId}/invoices`, config);
+    const result = await this.get<Invoice[]>(`/api/isp/v1/billing/${entityId}/invoices`, config);
 
     this.setCache(cacheKey, result, 300); // Cache for 5 minutes
     return result;
@@ -512,7 +512,7 @@ export class ManagementApiClient extends BaseApiClient {
     const config: RequestConfig = {
       params: { timeframe, entity_type: entityType },
     };
-    const result = await this.get<DashboardStats>("/api/isp/v1/admin/analytics/dashboard", config);
+    const result = await this.get<DashboardStats>("/api/isp/v1/analytics/dashboard", config);
 
     this.setCache(cacheKey, result, 600); // Cache for 10 minutes
     return result;
@@ -526,7 +526,7 @@ export class ManagementApiClient extends BaseApiClient {
     if (cached) return cached;
 
     const config: RequestConfig = { params: period };
-    const result = await this.get<UsageMetrics>(`/api/isp/v1/admin/analytics/usage/${entityId}`, config);
+    const result = await this.get<UsageMetrics>(`/api/isp/v1/analytics/usage/${entityId}`, config);
 
     this.setCache(cacheKey, result, 300); // Cache for 5 minutes
     return result;
@@ -535,7 +535,7 @@ export class ManagementApiClient extends BaseApiClient {
   async generateReport(type: ReportType, params: ReportParams): Promise<Report> {
     await this.checkRateLimit();
 
-    const result = await this.post<Report>("/api/isp/v1/admin/reports/generate", {
+    const result = await this.post<Report>("/api/isp/v1/reports/generate", {
       type,
       parameters: params,
     });
@@ -551,7 +551,7 @@ export class ManagementApiClient extends BaseApiClient {
     const cached = this.getFromCache<Report>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.get<Report>(`/api/isp/v1/admin/reports/${reportId}`);
+    const result = await this.get<Report>(`/api/isp/v1/reports/${reportId}`);
 
     this.setCache(cacheKey, result, 3600); // Cache for 1 hour
     return result;
@@ -560,7 +560,7 @@ export class ManagementApiClient extends BaseApiClient {
   async downloadReport(reportId: string): Promise<Blob> {
     await this.checkRateLimit();
 
-    const result = await this.get<Blob>(`/api/isp/v1/admin/reports/${reportId}/download`, {
+    const result = await this.get<Blob>(`/api/isp/v1/reports/${reportId}/download`, {
       headers: { Accept: "application/octet-stream" },
     });
 

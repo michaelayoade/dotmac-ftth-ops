@@ -1,11 +1,11 @@
+/* eslint-disable react/sort-comp */
 /**
  * Error Boundary for graceful component failure handling
  */
 
 "use client";
 
-import React, { Component } from "react";
-import type { ErrorInfo, ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -178,7 +178,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   override render() {
-    const { children, fallback, isolate } = this.props;
+    const { children, fallback, isolate: _isolate } = this.props;
     const { hasError, error, errorId } = this.state;
 
     if (hasError && error) {

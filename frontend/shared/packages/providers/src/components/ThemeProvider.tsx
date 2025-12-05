@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import type { PortalType } from "../UniversalProviders";
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 
 export function ThemeProvider({ children, portal }: Props) {
   // Map portal to theme variant; keep minimal for now
-  const variant =
+  const _variant =
     portal === "admin" || portal === "management"
       ? "management"
       : portal === "reseller"

@@ -70,7 +70,7 @@ export function useLicenseCheck(module?: string, feature?: string) {
       setIsLoading(true);
 
       try {
-        const response = await fetch("/api/platform/v1/admin/licensing/check", {
+        const response = await fetch("/api/platform/v1/licensing/check", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

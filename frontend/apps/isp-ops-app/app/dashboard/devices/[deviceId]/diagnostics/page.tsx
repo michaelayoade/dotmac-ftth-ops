@@ -57,7 +57,7 @@ function DiagnosticsPageContent() {
   const pingMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/diagnostics/ping`,
+        `${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}/diagnostics/ping`,
         {
           method: "POST",
           credentials: "include",
@@ -81,7 +81,7 @@ function DiagnosticsPageContent() {
   const tracerouteMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/diagnostics/traceroute`,
+        `${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}/diagnostics/traceroute`,
         {
           method: "POST",
           credentials: "include",
@@ -105,7 +105,7 @@ function DiagnosticsPageContent() {
   const dnsLookupMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/diagnostics/dns`,
+        `${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}/diagnostics/dns`,
         {
           method: "POST",
           credentials: "include",
@@ -129,7 +129,7 @@ function DiagnosticsPageContent() {
   const speedTestMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/isp/v1/admin/genieacs/devices/${deviceId}/diagnostics/speedtest`,
+        `${apiBaseUrl}/api/isp/v1/genieacs/devices/${deviceId}/diagnostics/speedtest`,
         {
           method: "POST",
           credentials: "include",

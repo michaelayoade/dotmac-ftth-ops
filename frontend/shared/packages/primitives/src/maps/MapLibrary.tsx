@@ -19,10 +19,11 @@ export interface ServiceCoverageMapProps extends Omit<UniversalMapProps, "type" 
 export function ServiceCoverageMap({
   serviceAreas,
   showCoverageHeatmap = false,
-  showCustomerDensity = false,
+  showCustomerDensity: _showCustomerDensity = false,
   onServiceAreaSelect,
   ...props
 }: ServiceCoverageMapProps) {
+  void _showCustomerDensity;
   return (
     <UniversalMap
       {...props}
@@ -45,11 +46,13 @@ export interface NetworkTopologyMapProps extends Omit<UniversalMapProps, "type" 
 
 export function NetworkTopologyMap({
   networkNodes,
-  showConnections = true,
-  showMetrics = false,
+  showConnections: _showConnections = true,
+  showMetrics: _showMetrics = false,
   onNodeSelect,
   ...props
 }: NetworkTopologyMapProps) {
+  void _showConnections;
+  void _showMetrics;
   return (
     <UniversalMap
       {...props}

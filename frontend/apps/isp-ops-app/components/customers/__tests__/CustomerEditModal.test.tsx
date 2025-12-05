@@ -5,8 +5,11 @@
  */
 
 import React from "react";
-import { renderQuick, screen } from "@dotmac/testing";
+import { render, screen } from "@testing-library/react";
 import { CustomerEditModal } from "../CustomerEditModal";
+
+// Simple render wrapper for fast tests
+const renderQuick = render;
 
 // Mock the shared component
 const mockSharedModal = jest.fn();

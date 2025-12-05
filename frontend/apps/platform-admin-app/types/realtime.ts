@@ -271,12 +271,12 @@ export interface EventSubscription {
 // ============================================================================
 
 export enum RealtimeChannel {
-  ONU_STATUS = "/api/platform/v1/admin/realtime/onu-status",
-  ALERTS = "/api/platform/v1/admin/realtime/alerts",
-  TICKETS = "/api/platform/v1/admin/realtime/tickets",
-  SUBSCRIBERS = "/api/platform/v1/admin/realtime/subscribers",
-  WS_JOB = "/api/platform/v1/admin/realtime/ws/jobs",
-  WS_CAMPAIGN = "/api/platform/v1/admin/realtime/ws/campaigns",
+  ONU_STATUS = "/api/platform/v1/realtime/onu-status",
+  ALERTS = "/api/platform/v1/realtime/alerts",
+  TICKETS = "/api/platform/v1/realtime/tickets",
+  SUBSCRIBERS = "/api/platform/v1/realtime/subscribers",
+  WS_JOB = "/api/platform/v1/realtime/ws/jobs",
+  WS_CAMPAIGN = "/api/platform/v1/realtime/ws/campaigns",
 }
 
 // ============================================================================

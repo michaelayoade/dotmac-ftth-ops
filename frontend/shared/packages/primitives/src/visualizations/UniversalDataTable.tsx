@@ -2,10 +2,9 @@
  * Universal Data Table Component
  * Advanced data table with sorting, filtering, pagination, and export capabilities
  */
-
 "use client";
+/* eslint-disable no-case-declarations */
 
-import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronUp,
@@ -22,6 +21,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
+import React, { useState, useMemo, useCallback } from "react";
+
 import { cn } from "../utils/cn";
 
 export interface TableColumn<T = any> {

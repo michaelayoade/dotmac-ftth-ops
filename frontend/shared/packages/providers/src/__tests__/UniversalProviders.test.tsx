@@ -1,14 +1,18 @@
 /**
  * @jest-environment jsdom
  */
-import React from "react";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
-import { UniversalProviders } from "../UniversalProviders";
-// Note: AuthVariant removed - Better Auth configured at app level
-import type { PortalType, FeatureFlags, TenantVariant } from "../UniversalProviders";
+import React from "react";
+
+import {
+  UniversalProviders,
+  type PortalType,
+  type FeatureFlags,
+  type TenantVariant,
+} from "../UniversalProviders";
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);

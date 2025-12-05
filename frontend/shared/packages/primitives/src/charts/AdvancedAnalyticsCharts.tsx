@@ -15,7 +15,6 @@
 
 import React, { useMemo, useCallback, useState, useEffect } from "react";
 import {
-  LineChart,
   Line,
   AreaChart,
   Area,
@@ -33,7 +32,6 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
-  ReferenceLine,
   Brush,
 } from "recharts";
 
@@ -184,6 +182,7 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
 }) => {
   const [activeChart, setActiveChart] = useState<string>("revenue");
   const [isRealTime, setIsRealTime] = useState(false);
+  const [selectedRange, setSelectedRange] = useState("30d");
 
   // Auto-refresh data
   useEffect(() => {
@@ -196,6 +195,12 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
 
     return () => clearInterval(interval);
   }, [isRealTime, refreshInterval]);
+
+  useEffect(() => {
+    if (dateRange?.start && dateRange?.end) {
+      setSelectedRange("custom");
+    }
+  }, [dateRange]);
 
   // Revenue trend analysis
   const revenueAnalysis = useMemo(() => {
@@ -210,7 +215,7 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
     return {
       total: totalRevenue,
       average: avgRevenue,
-      growth: growth,
+      growth,
       trend: growth > 0 ? "up" : growth < 0 ? "down" : "stable",
     };
   }, [timeSeriesData]);
@@ -230,6 +235,41 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
       retention: 1 - avgChurn,
     };
   }, [timeSeriesData]);
+
+  const handleDateRangeChange = useCallback(
+    (range: string) => {
+      setSelectedRange(range);
+      if (!onDateRangeChange) {
+        return;
+      }
+
+      const end = new Date();
+      const start = new Date(end);
+
+      switch (range) {
+        case "7d":
+          start.setDate(end.getDate() - 7);
+          break;
+        case "30d":
+          start.setDate(end.getDate() - 30);
+          break;
+        case "90d":
+          start.setDate(end.getDate() - 90);
+          break;
+        case "1y":
+          start.setFullYear(end.getFullYear() - 1);
+          break;
+        default:
+          return;
+      }
+
+      onDateRangeChange({
+        start: start.toISOString(),
+        end: end.toISOString(),
+      });
+    },
+    [onDateRangeChange],
+  );
 
   const handleChartSwitch = useCallback((chartType: string) => {
     setActiveChart(chartType);
@@ -264,16 +304,15 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
 
             <select
               className="date-range-select"
-              onChange={(e) => {
-                const range = e.target.value;
-                // Handle date range change
-                console.log("Date range changed:", range);
-              }}
+              value={selectedRange}
+              aria-label="Select a date range"
+              onChange={(e) => handleDateRangeChange(e.target.value)}
             >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
               <option value="90d">Last 3 months</option>
               <option value="1y">Last year</option>
+              <option value="custom">Custom range</option>
             </select>
           </div>
         </div>
@@ -358,21 +397,21 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
 
             <div className="analysis-panel">
               <h4>Revenue Analysis</h4>
-              {revenueAnalysis && (
-                <div className="analysis-stats">
-                  <div className="stat">
-                    <label>Total Revenue</label>
-                    <span className="value">{formatCurrency(revenueAnalysis.total)}</span>
-                  </div>
-                  <div className="stat">
-                    <label>Average</label>
-                    <span className="value">{formatCurrency(revenueAnalysis.average)}</span>
-                  </div>
-                  <div className="stat">
-                    <label>Growth</label>
-                    <span
-                      className={`value ${revenueAnalysis.growth > 0 ? "positive" : "negative"}`}
-                    >
+                  {revenueAnalysis && (
+                    <div className="analysis-stats">
+                      <div className="stat">
+                        <span className="label">Total Revenue</span>
+                        <span className="value">{formatCurrency(revenueAnalysis.total)}</span>
+                      </div>
+                      <div className="stat">
+                        <span className="label">Average</span>
+                        <span className="value">{formatCurrency(revenueAnalysis.average)}</span>
+                      </div>
+                      <div className="stat">
+                        <span className="label">Growth</span>
+                        <span
+                          className={`value ${revenueAnalysis.growth > 0 ? "positive" : "negative"}`}
+                        >
                       {revenueAnalysis.growth.toFixed(1)}%
                     </span>
                   </div>
@@ -435,27 +474,27 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
 
             <div className="customer-metrics">
               <h4>Customer Metrics</h4>
-              {customerAnalysis && (
-                <div className="metrics-grid">
-                  <div className="metric-item">
-                    <label>Total Customers</label>
-                    <span className="value">{formatNumber(customerAnalysis.total)}</span>
-                  </div>
-                  <div className="metric-item">
-                    <label>Churn Rate</label>
-                    <span className="value warning">
-                      {formatPercent(customerAnalysis.churnRate)}
-                    </span>
-                  </div>
-                  <div className="metric-item">
-                    <label>ARPU</label>
-                    <span className="value">{formatCurrency(customerAnalysis.arpu)}</span>
-                  </div>
-                  <div className="metric-item">
-                    <label>Retention</label>
-                    <span className="value success">
-                      {formatPercent(customerAnalysis.retention)}
-                    </span>
+                  {customerAnalysis && (
+                    <div className="metrics-grid">
+                      <div className="metric-item">
+                        <span className="label">Total Customers</span>
+                        <span className="value">{formatNumber(customerAnalysis.total)}</span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="label">Churn Rate</span>
+                        <span className="value warning">
+                          {formatPercent(customerAnalysis.churnRate)}
+                        </span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="label">ARPU</span>
+                        <span className="value">{formatCurrency(customerAnalysis.arpu)}</span>
+                      </div>
+                      <div className="metric-item">
+                        <span className="label">Retention</span>
+                        <span className="value success">
+                          {formatPercent(customerAnalysis.retention)}
+                        </span>
                   </div>
                 </div>
               )}
@@ -511,7 +550,7 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
                   <XAxis dataKey="longitude" name="Longitude" />
                   <YAxis dataKey="latitude" name="Latitude" />
                   <Tooltip
-                    formatter={(value, name, props) => [
+                    formatter={(value, name, _props) => [
                       name === "customers"
                         ? formatNumber(value as number)
                         : name === "revenue"

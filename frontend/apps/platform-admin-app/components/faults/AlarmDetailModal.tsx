@@ -34,16 +34,16 @@ export function AlarmDetailModal(props: AlarmDetailModalProps) {
       setIsLoading(true);
       try {
         // Fetch history
-        const historyResponse = await apiClient.get(`/api/platform/v1/admin/faults/alarms/${alarmId}/history`);
+        const historyResponse = await apiClient.get(`/api/platform/v1/faults/alarms/${alarmId}/history`);
         setHistory(historyResponse.data || []);
 
         // Fetch notes
-        const notesResponse = await apiClient.get(`/api/platform/v1/admin/faults/alarms/${alarmId}/notes`);
+        const notesResponse = await apiClient.get(`/api/platform/v1/faults/alarms/${alarmId}/notes`);
         setNotes(notesResponse.data || []);
 
         // Fetch related tickets if ticket_id exists
         if (alarm.ticket_id) {
-          const ticketResponse = await apiClient.get(`/api/isp/v1/admin/tickets/${alarm.ticket_id}`);
+          const ticketResponse = await apiClient.get(`/api/isp/v1/tickets/${alarm.ticket_id}`);
           setRelatedTickets([ticketResponse.data]);
         }
       } catch (error) {
@@ -56,7 +56,7 @@ export function AlarmDetailModal(props: AlarmDetailModalProps) {
   );
 
   const handleAcknowledge = async (alarmId: string) => {
-    await apiClient.post(`/api/platform/v1/admin/faults/alarms/${alarmId}/acknowledge`, {
+    await apiClient.post(`/api/platform/v1/faults/alarms/${alarmId}/acknowledge`, {
       note: "Acknowledged from detail view",
     });
     props.onUpdate?.();
@@ -64,7 +64,7 @@ export function AlarmDetailModal(props: AlarmDetailModalProps) {
   };
 
   const handleClear = async (alarmId: string) => {
-    await apiClient.post(`/api/platform/v1/admin/faults/alarms/${alarmId}/clear`, {});
+    await apiClient.post(`/api/platform/v1/faults/alarms/${alarmId}/clear`, {});
     props.onUpdate?.();
     fetchAlarmDetails(alarmId);
   };
@@ -72,7 +72,7 @@ export function AlarmDetailModal(props: AlarmDetailModalProps) {
   const handleCreateTicket = async (alarmId: string) => {
     if (!alarm) return;
 
-    await apiClient.post(`/api/platform/v1/admin/faults/alarms/${alarmId}/create-ticket`, {
+    await apiClient.post(`/api/platform/v1/faults/alarms/${alarmId}/create-ticket`, {
       priority: alarm.severity === "critical" ? "urgent" : "normal",
     });
     props.onUpdate?.();
@@ -80,7 +80,7 @@ export function AlarmDetailModal(props: AlarmDetailModalProps) {
   };
 
   const handleAddNote = async (alarmId: string, content: string) => {
-    await apiClient.post(`/api/platform/v1/admin/faults/alarms/${alarmId}/notes`, {
+    await apiClient.post(`/api/platform/v1/faults/alarms/${alarmId}/notes`, {
       content,
     });
     fetchAlarmDetails(alarmId);

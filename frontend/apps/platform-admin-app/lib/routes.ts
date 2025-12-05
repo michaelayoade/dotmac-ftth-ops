@@ -109,24 +109,24 @@ export const ROUTES = {
  * API route constants
  */
 export const API_ROUTES = {
-  BASE: "/api/platform/v1/admin",
+  BASE: "/api/platform/v1",
   AUTH: {
-    LOGIN: "/api/platform/v1/admin/auth/login",
-    LOGOUT: "/api/platform/v1/admin/auth/logout",
-    REGISTER: "/api/platform/v1/admin/auth/register",
-    REFRESH: "/api/platform/v1/admin/auth/refresh",
-    ME: "/api/platform/v1/admin/auth/me",
+    LOGIN: "/api/platform/v1/auth/login",
+    LOGOUT: "/api/platform/v1/auth/logout",
+    REGISTER: "/api/platform/v1/auth/register",
+    REFRESH: "/api/platform/v1/auth/refresh",
+    ME: "/api/platform/v1/auth/me",
   },
-  CUSTOMERS: "/api/platform/v1/admin/customers",
-  BILLING: "/api/platform/v1/admin/billing",
-  NETWORK: "/api/platform/v1/admin/network",
-  GENIEACS: "/api/platform/v1/admin/genieacs",
-  ACCESS: "/api/platform/v1/admin/access",
-  WEBHOOKS: "/api/platform/v1/admin/webhooks",
-  INTEGRATIONS: "/api/platform/v1/admin/integrations",
-  JOBS: "/api/platform/v1/admin/jobs",
-  HEALTH: "/api/platform/v1/admin/health",
-  READY: "/api/platform/v1/admin/ready",
+  CUSTOMERS: "/api/platform/v1/customers",
+  BILLING: "/api/platform/v1/billing",
+  NETWORK: "/api/platform/v1/network",
+  GENIEACS: "/api/platform/v1/genieacs",
+  ACCESS: "/api/platform/v1/access",
+  WEBHOOKS: "/api/platform/v1/webhooks",
+  INTEGRATIONS: "/api/platform/v1/integrations",
+  JOBS: "/api/platform/v1/jobs",
+  HEALTH: "/api/platform/v1/health",
+  READY: "/api/platform/v1/ready",
 } as const;
 
 /**

@@ -387,6 +387,7 @@ export class ThemeConfigLoader {
     return theme;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static async loadFromAPI(options: any): Promise<BrandTheme> {
     if (!options.apiEndpoint) {
       throw new Error("API endpoint required for API theme loading");
@@ -413,6 +414,7 @@ export class ThemeConfigLoader {
     return generateThemeFromConfig(options.fallbackConfig || commonISPThemes.genericISP);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   private static loadFromEnvironment(options: any): BrandTheme {
     const config: ThemeConfig = {
       brandColor: process.env["REACT_APP_BRAND_COLOR"] || "#1e40af",
@@ -432,9 +434,11 @@ export class ThemeConfigLoader {
     return generateThemeFromConfig(config);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static loadFromLocalConfig(options: any): BrandTheme {
     // Try to load from local configuration file or use fallback
     const configName = options.tenantId || "default";
+    // eslint-disable-next-line no-restricted-globals
     const storedConfig = localStorage.getItem(`theme-config-${configName}`);
 
     if (storedConfig) {

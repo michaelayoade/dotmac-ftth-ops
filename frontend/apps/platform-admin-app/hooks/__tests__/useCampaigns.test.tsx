@@ -495,7 +495,7 @@ describe("useUpdateCampaign", () => {
       });
 
       expect(mutationResult).toEqual(updatedCampaign);
-      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/admin/billing/dunning/campaigns/campaign-1", {
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/billing/dunning/campaigns/campaign-1", {
         is_active: false,
       });
       expect(extractDataOrThrow).toHaveBeenCalledWith({ data: updatedCampaign });
@@ -518,7 +518,7 @@ describe("useUpdateCampaign", () => {
       });
 
       expect(mutationResult).toEqual(updatedCampaign);
-      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/admin/billing/dunning/campaigns/campaign-1", {
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/billing/dunning/campaigns/campaign-1", {
         priority: 5,
       });
     });
@@ -538,7 +538,7 @@ describe("useUpdateCampaign", () => {
         });
       });
 
-      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/admin/billing/dunning/campaigns/campaign-1", {
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/billing/dunning/campaigns/campaign-1", {
         is_active: false,
         priority: 3,
       });
@@ -559,7 +559,7 @@ describe("useUpdateCampaign", () => {
         });
       });
 
-      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/admin/billing/dunning/campaigns/campaign-1", {
+      expect(apiClient.patch).toHaveBeenCalledWith("/api/isp/v1/billing/dunning/campaigns/campaign-1", {
         is_active: true,
         custom_field: "value",
       });
@@ -723,7 +723,7 @@ describe("useUpdateCampaign", () => {
       });
 
       expect(apiClient.patch).toHaveBeenCalledWith(
-        "/api/isp/v1/admin/billing/dunning/campaigns/test-campaign-123",
+        "/api/isp/v1/billing/dunning/campaigns/test-campaign-123",
         { is_active: true },
       );
     });
@@ -743,7 +743,7 @@ describe("useUpdateCampaign", () => {
       });
 
       expect(apiClient.patch).toHaveBeenCalledWith(
-        "/api/isp/v1/admin/billing/dunning/campaigns/campaign-uuid-abc-123",
+        "/api/isp/v1/billing/dunning/campaigns/campaign-uuid-abc-123",
         { priority: 2 },
       );
     });

@@ -2,7 +2,8 @@
  * Toast Components for Notifications
  */
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+
 import { cn } from "../utils/cn";
 
 // Types
@@ -29,6 +30,10 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
   const addToast = useCallback((toast: Omit<ToastProps, "id">) => {
     const id = Math.random().toString(36).substring(2, 9);
     const newToast = { ...toast, id };
@@ -43,18 +48,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     return id;
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
+  }, [removeToast]);
 
   const clearToasts = useCallback(() => {
     setToasts([]);
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ toasts, addToast, removeToast, clearToasts }),
+    [toasts, addToast, removeToast, clearToasts]
+  );
+
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast, clearToasts }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <ToastViewport />
     </ToastContext.Provider>

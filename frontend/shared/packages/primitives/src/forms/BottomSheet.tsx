@@ -2,8 +2,8 @@
  * BottomSheet - A modal that slides up from the bottom
  */
 
-import * as React from "react";
 import { clsx } from "clsx";
+import * as React from "react";
 
 export interface BottomSheetProps {
   children: React.ReactNode;
@@ -14,8 +14,6 @@ export interface BottomSheetProps {
 
 export const BottomSheet = React.forwardRef<HTMLDivElement, BottomSheetProps>(
   ({ children, isOpen, onClose, className }, ref) => {
-    const overlayRef = React.useRef<HTMLDivElement>(null);
-
     // Handle escape key
     React.useEffect(() => {
       const handleEscape = (e: KeyboardEvent) => {
@@ -36,31 +34,28 @@ export const BottomSheet = React.forwardRef<HTMLDivElement, BottomSheetProps>(
       };
     }, [isOpen, onClose]);
 
-    // Handle backdrop click
-    const handleBackdropClick = (e: React.MouseEvent) => {
-      if (e.target === overlayRef.current) {
-        onClose();
-      }
-    };
-
     return (
       <div
-        ref={overlayRef}
-        className={clsx("fixed inset-0 z-50 bg-black/50 flex items-end", !isOpen && "hidden")}
-        onClick={handleBackdropClick}
+        className={clsx("fixed inset-0 z-50 flex items-end", !isOpen && "hidden")}
         aria-modal="true"
         role="dialog"
         aria-label="Bottom sheet"
         aria-hidden={!isOpen}
+        data-testid="bottom-sheet"
       >
+        <button
+          type="button"
+          className="absolute inset-0 bg-black/50"
+          aria-label="Close bottom sheet"
+          onClick={onClose}
+        />
         <div
           ref={ref}
           className={clsx(
-            "w-full max-h-[90vh] bg-white rounded-t-lg shadow-lg overflow-auto",
+            "relative w-full max-h-[90vh] bg-white rounded-t-lg shadow-lg overflow-auto",
             isOpen && "animate-in slide-in-from-bottom duration-200",
             className,
           )}
-          onClick={(e) => e.stopPropagation()}
         >
           {children}
         </div>

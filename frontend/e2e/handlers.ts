@@ -13,7 +13,7 @@ import { http, HttpResponse, passthrough } from "msw";
 
 // Backend API base URL (configurable via environment)
 const BACKEND_URL = process.env["NEXT_PUBLIC_API_BASE_URL"] || "http://localhost:8000";
-const API_BASE = `${BACKEND_URL}/api/platform/v1/admin`;
+const API_BASE = `${BACKEND_URL}/api/platform/v1`;
 
 /**
  * Type definitions matching backend Pydantic models

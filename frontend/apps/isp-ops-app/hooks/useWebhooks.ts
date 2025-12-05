@@ -395,25 +395,19 @@ export function useWebhooks(options: UseWebhooksOptions = {}) {
       payload?: Record<string, unknown>;
     }): Promise<WebhookTestResult> => {
       try {
-        void Math.random();
-        await Promise.resolve();
-        const success = Math.random() > 0.3;
+        const response = await apiClient.post(`/webhooks/subscriptions/${id}/test`, {
+          event_type: eventType,
+          payload,
+        });
+        const data = response?.data ?? {};
 
-        if (success) {
-          return {
-            success: true,
-            status_code: 200,
-            response_body: "OK",
-            delivery_time_ms: Math.floor(Math.random() * 500 + 100),
-          };
-        } else {
-          return {
-            success: false,
-            status_code: 500,
-            error_message: "Internal Server Error",
-            delivery_time_ms: Math.floor(Math.random() * 1000 + 200),
-          };
-        }
+        return {
+          success: Boolean(data.success ?? (response.status ? response.status < 400 : true)),
+          status_code: data.status_code ?? response?.status ?? 200,
+          response_body: data.response_body,
+          error_message: data.error_message,
+          delivery_time_ms: data.delivery_time_ms ?? 0,
+        };
       } catch (error) {
         throw error instanceof Error
           ? error

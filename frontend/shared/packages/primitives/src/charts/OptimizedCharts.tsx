@@ -5,17 +5,10 @@
 
 "use client";
 
-import { useState, useCallback, useMemo, memo } from "react";
+import { useCallback, useMemo, memo } from "react";
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -23,13 +16,13 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { sanitizeText, validateClassName, validateArray } from "../utils/security";
-import {
-  revenueDataSchema,
-  networkUsageDataSchema,
-  serviceStatusDataSchema,
-  bandwidthDataSchema,
-} from "../utils/security";
+
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import type {
+  CustomTooltipProps,
+  RevenueChartProps,
+  ChartColors,
+} from "../types/chart";
 import {
   generateChartDescription,
   generateDataTable,
@@ -38,23 +31,18 @@ import {
   useScreenReader,
   generateId,
   ARIA_ROLES,
-  ARIA_LIVE_LEVELS,
 } from "../utils/a11y";
 import {
   useRenderProfiler,
   createMemoizedSelector,
   useThrottledState,
-  useDebouncedState,
 } from "../utils/performance";
-import type {
-  CustomTooltipProps,
-  RevenueChartProps,
-  NetworkUsageChartProps,
-  ServiceStatusChartProps,
-  BandwidthChartProps,
-  ChartColors,
-} from "../types/chart";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+import {
+  sanitizeText,
+  validateClassName,
+  validateArray,
+  revenueDataSchema,
+} from "../utils/security";
 
 // ISP-themed color palette
 const COLORS: ChartColors = {
@@ -107,22 +95,23 @@ const createDataSelector = <T extends any[]>(validator: any, fallback: T) =>
 const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
   ({ active, payload, label, formatter }) => {
     const tooltipId = useMemo(() => generateId("chart-tooltip"), []);
-
-    if (!active || !payload || payload.length === 0) {
-      return null;
-    }
+    const hasContent = Boolean(active && payload && payload.length);
 
     // Sanitize label to prevent XSS
     const safeLabel = useMemo(() => (label ? sanitizeText(String(label)) : ""), [label]);
 
     // Generate accessible description (memoized)
     const accessibleDescription = useMemo(() => {
+      if (!payload?.length) {
+        return "";
+      }
+
       const items = payload.map((entry) => {
         const name = entry.name ? sanitizeText(String(entry.name)) : "Unknown";
         const value = typeof entry.value === "number" ? entry.value : 0;
         return `${name}: ${value}`;
       });
-      return `Chart data point ${safeLabel ? "for " + safeLabel : ""}: ${items.join(", ")}`;
+      return `Chart data point ${safeLabel ? `for ${safeLabel}` : ""}: ${items.join(", ")}`;
     }, [payload, safeLabel]);
 
     // Memoized formatted entries
@@ -164,6 +153,10 @@ const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
         ];
       });
     }, [payload, formatter]);
+
+    if (!hasContent) {
+      return null;
+    }
 
     return (
       <div
@@ -211,10 +204,7 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
     });
 
     // Throttled state for better interaction performance
-    const [activeIndex, setActiveIndex, throttledActiveIndex] = useThrottledState<number | null>(
-      null,
-      16,
-    );
+    const [, setActiveIndex] = useThrottledState<number | null>(null, 16);
 
     // Accessibility setup
     const prefersReducedMotion = useReducedMotion();
@@ -294,7 +284,6 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
           style={{ height }}
           role="img"
           aria-label="No revenue data available"
-          tabIndex={0}
         >
           <p className="text-gray-500 text-sm">No revenue data available</p>
         </div>

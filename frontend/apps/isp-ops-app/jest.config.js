@@ -14,9 +14,19 @@ const config = {
   testTimeout: 15000,
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
-    "^@dotmac/testing$": "<rootDir>/../../shared/packages/primitives/src/testing/index.ts",
+    "^@dotmac/testing$": "<rootDir>/../../shared/packages/primitives/src/testing/index.tsx",
+    // Features package - explicit subpath exports
+    "^@dotmac/features$": "<rootDir>/../../shared/packages/features/src/index.ts",
+    "^@dotmac/features/customers$": "<rootDir>/../../shared/packages/features/src/customers/index.ts",
+    "^@dotmac/features/subscribers$": "<rootDir>/../../shared/packages/features/src/subscribers/index.ts",
+    "^@dotmac/features/forms$": "<rootDir>/../../shared/packages/features/src/forms/index.ts",
+    "^@dotmac/features/monitoring$": "<rootDir>/../../shared/packages/features/src/monitoring/index.ts",
+    "^@dotmac/features/error-handling$": "<rootDir>/../../shared/packages/features/src/error-handling/index.ts",
+    "^@dotmac/features/billing$": "<rootDir>/../../shared/packages/features/src/billing/index.ts",
+    "^@dotmac/features/(.+)$": "<rootDir>/../../shared/packages/features/src/$1/index.ts",
     "^@dotmac/([^/]+)$": "<rootDir>/../../shared/packages/$1/src",
     "^@dotmac/([^/]+)/(.+)$": "<rootDir>/../../shared/packages/$1/src/$2",
+    "^@shared/(.*)$": "<rootDir>/../../shared/$1",
     // MSW v2 with legacy compatibility layer for handlers using rest.get() syntax
     "^msw$": "<rootDir>/__tests__/msw/legacy.cjs",
     "^until-async$": "<rootDir>/jest.until-async.cjs",

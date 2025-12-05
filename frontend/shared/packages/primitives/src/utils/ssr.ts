@@ -1,6 +1,9 @@
+/* eslint-disable no-restricted-globals */
 /**
  * SSR utilities for safe client-side operations
  */
+
+import React from "react";
 
 /**
  * Safely checks if we're running in a browser environment
@@ -213,5 +216,3 @@ export function useUserPreferences() {
 
   return preferences;
 }
-
-import React from "react";

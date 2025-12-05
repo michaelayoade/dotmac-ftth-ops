@@ -78,7 +78,7 @@ _PLATFORM_HEALTH_SUMMARY: dict[str, str] = {
 }
 
 _RUNTIME_CONFIG_CACHE_SECONDS = 60
-_DEFAULT_API_PREFIX = "/api/platform/v1/admin"
+_DEFAULT_API_PREFIX = "/api/platform/v1"
 
 
 def _sanitize_base_url(value: str | None) -> str:

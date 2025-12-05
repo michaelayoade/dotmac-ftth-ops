@@ -1,7 +1,7 @@
 /**
  * WebSocket Client for Real-Time Bidirectional Communication
  *
- * Handles WebSocket connections to /api/platform/v1/admin/realtime/ws endpoints with:
+ * Handles WebSocket connections to /api/platform/v1/realtime/ws endpoints with:
  * - JWT authentication (query param, header, cookie)
  * - Automatic reconnection with exponential backoff
  * - Heartbeat/ping-pong for connection health
@@ -354,7 +354,7 @@ export class WebSocketEndpoints {
   private buildEndpoint(path: string): string {
     if (this.overrideBaseUrl) {
       const normalizedBase = this.overrideBaseUrl.replace(/\/+$/, "");
-      const prefix = platformConfig.api.prefix || "/api/platform/v1/admin";
+      const prefix = platformConfig.api.prefix || "/api/platform/v1";
       return `${normalizedBase}${prefix}${path}`;
     }
     return platformConfig.api.buildUrl(path);

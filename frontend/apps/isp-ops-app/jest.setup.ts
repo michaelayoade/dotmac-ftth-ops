@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom";
 import "whatwg-fetch"; // Polyfill fetch for jsdom
+import path from "path";
 import { TextEncoder, TextDecoder } from "util";
 import { TransformStream, ReadableStream, WritableStream } from "stream/web";
 import { Readable } from "stream";
@@ -9,18 +10,25 @@ jest.mock("@/lib/config", () => ({
   platformConfig: {
     api: {
       baseUrl: "http://localhost:3000",
-      prefix: "/api/isp/v1/admin",
+      prefix: "/api/isp/v1",
       timeout: 30000,
-      buildUrl: (path: string) => {
+      buildUrl: (path: string, options?: { skipPrefix?: boolean }) => {
         const normalized = path.startsWith("/") ? path : `/${path}`;
-        const prefixed = normalized.startsWith("/api/isp/v1/admin") ? normalized : `/api/isp/v1/admin${normalized}`;
+        const shouldPrefix = !options?.skipPrefix;
+        const prefixed =
+          shouldPrefix && !normalized.startsWith("/api/isp/v1")
+            ? `/api/isp/v1${normalized}`
+            : normalized;
         return `http://localhost:3000${prefixed}`;
       },
-      buildPath: (path: string) => {
+      buildPath: (path: string, options?: { skipPrefix?: boolean }) => {
         const normalized = path.startsWith("/") ? path : `/${path}`;
-        return normalized.startsWith("/api/isp/v1/admin") ? normalized : `/api/isp/v1/admin${normalized}`;
+        const shouldPrefix = !options?.skipPrefix;
+        return shouldPrefix && !normalized.startsWith("/api/isp/v1")
+          ? `/api/isp/v1${normalized}`
+          : normalized;
       },
-      graphqlEndpoint: "http://localhost:3000/api/isp/v1/admin/graphql",
+      graphqlEndpoint: "http://localhost:3000/api/isp/v1/graphql",
     },
     features: {
       enableGraphQL: false,
@@ -137,7 +145,7 @@ jest.mock("@/lib/config", () => ({
     },
     realtime: {
       wsUrl: "",
-      sseUrl: "/api/isp/v1/admin/realtime/events",
+      sseUrl: "/api/isp/v1/realtime/events",
       alertsChannel: "tenant-global",
     },
     deployment: {
@@ -151,6 +159,20 @@ jest.mock("@/lib/config", () => ({
     },
   },
 }));
+
+// Ensure testing helpers expose renderQuick even if build tooling strips it
+jest.mock("@dotmac/testing", () => {
+  const testingModulePath = path.resolve(
+    __dirname,
+    "../../shared/packages/primitives/src/testing/index.tsx",
+  );
+  const actual = jest.requireActual(testingModulePath);
+  return {
+    __esModule: true,
+    ...actual,
+    renderQuick: (actual as any).renderQuick || (actual as any).render,
+  };
+});
 
 import apiClient from "@/lib/api/client";
 import axios from "axios";

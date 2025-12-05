@@ -1,7 +1,7 @@
 "use client";
 
+import { MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import React, { useState, useCallback } from "react";
-import { MagnifyingGlassIcon, PlusIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
 interface ActionButton {
   label: string;
@@ -239,7 +239,7 @@ export function ManagementPageTemplate<T = any>({
       <div className="management-content flex-1 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
           </div>
         ) : data.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500">

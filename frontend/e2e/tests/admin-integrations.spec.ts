@@ -55,7 +55,7 @@ test.describe("Admin Integrations Dashboard", () => {
 
   test("should load integrations from real API", async ({ page, request }) => {
     // Make direct API call to verify backend response
-    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/admin/integrations", {
+    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/integrations", {
       headers: {
         Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },
@@ -111,7 +111,7 @@ test.describe("Admin Integrations Dashboard", () => {
 
   test("should display integration cards with correct data", async ({ page, request }) => {
     // Get integrations from API
-    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/admin/integrations", {
+    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/integrations", {
       headers: {
         Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },
@@ -143,7 +143,7 @@ test.describe("Admin Integrations Dashboard", () => {
 
   test("should trigger health check and update status", async ({ page, request }) => {
     // Get integrations from API
-    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/admin/integrations", {
+    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/integrations", {
       headers: {
         Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },
@@ -195,7 +195,7 @@ test.describe("Admin Integrations Dashboard", () => {
 
   test("should handle API errors gracefully", async ({ page, context }) => {
     // Intercept API calls and force error
-    await context.route("**/api/platform/v1/admin/integrations", (route) => {
+    await context.route("**/api/platform/v1/integrations", (route) => {
       route.fulfill({
         status: 500,
         body: JSON.stringify({ detail: "Internal server error" }),
@@ -213,7 +213,7 @@ test.describe("Admin Integrations Dashboard", () => {
 
   test("should display metadata details on expand", async ({ page, request }) => {
     // Get integrations from API
-    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/admin/integrations", {
+    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/integrations", {
       headers: {
         Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },
@@ -243,7 +243,7 @@ test.describe("Admin Integrations Dashboard", () => {
 
   test("should validate API contract - integration response structure", async ({ request }) => {
     // Make API call
-    const response = await request.get("http://localhost:8000/api/platform/v1/admin/integrations", {
+    const response = await request.get("http://localhost:8000/api/platform/v1/integrations", {
       headers: {
         Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },

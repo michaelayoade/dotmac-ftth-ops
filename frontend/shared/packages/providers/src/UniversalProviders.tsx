@@ -1,15 +1,16 @@
-import * as React from "react";
+import { RBACProvider } from "@dotmac/rbac";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as React from "react";
+
 // Devtools are optional; avoid hard dependency in library code
 const ReactQueryDevtools: React.FC<{ initialIsOpen?: boolean }> = () => null;
 // Note: Auth is now handled by @shared/lib/auth - no provider needed here
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { ThemeProvider } from "./components/ThemeProvider";
-import { NotificationProvider } from "./components/NotificationProvider";
 import { FeatureProvider } from "./components/FeatureProvider";
+import { NotificationProvider } from "./components/NotificationProvider";
 import { TenantProvider } from "./components/TenantProvider";
+import { ThemeProvider } from "./components/ThemeProvider";
 import { createPortalQueryClient } from "./utils/queryClients";
-import { RBACProvider } from "@dotmac/rbac";
 
 // Portal types formerly defined in @dotmac/auth
 export type PortalType = "admin" | "customer" | "reseller" | "technician" | "management";

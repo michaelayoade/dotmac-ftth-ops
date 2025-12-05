@@ -1,4 +1,6 @@
+/* eslint-disable react/sort-comp */
 import * as React from "react";
+
 import type { PortalType } from "../UniversalProviders";
 
 declare global {
@@ -122,7 +124,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 /**
  * Default error fallback component
  */
-function DefaultErrorFallback({ error, resetError, portal }: ErrorFallbackProps) {
+function DefaultErrorFallback({ error, resetError, portal: _portal }: ErrorFallbackProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
@@ -147,7 +149,7 @@ function DefaultErrorFallback({ error, resetError, portal }: ErrorFallbackProps)
         </h1>
 
         <p className="text-gray-600 text-center mb-6">
-          We're sorry, but something unexpected happened. Please try refreshing the page.
+          We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
         </p>
 
         <div className="space-y-3">

@@ -8,11 +8,19 @@ import { useAppStore } from "../appStore";
 
 describe("useAppStore", () => {
   beforeEach(() => {
-    // Reset store state before each test
-    const { result } = renderHook(() => useAppStore());
-    act(() => {
-      result.current.resetAllContexts();
-      result.current.clearNotifications();
+    // Reset store state before each test by accessing store directly
+    // Using getState() ensures we don't have stale hook references
+    const store = useAppStore.getState();
+    store.resetAllContexts();
+    store.clearNotifications();
+    // Also reset UI state
+    store.updateUI({
+      sidebarOpen: true,
+      activeTab: "",
+      activeView: "list",
+      showFilters: false,
+      showBulkActions: false,
+      notifications: [],
     });
   });
 
@@ -230,8 +238,13 @@ describe("useAppStore", () => {
   });
 
   describe("Selection State Management", () => {
-    const context = "test-selection";
+    // Use unique context for each test to avoid state pollution between tests
+    let context: string;
     const items = ["item1", "item2", "item3", "item4"];
+
+    beforeEach(() => {
+      context = `test-selection-${Date.now()}-${Math.random()}`;
+    });
 
     it("should manage single item selection", () => {
       const { result } = renderHook(() => useAppStore());
@@ -330,6 +343,8 @@ describe("useAppStore", () => {
 
       act(() => {
         result.current.selectItem(context, "item1", true);
+      });
+      act(() => {
         result.current.selectItem(context, "item2", true);
       });
 
@@ -393,7 +408,8 @@ describe("useAppStore", () => {
     it("should manage user preferences", () => {
       const { result } = renderHook(() => useAppStore());
 
-      expect(result.current.preferences.theme).toBe("light");
+      // Theme is stored in ui state, compactMode and showAdvancedFeatures in preferences
+      expect(result.current.ui.theme).toBe("light");
       expect(result.current.preferences.compactMode).toBe(false);
       expect(result.current.preferences.showAdvancedFeatures).toBe(false);
 
@@ -403,7 +419,7 @@ describe("useAppStore", () => {
         result.current.toggleAdvancedFeatures();
       });
 
-      expect(result.current.preferences.theme).toBe("dark");
+      expect(result.current.ui.theme).toBe("dark");
       expect(result.current.preferences.compactMode).toBe(true);
       expect(result.current.preferences.showAdvancedFeatures).toBe(true);
     });

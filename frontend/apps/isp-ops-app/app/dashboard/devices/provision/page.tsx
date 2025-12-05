@@ -72,7 +72,7 @@ function ProvisionPageContent() {
   const { data: presets = [] } = useQuery<Preset[]>({
     queryKey: ["device-presets"],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/presets`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/presets`, {
         credentials: "include",
       });
       if (!response.ok) return [];
@@ -84,7 +84,7 @@ function ProvisionPageContent() {
   const { data: bulkJobs = [] } = useQuery<BulkProvisionJob[]>({
     queryKey: ["bulk-provision-jobs"],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/provision/bulk/jobs`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/provision/bulk/jobs`, {
         credentials: "include",
       });
       if (!response.ok) return [];
@@ -96,7 +96,7 @@ function ProvisionPageContent() {
   // Single device provision
   const provisionMutation = useMutation({
     mutationFn: async (device: DeviceProvisionRequest) => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/provision`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/provision`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +131,7 @@ function ProvisionPageContent() {
         formData.append("presetName", bulkPreset);
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/provision/bulk`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/provision/bulk`, {
         method: "POST",
         credentials: "include",
         body: formData,

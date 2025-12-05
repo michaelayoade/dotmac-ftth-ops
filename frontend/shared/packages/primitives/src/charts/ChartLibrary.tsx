@@ -6,8 +6,8 @@
 "use client";
 
 import React from "react";
-import { UniversalChart } from "./UniversalChart";
-import type { UniversalChartProps, ChartDataPoint } from "./UniversalChart";
+
+import { UniversalChart, type UniversalChartProps, type ChartDataPoint } from "./UniversalChart";
 
 // Revenue Chart
 export interface RevenueChartData extends ChartDataPoint {
@@ -233,7 +233,6 @@ export function PerformanceChart({
   }));
 
   const formatLatency = (value: number) => `${value}ms`;
-  const formatThroughput = (value: number) => `${value} Mbps`;
   const formatUptime = (value: number) => `${value}%`;
 
   return (

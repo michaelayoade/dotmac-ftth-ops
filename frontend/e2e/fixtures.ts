@@ -15,12 +15,36 @@ export const test = base.extend<TestFixtures>({
     const loginHelper = async (page: Page) => {
       const email = process.env.E2E_USER_EMAIL || "admin@test.com";
       const password = process.env.E2E_USER_PASSWORD || "testpassword";
+      const authBypass = process.env.E2E_AUTH_BYPASS === "true";
 
+      // Navigate to login page
       await page.goto("/login");
-      await page.fill('input[name="email"]', email);
-      await page.fill('input[name="password"]', password);
-      await page.click('button[type="submit"]');
-      await page.waitForURL("**/dashboard**");
+
+      // Check if we're already on dashboard (auth bypass enabled)
+      const currentUrl = page.url();
+      if (currentUrl.includes("/dashboard") || authBypass) {
+        // Auth bypass is active, we're already logged in
+        if (!currentUrl.includes("/dashboard")) {
+          await page.goto("/dashboard");
+        }
+        await page.waitForURL("**/dashboard**", { timeout: 10000 });
+        return;
+      }
+
+      // Check if login form exists (might have auto-redirected)
+      const emailInput = page.locator('input[name="email"]');
+      const hasLoginForm = await emailInput.isVisible({ timeout: 5000 }).catch(() => false);
+
+      if (hasLoginForm) {
+        // Normal login flow
+        await page.fill('input[name="email"]', email);
+        await page.fill('input[name="password"]', password);
+        await page.click('button[type="submit"]');
+        await page.waitForURL("**/dashboard**");
+      } else {
+        // Already redirected to dashboard
+        await page.waitForURL("**/dashboard**", { timeout: 10000 });
+      }
     };
 
     await use(loginHelper);

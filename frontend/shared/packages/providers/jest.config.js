@@ -13,6 +13,8 @@ const config = {
     // Mock React Query and related provider dependencies
     "^@tanstack/react-query$": "<rootDir>/__tests__/mocks/react-query.js",
     "^zustand$": "<rootDir>/__tests__/mocks/zustand.js",
+    // Workspace package mappings
+    "^@dotmac/rbac$": "<rootDir>/../rbac/src/index.tsx",
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",

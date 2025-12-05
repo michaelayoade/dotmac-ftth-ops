@@ -271,7 +271,7 @@ function CustomerRow<TCustomer = any>({
     } else {
       // Fallback to direct API call
       try {
-        const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/customers/${customerId}/status`, {
+        const response = await fetch(`${apiBaseUrl}/api/isp/v1/customers/${customerId}/status`, {
           method: "PATCH",
           credentials: "include",
           headers: buildAuthHeaders(),
@@ -321,7 +321,7 @@ function CustomerRow<TCustomer = any>({
       // Fallback to direct API call
       try {
         const response = await fetch(
-          `${apiBaseUrl}/api/isp/v1/admin/customers/${customerId}/reset-password`,
+          `${apiBaseUrl}/api/isp/v1/customers/${customerId}/reset-password`,
           {
             method: "POST",
             credentials: "include",

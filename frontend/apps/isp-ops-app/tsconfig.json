@@ -41,6 +41,8 @@
       "@dotmac/auth": ["../../shared/lib/auth/index.ts"],
       "@dotmac/auth/*": ["../../shared/lib/auth/*"],
       "@shared/*": ["../../shared/*"],
+      "@dotmac/features": ["../../shared/packages/features/src/index.ts"],
+      "@dotmac/features/*": ["../../shared/packages/features/src/*"],
       "@dotmac/*": ["../../shared/packages/*/src"],
       "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
       "@dotmac/primitives/*": ["../../shared/packages/primitives/src/*"],

@@ -2,15 +2,15 @@
  * React Query hooks for plugin management
  *
  * Connects to backend plugin management API:
- * - GET /api/platform/v1/admin/plugins - List available plugins
- * - GET /api/platform/v1/admin/plugins/instances - List plugin instances
- * - GET /api/platform/v1/admin/plugins/{plugin_name}/schema - Get plugin schema
- * - POST /api/platform/v1/admin/plugins/instances - Create plugin instance
- * - GET /api/platform/v1/admin/plugins/instances/{instance_id} - Get plugin instance
- * - PUT /api/platform/v1/admin/plugins/instances/{instance_id}/configuration - Update configuration
- * - DELETE /api/platform/v1/admin/plugins/instances/{instance_id} - Delete instance
- * - GET /api/platform/v1/admin/plugins/instances/{instance_id}/health - Health check
- * - POST /api/platform/v1/admin/plugins/instances/{instance_id}/test - Test connection
+ * - GET /api/platform/v1/plugins - List available plugins
+ * - GET /api/platform/v1/plugins/instances - List plugin instances
+ * - GET /api/platform/v1/plugins/{plugin_name}/schema - Get plugin schema
+ * - POST /api/platform/v1/plugins/instances - Create plugin instance
+ * - GET /api/platform/v1/plugins/instances/{instance_id} - Get plugin instance
+ * - PUT /api/platform/v1/plugins/instances/{instance_id}/configuration - Update configuration
+ * - DELETE /api/platform/v1/plugins/instances/{instance_id} - Delete instance
+ * - GET /api/platform/v1/plugins/instances/{instance_id}/health - Health check
+ * - POST /api/platform/v1/plugins/instances/{instance_id}/test - Test connection
  */
 
 import {

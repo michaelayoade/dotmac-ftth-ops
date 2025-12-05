@@ -274,7 +274,11 @@ export function createAppStore(config: AppStoreConfig) {
               set((state) => {
                 if (state.contexts[context]) {
                   const selection = state.contexts[context].selection;
-                  selection.selectedItems = selection.selectedItems.filter((i) => i !== item);
+                  // Filter out items that match by reference OR by value (for objects)
+                  const itemStr = JSON.stringify(item);
+                  selection.selectedItems = selection.selectedItems.filter(
+                    (i) => i !== item && JSON.stringify(i) !== itemStr
+                  );
                   selection.selectAll = false;
                 }
               });
@@ -699,9 +703,8 @@ export function createAppStore(config: AppStoreConfig) {
             // Bulk operations
             resetAllContexts: () => {
               set((state) => {
-                Object.keys(state.contexts).forEach((contextId) => {
-                  state.contexts[contextId] = createDefaultContext();
-                });
+                // Clear all contexts completely rather than resetting each one
+                state.contexts = {};
               });
             },
 

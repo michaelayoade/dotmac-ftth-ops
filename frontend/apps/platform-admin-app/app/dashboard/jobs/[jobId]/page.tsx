@@ -62,7 +62,7 @@ function JobDetailsPageContent() {
   const { data: job, isLoading } = useQuery<Job>({
     queryKey: ["job", jobId],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/jobs/${jobId}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/jobs/${jobId}`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch job");
@@ -84,7 +84,7 @@ function JobDetailsPageContent() {
   // Cancel job mutation
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/jobs/${jobId}/cancel`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/jobs/${jobId}/cancel`, {
         method: "POST",
         credentials: "include",
       });
@@ -108,7 +108,7 @@ function JobDetailsPageContent() {
   // Retry job mutation
   const retryMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/jobs/${jobId}/retry`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/jobs/${jobId}/retry`, {
         method: "POST",
         credentials: "include",
       });

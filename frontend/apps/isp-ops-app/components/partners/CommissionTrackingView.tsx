@@ -49,7 +49,7 @@ async function fetchCommissions(
   }
 
   const response = await fetch(
-    `${API_BASE}/api/isp/v1/admin/partners/commissions?${params.toString()}`,
+    `${API_BASE}/api/isp/v1/partners/commissions?${params.toString()}`,
     {
       method: "GET",
       headers: {

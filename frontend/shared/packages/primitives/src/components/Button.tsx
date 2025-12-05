@@ -1,6 +1,5 @@
-import { forwardRef } from "react";
-import type { ButtonHTMLAttributes } from "react";
 import clsx from "clsx";
+import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "outline" | "ghost";
 
@@ -28,10 +27,10 @@ export const buttonVariants = ({ variant = "primary", size = "md" }: ButtonProps
     }[size],
   );
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>((
   { className, variant = "primary", size = "md", ...props },
   ref,
-) {
+) => {
   return (
     <button
       ref={ref}

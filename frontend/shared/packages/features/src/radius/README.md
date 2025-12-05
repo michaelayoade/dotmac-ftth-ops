@@ -363,27 +363,27 @@ interface CoARequest {
 
 ### Sessions
 
-- `GET /api/isp/v1/admin/radius/sessions` - List active sessions
-- `GET /api/isp/v1/admin/radius/sessions/{id}` - Get session details
-- `POST /api/isp/v1/admin/radius/sessions/{id}/disconnect` - Disconnect session (CoA)
-- `POST /api/isp/v1/admin/radius/sessions/{id}/coa` - Send CoA request
+- `GET /api/isp/v1/radius/sessions` - List active sessions
+- `GET /api/isp/v1/radius/sessions/{id}` - Get session details
+- `POST /api/isp/v1/radius/sessions/{id}/disconnect` - Disconnect session (CoA)
+- `POST /api/isp/v1/radius/sessions/{id}/coa` - Send CoA request
 
 ### Bandwidth Profiles
 
-- `GET /api/isp/v1/admin/radius/bandwidth-profiles` - List profiles
-- `POST /api/isp/v1/admin/radius/bandwidth-profiles` - Create profile
-- `GET /api/isp/v1/admin/radius/bandwidth-profiles/{id}` - Get profile
-- `PUT /api/isp/v1/admin/radius/bandwidth-profiles/{id}` - Update profile
-- `DELETE /api/isp/v1/admin/radius/bandwidth-profiles/{id}` - Delete profile
+- `GET /api/isp/v1/radius/bandwidth-profiles` - List profiles
+- `POST /api/isp/v1/radius/bandwidth-profiles` - Create profile
+- `GET /api/isp/v1/radius/bandwidth-profiles/{id}` - Get profile
+- `PUT /api/isp/v1/radius/bandwidth-profiles/{id}` - Update profile
+- `DELETE /api/isp/v1/radius/bandwidth-profiles/{id}` - Delete profile
 
 ### NAS Devices
 
-- `GET /api/isp/v1/admin/radius/nas-devices` - List devices
-- `POST /api/isp/v1/admin/radius/nas-devices` - Create device
-- `GET /api/isp/v1/admin/radius/nas-devices/{id}` - Get device
-- `PUT /api/isp/v1/admin/radius/nas-devices/{id}` - Update device
-- `DELETE /api/isp/v1/admin/radius/nas-devices/{id}` - Delete device
-- `POST /api/isp/v1/admin/radius/nas-devices/{id}/test` - Test connection
+- `GET /api/isp/v1/radius/nas-devices` - List devices
+- `POST /api/isp/v1/radius/nas-devices` - Create device
+- `GET /api/isp/v1/radius/nas-devices/{id}` - Get device
+- `PUT /api/isp/v1/radius/nas-devices/{id}` - Update device
+- `DELETE /api/isp/v1/radius/nas-devices/{id}` - Delete device
+- `POST /api/isp/v1/radius/nas-devices/{id}/test` - Test connection
 
 ## Common Workflows
 
@@ -404,7 +404,7 @@ interface CoARequest {
 ```typescript
 const handleDisconnect = async (sessionId: string) => {
   try {
-    await apiClient.post(`/api/isp/v1/admin/radius/sessions/${sessionId}/disconnect`);
+    await apiClient.post(`/api/isp/v1/radius/sessions/${sessionId}/disconnect`);
     toast({
       title: "Success",
       description: "Session disconnected",
@@ -464,7 +464,7 @@ const handleDisconnect = async (sessionId: string) => {
 ```typescript
 const changeBandwidth = async (sessionId: string, profileId: string) => {
   try {
-    await apiClient.post(`/api/isp/v1/admin/radius/sessions/${sessionId}/coa`, {
+    await apiClient.post(`/api/isp/v1/radius/sessions/${sessionId}/coa`, {
       action: "change_bandwidth",
       profile_id: profileId,
     });
@@ -549,7 +549,7 @@ CoA allows real-time session updates without reconnection.
 // Test CoA connectivity
 const testCoA = async (nasDeviceId: string) => {
   try {
-    const response = await apiClient.post(`/api/isp/v1/admin/radius/nas-devices/${nasDeviceId}/test-coa`);
+    const response = await apiClient.post(`/api/isp/v1/radius/nas-devices/${nasDeviceId}/test-coa`);
     if (response.data.success) {
       toast({
         title: "Success",

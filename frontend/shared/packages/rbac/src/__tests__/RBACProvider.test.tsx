@@ -299,11 +299,11 @@ describe("RBACProvider", () => {
         result.current.refresh();
       });
 
+      // Wait for both error to clear AND permissions to be updated
       await waitFor(() => {
         expect(result.current.error).toBeNull();
+        expect(result.current.permissions).toEqual(["recovered:read"]);
       });
-
-      expect(result.current.permissions).toEqual(["recovered:read"]);
     });
   });
 

@@ -131,7 +131,7 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
       <div className="dashboard-content flex-1 overflow-auto bg-gray-50 p-6">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
           </div>
         ) : (
           <div className="space-y-6">

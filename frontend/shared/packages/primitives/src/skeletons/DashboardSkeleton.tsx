@@ -5,8 +5,8 @@
  * Supports multiple layout variants for different dashboard types.
  */
 
-import React from "react";
 import { clsx } from "clsx";
+import React from "react";
 
 export interface DashboardSkeletonProps {
   /**

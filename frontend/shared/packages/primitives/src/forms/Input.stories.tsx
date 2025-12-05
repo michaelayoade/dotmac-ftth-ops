@@ -6,8 +6,9 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { Input } from "./Input";
 import { Mail, Search, Lock, User, Eye, EyeOff } from "lucide-react";
+
+import { Input } from "./Input";
 
 const meta = {
   title: "Primitives/Forms/Input",

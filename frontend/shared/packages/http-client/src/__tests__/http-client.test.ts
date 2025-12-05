@@ -3,9 +3,10 @@
  */
 
 import axios from "axios";
+
+import { ErrorNormalizer } from "../error-normalizer";
 import { HttpClient } from "../http-client";
 import { TenantResolver } from "../tenant-resolver";
-import { ErrorNormalizer } from "../error-normalizer";
 import type { ApiResponse } from "../types";
 
 // Mock axios

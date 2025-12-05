@@ -1,6 +1,7 @@
-import React, { useState, Fragment } from "react";
 import { motion } from "framer-motion";
 import { Bell, ChevronDown, HelpCircle, LogOut, Settings, User, Menu, X } from "lucide-react";
+import React, { useState, Fragment } from "react";
+
 import { OptimizedImage } from "../ui/OptimizedImage";
 
 interface PortalBranding {

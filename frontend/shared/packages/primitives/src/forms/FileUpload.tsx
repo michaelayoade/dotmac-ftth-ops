@@ -6,8 +6,14 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
-import type React from "react";
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type HTMLAttributes,
+} from "react";
 
 // Basic file upload variants
 const uploadVariants = cva("file-upload", {
@@ -59,7 +65,7 @@ export interface SimpleFile {
 
 // Base FileUpload props (simplified)
 export interface BaseFileUploadProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "onError">,
+  extends Omit<HTMLAttributes<HTMLDivElement>, "onChange" | "onError">,
     VariantProps<typeof uploadVariants> {
   multiple?: boolean;
   disabled?: boolean;

@@ -24,7 +24,12 @@ const { server } = require("@/__tests__/msw/server");
 jest.mock("@/providers/AppConfigContext", () => ({
   useAppConfig: () => ({
     api: {
-      buildUrl: (path: string) => `http://localhost:3000/api/v1${path}`,
+      buildUrl: (path: string, options?: { skipPrefix?: boolean }) => {
+        const normalized = path.startsWith("/") ? path : `/${path}`;
+        const shouldPrefix = !options?.skipPrefix && !normalized.startsWith("/api/isp/v1");
+        const finalPath = shouldPrefix ? `/api/isp/v1${normalized}` : normalized;
+        return `http://localhost:3000${finalPath}`;
+      },
     },
   }),
 }));

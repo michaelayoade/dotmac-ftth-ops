@@ -96,7 +96,8 @@ export const SplitPoints = {
     priority: "low",
     preloadCondition: () => {
       // Check if user has admin role (SSR safe)
-      if (typeof localStorage === "undefined") return false;
+      if (typeof window === "undefined") return false;
+      // eslint-disable-next-line no-restricted-globals
       return localStorage.getItem("userRole") === "admin";
     },
   },

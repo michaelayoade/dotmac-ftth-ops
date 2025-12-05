@@ -46,7 +46,7 @@ test.describe("Admin Data Transfer Dashboard", () => {
 
   test("should load jobs from real API", async ({ page, request }) => {
     // Direct API call
-    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/admin/data-transfer/jobs", {
+    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/data-transfer/jobs", {
       headers: {
         Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },
@@ -91,7 +91,7 @@ test.describe("Admin Data Transfer Dashboard", () => {
 
   test("should validate API contract - job response structure", async ({ request }) => {
     const response = await request.get(
-      "http://localhost:8000/api/platform/v1/admin/data-transfer/jobs?page=1&page_size=20",
+      "http://localhost:8000/api/platform/v1/data-transfer/jobs?page=1&page_size=20",
       {
         headers: {
           Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
@@ -114,7 +114,7 @@ test.describe("Admin Data Transfer Dashboard", () => {
 
   test("should navigate through pages", async ({ page, request }) => {
     // Check if pagination is needed
-    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/admin/data-transfer/jobs", {
+    const apiResponse = await request.get("http://localhost:8000/api/platform/v1/data-transfer/jobs", {
       headers: {
         Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },

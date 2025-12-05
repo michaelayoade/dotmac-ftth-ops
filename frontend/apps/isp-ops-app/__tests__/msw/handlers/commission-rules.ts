@@ -95,16 +95,16 @@ export function getCommissionRules(): CommissionRule[] {
 // ============================================
 
 export const commissionRulesHandlers = [
-// GET /api/isp/v1/admin/partners/commission-rules/partners/:partnerId/applicable - MUST come before /:id route
+// GET /api/isp/v1/partners/commission-rules/partners/:partnerId/applicable - MUST come before /:id route
 http.get(
-  "*/api/isp/v1/admin/partners/commission-rules/partners/:partnerId/applicable",
+  "*/api/isp/v1/partners/commission-rules/partners/:partnerId/applicable",
     ({ request, params }) => {
       const { partnerId } = params;
       const url = new URL(request.url);
       const productId = url.searchParams.get("product_id");
       const customerId = url.searchParams.get("customer_id");
 
-      console.log("[MSW] GET /api/isp/v1/admin/partners/commission-rules/partners/:partnerId/applicable", {
+      console.log("[MSW] GET /api/isp/v1/partners/commission-rules/partners/:partnerId/applicable", {
         partnerId,
         productId,
         customerId,
@@ -131,15 +131,15 @@ http.get(
     },
   ),
 
-// GET /api/isp/v1/admin/partners/commission-rules/ - List commission rules
-http.get("*/api/isp/v1/admin/partners/commission-rules/", ({ request, params }) => {
+// GET /api/isp/v1/partners/commission-rules/ - List commission rules
+http.get("*/api/isp/v1/partners/commission-rules/", ({ request, params }) => {
     const url = new URL(request.url);
     const partnerId = url.searchParams.get("partner_id");
     const isActive = url.searchParams.get("is_active");
     const page = parseInt(url.searchParams.get("page") || "1");
     const pageSize = parseInt(url.searchParams.get("page_size") || "10");
 
-    console.log("[MSW] GET /api/isp/v1/admin/partners/commission-rules/", {
+    console.log("[MSW] GET /api/isp/v1/partners/commission-rules/", {
       partnerId,
       isActive,
       page,
@@ -174,11 +174,11 @@ http.get("*/api/isp/v1/admin/partners/commission-rules/", ({ request, params }) 
     return HttpResponse.json(response);
   }),
 
-// POST /api/isp/v1/admin/partners/commission-rules/ - Create commission rule
-http.post("*/api/isp/v1/admin/partners/commission-rules/", async ({ request, params }) => {
+// POST /api/isp/v1/partners/commission-rules/ - Create commission rule
+http.post("*/api/isp/v1/partners/commission-rules/", async ({ request, params }) => {
     const createData = await request.json();
 
-    console.log("[MSW] POST /api/isp/v1/admin/partners/commission-rules/", {
+    console.log("[MSW] POST /api/isp/v1/partners/commission-rules/", {
       createData,
     });
 
@@ -196,11 +196,11 @@ http.post("*/api/isp/v1/admin/partners/commission-rules/", async ({ request, par
     return HttpResponse.json(newRule);
   }),
 
-// GET /api/isp/v1/admin/partners/commission-rules/:id - Get single commission rule
-http.get("*/api/isp/v1/admin/partners/commission-rules/:id", ({ request, params }) => {
+// GET /api/isp/v1/partners/commission-rules/:id - Get single commission rule
+http.get("*/api/isp/v1/partners/commission-rules/:id", ({ request, params }) => {
     const { id } = params;
 
-    console.log("[MSW] GET /api/isp/v1/admin/partners/commission-rules/:id", { id });
+    console.log("[MSW] GET /api/isp/v1/partners/commission-rules/:id", { id });
 
     const rule = rules.find((r) => r.id === id);
 
@@ -211,12 +211,12 @@ http.get("*/api/isp/v1/admin/partners/commission-rules/:id", ({ request, params 
     return HttpResponse.json(rule);
   }),
 
-// PATCH /api/isp/v1/admin/partners/commission-rules/:id - Update commission rule
-http.patch("*/api/isp/v1/admin/partners/commission-rules/:id", async ({ request, params }) => {
+// PATCH /api/isp/v1/partners/commission-rules/:id - Update commission rule
+http.patch("*/api/isp/v1/partners/commission-rules/:id", async ({ request, params }) => {
     const { id } = params;
     const updateData = await request.json();
 
-    console.log("[MSW] PATCH /api/isp/v1/admin/partners/commission-rules/:id", {
+    console.log("[MSW] PATCH /api/isp/v1/partners/commission-rules/:id", {
       id,
       updateData,
     });
@@ -236,11 +236,11 @@ http.patch("*/api/isp/v1/admin/partners/commission-rules/:id", async ({ request,
     return HttpResponse.json(rule);
   }),
 
-// DELETE /api/isp/v1/admin/partners/commission-rules/:id - Delete commission rule
-http.delete("*/api/isp/v1/admin/partners/commission-rules/:id", ({ request, params }) => {
+// DELETE /api/isp/v1/partners/commission-rules/:id - Delete commission rule
+http.delete("*/api/isp/v1/partners/commission-rules/:id", ({ request, params }) => {
     const { id } = params;
 
-    console.log("[MSW] DELETE /api/isp/v1/admin/partners/commission-rules/:id", { id });
+    console.log("[MSW] DELETE /api/isp/v1/partners/commission-rules/:id", { id });
 
     const index = rules.findIndex((r) => r.id === id);
 

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, CheckIcon } from "@heroicons/react/24/outline";
+import React, { useState, useCallback } from "react";
 
 interface WorkflowStep {
   id: string;
@@ -31,10 +31,6 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
   showProgress = true,
   className = "",
 }) => {
-  if (steps.length === 0) {
-    return null;
-  }
-
   const [currentStep, setCurrentStep] = useState(0);
   const [stepData, setStepData] = useState<Record<string, any>>({});
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());

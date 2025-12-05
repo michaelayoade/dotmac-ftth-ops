@@ -1,25 +1,17 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 /**
  * Commission Configuration Manager
  * Allows admins to create and manage flexible commission structures
  */
 
-import React, { useState, useEffect } from "react";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Star,
-  Copy,
-  Calendar,
-  DollarSign,
-  Percent,
-  TrendingUp,
-  Settings,
-} from "lucide-react";
+import { Plus, Edit, Trash2, Star, DollarSign, Percent, TrendingUp, Settings } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
 
-import { Card } from "../layout/Card";
+import { UniversalTable } from "../data-display/Table";
 import { Button } from "../forms/Button";
 import { Input } from "../forms/Input";
+import { StatusIndicators } from "../indicators/StatusIndicators";
+import { Card } from "../layout/Card";
 import {
   Modal,
   ModalBackdrop,
@@ -29,8 +21,6 @@ import {
   ModalBody,
   ModalFooter,
 } from "../layout/Modal";
-import { UniversalTable } from "../data-display/Table";
-import { StatusIndicators } from "../indicators/StatusIndicators";
 
 interface CommissionConfig {
   id: string;
@@ -64,7 +54,7 @@ const extractDatePart = (isoString: string): string => {
 };
 
 export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = ({
-  apiEndpoint = "/api/isp/v1/admin/commission-config",
+  apiEndpoint = "/api/isp/v1/commission-config",
   onConfigChange,
 }) => {
   const [configs, setConfigs] = useState<CommissionConfig[]>([]);
@@ -73,11 +63,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
   const [editingConfig, setEditingConfig] = useState<CommissionConfig | null>(null);
   const [formData, setFormData] = useState<Partial<CommissionConfig>>({});
 
-  useEffect(() => {
-    loadConfigs();
-  }, []);
-
-  const loadConfigs = async () => {
+  const loadConfigs = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(apiEndpoint);
@@ -88,7 +74,11 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiEndpoint]);
+
+  useEffect(() => {
+    loadConfigs();
+  }, [loadConfigs]);
 
   const handleCreate = () => {
     setEditingConfig(null);

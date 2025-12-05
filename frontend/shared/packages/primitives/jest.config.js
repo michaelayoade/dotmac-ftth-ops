@@ -32,7 +32,7 @@ const config = {
   moduleNameMapper: {
     "^@dotmac/primitives$": "<rootDir>/src/index.ts",
     "^@dotmac/primitives/(.*)$": "<rootDir>/src/$1",
-    "^@dotmac/testing$": "<rootDir>/src/testing/index.ts",
+    "^@dotmac/testing$": "<rootDir>/src/testing/index.tsx",
     "^@dotmac/headless$": "<rootDir>/../headless/src/index.ts",
     "^@dotmac/headless/(.*)$": "<rootDir>/../headless/src/$1",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",

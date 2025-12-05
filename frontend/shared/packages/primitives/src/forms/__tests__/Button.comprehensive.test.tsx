@@ -6,8 +6,9 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { Button, type ButtonProps } from "../Button";
 import * as React from "react";
+
+import { Button, type ButtonProps } from "../Button";
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, ChevronUp } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Define minimal components inline to avoid circular dependencies
 const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({
@@ -223,15 +223,28 @@ export function VirtualizedDataTable<T = Record<string, unknown>>({
               const rowKey = resolveRowKey(row, index);
               const isSelected = selectedKeys.has(rowKey);
 
+              const handleRowKeyDown = onRowClick
+                ? (e: React.KeyboardEvent) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick(row, index);
+                    }
+                  }
+                : undefined;
+
               return (
                 <div
                   key={rowKey}
                   className={clsx(
                     "flex items-center border-b border-gray-100 px-4 py-2 text-sm transition-colors",
                     isSelected ? "bg-blue-50" : "hover:bg-gray-50",
+                    onRowClick ? "cursor-pointer" : "",
                   )}
                   role="row"
+                  tabIndex={onRowClick ? 0 : undefined}
                   onClick={() => onRowClick?.(row, index)}
+                  onKeyDown={handleRowKeyDown}
+                  aria-label={onRowClick ? `Row ${index + 1}, press Enter to select` : undefined}
                 >
                   {selectable ? (
                     <div className="flex w-12 items-center justify-center">

@@ -5,8 +5,14 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
-import type React from "react";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useRef,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 
 // Widget variants
 const widgetVariants = cva("real-time-widget", {
@@ -39,7 +45,7 @@ const widgetVariants = cva("real-time-widget", {
 
 // Base real-time widget props
 export interface BaseRealTimeWidgetProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof widgetVariants> {
   title: string;
   subtitle?: string;
@@ -48,7 +54,7 @@ export interface BaseRealTimeWidgetProps
   loading?: boolean;
   error?: string;
   lastUpdated?: Date;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 }
 
 // Status indicator component

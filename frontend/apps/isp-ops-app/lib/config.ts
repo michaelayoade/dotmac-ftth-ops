@@ -7,7 +7,7 @@ import { getRuntimeConfigSnapshot } from "../../../shared/runtime/runtime-config
  * Centralized configuration for the frontend application.
  */
 
-const DEFAULT_API_PREFIX = "/api/isp/v1/admin";
+const DEFAULT_API_PREFIX = "/api/isp/v1";
 
 const rawApiBaseUrl =
   process.env["NEXT_PUBLIC_API_BASE_URL"] ??
@@ -48,7 +48,7 @@ export const platformConfig = {
    * API configuration
    */
   api: {
-    // Empty string - all API calls use full paths like /api/isp/v1/admin/...
+    // Empty string - all API calls use full paths like /api/isp/v1/...
     // Next.js rewrites in next.config.mjs proxy these to the backend
     baseUrl: apiBaseUrl,
     prefix: apiPrefix,
@@ -152,6 +152,7 @@ export function applyPlatformRuntimeConfig(runtimeConfig: RuntimeConfig | null |
     return;
   }
 
+  ensureMutableConfigSections();
   hydrateApiConfig(runtimeConfig.api);
   hydrateFeatures(runtimeConfig.features);
   hydrateBranding(runtimeConfig.branding);
@@ -260,6 +261,35 @@ function hydrateBranding(branding?: RuntimeConfig["branding"]) {
     // operationsEmail: branding.operationsEmail ?? platformConfig.branding.operationsEmail,
     // notificationDomain: branding.notificationDomain ?? platformConfig.branding.notificationDomain,
   });
+}
+
+function ensureMutableConfigSections() {
+  platformConfig.api = cloneIfReadOnlySection(platformConfig.api);
+  platformConfig.features = cloneIfReadOnlySection(platformConfig.features);
+  platformConfig.app = cloneIfReadOnlySection(platformConfig.app);
+  platformConfig.tenant = cloneIfReadOnlySection(platformConfig.tenant);
+  platformConfig.branding = cloneIfReadOnlySection(platformConfig.branding);
+  platformConfig.realtime = cloneIfReadOnlySection(platformConfig.realtime);
+  platformConfig.deployment = cloneIfReadOnlySection(platformConfig.deployment);
+  platformConfig.license = cloneIfReadOnlySection(platformConfig.license);
+}
+
+function cloneIfReadOnlySection<T extends object>(section: T): T {
+  const descriptors = Object.getOwnPropertyDescriptors(section);
+  const hasReadOnlyProperty = Object.values(descriptors).some((descriptor) => {
+    if (!descriptor) {
+      return false;
+    }
+
+    const isReadOnly = descriptor.writable === false && typeof descriptor.set !== "function";
+    return isReadOnly;
+  });
+
+  if (Object.isFrozen(section) || hasReadOnlyProperty) {
+    return { ...(section as Record<string, unknown>) } as T;
+  }
+
+  return section;
 }
 
 /**

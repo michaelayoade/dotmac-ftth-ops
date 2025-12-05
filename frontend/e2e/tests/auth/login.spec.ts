@@ -10,13 +10,13 @@ test.describe("Advanced Authentication Scenarios", () => {
   const TEST_PASSWORD = "admin123";
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${ISP_APP_URL}/login`);
-    await page.waitForLoadState("networkidle");
+    await page.goto(`${ISP_APP_URL}/login`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("email-input")).toBeVisible({ timeout: 15000 });
   });
 
   test("should handle network errors gracefully", async ({ page }) => {
     // Intercept login request and simulate network error
-    await page.route("**/api/isp/v1/admin/auth/login", (route) => {
+    await page.route("**/api/isp/v1/auth/login", (route) => {
       route.abort("failed");
     });
 
@@ -30,7 +30,7 @@ test.describe("Advanced Authentication Scenarios", () => {
 
   test("should show loading state during login", async ({ page }) => {
     // Intercept login request and delay response
-    await page.route("**/api/isp/v1/admin/auth/login", async (route) => {
+    await page.route("**/api/isp/v1/auth/login", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await route.continue();
     });

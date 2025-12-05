@@ -73,32 +73,32 @@ describe("routes", () => {
 
   describe("API_ROUTES constants", () => {
     it("should have base API route", () => {
-      expect(API_ROUTES.BASE).toBe("/api/isp/v1/admin");
+      expect(API_ROUTES.BASE).toBe("/api/isp/v1");
     });
 
     it("should have auth API routes", () => {
       expect(API_ROUTES.AUTH).toBeDefined();
-      expect(API_ROUTES.AUTH.LOGIN).toBe("/api/isp/v1/admin/auth/login");
-      expect(API_ROUTES.AUTH.LOGOUT).toBe("/api/isp/v1/admin/auth/logout");
-      expect(API_ROUTES.AUTH.ME).toBe("/api/isp/v1/admin/auth/me");
+      expect(API_ROUTES.AUTH.LOGIN).toBe("/api/isp/v1/auth/login");
+      expect(API_ROUTES.AUTH.LOGOUT).toBe("/api/isp/v1/auth/logout");
+      expect(API_ROUTES.AUTH.ME).toBe("/api/isp/v1/auth/me");
     });
 
     it("should have resource API routes", () => {
-      expect(API_ROUTES.CUSTOMERS).toBe("/api/isp/v1/admin/customers");
-      expect(API_ROUTES.BILLING).toBe("/api/isp/v1/admin/billing");
-      expect(API_ROUTES.NETWORK).toBe("/api/isp/v1/admin/network");
-      expect(API_ROUTES.RADIUS).toBe("/api/isp/v1/admin/radius");
+      expect(API_ROUTES.CUSTOMERS).toBe("/api/isp/v1/customers");
+      expect(API_ROUTES.BILLING).toBe("/api/isp/v1/billing");
+      expect(API_ROUTES.NETWORK).toBe("/api/isp/v1/network");
+      expect(API_ROUTES.RADIUS).toBe("/api/isp/v1/radius");
     });
 
     it("should have infrastructure API routes", () => {
-      expect(API_ROUTES.GENIEACS).toBe("/api/isp/v1/admin/genieacs");
-      expect(API_ROUTES.ACCESS).toBe("/api/isp/v1/admin/access");
-      expect(API_ROUTES.WEBHOOKS).toBe("/api/isp/v1/admin/webhooks");
+      expect(API_ROUTES.GENIEACS).toBe("/api/isp/v1/genieacs");
+      expect(API_ROUTES.ACCESS).toBe("/api/isp/v1/access");
+      expect(API_ROUTES.WEBHOOKS).toBe("/api/isp/v1/webhooks");
     });
 
     it("should have health check routes", () => {
-      expect(API_ROUTES.HEALTH).toBe("/api/isp/v1/admin/health");
-      expect(API_ROUTES.READY).toBe("/api/isp/v1/admin/ready");
+      expect(API_ROUTES.HEALTH).toBe("/api/isp/v1/health");
+      expect(API_ROUTES.READY).toBe("/api/isp/v1/ready");
     });
   });
 
@@ -224,10 +224,10 @@ describe("routes", () => {
     });
 
     it("should have consistent API route patterns", () => {
-      // All API routes should start with /api/isp/v1/admin
-      expect(API_ROUTES.AUTH.LOGIN.startsWith("/api/isp/v1/admin")).toBe(true);
-      expect(API_ROUTES.CUSTOMERS.startsWith("/api/isp/v1/admin")).toBe(true);
-      expect(API_ROUTES.BILLING.startsWith("/api/isp/v1/admin")).toBe(true);
+      // All API routes should start with /api/isp/v1
+      expect(API_ROUTES.AUTH.LOGIN.startsWith("/api/isp/v1")).toBe(true);
+      expect(API_ROUTES.CUSTOMERS.startsWith("/api/isp/v1")).toBe(true);
+      expect(API_ROUTES.BILLING.startsWith("/api/isp/v1")).toBe(true);
     });
 
     it("should not have duplicate route definitions", () => {

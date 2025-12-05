@@ -5,20 +5,20 @@
 
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin,
   Wifi,
   Users,
   AlertTriangle,
-  CheckCircle,
   Layers,
   ZoomIn,
   ZoomOut,
   Maximize2,
   Filter,
 } from "lucide-react";
+import React, { useState, useCallback, useMemo } from "react";
+
 import { cn } from "../utils/cn";
 
 // Map Types
@@ -337,10 +337,10 @@ const MockMapCanvas = ({
 };
 
 export function UniversalMap({
-  type,
+  type: _type,
   center = { lat: 37.7749, lng: -122.4194 },
   zoom = 10,
-  bounds,
+  bounds: _bounds,
   markers = [],
   serviceAreas = [],
   networkNodes = [],
@@ -349,12 +349,12 @@ export function UniversalMap({
   showLegend = true,
   showControls = true,
   showHeatmap = false,
-  showClusters = false,
+  showClusters: _showClusters = false,
   onMarkerClick,
   onAreaClick,
-  onNodeClick,
-  onMapClick,
-  onBoundsChanged,
+  onNodeClick: _onNodeClick,
+  onMapClick: _onMapClick,
+  onBoundsChanged: _onBoundsChanged,
   filters,
   title,
   height = 400,
@@ -363,6 +363,13 @@ export function UniversalMap({
   error = null,
   className = "",
 }: UniversalMapProps) {
+  // Acknowledge unused props (reserved for future map implementations)
+  void _type;
+  void _bounds;
+  void _showClusters;
+  void _onNodeClick;
+  void _onMapClick;
+  void _onBoundsChanged;
   const [currentZoom, setCurrentZoom] = useState(zoom);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState(filters || {});

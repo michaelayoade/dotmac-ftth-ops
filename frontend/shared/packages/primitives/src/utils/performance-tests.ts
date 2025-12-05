@@ -125,7 +125,7 @@ export class PerformanceMeasurer {
 export const ComponentBenchmarks = {
   // Chart component performance test
   async testChartPerformance(
-    ChartComponent: React.ComponentType<any>,
+    _ChartComponent: React.ComponentType<any>,
     testData: any[],
     budget: PerformanceBudget,
   ): Promise<BenchmarkResult> {
@@ -134,8 +134,7 @@ export const ComponentBenchmarks = {
 
     measurer.startMeasurement(testName);
 
-    // Simulate component lifecycle
-    const startRender = performance.now();
+    // Simulate component lifecycle (component used in real implementation)
 
     // Mock rendering process
     await new Promise((resolve) => {
@@ -167,7 +166,7 @@ export const ComponentBenchmarks = {
 
   // Status indicator performance test
   async testStatusIndicatorPerformance(
-    IndicatorComponent: React.ComponentType<any>,
+    _IndicatorComponent: React.ComponentType<any>,
     testCount: number,
     budget: PerformanceBudget,
   ): Promise<BenchmarkResult> {
@@ -204,7 +203,7 @@ export const ComponentBenchmarks = {
 
   // Virtualized list performance test
   async testVirtualizedListPerformance(
-    ListComponent: React.ComponentType<any>,
+    _ListComponent: React.ComponentType<any>,
     itemCount: number,
     budget: PerformanceBudget,
   ): Promise<BenchmarkResult> {

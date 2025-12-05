@@ -1,7 +1,7 @@
 /**
  * Performance measurement and optimization utilities
  */
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export interface PerformanceMeasurement {
   name: string;
@@ -78,11 +78,11 @@ export function withPerformanceTracking<P extends Record<string, any>>(
 
   const PerformanceTrackedComponent: React.FC<P> = (props) => {
     const renderStartTime = useRef<number>();
-    const [measurements, setMeasurements] = useState<PerformanceMeasurement[]>([]);
+    // measurements state is used for tracking render history
+    const [, setMeasurements] = useState<PerformanceMeasurement[]>([]);
 
-    useEffect(() => {
-      renderStartTime.current = performance.now();
-    });
+    // Record start time before render
+    renderStartTime.current = performance.now();
 
     useEffect(() => {
       if (renderStartTime.current) {
@@ -103,7 +103,7 @@ export function withPerformanceTracking<P extends Record<string, any>>(
           );
         }
       }
-    });
+    }); // Intentionally runs on every render to measure render time
 
     return React.createElement(WrappedComponent, props);
   };
@@ -131,9 +131,8 @@ export function usePerformanceMetrics(componentName: string) {
   const renderStartTime = useRef<number>();
   const renderTimes = useRef<number[]>([]);
 
-  useEffect(() => {
-    renderStartTime.current = performance.now();
-  });
+  // Record start time before render
+  renderStartTime.current = performance.now();
 
   useEffect(() => {
     if (renderStartTime.current) {
@@ -168,7 +167,7 @@ export function usePerformanceMetrics(componentName: string) {
         }
       }
     }
-  });
+  }); // Intentionally runs on every render to measure render time
 
   return metrics;
 }
@@ -353,6 +352,3 @@ export const networkUtils = {
     };
   },
 };
-
-// React import for lazy loading
-import React from "react";

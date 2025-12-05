@@ -5,7 +5,8 @@
  */
 
 import React from "react";
-import { renderWithTimers, screen, waitFor, act } from "@dotmac/testing";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { renderWithTimers, screen, waitFor, act } = require("@dotmac/testing");
 import { LiveSessionMonitor } from "../LiveSessionMonitor";
 
 interface SessionUpdate {

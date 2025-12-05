@@ -4,8 +4,9 @@
  * Tests tab navigation primitive with variants, keyboard nav, and accessibility
  */
 
-import React, { useState } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import React, { useState } from "react";
+
 import { TabNavigation, TabItem, TabPanel } from "../TabNavigation";
 
 describe("TabNavigation", () => {

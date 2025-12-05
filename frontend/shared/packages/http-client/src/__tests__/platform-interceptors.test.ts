@@ -2,13 +2,14 @@
  * @jest-environment jsdom
  */
 
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import { v4 as uuidv4 } from "uuid";
+
 import {
   PlatformInterceptors,
   createPlatformInterceptors,
   addPlatformInterceptors,
 } from "../platform-interceptors";
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
 
 // Mock uuid
 jest.mock("uuid", () => ({

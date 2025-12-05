@@ -1,4 +1,5 @@
 import type { AxiosError } from "axios";
+
 import type { ApiError } from "./types";
 
 export class ErrorNormalizer {

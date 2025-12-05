@@ -91,7 +91,7 @@ export interface TemplateVariable {
 
 /**
  * Send immediate email request
- * POST /api/platform/v1/admin/communications/email/send
+ * POST /api/platform/v1/communications/email/send
  */
 export interface SendEmailRequest {
   to: EmailRecipient[];
@@ -110,7 +110,7 @@ export interface SendEmailRequest {
 
 /**
  * Queue async email request
- * POST /api/platform/v1/admin/communications/email/queue
+ * POST /api/platform/v1/communications/email/queue
  */
 export interface QueueEmailRequest extends SendEmailRequest {
   priority?: number; // 1-10, default 5
@@ -119,7 +119,7 @@ export interface QueueEmailRequest extends SendEmailRequest {
 
 /**
  * Create template request
- * POST /api/platform/v1/admin/communications/templates
+ * POST /api/platform/v1/communications/templates
  */
 export interface CreateTemplateRequest {
   name: string;
@@ -135,7 +135,7 @@ export interface CreateTemplateRequest {
 
 /**
  * Update template request
- * PUT /api/platform/v1/admin/communications/templates/{id}
+ * PUT /api/platform/v1/communications/templates/{id}
  */
 export interface UpdateTemplateRequest {
   name?: string;
@@ -150,7 +150,7 @@ export interface UpdateTemplateRequest {
 
 /**
  * Render template request
- * POST /api/platform/v1/admin/communications/templates/{id}/render
+ * POST /api/platform/v1/communications/templates/{id}/render
  */
 export interface RenderTemplateRequest {
   variables: Record<string, any>;
@@ -158,7 +158,7 @@ export interface RenderTemplateRequest {
 
 /**
  * Quick render request (no template ID)
- * POST /api/platform/v1/admin/communications/render
+ * POST /api/platform/v1/communications/render
  */
 export interface QuickRenderRequest {
   subject?: string;
@@ -169,7 +169,7 @@ export interface QuickRenderRequest {
 
 /**
  * Queue bulk operation request
- * POST /api/platform/v1/admin/communications/bulk/queue
+ * POST /api/platform/v1/communications/bulk/queue
  */
 export interface QueueBulkRequest {
   recipients: EmailRecipient[];

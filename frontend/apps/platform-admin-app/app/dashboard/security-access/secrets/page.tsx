@@ -60,7 +60,7 @@ function SecretsPageContent() {
 
   const fetchSecrets = useCallback(async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/secrets`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/secrets`, {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -98,7 +98,7 @@ function SecretsPageContent() {
 
   const fetchSecretValue = async (path: string) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/secrets/${encodeURIComponent(path)}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/secrets/${encodeURIComponent(path)}`, {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -140,7 +140,7 @@ function SecretsPageContent() {
 
   const handleCreateSecret = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/secrets`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/secrets`, {
         method: "POST",
         credentials: "include",
         headers: {

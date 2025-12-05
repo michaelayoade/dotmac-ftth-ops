@@ -1,6 +1,6 @@
 "use client";
 
-import React, { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
 
 import { VirtualizedDataTable, type VirtualizedDataTableProps } from "./VirtualizedDataTable";
 

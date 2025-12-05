@@ -73,11 +73,17 @@
     --muted-foreground: 215 20% 65%;
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 65%; /* Lightened for dark mode contrast */
     --destructive-foreground: 210 40% 98%;
     --border: 215 28% 32%;
     --input: 215 28% 32%;
     --ring: 199 89% 48%;
+
+    /* WCAG AA compliant status colors for dark mode */
+    --status-warning: 45 93% 58%; /* yellow-300 equivalent */
+    --status-success: 142 69% 58%; /* green-300 equivalent */
+    --status-error: 0 91% 71%; /* red-300 equivalent */
+    --status-info: 199 89% 64%; /* blue-300 equivalent */
 
     /* DotMac legacy variables for compatibility */
     --dotmac-background: #0f172a;
@@ -236,5 +242,18 @@
 
   .badge-outline {
     @apply badge border border-border bg-background text-foreground;
+  }
+
+  /* Prose/readable text - constrain line length for readability (45-75 chars optimal) */
+  .prose-readable {
+    @apply max-w-prose; /* 65ch */
+  }
+
+  .prose-narrow {
+    max-width: 45ch;
+  }
+
+  .prose-wide {
+    max-width: 75ch;
   }
 }

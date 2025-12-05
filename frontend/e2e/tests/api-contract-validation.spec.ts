@@ -15,7 +15,7 @@
 import { test, expect } from "#e2e/fixtures";
 
 test.describe("API Contract Validation", () => {
-  const API_BASE = "http://localhost:8000/api/isp/v1/admin";
+  const API_BASE = "http://localhost:8000/api/isp/v1";
 
   // Helper to validate common response patterns
   function validatePaginatedResponse(data: any) {

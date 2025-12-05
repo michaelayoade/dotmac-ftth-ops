@@ -6,9 +6,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { UniversalMetricCard } from "./UniversalMetricCard";
-import type { UniversalMetricCardProps } from "./UniversalMetricCard";
+
 import { cn } from "../utils/cn";
+
+import { UniversalMetricCard, type UniversalMetricCardProps } from "./UniversalMetricCard";
 
 export interface KPIItem extends Omit<UniversalMetricCardProps, "size" | "variant"> {
   id: string;
@@ -129,7 +130,7 @@ export function UniversalKPISection({
         )}
         variants={containerVariants}
       >
-        {kpis.map((kpi, index) => (
+        {kpis.map((kpi) => (
           <motion.div key={kpi.id} variants={itemVariants}>
             <UniversalMetricCard {...kpi} size={cardSize} variant={cardVariant} loading={loading} />
           </motion.div>

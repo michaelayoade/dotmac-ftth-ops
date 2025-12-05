@@ -3,8 +3,8 @@
  * Moved from patterns package during consolidation
  */
 
-import React, { useState, useMemo } from "react";
 import { clsx } from "clsx";
+import React, { useState, useMemo } from "react";
 
 export interface Column<T> {
   key: keyof T;
@@ -58,7 +58,7 @@ export function DataTable<T extends Record<string, any>>({
   if (loading) {
     return (
       <div className="flex justify-center p-4">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
       </div>
     );
   }

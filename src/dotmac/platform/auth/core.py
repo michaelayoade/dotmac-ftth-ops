@@ -569,22 +569,33 @@ class JWTService:
         """Check if a session is still active in Redis.
 
         Returns True if session exists, False otherwise.
-        Falls back to True if Redis is unavailable (fail-open for availability).
+        Falls back to True only when fallback session storage is enabled
+        (non-production/dev environments).
         """
+        fail_open_allowed = bool(session_manager._fallback_enabled and not _require_redis_for_sessions)
         try:
             session = await session_manager.get_session(session_id)
             if session is not None:
                 return True
 
             redis_healthy = getattr(session_manager, "_redis_healthy", True)
-            if not session_manager._fallback_enabled and not redis_healthy:
-                logger.warning("Session store unavailable during validation; allowing token")
-                return True
+            if not redis_healthy:
+                logger.warning(
+                    "Session store unavailable during validation",
+                    session_id=session_id[:8] + "..." if session_id else None,
+                    fail_open_allowed=fail_open_allowed,
+                )
+                return fail_open_allowed
 
             return False
         except Exception as e:
-            logger.error("Session check failed", session_id=session_id, error=str(e))
-            return True  # Fail-open for availability
+            logger.error(
+                "Session check failed",
+                session_id=session_id[:8] + "..." if session_id else None,
+                error=str(e),
+                fail_open_allowed=fail_open_allowed,
+            )
+            return fail_open_allowed  # Fail-open only when explicitly allowed
 
     async def revoke_user_tokens(self, user_id: str) -> int:
         """Revoke all tokens associated with a user by blacklisting their JTIs.

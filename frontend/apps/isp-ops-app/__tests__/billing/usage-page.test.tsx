@@ -16,18 +16,16 @@ jest.mock("@/lib/services/usage-billing-service", () => {
   mockGetUsageStatistics = jest.fn();
   mockCreateUsageRecord = jest.fn();
 
-  const Service = jest.fn().mockImplementation(() => ({
-    listUsageRecords: mockListUsageRecords,
-    getUsageStatistics: mockGetUsageStatistics,
-    createUsageRecord: mockCreateUsageRecord,
-    formatCurrency: (amount: number, currency: string = "USD") =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount / 100),
-    calculateTotalAmount: (qty: number, unitPrice: number) => Math.round(qty * unitPrice),
-  }));
-
   return {
     __esModule: true,
-    default: Service,
+    usageBillingService: {
+      listUsageRecords: mockListUsageRecords,
+      getUsageStatistics: mockGetUsageStatistics,
+      createUsageRecord: mockCreateUsageRecord,
+      formatCurrency: (amount: number, currency: string = "USD") =>
+        new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount / 100),
+      calculateTotalAmount: (qty: number, unitPrice: number) => Math.round(qty * unitPrice),
+    },
   };
 });
 

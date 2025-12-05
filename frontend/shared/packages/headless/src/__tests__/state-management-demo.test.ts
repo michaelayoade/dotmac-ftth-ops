@@ -4,7 +4,7 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { useDataTable, useFilters, useNotifications } from "@dotmac/headless/hooks";
+import { useDataTable, useFilters, useAppNotifications } from "@dotmac/headless/hooks";
 
 describe("State Management System Demo", () => {
   describe("Real-world Customer Management Scenario", () => {
@@ -177,7 +177,7 @@ describe("State Management System Demo", () => {
 
   describe("Notification System Scenario", () => {
     it("should handle global notifications across components", () => {
-      const notifications = renderHook(() => useNotifications());
+      const notifications = renderHook(() => useAppNotifications());
       const customerTable = renderHook(() => useDataTable("customers"));
 
       // No initial notifications

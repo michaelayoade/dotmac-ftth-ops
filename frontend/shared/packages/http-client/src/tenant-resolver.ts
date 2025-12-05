@@ -1,4 +1,5 @@
 import Cookies from "js-cookie";
+
 import type { TenantConfig } from "./types";
 
 export class TenantResolver {

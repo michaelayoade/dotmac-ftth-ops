@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -26,15 +25,17 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-900/60"
+        aria-label="Close modal"
+        onClick={onClose}
+      />
       <div
-        className="w-full max-w-lg rounded-xl bg-white shadow-xl"
+        className="relative w-full max-w-lg rounded-xl bg-white shadow-xl"
         role="dialog"
         aria-modal="true"
-        onClick={(event) => event.stopPropagation()}
       >
         {title ? (
           <div className="border-b border-slate-200 px-6 py-4 text-lg font-semibold">{title}</div>

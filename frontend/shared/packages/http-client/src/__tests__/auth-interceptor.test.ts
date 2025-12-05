@@ -2,9 +2,10 @@
  * @jest-environment jsdom
  */
 
-import Cookies from "js-cookie";
-import { AuthInterceptor } from "../auth-interceptor";
 import type { InternalAxiosRequestConfig, AxiosResponse } from "axios";
+import Cookies from "js-cookie";
+
+import { AuthInterceptor } from "../auth-interceptor";
 
 // Mock js-cookie
 jest.mock("js-cookie", () => ({

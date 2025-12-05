@@ -14,6 +14,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -296,8 +297,13 @@ export function ToastProvider({
     setToasts([]);
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ toasts, addToast, removeToast, removeAllToasts }),
+    [toasts, addToast, removeToast, removeAllToasts]
+  );
+
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast, removeAllToasts }}>
+    <ToastContext.Provider value={contextValue}>
       <ToastPrimitive.Provider swipeDirection={swipeDirection} swipeThreshold={swipeThreshold}>
         {children}
 

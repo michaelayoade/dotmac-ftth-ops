@@ -1,6 +1,7 @@
+import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import type { ComponentType, ReactNode } from "react";
-import { motion } from "framer-motion";
+
 import UniversalHeader from "./UniversalHeader";
 
 interface NavigationItem {
@@ -165,10 +166,14 @@ export function UniversalLayout({
   padding = "md",
 
   // Security (implementation would need auth context)
-  requireAuth = true,
-  requiredRoles = [],
-  requiredPermissions = [],
+  requireAuth: _requireAuth = true,
+  requiredRoles: _requiredRoles = [],
+  requiredPermissions: _requiredPermissions = [],
 }: UniversalLayoutProps) {
+  // These security props are reserved for future auth context integration
+  void _requireAuth;
+  void _requiredRoles;
+  void _requiredPermissions;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

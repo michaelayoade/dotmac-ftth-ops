@@ -8,24 +8,8 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { useMemo, useCallback } from "react";
-import { sanitizeText, validateClassName, validateData } from "../utils/security";
-import {
-  uptimeSchema,
-  networkMetricsSchema,
-  serviceTierSchema,
-  alertSeveritySchema,
-} from "../utils/security";
-import {
-  generateStatusText,
-  useKeyboardNavigation,
-  useFocusManagement,
-  useReducedMotion,
-  useScreenReader,
-  announceToScreenReader,
-  generateId,
-  ARIA_ROLES,
-  COLOR_CONTRAST,
-} from "../utils/a11y";
+
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import type {
   StatusBadgeProps,
   UptimeIndicatorProps,
@@ -38,10 +22,24 @@ import type {
   AlertSeverityConfig,
   ServiceTier,
   AlertSeverity,
-  StatusVariant,
 } from "../types/status";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+import type { StatusVariant } from "../types/status";
+import {
+  generateStatusText,
+  useReducedMotion,
+  announceToScreenReader,
+  generateId,
+  ARIA_ROLES,
+  COLOR_CONTRAST,
+} from "../utils/a11y";
 import { cn } from "../utils/cn";
+import { sanitizeText, validateClassName, validateData } from "../utils/security";
+import {
+  uptimeSchema,
+  networkMetricsSchema,
+  serviceTierSchema,
+  alertSeveritySchema,
+} from "../utils/security";
 
 // Enhanced status badge variants
 const statusBadgeVariants = cva(

@@ -58,7 +58,7 @@ function IntegrationDetailsPageContent() {
     queryKey: ["integration", integrationName],
     queryFn: async () => {
       const response = await fetch(
-        `${apiBaseUrl}/api/platform/v1/admin/integrations/${encodeURIComponent(integrationName)}`,
+        `${apiBaseUrl}/api/platform/v1/integrations/${encodeURIComponent(integrationName)}`,
         { credentials: "include" },
       );
       if (!response.ok) {

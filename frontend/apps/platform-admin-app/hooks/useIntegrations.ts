@@ -2,9 +2,9 @@
  * React Query hooks for integrations management
  *
  * Connects to backend integrations API:
- * - GET /api/platform/v1/admin/integrations - List all registered integrations
- * - GET /api/platform/v1/admin/integrations/{name} - Get integration details
- * - POST /api/platform/v1/admin/integrations/{name}/health-check - Trigger health check
+ * - GET /api/platform/v1/integrations - List all registered integrations
+ * - GET /api/platform/v1/integrations/{name} - Get integration details
+ * - POST /api/platform/v1/integrations/{name}/health-check - Trigger health check
  */
 
 import {

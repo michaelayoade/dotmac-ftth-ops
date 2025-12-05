@@ -5,6 +5,7 @@
 
 "use client";
 
+import { motion } from "framer-motion";
 import React, { useMemo, useCallback } from "react";
 import {
   ResponsiveContainer,
@@ -25,8 +26,7 @@ import {
   ReferenceLine,
   Brush,
 } from "recharts";
-import { motion } from "framer-motion";
-import { Download, Maximize2, RefreshCw } from "lucide-react";
+
 import { cn } from "../utils/cn";
 
 // Chart Type Definitions
@@ -344,7 +344,7 @@ export function UniversalChart({
         return (
           <LineChart {...commonProps}>
             <defs>
-              {seriesWithColors.map((s, index) => (
+              {seriesWithColors.map((s) => (
                 <linearGradient key={s.key} id={`gradient-${s.key}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={s.color} stopOpacity={0.3} />
                   <stop offset="95%" stopColor={s.color} stopOpacity={0.1} />
@@ -556,7 +556,7 @@ export function UniversalChart({
       className={cn("bg-white rounded-lg border border-gray-200 p-6", className)}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.3, ease: animationEasing }}
     >
       {/* Header */}
       {(title || subtitle || actions.length > 0) && (

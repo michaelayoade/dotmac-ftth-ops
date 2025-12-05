@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import { generateNonce, generateCSP, extractNonce, isValidNonce } from "../csp";
 
 describe("CSP Utilities", () => {

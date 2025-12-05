@@ -8,8 +8,8 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
-import * as React from "react";
 import { Loader2 } from "lucide-react";
+import * as React from "react";
 
 const isPromise = (value: unknown): value is Promise<unknown> =>
   typeof value === "object" &&
@@ -118,7 +118,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
 
     // Use only isLoading - no backward compatibility
-    const actuallyLoading = isLoading;
+    const actuallyLoading = isLoading || loading;
 
     // Handle icon props (icon prop can override leftIcon/rightIcon based on position)
     const resolvedLeftIcon = icon && iconPosition === "left" ? icon : leftIcon;
@@ -183,30 +183,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const showLoading = actuallyLoading || isAsyncLoading;
 
     // Custom loading spinner matching UI package behavior
-    const LoadingIcon = loadingComponent || (
-      <svg
-        data-testid="loader"
-        className="animate-spin h-4 w-4"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        />
-      </svg>
-    );
+    const LoadingIcon =
+      loadingComponent ||
+      (Loader2 ? <Loader2 data-testid="loader" className="h-4 w-4 animate-spin" /> : null);
 
     const handleKeyDownEvent = (event: React.KeyboardEvent<HTMLButtonElement>) => {
       if ([" ", "Spacebar", "Space"].includes(event.key)) {

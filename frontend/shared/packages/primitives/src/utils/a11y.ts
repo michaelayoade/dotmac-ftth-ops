@@ -96,11 +96,11 @@ export const generateChartDescription = (
   title?: string,
 ): string => {
   if (!data || data.length === 0) {
-    return `${title ? title + ": " : ""}Empty ${chartType} chart with no data available.`;
+    return `${title ? `${title  }: ` : ""}Empty ${chartType} chart with no data available.`;
   }
 
   const dataCount = data.length;
-  let description = `${title ? title + ": " : ""}${chartType} chart with ${dataCount} data point${dataCount === 1 ? "" : "s"}.`;
+  let description = `${title ? `${title  }: ` : ""}${chartType} chart with ${dataCount} data point${dataCount === 1 ? "" : "s"}.`;
 
   // Add trend information for time series
   if (chartType === "line" || chartType === "area") {

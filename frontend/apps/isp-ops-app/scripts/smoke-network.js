@@ -2,13 +2,13 @@
 
 // Simple REST smoke for network monitoring endpoints.
 // Usage:
-//   NETWORK_BASE=http://localhost:8000/api/isp/v1/admin \
+//   NETWORK_BASE=http://localhost:8000/api/isp/v1 \
 //   AUTH_TOKEN="Bearer <token>" \
 //   node scripts/smoke-network.js
 
 const axios = require("axios");
 
-const BASE = process.env.NETWORK_BASE || "http://localhost:8000/api/isp/v1/admin";
+const BASE = process.env.NETWORK_BASE || "http://localhost:8000/api/isp/v1";
 const AUTH = process.env.AUTH_TOKEN || process.env.BEARER_TOKEN || "";
 
 const headers = {};

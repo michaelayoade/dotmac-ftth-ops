@@ -62,11 +62,11 @@ const nextConfig = {
     return [
       {
         source: '/api/v1/platform/:path*',
-        destination: `${backendUrl}/api/platform/v1/admin/:path*`,
+        destination: `${backendUrl}/api/platform/v1/:path*`,
       },
       {
-        source: '/api/platform/v1/admin/:path*',
-        destination: `${backendUrl}/api/platform/v1/admin/:path*`,
+        source: '/api/platform/v1/:path*',
+        destination: `${backendUrl}/api/platform/v1/:path*`,
       },
       {
         source: '/health',

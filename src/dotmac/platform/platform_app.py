@@ -71,7 +71,7 @@ def create_platform_app() -> FastAPI:
         app,
         scope=ServiceScope.CONTROLPLANE,
         include_shared=True,
-        default_base_prefix="/admin",
+        default_base_prefix="",
     )
 
     logger.info(

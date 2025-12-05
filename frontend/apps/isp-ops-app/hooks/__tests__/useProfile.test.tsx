@@ -25,6 +25,7 @@ import apiClient from "@/lib/api/client";
 jest.mock("@/lib/api/client", () => ({
   __esModule: true,
   default: {
+    patch: jest.fn(),
     post: jest.fn(),
     delete: jest.fn(),
     get: jest.fn(),

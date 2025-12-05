@@ -2,8 +2,8 @@
  * Bundle Analysis Component for Performance Monitoring
  * Tracks bundle sizes, chunk loading, and provides optimization insights
  */
-import React, { useEffect, useState, useMemo } from "react";
 import { Activity, AlertTriangle, CheckCircle, FileText, Zap } from "lucide-react";
+import React, { useEffect, useState, useMemo } from "react";
 
 interface BundleMetric {
   name: string;
@@ -53,7 +53,6 @@ export function BundleAnalyzer({
 }: BundleAnalysisProps) {
   const [metrics, setMetrics] = useState<BundleMetric[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [performanceScore, setPerformanceScore] = useState(0);
 
   // Analyze bundle metrics
   const analysis = useMemo(() => {
@@ -175,10 +174,6 @@ export function BundleAnalyzer({
         ];
 
         setMetrics(simulatedMetrics);
-
-        // Calculate performance score
-        const score = calculatePerformanceScore(simulatedMetrics);
-        setPerformanceScore(score);
       } catch (error) {
         console.error("Failed to collect bundle metrics:", error);
       } finally {
@@ -416,18 +411,6 @@ function MetricCard({
       </div>
     </div>
   );
-}
-
-function calculatePerformanceScore(metrics: BundleMetric[]): number {
-  // Simplified scoring algorithm
-  const totalSize = metrics.reduce((sum, m) => sum + m.gzipSize, 0);
-  const totalLoadTime = metrics.reduce((sum, m) => sum + m.loadTime, 0);
-
-  // Penalties for large sizes and slow load times
-  const sizePenalty = Math.max(0, (totalSize - 500000) / 10000); // Penalty after 500KB
-  const timePenalty = Math.max(0, (totalLoadTime - 1000) / 100); // Penalty after 1s
-
-  return Math.max(0, Math.round(100 - sizePenalty - timePenalty));
 }
 
 function generateRecommendations(

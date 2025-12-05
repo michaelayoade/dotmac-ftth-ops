@@ -71,7 +71,7 @@ function PresetsPageContent() {
   const { data: presets = [], isLoading } = useQuery<Preset[]>({
     queryKey: ["device-presets"],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/presets`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/presets`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch presets");
@@ -89,7 +89,7 @@ function PresetsPageContent() {
         throw new Error("Invalid JSON configuration");
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/presets`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/presets`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -127,7 +127,7 @@ function PresetsPageContent() {
         throw new Error("Invalid JSON configuration");
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/presets/${id}`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/presets/${id}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -159,7 +159,7 @@ function PresetsPageContent() {
   // Delete preset
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/presets/${id}`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/presets/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -182,7 +182,7 @@ function PresetsPageContent() {
   // Duplicate preset
   const duplicateMutation = useMutation({
     mutationFn: async (preset: Preset) => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/genieacs/presets`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/genieacs/presets`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

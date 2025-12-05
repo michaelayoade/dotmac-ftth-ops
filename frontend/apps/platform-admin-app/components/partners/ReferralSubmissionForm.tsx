@@ -37,7 +37,7 @@ export default function ReferralSubmissionForm({
 
   const submitMutation = useMutation({
     mutationFn: async (data: ReferralInput) => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/partners/referrals`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/partners/referrals`, {
         method: "POST",
         credentials: "include",
         headers: {

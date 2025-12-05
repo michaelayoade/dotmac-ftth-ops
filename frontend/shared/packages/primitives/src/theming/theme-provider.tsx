@@ -5,7 +5,7 @@
  * ELIMINATES HARDCODED THEMES: Dynamic theme injection from configuration
  */
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
 
 // Theme configuration interface for white-labeling
@@ -378,7 +378,7 @@ export function ThemeProvider({
   }, [configEndpoint, tenantId, portalVar]);
 
   // Get portal-specific theme with overrides
-  const getPortalTheme = (): BrandTheme => {
+  const getPortalTheme = useCallback((): BrandTheme => {
     if (!currentTheme.portals?.[portalVar]) {
       return currentTheme;
     }
@@ -399,10 +399,10 @@ export function ThemeProvider({
         ...currentTheme.portals[portalVar]?.brand,
       },
     };
-  };
+  }, [currentTheme, portalVar]);
 
   // Generate CSS variables for dynamic theming
-  const getCSSVariables = (): Record<string, string> => {
+  const getCSSVariables = useCallback((): Record<string, string> => {
     const portalTheme = getPortalTheme();
     const vars: Record<string, string> = {};
 
@@ -436,7 +436,7 @@ export function ThemeProvider({
     });
 
     return vars;
-  };
+  }, [getPortalTheme]);
 
   // Apply CSS variables to document root
   useEffect(() => {
@@ -465,16 +465,19 @@ export function ThemeProvider({
         root.style.removeProperty(property);
       });
     };
-  }, [currentTheme, portalVar]);
+  }, [currentTheme, portalVar, getCSSVariables, getPortalTheme]);
 
-  const contextValue: ThemeContextType = {
-    currentTheme,
-    portalVariant: portalVar,
-    setTheme: setCurrentTheme,
-    setPortalVariant: setPortalVar,
-    getPortalTheme,
-    getCSSVariables,
-  };
+  const contextValue = useMemo<ThemeContextType>(
+    () => ({
+      currentTheme,
+      portalVariant: portalVar,
+      setTheme: setCurrentTheme,
+      setPortalVariant: setPortalVar,
+      getPortalTheme,
+      getCSSVariables,
+    }),
+    [currentTheme, portalVar, getPortalTheme, getCSSVariables]
+  );
 
   return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 }

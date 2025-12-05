@@ -6,6 +6,7 @@
  */
 
 import { platformConfig } from "./config";
+import { getOperatorAccessToken } from "@shared/utils/operatorAuth";
 
 /**
  * GraphQL client interface
@@ -37,12 +38,19 @@ function createGraphQLClient(): GraphQLClient {
 
   return {
     async request<T = any>(query: string, variables?: Record<string, any>): Promise<T> {
+      const token = getOperatorAccessToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Portal-Type": "ispAdmin", // ✅ Identify as ISP admin portal
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch(graphqlUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Portal-Type": "ispAdmin", // ✅ Identify as ISP admin portal
-        },
+        headers,
         credentials: "include",
         body: JSON.stringify({
           query,

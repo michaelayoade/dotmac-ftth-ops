@@ -13,7 +13,7 @@ import { http, HttpResponse, passthrough } from "msw";
 
 // Backend API base URL (configurable via environment)
 const BACKEND_URL = process.env["NEXT_PUBLIC_API_BASE_URL"] || "http://localhost:8000";
-const API_BASE = `${BACKEND_URL}/api/isp/v1/admin`;
+const API_BASE = `${BACKEND_URL}/api/isp/v1`;
 
 /**
  * Type definitions matching backend Pydantic models
@@ -343,6 +343,91 @@ export const handlers = [
  * in isolation without backend dependency.
  */
 export const mockHandlers = [
+  // Auth - Login
+  http.post(`${BACKEND_URL}/auth/login`, async () => {
+    return HttpResponse.json({
+      access_token: "mock-access-token-12345",
+      refresh_token: "mock-refresh-token-12345",
+      token_type: "Bearer",
+      expires_in: 3600,
+      user: {
+        id: "user-123",
+        email: "admin@test.com",
+        name: "Test Admin",
+        roles: ["admin"],
+        tenant_id: "tenant-123",
+        is_platform_admin: true,
+      },
+    });
+  }),
+
+  // Auth - Me (current user)
+  http.get(`${BACKEND_URL}/auth/me`, async () => {
+    return HttpResponse.json({
+      id: "user-123",
+      email: "admin@test.com",
+      name: "Test Admin",
+      roles: ["admin"],
+      tenant_id: "tenant-123",
+      is_platform_admin: true,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    });
+  }),
+
+  // Auth - Refresh Token
+  http.post(`${BACKEND_URL}/auth/refresh`, async () => {
+    return HttpResponse.json({
+      access_token: "mock-refreshed-token-12345",
+      refresh_token: "mock-refresh-token-67890",
+      token_type: "Bearer",
+      expires_in: 3600,
+    });
+  }),
+
+  // Auth - Logout
+  http.post(`${BACKEND_URL}/auth/logout`, async () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Health check
+  http.get(`${BACKEND_URL}/health`, () => {
+    return HttpResponse.json({
+      status: "healthy",
+      checks: {
+        database: { status: "healthy", latency_ms: 5 },
+        redis: { status: "healthy", latency_ms: 2 },
+        storage: { status: "healthy" },
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Users list
+  http.get(`${API_BASE}/users`, () => {
+    return HttpResponse.json({
+      users: [
+        {
+          id: "user-123",
+          email: "admin@test.com",
+          name: "Test Admin",
+          is_active: true,
+          roles: ["admin"],
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "user-456",
+          email: "user@test.com",
+          name: "Test User",
+          is_active: true,
+          roles: ["user"],
+          created_at: new Date().toISOString(),
+        },
+      ],
+      total: 2,
+    });
+  }),
+
   http.get(`${API_BASE}/integrations`, () => {
     return HttpResponse.json({
       integrations: [

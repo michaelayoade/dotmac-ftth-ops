@@ -32,6 +32,7 @@ class SimpleUser:
         tenant_id: str | None = None,
         roles: list[str] | None = None,
         scopes: list[str] | None = None,
+        is_platform_admin: bool | None = None,
     ):
         self.id = user_id
         self.user_id = user_id
@@ -42,6 +43,7 @@ class SimpleUser:
         # Map roles to scopes for boundary middleware
         # Roles and scopes are treated as equivalent permissions
         self.scopes = scopes or roles or []
+        self.is_platform_admin = bool(is_platform_admin)
 
 
 class AuditContextMiddleware(BaseHTTPMiddleware):
@@ -81,18 +83,36 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
 
             if jwt_token or api_key:
                 # Import here to avoid circular dependency
-                from ..auth.core import api_key_service, jwt_service
+                from ..auth.core import (
+                    TokenType,
+                    _enforce_active_session,
+                    api_key_service,
+                    jwt_service,
+                )
 
                 # Extract user info from JWT token (header or cookie)
                 if jwt_token:
                     try:
-                        claims = jwt_service.verify_token(jwt_token)
+                        verify_async = getattr(jwt_service, "verify_token_async", None)
+                        if verify_async:
+                            claims = await verify_async(
+                                jwt_token, expected_type=TokenType.ACCESS
+                            )
+                        else:
+                            claims = jwt_service.verify_token(
+                                jwt_token, expected_type=TokenType.ACCESS
+                            )
+
+                        # Validate session is active (refreshes TTL)
+                        await _enforce_active_session(claims)
+
                         user_id = claims.get("sub")
                         username = claims.get("username")
                         email = claims.get("email")
                         tenant_id_claim = claims.get("tenant_id")
                         roles = claims.get("roles", [])
                         scopes = claims.get("scopes", []) or claims.get("permissions", [])
+                        is_platform_admin = claims.get("is_platform_admin", False)
 
                         # Partner multi-tenant context
                         partner_id = claims.get("partner_id")
@@ -105,6 +125,7 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                         request.state.email = email
                         request.state.tenant_id = tenant_id_claim
                         request.state.roles = roles
+                        request.state.is_platform_admin = is_platform_admin
 
                         # Set partner context fields for audit logging
                         request.state.partner_id = partner_id
@@ -125,6 +146,7 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                                 tenant_id=tenant_id_claim,
                                 roles=roles,
                                 scopes=scopes,
+                                is_platform_admin=is_platform_admin,
                             )
 
                         # Determine effective tenant ID (for partner cross-tenant access)
@@ -217,6 +239,7 @@ def create_audit_aware_dependency(user_info_dependency: Any) -> Any:
             request.state.email = getattr(user_info, "email", None)
             request.state.tenant_id = getattr(user_info, "tenant_id", None)
             request.state.roles = getattr(user_info, "roles", [])
+            request.state.is_platform_admin = getattr(user_info, "is_platform_admin", False)
 
             # Populate user object for downstream middleware (e.g., AppBoundaryMiddleware)
             permissions = getattr(user_info, "permissions", None)
@@ -231,6 +254,7 @@ def create_audit_aware_dependency(user_info_dependency: Any) -> Any:
                     if permissions is not None
                     else getattr(user_info, "roles", []) or []
                 ),
+                is_platform_admin=getattr(user_info, "is_platform_admin", False),
             )
 
             # Also set tenant in context var for database operations

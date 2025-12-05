@@ -460,7 +460,7 @@ test.describe("Dunning & Collections Management", () => {
   test.describe("Error Handling", () => {
     test("should handle network errors gracefully", async ({ page, context }) => {
       // Simulate network failure
-      await context.route("**/api/isp/v1/admin/billing/dunning/campaigns", (route) => {
+      await context.route("**/api/isp/v1/billing/dunning/campaigns", (route) => {
         route.abort("failed");
       });
 

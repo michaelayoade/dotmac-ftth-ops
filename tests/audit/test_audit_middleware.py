@@ -5,24 +5,31 @@ Tests for audit context middleware.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import Request
+from fastapi import HTTPException, Request
 
 from dotmac.platform.audit.middleware import (
     AuditContextMiddleware,
     create_audit_aware_dependency,
 )
+from dotmac.platform.auth.core import TokenType
 
 pytestmark = pytest.mark.asyncio
+
+
+class MockState:
+    """Mock state object that behaves like Starlette's State."""
+    pass
 
 
 @pytest.fixture
 def mock_request():
     """Create a mock request object."""
     request = MagicMock(spec=Request)
-    request.state = MagicMock()
+    request.state = MockState()
     request.headers = {}
     request.client = MagicMock()
     request.client.host = "192.168.1.100"
+    request.cookies = {}
     return request
 
 
@@ -43,14 +50,20 @@ class TestAuditContextMiddleware:
             "Authorization": "Bearer test-token-123",
         }
 
-        with patch("dotmac.platform.auth.core.jwt_service") as mock_jwt:
-            mock_jwt.verify_token.return_value = {
-                "sub": "user123",
-                "username": "john.doe",
-                "email": "john@example.com",
-                "tenant_id": "tenant456",
-                "roles": ["user", "admin"],
-            }
+        with patch("dotmac.platform.auth.core.jwt_service") as mock_jwt, patch(
+            "dotmac.platform.auth.core._enforce_active_session", new_callable=AsyncMock
+        ) as mock_enforce:
+            mock_jwt.verify_token_async = AsyncMock(
+                return_value={
+                    "sub": "user123",
+                    "username": "john.doe",
+                    "email": "john@example.com",
+                    "tenant_id": "tenant456",
+                    "roles": ["user", "admin"],
+                    "is_platform_admin": True,
+                    "session_id": "session-123",
+                }
+            )
 
             call_next = AsyncMock()
             call_next.return_value = MagicMock()
@@ -63,6 +76,9 @@ class TestAuditContextMiddleware:
             assert mock_request.state.email == "john@example.com"
             assert mock_request.state.tenant_id == "tenant456"
             assert mock_request.state.roles == ["user", "admin"]
+            assert mock_request.state.is_platform_admin is True
+            mock_enforce.assert_awaited_once()
+            assert mock_jwt.verify_token_async.await_args.kwargs["expected_type"] == TokenType.ACCESS
 
             call_next.assert_called_once_with(mock_request)
 
@@ -101,8 +117,10 @@ class TestAuditContextMiddleware:
             "Authorization": "Bearer invalid-token",
         }
 
-        with patch("dotmac.platform.auth.core.jwt_service") as mock_jwt:
-            mock_jwt.verify_token.side_effect = Exception("Invalid token")
+        with patch("dotmac.platform.auth.core.jwt_service") as mock_jwt, patch(
+            "dotmac.platform.auth.core._enforce_active_session", new_callable=AsyncMock
+        ) as mock_enforce:
+            mock_jwt.verify_token_async = AsyncMock(side_effect=Exception("Invalid token"))
 
             with patch("dotmac.platform.tenant.set_current_tenant_id"):
                 call_next = AsyncMock()
@@ -111,6 +129,7 @@ class TestAuditContextMiddleware:
                 # Should not raise exception
                 await middleware.dispatch(mock_request, call_next)
 
+                mock_enforce.assert_not_awaited()
                 # Just verify the middleware doesn't crash on invalid tokens
                 pass
 
@@ -162,11 +181,16 @@ class TestAuditContextMiddleware:
             "Authorization": "Bearer test-token-123",
         }
 
-        with patch("dotmac.platform.auth.core.jwt_service") as mock_jwt:
-            mock_jwt.verify_token.return_value = {
-                "sub": "user123",
-                "tenant_id": "tenant456",
-            }
+        with patch("dotmac.platform.auth.core.jwt_service") as mock_jwt, patch(
+            "dotmac.platform.auth.core._enforce_active_session", new_callable=AsyncMock
+        ):
+            mock_jwt.verify_token_async = AsyncMock(
+                return_value={
+                    "sub": "user123",
+                    "tenant_id": "tenant456",
+                    "session_id": "session-123",
+                }
+            )
 
             with patch("dotmac.platform.tenant.set_current_tenant_id") as mock_set_tenant:
                 call_next = AsyncMock()
@@ -199,6 +223,31 @@ class TestAuditContextMiddleware:
 
                 # Request should continue even with API key error
                 call_next.assert_called_once_with(mock_request)
+
+    @pytest.mark.asyncio
+    async def test_middleware_rejects_refresh_tokens(self, middleware, mock_request):
+        """Refresh tokens should not populate user context."""
+        mock_request.headers = {
+            "Authorization": "Bearer refresh-token",
+        }
+
+        with patch("dotmac.platform.auth.core.jwt_service") as mock_jwt, patch(
+            "dotmac.platform.auth.core._enforce_active_session", new_callable=AsyncMock
+        ) as mock_enforce:
+            mock_jwt.verify_token_async = AsyncMock(
+                side_effect=HTTPException(status_code=401, detail="Invalid token type")
+            )
+
+            call_next = AsyncMock()
+            call_next.return_value = MagicMock()
+
+            await middleware.dispatch(mock_request, call_next)
+
+            mock_jwt.verify_token_async.assert_awaited_once()
+            assert mock_jwt.verify_token_async.await_args.kwargs["expected_type"] == TokenType.ACCESS
+            mock_enforce.assert_not_awaited()
+            assert not hasattr(mock_request.state, "user")
+            call_next.assert_called_once_with(mock_request)
 
 
 @pytest.mark.integration

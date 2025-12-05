@@ -2,16 +2,17 @@
  * @jest-environment jsdom
  */
 
-import React from "react";
-import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import React from "react";
+
+import { HttpClient } from "../http-client";
 import {
   createApiQuery,
   useApiQuery,
   useApiMutation,
   createHttpClientForQuery,
 } from "../react-query";
-import { HttpClient } from "../http-client";
 import type { ApiError } from "../types";
 
 // Mock the http-client module

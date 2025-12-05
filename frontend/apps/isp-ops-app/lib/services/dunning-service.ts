@@ -188,7 +188,7 @@ class DunningService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/isp/v1/admin/billing/dunning/campaigns${
+    const url = `${this.baseUrl}/api/isp/v1/billing/dunning/campaigns${
       queryString ? `?${queryString}` : ""
     }`;
 
@@ -208,7 +208,7 @@ class DunningService {
    * @returns Campaign details
    */
   async getCampaign(campaignId: string): Promise<DunningCampaign> {
-    const response = await fetch(`${this.baseUrl}/api/isp/v1/admin/billing/dunning/campaigns/${campaignId}`, {
+    const response = await fetch(`${this.baseUrl}/api/isp/v1/billing/dunning/campaigns/${campaignId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -224,7 +224,7 @@ class DunningService {
    * @returns Created campaign
    */
   async createCampaign(data: DunningCampaignCreate): Promise<DunningCampaign> {
-    const response = await fetch(`${this.baseUrl}/api/isp/v1/admin/billing/dunning/campaigns`, {
+    const response = await fetch(`${this.baseUrl}/api/isp/v1/billing/dunning/campaigns`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -242,7 +242,7 @@ class DunningService {
    * @returns Updated campaign
    */
   async updateCampaign(campaignId: string, data: DunningCampaignUpdate): Promise<DunningCampaign> {
-    const response = await fetch(`${this.baseUrl}/api/isp/v1/admin/billing/dunning/campaigns/${campaignId}`, {
+    const response = await fetch(`${this.baseUrl}/api/isp/v1/billing/dunning/campaigns/${campaignId}`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -258,7 +258,7 @@ class DunningService {
    * @param campaignId - Campaign UUID
    */
   async deleteCampaign(campaignId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/api/isp/v1/admin/billing/dunning/campaigns/${campaignId}`, {
+    const response = await fetch(`${this.baseUrl}/api/isp/v1/billing/dunning/campaigns/${campaignId}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -277,7 +277,7 @@ class DunningService {
    */
   async pauseCampaign(campaignId: string): Promise<DunningCampaign> {
     const response = await fetch(
-      `${this.baseUrl}/api/isp/v1/admin/billing/dunning/campaigns/${campaignId}/pause`,
+      `${this.baseUrl}/api/isp/v1/billing/dunning/campaigns/${campaignId}/pause`,
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -295,7 +295,7 @@ class DunningService {
    */
   async resumeCampaign(campaignId: string): Promise<DunningCampaign> {
     const response = await fetch(
-      `${this.baseUrl}/api/isp/v1/admin/billing/dunning/campaigns/${campaignId}/resume`,
+      `${this.baseUrl}/api/isp/v1/billing/dunning/campaigns/${campaignId}/resume`,
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -339,7 +339,7 @@ class DunningService {
     }
 
     const queryString = params.toString();
-    const url = `${this.baseUrl}/api/isp/v1/admin/billing/dunning/executions${
+    const url = `${this.baseUrl}/api/isp/v1/billing/dunning/executions${
       queryString ? `?${queryString}` : ""
     }`;
 
@@ -360,7 +360,7 @@ class DunningService {
    */
   async getExecution(executionId: string): Promise<DunningExecution> {
     const response = await fetch(
-      `${this.baseUrl}/api/isp/v1/admin/billing/dunning/executions/${executionId}`,
+      `${this.baseUrl}/api/isp/v1/billing/dunning/executions/${executionId}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -378,7 +378,7 @@ class DunningService {
    * @returns Started execution
    */
   async startExecution(data: DunningExecutionStart): Promise<DunningExecution> {
-    const response = await fetch(`${this.baseUrl}/api/isp/v1/admin/billing/dunning/executions`, {
+    const response = await fetch(`${this.baseUrl}/api/isp/v1/billing/dunning/executions`, {
       method: "POST",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -396,7 +396,7 @@ class DunningService {
    */
   async cancelExecution(executionId: string, reason: string): Promise<DunningExecution> {
     const response = await fetch(
-      `${this.baseUrl}/api/isp/v1/admin/billing/dunning/executions/${executionId}/cancel`,
+      `${this.baseUrl}/api/isp/v1/billing/dunning/executions/${executionId}/cancel`,
       {
         method: "POST",
         headers: this.getAuthHeaders(),
@@ -418,7 +418,7 @@ class DunningService {
    * @returns Dunning statistics
    */
   async getStatistics(): Promise<DunningStatistics> {
-    const response = await fetch(`${this.baseUrl}/api/isp/v1/admin/billing/dunning/stats`, {
+    const response = await fetch(`${this.baseUrl}/api/isp/v1/billing/dunning/stats`, {
       method: "GET",
       headers: this.getAuthHeaders(),
       credentials: "include",
@@ -435,7 +435,7 @@ class DunningService {
    */
   async getCampaignStatistics(campaignId: string): Promise<DunningCampaignStats> {
     const response = await fetch(
-      `${this.baseUrl}/api/isp/v1/admin/billing/dunning/stats/campaigns/${campaignId}`,
+      `${this.baseUrl}/api/isp/v1/billing/dunning/stats/campaigns/${campaignId}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),
@@ -454,7 +454,7 @@ class DunningService {
    */
   async getRecoveryChartData(days: number = 30): Promise<DunningRecoveryChartData[]> {
     const response = await fetch(
-      `${this.baseUrl}/api/isp/v1/admin/billing/dunning/analytics/recovery?days=${days}`,
+      `${this.baseUrl}/api/isp/v1/billing/dunning/analytics/recovery?days=${days}`,
       {
         method: "GET",
         headers: this.getAuthHeaders(),

@@ -72,7 +72,6 @@ const localStorageMock = {
   length: 0,
   key: jest.fn(),
 };
-Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 const sessionStorageMock = {
   getItem: jest.fn(),
@@ -82,7 +81,12 @@ const sessionStorageMock = {
   length: 0,
   key: jest.fn(),
 };
-Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock });
+
+// Only set window properties if window exists (jsdom environment)
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "localStorage", { value: localStorageMock });
+  Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock });
+}
 
 // Mock WebSocket for real-time features
 global.WebSocket = jest.fn().mockImplementation(() => ({
@@ -104,22 +108,24 @@ global.performance.mark = global.performance.mark || jest.fn();
 global.performance.measure = global.performance.measure || jest.fn();
 
 // Mock crypto for secure operations
-Object.defineProperty(window, "crypto", {
-  value: {
-    getRandomValues: jest.fn((arr) => {
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = Math.floor(Math.random() * 256);
-      }
-      return arr;
-    }),
-    randomUUID: jest.fn(() => "mock-uuid-" + Math.random().toString(36).substr(2, 9)),
-    subtle: {
-      digest: jest.fn(),
-      encrypt: jest.fn(),
-      decrypt: jest.fn(),
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "crypto", {
+    value: {
+      getRandomValues: jest.fn((arr) => {
+        for (let i = 0; i < arr.length; i++) {
+          arr[i] = Math.floor(Math.random() * 256);
+        }
+        return arr;
+      }),
+      randomUUID: jest.fn(() => "mock-uuid-" + Math.random().toString(36).substr(2, 9)),
+      subtle: {
+        digest: jest.fn(),
+        encrypt: jest.fn(),
+        decrypt: jest.fn(),
+      },
     },
-  },
-});
+  });
+}
 
 // Mock console methods to reduce noise
 const originalError = console.error;
@@ -431,23 +437,73 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock matchMedia for responsive hooks
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+}
 
 // Export mock implementations for direct use in tests
 export const mockWebSocket = global.WebSocket;
 export const mockFetch = global.fetch as jest.Mock;
+
+// Factory function for creating mock WebSocket instances
+export const createMockWebSocket = (url?: string) => {
+  const mockWs = {
+    url: url || "ws://localhost:8080",
+    readyState: 1, // OPEN
+    CONNECTING: 0,
+    OPEN: 1,
+    CLOSING: 2,
+    CLOSED: 3,
+    bufferedAmount: 0,
+    extensions: "",
+    protocol: "",
+    binaryType: "blob" as BinaryType,
+    onopen: null as ((event: Event) => void) | null,
+    onclose: null as ((event: CloseEvent) => void) | null,
+    onerror: null as ((event: Event) => void) | null,
+    onmessage: null as ((event: MessageEvent) => void) | null,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    send: jest.fn(),
+    close: jest.fn(),
+    dispatchEvent: jest.fn(() => true),
+    // Helper to simulate receiving a message
+    simulateMessage: (data: any) => {
+      const event = new MessageEvent("message", { data: JSON.stringify(data) });
+      if (mockWs.onmessage) mockWs.onmessage(event);
+    },
+    // Helper to simulate connection open
+    simulateOpen: () => {
+      mockWs.readyState = 1;
+      const event = new Event("open");
+      if (mockWs.onopen) mockWs.onopen(event);
+    },
+    // Helper to simulate connection close
+    simulateClose: (code = 1000, reason = "") => {
+      mockWs.readyState = 3;
+      const event = new CloseEvent("close", { code, reason });
+      if (mockWs.onclose) mockWs.onclose(event);
+    },
+    // Helper to simulate error
+    simulateError: () => {
+      const event = new Event("error");
+      if (mockWs.onerror) mockWs.onerror(event);
+    },
+  };
+  return mockWs;
+};
 
 // Hook testing utilities
 export const createMockHookContext = (overrides = {}) => ({

@@ -5,8 +5,8 @@
  * Supports various card layouts including metrics, info cards, and content cards.
  */
 
-import React from "react";
 import { clsx } from "clsx";
+import React from "react";
 
 export interface CardSkeletonProps {
   /**

@@ -7,7 +7,6 @@
 "use client";
 
 import { useState, useCallback, useMemo, memo } from "react";
-import { useRenderProfiler, createMemoizedSelector } from "../utils/performance";
 import {
   AreaChart,
   Area,
@@ -25,32 +24,32 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { sanitizeText, validateClassName, validateArray } from "../utils/security";
-import {
-  revenueDataSchema,
-  networkUsageDataSchema,
-  serviceStatusDataSchema,
-  bandwidthDataSchema,
-} from "../utils/security";
-import {
-  generateChartDescription,
-  generateDataTable,
-  announceToScreenReader,
-  useReducedMotion,
-  useScreenReader,
-  generateId,
-  ARIA_ROLES,
-  ARIA_LIVE_LEVELS,
-} from "../utils/a11y";
+
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import type {
   CustomTooltipProps,
   RevenueChartProps,
   NetworkUsageChartProps,
   ServiceStatusChartProps,
   BandwidthChartProps,
-  ChartColors,
 } from "../types/chart";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+import {
+  generateChartDescription,
+  generateDataTable,
+  announceToScreenReader,
+  useScreenReader,
+  generateId,
+  ARIA_ROLES,
+} from "../utils/a11y";
+import {
+  sanitizeText,
+  validateClassName,
+  validateArray,
+  revenueDataSchema,
+  networkUsageDataSchema,
+  serviceStatusDataSchema,
+  bandwidthDataSchema,
+} from "../utils/security";
 
 // ISP-themed color palette
 const COLORS = {
@@ -89,23 +88,30 @@ const ChartGradients = () => (
 const CustomTooltip: React.FC<CustomTooltipProps> = memo(
   ({ active, payload, label, formatter }) => {
     const tooltipId = useMemo(() => generateId("chart-tooltip"), []);
-
-    if (!active || !payload || payload.length === 0) {
-      return null;
-    }
+    const hasContent = Boolean(active && payload && payload.length);
 
     // Sanitize label to prevent XSS
-    const safeLabel = label ? sanitizeText(String(label)) : "";
+    const safeLabel = useMemo(() => (label ? sanitizeText(String(label)) : ""), [label]);
 
     // Generate accessible description
     const accessibleDescription = useMemo(() => {
+      if (!payload?.length) {
+        return "";
+      }
+
       const items = payload.map((entry) => {
         const name = entry.name ? sanitizeText(String(entry.name)) : "Unknown";
         const value = typeof entry.value === "number" ? entry.value : 0;
         return `${name}: ${value}`;
       });
-      return `Chart data point ${safeLabel ? "for " + safeLabel : ""}: ${items.join(", ")}`;
+      return `Chart data point ${safeLabel ? `for ${safeLabel}` : ""}: ${items.join(", ")}`;
     }, [payload, safeLabel]);
+
+    const safePayload = payload ?? [];
+
+    if (!hasContent) {
+      return null;
+    }
 
     return (
       <div
@@ -118,7 +124,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = memo(
       >
         <div className="sr-only">{accessibleDescription}</div>
         {safeLabel && <p className="text-sm font-semibold text-gray-900 mb-2">{safeLabel}</p>}
-        {payload.map((entry, index) => {
+        {safePayload.map((entry, index) => {
           if (!entry || typeof entry.value === "undefined") {
             return null;
           }
@@ -173,15 +179,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = memo(
 // Revenue Trends Area Chart with security validation and accessibility (memoized)
 export const RevenueChart: React.FC<RevenueChartProps> = memo(
   ({ data, height = 300, className, onDataPointClick }) => {
-    // Performance profiling
-    const { renderCount, getProfile } = useRenderProfiler("RevenueChart", {
-      dataLength: data?.length,
-      height,
-      className,
-    });
-
     // Accessibility hooks
-    const prefersReducedMotion = useReducedMotion();
     const isScreenReader = useScreenReader();
     const chartId = useMemo(() => generateId("revenue-chart"), []);
     const descriptionId = useMemo(() => generateId("revenue-description"), []);
@@ -211,7 +209,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = memo(
       return generateDataTable(validatedData, ["month", "revenue", "target", "previousYear"]);
     }, [validatedData]);
 
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [, setActiveIndex] = useState<number | null>(null);
 
     // Memoized event handlers for performance
     const handleMouseEnter = useCallback((...args: unknown[]) => {
@@ -255,14 +253,13 @@ export const RevenueChart: React.FC<RevenueChartProps> = memo(
     if (!validatedData || validatedData.length === 0) {
       return (
         <div
-          className={`w-full flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg ${safeClassName}`}
-          style={{ height }}
-          role="img"
-          aria-label="No revenue data available"
-          tabIndex={0}
-        >
-          <p className="text-gray-500 text-sm">No revenue data available</p>
-        </div>
+        className={`w-full flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg ${safeClassName}`}
+        style={{ height }}
+        role="img"
+        aria-label="No revenue data available"
+      >
+        <p className="text-gray-500 text-sm">No revenue data available</p>
+      </div>
       );
     }
 
@@ -442,7 +439,12 @@ export const NetworkUsageChart: React.FC<NetworkUsageChartProps> = ({
         </div>
       }
     >
-      <div className={`w-full ${safeClassName}`} style={{ height }}>
+      <div
+        className={`w-full ${safeClassName}`}
+        style={{ height }}
+        role={ARIA_ROLES.CHART}
+        aria-label="Network usage chart"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={validatedData}
@@ -577,7 +579,12 @@ export const ServiceStatusChart: React.FC<ServiceStatusChartProps> = ({
         </div>
       }
     >
-      <div className={`w-full ${safeClassName}`} style={{ height }}>
+      <div
+        className={`w-full ${safeClassName}`}
+        style={{ height }}
+        role={ARIA_ROLES.CHART}
+        aria-label="Service status chart"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart onClick={handleDataPointClick}>
             <Pie
@@ -679,7 +686,12 @@ export const BandwidthChart: React.FC<BandwidthChartProps> = ({
         </div>
       }
     >
-      <div className={`w-full ${safeClassName}`} style={{ height }}>
+      <div
+        className={`w-full ${safeClassName}`}
+        style={{ height }}
+        role={ARIA_ROLES.CHART}
+        aria-label="Bandwidth chart"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={validatedData}

@@ -5,7 +5,6 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
@@ -13,10 +12,10 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  MoreHorizontal,
-  Filter,
   RefreshCw,
 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+
 import { cn } from "../utils/cn";
 
 export interface ActivityItem {
@@ -153,7 +152,7 @@ export function UniversalActivityFeed({
   isLive = false,
   onRefresh,
   refreshInterval = 30,
-  variant = "default",
+  variant: _variant = "default",
   className = "",
   itemClassName = "",
   loading = false,
@@ -162,7 +161,7 @@ export function UniversalActivityFeed({
 }: UniversalActivityFeedProps) {
   const [filteredActivities, setFilteredActivities] = useState<ActivityItem[]>(activities);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedPriority, setSelectedPriority] = useState<string>("all");
+  const selectedPriority = priorityFilter?.[0] ?? "all";
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Auto-refresh for live feeds

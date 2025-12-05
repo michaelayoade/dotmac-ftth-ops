@@ -6,7 +6,7 @@
 import { renderHook, act } from "@testing-library/react";
 import {
   useUI,
-  useNotifications,
+  useAppNotifications as useNotifications,
   useFilters,
   usePagination,
   useSelection,

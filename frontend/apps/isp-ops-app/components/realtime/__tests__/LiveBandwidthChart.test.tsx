@@ -6,7 +6,8 @@
  */
 
 import React from "react";
-import { render, renderWithTimers, screen, waitFor, act } from "@dotmac/testing";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { render, renderWithTimers, screen, waitFor, act } = require("@dotmac/testing");
 import { LiveBandwidthChart } from "../LiveBandwidthChart";
 
 // Mock WebSocket hooks

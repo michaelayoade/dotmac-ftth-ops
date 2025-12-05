@@ -142,11 +142,16 @@ export const ModalBackdrop = forwardRef<HTMLDivElement, ModalBackdropProps>(
     );
 
     return (
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
       <div
         ref={ref}
         className={clsx("modal-backdrop", className)}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === "Enter" && handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            handleClick(e as unknown as React.MouseEvent);
+          }
+        }}
         data-testid={dataTestId ?? "modal-backdrop"}
         {...props}
       />

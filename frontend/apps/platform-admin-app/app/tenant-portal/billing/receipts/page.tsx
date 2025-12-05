@@ -31,7 +31,7 @@ export default function ReceiptsPage() {
 
   const handleDownloadPDF = async (receipt: Receipt) => {
     try {
-      const response = await apiClient.get(`/api/isp/v1/admin/billing/receipts/${receipt.receipt_id}/pdf`, {
+      const response = await apiClient.get(`/api/isp/v1/billing/receipts/${receipt.receipt_id}/pdf`, {
         responseType: "blob",
       });
 
@@ -53,7 +53,7 @@ export default function ReceiptsPage() {
 
   const handleEmailReceipt = async (receipt: Receipt) => {
     try {
-      await apiClient.post(`/api/isp/v1/admin/billing/receipts/${receipt.receipt_id}/email`);
+      await apiClient.post(`/api/isp/v1/billing/receipts/${receipt.receipt_id}/email`);
       // eslint-disable-next-line no-alert
       alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
     } catch (err) {
@@ -65,7 +65,7 @@ export default function ReceiptsPage() {
 
   const handlePrintReceipt = (receipt: Receipt) => {
     const printWindow = window.open(
-      `/api/isp/v1/admin/billing/receipts/${receipt.receipt_id}/html`,
+      `/api/isp/v1/billing/receipts/${receipt.receipt_id}/html`,
       "_blank",
     );
     if (printWindow) {

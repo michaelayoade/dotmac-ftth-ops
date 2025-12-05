@@ -3,6 +3,7 @@
  * Configures testing environment for provider components and utilities
  */
 
+/* eslint-disable no-console, react/sort-comp, @typescript-eslint/no-namespace */
 import React from "react";
 import "@testing-library/jest-dom";
 
@@ -131,7 +132,7 @@ Object.defineProperty(window, "crypto", {
       }
       return arr;
     }),
-    randomUUID: jest.fn(() => "test-uuid-" + Math.random().toString(36).substr(2, 9)),
+    randomUUID: jest.fn(() => `test-uuid-${Math.random().toString(36).substr(2, 9)}`),
   },
 });
 

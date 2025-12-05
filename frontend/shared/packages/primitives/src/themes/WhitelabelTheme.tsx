@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
 
 interface WhitelabelConfig {
@@ -76,7 +76,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
   partnerId,
   domain,
   fallbackConfig,
-  apiEndpoint = "/api/isp/v1/admin/partners",
+  apiEndpoint = "/api/isp/v1/partners",
 }) => {
   const [config, setConfig] = useState<WhitelabelConfig | null>(fallbackConfig || null);
   const [isWhitelabel, setIsWhitelabel] = useState(!!fallbackConfig);
@@ -142,7 +142,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     }
   };
 
-  const updateConfig = (newConfig: WhitelabelConfig) => {
+  const updateConfig = useCallback((newConfig: WhitelabelConfig) => {
     setConfig(newConfig);
     setIsWhitelabel(true);
     applyThemeVariables(newConfig);
@@ -154,9 +154,9 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     if (newConfig.brand.favicon) {
       updateFavicon(newConfig.brand.favicon);
     }
-  };
+  }, []);
 
-  const resetToDefault = () => {
+  const resetToDefault = useCallback(() => {
     setConfig(null);
     setIsWhitelabel(false);
 
@@ -171,7 +171,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
 
     // Reset page title
     document.title = "DotMac ISP Framework";
-  };
+  }, [config?.css_variables]);
 
   const applyThemeVariables = (themeConfig: WhitelabelConfig) => {
     const root = document.documentElement;
@@ -243,17 +243,20 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     document.head.appendChild(style);
   };
 
-  const contextValue: WhitelabelContextType = {
-    config,
-    isWhitelabel,
-    updateConfig,
-    resetToDefault,
-  };
+  const contextValue = useMemo<WhitelabelContextType>(
+    () => ({
+      config,
+      isWhitelabel,
+      updateConfig,
+      resetToDefault,
+    }),
+    [config, isWhitelabel, updateConfig, resetToDefault]
+  );
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }

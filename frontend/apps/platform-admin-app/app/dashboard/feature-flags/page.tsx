@@ -73,7 +73,7 @@ function FeatureFlagsPageContent() {
   } = useQuery<FeatureFlag[]>({
     queryKey: ["feature-flags", apiBaseUrl],
     queryFn: async () => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/feature-flags/flags`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch feature flags");
@@ -105,7 +105,7 @@ function FeatureFlagsPageContent() {
   // Create flag mutation
   const createFlagMutation = useMutation({
     mutationFn: async (data: { name: string; enabled: boolean; description?: string }) => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags/${data.name}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/feature-flags/flags/${data.name}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -144,7 +144,7 @@ function FeatureFlagsPageContent() {
   // Toggle flag mutation
   const toggleFlagMutation = useMutation({
     mutationFn: async (data: { name: string; enabled: boolean; description?: string }) => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags/${data.name}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/feature-flags/flags/${data.name}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -176,7 +176,7 @@ function FeatureFlagsPageContent() {
   // Delete flag mutation
   const deleteFlagMutation = useMutation({
     mutationFn: async (flagName: string) => {
-      const response = await fetch(`${apiBaseUrl}/api/platform/v1/admin/feature-flags/flags/${flagName}`, {
+      const response = await fetch(`${apiBaseUrl}/api/platform/v1/feature-flags/flags/${flagName}`, {
         method: "DELETE",
         credentials: "include",
       });

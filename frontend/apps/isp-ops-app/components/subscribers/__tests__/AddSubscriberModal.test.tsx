@@ -5,7 +5,10 @@
  */
 
 import React from "react";
-import { renderQuick, screen } from "@dotmac/testing";
+import { render, screen } from "@testing-library/react";
+
+// Simple render wrapper for fast tests
+const renderQuick = render;
 import { AddSubscriberModal } from "../AddSubscriberModal";
 
 // Mock the shared component

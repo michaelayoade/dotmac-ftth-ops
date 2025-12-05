@@ -5,7 +5,8 @@
  */
 
 import React from "react";
-import { renderQuick, screen, waitFor, act } from "@dotmac/testing";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { renderQuick, screen, waitFor, act } = require("@dotmac/testing");
 import { RealtimeAlerts, useAlertCount } from "../RealtimeAlerts";
 import type { AlertEvent } from "@/types/realtime";
 

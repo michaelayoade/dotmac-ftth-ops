@@ -46,7 +46,7 @@ import type {
 } from "@/types/communications";
 
 const API_BASE = platformConfig.api.baseUrl;
-const ADMIN_PREFIX = "/api/isp/v1/admin";
+const ADMIN_PREFIX = "/api/isp/v1";
 
 // ============================================
 // Service Class

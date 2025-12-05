@@ -33,7 +33,7 @@ export default function AssignAccountModal({ partnerId, onClose }: AssignAccount
 
   const assignMutation = useMutation({
     mutationFn: async (data: AssignAccountInput) => {
-      const response = await fetch(`${apiBaseUrl}/api/isp/v1/admin/partners/accounts`, {
+      const response = await fetch(`${apiBaseUrl}/api/isp/v1/partners/accounts`, {
         method: "POST",
         credentials: "include",
         headers: {

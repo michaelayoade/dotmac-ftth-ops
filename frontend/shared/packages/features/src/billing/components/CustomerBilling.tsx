@@ -138,9 +138,9 @@ export default function CustomerBilling({
     try {
       setLoading(true);
       const [invoicesRes, paymentsRes, summaryRes] = await Promise.all([
-        apiClient.get<{ invoices: Invoice[] }>(`/api/isp/v1/admin/customers/${customerId}/invoices`),
-        apiClient.get<{ payments: Payment[] }>(`/api/isp/v1/admin/customers/${customerId}/payments`),
-        apiClient.get<BillingSummary>(`/api/isp/v1/admin/customers/${customerId}/billing-summary`),
+        apiClient.get<{ invoices: Invoice[] }>(`/api/isp/v1/customers/${customerId}/invoices`),
+        apiClient.get<{ payments: Payment[] }>(`/api/isp/v1/customers/${customerId}/payments`),
+        apiClient.get<BillingSummary>(`/api/isp/v1/customers/${customerId}/billing-summary`),
       ]);
 
       setInvoices(invoicesRes.data.invoices);
@@ -163,7 +163,7 @@ export default function CustomerBilling({
 
   const handleDownloadInvoice = async (invoiceId: string) => {
     try {
-      const response = await apiClient.get(`/api/isp/v1/admin/invoices/${invoiceId}/download`, {
+      const response = await apiClient.get(`/api/isp/v1/invoices/${invoiceId}/download`, {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));

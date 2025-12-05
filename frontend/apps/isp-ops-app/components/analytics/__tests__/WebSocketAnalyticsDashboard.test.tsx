@@ -5,7 +5,8 @@
  */
 
 import React from "react";
-import { renderQuick, screen, waitFor } from "@dotmac/testing";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { renderQuick, screen, waitFor } = require("@dotmac/testing");
 import { WebSocketAnalyticsDashboard } from "../WebSocketAnalyticsDashboard";
 
 jest.mock("@/lib/api/client", () => ({

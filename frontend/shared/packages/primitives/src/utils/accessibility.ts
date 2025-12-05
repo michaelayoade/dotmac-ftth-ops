@@ -147,15 +147,8 @@ export function useKeyboardNavigation<T>(
         event,
       );
     },
-    [
-      orientation,
-      navigate,
-      focusedIndex,
-      items,
-      onSelect,
-      NavigationHandlers.handleNavigationKey, // Then try selection keys
-      NavigationHandlers.handleSelectionKey,
-    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orientation, navigate, focusedIndex, items, onSelect],
   );
 
   return {
@@ -340,7 +333,7 @@ export function useAriaSelection<T>(
   const clearSelection = React.useCallback(() => {
     setSelectedItems([]);
     onSelectionChange?.([]);
-  }, []);
+  }, [onSelectionChange]);
 
   return {
     selectedItems,
