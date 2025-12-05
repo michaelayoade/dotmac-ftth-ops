@@ -5,8 +5,8 @@
 
 "use client";
 
-import { cva, type VariantProps } from "class-variance-authority";
-import { useMemo, useCallback, memo, useState, useRef, useEffect } from "react";
+import { cva } from "class-variance-authority";
+import { useMemo, useCallback, memo, useRef, useEffect } from "react";
 
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import type { StatusBadgeProps, UptimeIndicatorProps, StatusSize, UptimeStatus } from "../types/status";
@@ -19,13 +19,12 @@ import {
   COLOR_CONTRAST,
 } from "../utils/a11y";
 import { cn } from "../utils/cn";
-import { useRenderProfiler, useThrottledState, useDebouncedState } from "../utils/performance";
-import { sanitizeText, validateClassName, validateData } from "../utils/security";
+import { useRenderProfiler, useThrottledState } from "../utils/performance";
 import {
+  sanitizeText,
+  validateClassName,
+  validateData,
   uptimeSchema,
-  networkMetricsSchema,
-  serviceTierSchema,
-  alertSeveritySchema,
 } from "../utils/security";
 
 // Memoized status badge variants
@@ -135,7 +134,6 @@ export const OptimizedStatusBadge: React.FC<StatusBadgeProps> = memo(
 
     // Optimized state management
     const [isPressed, setIsPressed] = useThrottledState(false, 50);
-    const [isFocused, setIsFocused, throttledIsFocused] = useThrottledState(false, 16);
 
     // Accessibility hooks with debouncing
     const prefersReducedMotion = useReducedMotion();
@@ -193,9 +191,6 @@ export const OptimizedStatusBadge: React.FC<StatusBadgeProps> = memo(
       };
     }, [animated, pulse, prefersReducedMotion, size]);
 
-    // Debounced click handler to prevent rapid firing
-    const [, , debouncedClickHandler] = useDebouncedState(null, 150);
-
     const handleClick = useCallback(() => {
       try {
         if (onClick) {
@@ -223,10 +218,6 @@ export const OptimizedStatusBadge: React.FC<StatusBadgeProps> = memo(
       [onClick, handleClick],
     );
 
-    // Focus management with throttling
-    const handleFocus = useCallback(() => setIsFocused(true), [setIsFocused]);
-    const handleBlur = useCallback(() => setIsFocused(false), [setIsFocused]);
-
     return (
       <ErrorBoundary
         fallback={
@@ -248,16 +239,12 @@ export const OptimizedStatusBadge: React.FC<StatusBadgeProps> = memo(
               animated: animationConfig.shouldAnimate,
             }),
             computedValues.safeClassName,
-            // Focus styles with throttled state
-            onClick && throttledIsFocused && "ring-2 ring-offset-2 ring-blue-500",
             onClick && isPressed && "scale-95 transform",
             onClick && "cursor-pointer transition-transform duration-75",
             "transition-all duration-200 ease-in-out",
           )}
           onClick={onClick ? handleClick : undefined}
           onKeyDown={onClick ? handleKeyDown : undefined}
-          onFocus={onClick ? handleFocus : undefined}
-          onBlur={onClick ? handleBlur : undefined}
           role={onClick ? "button" : ARIA_ROLES.STATUS_INDICATOR}
           aria-label={ariaLabel || computedValues.accessibleStatusText}
           aria-describedby={onClick ? `${badgeId}-description` : undefined}

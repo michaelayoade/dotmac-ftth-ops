@@ -232,6 +232,7 @@ describe("Textarea", () => {
     });
 
     it("supports autoFocus attribute", () => {
+      // eslint-disable-next-line jsx-a11y/no-autofocus -- Testing autoFocus behavior
       render(<Textarea autoFocus data-testid="textarea" />);
 
       expect(screen.getByTestId("textarea")).toHaveFocus();

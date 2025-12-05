@@ -7,7 +7,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
 import { ChevronRight } from "lucide-react";
-import React, { createContext, forwardRef, useContext } from "react";
+import { createContext, forwardRef, useContext } from "react";
 
 // Navigation variants
 const navigationVariants = cva("", {

@@ -6,7 +6,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { Mail, Search, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Search, Lock, User } from "lucide-react";
 
 import { Input } from "./Input";
 

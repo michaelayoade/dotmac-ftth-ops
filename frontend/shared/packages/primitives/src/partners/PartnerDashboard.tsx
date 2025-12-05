@@ -13,7 +13,7 @@ import {
   Search,
   MoreVertical,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import { UniversalKPISection } from "../dashboard/UniversalKPISection";
 import { UniversalTable } from "../data-display/Table";
@@ -65,15 +65,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
   const [tierFilter, setTierFilter] = useState("all");
   const [showConfigModal, setShowConfigModal] = useState(false);
 
-  // Load partners and commission configs
-  useEffect(() => {
-    loadPartners();
-    if (showCommissionConfig) {
-      loadCommissionConfigs();
-    }
-  }, []);
-
-  const loadPartners = async () => {
+  const loadPartners = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(apiEndpoint);
@@ -84,9 +76,9 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiEndpoint]);
 
-  const loadCommissionConfigs = async () => {
+  const loadCommissionConfigs = useCallback(async () => {
     try {
       const response = await fetch("/api/isp/v1/commission-config");
       const configs = await response.json();
@@ -94,7 +86,15 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
     } catch (error) {
       console.error("Failed to load commission configs:", error);
     }
-  };
+  }, []);
+
+  // Load partners and commission configs
+  useEffect(() => {
+    loadPartners();
+    if (showCommissionConfig) {
+      loadCommissionConfigs();
+    }
+  }, [loadPartners, loadCommissionConfigs, showCommissionConfig]);
 
   // Filter partners
   const filteredPartners = partners.filter((partner) => {

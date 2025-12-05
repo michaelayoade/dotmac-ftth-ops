@@ -1,4 +1,5 @@
 /* eslint-disable jsx-a11y/role-supports-aria-props */
+/* eslint-disable react/jsx-no-constructed-context-values */
 /**
  * Unstyled, composable Form primitives with React Hook Form integration
  *
@@ -28,13 +29,12 @@
  * ```
  */
 
-import * as React from "react";
-const { createContext, useContext, forwardRef } = React;
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
-import type { VariantProps } from "class-variance-authority";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
+import * as React from "react";
+const { createContext, useContext, forwardRef, useMemo } = React;
 import {
   Controller,
   type FieldValues,
@@ -196,9 +196,13 @@ export function Form<TFieldValues extends FieldValues = FieldValues>({
   ...props
 }: FormProps<TFieldValues>) {
   const Comp = asChild ? Slot : "form";
+  const contextValue = useMemo(
+    () => ({ form: form as UseFormReturn<FieldValues> }),
+    [form],
+  );
 
   return (
-    <FormContext.Provider value={{ form: form as UseFormReturn<FieldValues> }}>
+    <FormContext.Provider value={contextValue}>
       <Comp
         className={clsx(formVariants({ layout, size }), className)}
         onSubmit={form.handleSubmit(onSubmit)}
@@ -240,21 +244,24 @@ export function FormField({ name, rules, defaultValue, children }: FormFieldProp
     <Controller
       {...controllerProps}
       render={({ field, fieldState }) => (
-        <FormFieldContext.Provider
-          value={{
-            name,
-            error: fieldState.error?.message ?? "",
-            invalid: fieldState.invalid,
-          }}
-        >
-          {children({
-            value: field.value,
-            onChange: (value) => field.onChange(value),
-            onBlur: field.onBlur,
-            error: fieldState.error?.message ?? "",
-            invalid: fieldState.invalid,
-          })}
-        </FormFieldContext.Provider>
+        <>
+          {/* eslint-disable-next-line react/jsx-no-constructed-context-values */}
+          <FormFieldContext.Provider
+            value={{
+              name,
+              error: fieldState.error?.message ?? "",
+              invalid: fieldState.invalid,
+            }}
+          >
+            {children({
+              value: field.value,
+              onChange: (value) => field.onChange(value),
+              onBlur: field.onBlur,
+              error: fieldState.error?.message ?? "",
+              invalid: fieldState.invalid,
+            })}
+          </FormFieldContext.Provider>
+        </>
       )}
     />
   );
@@ -271,9 +278,12 @@ export const FormItem = forwardRef<HTMLDivElement, FormItemProps>(
     const id = useUniqueId("form-item");
 
     return (
-      <FormItemContext.Provider value={{ id }}>
-        <Comp ref={ref} className={clsx("form-item space-y-2", className)} {...props} />
-      </FormItemContext.Provider>
+      <>
+        {/* eslint-disable-next-line react/jsx-no-constructed-context-values */}
+        <FormItemContext.Provider value={{ id }}>
+          <Comp ref={ref} className={clsx("form-item space-y-2", className)} {...props} />
+        </FormItemContext.Provider>
+      </>
     );
   },
 );

@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useCallback } from "react";
+import { createContext, useContext, useEffect, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
 
 import { cn } from "../utils/cn";

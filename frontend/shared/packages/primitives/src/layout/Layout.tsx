@@ -5,8 +5,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
-import type React from "react";
-import { forwardRef } from "react";
+import React, { forwardRef } from "react";
 
 // Container variants
 const containerVariants = cva("", {

@@ -1,5 +1,11 @@
-import { render as rtlRender, type RenderOptions } from "@testing-library/react";
-import { fireEvent, screen, waitFor, act } from "@testing-library/react";
+import {
+  render as rtlRender,
+  fireEvent,
+  screen,
+  waitFor,
+  act,
+  type RenderOptions,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import type React from "react";

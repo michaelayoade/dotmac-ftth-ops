@@ -6,7 +6,7 @@
 
 "use client";
 
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { useMemo, useCallback } from "react";
 
 import { ErrorBoundary } from "../components/ErrorBoundary";
@@ -22,8 +22,8 @@ import type {
   AlertSeverityConfig,
   ServiceTier,
   AlertSeverity,
+  StatusVariant,
 } from "../types/status";
-import type { StatusVariant } from "../types/status";
 import {
   generateStatusText,
   useReducedMotion,
@@ -33,8 +33,10 @@ import {
   COLOR_CONTRAST,
 } from "../utils/a11y";
 import { cn } from "../utils/cn";
-import { sanitizeText, validateClassName, validateData } from "../utils/security";
 import {
+  sanitizeText,
+  validateClassName,
+  validateData,
   uptimeSchema,
   networkMetricsSchema,
   serviceTierSchema,
@@ -191,8 +193,6 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 
   // Generate accessible status text with text indicators
   const accessibleStatusText = useMemo(() => {
-    const textIndicator =
-      COLOR_CONTRAST.TEXT_INDICATORS[safeVariant as keyof typeof COLOR_CONTRAST.TEXT_INDICATORS];
     const childText = typeof safeChildren === "string" ? safeChildren : "";
     return generateStatusText(safeVariant, childText);
   }, [safeVariant, safeChildren]);

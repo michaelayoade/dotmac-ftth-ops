@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import React, { useState, useEffect } from "react";
-import type { ComponentType, ReactNode } from "react";
+import React, { useState, useEffect, type ComponentType, type ReactNode } from "react";
 
 import UniversalHeader from "./UniversalHeader";
 
@@ -101,29 +100,6 @@ const variantStyles = {
   },
 };
 
-const layoutTypes = {
-  dashboard: {
-    structure: "header-content",
-    sidebar: false,
-    responsive: true,
-  },
-  sidebar: {
-    structure: "header-sidebar-content",
-    sidebar: true,
-    responsive: true,
-  },
-  mobile: {
-    structure: "mobile-header-content",
-    sidebar: false,
-    responsive: false,
-  },
-  simple: {
-    structure: "content-only",
-    sidebar: false,
-    responsive: false,
-  },
-};
-
 const maxWidthClasses = {
   none: "",
   sm: "max-w-sm",
@@ -171,15 +147,11 @@ export function UniversalLayout({
   requiredPermissions: _requiredPermissions = [],
 }: UniversalLayoutProps) {
   // These security props are reserved for future auth context integration
-  void _requireAuth;
-  void _requiredRoles;
-  void _requiredPermissions;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const styles = variantStyles[variant];
-  const layout = layoutTypes[layoutType];
 
   // Handle responsive behavior
   useEffect(() => {

@@ -5,7 +5,7 @@
  * ELIMINATES HARDCODED THEMES: Dynamic theme injection from configuration
  */
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
 
 // Theme configuration interface for white-labeling

@@ -103,7 +103,7 @@ export function withPerformanceTracking<P extends Record<string, any>>(
           );
         }
       }
-    }); // Intentionally runs on every render to measure render time
+    }, [props]); // Intentionally runs on every render to measure render time
 
     return React.createElement(WrappedComponent, props);
   };
@@ -134,6 +134,7 @@ export function usePerformanceMetrics(componentName: string) {
   // Record start time before render
   renderStartTime.current = performance.now();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (renderStartTime.current) {
       const renderTime = performance.now() - renderStartTime.current;
@@ -153,7 +154,7 @@ export function usePerformanceMetrics(componentName: string) {
         averageRenderTime,
         slowRenders,
         lastRenderTime: renderTime,
-      });
+  }, [componentName]);
 
       if (process.env["NODE_ENV"] === "development") {
         if (renderTime > 16) {
@@ -263,7 +264,7 @@ export const memoryUtils = {
   /**
    * Monitor memory leaks by tracking object references
    */
-  trackMemoryLeaks: (objectName: string, obj: any) => {
+  trackMemoryLeaks: (objectName: string, _obj: any) => {
     if (process.env["NODE_ENV"] !== "development") return;
 
     const refs = new Set();
@@ -329,7 +330,7 @@ export const networkUtils = {
           request: resource.requestStart - resource.connectEnd,
           response: resource.responseEnd - resource.requestStart,
           total: resource.responseEnd - resource.startTime,
-        });
+  }, [componentName]);
       }
     });
 

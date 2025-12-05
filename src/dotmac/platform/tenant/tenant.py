@@ -96,6 +96,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 "/redoc",
                 "/openapi.json",
                 "/api/v1/auth/login",  # Auth endpoints don't need tenant
+                "/api/platform/v1/auth/login",
+                "/api/isp/v1/auth/login",
+                "/api/platform/v1/admin/auth/login",  # legacy combined path
+                "/api/isp/v1/admin/auth/login",  # legacy combined path
                 "/api/v1/auth/register",
                 "/api/v1/auth/password-reset",
                 "/api/v1/auth/password-reset/confirm",
@@ -106,7 +110,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 "/api",
                 "/api/v1/platform/config",
                 "/api/v1/platform/runtime-config",  # Frontend SSR needs this before tenant context exists
-                "/api/platform/v1/admin/runtime-config",  # Platform-admin runtime config path
+                "/api/platform/v1/admin/runtime-config",  # Platform-admin runtime config path (legacy)
+                "/api/platform/v1/runtime-config",
                 "/api/v1/branding",  # Public branding for frontend bootstrapping
                 "/api/v1/platform/health",
                 "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
@@ -121,8 +126,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/realtime/subscribers",
             "/api/v1/realtime/radius-sessions",
             "/api/v1/realtime/events",
-            "/api/platform/v1/admin/realtime",  # Admin router mount (platform app)
-            "/api/isp/v1/admin/realtime",  # Admin router mount (ISP app)
+            "/api/platform/v1/admin/realtime",  # Admin router mount (platform app, legacy)
+            "/api/isp/v1/admin/realtime",  # Admin router mount (ISP app, legacy)
+            "/api/platform/v1/realtime",
+            "/api/isp/v1/realtime",
         }
         # Override config's require_tenant if explicitly provided
         if require_tenant is not None:
@@ -230,6 +237,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
             path == optional_path or path.startswith(optional_path.rstrip("/") + "/")
             for optional_path in self.optional_tenant_paths
         )
+        # Registration should never silently fall back to default tenant in multi-tenant setups
+        is_registration_path = path.startswith("/api/") and "/auth/register" in path
 
         if tenant_id:
             # Set tenant ID on request state and context var
@@ -237,7 +246,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
             from . import set_current_tenant_id
 
             set_current_tenant_id(tenant_id)
-        elif self.require_tenant and not is_platform_admin_request and not is_optional_tenant_path:
+        elif (
+            self.require_tenant
+            or (is_registration_path and not self.config.is_single_tenant)
+        ) and not is_platform_admin_request and not is_optional_tenant_path:
             import structlog
 
             logger = structlog.get_logger(__name__)

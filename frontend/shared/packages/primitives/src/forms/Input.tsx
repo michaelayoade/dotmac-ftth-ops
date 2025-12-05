@@ -148,7 +148,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         try {
           return validate(val);
-        } catch (err) {
+        } catch (_error) {
           return "Validation error occurred";
         }
       },
