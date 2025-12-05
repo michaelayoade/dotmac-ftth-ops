@@ -44,6 +44,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     ISP_PREFIXES = ("/api/isp/",)
     PUBLIC_PREFIXES = ("/api/public/", "/docs", "/redoc", "/openapi.json")
     HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api/health")
+    AUTH_PREFIXES = ("/api/platform/v1/auth/", "/api/isp/v1/auth/")
 
     # Rejected prefixes - fail fast with 410 Gone
     REJECTED_PREFIXES = ("/api/tenant/", "/api/v1/")
@@ -72,7 +73,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
             )
 
         # Skip middleware for public and health routes
-        if self._is_public_route(path) or self._is_health_route(path):
+        if self._is_public_route(path) or self._is_health_route(path) or self._is_auth_route(path):
             return await call_next(request)
 
         # Get user from request state (set by auth middleware)
@@ -213,6 +214,10 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     def _is_rejected_route(self, path: str) -> bool:
         """Check if route uses rejected prefixes."""
         return any(path.startswith(prefix) for prefix in self.REJECTED_PREFIXES)
+
+    def _is_auth_route(self, path: str) -> bool:
+        """Allow unauthenticated access to auth routes for login/refresh/2fa/etc."""
+        return any(path.startswith(prefix) for prefix in self.AUTH_PREFIXES)
 
     def _is_public_route(self, path: str) -> bool:
         """Check if route is public (no auth required)."""
