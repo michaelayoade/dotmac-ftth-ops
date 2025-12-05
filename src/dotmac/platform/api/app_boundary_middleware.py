@@ -42,7 +42,14 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     # Route prefixes that define boundaries
     PLATFORM_PREFIXES = ("/api/platform/",)
     ISP_PREFIXES = ("/api/isp/",)
-    PUBLIC_PREFIXES = ("/api/public/", "/docs", "/redoc", "/openapi.json")
+    PUBLIC_PREFIXES = (
+        "/api/public/",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/api/platform/v1/auth",
+        "/api/isp/v1/auth",
+    )
     HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api/health")
     AUTH_PREFIXES = ("/api/platform/v1/auth/", "/api/isp/v1/auth/")
 
@@ -218,6 +225,18 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     def _is_auth_route(self, path: str) -> bool:
         """Allow unauthenticated access to auth routes for login/refresh/2fa/etc."""
         return any(path.startswith(prefix) for prefix in self.AUTH_PREFIXES)
+
+    def _is_platform_route(self, path: str) -> bool:
+        """Check if route is a platform route, excluding auth/public/health."""
+        if self._is_auth_route(path) or self._is_public_route(path) or self._is_health_route(path):
+            return False
+        return any(path.startswith(prefix) for prefix in self.PLATFORM_PREFIXES)
+
+    def _is_isp_route(self, path: str) -> bool:
+        """Check if route is an ISP route, excluding auth/public/health."""
+        if self._is_auth_route(path) or self._is_public_route(path) or self._is_health_route(path):
+            return False
+        return any(path.startswith(prefix) for prefix in self.ISP_PREFIXES)
 
     def _is_public_route(self, path: str) -> bool:
         """Check if route is public (no auth required)."""

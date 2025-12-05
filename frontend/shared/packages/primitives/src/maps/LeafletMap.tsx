@@ -38,7 +38,7 @@ const patchLeafletIcons = (leaflet: LeafletModule) => {
     return;
   }
   // Fix for default marker icons in Leaflet
-  // @ts-ignore
+  // @ts-expect-error - upstream type does not expose this private member
   delete leaflet.Icon.Default.prototype._getIconUrl;
   leaflet.Icon.Default.mergeOptions({
     iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",

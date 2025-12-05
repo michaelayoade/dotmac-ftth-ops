@@ -409,7 +409,7 @@ export const Modal: React.FC<ModalProps> = ({
         onOpenChange?.(newOpen);
       }
     },
-    [controlledOpen, onOpenChange, open],
+    [controlledOpen, onOpenChange, open, close],
   );
 
   useEffect(() => {

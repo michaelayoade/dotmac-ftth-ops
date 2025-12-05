@@ -7,7 +7,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { clsx } from "clsx";
 import { ChevronRight } from "lucide-react";
-import { createContext, forwardRef, useContext } from "react";
+import { createContext, forwardRef, useContext, useMemo } from "react";
 
 // Navigation variants
 const navigationVariants = cva("", {
@@ -128,11 +128,16 @@ export function NavigationProvider({
   onNavigate,
   collapsed = false,
 }: NavigationProviderProps) {
-  const contextValue: NavigationContextValue = {
-    ...(activeItem !== undefined ? { activeItem } : {}),
-    ...(onNavigate ? { onNavigate } : {}),
-    collapsed,
-  };
+  const contextValue: NavigationContextValue = useMemo(() => {
+    const value: NavigationContextValue = { collapsed };
+    if (activeItem !== undefined) {
+      value.activeItem = activeItem;
+    }
+    if (onNavigate) {
+      value.onNavigate = onNavigate;
+    }
+    return value;
+  }, [activeItem, collapsed, onNavigate]);
 
   return <NavigationContext.Provider value={contextValue}>{children}</NavigationContext.Provider>;
 }
@@ -456,14 +461,14 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
       <Comp ref={ref} className={clsx("breadcrumb", className)} aria-label="Breadcrumb" {...props}>
         <ol className="breadcrumb-list">
           {displayItems.map((item, index) => (
-            <React.Fragment key={`item-${index}`}>
+            <span key={`item-${index}`} className="contents">
               {item}
               {index < displayItems.length - 1 && (
                 <li className="breadcrumb-separator-item" aria-hidden="true">
                   {separator}
                 </li>
               )}
-            </React.Fragment>
+            </span>
           ))}
         </ol>
       </Comp>

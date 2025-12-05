@@ -2,8 +2,7 @@
 
 import { clsx } from "clsx";
 import { ChevronDown, ChevronRight, Menu, X } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 
 import { useFocusTrap } from "../utils/accessibility";
 

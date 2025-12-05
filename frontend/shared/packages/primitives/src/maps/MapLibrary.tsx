@@ -141,7 +141,7 @@ export function TechnicianRouteMap({
   routes,
   technicians,
   workOrders = [],
-  onRouteSelect,
+  onRouteSelect: _onRouteSelect,
   onTechnicianSelect,
   ...props
 }: TechnicianRouteMapProps) {
