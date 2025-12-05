@@ -243,8 +243,9 @@ const MockMapCanvas = ({
 
       {/* Service Areas */}
       {serviceAreas?.map((area: ServiceArea, index: number) => (
-        <div
+        <button
           key={area.id}
+          type="button"
           className="absolute opacity-30 hover:opacity-50 cursor-pointer transition-opacity"
           style={{
             left: `${10 + index * 20}%`,
