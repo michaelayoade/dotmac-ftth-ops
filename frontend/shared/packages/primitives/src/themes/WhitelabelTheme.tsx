@@ -6,8 +6,15 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
-import type { ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from "react";
 
 interface WhitelabelConfig {
   brand: {
@@ -82,14 +89,80 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
   const [isWhitelabel, setIsWhitelabel] = useState(!!fallbackConfig);
   const [loading, setLoading] = useState(!!partnerId || !!domain);
 
-  // Load whitelabel configuration
-  useEffect(() => {
-    if (partnerId || domain) {
-      loadWhitelabelConfig();
+  const injectCustomCSS = useCallback((customCSS: string) => {
+    // Remove existing custom CSS
+    const existingStyle = document.getElementById("whitelabel-custom-css");
+    if (existingStyle) {
+      existingStyle.remove();
     }
-  }, [partnerId, domain]);
 
-  const loadWhitelabelConfig = async () => {
+    // Inject new custom CSS
+    const style = document.createElement("style");
+    style.id = "whitelabel-custom-css";
+    style.textContent = customCSS;
+    document.head.appendChild(style);
+  }, []);
+
+  const loadCustomFont = useCallback((fontUrl: string) => {
+    // Check if font is already loaded
+    const existingLink = document.querySelector(`link[href="${fontUrl}"]`);
+    if (existingLink) return;
+
+    // Create and append font link
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = fontUrl;
+    link.crossOrigin = "anonymous";
+    document.head.appendChild(link);
+  }, []);
+
+  const updateFavicon = useCallback((faviconUrl: string) => {
+    let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+
+    if (!favicon) {
+      favicon = document.createElement("link");
+      favicon.rel = "icon";
+      document.head.appendChild(favicon);
+    }
+
+    favicon.href = faviconUrl;
+  }, []);
+
+  const updatePageTitle = useCallback((brandName: string) => {
+    // Only update if not already set by the page
+    if (document.title === "DotMac ISP Framework" || !document.title) {
+      document.title = brandName;
+    }
+  }, []);
+
+  const applyThemeVariables = useCallback(
+    (themeConfig: WhitelabelConfig) => {
+      const root = document.documentElement;
+
+      // Apply CSS variables
+      Object.entries(themeConfig.css_variables).forEach(([variable, value]) => {
+        root.style.setProperty(variable, value);
+      });
+
+      // Apply base colors
+      root.style.setProperty("--color-primary", themeConfig.colors.primary);
+      root.style.setProperty("--color-secondary", themeConfig.colors.secondary);
+      root.style.setProperty("--color-accent", themeConfig.colors.accent);
+      root.style.setProperty("--color-background", themeConfig.colors.background);
+      root.style.setProperty("--color-text", themeConfig.colors.text);
+
+      // Apply typography
+      root.style.setProperty("--font-family", themeConfig.typography.font_family);
+
+      // Inject custom CSS if provided
+      if (themeConfig.custom_css) {
+        injectCustomCSS(themeConfig.custom_css);
+      }
+    },
+    [injectCustomCSS],
+  );
+
+  const loadWhitelabelConfig = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -140,7 +213,14 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiEndpoint, applyThemeVariables, domain, loadCustomFont, partnerId, updateFavicon, updatePageTitle]);
+
+  // Load whitelabel configuration
+  useEffect(() => {
+    if (partnerId || domain) {
+      loadWhitelabelConfig();
+    }
+  }, [partnerId, domain, loadWhitelabelConfig]);
 
   const updateConfig = useCallback((newConfig: WhitelabelConfig) => {
     setConfig(newConfig);
@@ -154,7 +234,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     if (newConfig.brand.favicon) {
       updateFavicon(newConfig.brand.favicon);
     }
-  }, []);
+  }, [applyThemeVariables, loadCustomFont, updateFavicon]);
 
   const resetToDefault = useCallback(() => {
     setConfig(null);
@@ -171,77 +251,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
 
     // Reset page title
     document.title = "DotMac ISP Framework";
-  }, [config?.css_variables]);
-
-  const applyThemeVariables = (themeConfig: WhitelabelConfig) => {
-    const root = document.documentElement;
-
-    // Apply CSS variables
-    Object.entries(themeConfig.css_variables).forEach(([variable, value]) => {
-      root.style.setProperty(variable, value);
-    });
-
-    // Apply base colors
-    root.style.setProperty("--color-primary", themeConfig.colors.primary);
-    root.style.setProperty("--color-secondary", themeConfig.colors.secondary);
-    root.style.setProperty("--color-accent", themeConfig.colors.accent);
-    root.style.setProperty("--color-background", themeConfig.colors.background);
-    root.style.setProperty("--color-text", themeConfig.colors.text);
-
-    // Apply typography
-    root.style.setProperty("--font-family", themeConfig.typography.font_family);
-
-    // Inject custom CSS if provided
-    if (themeConfig.custom_css) {
-      injectCustomCSS(themeConfig.custom_css);
-    }
-  };
-
-  const loadCustomFont = (fontUrl: string) => {
-    // Check if font is already loaded
-    const existingLink = document.querySelector(`link[href="${fontUrl}"]`);
-    if (existingLink) return;
-
-    // Create and append font link
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = fontUrl;
-    link.crossOrigin = "anonymous";
-    document.head.appendChild(link);
-  };
-
-  const updateFavicon = (faviconUrl: string) => {
-    let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-
-    if (!favicon) {
-      favicon = document.createElement("link");
-      favicon.rel = "icon";
-      document.head.appendChild(favicon);
-    }
-
-    favicon.href = faviconUrl;
-  };
-
-  const updatePageTitle = (brandName: string) => {
-    // Only update if not already set by the page
-    if (document.title === "DotMac ISP Framework" || !document.title) {
-      document.title = brandName;
-    }
-  };
-
-  const injectCustomCSS = (customCSS: string) => {
-    // Remove existing custom CSS
-    const existingStyle = document.getElementById("whitelabel-custom-css");
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-
-    // Inject new custom CSS
-    const style = document.createElement("style");
-    style.id = "whitelabel-custom-css";
-    style.textContent = customCSS;
-    document.head.appendChild(style);
-  };
+  }, [config?.css_variables, updateFavicon]);
 
   const contextValue = useMemo<WhitelabelContextType>(
     () => ({

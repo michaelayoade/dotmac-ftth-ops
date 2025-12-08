@@ -17,7 +17,7 @@ import {
   Maximize2,
   Filter,
 } from "lucide-react";
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 
 import { cn } from "../utils/cn";
 
@@ -125,6 +125,8 @@ export interface UniversalMapProps {
     serviceTypes?: ServiceArea["type"][];
     nodeTypes?: NetworkNode["type"][];
     statusFilter?: string[];
+    status?: string[];
+    serviceAreas?: string[];
   };
 
   // Customization
@@ -286,8 +288,9 @@ const MockMapCanvas = ({
       {markers?.map((marker: MapMarker, index: number) => {
         const Icon = markerIcons[marker.type] || MapPin;
         return (
-          <div
+          <button
             key={marker.id}
+            type="button"
             className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform"
             style={{
               left: `${15 + index * 12}%`,
@@ -304,7 +307,7 @@ const MockMapCanvas = ({
             >
               <Icon className="w-3 h-3 text-white" />
             </div>
-          </div>
+          </button>
         );
       })}
 
@@ -339,7 +342,7 @@ const MockMapCanvas = ({
 
 export function UniversalMap({
   type: _type,
-  center = { lat: 37.7749, lng: -122.4194 },
+  center: _center = { lat: 37.7749, lng: -122.4194 },
   zoom = 10,
   bounds: _bounds,
   markers = [],
@@ -365,12 +368,6 @@ export function UniversalMap({
   className = "",
 }: UniversalMapProps) {
   // Acknowledge unused props (reserved for future map implementations)
-  void _type;
-  void _bounds;
-  void _showClusters;
-  void _onNodeClick;
-  void _onMapClick;
-  void _onBoundsChanged;
   const [currentZoom, setCurrentZoom] = useState(zoom);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState(filters || {});
@@ -505,7 +502,6 @@ export function UniversalMap({
           <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs">
             <h4 className="font-medium text-gray-900 mb-2 text-sm">Legend</h4>
             <div className="space-y-1">
-              {/* Marker types */}
               {Object.entries(markerIcons).map(([type, Icon]) => (
                 <div key={type} className="flex items-center space-x-2 text-xs">
                   <Icon className="w-3 h-3 text-gray-600" />
@@ -513,7 +509,6 @@ export function UniversalMap({
                 </div>
               ))}
 
-              {/* Status indicators */}
               <div className="mt-2 pt-2 border-t border-gray-200">
                 {Object.entries(statusColors).map(([status, color]) => (
                   <div key={status} className="flex items-center space-x-2 text-xs">
@@ -531,48 +526,130 @@ export function UniversalMap({
           <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 w-64">
             <h4 className="font-medium text-gray-900 mb-3">Filters</h4>
 
-            {/* Marker Type Filter */}
             <div className="mb-3">
-              <label className="text-sm font-medium text-gray-700">Marker Types</label>
+              <p className="text-sm font-medium text-gray-700">Marker Types</p>
               <div className="mt-1 space-y-1">
-                {Object.keys(markerIcons).map((type) => (
-                  <label key={type} className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      className="mr-2"
-                      checked={activeFilters.markerTypes?.includes(type as any)}
-                      onChange={(e) => {
-                        const types = activeFilters.markerTypes || [];
-                        if (e.target.checked) {
-                          setActiveFilters({
-                            ...activeFilters,
-                            markerTypes: [...types, type as any],
-                          });
-                        } else {
-                          setActiveFilters({
-                            ...activeFilters,
-                            markerTypes: types.filter((t) => t !== type),
-                          });
-                        }
-                      }}
-                    />
-                    <span className="capitalize">{type.replace("_", " ")}</span>
-                  </label>
-                ))}
+                {Object.keys(markerIcons).map((type) => {
+                  const checkboxId = `marker-type-${type}`;
+                  return (
+                    <label key={type} className="flex items-center text-sm" htmlFor={checkboxId}>
+                      <input
+                        id={checkboxId}
+                        type="checkbox"
+                        className="mr-2"
+                        checked={activeFilters.markerTypes?.includes(type as any)}
+                        onChange={(e) => {
+                          const types = activeFilters.markerTypes || [];
+                          if (e.target.checked) {
+                            setActiveFilters({
+                              ...activeFilters,
+                              markerTypes: [...types, type as any],
+                            });
+                          } else {
+                            setActiveFilters({
+                              ...activeFilters,
+                              markerTypes: types.filter((t) => t !== type),
+                            });
+                          }
+                        }}
+                      />
+                      <span className="capitalize">{type.replace("_", " ")}</span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
-            <button
-              onClick={() => setShowFilters(false)}
-              className="w-full mt-3 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
-            >
-              Close
-            </button>
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-700">Status</p>
+              <div className="mt-1 space-y-1">
+                {["active", "inactive", "issue"].map((status) => {
+                  const statusId = `marker-status-${status}`;
+                  const color = getStatusColor(status as MapMarker["status"]);
+                  return (
+                    <label key={status} className="flex items-center text-sm" htmlFor={statusId}>
+                      <input
+                        id={statusId}
+                        type="checkbox"
+                        className="mr-2"
+                        checked={activeFilters.status?.includes(status as any)}
+                        onChange={(e) => {
+                          const statuses = activeFilters.status || [];
+                          if (e.target.checked) {
+                            setActiveFilters({
+                              ...activeFilters,
+                              status: [...statuses, status as any],
+                            });
+                          } else {
+                            setActiveFilters({
+                              ...activeFilters,
+                              status: statuses.filter((s) => s !== status),
+                            });
+                          }
+                        }}
+                      />
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                      <span className="capitalize text-gray-700">{status.replace("_", " ")}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-700">Service Areas</p>
+              <div className="mt-1 space-y-1">
+                {serviceAreas.map((area) => {
+                  const areaId = `service-area-${area.id}`;
+                  return (
+                    <label key={area.id} className="flex items-center text-sm" htmlFor={areaId}>
+                      <input
+                        id={areaId}
+                        type="checkbox"
+                        className="mr-2"
+                        checked={activeFilters.serviceAreas?.includes(area.id)}
+                        onChange={(e) => {
+                          const areas = activeFilters.serviceAreas || [];
+                          if (e.target.checked) {
+                            setActiveFilters({
+                              ...activeFilters,
+                              serviceAreas: [...areas, area.id],
+                            });
+                          } else {
+                            setActiveFilters({
+                              ...activeFilters,
+                              serviceAreas: areas.filter((id) => id !== area.id),
+                            });
+                          }
+                        }}
+                      />
+                      <span className="text-gray-700">{area.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <button
+                type="button"
+                className="text-sm text-blue-600 hover:text-blue-700"
+                onClick={() => setActiveFilters({})}
+              >
+                Reset Filters
+              </button>
+              <button
+                type="button"
+                className="text-sm text-gray-600 hover:text-gray-700"
+                onClick={() => setShowFilters(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Stats Footer */}
       <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
         <div className="flex items-center justify-between text-sm text-gray-600">
           <div className="flex items-center space-x-4">

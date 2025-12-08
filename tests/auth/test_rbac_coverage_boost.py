@@ -579,7 +579,8 @@ class TestCachingBehavior:
         # Second call - should hit cache
         perms2 = await rbac_service.get_user_permissions(user_id)
 
-        assert perms1 == perms2
+        # Compare allows sets since PermissionSnapshot doesn't have __eq__
+        assert perms1.allows == perms2.allows
         assert "ticket.read" in perms2
 
     @pytest.mark.asyncio

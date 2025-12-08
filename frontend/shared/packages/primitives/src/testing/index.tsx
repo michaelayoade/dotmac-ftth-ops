@@ -35,7 +35,9 @@ const render = (ui: React.ReactElement, options?: RenderOptions): RenderResult =
 const renderA11y = async (ui: React.ReactElement, options?: RenderOptions) => {
   const result = render(ui, options);
   const accessibility = await axe(result.container);
-  expect(accessibility).toHaveNoViolations();
+  if (accessibility.violations.length > 0) {
+    throw new Error(`Accessibility violations detected:\n${accessibility.violations.map(v => v.id).join('\n')}`);
+  }
   return result;
 };
 
@@ -75,7 +77,9 @@ const renderComprehensive = async (
       "nested-interactive": { enabled: false },
     },
   });
-  expect(accessibility).toHaveNoViolations();
+  if (accessibility.violations.length > 0) {
+    throw new Error(`Accessibility violations detected:\n${accessibility.violations.map(v => v.id).join('\n')}`);
+  }
 
   return {
     result: perfResult,
@@ -186,9 +190,45 @@ const createMockWebSocket = () => {
 };
 
 // Hook wrapper factory for testing hooks with providers
-const createHookWrapper = (options: { queryClient?: unknown } = {}) => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { QueryClient, QueryClientProvider } = require("@tanstack/react-query");
+// Dynamic import wrapper to avoid require
+let cachedQueryClient: any = null;
+let cachedQueryClientProvider: any = null;
+
+const getQueryClientModules = async () => {
+  if (!cachedQueryClient || !cachedQueryClientProvider) {
+    const mod = await import("@tanstack/react-query");
+    cachedQueryClient = mod.QueryClient;
+    cachedQueryClientProvider = mod.QueryClientProvider;
+  }
+  return { QueryClient: cachedQueryClient, QueryClientProvider: cachedQueryClientProvider };
+};
+
+const createHookWrapper = (options: { queryClient?: any } = {}) => {
+  // Synchronous wrapper that uses cached modules
+  // Note: This will throw if modules haven't been loaded yet
+  // For async loading, use createHookWrapperAsync
+  const QueryClientClass = cachedQueryClient;
+  const QueryClientProvider = cachedQueryClientProvider;
+
+  if (!QueryClientClass || !QueryClientProvider) {
+    throw new Error("Query client modules not loaded. Call getQueryClientModules() first.");
+  }
+
+  const queryClient = options.queryClient || new QueryClientClass({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
+// Async version that loads modules first
+const createHookWrapperAsync = async (options: { queryClient?: any } = {}) => {
+  const { QueryClient, QueryClientProvider } = await getQueryClientModules();
   const queryClient = options.queryClient || new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -223,8 +263,7 @@ const simulateNetworkDelay = (ms: number) => {
   const originalFetch = global.fetch;
   (global.fetch as jest.Mock).mockImplementationOnce(async (...args: unknown[]) => {
     await new Promise((resolve) => setTimeout(resolve, ms));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    return (originalFetch as Function)(...args);
+    return (originalFetch as typeof fetch)(...(args as Parameters<typeof fetch>));
   });
 };
 
@@ -248,6 +287,8 @@ export {
   createMockWebSocket,
   // Hook testing utilities
   createHookWrapper,
+  createHookWrapperAsync,
+  getQueryClientModules,
   // MSW server stub
   server,
   // API simulation

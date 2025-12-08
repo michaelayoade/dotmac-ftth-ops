@@ -4,14 +4,15 @@
  */
 
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useApiClient } from "../hooks/useApiClient";
-import { useAuthStore } from "../auth/store";
+
 import {
   createMockUser,
   createMockTokens,
   mockFetchResponse,
   mockFetchError,
 } from "../../__tests__/setup";
+import { useAuthStore } from "../auth/store";
+import { useApiClient } from "../hooks/useApiClient";
 
 // Mock the auth store to provide authentication context
 const mockAuthStore = {

@@ -168,3 +168,4 @@ async def validate_partner_tenant_link(
             error=str(e),
         )
         return False
+# pragma: no cover

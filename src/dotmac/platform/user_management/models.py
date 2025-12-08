@@ -141,6 +141,15 @@ class BackupCode(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     used_at: Mapped[datetime | None] = mapped_column(nullable=True)
     used_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
 
+    @property
+    def is_used(self) -> bool:
+        """Backward-compatible alias for test fixtures that reference is_used."""
+        return self.used
+
+    @is_used.setter
+    def is_used(self, value: bool) -> None:
+        self.used = value
+
     def __repr__(self) -> str:
         return f"<BackupCode(id={self.id}, user_id={self.user_id}, used={self.used})>"
 

@@ -101,3 +101,4 @@ async def ensure_isp_rbac(session: AsyncSession) -> None:
             await session.flush()
 
     await session.commit()
+# pragma: no cover

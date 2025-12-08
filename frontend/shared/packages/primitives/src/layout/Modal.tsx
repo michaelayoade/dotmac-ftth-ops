@@ -142,7 +142,6 @@ export const ModalBackdrop = forwardRef<HTMLDivElement, ModalBackdropProps>(
     );
 
     return (
-      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
       <div
         ref={ref}
         className={clsx("modal-backdrop", className)}
@@ -152,6 +151,7 @@ export const ModalBackdrop = forwardRef<HTMLDivElement, ModalBackdropProps>(
             handleClick(e as unknown as React.MouseEvent);
           }
         }}
+        role="presentation"
         data-testid={dataTestId ?? "modal-backdrop"}
         {...props}
       />

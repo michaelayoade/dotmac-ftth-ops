@@ -3,7 +3,6 @@
  * Advanced data table with sorting, filtering, pagination, and export capabilities
  */
 "use client";
-/* eslint-disable no-case-declarations */
 
 import { motion } from "framer-motion";
 import {
@@ -12,10 +11,6 @@ import {
   Search,
   Filter,
   Download,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -106,19 +101,28 @@ export interface UniversalDataTableProps<T = any> {
   maxHeight?: number | string;
 }
 
-const formatValue = (value: any, column: TableColumn): React.ReactNode => {
+const formatCurrency = (value: unknown, column: TableColumn): string => {
+  const currency = column.currency || "USD";
+  const precision = column.precision || 2;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: precision,
+    maximumFractionDigits: precision,
+  }).format(Number(value));
+};
+
+const formatDate = (value: unknown): string => {
+  const date = new Date(value as string | number | Date);
+  return date.toLocaleDateString();
+};
+
+const formatValue = (value: unknown, column: TableColumn): React.ReactNode => {
   if (value === null || value === undefined) return "-";
 
   switch (column.format) {
     case "currency":
-      const currency = column.currency || "USD";
-      const precision = column.precision || 2;
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency,
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision,
-      }).format(Number(value));
+      return formatCurrency(value, column);
 
     case "percentage":
       return `${Number(value).toFixed(column.precision || 1)}%`;
@@ -130,8 +134,7 @@ const formatValue = (value: any, column: TableColumn): React.ReactNode => {
       });
 
     case "date":
-      const date = new Date(value);
-      return date.toLocaleDateString();
+      return formatDate(value);
 
     case "status":
       return (
@@ -151,7 +154,7 @@ const formatValue = (value: any, column: TableColumn): React.ReactNode => {
     case "badge":
       return (
         <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-          {value}
+          {String(value)}
         </span>
       );
 
@@ -184,7 +187,7 @@ export function UniversalDataTable<T extends Record<string, any>>({
   actions = [],
   rowActions = [],
   bulkActions = [],
-  sortable = true,
+  sortable: _sortable = true,
   filterable = true,
   searchable = true,
   paginated = true,

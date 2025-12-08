@@ -3,8 +3,9 @@
  * Handles multi-channel communication, alerts, and notification management
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface NotificationTemplate {
   id: string;

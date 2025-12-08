@@ -117,7 +117,7 @@ if (typeof window !== "undefined") {
         }
         return arr;
       }),
-      randomUUID: jest.fn(() => "mock-uuid-" + Math.random().toString(36).substr(2, 9)),
+      randomUUID: jest.fn(() => `mock-uuid-${  Math.random().toString(36).substr(2, 9)}`),
       subtle: {
         digest: jest.fn(),
         encrypt: jest.fn(),
@@ -349,6 +349,7 @@ export const createMockPerformanceMetric = (name: string, value: number) => ({
 
 // Custom Jest matchers for headless testing
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toHaveBeenCalledWithAuth(): R;
@@ -511,6 +512,181 @@ export const createMockHookContext = (overrides = {}) => ({
   tokens: createMockTokens(),
   features: createMockFeatureFlags(),
   portalConfig: createMockPortalConfig("admin"),
+  ...overrides,
+});
+
+// Mock audit log for compliance testing
+export const createMockAuditLog = (overrides = {}) => ({
+  id: "audit_123",
+  event_type: "DATA_ACCESS",
+  action: "READ",
+  user_id: "user_456",
+  user_email: "user@example.com",
+  resource_type: "CUSTOMER_DATA",
+  resource_id: "cust_789",
+  risk_level: "LOW",
+  ip_address: "192.168.1.1",
+  user_agent: "Mozilla/5.0",
+  timestamp: new Date().toISOString(),
+  details: {
+    fields_accessed: ["name", "email"],
+    purpose: "Customer support inquiry",
+  },
+  ...overrides,
+});
+
+// Mock compliance assessment
+export const createMockAssessment = (overrides = {}) => ({
+  id: "assessment_123",
+  name: "Q4 SOC2 Compliance Assessment",
+  framework: "SOC2",
+  status: "IN_PROGRESS",
+  assessor_id: "user_assessor",
+  assessor_name: "Compliance Auditor",
+  start_date: new Date().toISOString(),
+  due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  compliance_percentage: 85,
+  findings: [],
+  action_plan: [],
+  recommendations: [],
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  ...overrides,
+});
+
+// Mock compliance finding
+export const createMockFinding = (overrides = {}) => ({
+  id: "finding_123",
+  assessment_id: "assessment_123",
+  title: "Access Control Gap",
+  description: "Missing MFA for admin access",
+  severity: "HIGH",
+  status: "OPEN",
+  control_id: "AC-1",
+  evidence: [],
+  remediation_deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+  assigned_to: "user_456",
+  created_at: new Date().toISOString(),
+  ...overrides,
+});
+
+// Mock action item
+export const createMockActionItem = (overrides = {}) => ({
+  id: "action_123",
+  finding_id: "finding_123",
+  title: "Implement MFA for admin portal",
+  description: "Enable multi-factor authentication for all admin users",
+  priority: "HIGH",
+  status: "PENDING",
+  due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  assigned_to: "user_789",
+  evidence_required: true,
+  created_at: new Date().toISOString(),
+  ...overrides,
+});
+
+// Mock privacy request
+export const createMockPrivacyRequest = (overrides = {}) => ({
+  id: "privacy_123",
+  customer_id: "cust_456",
+  customer_email: "customer@example.com",
+  request_type: "DATA_ACCESS",
+  status: "PENDING",
+  verification_status: "VERIFIED",
+  data_categories: ["personal_info", "usage_data", "billing"],
+  request_details: "Request for full data export under GDPR Article 15",
+  submission_date: new Date().toISOString(),
+  completion_deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  processing_notes: [],
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  ...overrides,
+});
+
+// Mock inventory item
+export const createMockInventoryItem = (overrides = {}) => ({
+  id: "item_123",
+  sku: "ONT-GPON-001",
+  name: "GPON ONT Device",
+  description: "Gigabit-capable Passive Optical Network terminal",
+  category: "NETWORK_EQUIPMENT",
+  type: "ONT",
+  status: "IN_STOCK",
+  condition: "NEW",
+  serial_number: "SN123456789",
+  quantity: 1,
+  unit_cost: 150.0,
+  location: {
+    warehouse_id: "wh_main",
+    zone: "A",
+    shelf: "3",
+    bin: "12",
+  },
+  purchase_info: {
+    vendor_id: "vendor_123",
+    vendor_name: "Network Equipment Co",
+    purchase_order: "PO-2024-001",
+    purchase_date: new Date().toISOString(),
+    purchase_price: 150.0,
+  },
+  warranty_info: {
+    warranty_period_months: 24,
+    warranty_start: new Date().toISOString(),
+    warranty_end: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  specifications: {
+    ports: 4,
+    speed: "1Gbps",
+    wifi: true,
+  },
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  ...overrides,
+});
+
+// Mock work order
+export const createMockWorkOrder = (overrides = {}) => ({
+  id: "wo_123",
+  type: "INSTALLATION",
+  status: "SCHEDULED",
+  priority: "NORMAL",
+  customer_id: "cust_456",
+  customer_name: "John Doe",
+  customer_address: "123 Main St, City, ST 12345",
+  scheduled_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+  estimated_duration_hours: 2,
+  technician_id: "tech_789",
+  technician_name: "Jane Technician",
+  service_type: "FIBER_INSTALLATION",
+  required_equipment: [
+    { item_id: "item_123", quantity: 1, name: "GPON ONT Device" },
+    { item_id: "item_456", quantity: 50, name: "Fiber Cable (meters)" },
+  ],
+  assigned_equipment: [],
+  notes: "Customer requested morning installation",
+  completion_notes: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  ...overrides,
+});
+
+// Mock metrics for analytics
+export const createMockMetrics = (overrides = {}) => ({
+  period: "daily",
+  start_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  end_date: new Date().toISOString(),
+  metrics: {
+    active_users: 1500,
+    new_signups: 25,
+    revenue: 45000,
+    churn_rate: 0.02,
+    avg_response_time_ms: 150,
+    uptime_percentage: 99.95,
+  },
+  trends: {
+    users: { current: 1500, previous: 1450, change: 3.45 },
+    revenue: { current: 45000, previous: 42000, change: 7.14 },
+  },
   ...overrides,
 });
 

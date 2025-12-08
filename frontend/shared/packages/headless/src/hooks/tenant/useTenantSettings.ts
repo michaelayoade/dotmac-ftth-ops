@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+
 import type { TenantBranding, TenantSession } from "../../types/tenant";
 
 export interface UseTenantSettingsReturn {

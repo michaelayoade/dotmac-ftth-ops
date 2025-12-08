@@ -3,8 +3,9 @@
  * Handles data visualization, reporting, and business metrics
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface AnalyticsReport {
   id: string;
@@ -291,7 +292,7 @@ export class AnalyticsApiClient extends BaseApiClient {
 
   async subscribeToMetrics(
     metrics: string[],
-    callback: (data: any) => void,
+    _callback: (data: any) => void,
   ): Promise<{ subscription_id: string }> {
     const response = await this.post("/api/analytics/realtime/subscribe", {
       metrics,

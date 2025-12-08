@@ -13,4 +13,19 @@ import {
   Toast,
 } from "./src/index";
 
-console.log("Primitives exports working");
+const primitives = {
+  Table,
+  TableCell,
+  TableFooter,
+  TableHeader,
+  TableRow,
+  TableBody,
+  useToast,
+  useModal,
+  useNavigation,
+  NotificationProvider,
+  Modal,
+  Toast,
+};
+
+console.log("Primitives exports working", Object.keys(primitives));

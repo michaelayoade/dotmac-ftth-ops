@@ -70,7 +70,8 @@ module.exports = {
     // Check if file should be processed
     function shouldProcessFile() {
       const path = require("path");
-      const minimatch = require("minimatch");
+      const minimatchModule = require("minimatch");
+      const minimatch = minimatchModule.minimatch || minimatchModule;
       const relativePath = path.relative(process.cwd(), filename);
 
       // Check exclude patterns first

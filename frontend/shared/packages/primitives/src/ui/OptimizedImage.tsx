@@ -78,7 +78,6 @@ export const OptimizedImage = React.forwardRef<HTMLImageElement, OptimizedImageP
     // Enhanced fallback img with optimization attributes
     // Note: Next.js Image should be used in Next.js apps, this is a fallback
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         ref={setRefs}
         src={src}

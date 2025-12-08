@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/role-supports-aria-props */
-/* eslint-disable react/jsx-no-constructed-context-values */
 /**
  * Unstyled, composable Form primitives with React Hook Form integration
  *
@@ -229,6 +227,39 @@ export interface FormFieldProps {
   }) => React.ReactNode;
 }
 
+function FormFieldRenderContent({
+  name,
+  field,
+  fieldState,
+  children,
+}: {
+  name: string;
+  field: { value: unknown; onChange: (value: unknown) => void; onBlur: () => void };
+  fieldState: { error?: { message?: string }; invalid: boolean };
+  children: FormFieldProps["children"];
+}) {
+  const contextValue = useMemo(
+    () => ({
+      name,
+      error: fieldState.error?.message ?? "",
+      invalid: fieldState.invalid,
+    }),
+    [name, fieldState.error?.message, fieldState.invalid]
+  );
+
+  return (
+    <FormFieldContext.Provider value={contextValue}>
+      {children({
+        value: field.value,
+        onChange: (value) => field.onChange(value),
+        onBlur: field.onBlur,
+        error: fieldState.error?.message ?? "",
+        invalid: fieldState.invalid,
+      })}
+    </FormFieldContext.Provider>
+  );
+}
+
 export function FormField({ name, rules, defaultValue, children }: FormFieldProps) {
   const { form } = useFormContext();
   const validationRules = rules ? createValidationRules(rules) : undefined;
@@ -244,24 +275,9 @@ export function FormField({ name, rules, defaultValue, children }: FormFieldProp
     <Controller
       {...controllerProps}
       render={({ field, fieldState }) => (
-        <>
-          {/* eslint-disable-next-line react/jsx-no-constructed-context-values */}
-          <FormFieldContext.Provider
-            value={{
-              name,
-              error: fieldState.error?.message ?? "",
-              invalid: fieldState.invalid,
-            }}
-          >
-            {children({
-              value: field.value,
-              onChange: (value) => field.onChange(value),
-              onBlur: field.onBlur,
-              error: fieldState.error?.message ?? "",
-              invalid: fieldState.invalid,
-            })}
-          </FormFieldContext.Provider>
-        </>
+        <FormFieldRenderContent name={name} field={field} fieldState={fieldState}>
+          {children}
+        </FormFieldRenderContent>
       )}
     />
   );
@@ -276,14 +292,12 @@ export const FormItem = forwardRef<HTMLDivElement, FormItemProps>(
   ({ className, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "div";
     const id = useUniqueId("form-item");
+    const contextValue = useMemo(() => ({ id }), [id]);
 
     return (
-      <>
-        {/* eslint-disable-next-line react/jsx-no-constructed-context-values */}
-        <FormItemContext.Provider value={{ id }}>
-          <Comp ref={ref} className={clsx("form-item space-y-2", className)} {...props} />
-        </FormItemContext.Provider>
-      </>
+      <FormItemContext.Provider value={contextValue}>
+        <Comp ref={ref} className={clsx("form-item space-y-2", className)} {...props} />
+      </FormItemContext.Provider>
     );
   },
 );
@@ -706,7 +720,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
     const field = useFormFieldState();
 
     const controlId = field?.inputId ?? radioId;
-    const isInvalid = field ? field.invalid : (ariaInvalid ?? false);
+    const _isInvalid = field ? field.invalid : (ariaInvalid ?? false);
     const describedBy =
       [ariaDescribedBy, field?.formDescriptionId, field?.error ? field?.formMessageId : null]
         .filter(Boolean)
@@ -720,7 +734,6 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
           ref={ref}
           id={controlId}
           name={resolvedName}
-          aria-invalid={isInvalid ? "true" : "false"}
           aria-describedby={describedBy}
           className="radio-input"
           {...props}

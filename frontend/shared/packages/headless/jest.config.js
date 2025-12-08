@@ -14,6 +14,9 @@ const config = {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     // Provide shared testing utilities + MSW server
     "^@dotmac/testing$": "<rootDir>/../primitives/src/testing/index.tsx",
+    "^react$": "<rootDir>/../../../node_modules/react",
+    "^react-dom$": "<rootDir>/../../../node_modules/react-dom",
+    "^react/jsx-runtime$": "<rootDir>/../../../node_modules/react/jsx-runtime",
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",

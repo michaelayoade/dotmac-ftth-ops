@@ -5,8 +5,7 @@
 
 "use client";
 
-import { createContext, useContext } from "react";
-import type { ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { cn } from "../utils/cn";
 
@@ -139,7 +138,7 @@ interface ISPThemeProviderProps {
 }
 
 export function ISPThemeProvider({ children, config = {} }: ISPThemeProviderProps) {
-  const themeConfig = { ...defaultThemeConfig, ...config };
+  const themeConfig = useMemo(() => ({ ...defaultThemeConfig, ...config }), [config]);
 
   return (
     <ISPThemeContext.Provider value={themeConfig}>

@@ -3,8 +3,7 @@
  * Code splitting, tree shaking, and dynamic loading optimizations
  */
 
-import React, { lazy } from "react";
-import type { ComponentType, LazyExoticComponent } from "react";
+import React, { lazy, type ComponentType, type LazyExoticComponent } from "react";
 
 // Bundle analysis utilities
 export interface BundleAnalysis {
@@ -97,8 +96,7 @@ export const SplitPoints = {
     preloadCondition: () => {
       // Check if user has admin role (SSR safe)
       if (typeof window === "undefined") return false;
-      // eslint-disable-next-line no-restricted-globals
-      return localStorage.getItem("userRole") === "admin";
+      return window.localStorage?.getItem("userRole") === "admin";
     },
   },
 

@@ -7,6 +7,8 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+import { SecureStorage } from "../auth/storage";
+
 import type {
   AppStore,
   AppState,
@@ -19,7 +21,6 @@ import type {
   ContextState,
   NotificationItem,
 } from "./types";
-import { SecureStorage } from "../auth/storage";
 
 // Default state values
 const defaultFilterState: FilterState = {
@@ -259,7 +260,7 @@ export function createAppStore(config: AppStoreConfig) {
                   selection.selectedItems = selection.selectedItems.filter((i) => i !== item);
                 } else {
                   if (multiple && selection.isMultiSelect) {
-                    selection.selectedItems.push(item);
+                    selection.selectedItems = [...selection.selectedItems, item];
                   } else {
                     selection.selectedItems = [item];
                   }

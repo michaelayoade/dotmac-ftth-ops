@@ -25,15 +25,17 @@ export function useIsHydrated(): boolean {
 }
 
 // useClientEffect hook
-export function useClientEffect(effect: () => void | (() => void), deps?: React.DependencyList) {
+export function useClientEffect(effect: () => void | (() => void), deps: React.DependencyList = []) {
   const isHydrated = useIsHydrated();
+  // Store effect in a ref to avoid re-triggering on effect change
+  const effectRef = useRef(effect);
+  effectRef.current = effect;
 
   useEffect(() => {
     if (isHydrated) {
-      return effect();
+      return effectRef.current();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, ...(deps || [])]);
+  }, [isHydrated, ...deps]);
 }
 
 // useMediaQuery hook

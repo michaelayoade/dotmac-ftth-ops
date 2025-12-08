@@ -1,4 +1,3 @@
-/* eslint-disable react/sort-comp */
 "use client";
 
 import { AlertTriangle, Home, MessageSquare, RefreshCw } from "lucide-react";
@@ -21,13 +20,6 @@ export interface ErrorBoundaryProps {
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null, errorId: null };
-  }
-
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     return {
@@ -36,6 +28,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       errorInfo: null,
       errorId,
     };
+  }
+
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null, errorId: null };
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -64,6 +61,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       });
     }
   }
+
+  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   handleRetry = () => {
     if (this.retryTimeoutId) {

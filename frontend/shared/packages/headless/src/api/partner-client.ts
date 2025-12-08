@@ -2,14 +2,11 @@
  * Partner Portal API Client with validation
  */
 
-import { getApiClient } from "./client";
-import type { ApiResponse } from "./types/api";
 import {
   CustomerSchema,
   CreateCustomerSchema,
   UpdateCustomerSchema,
   CustomerQueryParamsSchema,
-  CommissionQueryParamsSchema,
   TerritoryValidationSchema,
   DashboardDataSchema,
   sanitizeInput,
@@ -18,8 +15,11 @@ import {
   type CreateCustomer,
   type UpdateCustomer,
   type DashboardData,
+  type CommissionRecord,
 } from "../validation/partner-schemas";
-import type { CommissionRecord } from "../validation/partner-schemas";
+
+import { getApiClient } from "./client";
+import type { ApiResponse } from "./types/api";
 
 // Use types from validation schemas instead of duplicating
 export type { DashboardData as PartnerDashboardData } from "../validation/partner-schemas";

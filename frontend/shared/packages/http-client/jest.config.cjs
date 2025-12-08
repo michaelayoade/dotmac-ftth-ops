@@ -13,5 +13,10 @@ module.exports = {
       },
     ],
   },
+  moduleNameMapper: {
+    "^react$": "<rootDir>/../../../node_modules/react",
+    "^react-dom$": "<rootDir>/../../../node_modules/react-dom",
+    "^react/jsx-runtime$": "<rootDir>/../../../node_modules/react/jsx-runtime",
+  },
   moduleFileExtensions: ["ts", "tsx", "js", "json"],
 };

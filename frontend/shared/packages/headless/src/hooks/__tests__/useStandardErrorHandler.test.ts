@@ -3,6 +3,7 @@
  */
 
 import { renderHook, act, waitFor } from "@testing-library/react";
+
 import {
   useStandardErrorHandler,
   useApiErrorHandler,
@@ -59,8 +60,8 @@ jest.mock("../../utils/errorUtils", () => {
   };
 });
 
-import { useNotifications } from "../useNotifications";
 import { useISPTenant } from "../useISPTenant";
+import { useNotifications } from "../useNotifications";
 
 const mockUseNotifications = useNotifications as jest.Mock;
 const mockUseISPTenant = useISPTenant as jest.Mock;

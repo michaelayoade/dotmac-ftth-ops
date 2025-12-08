@@ -3,8 +3,9 @@
  */
 
 import React, { useEffect, useRef } from "react";
-import { usePerformanceMonitoring } from "./usePerformanceMonitoring";
+
 import type { PerformanceObserverConfig } from "./types";
+import { usePerformanceMonitoring } from "./usePerformanceMonitoring";
 
 // React component to wrap apps with performance monitoring
 export const PerformanceMonitor: React.FC<{

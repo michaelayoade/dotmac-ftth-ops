@@ -17,8 +17,7 @@ expect.extend(toHaveNoViolations);
 ensureTestingMatchers();
 
 declare global {
-  // eslint-disable-next-line no-var
-  var ResizeObserver: typeof window.ResizeObserver;
+  let ResizeObserver: typeof window.ResizeObserver;
 }
 
 if (typeof globalThis.TextEncoder === "undefined") {

@@ -4,6 +4,7 @@
  */
 
 import { useCallback } from "react";
+
 import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
 
 export function useMetricTracking(

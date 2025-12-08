@@ -1,6 +1,5 @@
 import type { LatLng } from "./types";
-import { UniversalMap } from "./UniversalMap";
-import type { MapMarker, NetworkNode as MapNetworkNode } from "./UniversalMap";
+import { UniversalMap, type MapMarker, type NetworkNode as MapNetworkNode } from "./UniversalMap";
 
 export interface NetworkNode {
   id: string;

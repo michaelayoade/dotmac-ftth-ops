@@ -3,19 +3,19 @@
  * Critical test suite for multi-channel communication and alert management
  */
 
-import { NotificationsApiClient } from "../NotificationsApiClient";
-import type {
-  NotificationTemplate,
-  Notification,
-  NotificationCampaign,
-  Alert,
-  NotificationPreference,
-  TemplateVariable,
-  NotificationChannel,
-  AudienceFilter,
-  CampaignScheduling,
-  CampaignMetrics,
-  EscalationRule,
+import {
+  NotificationsApiClient,
+  type NotificationTemplate,
+  type Notification,
+  type NotificationCampaign,
+  type Alert,
+  type NotificationPreference,
+  type TemplateVariable,
+  type NotificationChannel,
+  type AudienceFilter,
+  type CampaignScheduling,
+  type CampaignMetrics,
+  type EscalationRule,
 } from "../NotificationsApiClient";
 
 // Mock fetch
@@ -38,6 +38,49 @@ describe("NotificationsApiClient", () => {
       status,
       json: async () => data,
     } as Response);
+  };
+
+  // Shared mock fixtures for all test suites
+  const sharedMockNotification: Notification = {
+    id: "notification_shared",
+    template_id: "template_123",
+    recipient_id: "customer_456",
+    recipient_type: "CUSTOMER",
+    recipient_contact: {
+      email: "customer@example.com",
+      phone: "+1-555-0123",
+    },
+    channel: "EMAIL",
+    status: "DELIVERED",
+    priority: "HIGH",
+    subject: "Your monthly bill is ready - $89.99",
+    message: "Dear John Doe, your monthly bill of $89.99 is due on 2024-02-15.",
+    data: {
+      customer_name: "John Doe",
+      bill_amount: "$89.99",
+      due_date: "2024-02-15",
+    },
+    sent_at: "2024-01-17T09:00:00Z",
+    delivered_at: "2024-01-17T09:02:30Z",
+    retry_count: 0,
+    max_retries: 3,
+    expires_at: "2024-01-24T09:00:00Z",
+    created_at: "2024-01-17T08:58:00Z",
+  };
+
+  const sharedMockMetrics: CampaignMetrics = {
+    total_recipients: 4850,
+    sent_count: 4820,
+    delivered_count: 4775,
+    failed_count: 45,
+    opened_count: 2387,
+    clicked_count: 238,
+    unsubscribed_count: 12,
+    bounce_count: 28,
+    delivery_rate: 99.1,
+    open_rate: 50.0,
+    click_rate: 5.0,
+    unsubscribe_rate: 0.3,
   };
 
   describe("Notification Templates Management", () => {
@@ -1248,7 +1291,7 @@ describe("NotificationsApiClient", () => {
   describe("Performance and Scalability", () => {
     it("should handle large notification lists efficiently", async () => {
       const largeNotificationList = Array.from({ length: 5000 }, (_, i) => ({
-        ...mockNotification,
+        ...sharedMockNotification,
         id: `notification_${i}`,
         recipient_id: `customer_${i}`,
       }));
@@ -1300,7 +1343,7 @@ describe("NotificationsApiClient", () => {
 
     it("should handle complex campaign metrics efficiently", async () => {
       const complexMetrics = {
-        ...mockMetrics,
+        ...sharedMockMetrics,
         detailed_breakdown: Array.from({ length: 100 }, (_, i) => ({
           segment: `segment_${i}`,
           sent_count: Math.floor(Math.random() * 1000),

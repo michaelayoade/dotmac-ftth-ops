@@ -3,9 +3,11 @@
  * Testing critical API patterns with ISP-specific scenarios
  */
 
-import { createAPIClient, APIClient } from "@dotmac/headless/api/client";
-import { BusinessLogicTestFactory, ISPTestDataFactory } from "./business-logic-test-factory";
 import { jest } from "@jest/globals";
+
+import { createAPIClient, APIClient } from "@dotmac/headless/api/client";
+
+import { BusinessLogicTestFactory, ISPTestDataFactory } from "./business-logic-test-factory";
 
 // Mock fetch globally
 global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;

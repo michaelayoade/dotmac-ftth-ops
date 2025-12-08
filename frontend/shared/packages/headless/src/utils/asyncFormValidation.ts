@@ -5,8 +5,9 @@
  * for server-side validation, uniqueness checks, etc.
  */
 
-import { ValidationError, ValidationResult, FieldValidationConfig } from "./formValidation";
 import { parseBackendError, type StandardErrorResponse } from "../types/error-contract";
+
+import { ValidationError, ValidationResult, FieldValidationConfig } from "./formValidation";
 
 export interface AsyncValidationRule {
   validate: (value: unknown, formData?: Record<string, unknown>) => Promise<boolean>;
@@ -187,7 +188,7 @@ export class AsyncFormValidator {
    */
   clearFieldCache(fieldName: string): void {
     Object.keys(this.cache).forEach((key) => {
-      if (key.startsWith(fieldName + ":")) {
+      if (key.startsWith(`${fieldName  }:`)) {
         delete this.cache[key];
       }
     });

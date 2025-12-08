@@ -3,9 +3,6 @@
  * Production-level test generation leveraging existing patterns
  */
 
-import { renderHook, act } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React, { type ReactNode } from "react";
 import type {
   AuthProviderConfig,
   LoginCredentials,
@@ -13,6 +10,12 @@ import type {
   AuthError,
   PortalConfig,
 } from "@dotmac/headless/auth/types";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, act } from "@testing-library/react";
+import React, { type ReactNode } from "react";
+
+import { EnhancedErrorFactory, type ErrorContext } from "@dotmac/headless/utils/enhancedErrorHandling";
+
 
 // DRY Test Configuration Factory
 export class BusinessLogicTestFactory {
@@ -225,6 +228,19 @@ export class BusinessLogicTestFactory {
       ...baseCredentials[type],
       ...overrides,
     };
+  }
+
+  createValidationError(
+    field = "email",
+    value: any = "invalid@example.com",
+    rule = "must be a valid email",
+    context: Partial<ErrorContext> = {},
+  ) {
+    return EnhancedErrorFactory.validationError(field, value, rule, {
+      operation: context.operation || "submit_form",
+      businessProcess: context.businessProcess || "data_entry",
+      ...context,
+    });
   }
 
   // DRY Error Generator

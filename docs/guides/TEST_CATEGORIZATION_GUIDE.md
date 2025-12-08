@@ -423,15 +423,7 @@ import pytest
 pytestmark = pytest.mark.e2e
 
 async def test_registration_login_access_flow(test_client):
-    """Test complete user journey: register → login → access protected resource"""
-
-    # Step 1: Register
-    reg_response = await test_client.post("/auth/register", json={
-        "username": "newuser",
-        "email": "new@example.com",
-        "password": "SecureP@ss123"
-    })
-    assert reg_response.status_code == 201
+    """Test complete user journey: login → access protected resource (registration disabled)"""
 
     # Step 2: Login
     login_response = await test_client.post("/auth/login", json={

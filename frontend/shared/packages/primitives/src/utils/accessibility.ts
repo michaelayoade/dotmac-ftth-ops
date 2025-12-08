@@ -147,7 +147,6 @@ export function useKeyboardNavigation<T>(
         event,
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [orientation, navigate, focusedIndex, items, onSelect],
   );
 
@@ -301,7 +300,7 @@ export function useAriaSelection<T>(
     items: [],
   },
 ) {
-  const { items, multiple = false, onSelectionChange } = options;
+  const { items: _items, multiple = false, onSelectionChange } = options;
   const [selectedItems, setSelectedItems] = React.useState<T[]>([]);
 
   const toggleSelection = React.useCallback(

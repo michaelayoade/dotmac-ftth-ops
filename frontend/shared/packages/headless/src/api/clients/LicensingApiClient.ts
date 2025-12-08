@@ -3,8 +3,9 @@
  * Handles software licensing, activation, and compliance management
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface SoftwareLicense {
   id: string;

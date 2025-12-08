@@ -100,7 +100,6 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 "/api/isp/v1/auth/login",
                 "/api/platform/v1/admin/auth/login",  # legacy combined path
                 "/api/isp/v1/admin/auth/login",  # legacy combined path
-                "/api/v1/auth/register",
                 "/api/v1/auth/password-reset",
                 "/api/v1/auth/password-reset/confirm",
                 "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
@@ -142,16 +141,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
     ) -> Any:
         """Process request and set tenant context."""
         path = request.url.path
-        register_path = "/api/v1/auth/register"
 
         # Skip tenant validation for exempt paths
         skip_tenant_validation = False
         if path in self.exempt_paths:
-            # Registration requires explicit tenant context when header enforcement is enabled
-            if path == register_path and self.require_tenant and not self.config.is_single_tenant:
-                skip_tenant_validation = False
-            else:
-                skip_tenant_validation = True
+            skip_tenant_validation = True
 
         if skip_tenant_validation:
             from . import set_current_tenant_id
@@ -237,8 +231,6 @@ class TenantMiddleware(BaseHTTPMiddleware):
             path == optional_path or path.startswith(optional_path.rstrip("/") + "/")
             for optional_path in self.optional_tenant_paths
         )
-        # Registration should never silently fall back to default tenant in multi-tenant setups
-        is_registration_path = path.startswith("/api/") and "/auth/register" in path
 
         if tenant_id:
             # Set tenant ID on request state and context var
@@ -246,10 +238,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             from . import set_current_tenant_id
 
             set_current_tenant_id(tenant_id)
-        elif (
-            self.require_tenant
-            or (is_registration_path and not self.config.is_single_tenant)
-        ) and not is_platform_admin_request and not is_optional_tenant_path:
+        elif self.require_tenant and not is_platform_admin_request and not is_optional_tenant_path:
             import structlog
 
             logger = structlog.get_logger(__name__)
@@ -292,10 +281,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 if (not is_platform_admin_request or is_optional_tenant_path)
                 else None
             )
-            request.state.tenant_id = fallback_tenant
+            # Do NOT apply fallback on auth routes: tenant should be established post-auth
+            is_auth_route = "/auth/" in path
+            request.state.tenant_id = None if is_auth_route else fallback_tenant
             from . import set_current_tenant_id
 
-            set_current_tenant_id(fallback_tenant)
+            set_current_tenant_id(None if is_auth_route else fallback_tenant)
 
         return await call_next(request)
 

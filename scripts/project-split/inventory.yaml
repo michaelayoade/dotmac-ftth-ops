@@ -1,0 +1,319 @@
+# Project Split Inventory
+# Generated for splitting dotmac-ftth-ops into control-plane and isp-app
+
+source_project: /Users/michaelayoade/Downloads/Projects/dotmac-ftth-ops
+platform_services: /Users/michaelayoade/Downloads/Projects/dotmac-platform-services
+target_dir: /Users/michaelayoade/Downloads/Projects
+
+# ============================================================================
+# CONTROL PLANE PROJECT
+# ============================================================================
+control_plane:
+  name: dotmac-control-plane
+  description: "Platform management for ISP deployments, licensing, and billing"
+
+  # Backend modules to COPY from ftth-ops (control-plane specific)
+  backend_modules:
+    copy_from_ftth_ops:
+      - platform_admin      # Cross-tenant analytics, billing, audit
+      - partner_management  # Reseller/partner portal
+      - deployment          # ISP instance orchestration (K8s/Docker)
+
+    # These come from platform-services (imported as dependency)
+    from_platform_services:
+      - auth                # Full auth with tenant management
+      - tenant              # Tenant CRUD, onboarding, domain verification
+      - billing             # Platform SaaS billing (ISPs pay us)
+      - licensing           # License issuer
+      - user_management     # Platform users (admins, partners)
+      - webhooks            # Webhook subscriptions
+      - communications      # Email/SMS templates
+      - feature_flags       # Feature flag management
+      - secrets             # Vault integration
+      - analytics           # Platform analytics
+      - audit               # Audit logging
+      - cache               # Redis caching
+      - core                # Base models, exceptions
+      - db                  # Database utilities
+      - config              # Health endpoints
+      - jobs                # Background jobs
+      - monitoring          # Observability
+      - notifications       # Push notifications
+      - plugins             # Plugin system
+      - rate_limit          # Rate limiting
+      - search              # Search functionality
+      - file_storage        # File uploads
+      - data_import         # Data import
+      - data_transfer       # Data export
+      - integrations        # External integrations
+      - contacts            # Contact management
+      - ticketing           # Support tickets
+
+  # Frontend apps to COPY
+  frontend_apps:
+    - platform-admin-app    # Super admin dashboard
+    - platform-tenant       # ISP self-service portal
+    - platform-reseller     # Partner portal
+
+  # Tests to COPY
+  tests:
+    - platform_admin
+    - partner_management
+    - deployment
+
+  # Database
+  database:
+    name: control_plane_db
+    migrations: separate    # New alembic tree
+
+  # Docker
+  docker:
+    service_mode: control_plane
+    env_vars:
+      - SERVICE_MODE=control_plane
+      - TENANT_MANAGEMENT_ENABLED=true
+      - PLATFORM_BILLING_ENABLED=true
+      - LICENSE_ISSUER_ENABLED=true
+      - LICENSE_ENFORCER_ENABLED=false
+
+# ============================================================================
+# ISP APP PROJECT
+# ============================================================================
+isp_app:
+  name: dotmac-isp-app
+  description: "ISP operations app - subscriber management, billing, network ops"
+
+  # Backend modules to COPY from ftth-ops (ISP-specific)
+  backend_modules:
+    copy_from_ftth_ops:
+      # Core ISP operations
+      - subscribers         # Subscriber management
+      - billing             # ISP subscriber billing (RENAME imports)
+      - radius              # RADIUS/AAA
+      - services            # Service lifecycle
+      - network             # VLAN, IPv6, static IP
+      - ip_management       # IP pool management
+
+      # Infrastructure
+      - access              # OLT management
+      - fiber               # Fiber infrastructure
+      - wireless            # Wireless APs
+
+      # OSS Integrations
+      - genieacs            # TR-069 CPE management
+      - voltha              # PON network
+      - netbox              # IPAM/DCIM
+      - ansible             # Automation
+      - wireguard           # VPN management
+
+      # Operations
+      - field_service       # Technician tracking
+      - fault_management    # Alarms, SLA
+      - project_management  # Projects/tasks
+      - crm                 # CRM/leads
+      - sales               # Orders
+      - customer_portal     # Subscriber self-service
+      - customer_management # Customer lifecycle
+
+      # Supporting
+      - metrics             # ISP metrics
+      - realtime            # WebSocket/SSE
+      - orchestration       # Service orchestration
+      - network_monitoring  # Network monitoring
+      - geo                 # Geocoding
+      - push                # Push notifications
+      - ai                  # AI chat (optional)
+      - timeseries          # TimescaleDB
+
+    # These come from platform-services (subset)
+    from_platform_services:
+      - auth                # Tenant-scoped auth (no tenant management)
+      - user_management     # ISP staff users
+      - webhooks            # Webhook subscriptions
+      - communications      # Email/SMS
+      - cache               # Redis
+      - core                # Base models
+      - db                  # Database
+      - config              # Health
+      - jobs                # Background jobs
+      - monitoring          # Observability
+      - notifications       # Notifications
+      - rate_limit          # Rate limiting
+      - search              # Search
+      - file_storage        # File uploads
+      - audit               # Audit logging
+      - analytics           # Analytics
+      - contacts            # Contacts
+      - ticketing           # Tickets
+
+  # Frontend apps to COPY
+  frontend_apps:
+    - isp-ops-app           # Main operations dashboard
+    - isp-customer          # Subscriber self-service
+    - isp-reseller          # Sales agent portal
+
+  # Tests to COPY
+  tests:
+    - subscribers
+    - billing
+    - radius
+    - services
+    - network
+    - ip_management
+    - access
+    - fiber
+    - wireless
+    - genieacs
+    - voltha
+    - netbox
+    - ansible
+    - wireguard
+    - field_service
+    - fault_management
+    - project_management
+    - crm
+    - sales
+    - customer_portal
+    - customer_management
+    - metrics
+    - realtime
+    - orchestration
+    - network_monitoring
+    - geo
+
+  # Database
+  database:
+    name: "{tenant_id}_db"  # Per-tenant database
+    migrations: separate    # New alembic tree
+
+  # Docker
+  docker:
+    service_mode: isp_instance
+    env_vars:
+      - SERVICE_MODE=isp_instance
+      - TENANT_MANAGEMENT_ENABLED=false
+      - PLATFORM_BILLING_ENABLED=false
+      - LICENSE_ISSUER_ENABLED=false
+      - LICENSE_ENFORCER_ENABLED=true
+      - TENANT_ID=${TENANT_ID}
+      - CONTROL_PLANE_URL=${CONTROL_PLANE_URL}
+
+# ============================================================================
+# SHARED PACKAGES (Frontend)
+# ============================================================================
+shared_packages:
+  delivery: git_submodule  # or 'npm_package'
+  repo: dotmac-shared-packages
+  packages:
+    - analytics
+    - design-system
+    - eslint-config
+    - eslint-plugin
+    - features
+    - graphql
+    - headless
+    - hooks
+    - http-client
+    - notifications
+    - primitives
+    - providers
+    - rbac
+    - testing
+    - testing-utils
+    - types
+    - typescript-config
+    - ui
+    - utils
+
+# ============================================================================
+# IMPORT REWRITING RULES
+# ============================================================================
+import_rewrites:
+  control_plane:
+    # Modules copied from ftth-ops get new prefix
+    - from: "dotmac.platform.platform_admin"
+      to: "control_plane.platform_admin"
+    - from: "dotmac.platform.partner_management"
+      to: "control_plane.partner_management"
+    - from: "dotmac.platform.deployment"
+      to: "control_plane.deployment"
+    # Platform-services imports stay as-is (installed as package)
+
+  isp_app:
+    # All ISP modules get new prefix
+    - from: "dotmac.platform.subscribers"
+      to: "isp_app.subscribers"
+    - from: "dotmac.platform.billing"
+      to: "isp_app.billing"
+    - from: "dotmac.platform.radius"
+      to: "isp_app.radius"
+    - from: "dotmac.platform.services"
+      to: "isp_app.services"
+    - from: "dotmac.platform.network"
+      to: "isp_app.network"
+    - from: "dotmac.platform.access"
+      to: "isp_app.access"
+    - from: "dotmac.platform.field_service"
+      to: "isp_app.field_service"
+    - from: "dotmac.platform.fault_management"
+      to: "isp_app.fault_management"
+    - from: "dotmac.platform.genieacs"
+      to: "isp_app.genieacs"
+    - from: "dotmac.platform.voltha"
+      to: "isp_app.voltha"
+    - from: "dotmac.platform.netbox"
+      to: "isp_app.netbox"
+    - from: "dotmac.platform.fiber"
+      to: "isp_app.fiber"
+    - from: "dotmac.platform.wireless"
+      to: "isp_app.wireless"
+    - from: "dotmac.platform.crm"
+      to: "isp_app.crm"
+    - from: "dotmac.platform.sales"
+      to: "isp_app.sales"
+    - from: "dotmac.platform.customer_portal"
+      to: "isp_app.customer_portal"
+    - from: "dotmac.platform.customer_management"
+      to: "isp_app.customer_management"
+    - from: "dotmac.platform.project_management"
+      to: "isp_app.project_management"
+    - from: "dotmac.platform.ip_management"
+      to: "isp_app.ip_management"
+    - from: "dotmac.platform.metrics"
+      to: "isp_app.metrics"
+    - from: "dotmac.platform.realtime"
+      to: "isp_app.realtime"
+    - from: "dotmac.platform.orchestration"
+      to: "isp_app.orchestration"
+    - from: "dotmac.platform.network_monitoring"
+      to: "isp_app.network_monitoring"
+    - from: "dotmac.platform.geo"
+      to: "isp_app.geo"
+    - from: "dotmac.platform.ansible"
+      to: "isp_app.ansible"
+    - from: "dotmac.platform.wireguard"
+      to: "isp_app.wireguard"
+    - from: "dotmac.platform.push"
+      to: "isp_app.push"
+    - from: "dotmac.platform.timeseries"
+      to: "isp_app.timeseries"
+    - from: "dotmac.platform.ai"
+      to: "isp_app.ai"
+    # Platform-services imports stay as-is
+
+# ============================================================================
+# FILES TO COPY (non-module)
+# ============================================================================
+config_files:
+  both_projects:
+    - .gitignore
+    - .pre-commit-config.yaml
+    - .python-version
+    - ruff.toml
+    - mypy.ini
+
+  control_plane:
+    - .env.example -> .env.example (modify for control plane)
+
+  isp_app:
+    - .env.example -> .env.example (modify for ISP instance)

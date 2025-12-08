@@ -12,8 +12,8 @@
  * - Error handling and retry logic
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useQueries, QueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
 // Types
 interface AnalyticsMetric {
@@ -360,7 +360,7 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
     const previousData = timeSeriesData[timeSeriesData.length - 2];
 
     return baseMetrics.map((metric) => {
-      let enhancedMetric = { ...metric };
+      const enhancedMetric = { ...metric };
 
       // Add trend and change calculations
       if (previousData) {

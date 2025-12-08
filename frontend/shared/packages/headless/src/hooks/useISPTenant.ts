@@ -5,6 +5,7 @@
  */
 
 import { useContext, createContext, useMemo } from "react";
+
 import type {
   TenantSession,
   TenantPermissions,
@@ -14,11 +15,11 @@ import type {
 } from "../types/tenant";
 
 // Import focused sub-hooks
-import { useTenantSession } from "./tenant/useTenantSession";
-import { useTenantPermissions } from "./tenant/useTenantPermissions";
 import { useTenantLimits } from "./tenant/useTenantLimits";
-import { useTenantSettings } from "./tenant/useTenantSettings";
 import { useTenantNotifications } from "./tenant/useTenantNotifications";
+import { useTenantPermissions } from "./tenant/useTenantPermissions";
+import { useTenantSession } from "./tenant/useTenantSession";
+import { useTenantSettings } from "./tenant/useTenantSettings";
 
 interface ISPTenantContextValue {
   // Current tenant session

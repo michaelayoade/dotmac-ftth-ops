@@ -88,7 +88,7 @@ async def client(app, async_db_session, mock_user_info):
     transport = ASGITransport(app=app)
     from unittest.mock import AsyncMock, patch
 
-    with patch("dotmac.platform.auth.router.log_user_activity", new=AsyncMock()):
+    with patch("dotmac.platform.auth.mfa_router.log_user_activity", new=AsyncMock()):
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
             yield ac
 

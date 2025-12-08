@@ -3,19 +3,19 @@
  * Critical test suite for technician dispatch and field service management
  */
 
-import { FieldOpsApiClient } from "../FieldOpsApiClient";
-import type {
-  Technician,
-  FieldWorkOrder,
-  Route,
-  TimeEntry,
-  ServiceCall,
-  TechnicianSkill,
-  Certification,
-  GeoLocation,
-  TechnicianAssignment,
-  WorkOrderPhoto,
-  AddressData,
+import {
+  FieldOpsApiClient,
+  type Technician,
+  type FieldWorkOrder,
+  type Route,
+  type TimeEntry,
+  type ServiceCall,
+  type TechnicianSkill,
+  type Certification,
+  type GeoLocation,
+  type TechnicianAssignment,
+  type WorkOrderPhoto,
+  type AddressData,
 } from "../FieldOpsApiClient";
 
 // Mock fetch
@@ -26,6 +26,100 @@ describe("FieldOpsApiClient", () => {
   let client: FieldOpsApiClient;
   const baseURL = "https://api.test.com";
   const defaultHeaders = { Authorization: "Bearer test-token" };
+
+  // Shared mock location
+  const sharedMockLocation: GeoLocation = {
+    latitude: 40.7128,
+    longitude: -74.006,
+    accuracy: 10,
+    timestamp: "2024-01-17T10:30:00Z",
+    address: "123 Main St, City, ST 12345",
+  };
+
+  // Shared mock technician for Performance and Emergency tests
+  const sharedMockTechnician: Technician = {
+    id: "tech_123",
+    employee_id: "EMP-789",
+    name: "John Doe",
+    email: "john.doe@company.com",
+    phone: "+1-555-0123",
+    status: "AVAILABLE",
+    skills: [
+      {
+        skill_id: "fiber_install",
+        skill_name: "Fiber Installation",
+        proficiency_level: "ADVANCED",
+        certified: true,
+        certification_date: "2023-06-15T00:00:00Z",
+      },
+    ],
+    certifications: [],
+    territories: ["north_zone", "downtown"],
+    current_location: sharedMockLocation,
+    truck_inventory: ["item_001", "item_002"],
+    shift_start: "08:00",
+    shift_end: "17:00",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-17T10:30:00Z",
+  };
+
+  // Shared mock address
+  const sharedMockAddress: AddressData = {
+    street: "456 Oak Ave",
+    city: "Metro City",
+    state: "MC",
+    zip: "54321",
+    country: "US",
+  };
+
+  // Shared mock work order for Performance and Emergency tests
+  const sharedMockWorkOrder: FieldWorkOrder = {
+    id: "wo_123",
+    work_order_number: "WO-2024-5678",
+    type: "INSTALLATION",
+    priority: "HIGH",
+    status: "IN_PROGRESS",
+    customer_id: "cust_456",
+    customer_name: "Alice Johnson",
+    customer_phone: "+1-555-0789",
+    service_address: sharedMockAddress,
+    description: "Fiber installation",
+    special_instructions: "",
+    estimated_duration: 180,
+    scheduled_start: "2024-01-17T09:00:00Z",
+    scheduled_end: "2024-01-17T12:00:00Z",
+    assigned_technician: {
+      technician_id: "tech_123",
+      technician_name: "John Doe",
+      assigned_at: "2024-01-17T08:00:00Z",
+      accepted_at: "2024-01-17T08:05:00Z",
+      started_at: "2024-01-17T09:15:00Z",
+      travel_time: 15,
+      on_site_time: 120,
+    },
+    required_skills: ["fiber_install"],
+    required_equipment: [],
+    photos: [],
+    created_at: "2024-01-16T14:00:00Z",
+    updated_at: "2024-01-17T09:15:00Z",
+  };
+
+  // Shared mock route for Performance tests
+  const sharedMockRoute: Route = {
+    id: "route_123",
+    technician_id: "tech_123",
+    date: "2024-01-17",
+    status: "IN_PROGRESS",
+    start_location: sharedMockLocation,
+    end_location: sharedMockLocation,
+    stops: [],
+    total_distance: 45.5,
+    total_duration: 480,
+    optimized: true,
+    optimization_score: 92.5,
+    created_at: "2024-01-17T06:00:00Z",
+    updated_at: "2024-01-17T09:00:00Z",
+  };
 
   beforeEach(() => {
     client = new FieldOpsApiClient(baseURL, defaultHeaders);
@@ -234,17 +328,17 @@ describe("FieldOpsApiClient", () => {
         },
       });
 
+      // Params are encoded in URL query string, not as a params object
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/field-ops/technicians/available",
+        expect.stringContaining("api/field-ops/technicians/available?"),
         expect.objectContaining({
-          params: {
-            skills: ["fiber_install", "network_troubleshooting"],
-            territory: "north_zone",
-            date: "2024-01-17",
-            time_range: { start: "10:00", end: "12:00" },
-          },
+          method: "GET",
         }),
       );
+      // Verify query params are in URL
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("territory=north_zone");
+      expect(calledUrl).toContain("date=2024-01-17");
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].status).toBe("AVAILABLE");
@@ -658,10 +752,11 @@ describe("FieldOpsApiClient", () => {
 
       const result = await client.getTechnicianRoute("tech_123", "2024-01-17");
 
+      // Params are encoded in URL query string
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/field-ops/technicians/tech_123/route",
+        expect.stringContaining("api/field-ops/technicians/tech_123/route?date=2024-01-17"),
         expect.objectContaining({
-          params: { date: "2024-01-17" },
+          method: "GET",
         }),
       );
 
@@ -784,16 +879,17 @@ describe("FieldOpsApiClient", () => {
         entry_type: "WORK",
       });
 
+      // Params are encoded in URL query string
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/field-ops/technicians/tech_123/time-entries",
+        expect.stringContaining("api/field-ops/technicians/tech_123/time-entries?"),
         expect.objectContaining({
-          params: {
-            start_date: "2024-01-01",
-            end_date: "2024-01-31",
-            entry_type: "WORK",
-          },
+          method: "GET",
         }),
       );
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("start_date=2024-01-01");
+      expect(calledUrl).toContain("end_date=2024-01-31");
+      expect(calledUrl).toContain("entry_type=WORK");
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].billable).toBe(true);
@@ -971,15 +1067,16 @@ describe("FieldOpsApiClient", () => {
         end_date: "2024-01-31",
       });
 
+      // Params are encoded in URL query string
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/field-ops/technicians/tech_123/performance",
+        expect.stringContaining("api/field-ops/technicians/tech_123/performance?"),
         expect.objectContaining({
-          params: {
-            start_date: "2024-01-01",
-            end_date: "2024-01-31",
-          },
+          method: "GET",
         }),
       );
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("start_date=2024-01-01");
+      expect(calledUrl).toContain("end_date=2024-01-31");
 
       expect(result.data.customer_satisfaction).toBe(4.7);
       expect(result.data.efficiency_rating).toBe(92.5);
@@ -1021,10 +1118,11 @@ describe("FieldOpsApiClient", () => {
 
       const result = await client.getDispatchMetrics("2024-01-17");
 
+      // Params are encoded in URL query string
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/field-ops/dispatch/metrics",
+        expect.stringContaining("api/field-ops/dispatch/metrics?date=2024-01-17"),
         expect.objectContaining({
-          params: { date: "2024-01-17" },
+          method: "GET",
         }),
       );
 
@@ -1053,7 +1151,7 @@ describe("FieldOpsApiClient", () => {
 
       mockResponse({
         data: {
-          ...mockWorkOrder,
+          ...sharedMockWorkOrder,
           id: "wo_emergency_123",
           type: "EMERGENCY",
           priority: "EMERGENCY",
@@ -1086,7 +1184,7 @@ describe("FieldOpsApiClient", () => {
       };
 
       const dispatchResponse = {
-        technician: mockTechnician,
+        technician: sharedMockTechnician,
         estimated_arrival: "2024-01-17T15:45:00Z",
         distance: 2.8,
       };
@@ -1213,7 +1311,7 @@ describe("FieldOpsApiClient", () => {
   describe("Performance and Scalability", () => {
     it("should handle large technician lists efficiently", async () => {
       const largeTechnicianList = Array.from({ length: 200 }, (_, i) => ({
-        ...mockTechnician,
+        ...sharedMockTechnician,
         id: `tech_${i}`,
         name: `Technician ${i}`,
         employee_id: `EMP-${String(i).padStart(3, "0")}`,
@@ -1239,7 +1337,7 @@ describe("FieldOpsApiClient", () => {
 
     it("should handle complex route optimization", async () => {
       const complexRoute = {
-        ...mockRoute,
+        ...sharedMockRoute,
         work_orders: Array.from({ length: 20 }, (_, i) => ({
           work_order_id: `wo_${i}`,
           sequence: i + 1,

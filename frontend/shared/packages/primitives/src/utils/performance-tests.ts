@@ -178,7 +178,7 @@ export const ComponentBenchmarks = {
     // Simulate rendering multiple indicators
     const renderPromises = Array(testCount)
       .fill(0)
-      .map(async (_, index) => {
+      .map(async (_, _index) => {
         measurer.recordRender();
         return new Promise((resolve) => setTimeout(resolve, 1));
       });

@@ -3,12 +3,12 @@
  * Comprehensive test suite for support ticket management and knowledge base
  */
 
-import { SupportApiClient } from "../SupportApiClient";
-import type {
-  SupportTicket,
-  TicketComment,
-  KnowledgeArticle,
-  SupportAgent,
+import {
+  SupportApiClient,
+  type SupportTicket,
+  type TicketComment,
+  type KnowledgeArticle,
+  type SupportAgent,
 } from "../SupportApiClient";
 
 // Mock fetch
@@ -389,10 +389,14 @@ describe("SupportApiClient", () => {
         status: "PUBLISHED",
       });
 
+      // URLSearchParams uses + for spaces, not %20
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/support/knowledge?category=Technical%20Support&status=PUBLISHED",
+        expect.stringContaining("api/support/knowledge?"),
         expect.any(Object),
       );
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("category=Technical");
+      expect(calledUrl).toContain("status=PUBLISHED");
 
       expect(result.data).toContain(mockArticle);
     });
@@ -415,10 +419,14 @@ describe("SupportApiClient", () => {
         category: "Technical Support",
       });
 
+      // URLSearchParams uses + for spaces, not %20
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/support/knowledge/search?q=connectivity%20issues&category=Technical%20Support",
+        expect.stringContaining("api/support/knowledge/search?"),
         expect.any(Object),
       );
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("q=connectivity");
+      expect(calledUrl).toContain("category=Technical");
 
       expect(result.data).toContain(mockArticle);
     });

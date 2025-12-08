@@ -5,8 +5,10 @@
  */
 
 import React from "react";
-import { AuditProvider } from "./AuditProvider";
+
 import { useAuditInterceptor } from "../hooks/useAuditInterceptor";
+
+import { AuditProvider } from "./AuditProvider";
 
 interface AuditWrapperContentProps {
   children: React.ReactNode;

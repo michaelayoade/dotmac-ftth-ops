@@ -5,8 +5,7 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
-import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
 
 interface CSRFContextValue {
   token: string | null;
@@ -67,28 +66,32 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
     setToken(initialToken);
 
     // Store in session storage for validation
-    // eslint-disable-next-line no-restricted-globals
-    sessionStorage.setItem("csrf-token", initialToken);
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      window.sessionStorage.setItem("csrf-token", initialToken);
+    }
 
     // Set up cleanup
     return () => {
-      // eslint-disable-next-line no-restricted-globals
-      sessionStorage.removeItem("csrf-token");
+      if (typeof window !== "undefined" && window.sessionStorage) {
+        window.sessionStorage.removeItem("csrf-token");
+      }
     };
   }, []);
 
   const generateToken = useCallback((): string => {
     const newToken = generateSecureToken();
     setToken(newToken);
-    // eslint-disable-next-line no-restricted-globals
-    sessionStorage.setItem("csrf-token", newToken);
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      window.sessionStorage.setItem("csrf-token", newToken);
+    }
     return newToken;
   }, []);
 
   const validateToken = useCallback((tokenToValidate: string): boolean => {
     // Check against both client and server tokens
-    // eslint-disable-next-line no-restricted-globals
-    const storedToken = sessionStorage.getItem("csrf-token");
+    const storedToken = typeof window !== "undefined" && window.sessionStorage
+      ? window.sessionStorage.getItem("csrf-token")
+      : null;
     return (
       tokenToValidate === storedToken || (serverToken !== null && tokenToValidate === serverToken)
     );

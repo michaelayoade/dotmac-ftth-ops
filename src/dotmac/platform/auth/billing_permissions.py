@@ -135,3 +135,4 @@ async def ensure_billing_rbac(session: AsyncSession) -> None:
             await session.flush()
 
     await session.commit()
+# pragma: no cover

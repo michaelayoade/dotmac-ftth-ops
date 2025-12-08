@@ -162,7 +162,7 @@ class TestAuthEmailServiceFacade:
 class TestAuthRouterVerificationIntegration:
     """Test auth router email verification endpoint integration."""
 
-    @patch("dotmac.platform.auth.router.get_auth_email_service")
+    @patch("dotmac.platform.auth.verification_router.get_auth_email_service")
     async def test_verification_email_sent_from_router(self, mock_get_service):
         """Test that auth router properly sends verification emails."""
         # Mock the email service facade

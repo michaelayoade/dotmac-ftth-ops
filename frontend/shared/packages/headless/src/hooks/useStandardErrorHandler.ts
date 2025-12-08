@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useState, useRef, useEffect } from "react";
+
 import {
   ISPError,
   classifyError,
@@ -15,8 +16,9 @@ import {
   type ErrorHandlingConfig,
   type ErrorSeverity,
 } from "../utils/errorUtils";
-import { useNotifications } from "./useNotifications";
+
 import { useISPTenant } from "./useISPTenant";
+import { useNotifications } from "./useNotifications";
 
 export interface UseStandardErrorHandlerOptions {
   context: string;

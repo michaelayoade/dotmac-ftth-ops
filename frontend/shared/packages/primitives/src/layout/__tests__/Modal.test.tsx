@@ -32,14 +32,35 @@ describe("Refactored Modal Components", () => {
   describe("ModalFocusUtils", () => {
     it("finds focusable elements correctly", () => {
       const container = document.createElement("div");
-      container.innerHTML = `
-        <button type="button">Button 1</button>
-        <input type="text" />
-        <button type='button' disabled>Disabled Button</button>
-        <a href="/test">Link</a>
-        <div tabindex="0">Focusable Div</div>
-        <div tabindex="-1">Non-focusable Div</div>
-      `;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Button 1";
+      container.appendChild(button);
+
+      const input = document.createElement("input");
+      input.type = "text";
+      container.appendChild(input);
+
+      const disabledButton = document.createElement("button");
+      disabledButton.type = "button";
+      disabledButton.disabled = true;
+      disabledButton.textContent = "Disabled Button";
+      container.appendChild(disabledButton);
+
+      const link = document.createElement("a");
+      link.href = "/test";
+      link.textContent = "Link";
+      container.appendChild(link);
+
+      const focusableDiv = document.createElement("div");
+      focusableDiv.tabIndex = 0;
+      focusableDiv.textContent = "Focusable Div";
+      container.appendChild(focusableDiv);
+
+      const nonFocusableDiv = document.createElement("div");
+      nonFocusableDiv.tabIndex = -1;
+      nonFocusableDiv.textContent = "Non-focusable Div";
+      container.appendChild(nonFocusableDiv);
 
       const focusableElements = ModalFocusUtils.getFocusableElements(container);
       expect(focusableElements).toHaveLength(4); // button, input, link, focusable div

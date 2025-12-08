@@ -3,21 +3,8 @@
  * Consolidates all API functionality from individual portals
  */
 
-import type {
-  ApiResponse,
-  ApiError,
-  RequestConfig,
-  RetryConfig,
-  ApiClientConfig,
-  PortalEndpoints,
-  PaginatedResponse,
-  PaginationParams,
-} from "./types";
-import { PORTAL_ENDPOINTS } from "./types";
-import { ApiCache } from "./cache";
-import { RateLimiter } from "../utils/rate-limiter";
+import { validate } from "@dotmac/primitives";
 
-// Legacy types for compatibility
 import type {
   ChatSession,
   Customer,
@@ -40,10 +27,25 @@ import type {
   PluginBackup,
 } from "../types/plugins";
 import { csrfProtection } from "../utils/csrfProtection";
-import { inputSanitizer } from "../utils/sanitization";
-import { type TokenPair, tokenManager } from "../utils/tokenManager";
-import { validationPatterns, validate } from "@dotmac/primitives";
 import { ISPError, classifyError } from "../utils/errorUtils";
+import { RateLimiter } from "../utils/rate-limiter";
+import { inputSanitizer } from "../utils/sanitization";
+import { tokenManager, type TokenPair } from "../utils/tokenManager";
+
+import { ApiCache } from "./cache";
+import {
+  PORTAL_ENDPOINTS,
+  type ApiResponse,
+  type ApiError,
+  type RequestConfig,
+  type RetryConfig,
+  type ApiClientConfig,
+  type PortalEndpoints,
+  type PaginatedResponse,
+  type PaginationParams,
+} from "./types";
+
+// Legacy types for compatibility
 
 const DEFAULT_CONFIG: Required<Omit<ApiClientConfig, "interceptors" | "portal" | "tenantId">> = {
   baseUrl: "/api",
@@ -70,7 +72,7 @@ const DEFAULT_CONFIG: Required<Omit<ApiClientConfig, "interceptors" | "portal" |
   },
   onError: (error) => {
     // Use existing ISPError system for standardized error handling
-    const ispError = new ISPError({
+    const _ispError = new ISPError({
       code: "API_CLIENT_ERROR",
       message: error.message || "Unknown API client error",
       category: "system",
@@ -81,7 +83,7 @@ const DEFAULT_CONFIG: Required<Omit<ApiClientConfig, "interceptors" | "portal" |
   },
 };
 
-const DEFAULT_RETRY_CONFIG: RetryConfig = {
+const _DEFAULT_RETRY_CONFIG: RetryConfig = {
   attempts: 3,
   baseDelay: 1000,
   maxDelay: 10000,
@@ -330,7 +332,7 @@ export class ApiClient {
   }
 
   public async request<T>(endpoint: string, options: RequestConfig = {}): Promise<T> {
-    const { params, cache: useCache, cacheTTL, ...rest } = options;
+    const { params, cache: _useCache, cacheTTL: _cacheTTL, ...rest } = options;
 
     let url = `${this.config.baseUrl}${endpoint}`;
     if (params && Object.keys(params).length > 0) {

@@ -165,7 +165,7 @@ const TextFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) =>
       onChange={handleChange}
       placeholder="Filter..."
       className="filter-input"
-      aria-label={column?.label ? `Filter by ${String(column.label)}` : "Filter"}
+      aria-label={column?.title ? `Filter by ${String(column.title)}` : "Filter"}
     />
   );
 };
@@ -180,7 +180,7 @@ const SelectFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) 
       value={String(value || "")}
       onChange={handleChange}
       className="filter-select"
-      aria-label={column?.label ? `Filter by ${String(column.label)}` : "Filter"}
+      aria-label={column?.title ? `Filter by ${String(column.title)}` : "Filter"}
     >
       <option value="">All</option>
       {column?.filterOptions?.map((option) => (
@@ -192,24 +192,24 @@ const SelectFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) 
   );
 };
 
-const NumberFilter = ({ value, onChange, column }: any) => (
+const NumberFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) => (
   <input
     type="number"
-    value={value || ""}
-    onChange={(e) => onChange(Number(e.target.value) || undefined)}
+    value={value as number || ""}
+    onChange={(e) => onChange((Number(e.target.value) || undefined) as T[keyof T])}
     placeholder="Filter..."
     className="filter-input"
-    aria-label={column?.label ? `Filter by ${String(column.label)}` : "Number filter"}
+    aria-label={column?.title ? `Filter by ${String(column.title)}` : "Number filter"}
   />
 );
 
-const DateFilter = ({ value, onChange, column }: any) => (
+const DateFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) => (
   <input
     type="date"
-    value={value || ""}
-    onChange={(e) => onChange(e.target.value)}
+    value={value as string || ""}
+    onChange={(e) => onChange(e.target.value as T[keyof T])}
     className="filter-input"
-    aria-label={column?.label ? `Filter by ${String(column.label)}` : "Date filter"}
+    aria-label={column?.title ? `Filter by ${String(column.title)}` : "Date filter"}
   />
 );
 
@@ -346,7 +346,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
                 return Number(recordValue) === Number(filterValue);
               case "date":
                 return (
-                  new Date(recordValue).toDateString() === new Date(filterValue).toDateString()
+                  new Date(recordValue as string).toDateString() === new Date(filterValue as string).toDateString()
                 );
               case "boolean":
                 return Boolean(recordValue) === Boolean(filterValue);
@@ -371,10 +371,10 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
             const aValue = column.dataIndex ? a[column.dataIndex] : a;
             const bValue = column.dataIndex ? b[column.dataIndex] : b;
 
-            if (aValue < bValue) {
+            if ((aValue as any) < (bValue as any)) {
               return state.sorting.order === "asc" ? -1 : 1;
             }
-            if (aValue > bValue) {
+            if ((aValue as any) > (bValue as any)) {
               return state.sorting.order === "asc" ? 1 : -1;
             }
             return 0;
@@ -484,11 +484,11 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
           case "select":
             return <SelectFilter value={value} onChange={onChange} column={column} />;
           case "number":
-            return <NumberFilter value={value} onChange={onChange} />;
+            return <NumberFilter value={value} onChange={onChange} column={column} />;
           case "date":
-            return <DateFilter value={value} onChange={onChange} />;
+            return <DateFilter value={value} onChange={onChange} column={column} />;
           default:
-            return <TextFilter value={value} onChange={onChange} />;
+            return <TextFilter value={value} onChange={onChange} column={column} />;
         }
       },
       [state.filters, handleFilter],
@@ -548,7 +548,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
       sortable: sortable && col.sortable !== false,
     }));
 
-    const dataTableProps = {
+    const dataTableProps: any = {
       columns: dataTableColumns,
       data: virtualScrolling ? visibleData : paginatedData,
       loading,
@@ -569,7 +569,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
             current: state.pagination.page,
             pageSize: state.pagination.pageSize,
             total: processedData.length,
-            onChange: handlePageChange,
+            onChange: (page: number, pageSize: number) => handlePageChange(page, pageSize),
           }
         : undefined,
       emptyText,

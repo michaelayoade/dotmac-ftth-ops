@@ -4,10 +4,11 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
+
 import { useApiClient } from "../api";
-import { useAppStore } from "../stores";
-import { useAuth } from "../auth/context";
 import type { ApiResponse, PaginatedResponse, PaginationParams } from "../api/types";
+import { useAuth } from "../auth/context";
+import { useAppStore } from "../stores";
 import type { FilterState, PaginationState, SelectionState, LoadingState } from "../stores/types";
 
 export interface DataManagerConfig<T = any> {

@@ -3,16 +3,7 @@
  * Configurable commission structures - no hardcoded rates
  */
 
-import {
-  Users,
-  TrendingUp,
-  DollarSign,
-  Settings,
-  Plus,
-  Filter,
-  Search,
-  MoreVertical,
-} from "lucide-react";
+import { Users, TrendingUp, DollarSign, Settings, Plus, Search, MoreVertical } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 
 import { UniversalKPISection } from "../dashboard/UniversalKPISection";

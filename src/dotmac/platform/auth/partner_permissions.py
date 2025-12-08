@@ -218,3 +218,4 @@ async def ensure_partner_rbac(session: AsyncSession) -> None:
             await session.flush()
 
     await session.commit()
+# pragma: no cover

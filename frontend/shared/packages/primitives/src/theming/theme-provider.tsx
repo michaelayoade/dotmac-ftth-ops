@@ -5,8 +5,7 @@
  * ELIMINATES HARDCODED THEMES: Dynamic theme injection from configuration
  */
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
-import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
 
 // Theme configuration interface for white-labeling
 export interface BrandTheme {
@@ -493,7 +492,7 @@ export function useTheme() {
 
 // Utility hook for getting CSS classes based on current theme
 export function useThemedClasses() {
-  const { getPortalTheme, portalVariant } = useTheme();
+  useTheme();
 
   return {
     primary: `bg-[var(--color-primary-500)] text-white`,

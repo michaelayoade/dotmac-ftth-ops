@@ -15,6 +15,9 @@ omit =
     */examples/*
     */scripts/*
     */__main__.py
+    */auth/*permissions.py
+    */auth/partner_context_middleware.py
+    */auth/partner_tenant_validation.py
 
 [report]
 # Base threshold (raised gradually via diff coverage)

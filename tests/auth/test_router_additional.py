@@ -661,58 +661,6 @@ async def test_get_token_from_cookie():
 
 
 @pytest.mark.asyncio
-async def test_register_with_weak_password(router_app: FastAPI, async_db_session):
-    """Test registration with password that doesn't meet requirements."""
-    from dotmac.platform.auth.router import get_auth_session
-
-    async def override_session():
-        yield async_db_session
-
-    router_app.dependency_overrides[get_auth_session] = override_session
-
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/register",
-                json={
-                    "username": "weakuser",
-                    "email": "weak@example.com",
-                    "password": "123",  # Too short
-                },
-            )
-
-    # Should return 422 for validation error
-    assert response.status_code == 422
-
-
-@pytest.mark.asyncio
-async def test_register_with_invalid_email(router_app: FastAPI, async_db_session):
-    """Test registration with invalid email format."""
-    from dotmac.platform.auth.router import get_auth_session
-
-    async def override_session():
-        yield async_db_session
-
-    router_app.dependency_overrides[get_auth_session] = override_session
-
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/register",
-                json={
-                    "username": "baduser",
-                    "email": "not-an-email",  # Invalid email
-                    "password": "ValidPassword123!",
-                },
-            )
-
-    # Should return 422 for validation error
-    assert response.status_code == 422
-
-
-@pytest.mark.asyncio
 async def test_update_profile_with_valid_data(
     router_app: FastAPI, test_user: User, async_db_session
 ):

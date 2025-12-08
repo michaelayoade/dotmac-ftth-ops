@@ -8,7 +8,7 @@ import pytest
 
 from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.models import Permission, Role
-from dotmac.platform.auth.rbac_service import RBACService, get_rbac_service
+from dotmac.platform.auth.rbac_service import PermissionSnapshot, RBACService, get_rbac_service
 
 pytestmark = pytest.mark.asyncio
 
@@ -36,7 +36,7 @@ class TestUserPermissions:
         user_id = uuid4()
 
         with patch.object(
-            rbac_service, "get_user_permissions", return_value={"read:users", "write:users"}
+            rbac_service, "get_user_permissions", return_value=PermissionSnapshot({"read:users", "write:users"})
         ):
             result = await rbac_service.user_has_permission(user_id, "read:users")
             assert result is True
@@ -45,7 +45,7 @@ class TestUserPermissions:
         """Test user has permission with wildcard match."""
         user_id = uuid4()
 
-        with patch.object(rbac_service, "get_user_permissions", return_value={"ticket.*"}):
+        with patch.object(rbac_service, "get_user_permissions", return_value=PermissionSnapshot({"ticket.*"})):
             result = await rbac_service.user_has_permission(user_id, "ticket.read")
             assert result is True
 
@@ -53,7 +53,7 @@ class TestUserPermissions:
         """Wildcard should only match its own prefix, not other categories."""
         user_id = uuid4()
 
-        with patch.object(rbac_service, "get_user_permissions", return_value={"billing.*"}):
+        with patch.object(rbac_service, "get_user_permissions", return_value=PermissionSnapshot({"billing.*"})):
             assert await rbac_service.user_has_permission(user_id, "billing.read") is True
             assert await rbac_service.user_has_permission(user_id, "billing") is True
             assert await rbac_service.user_has_permission(user_id, "billing.invoices.read") is True
@@ -64,7 +64,7 @@ class TestUserPermissions:
         """Test superadmin has all permissions."""
         user_id = uuid4()
 
-        with patch.object(rbac_service, "get_user_permissions", return_value={"*"}):
+        with patch.object(rbac_service, "get_user_permissions", return_value=PermissionSnapshot({"*"})):
             result = await rbac_service.user_has_permission(user_id, "any.permission")
             assert result is True
 
@@ -72,7 +72,7 @@ class TestUserPermissions:
         """Test user doesn't have permission."""
         user_id = uuid4()
 
-        with patch.object(rbac_service, "get_user_permissions", return_value={"read:users"}):
+        with patch.object(rbac_service, "get_user_permissions", return_value=PermissionSnapshot({"read:users"})):
             result = await rbac_service.user_has_permission(user_id, "write:users")
             assert result is False
 
@@ -554,31 +554,20 @@ class TestHelperMethods:
 
         assert perm is None
 
-    async def test_expand_permissions_with_parent(self, rbac_service):
-        """Test permission expansion with parent."""
-        child_perm = MagicMock(spec=Permission)
-        child_perm.name = "child:perm"
-        child_perm.parent_id = uuid4()
+    async def test_permission_snapshot_allows_permission(self):
+        """Test PermissionSnapshot allows_permission method."""
+        snapshot = PermissionSnapshot({"read:users", "write:users"})
+        assert snapshot.allows_permission("read:users") is True
+        assert snapshot.allows_permission("write:users") is True
+        assert snapshot.allows_permission("delete:users") is False
 
-        parent_perm = MagicMock(spec=Permission)
-        parent_perm.name = "parent:perm"
-
-        rbac_service._permission_cache["child:perm"] = child_perm
-        rbac_service.db.get = AsyncMock(return_value=parent_perm)
-
-        expanded = await rbac_service._expand_permissions({"child:perm"})
-
-        assert "child:perm" in expanded
-        assert "parent:perm" in expanded
-
-    async def test_expand_permissions_with_wildcard(self, rbac_service):
-        """Test permission expansion with wildcards."""
-        with patch.object(rbac_service, "_get_permission_by_name", return_value=None):
-            expanded = await rbac_service._expand_permissions({"ticket.read.all"})
-
-            assert "ticket.read.all" in expanded
-            assert "ticket.*" in expanded
-            assert "ticket.read.*" in expanded
+    async def test_permission_snapshot_with_denies(self):
+        """Test PermissionSnapshot with deny permissions."""
+        # Wildcard uses ".*" format, not just "*"
+        snapshot = PermissionSnapshot({"read.*", "write.*"}, {"write.users"})
+        # "write.users" is denied, so it should be pruned from allows
+        assert snapshot.allows_permission("read.users") is True
+        assert snapshot.is_denied("write.users") is True
 
     async def test_log_permission_grant(self, rbac_service):
         """Test logging permission grant."""

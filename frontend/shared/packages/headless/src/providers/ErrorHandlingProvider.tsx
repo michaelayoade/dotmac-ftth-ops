@@ -4,6 +4,9 @@
  */
 
 import React, { createContext, useContext, useCallback, useEffect, useState } from "react";
+
+import { useISPTenant } from "../hooks/useISPTenant";
+import { useNotifications } from "../hooks/useNotifications";
 import {
   ISPError,
   setErrorLogger,
@@ -13,8 +16,6 @@ import {
   type ErrorHandlingConfig,
   type ErrorLogEntry,
 } from "../utils/errorUtils";
-import { useISPTenant } from "../hooks/useISPTenant";
-import { useNotifications } from "../hooks/useNotifications";
 
 export interface ErrorHandlingContextValue {
   config: ErrorHandlingConfig;

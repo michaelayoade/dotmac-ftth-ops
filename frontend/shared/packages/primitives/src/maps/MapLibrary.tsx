@@ -5,8 +5,7 @@
 
 "use client";
 
-import { UniversalMap } from "./UniversalMap";
-import type { UniversalMapProps, MapMarker, ServiceArea, NetworkNode, Route } from "./UniversalMap";
+import { UniversalMap, type UniversalMapProps, type MapMarker, type ServiceArea, type NetworkNode, type Route } from "./UniversalMap";
 
 // Service Coverage Map
 export interface ServiceCoverageMapProps extends Omit<UniversalMapProps, "type" | "serviceAreas"> {
@@ -23,7 +22,6 @@ export function ServiceCoverageMap({
   onServiceAreaSelect,
   ...props
 }: ServiceCoverageMapProps) {
-  void _showCustomerDensity;
   return (
     <UniversalMap
       {...props}
@@ -51,8 +49,6 @@ export function NetworkTopologyMap({
   onNodeSelect,
   ...props
 }: NetworkTopologyMapProps) {
-  void _showConnections;
-  void _showMetrics;
   return (
     <UniversalMap
       {...props}

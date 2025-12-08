@@ -16,6 +16,105 @@ router = APIRouter(prefix="/auth/api-keys", tags=["API Keys"])
 
 
 # ============================================
+# Valid API Key Scopes
+# ============================================
+
+# SECURITY: All scopes that can be assigned to API keys.
+# Adding new scopes requires updating this set.
+VALID_API_KEY_SCOPES: frozenset[str] = frozenset([
+    # General Access
+    "read",
+    "write",
+    "delete",
+    # Customer & CRM
+    "customers:read",
+    "customers:write",
+    "crm:leads:read",
+    "crm:leads:write",
+    "crm:contacts:read",
+    "crm:contacts:write",
+    # Subscribers & RADIUS
+    "subscribers:read",
+    "subscribers:write",
+    "radius:sessions:read",
+    "radius:sessions:manage",
+    "radius:nas:read",
+    "radius:nas:write",
+    # Network & Infrastructure
+    "network:read",
+    "network:write",
+    "ipam:read",
+    "ipam:write",
+    "fiber:read",
+    "fiber:write",
+    "pon:read",
+    "pon:write",
+    "wireless:read",
+    "wireless:write",
+    # Billing & Revenue
+    "billing:read",
+    "billing:write",
+    "billing:payments",
+    "billing.payment_methods.view",
+    "billing.payment_methods.manage",
+    "billing.subscription.manage",
+    "billing.subscription.cancel",
+    "subscriptions:read",
+    "subscriptions:write",
+    # Support & Ticketing
+    "tickets:read",
+    "tickets:write",
+    "tickets:assign",
+    # Communications
+    "communications:read",
+    "communications:send",
+    "communications:campaigns",
+    "communications:templates",
+    # Operations & Automation
+    "automation:read",
+    "automation:execute",
+    "workflows:read",
+    "workflows:execute",
+    "jobs:read",
+    # Integrations
+    "webhooks:read",
+    "webhooks:manage",
+    "integrations:read",
+    "integrations:manage",
+    # Analytics & Reporting
+    "analytics:read",
+    "analytics:export",
+    # Partner Management
+    "partner:read",
+    "partner:manage",
+    "partner:tenants:list",
+    "partner:tenants:manage",
+])
+
+
+def validate_scopes(scopes: list[str]) -> list[str]:
+    """
+    Validate that all requested scopes are in the allowed set.
+
+    SECURITY: Prevents users from requesting arbitrary scopes that may
+    bypass access controls or escalate privileges.
+
+    Args:
+        scopes: List of requested scopes
+
+    Returns:
+        The validated scopes list
+
+    Raises:
+        ValueError: If any scope is invalid
+    """
+    invalid_scopes = set(scopes) - VALID_API_KEY_SCOPES
+    if invalid_scopes:
+        raise ValueError(f"Invalid scopes: {', '.join(sorted(invalid_scopes))}")
+    return scopes
+
+
+# ============================================
 # Security Helpers
 # ============================================
 
@@ -342,12 +441,21 @@ async def create_api_key(
     current_user: UserInfo = Depends(get_current_user),
 ) -> APIKeyCreateResponse:
     """Create a new API key."""
+    # SECURITY: Validate requested scopes are in the allowed set
+    try:
+        validated_scopes = validate_scopes(request.scopes)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
     try:
         # SECURITY: Bind API key to current user's tenant
         api_key, key_id = await _enhanced_create_api_key(
             user_id=current_user.user_id,
             name=request.name,
-            scopes=request.scopes,
+            scopes=validated_scopes,
             expires_at=request.expires_at,
             description=request.description,
             tenant_id=current_user.tenant_id,  # SECURITY: Enforce tenant binding
@@ -356,7 +464,7 @@ async def create_api_key(
         return APIKeyCreateResponse(
             id=key_id,
             name=request.name,
-            scopes=request.scopes,
+            scopes=validated_scopes,
             created_at=datetime.now(UTC),
             expires_at=request.expires_at,
             description=request.description,
@@ -490,7 +598,15 @@ async def update_api_key(
         if request.name is not None:
             updates["name"] = request.name
         if request.scopes is not None:
-            updates["scopes"] = request.scopes
+            # SECURITY: Validate scopes when updating
+            try:
+                validated_scopes = validate_scopes(request.scopes)
+            except ValueError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(e),
+                )
+            updates["scopes"] = validated_scopes
         if request.description is not None:
             updates["description"] = request.description
         if request.is_active is not None:

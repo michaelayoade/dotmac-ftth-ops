@@ -4,13 +4,14 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+
+import { errorLogger } from "../services/ErrorLoggingService";
 import {
   EnhancedISPError,
   EnhancedErrorFactory,
   ErrorCode,
   type ErrorContext,
 } from "../utils/enhancedErrorHandling";
-import { errorLogger } from "../services/ErrorLoggingService";
 
 const mergeErrorContext = (base: ErrorContext, updates?: Partial<ErrorContext>): ErrorContext => {
   if (!updates) {

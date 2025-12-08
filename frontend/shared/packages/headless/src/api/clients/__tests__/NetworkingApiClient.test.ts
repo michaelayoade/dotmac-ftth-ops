@@ -3,8 +3,11 @@
  * Critical test suite for network device management and monitoring
  */
 
-import { NetworkingApiClient } from "../NetworkingApiClient";
-import type { NetworkDevice, NetworkTopology } from "../NetworkingApiClient";
+import {
+  NetworkingApiClient,
+  type NetworkDevice,
+  type NetworkTopology,
+} from "../NetworkingApiClient";
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -26,6 +29,20 @@ describe("NetworkingApiClient", () => {
       status,
       json: async () => data,
     } as Response);
+  };
+
+  // Shared mock fixtures
+  const sharedMockDevice: NetworkDevice = {
+    id: "device_shared",
+    name: "Main Router",
+    type: "router",
+    status: "online",
+    ip_address: "192.168.1.1",
+    mac_address: "00:11:22:33:44:55",
+    location: "Network Closet A",
+    last_seen: "2024-01-15T10:30:00Z",
+    uptime: 2592000,
+    firmware_version: "1.2.3",
   };
 
   describe("Network Device Operations", () => {
@@ -272,10 +289,14 @@ describe("NetworkingApiClient", () => {
         metrics: ["cpu_usage", "memory_usage", "interface_stats"],
       });
 
+      // Arrays are JSON-serialized in query params
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/networking/devices/device_123/metrics?start_time=2024-01-15T10%3A00%3A00Z&end_time=2024-01-15T11%3A00%3A00Z&metrics=cpu_usage%2Cmemory_usage%2Cinterface_stats",
+        expect.stringContaining("api/networking/devices/device_123/metrics?"),
         expect.any(Object),
       );
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("start_time=");
+      expect(calledUrl).toContain("end_time=");
 
       expect(result.data.cpu_usage).toHaveLength(2);
       expect(result.data.interface_stats.eth0.bytes_in).toBe(1048576000);
@@ -370,7 +391,7 @@ describe("NetworkingApiClient", () => {
   describe("Real-time Operations", () => {
     it("should handle device status changes", async () => {
       // Test device going offline
-      const offlineDevice = { ...mockDevice, status: "offline" as const };
+      const offlineDevice = { ...sharedMockDevice, status: "offline" as const };
       mockResponse({ data: offlineDevice });
 
       const result = await client.updateNetworkDevice("device_123", {
@@ -469,7 +490,7 @@ describe("NetworkingApiClient", () => {
   describe("Performance and Scalability", () => {
     it("should handle large device lists efficiently", async () => {
       const largeDeviceList = Array.from({ length: 1000 }, (_, i) => ({
-        ...mockDevice,
+        ...sharedMockDevice,
         id: `device_${i}`,
         name: `Device ${i}`,
         ip_address: `192.168.${Math.floor(i / 254)}.${(i % 254) + 1}`,

@@ -5,13 +5,14 @@
  */
 
 import { useEffect, useCallback, useRef } from "react";
-import { useAudit } from "../components/AuditProvider";
+
 import {
   AuditEventType,
   AuditOutcome,
   FrontendAuditEventType,
   AuditSeverity,
 } from "../api/types/audit";
+import { useAudit } from "../components/AuditProvider";
 
 interface AuditInterceptorConfig {
   interceptFetch?: boolean;

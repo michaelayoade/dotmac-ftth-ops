@@ -154,7 +154,7 @@ export function usePerformanceMetrics(componentName: string) {
         averageRenderTime,
         slowRenders,
         lastRenderTime: renderTime,
-  }, [componentName]);
+      });
 
       if (process.env["NODE_ENV"] === "development") {
         if (renderTime > 16) {
@@ -330,7 +330,7 @@ export const networkUtils = {
           request: resource.requestStart - resource.connectEnd,
           response: resource.responseEnd - resource.requestStart,
           total: resource.responseEnd - resource.startTime,
-  }, [componentName]);
+        });
       }
     });
 

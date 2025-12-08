@@ -356,35 +356,6 @@ async def test_resend_email_verification(extended_app: FastAPI, async_db_session
 
 
 @pytest.mark.asyncio
-async def test_register_with_full_name(extended_app: FastAPI, async_db_session):
-    """Test registration with full name field."""
-    from dotmac.platform.auth.router import get_auth_session
-
-    async def override_session():
-        yield async_db_session
-
-    extended_app.dependency_overrides[get_auth_session] = override_session
-
-    unique_id = uuid4().hex[:8]
-
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"):
-        transport = ASGITransport(app=extended_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/register",
-                json={
-                    "username": f"fullname_{unique_id}",
-                    "email": f"fullname_{unique_id}@example.com",
-                    "password": "NewPassword123!",
-                    "full_name": "John Doe",
-                },
-            )
-
-    # Should succeed or return validation error
-    assert response.status_code in [200, 201, 400]
-
-
-@pytest.mark.asyncio
 async def test_update_profile_minimal_fields(
     extended_app: FastAPI, test_user_extended: User, async_db_session
 ):

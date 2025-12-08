@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import type { AuthContext as AuthState, LoginFlow, PortalConfig } from "../types/auth";
 import type { Tenant, User } from "../types";
+import type { AuthContext as AuthState, LoginFlow, PortalConfig } from "../types/auth";
 
 export interface ExtendedAuthState extends AuthState {
   sessionId?: string;

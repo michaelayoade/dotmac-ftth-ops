@@ -19,7 +19,6 @@ export const ROUTES = {
   // Public routes
   HOME: "/",
   LOGIN: "/login",
-  REGISTER: "/register",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
 
@@ -118,7 +117,6 @@ export const API_ROUTES = {
   AUTH: {
     LOGIN: "/api/isp/v1/auth/login",
     LOGOUT: "/api/isp/v1/auth/logout",
-    REGISTER: "/api/isp/v1/auth/register",
     REFRESH: "/api/isp/v1/auth/refresh",
     ME: "/api/isp/v1/auth/me",
   },
@@ -164,7 +162,6 @@ export const isProtectedRoute = (path: string): boolean => {
   const publicRoutes: string[] = [
     ROUTES.HOME,
     ROUTES.LOGIN,
-    ROUTES.REGISTER,
     ROUTES.FORGOT_PASSWORD,
     ROUTES.RESET_PASSWORD,
   ];

@@ -153,6 +153,23 @@ export class EnhancedISPError extends ISPError {
   public readonly escalationRequired: boolean;
   public readonly workaround?: string;
 
+  // Getters for test compatibility - maps to internal properties
+  get code(): ErrorCode {
+    return this.errorCode;
+  }
+
+  set code(value: ErrorCode) {
+    this.errorCode = value;
+  }
+
+  get context(): ErrorContext {
+    return this.enhancedContext;
+  }
+
+  get metadata(): Record<string, any> {
+    return this.enhancedContext.metadata || {};
+  }
+
   constructor(params: {
     code: ErrorCode;
     message: string;
@@ -186,13 +203,21 @@ export class EnhancedISPError extends ISPError {
       correlationId: params.context.correlationId,
     });
 
+    // Set proper name for this error class
+    this.name = "EnhancedISPError";
+
     this.errorCode = errorCode;
-    this.enhancedContext = params.context;
-    this.userActions = params.userActions || generateUserActions(params.code);
+    // Ensure context always has correlationId and metadata
+    this.enhancedContext = {
+      ...params.context,
+      correlationId: params.context.correlationId || this.correlationId,
+      metadata: params.context.metadata || {},
+    };
+    this.userActions = params.userActions || generateUserActions(errorCode);
     this.supportContact = params.supportContact;
-    this.documentationUrl = params.documentationUrl || generateDocumentationUrl(params.code);
+    this.documentationUrl = params.documentationUrl || generateDocumentationUrl(errorCode);
     this.escalationRequired =
-      params.escalationRequired ?? requiresEscalation(params.code, params.severity || severity);
+      params.escalationRequired ?? requiresEscalation(errorCode, params.severity || severity);
     this.workaround = params.workaround;
   }
 
@@ -764,8 +789,11 @@ export const ErrorMigrationHelper = {
     else if (category === "network") code = ErrorCode.NETWORK_CONNECTION_FAILED;
     else if (category === "authentication") code = ErrorCode.AUTH_TOKEN_EXPIRED;
     else if (category === "authorization") code = ErrorCode.AUTHZ_INSUFFICIENT_PERMISSIONS;
-    else if (category === "validation") code = ErrorCode.VALIDATION_BUSINESS_RULE;
-    else if (category === "system" && legacyError.status === 503) code = ErrorCode.SYSTEM_MAINTENANCE;
+    else if (category === "validation") code = ErrorCode.VALIDATION_INVALID_FORMAT;
+    else if (category === "system") {
+      if (legacyError.status === 503) code = ErrorCode.SYSTEM_MAINTENANCE;
+      else code = ErrorCode.SYSTEM_DATABASE_ERROR;
+    }
 
     return new EnhancedISPError({
       code,

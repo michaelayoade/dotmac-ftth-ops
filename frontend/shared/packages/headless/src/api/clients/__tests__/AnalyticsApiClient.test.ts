@@ -3,13 +3,13 @@
  * Critical test suite for business intelligence and reporting functionality
  */
 
-import { AnalyticsApiClient } from "../AnalyticsApiClient";
-import type {
-  AnalyticsReport,
-  ReportExecution,
-  Dashboard,
-  DashboardWidget,
-  MetricDefinition,
+import {
+  AnalyticsApiClient,
+  type AnalyticsReport,
+  type ReportExecution,
+  type Dashboard,
+  type DashboardWidget,
+  type MetricDefinition,
 } from "../AnalyticsApiClient";
 
 // Mock fetch

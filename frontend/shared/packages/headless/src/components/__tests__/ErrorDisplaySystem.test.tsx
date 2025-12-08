@@ -8,13 +8,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { axe, toHaveNoViolations } from "jest-axe";
 
+import { EnhancedISPError, ErrorCode } from "../../utils/enhancedErrorHandling";
 import {
   EnhancedErrorDisplay,
   CompactErrorDisplay,
   ErrorToast,
   EnhancedErrorBoundary,
 } from "../ErrorDisplaySystem";
-import { EnhancedISPError, ErrorCode } from "../../utils/enhancedErrorHandling";
 
 expect.extend(toHaveNoViolations);
 
@@ -131,7 +131,16 @@ describe("EnhancedErrorDisplay", () => {
   describe("Interactive Features", () => {
     it("should call onRetry when retry button is clicked", async () => {
       const retryableError = new EnhancedISPError({
-        ...mockEnhancedError,
+        code: ErrorCode.CUSTOMER_NOT_FOUND,
+        message: "Customer with ID cust_12345 not found",
+        context: {
+          operation: "fetch_customer_profile",
+          resource: "customer",
+          resourceId: "cust_12345",
+          businessProcess: "customer_management",
+          customerImpact: "medium",
+          correlationId: "req_abc123",
+        },
         retryable: true,
       });
 
@@ -255,7 +264,16 @@ describe("CompactErrorDisplay", () => {
 
   it("should show retry button for retryable errors", () => {
     const retryableError = new EnhancedISPError({
-      ...mockEnhancedError,
+      code: ErrorCode.CUSTOMER_NOT_FOUND,
+      message: "Customer with ID cust_12345 not found",
+      context: {
+        operation: "fetch_customer_profile",
+        resource: "customer",
+        resourceId: "cust_12345",
+        businessProcess: "customer_management",
+        customerImpact: "medium",
+        correlationId: "req_abc123",
+      },
       retryable: true,
     });
 

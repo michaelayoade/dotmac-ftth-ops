@@ -1068,7 +1068,6 @@ def get_api_info() -> dict[str, Any]:
             "/redoc",
             "/openapi.json",
             "/api/v1/auth/login",  # Login doesn't require auth
-            "/api/v1/auth/register",  # Registration doesn't require auth
         ],
         "authenticated_endpoints": [
             config.prefix for config in ROUTER_CONFIGS if config.requires_auth

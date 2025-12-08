@@ -1,4 +1,5 @@
 import { create } from "zustand";
+
 import * as createAppStoreModule from "./createAppStore";
 import type { AppStore } from "./types";
 

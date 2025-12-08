@@ -3,10 +3,10 @@
  * Comprehensive test suite for the refactored ISP API client composition
  */
 
-import { ISPApiClient } from "../isp-client";
+import { BillingApiClient } from "../clients/BillingApiClient";
 import { IdentityApiClient } from "../clients/IdentityApiClient";
 import { NetworkingApiClient } from "../clients/NetworkingApiClient";
-import { BillingApiClient } from "../clients/BillingApiClient";
+import { ISPApiClient } from "../isp-client";
 
 // Mock the individual API clients
 jest.mock("../clients/IdentityApiClient");

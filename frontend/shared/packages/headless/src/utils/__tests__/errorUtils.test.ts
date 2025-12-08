@@ -69,7 +69,7 @@ describe("ISPError", () => {
     expect(json.message).toBe(error.message);
     expect(json.category).toBe(error.category);
     expect(json.severity).toBe(error.severity);
-    expect(json.context).toBe(error.context);
+    expect(json.context).toBe(error.operationContext);
     expect(json.technicalDetails).toEqual({ foo: "bar" });
   });
 });
@@ -82,7 +82,7 @@ describe("classifyError", () => {
     expect(classified).toBeInstanceOf(ISPError);
     expect(classified.category).toBe("network");
     expect(classified.retryable).toBe(true);
-    expect(classified.context).toBe("API Call");
+    expect(classified.operationContext).toBe("API Call");
   });
 
   it("should classify HTTP status errors", () => {
@@ -230,7 +230,7 @@ describe("ErrorFactory", () => {
 
     expect(error.category).toBe("network");
     expect(error.retryable).toBe(true);
-    expect(error.context).toBe("API Call");
+    expect(error.operationContext).toBe("API Call");
   });
 
   it("should create validation errors", () => {
@@ -360,7 +360,7 @@ describe("error context and correlation", () => {
       technicalDetails,
     });
 
-    expect(error.context).toBe(context);
+    expect(error.operationContext).toBe(context);
     expect(error.technicalDetails).toEqual(technicalDetails);
   });
 });

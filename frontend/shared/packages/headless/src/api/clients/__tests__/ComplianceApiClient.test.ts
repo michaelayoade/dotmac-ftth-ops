@@ -3,18 +3,18 @@
  * Critical test suite for regulatory compliance and audit management
  */
 
-import { ComplianceApiClient } from "../ComplianceApiClient";
-import type {
-  CompliancePolicy,
-  AuditLog,
-  DataPrivacyRequest,
-  IncidentReport,
-  ComplianceAssessment,
-  PolicyRequirement,
-  ComplianceControl,
-  AssessmentFinding,
-  ActionItem,
-  RegulatoryNotification,
+import {
+  ComplianceApiClient,
+  type CompliancePolicy,
+  type AuditLog,
+  type DataPrivacyRequest,
+  type IncidentReport,
+  type ComplianceAssessment,
+  type PolicyRequirement,
+  type ComplianceControl,
+  type AssessmentFinding,
+  type ActionItem,
+  type RegulatoryNotification,
 } from "../ComplianceApiClient";
 
 // Mock fetch
@@ -25,6 +25,93 @@ describe("ComplianceApiClient", () => {
   let client: ComplianceApiClient;
   const baseURL = "https://api.test.com";
   const defaultHeaders = { Authorization: "Bearer test-token" };
+
+  // Shared mock data - available to all describe blocks
+  const mockAuditLog: AuditLog = {
+    id: "audit_123",
+    event_type: "user_login",
+    resource_type: "user_session",
+    resource_id: "session_456",
+    user_id: "user_789",
+    user_email: "john.doe@company.com",
+    action: "LOGIN",
+    details: {
+      login_method: "mfa",
+      device_type: "desktop",
+      location: "Office Network",
+      success: true,
+    },
+    ip_address: "192.168.1.100",
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    session_id: "sess_abc123",
+    tenant_id: "tenant_xyz",
+    risk_level: "LOW",
+    timestamp: "2024-01-17T09:30:00Z",
+  };
+
+  const mockFinding: AssessmentFinding = {
+    id: "finding_123",
+    control_id: "CC6.1",
+    finding_type: "DEFICIENCY",
+    severity: "MEDIUM",
+    title: "Incomplete User Access Review Process",
+    description: "Annual user access reviews are not consistently documented",
+    evidence: ["access_review_spreadsheet", "hr_termination_records"],
+    risk_rating: 6.5,
+    remediation_required: true,
+    remediation_timeline: "30 days",
+  };
+
+  const mockActionItem: ActionItem = {
+    id: "action_123",
+    title: "Implement Automated User Access Review",
+    description: "Deploy automated system for quarterly user access reviews",
+    priority: "HIGH",
+    assigned_to: "security_team_lead",
+    due_date: "2024-02-15T23:59:59Z",
+    status: "IN_PROGRESS",
+    progress_notes: ["Requirements gathering completed", "Vendor selection in progress"],
+  };
+
+  const mockAssessment: ComplianceAssessment = {
+    id: "assessment_123",
+    assessment_name: "SOC 2 Type II Annual Assessment",
+    framework: "SOC2",
+    scope: "Security, Availability, and Confidentiality controls",
+    assessment_type: "EXTERNAL_AUDIT",
+    status: "IN_PROGRESS",
+    start_date: "2024-01-15T00:00:00Z",
+    end_date: "2024-01-30T23:59:59Z",
+    assessor: "External Audit Firm ABC",
+    findings: [mockFinding],
+    overall_score: 85.5,
+    compliance_percentage: 92.3,
+    recommendations: [
+      "Implement automated control testing",
+      "Enhance documentation processes",
+      "Increase training frequency",
+    ],
+    action_plan: [mockActionItem],
+    created_at: "2024-01-15T08:00:00Z",
+  };
+
+  const mockPrivacyRequest: DataPrivacyRequest = {
+    id: "privacy_123",
+    request_type: "ERASURE",
+    customer_id: "cust_456",
+    customer_email: "customer@example.com",
+    request_details: "Please delete all my personal data from your systems",
+    legal_basis: "GDPR Article 17 - Right to Erasure",
+    status: "VERIFIED",
+    priority: "HIGH",
+    assigned_to: "data_protection_officer",
+    verification_method: "email_verification",
+    completion_deadline: "2024-02-16T23:59:59Z",
+    data_categories: ["personal_info", "contact_details", "service_history"],
+    systems_involved: ["crm", "billing", "support"],
+    notes: "Customer requested complete account closure",
+    submitted_at: "2024-01-17T10:00:00Z",
+  };
 
   beforeEach(() => {
     client = new ComplianceApiClient(baseURL, defaultHeaders);
@@ -285,13 +372,8 @@ describe("ComplianceApiClient", () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/compliance/controls/status",
-        expect.objectContaining({
-          params: {
-            framework: "SOC2",
-            control_type: "PREVENTIVE",
-          },
-        }),
+        "https://api.test.com/api/compliance/controls/status?framework=SOC2&control_type=PREVENTIVE",
+        expect.any(Object),
       );
 
       expect(result.data).toHaveLength(2);
@@ -945,10 +1027,8 @@ describe("ComplianceApiClient", () => {
       const result = await client.getComplianceDashboard("SOC2");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/compliance/dashboard",
-        expect.objectContaining({
-          params: { framework: "SOC2" },
-        }),
+        "https://api.test.com/api/compliance/dashboard?framework=SOC2",
+        expect.any(Object),
       );
 
       expect(result.data.overall_compliance_score).toBe(87.5);

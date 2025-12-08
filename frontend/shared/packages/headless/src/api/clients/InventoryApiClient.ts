@@ -3,8 +3,9 @@
  * Handles equipment tracking, asset lifecycle, and stock management
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface InventoryItem {
   id: string;

@@ -22,15 +22,17 @@ export function useIsHydrated() {
   return isHydrated;
 }
 
-export function useClientEffect(effect: React.EffectCallback, deps?: React.DependencyList) {
+export function useClientEffect(effect: React.EffectCallback, deps: React.DependencyList = []) {
   const isHydrated = useIsHydrated();
+  // Store effect in a ref to avoid re-triggering on effect change
+  const effectRef = React.useRef(effect);
+  effectRef.current = effect;
 
   React.useEffect(() => {
     if (isHydrated) {
-      return effect();
+      return effectRef.current();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, ...(deps || []), effect]);
+  }, [isHydrated, ...deps]);
 }
 
 export function useLocalStorage<T>(key: string, initialValue: T) {

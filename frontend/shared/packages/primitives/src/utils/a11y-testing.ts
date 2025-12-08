@@ -88,7 +88,7 @@ export const testKeyboardNavigation = (container: HTMLElement): AccessibilityVio
   );
 
   // Check for keyboard accessibility
-  interactiveElements.forEach((element, index) => {
+  interactiveElements.forEach((element, _index) => {
     const htmlElement = element as HTMLElement;
 
     // Check if element is focusable

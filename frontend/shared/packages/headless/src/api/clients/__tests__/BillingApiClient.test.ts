@@ -185,7 +185,7 @@ describe("BillingApiClient", () => {
       const result = await client.updateBillingAddress("cust_123", address);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/billing/customers/cust_123/billing-address",
+        "https://api.test.com/api/billing/customers/cust_123/address",
         expect.objectContaining({
           method: "PUT",
           body: JSON.stringify(address),

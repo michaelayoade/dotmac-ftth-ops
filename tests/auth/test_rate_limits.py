@@ -14,17 +14,12 @@ class TestAuthRateLimits:
     def test_rate_limits_defined(self):
         """Test rate limits are defined for all endpoints."""
         assert "/auth/login" in AUTH_RATE_LIMITS
-        assert "/auth/register" in AUTH_RATE_LIMITS
         assert "/auth/refresh" in AUTH_RATE_LIMITS
         assert "/auth/password-reset" in AUTH_RATE_LIMITS
 
     def test_login_rate_limit(self):
         """Test login endpoint rate limit."""
         assert AUTH_RATE_LIMITS["/auth/login"] == "5/minute"
-
-    def test_register_rate_limit(self):
-        """Test register endpoint rate limit."""
-        assert AUTH_RATE_LIMITS["/auth/register"] == "3/minute"
 
     def test_refresh_rate_limit(self):
         """Test refresh endpoint rate limit."""
@@ -47,13 +42,13 @@ class TestAuthRateLimits:
         """Test rate limits are appropriately restrictive."""
         # Extract numeric part
         login_limit = int(AUTH_RATE_LIMITS["/auth/login"].split("/")[0])
-        register_limit = int(AUTH_RATE_LIMITS["/auth/register"].split("/")[0])
+        password_reset_limit = int(AUTH_RATE_LIMITS["/auth/password-reset"].split("/")[0])
 
         # Login should allow few attempts to prevent brute force
         assert login_limit <= 10
 
-        # Registration should be even more restrictive
-        assert register_limit <= 5
+        # Password reset should be restrictive
+        assert password_reset_limit <= 5
 
     def test_apply_auth_rate_limits_no_error(self):
         """Test apply_auth_rate_limits can be called."""
@@ -71,7 +66,7 @@ class TestAuthRateLimits:
     def test_rate_limits_dictionary_immutable(self):
         """Test rate limits dictionary structure."""
         assert isinstance(AUTH_RATE_LIMITS, dict)
-        assert len(AUTH_RATE_LIMITS) >= 4
+        assert len(AUTH_RATE_LIMITS) >= 3
 
     def test_all_endpoints_start_with_auth(self):
         """Test all endpoints are under /auth path."""
@@ -94,8 +89,7 @@ class TestAuthRateLimits:
             endpoint: int(limit.split("/")[0]) for endpoint, limit in AUTH_RATE_LIMITS.items()
         }
 
-        # Register and password-reset should be among the strictest
-        assert limits["/auth/register"] <= 3
+        # Password-reset should be among the strictest
         assert limits["/auth/password-reset"] <= 3
 
     def test_most_lenient_rate_limit(self):

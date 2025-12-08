@@ -388,8 +388,8 @@ class TestAuthRouterFixes:
         """Test logout properly cleans up tokens and sessions."""
 
         # Patch module-level objects
-        with patch("dotmac.platform.auth.router.jwt_service", mock_jwt_service):
-            with patch("dotmac.platform.auth.router.session_manager", mock_session_manager):
+        with patch("dotmac.platform.auth.public_router.jwt_service", mock_jwt_service):
+            with patch("dotmac.platform.auth.public_router.session_manager", mock_session_manager):
                 response = test_client.post(
                     "/auth/logout", headers={"Authorization": "Bearer test-token"}
                 )
@@ -440,8 +440,8 @@ class TestAuthRouterFixes:
         app.dependency_overrides[get_session_dependency] = mock_get_session
 
         # Patch module-level objects and UserService class
-        with patch("dotmac.platform.auth.router.jwt_service", mock_jwt_service):
-            with patch("dotmac.platform.auth.router.UserService", MockUserServiceClass):
+        with patch("dotmac.platform.auth.public_router.jwt_service", mock_jwt_service):
+            with patch("dotmac.platform.auth.public_router.UserService", MockUserServiceClass):
                 try:
                     response = test_client.post(
                         "/auth/refresh", json={"refresh_token": "old-refresh-token"}

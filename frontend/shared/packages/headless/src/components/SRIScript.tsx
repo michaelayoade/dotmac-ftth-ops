@@ -2,9 +2,10 @@
  * Script and Link components with SRI support for Next.js
  */
 
-import Script from "next/script";
 import Head from "next/head";
+import Script from "next/script";
 import type { ScriptProps } from "next/script";
+
 import { useNonce } from "./NonceProvider";
 
 interface SRIScriptProps extends Omit<ScriptProps, "integrity"> {

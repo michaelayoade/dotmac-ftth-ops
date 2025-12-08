@@ -3,23 +3,49 @@
  * Temporary stub implementation for dashboard package compatibility
  */
 
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 
 // Simple hooks for dashboard compatibility
-export const useNotifications = () => ({
-  showToast: (
-    message: string | { type: string; title: string; message: string; duration: number },
-  ) => {
-    if (typeof message === "string") {
-      console.log("Toast:", message);
-    } else {
-      console.log("Toast:", message.title, message.message);
-    }
-  },
-  addNotification: (notification: any) => console.log("Notification:", notification),
-  removeNotification: (id: string) => console.log("Remove notification:", id),
-  clearAll: () => console.log("Clear all notifications"),
-});
+export const useNotifications = () => {
+  const showToast = useCallback(
+    (message: string | { type?: string; title?: string; message?: string; duration?: number }) => {
+      if (!message) {
+        return;
+      }
+
+      if (typeof message === "string") {
+        console.log("Toast:", message);
+        return;
+      }
+
+      const { title = "Notification", message: body = "" } = message;
+      console.log("Toast:", title, body);
+    },
+    [],
+  );
+
+  const addNotification = useCallback((notification: any) => {
+    console.log("Notification:", notification);
+  }, []);
+
+  const removeNotification = useCallback((id: string) => {
+    console.log("Remove notification:", id);
+  }, []);
+
+  const clearAll = useCallback(() => {
+    console.log("Clear all notifications");
+  }, []);
+
+  return useMemo(
+    () => ({
+      showToast,
+      addNotification,
+      removeNotification,
+      clearAll,
+    }),
+    [showToast, addNotification, removeNotification, clearAll],
+  );
+};
 
 // Simple provider component
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => children;

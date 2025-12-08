@@ -89,15 +89,7 @@ def login_and_get_headers(client, *, rng=random) -> dict[str, str]:
     login_payload = {"username": username, "password": password}
     response = client.post("/api/v1/auth/login", json=login_payload)
     if response.status_code != 200:
-        client.post(
-            "/api/v1/auth/register",
-            json={
-                "username": username,
-                "email": f"{username}@example.com",
-                "password": password,
-            },
-        )
-        response = client.post("/api/v1/auth/login", json=login_payload)
+        return {}
 
     token = response.json().get("access_token", "")
     return {"Authorization": f"Bearer {token}"} if token else {}
@@ -368,28 +360,6 @@ def test_login_and_get_headers_success():
     assert headers == {"Authorization": "Bearer token-abc"}
     assert client.calls[0][0] == "POST"
     assert client.calls[0][1] == "/api/v1/auth/login"
-
-
-def test_login_and_get_headers_register_flow():
-    client = DummyClient(
-        responses=[
-            DummyResponse(401, {"detail": "Unauthorized"}),
-            DummyResponse(201, {}),
-            DummyResponse(200, {"access_token": "token-def"}),
-        ]
-    )
-
-    headers = login_and_get_headers(client, rng=DeterministicRandom())
-
-    assert headers == {"Authorization": "Bearer token-def"}
-    methods = [call[0] for call in client.calls]
-    paths = [call[1] for call in client.calls]
-    assert methods == ["POST", "POST", "POST"]
-    assert paths == [
-        "/api/v1/auth/login",
-        "/api/v1/auth/register",
-        "/api/v1/auth/login",
-    ]
 
 
 @pytest.mark.parametrize(

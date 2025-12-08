@@ -116,8 +116,8 @@ class TestLoginEndpoint:
     async def test_login_success_with_username(self, client, tenant_headers, active_user):
         """Test successful login using username."""
         # Mock audit logging (external service)
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
+            with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
                 response = client.post(
                     "/auth/login",
                     json={
@@ -142,8 +142,8 @@ class TestLoginEndpoint:
     @pytest.mark.asyncio
     async def test_login_success_with_email(self, client, tenant_headers, active_user):
         """Test successful login using email instead of username."""
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
+            with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
                 response = client.post(
                     "/auth/login",
                     json={
@@ -161,7 +161,7 @@ class TestLoginEndpoint:
     async def test_login_invalid_password(self, client, tenant_headers, active_user):
         """Test login with invalid password."""
         with patch(
-            "dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock
+            "dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock
         ) as mock_log:
             response = client.post(
                 "/auth/login",
@@ -181,7 +181,7 @@ class TestLoginEndpoint:
     @pytest.mark.asyncio
     async def test_login_nonexistent_user(self, client, tenant_headers):
         """Test login with non-existent user."""
-        with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
             response = client.post(
                 "/auth/login",
                 json={
@@ -198,7 +198,7 @@ class TestLoginEndpoint:
     async def test_login_inactive_account(self, client, tenant_headers, inactive_user):
         """Test login with inactive account."""
         with patch(
-            "dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock
+            "dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock
         ) as mock_log:
             response = client.post(
                 "/auth/login",
@@ -251,8 +251,8 @@ class TestTokenEndpoint:
     async def test_token_endpoint_success(self, client, tenant_headers, active_user):
         """Test successful token request using OAuth2 form."""
 
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
+            with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
                 response = client.post(
                     "/auth/token",
                     data={
@@ -271,7 +271,7 @@ class TestTokenEndpoint:
     async def test_token_endpoint_invalid_credentials(self, client, tenant_headers, active_user):
         """Test token endpoint with invalid credentials."""
 
-        with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
             response = client.post(
                 "/auth/token",
                 data={
@@ -282,124 +282,6 @@ class TestTokenEndpoint:
             )
 
         assert response.status_code == 401
-
-
-# ============================================================================
-# Register Endpoint Tests
-# ============================================================================
-
-
-@pytest.mark.integration
-class TestRegisterEndpoint:
-    """Test POST /auth/register endpoint."""
-
-    @pytest.mark.asyncio
-    async def test_register_success(self, client, tenant_headers):
-        """Test successful user registration."""
-
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            response = client.post(
-                "/auth/register",
-                json={
-                    "username": "newuser",
-                    "email": "newuser@example.com",
-                    "password": "NewSecurePass123!",
-                    "full_name": "New User",
-                },
-                headers=tenant_headers,
-            )
-
-        assert response.status_code == 200  # Router returns 200, not 201
-        data = response.json()
-        assert "access_token" in data
-        # User ID is in the token claims, not response body directly
-
-        # Verify response contains user info
-        # (We can't easily query the DB after the fact with TestClient)
-
-    @pytest.mark.asyncio
-    async def test_register_duplicate_username(self, client, tenant_headers, active_user):
-        """Test registration with duplicate username."""
-
-        response = client.post(
-            "/auth/register",
-            json={
-                "username": "activeuser",  # Already exists
-                "email": "different@example.com",
-                "password": "NewSecurePass123!",
-            },
-            headers=tenant_headers,
-        )
-
-        assert response.status_code == 400
-        # Generic error message to prevent user enumeration (security best practice)
-        assert "registration failed" in response.json()["detail"].lower()
-
-    @pytest.mark.asyncio
-    async def test_register_duplicate_email(self, client, tenant_headers, active_user):
-        """Test registration with duplicate email."""
-
-        response = client.post(
-            "/auth/register",
-            json={
-                "username": "differentuser",
-                "email": "active@example.com",  # Already exists
-                "password": "NewSecurePass123!",
-            },
-            headers=tenant_headers,
-        )
-
-        assert response.status_code == 400
-        # Generic error message to prevent user enumeration (security best practice)
-        assert "registration failed" in response.json()["detail"].lower()
-
-    @pytest.mark.asyncio
-    async def test_register_invalid_email(self, client, tenant_headers):
-        """Test registration with invalid email format."""
-
-        response = client.post(
-            "/auth/register",
-            json={
-                "username": "newuser",
-                "email": "not-an-email",
-                "password": "NewSecurePass123!",
-            },
-            headers=tenant_headers,
-        )
-
-        assert response.status_code == 422  # Validation error
-
-    @pytest.mark.asyncio
-    async def test_register_short_password(self, client, tenant_headers):
-        """Test registration with password too short."""
-
-        response = client.post(
-            "/auth/register",
-            json={
-                "username": "newuser",
-                "email": "newuser@example.com",
-                "password": "short",  # Less than 8 characters
-            },
-            headers=tenant_headers,
-        )
-
-        assert response.status_code == 422  # Validation error
-
-    @pytest.mark.asyncio
-    async def test_register_short_username(self, client, tenant_headers):
-        """Test registration with username too short."""
-
-        response = client.post(
-            "/auth/register",
-            json={
-                "username": "ab",  # Less than 3 characters
-                "email": "newuser@example.com",
-                "password": "NewSecurePass123!",
-            },
-            headers=tenant_headers,
-        )
-
-        assert response.status_code == 422  # Validation error
 
 
 # ============================================================================
@@ -416,8 +298,8 @@ class TestLogoutEndpoint:
         """Test successful logout."""
 
         # First login to get a token
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
+            with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
                 login_response = client.post(
                     "/auth/login",
                     json={
@@ -431,7 +313,7 @@ class TestLogoutEndpoint:
         access_token = login_response.json()["access_token"]
 
         # Now logout
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
             logout_response = client.post(
                 "/auth/logout",
                 headers={**tenant_headers, "Authorization": f"Bearer {access_token}"},
@@ -458,8 +340,8 @@ class TestRefreshEndpoint:
         """Test successful token refresh."""
 
         # First login to get tokens
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
+            with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
                 login_response = client.post(
                     "/auth/login",
                     json={
@@ -510,7 +392,7 @@ class TestPasswordResetEndpoint:
         """Test successful password reset request."""
 
         # Mock email service
-        with patch("dotmac.platform.auth.router.get_auth_email_service") as mock_email:
+        with patch("dotmac.platform.auth.verification_router.get_auth_email_service") as mock_email:
             mock_service = MagicMock()
             mock_service.send_password_reset_email = AsyncMock()
             mock_email.return_value = mock_service
@@ -528,7 +410,7 @@ class TestPasswordResetEndpoint:
     async def test_password_reset_nonexistent_email(self, client, tenant_headers):
         """Test password reset request for non-existent email."""
 
-        with patch("dotmac.platform.auth.router.get_auth_email_service") as mock_email:
+        with patch("dotmac.platform.auth.verification_router.get_auth_email_service") as mock_email:
             mock_service = MagicMock()
             mock_email.return_value = mock_service
 
@@ -556,8 +438,8 @@ class TestVerifyEndpoint:
         """Test token verification with valid token."""
 
         # First login to get a token
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
+            with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
                 login_response = client.post(
                     "/auth/login",
                     json={
@@ -606,8 +488,8 @@ class TestMeEndpoint:
         """Test /me endpoint with authenticated user."""
 
         # First login to get a token
-        with patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock):
-            with patch("dotmac.platform.auth.router.log_api_activity", new_callable=AsyncMock):
+        with patch("dotmac.platform.auth.public_router.log_user_activity", new_callable=AsyncMock):
+            with patch("dotmac.platform.auth.public_router.log_api_activity", new_callable=AsyncMock):
                 login_response = client.post(
                     "/auth/login",
                     json={

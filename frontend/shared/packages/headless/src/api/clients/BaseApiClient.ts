@@ -112,7 +112,7 @@ export class BaseApiClient {
           category: "network",
           severity: "medium",
           context: `${this.context} - ${endpoint}`,
-          retryable: retryable,
+          retryable,
           userMessage: "Request timed out. Please try again.",
           technicalDetails: { method, endpoint, timeout },
         });

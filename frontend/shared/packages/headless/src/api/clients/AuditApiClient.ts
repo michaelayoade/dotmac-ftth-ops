@@ -3,14 +3,14 @@
  * Provides comprehensive audit logging integration with backend audit system
  */
 
-import { BaseApiClient } from "./BaseApiClient";
-import type { RequestConfig } from "./BaseApiClient";
 import type {
   AuditEvent,
   AuditEventQuery,
   AuditEventResponse,
   AuditHealthResponse,
 } from "../types/audit";
+
+import { BaseApiClient, type RequestConfig } from "./BaseApiClient";
 
 export class AuditApiClient extends BaseApiClient {
   constructor(baseURL: string, headers: Record<string, string> = {}) {

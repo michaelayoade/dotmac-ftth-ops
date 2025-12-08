@@ -15,6 +15,9 @@ const config = {
     "^zustand$": "<rootDir>/__tests__/mocks/zustand.js",
     // Workspace package mappings
     "^@dotmac/rbac$": "<rootDir>/../rbac/src/index.tsx",
+    "^react$": "<rootDir>/../../../node_modules/react",
+    "^react-dom$": "<rootDir>/../../../node_modules/react-dom",
+    "^react/jsx-runtime$": "<rootDir>/../../../node_modules/react/jsx-runtime",
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",

@@ -3,14 +3,15 @@
  * Provides utilities and examples for migrating from basic to enhanced error handling
  */
 
-import { ISPError } from "./errorUtils";
+import { errorLogger } from "../services/ErrorLoggingService";
+
 import {
   EnhancedISPError,
   EnhancedErrorFactory,
   ErrorCode,
   type ErrorContext,
 } from "./enhancedErrorHandling";
-import { errorLogger } from "../services/ErrorLoggingService";
+import { ISPError } from "./errorUtils";
 
 // Migration utilities to help transition existing error handling
 export class ErrorMigrationHelper {
@@ -66,7 +67,7 @@ export class ErrorMigrationHelper {
 
       case "validation":
         if (status === 409) return ErrorCode.VALIDATION_DUPLICATE_VALUE;
-        if (status === 422) return ErrorCode.VALIDATION_BUSINESS_RULE;
+        if (status === 422) return ErrorCode.VALIDATION_INVALID_FORMAT;
         return ErrorCode.VALIDATION_REQUIRED_FIELD;
 
       case "business":

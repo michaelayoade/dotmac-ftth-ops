@@ -1,8 +1,8 @@
 "use client";
 
+import { AlertCircle, RefreshCw, WifiOff } from "lucide-react";
 import type React from "react";
 
-import { AlertCircle, RefreshCw, WifiOff } from "lucide-react";
 
 export interface ErrorFallbackProps {
   error?: Error;

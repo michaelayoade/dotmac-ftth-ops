@@ -1,3 +1,9 @@
+// Mock node-fetch before importing SRI utilities
+jest.mock("node-fetch", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 import {
   generateSRIHash,
   verifySRIHash,

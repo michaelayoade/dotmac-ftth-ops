@@ -42,14 +42,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     # Route prefixes that define boundaries
     PLATFORM_PREFIXES = ("/api/platform/",)
     ISP_PREFIXES = ("/api/isp/",)
-    PUBLIC_PREFIXES = (
-        "/api/public/",
-        "/docs",
-        "/redoc",
-        "/openapi.json",
-        "/api/platform/v1/auth",
-        "/api/isp/v1/auth",
-    )
+    PUBLIC_PREFIXES = ("/api/public/", "/docs", "/redoc", "/openapi.json")
     HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api/health")
     AUTH_PREFIXES = ("/api/platform/v1/auth/", "/api/isp/v1/auth/")
 
@@ -79,8 +72,8 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-        # Skip middleware for public and health routes
-        if self._is_public_route(path) or self._is_health_route(path) or self._is_auth_route(path):
+        # Skip middleware for public, auth, and health routes
+        if self._is_auth_route(path) or self._is_public_route(path) or self._is_health_route(path):
             return await call_next(request)
 
         # Get user from request state (set by auth middleware)

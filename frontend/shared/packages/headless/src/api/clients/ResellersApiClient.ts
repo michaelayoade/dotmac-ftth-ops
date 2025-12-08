@@ -3,8 +3,9 @@
  * Handles partner relationships, commission tracking, and channel sales
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams, AddressData } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface ResellerPartner {
   id: string;

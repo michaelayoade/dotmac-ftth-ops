@@ -3,6 +3,7 @@
  */
 
 import { createHash } from "crypto";
+
 import fetch from "node-fetch";
 
 /**
@@ -178,22 +179,38 @@ export function validateSRIInHTML(html: string): {
 } {
   const errors: string[] = [];
 
-  // Check script tags
-  const scriptRegex = /<script[^>]*integrity="([^"]*)"[^>]*src="([^"]*)"[^>]*>/g;
-  let match;
-  while ((match = scriptRegex.exec(html)) !== null) {
-    const [, integrity, src] = match;
-    if (!integrity || !integrity.match(/^(sha256|sha384|sha512)-/)) {
-      errors.push(`Invalid SRI hash for script: ${src}`);
+  // Check script tags - match tags with both src and integrity in any order
+  const scriptTagRegex = /<script[^>]*>/g;
+  let tagMatch;
+  while ((tagMatch = scriptTagRegex.exec(html)) !== null) {
+    const tag = tagMatch[0];
+    const srcMatch = tag.match(/src="([^"]*)"/);
+    const integrityMatch = tag.match(/integrity="([^"]*)"/);
+
+    // Only validate scripts that have both src and integrity attributes
+    if (srcMatch && integrityMatch) {
+      const src = srcMatch[1];
+      const integrity = integrityMatch[1];
+      if (!integrity || !integrity.match(/^(sha256|sha384|sha512)-/)) {
+        errors.push(`Invalid SRI hash for script: ${src}`);
+      }
     }
   }
 
-  // Check link tags
-  const linkRegex = /<link[^>]*integrity="([^"]*)"[^>]*href="([^"]*)"[^>]*>/g;
-  while ((match = linkRegex.exec(html)) !== null) {
-    const [, integrity, href] = match;
-    if (!integrity || !integrity.match(/^(sha256|sha384|sha512)-/)) {
-      errors.push(`Invalid SRI hash for stylesheet: ${href}`);
+  // Check link tags - match tags with both href and integrity in any order
+  const linkTagRegex = /<link[^>]*>/g;
+  while ((tagMatch = linkTagRegex.exec(html)) !== null) {
+    const tag = tagMatch[0];
+    const hrefMatch = tag.match(/href="([^"]*)"/);
+    const integrityMatch = tag.match(/integrity="([^"]*)"/);
+
+    // Only validate links that have both href and integrity attributes
+    if (hrefMatch && integrityMatch) {
+      const href = hrefMatch[1];
+      const integrity = integrityMatch[1];
+      if (!integrity || !integrity.match(/^(sha256|sha384|sha512)-/)) {
+        errors.push(`Invalid SRI hash for stylesheet: ${href}`);
+      }
     }
   }
 

@@ -6,14 +6,15 @@
 
 import React, { createContext, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
-import { useAuditLogger } from "../hooks/useAuditLogger";
-import type { UseAuditLoggerReturn } from "../hooks/useAuditLogger";
+
 import {
   AuditEventType,
   AuditOutcome,
   FrontendAuditEventType,
   AuditSeverity,
 } from "../api/types/audit";
+import { useAuditLogger } from "../hooks/useAuditLogger";
+import type { UseAuditLoggerReturn } from "../hooks/useAuditLogger";
 
 interface AuditContextType extends UseAuditLoggerReturn {
   serviceName: string;

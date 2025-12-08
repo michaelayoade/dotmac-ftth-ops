@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from "react";
 import type { MutableRefObject } from "react";
+
 import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
 
 export function usePerformanceObservers(

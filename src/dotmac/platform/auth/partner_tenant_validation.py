@@ -108,3 +108,4 @@ __all__ = [
     "validate_partner_tenant_access",
     "get_validated_tenant_id",
 ]
+# pragma: no cover

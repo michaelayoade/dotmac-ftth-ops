@@ -1,5 +1,6 @@
-import { defineConfig, Options } from "tsup";
 import { readFileSync, writeFileSync } from "fs";
+
+import { defineConfig, Options } from "tsup";
 
 export default defineConfig({
   entry: {

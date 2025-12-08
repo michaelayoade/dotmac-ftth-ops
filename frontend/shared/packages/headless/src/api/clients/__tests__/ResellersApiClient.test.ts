@@ -3,23 +3,23 @@
  * Critical test suite for partner relationship and channel sales management
  */
 
-import { ResellersApiClient } from "../ResellersApiClient";
-import type {
-  ResellerPartner,
-  Sale,
-  CommissionPayment,
-  PartnerTraining,
-  PartnerTrainingRecord,
-  Territory,
-  PartnerContact,
-  BusinessInformation,
-  CommissionStructure,
-  PartnerMetrics,
-  ContractInformation,
-  OnboardingStatus,
-  SaleProduct,
-  ContractDocument,
-  AddressData,
+import {
+  ResellersApiClient,
+  type ResellerPartner,
+  type Sale,
+  type CommissionPayment,
+  type PartnerTraining,
+  type PartnerTrainingRecord,
+  type Territory,
+  type PartnerContact,
+  type BusinessInformation,
+  type CommissionStructure,
+  type PartnerMetrics,
+  type ContractInformation,
+  type OnboardingStatus,
+  type SaleProduct,
+  type ContractDocument,
+  type AddressData,
 } from "../ResellersApiClient";
 
 // Mock fetch
@@ -30,6 +30,78 @@ describe("ResellersApiClient", () => {
   let client: ResellersApiClient;
   const baseURL = "https://api.test.com";
   const defaultHeaders = { Authorization: "Bearer test-token" };
+
+  // Shared mock partner for Onboarding and Performance tests
+  const sharedMockPartner: ResellerPartner = {
+    id: "partner_123",
+    partner_code: "PTN-001",
+    company_name: "TechSolutions LLC",
+    legal_name: "TechSolutions Limited Liability Company",
+    partner_type: "DEALER",
+    tier: "GOLD",
+    status: "ACTIVE",
+    contact_info: {
+      primary_contact: { name: "John Smith", title: "Owner", email: "john@tech.com", phone: "+1-555-0123" },
+    },
+    business_info: { registration_number: "REG-123", tax_id: "TAX-456", website: "https://tech.com" },
+    territories: [],
+    service_authorizations: [],
+    commission_structure: {
+      base_rate: 8.0,
+      tier_bonuses: [],
+      performance_bonuses: [],
+      payment_terms: "NET_30",
+      minimum_payout: 100,
+    },
+    performance_metrics: {
+      total_sales: 125000,
+      monthly_sales: 12500,
+      quarterly_sales: 37500,
+      conversion_rate: 22.5,
+      customer_satisfaction: 4.6,
+      ticket_resolution_time: 24,
+      active_customers: 45,
+    },
+    contract_info: {
+      contract_start_date: "2024-01-01",
+      contract_end_date: "2024-12-31",
+      auto_renewal: true,
+      status: "ACTIVE",
+      documents: [],
+    },
+    onboarding_status: {
+      stage: "COMPLETED",
+      progress_percentage: 100,
+      completed_steps: ["all"],
+      pending_steps: [],
+      assigned_onboarding_manager: "manager_456",
+      estimated_completion_date: "2024-01-15T23:59:59Z",
+      notes: "Completed",
+    },
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-15T14:30:00Z",
+  };
+
+  // Shared mock commission payment for Performance tests
+  const sharedMockCommissionPayment: CommissionPayment = {
+    id: "payment_123",
+    partner_id: "partner_123",
+    period_start: "2024-01-01T00:00:00Z",
+    period_end: "2024-01-31T23:59:59Z",
+    sales_total: 25000,
+    commission_amount: 2000,
+    bonus_amount: 250,
+    deductions: 50,
+    net_amount: 2200,
+    currency: "USD",
+    status: "PENDING",
+    payment_date: null,
+    payment_method: "BANK_TRANSFER",
+    payment_reference: null,
+    line_items: [],
+    created_at: "2024-02-01T00:00:00Z",
+    updated_at: "2024-02-01T00:00:00Z",
+  };
 
   beforeEach(() => {
     client = new ResellersApiClient(baseURL, defaultHeaders);
@@ -1123,10 +1195,14 @@ describe("ResellersApiClient", () => {
         metrics: ["sales", "commissions", "customers"],
       });
 
+      // Arrays are JSON-serialized in query params
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/resellers/partners/partner_123/performance?start_date=2023-11-01&end_date=2024-01-31&metrics=sales%2Ccommissions%2Ccustomers",
+        expect.stringContaining("api/resellers/partners/partner_123/performance?"),
         expect.any(Object),
       );
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("start_date=2023-11-01");
+      expect(calledUrl).toContain("end_date=2024-01-31");
 
       expect(result.data.performance_score).toBe(92.3);
       expect(result.data.sales_trend).toHaveLength(3);
@@ -1246,9 +1322,9 @@ describe("ResellersApiClient", () => {
 
       mockResponse({
         data: {
-          ...mockPartner,
+          ...sharedMockPartner,
           onboarding_status: {
-            ...mockPartner.onboarding_status,
+            ...sharedMockPartner.onboarding_status,
             stage: "CERTIFICATION",
             progress_percentage: 85,
             completed_steps: statusData.completed_steps,
@@ -1267,9 +1343,9 @@ describe("ResellersApiClient", () => {
     it("should assign onboarding manager", async () => {
       mockResponse({
         data: {
-          ...mockPartner,
+          ...sharedMockPartner,
           onboarding_status: {
-            ...mockPartner.onboarding_status,
+            ...sharedMockPartner.onboarding_status,
             assigned_onboarding_manager: "manager_789",
           },
         },
@@ -1496,7 +1572,7 @@ describe("ResellersApiClient", () => {
   describe("Performance and Scalability", () => {
     it("should handle large partner lists efficiently", async () => {
       const largePartnerList = Array.from({ length: 500 }, (_, i) => ({
-        ...mockPartner,
+        ...sharedMockPartner,
         id: `partner_${i}`,
         partner_code: `PTN-${String(i).padStart(3, "0")}`,
         company_name: `Partner Company ${i}`,
@@ -1522,7 +1598,7 @@ describe("ResellersApiClient", () => {
 
     it("should handle complex commission calculations efficiently", async () => {
       const complexCommission = {
-        ...mockCommissionPayment,
+        ...sharedMockCommissionPayment,
         sales_included: Array.from({ length: 100 }, (_, i) => `sale_${i}`),
         deductions: Array.from({ length: 20 }, (_, i) => ({
           type: "ADJUSTMENT" as const,

@@ -1,6 +1,7 @@
+import { Button } from "@dotmac/primitives";
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useEffect, useState } from "react";
-import { Button } from "@dotmac/primitives";
+
 import {
   useAppState,
   useUI,
@@ -567,7 +568,7 @@ export const LoadingStatesDemo: Story = {
         {isLoading && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
               <span className="text-blue-800">Operation in progress...</span>
             </div>
           </div>
@@ -697,7 +698,7 @@ export const DataTableDemo: Story = {
         <div className="space-y-2">
           {loading.isLoading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
               <p className="mt-2 text-gray-600">Loading data...</p>
             </div>
           ) : (

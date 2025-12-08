@@ -3,8 +3,9 @@
  * Handles regulatory compliance, audit trails, and policy management
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface CompliancePolicy {
   id: string;

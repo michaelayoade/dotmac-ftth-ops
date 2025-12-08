@@ -5,8 +5,9 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import type { MutableRefObject } from "react";
-import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
+
 import { reportMetrics } from "./reportingUtils";
+import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
 
 export function usePerformanceReporting(
   metrics: MutableRefObject<PerformanceMetrics>,

@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useRef, useEffect } from "react";
+
 import { AuditApiClient } from "../api/clients/AuditApiClient";
 import {
   AuditEventType,
@@ -18,8 +19,9 @@ import type {
   AuditEvent,
   AuditActor,
 } from "../api/types/audit";
-import { useISPTenant } from "./useISPTenant";
 import { useAuth } from "../auth/context";
+
+import { useISPTenant } from "./useISPTenant";
 
 interface AuditLoggerConfig {
   serviceName: string;

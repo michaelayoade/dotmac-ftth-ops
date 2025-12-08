@@ -3,8 +3,9 @@
  * Handles network devices, topology, and monitoring
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface NetworkDevice {
   id: string;

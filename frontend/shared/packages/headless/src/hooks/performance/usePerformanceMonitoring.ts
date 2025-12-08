@@ -4,9 +4,10 @@
  */
 
 import { useMemo, useRef } from "react";
+
 import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
-import { usePerformanceObservers } from "./usePerformanceObservers";
 import { useMetricTracking } from "./useMetricTracking";
+import { usePerformanceObservers } from "./usePerformanceObservers";
 import { usePerformanceReporting } from "./usePerformanceReporting";
 
 const defaultConfig: PerformanceObserverConfig = {

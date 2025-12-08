@@ -3,8 +3,9 @@
  * Handles technician dispatch, work orders, and field service management
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams, AddressData } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface Technician {
   id: string;

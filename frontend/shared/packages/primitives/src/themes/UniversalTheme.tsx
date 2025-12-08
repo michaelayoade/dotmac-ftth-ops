@@ -5,8 +5,15 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useCallback } from "react";
-import type { ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useCallback,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { cn } from "../utils/cn";
 
@@ -110,7 +117,7 @@ interface UniversalThemeProviderProps {
 }
 
 export function UniversalThemeProvider({ children, config = {} }: UniversalThemeProviderProps) {
-  const [themeConfig, setThemeConfig] = React.useState<UniversalThemeConfig>({
+  const [themeConfig, setThemeConfig] = useState<UniversalThemeConfig>({
     ...defaultThemeConfig,
     ...config,
   });
@@ -329,7 +336,7 @@ export function PortalBrand({
   size = "md",
   className,
 }: PortalBrandProps) {
-  const { config, portalTheme } = useUniversalTheme();
+  const { portalTheme } = useUniversalTheme();
 
   const sizeClasses = {
     sm: "text-sm",

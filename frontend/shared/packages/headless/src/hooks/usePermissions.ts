@@ -4,8 +4,9 @@
  */
 
 import { useMemo, useCallback } from "react";
-import { useAuth } from "../auth/context";
+
 import { useApiClient } from "../api";
+import { useAuth } from "../auth/context";
 
 export interface Permission {
   id: string;

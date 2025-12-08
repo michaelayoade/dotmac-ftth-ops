@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { createPortalAuthFetch, DEFAULT_PORTAL_TOKEN_KEY } from "../utils/portalAuth";
+
 import type {
   PortalLoginCredentials,
   PortalAuthResponse,
@@ -15,6 +15,7 @@ import type {
   DeviceFingerprint,
 } from "../types/portal-auth";
 import { PORTAL_ID_CONFIG, RISK_THRESHOLDS } from "../types/portal-auth";
+import { createPortalAuthFetch, DEFAULT_PORTAL_TOKEN_KEY } from "../utils/portalAuth";
 
 interface UsePortalIdAuthState {
   isAuthenticated: boolean;

@@ -9,6 +9,9 @@ const config = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    "^react$": "<rootDir>/../../../node_modules/react",
+    "^react-dom$": "<rootDir>/../../../node_modules/react-dom",
+    "^react/jsx-runtime$": "<rootDir>/../../../node_modules/react/jsx-runtime",
   },
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",

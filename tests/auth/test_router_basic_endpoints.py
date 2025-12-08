@@ -183,48 +183,6 @@ async def test_me_endpoint_unauthenticated(auth_test_app: FastAPI):
 
 
 @pytest.mark.asyncio
-async def test_register_endpoint(auth_test_app: FastAPI, mock_db_session):
-    """Test user registration endpoint."""
-
-    # Mock user lookup to return None (user doesn't exist)
-    async def mock_execute_first_call(*args, **kwargs):
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none = MagicMock(return_value=None)
-        return mock_result
-
-    mock_db_session.execute = AsyncMock(side_effect=mock_execute_first_call)
-
-    # Mock refresh to set ID
-    def set_user_id(user):
-        if not hasattr(user, "id") or user.id is None:
-            user.id = uuid4()
-        if not hasattr(user, "created_at") or user.created_at is None:
-            user.created_at = datetime.now(UTC)
-        if not hasattr(user, "updated_at") or user.updated_at is None:
-            user.updated_at = datetime.now(UTC)
-
-    mock_db_session.refresh = AsyncMock(side_effect=set_user_id)
-
-    from dotmac.platform.auth.router import get_auth_session
-
-    auth_test_app.dependency_overrides[get_auth_session] = lambda: mock_db_session
-
-    transport = ASGITransport(app=auth_test_app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-        response = await client.post(
-            "/auth/register",
-            json={
-                "username": "newuser",
-                "email": "newuser@example.com",
-                "password": "SecurePassword123!",
-            },
-        )
-
-    # Should return 200 or 201 on successful registration
-    assert response.status_code in [200, 201, 400]  # 400 if validation fails
-
-
-@pytest.mark.asyncio
 async def test_login_endpoint_invalid_credentials(auth_test_app: FastAPI, async_db_session):
     """Test login endpoint with invalid credentials."""
     from dotmac.platform.auth.router import get_auth_session

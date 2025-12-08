@@ -3,16 +3,6 @@
  * Helpers for transitioning between legacy and ISP Framework types
  */
 
-import type {
-  Customer,
-  Address,
-  BillingInfo,
-  CustomerService,
-  LegacyPaginatedResponse,
-  LegacyApiResponse,
-  NetworkDevice,
-  DeviceMetrics,
-} from "./index";
 
 import type {
   CustomerData,
@@ -25,6 +15,17 @@ import type {
 } from "../api/types/api";
 
 import type { ISPTenant, TenantUser } from "./tenant";
+
+import type {
+  Customer,
+  Address,
+  BillingInfo,
+  CustomerService,
+  LegacyPaginatedResponse,
+  LegacyApiResponse,
+  NetworkDevice,
+  DeviceMetrics,
+} from "./index";
 
 /**
  * Migration utilities for converting between legacy and API types

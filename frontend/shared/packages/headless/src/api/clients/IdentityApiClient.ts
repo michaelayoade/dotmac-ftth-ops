@@ -3,7 +3,6 @@
  * Handles customer, user, and authentication operations
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type {
   PaginatedResponse,
   QueryParams,
@@ -12,6 +11,8 @@ import type {
   CreateCustomerRequest,
   UpdateCustomerRequest,
 } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export class IdentityApiClient extends BaseApiClient {
   constructor(baseURL: string, defaultHeaders: Record<string, string> = {}) {

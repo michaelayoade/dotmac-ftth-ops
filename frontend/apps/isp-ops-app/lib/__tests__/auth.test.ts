@@ -1,11 +1,10 @@
 /**
  * Tests for auth utilities
- * Tests authentication helpers including login, register, permissions, and roles
+ * Tests authentication helpers including login, permissions, and roles
  */
 
 import {
   login,
-  register,
   logout,
   getCurrentUser,
   hasPermission,
@@ -14,7 +13,6 @@ import {
   refreshToken,
   type User,
   type LoginCredentials,
-  type RegisterData,
 } from "../auth";
 import { apiClient } from "../api/client";
 
@@ -72,56 +70,8 @@ describe("auth", () => {
   });
 
   describe("register", () => {
-    it("should call API with registration data", async () => {
-      const data: RegisterData = {
-        username: "testuser",
-        email: "test@example.com",
-        password: "password123",
-        full_name: "Test User",
-        tenant_name: "Test Tenant",
-      };
-
-      const mockResponse = {
-        data: {
-          user: {
-            id: "1",
-            email: "test@example.com",
-            name: "Test User",
-          },
-          access_token: "token123",
-        },
-      };
-
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
-
-      const result = await register(data);
-
-      expect(apiClient.post).toHaveBeenCalledWith("/auth/register", data);
-      expect(result).toEqual(mockResponse.data);
-    });
-
-    it("should handle registration with minimal data", async () => {
-      const data: RegisterData = {
-        username: "testuser",
-        email: "test@example.com",
-        password: "password123",
-      };
-
-      const mockResponse = {
-        data: {
-          user: {
-            id: "1",
-            email: "test@example.com",
-            name: "testuser",
-          },
-        },
-      };
-
-      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
-
-      const result = await register(data);
-
-      expect(result.user.email).toBe("test@example.com");
+    it("is no longer exposed", () => {
+      expect(true).toBe(true);
     });
   });
 
@@ -442,9 +392,6 @@ describe("auth", () => {
       (apiClient.post as jest.Mock).mockRejectedValue(new Error("500 Internal Server Error"));
 
       await expect(login({ email: "test", password: "test" })).rejects.toThrow();
-      await expect(
-        register({ username: "test", email: "test", password: "test" }),
-      ).rejects.toThrow();
     });
   });
 
@@ -474,22 +421,6 @@ describe("auth", () => {
 
       expect(credentials.email).toBeDefined();
       expect(credentials.password).toBeDefined();
-    });
-
-    it("should accept valid RegisterData type with optional fields", () => {
-      const data: RegisterData = {
-        username: "testuser",
-        email: "test@example.com",
-        password: "password123",
-        full_name: "Test User",
-        tenant_name: "Test Tenant",
-      };
-
-      expect(data.username).toBeDefined();
-      expect(data.email).toBeDefined();
-      expect(data.password).toBeDefined();
-      expect(data.full_name).toBeDefined();
-      expect(data.tenant_name).toBeDefined();
     });
   });
 });

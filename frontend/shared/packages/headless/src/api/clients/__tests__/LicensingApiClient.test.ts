@@ -3,21 +3,21 @@
  * Critical test suite for software licensing and activation management
  */
 
-import { LicensingApiClient } from "../LicensingApiClient";
-import type {
-  SoftwareLicense,
-  Activation,
-  LicenseTemplate,
-  LicenseOrder,
-  ComplianceAudit,
-  LicenseUsageReport,
-  LicenseFeature,
-  LicenseRestriction,
-  UsageMetrics,
-  ActivationLocation,
-  LicensePricing,
-  AuditFinding,
-  ComplianceViolation,
+import {
+  LicensingApiClient,
+  type SoftwareLicense,
+  type Activation,
+  type LicenseTemplate,
+  type LicenseOrder,
+  type ComplianceAudit,
+  type LicenseUsageReport,
+  type LicenseFeature,
+  type LicenseRestriction,
+  type UsageMetrics,
+  type ActivationLocation,
+  type LicensePricing,
+  type AuditFinding,
+  type ComplianceViolation,
 } from "../LicensingApiClient";
 
 // Mock fetch
@@ -28,6 +28,155 @@ describe("LicensingApiClient", () => {
   let client: LicensingApiClient;
   const baseURL = "https://api.test.com";
   const defaultHeaders = { Authorization: "Bearer test-token" };
+
+  // Shared mock location for tests using mockActivation
+  const sharedMockLocation: ActivationLocation = {
+    country: "US",
+    region: "California",
+    city: "San Francisco",
+    postal_code: "94102",
+    latitude: 37.7749,
+    longitude: -122.4194,
+    timezone: "America/Los_Angeles",
+    ip_address: "192.168.1.100",
+  };
+
+  // Shared mock usage metrics for tests using mockActivation
+  const sharedMockUsageMetrics: UsageMetrics = {
+    total_sessions: 1250,
+    active_users: 25,
+    feature_usage: {
+      advanced_analytics: 890,
+      api_access: 5420,
+      reporting: 234,
+    },
+    api_calls_count: 125000,
+    data_processed_mb: 15680,
+    last_used_at: "2024-01-17T10:30:00Z",
+    peak_concurrent_users: 45,
+  };
+
+  // Shared mock activation used in Performance tests
+  const sharedMockActivation: Activation = {
+    id: "activation_123",
+    license_id: "license_123",
+    activation_token: "ACT-TOKEN-ABCD-1234-EFGH-5678",
+    device_fingerprint: "fp_abc123def456",
+    machine_name: "PROD-SERVER-01",
+    hardware_id: "HW-ID-789012",
+    mac_address: "00:1B:44:11:3A:B7",
+    ip_address: "192.168.1.100",
+    operating_system: "Windows Server 2022",
+    user_agent: "NetworkMgmt/2024.1 (Windows NT 10.0)",
+    application_version: "2024.1.3456",
+    activation_type: "ONLINE",
+    status: "ACTIVE",
+    activated_at: "2024-01-02T10:15:00Z",
+    last_heartbeat: "2024-01-17T10:30:00Z",
+    location: sharedMockLocation,
+    usage_metrics: sharedMockUsageMetrics,
+  };
+
+  // Shared mock features for license tests
+  const sharedMockFeatures: LicenseFeature[] = [
+    {
+      feature_id: "advanced_analytics",
+      feature_name: "Advanced Analytics Dashboard",
+      enabled: true,
+      limit_value: 1000,
+      limit_type: "COUNT",
+      expires_at: "2024-12-31T23:59:59Z",
+    },
+  ];
+
+  // Shared mock restrictions for license tests
+  const sharedMockRestrictions: LicenseRestriction[] = [
+    {
+      restriction_type: "GEOGRAPHIC",
+      values: ["US", "CA"],
+      operator: "ALLOW",
+    },
+  ];
+
+  // Shared mock license used in Performance tests
+  const sharedMockLicense: SoftwareLicense = {
+    id: "license_123",
+    license_key: "ABCD-EFGH-IJKL-MNOP-QRST",
+    product_id: "product_network_mgmt",
+    product_name: "Network Management Suite Enterprise",
+    product_version: "2024.1",
+    license_type: "SUBSCRIPTION",
+    license_model: "PER_SEAT",
+    customer_id: "customer_456",
+    reseller_id: "reseller_789",
+    issued_to: "TechCorp Solutions Inc.",
+    max_activations: 50,
+    current_activations: 12,
+    features: sharedMockFeatures,
+    restrictions: sharedMockRestrictions,
+    issued_date: "2024-01-01T00:00:00Z",
+    activation_date: "2024-01-02T10:00:00Z",
+    expiry_date: "2024-12-31T23:59:59Z",
+    maintenance_expiry: "2025-03-31T23:59:59Z",
+    status: "ACTIVE",
+    auto_renewal: true,
+    grace_period_days: 30,
+    metadata: {
+      purchase_order: "PO-2024-001",
+    },
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-15T14:30:00Z",
+  };
+
+  // Shared mock audit findings for Performance tests
+  const sharedMockFindings: AuditFinding[] = [
+    {
+      finding_type: "OVER_DEPLOYMENT",
+      severity: "HIGH",
+      description: "15 unlicensed installations detected on network devices",
+      evidence: ["network_scan_report.pdf"],
+      affected_licenses: ["license_123"],
+      impact_assessment: "Potential compliance violation",
+      recommended_action: "Purchase additional licenses",
+    },
+  ];
+
+  // Shared mock violations for Performance tests
+  const sharedMockViolations: ComplianceViolation[] = [
+    {
+      violation_type: "UNAUTHORIZED_USE",
+      severity: "MAJOR",
+      license_id: "license_123",
+      description: "Software deployed outside authorized region",
+      detected_at: "2024-01-15T10:00:00Z",
+      evidence: ["geo_location_logs.txt"],
+      financial_impact: 15000,
+      resolution_required: true,
+      resolution_deadline: "2024-02-15T23:59:59Z",
+      status: "OPEN",
+    },
+  ];
+
+  // Shared mock audit for Performance tests
+  const sharedMockAudit: ComplianceAudit = {
+    id: "audit_123",
+    audit_type: "SCHEDULED",
+    customer_id: "customer_456",
+    product_ids: ["product_network_mgmt"],
+    audit_scope: "FULL",
+    status: "COMPLETED",
+    auditor_id: "auditor_789",
+    audit_date: "2024-01-15T09:00:00Z",
+    findings: sharedMockFindings,
+    violations: sharedMockViolations,
+    compliance_score: 72.5,
+    recommendations: ["Implement automated license tracking"],
+    follow_up_required: true,
+    follow_up_date: "2024-03-15T23:59:59Z",
+    report_url: "https://storage.example.com/compliance/audit_123_report.pdf",
+    created_at: "2024-01-10T08:00:00Z",
+    completed_at: "2024-01-15T17:00:00Z",
+  };
 
   beforeEach(() => {
     client = new LicensingApiClient(baseURL, defaultHeaders);
@@ -412,7 +561,7 @@ describe("LicensingApiClient", () => {
         data: {
           valid: true,
           activation: mockActivation,
-          license: mockLicense,
+          license: sharedMockLicense,
         },
       });
 
@@ -1218,10 +1367,8 @@ describe("LicensingApiClient", () => {
       const result = await client.getExpiryAlerts(30);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/licensing/alerts/expiring",
-        expect.objectContaining({
-          params: { days_ahead: 30 },
-        }),
+        "https://api.test.com/api/licensing/alerts/expiring?days_ahead=30",
+        expect.any(Object),
       );
 
       expect(result.data).toHaveLength(2);
@@ -1233,7 +1380,7 @@ describe("LicensingApiClient", () => {
     it("should validate license key", async () => {
       const validationResponse = {
         valid: true,
-        license: mockLicense,
+        license: sharedMockLicense,
         validation_details: {
           key_format_valid: true,
           signature_valid: true,
@@ -1405,7 +1552,7 @@ describe("LicensingApiClient", () => {
   describe("Performance and Scalability", () => {
     it("should handle large license collections efficiently", async () => {
       const largeLicenseList = Array.from({ length: 1000 }, (_, i) => ({
-        ...mockLicense,
+        ...sharedMockLicense,
         id: `license_${i}`,
         license_key: `ABCD-EFGH-${String(i).padStart(4, "0")}-MNOP-QRST`,
       }));
@@ -1430,14 +1577,14 @@ describe("LicensingApiClient", () => {
 
     it("should handle complex compliance audits efficiently", async () => {
       const complexAudit = {
-        ...mockAudit,
+        ...sharedMockAudit,
         findings: Array.from({ length: 50 }, (_, i) => ({
-          ...mockFindings[0],
+          ...sharedMockFindings[0],
           description: `Finding ${i}`,
           affected_licenses: [`license_${i}`],
         })),
         violations: Array.from({ length: 20 }, (_, i) => ({
-          ...mockViolations[0],
+          ...sharedMockViolations[0],
           license_id: `license_${i}`,
           description: `Violation ${i}`,
         })),
@@ -1453,7 +1600,7 @@ describe("LicensingApiClient", () => {
 
     it("should handle bulk activation scenarios", async () => {
       const bulkActivations = Array.from({ length: 100 }, (_, i) => ({
-        ...mockActivation,
+        ...sharedMockActivation,
         id: `activation_${i}`,
         device_fingerprint: `fp_device_${i}`,
         machine_name: `MACHINE-${String(i).padStart(3, "0")}`,

@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
 /**
  * Commission Configuration Manager
  * Allows admins to create and manage flexible commission structures
@@ -133,6 +132,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
   };
 
   const handleDelete = async (id: string) => {
+    // eslint-disable-next-line no-alert
     if (!confirm("Are you sure you want to delete this commission configuration?")) return;
 
     try {
@@ -319,18 +319,20 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                  <label htmlFor="config-name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                   <Input
+                    id="config-name"
                     value={formData.name || ""}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Standard Partner Commission"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="commission-structure" className="block text-sm font-medium text-gray-700 mb-1">
                     Commission Structure *
                   </label>
                   <select
+                    id="commission-structure"
                     value={formData.commission_structure || "percentage"}
                     onChange={(e) =>
                       setFormData({
@@ -351,8 +353,9 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label htmlFor="config-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
+                  id="config-description"
                   value={formData.description || ""}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -367,11 +370,12 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
 
                 {formData.commission_structure === "percentage" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="commission-percentage" className="block text-sm font-medium text-gray-700 mb-1">
                       Commission Percentage *
                     </label>
                     <div className="relative">
                       <Input
+                        id="commission-percentage"
                         type="number"
                         step="0.1"
                         min="0"
@@ -394,7 +398,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
 
                 {formData.commission_structure === "flat_rate" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="fixed-amount" className="block text-sm font-medium text-gray-700 mb-1">
                       Fixed Amount *
                     </label>
                     <div className="relative">
@@ -402,6 +406,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
                         <span className="text-gray-500">$</span>
                       </div>
                       <Input
+                        id="fixed-amount"
                         type="number"
                         step="0.01"
                         min="0"
@@ -434,10 +439,11 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="reseller-type" className="block text-sm font-medium text-gray-700 mb-1">
                     Reseller Type
                   </label>
                   <select
+                    id="reseller-type"
                     value={formData.reseller_type || ""}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -460,10 +466,11 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="reseller-tier" className="block text-sm font-medium text-gray-700 mb-1">
                     Reseller Tier
                   </label>
                   <select
+                    id="reseller-tier"
                     value={formData.reseller_tier || ""}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -485,8 +492,9 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
+                  <label htmlFor="territory" className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
                   <Input
+                    id="territory"
                     value={formData.territory || ""}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -506,10 +514,11 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               {/* Settings */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="payment-frequency" className="block text-sm font-medium text-gray-700 mb-1">
                     Payment Frequency
                   </label>
                   <select
+                    id="payment-frequency"
                     value={formData.payment_frequency || "monthly"}
                     onChange={(e) =>
                       setFormData({
@@ -525,7 +534,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="minimum-payout" className="block text-sm font-medium text-gray-700 mb-1">
                     Minimum Payout
                   </label>
                   <div className="relative">
@@ -533,6 +542,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
                       <span className="text-gray-500">$</span>
                     </div>
                     <Input
+                      id="minimum-payout"
                       type="number"
                       step="0.01"
                       min="0"
@@ -548,10 +558,11 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="calculate-on" className="block text-sm font-medium text-gray-700 mb-1">
                     Calculate On
                   </label>
                   <select
+                    id="calculate-on"
                     value={formData.calculate_on || "revenue"}
                     onChange={(e) =>
                       setFormData({
@@ -571,20 +582,22 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               {/* Effective Period */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="effective-from" className="block text-sm font-medium text-gray-700 mb-1">
                     Effective From *
                   </label>
                   <Input
+                    id="effective-from"
                     type="date"
                     value={formData.effective_from || ""}
                     onChange={(e) => setFormData({ ...formData, effective_from: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="effective-until" className="block text-sm font-medium text-gray-700 mb-1">
                     Effective Until
                   </label>
                   <Input
+                    id="effective-until"
                     type="date"
                     value={formData.effective_until || ""}
                     onChange={(e) => {
@@ -603,8 +616,9 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
 
               {/* Status */}
               <div className="flex items-center space-x-6">
-                <label className="flex items-center">
+                <label htmlFor="is-active" className="flex items-center">
                   <input
+                    id="is-active"
                     type="checkbox"
                     checked={formData.is_active || false}
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
@@ -612,8 +626,9 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
                   />
                   <span className="ml-2 text-sm">Active</span>
                 </label>
-                <label className="flex items-center">
+                <label htmlFor="is-default" className="flex items-center">
                   <input
+                    id="is-default"
                     type="checkbox"
                     checked={formData.is_default || false}
                     onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}

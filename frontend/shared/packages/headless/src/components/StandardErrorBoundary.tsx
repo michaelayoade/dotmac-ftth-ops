@@ -5,6 +5,7 @@
 
 import React, { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
+
 import { ISPError, classifyError, logError } from "../utils/errorUtils";
 
 export interface ErrorBoundaryState {

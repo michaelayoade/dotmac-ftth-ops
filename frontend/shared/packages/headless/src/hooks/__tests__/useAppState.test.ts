@@ -4,6 +4,9 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
+
+import { useAppStore } from "@dotmac/headless/stores";
+
 import {
   useUI,
   useAppNotifications as useNotifications,
@@ -15,7 +18,6 @@ import {
   useDataTable,
   useFormState,
 } from "../useAppState";
-import { useAppStore } from "@dotmac/headless/stores";
 
 describe("useAppState Hooks", () => {
   beforeEach(() => {

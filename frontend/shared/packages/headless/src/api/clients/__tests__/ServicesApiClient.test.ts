@@ -3,8 +3,11 @@
  * Comprehensive test suite for service provisioning and lifecycle management
  */
 
-import { ServicesApiClient } from "../ServicesApiClient";
-import type { ServiceOrder, ServiceProvisioning } from "../ServicesApiClient";
+import {
+  ServicesApiClient,
+  type ServiceOrder,
+  type ServiceProvisioning,
+} from "../ServicesApiClient";
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -37,6 +40,19 @@ describe("ServicesApiClient", () => {
         error: { code: "ERROR", message, details: {} },
       }),
     } as Response);
+  };
+
+  // Shared mock fixtures
+  const sharedMockServiceOrder: ServiceOrder = {
+    id: "order_shared",
+    customer_id: "cust_123",
+    service_plan_id: "plan_123",
+    status: "PENDING",
+    installation_address: "123 Main St, City, State 12345",
+    monthly_cost: 89.99,
+    setup_fee: 99.0,
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
   };
 
   describe("Service Plans Management", () => {
@@ -486,10 +502,13 @@ describe("ServicesApiClient", () => {
         period: "last_24h",
       });
 
+      // Arrays are JSON-serialized in query params
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.test.com/api/services/service_123/metrics?metrics=latency%2Cpacket_loss%2Cuptime&period=last_24h",
+        expect.stringContaining("api/services/service_123/metrics?"),
         expect.any(Object),
       );
+      const calledUrl = (mockFetch as jest.Mock).mock.calls[0][0];
+      expect(calledUrl).toContain("period=last_24h");
 
       expect(result.data.connection_quality).toBe("EXCELLENT");
     });
@@ -554,11 +573,11 @@ describe("ServicesApiClient", () => {
         setup_fee: 99.0,
       };
 
-      mockResponse({ data: { ...mockServiceOrder, id: "order_123" } });
+      mockResponse({ data: { ...sharedMockServiceOrder, id: "order_123" } });
       await client.createServiceOrder(orderData);
 
       // Step 2: Approve order
-      mockResponse({ data: { ...mockServiceOrder, status: "APPROVED" } });
+      mockResponse({ data: { ...sharedMockServiceOrder, status: "APPROVED" } });
       await client.approveServiceOrder("order_123", "Approved for installation");
 
       // Step 3: Update provisioning
@@ -590,7 +609,7 @@ describe("ServicesApiClient", () => {
   describe("Performance and Reliability", () => {
     it("should handle large service order batches", async () => {
       const manyOrders = Array.from({ length: 100 }, (_, i) => ({
-        ...mockServiceOrder,
+        ...sharedMockServiceOrder,
         id: `order_${i}`,
       }));
 

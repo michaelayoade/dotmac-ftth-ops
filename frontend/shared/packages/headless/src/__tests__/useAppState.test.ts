@@ -4,12 +4,13 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { useAppState } from "../hooks/useAppState";
+
 import {
   createMockUser,
   createMockFeatureFlags,
   createMockPortalConfig,
 } from "../../__tests__/setup";
+import { useAppState } from "../hooks/useAppState";
 
 // Mock the app state store
 const mockAppStateStore = {
@@ -401,8 +402,8 @@ describe("useAppState Hook", () => {
         result.current.saveStateToStorage();
       });
 
-      // This would typically interact with localStorage or sessionStorage
-      expect(localStorage.setItem).toHaveBeenCalled();
+      // This would typically interact with secureStorage
+      expect(localStorage.setItem).toHaveBeenCalled(); // eslint-disable-line no-restricted-globals
     });
 
     it("should load state from storage", () => {
@@ -412,7 +413,7 @@ describe("useAppState Hook", () => {
         features: { analytics: true },
       };
 
-      (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(savedState));
+      (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(savedState)); // eslint-disable-line no-restricted-globals
 
       const { result } = renderHook(() => useAppState());
 

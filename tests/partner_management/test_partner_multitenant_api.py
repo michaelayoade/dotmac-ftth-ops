@@ -98,7 +98,7 @@ async def partner_user(db_session: AsyncSession, partner: Partner, test_tenant: 
         id=uuid4(),
         username="partner_admin",
         email="admin@testmsp.com",
-        hashed_password="hashed",
+        password_hash="hashed",
         is_active=True,
         tenant_id=test_tenant.id,
     )

@@ -1,11 +1,10 @@
-/* eslint-disable react/sort-comp */
 /**
  * Error Boundary for graceful component failure handling
  */
 
 "use client";
 
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, useCallback } from "react";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -75,7 +74,16 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
 );
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    // Generate unique error ID for tracking
+    const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    return {
+      hasError: true,
+      error,
+      errorId,
+    };
+  }
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -85,17 +93,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       error: null,
       errorInfo: null,
       errorId: "",
-    };
-  }
-
-  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    // Generate unique error ID for tracking
-    const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    return {
-      hasError: true,
-      error,
-      errorId,
     };
   }
 
@@ -128,6 +125,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       this.reportError(error, errorInfo, errorId);
     }
   }
+
+  override componentWillUnmount() {
+    if (this.retryTimeoutId) {
+      clearTimeout(this.retryTimeoutId);
+    }
+  }
+
+  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   private reportError = (error: Error, errorInfo: ErrorInfo, errorId: string) => {
     // This would integrate with your error reporting service
@@ -171,10 +176,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }, 100);
   };
 
-  override componentWillUnmount() {
-    if (this.retryTimeoutId) {
-      clearTimeout(this.retryTimeoutId);
+  private getComponentName(): string {
+    // Try to extract component name from error stack
+    const { error } = this.state;
+    if (error?.stack) {
+      const match = error.stack.match(/at\s+([A-Z][A-Za-z0-9]*)/);
+      const matchedName = match?.[1];
+      if (matchedName) {
+        return matchedName;
+      }
     }
+    return "Component";
   }
 
   override render() {
@@ -200,19 +212,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return children;
   }
-
-  private getComponentName(): string {
-    // Try to extract component name from error stack
-    const { error } = this.state;
-    if (error?.stack) {
-      const match = error.stack.match(/at\s+([A-Z][A-Za-z0-9]*)/);
-      const matchedName = match?.[1];
-      if (matchedName) {
-        return matchedName;
-      }
-    }
-    return "Component";
-  }
 }
 
 // HOC for wrapping components with error boundary
@@ -233,7 +232,7 @@ export function withErrorBoundary<P extends object>(
 
 // Hook for manual error reporting
 export function useErrorHandler() {
-  return React.useCallback((error: Error, context?: string) => {
+  return useCallback((error: Error, context?: string) => {
     const errorId = `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     console.error(`Manual error report (${errorId}):`, error);

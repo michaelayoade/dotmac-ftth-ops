@@ -3,8 +3,6 @@
  * Handles invoices, payments, subscriptions
  */
 
-import { BaseApiClient } from "./BaseApiClient";
-import type { PaginatedResponse, QueryParams } from "../types/api";
 import type {
   PaymentProcessor,
   Transaction,
@@ -12,6 +10,9 @@ import type {
   CreatePaymentIntentRequest,
   PaymentIntent,
 } from "../../types/billing";
+import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export class BillingApiClient extends BaseApiClient {
   constructor(baseURL: string, defaultHeaders: Record<string, string> = {}) {
@@ -80,6 +81,23 @@ export class BillingApiClient extends BaseApiClient {
     return this.post("/api/billing/invoices", data);
   }
 
+  async sendInvoice(invoiceId: string): Promise<{ data: Invoice }> {
+    return this.post(`/api/billing/invoices/${invoiceId}/send`);
+  }
+
+  // Customer billing operations
+  async getCustomerBillingSummary(customerId: string): Promise<{ data: any }> {
+    return this.get(`/api/billing/customers/${customerId}/summary`);
+  }
+
+  async updateBillingAddress(customerId: string, data: any): Promise<{ data: any }> {
+    return this.put(`/api/billing/customers/${customerId}/address`, data);
+  }
+
+  async savePaymentMethod(customerId: string, data: any): Promise<{ data: any }> {
+    return this.post(`/api/billing/customers/${customerId}/payment-methods`, data);
+  }
+
   // Analytics operations
   async getBillingAnalytics(params?: any): Promise<{ data: any }> {
     return this.get("/api/billing/analytics", { params });
@@ -100,5 +118,56 @@ export class BillingApiClient extends BaseApiClient {
 
   async encryptBillingData(data: any): Promise<{ data: any }> {
     return this.post("/api/billing/encrypt", data);
+  }
+
+  // Payment method operations
+  async getPaymentMethods(params?: QueryParams): Promise<PaginatedResponse<any>> {
+    return this.get("/api/billing/payment-methods", { params });
+  }
+
+  async getPaymentMethod(paymentMethodId: string): Promise<{ data: any }> {
+    return this.get(`/api/billing/payment-methods/${paymentMethodId}`);
+  }
+
+  async createPaymentMethod(data: any): Promise<{ data: any }> {
+    return this.post("/api/billing/payment-methods", data);
+  }
+
+  async deletePaymentMethod(paymentMethodId: string): Promise<{ success: boolean }> {
+    return this.delete(`/api/billing/payment-methods/${paymentMethodId}`);
+  }
+
+  // Subscription operations
+  async getSubscriptions(params?: QueryParams): Promise<PaginatedResponse<any>> {
+    return this.get("/api/billing/subscriptions", { params });
+  }
+
+  async getSubscription(subscriptionId: string): Promise<{ data: any }> {
+    return this.get(`/api/billing/subscriptions/${subscriptionId}`);
+  }
+
+  async createSubscription(data: any): Promise<{ data: any }> {
+    return this.post("/api/billing/subscriptions", data);
+  }
+
+  async updateSubscription(subscriptionId: string, data: any): Promise<{ data: any }> {
+    return this.put(`/api/billing/subscriptions/${subscriptionId}`, data);
+  }
+
+  async cancelSubscription(subscriptionId: string, data?: any): Promise<{ data: any }> {
+    return this.post(`/api/billing/subscriptions/${subscriptionId}/cancel`, data);
+  }
+
+  // Payment processing
+  async processPayment(data: any): Promise<{ data: Transaction }> {
+    return this.post("/api/billing/payments", data);
+  }
+
+  async getCustomerBilling(customerId: string, params?: QueryParams): Promise<{ data: any }> {
+    return this.get(`/api/billing/customers/${customerId}/billing`, { params });
+  }
+
+  async getBillingHistory(customerId: string, params?: QueryParams): Promise<{ data: any[] }> {
+    return this.get(`/api/billing/customers/${customerId}/billing/history`, { params });
   }
 }

@@ -7,10 +7,10 @@ import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/re
 import "@testing-library/jest-dom";
 import React from "react";
 
-import { ISPTenantProvider } from "../../components/ISPTenantProvider";
-import { AuthProvider } from "../../auth";
-import { IdentityApiClient } from "../../api/clients/IdentityApiClient";
 import { BillingApiClient } from "../../api/clients/BillingApiClient";
+import { IdentityApiClient } from "../../api/clients/IdentityApiClient";
+import { AuthProvider } from "../../auth";
+import { ISPTenantProvider } from "../../components/ISPTenantProvider";
 
 // Keep tenant provider simple to avoid pulling heavy tenant hooks in these isolated tests
 jest.mock("../../components/ISPTenantProvider", () => ({

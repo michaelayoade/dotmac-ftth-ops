@@ -4,6 +4,7 @@
  */
 
 import { useMemo, useCallback } from "react";
+
 import type { TenantLimitsUsage, TenantSession } from "../../types/tenant";
 
 export interface UseTenantLimitsReturn {

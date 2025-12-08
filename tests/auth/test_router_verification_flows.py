@@ -81,7 +81,7 @@ async def test_request_email_verification_new_email(
     )
 
     # Mock email service
-    with patch("dotmac.platform.auth.router.get_auth_email_service") as mock_email_service:
+    with patch("dotmac.platform.auth.verification_router.get_auth_email_service") as mock_email_service:
         mock_service = AsyncMock()
         mock_service.send_verification_email = AsyncMock(return_value=True)
         mock_email_service.return_value = mock_service
@@ -344,7 +344,7 @@ async def test_login_logs_activity_on_failure(verification_app: FastAPI, async_d
     with (
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
         patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-        patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock) as mock_log,
+        patch("dotmac.platform.auth.verification_router.log_user_activity", new_callable=AsyncMock) as mock_log,
     ):
         transport = ASGITransport(app=verification_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -414,7 +414,7 @@ async def test_password_reset_request(
     verification_app.dependency_overrides[get_auth_session] = override_session
 
     # Mock email service
-    with patch("dotmac.platform.auth.router.get_auth_email_service") as mock_email_service:
+    with patch("dotmac.platform.auth.verification_router.get_auth_email_service") as mock_email_service:
         mock_service = AsyncMock()
         mock_service.send_password_reset_email = AsyncMock(return_value=True)
         mock_email_service.return_value = mock_service
@@ -443,7 +443,7 @@ async def test_password_reset_request_nonexistent_email(
     verification_app.dependency_overrides[get_auth_session] = override_session
 
     # Mock email service
-    with patch("dotmac.platform.auth.router.get_auth_email_service") as mock_email_service:
+    with patch("dotmac.platform.auth.verification_router.get_auth_email_service") as mock_email_service:
         mock_service = AsyncMock()
         mock_service.send_password_reset_email = AsyncMock(return_value=True)
         mock_email_service.return_value = mock_service

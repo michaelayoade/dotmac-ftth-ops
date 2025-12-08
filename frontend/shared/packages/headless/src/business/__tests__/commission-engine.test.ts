@@ -154,7 +154,7 @@ describe("CommissionEngine", () => {
 
     test("validates revenue ranges", () => {
       const extremeRevenue = {
-        revenue: 999999999,
+        revenue: 1_000_000_001, // Over 1 billion threshold
         partnerId: "P001",
         productType: "enterprise",
       };
@@ -252,8 +252,12 @@ describe("CommissionEngine", () => {
     test("has consistent product multipliers", () => {
       DEFAULT_COMMISSION_TIERS.forEach((tier) => {
         expect(tier.productMultipliers).toBeDefined();
-        expect(tier.productMultipliers!["residential_basic"]).toBe(1.0);
-        expect(tier.productMultipliers!["enterprise"]).toBeGreaterThan(1.0);
+        // Residential basic should be at least 1.0 (some higher tiers have bonuses)
+        expect(tier.productMultipliers!["residential_basic"]).toBeGreaterThanOrEqual(1.0);
+        // Enterprise should always have higher multiplier than residential_basic
+        expect(tier.productMultipliers!["enterprise"]).toBeGreaterThan(
+          tier.productMultipliers!["residential_basic"],
+        );
       });
     });
   });
@@ -289,9 +293,10 @@ describe("CommissionEngine", () => {
     });
 
     test("handles concurrent calculation requests", async () => {
+      // Use Bronze tier (minimumRevenue: 0) to ensure all calculations are eligible
       const requests = Array.from({ length: 100 }, (_, i) => ({
         revenue: 10000 + i * 100,
-        tier: DEFAULT_COMMISSION_TIERS[1],
+        tier: DEFAULT_COMMISSION_TIERS[0], // Bronze tier
         productType: "residential_premium",
       }));
 
@@ -339,11 +344,18 @@ describe("CommissionEngine", () => {
     });
 
     test("caches tier calculations efficiently", () => {
-      const engine = new CommissionEngine({ enableCaching: true });
+      // Constructor takes (customTiers, config) - use undefined for default tiers
+      const engine = new CommissionEngine(undefined, { enableCaching: true });
+      // Use full schema-compliant input
       const testData = {
-        revenue: 25000,
-        tier: DEFAULT_COMMISSION_TIERS[1],
-        productType: "business_pro",
+        customerId: "cust_123",
+        partnerId: "partner_123",
+        partnerTier: "bronze" as const,
+        productType: "business_pro" as const,
+        monthlyRevenue: 25000,
+        partnerLifetimeRevenue: 100000,
+        isNewCustomer: false,
+        contractLength: 12,
       };
 
       // First calculation
@@ -356,7 +368,7 @@ describe("CommissionEngine", () => {
       const result2 = engine.calculateWithCaching(testData);
       const duration2 = performance.now() - startTime2;
 
-      expect(result1.total).toBe(result2.total);
+      expect(result1.totalCommission).toBe(result2.totalCommission);
       expect(duration2).toBeLessThan(duration1); // Cached result should be faster
     });
   });

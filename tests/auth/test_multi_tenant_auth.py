@@ -153,132 +153,38 @@ class TestMultiTenantPasswordReset:
 
 
 @pytest.mark.asyncio
-class TestMultiTenantRegistration:
-    """Test registration with duplicate usernames/emails across tenants."""
+class TestLoginIgnoresTenantHeader:
+    """Regression: login should ignore spoofed tenant headers."""
 
-    async def test_registration_duplicate_username_across_tenants(
+    async def test_login_ignores_supplied_tenant_header(
         self, test_client: AsyncClient, async_session: AsyncSession
     ):
-        """
-        Regression test: Users in different tenants can use the same username.
-
-        Bug: Registration checked username globally instead of per-tenant,
-        blocking legitimate registrations in Tenant B when username exists in Tenant A.
-
-        Fix: Pass tenant_id to get_user_by_username() to scope check to current tenant.
-        """
         user_service = UserService(async_session)
 
-        # Create user 'admin' in Tenant A
-        await user_service.create_user(
-            username="admin",
-            email="admin@tenant-a.com",
+        user = await user_service.create_user(
+            username="header-test",
+            email="header@test.com",
             password="SecurePass123!",
-            full_name="Admin Tenant A",
-            tenant_id="tenant-a",
+            full_name="Header Test",
+            tenant_id="tenant-login",
         )
 
         await async_session.commit()
 
-        # Register 'admin' in Tenant B (should succeed)
+        # Supply a conflicting tenant header; login should still succeed and
+        # the issued token should reflect the user's tenant, not the header.
         response = await test_client.post(
-            "/api/v1/auth/register",
-            json={
-                "username": "admin",
-                "email": "admin@tenant-b.com",
-                "password": "SecurePass123!",
-                "full_name": "Admin Tenant B",
-            },
-            headers={"X-Tenant-ID": "tenant-b"},
+            "/api/v1/auth/login",
+            json={"username": user.username, "password": "SecurePass123!"},
+            headers={"X-Tenant-ID": "spoofed-tenant"},
         )
 
-        assert response.status_code == status.HTTP_200_OK, (
-            f"Registration should succeed. Response: {response.json()}"
-        )
+        assert response.status_code == status.HTTP_200_OK
 
-        # Verify both users exist with same username, different tenants
-        result = await async_session.execute(select(User).where(User.username == "admin"))
-        users = result.scalars().all()
+        from dotmac.platform.auth.core import TokenType, jwt_service
 
-        assert len(users) == 2
-        tenant_ids = {user.tenant_id for user in users}
-        assert tenant_ids == {"tenant-a", "tenant-b"}
-
-    async def test_registration_duplicate_email_across_tenants(
-        self, test_client: AsyncClient, async_session: AsyncSession
-    ):
-        """Users in different tenants can use the same email."""
-        user_service = UserService(async_session)
-
-        # Create user with email@example.com in Tenant A
-        await user_service.create_user(
-            username="user_a",
-            email="shared@example.com",
-            password="SecurePass123!",
-            full_name="User Tenant A",
-            tenant_id="tenant-a",
-        )
-
-        await async_session.commit()
-
-        # Register same email in Tenant B (should succeed)
-        response = await test_client.post(
-            "/api/v1/auth/register",
-            json={
-                "username": "user_b",
-                "email": "shared@example.com",
-                "password": "SecurePass123!",
-                "full_name": "User Tenant B",
-            },
-            headers={"X-Tenant-ID": "tenant-b"},
-        )
-
-        assert response.status_code == status.HTTP_200_OK, (
-            f"Registration should succeed. Response: {response.json()}"
-        )
-
-        # Verify both users exist with same email, different tenants
-        result = await async_session.execute(select(User).where(User.email == "shared@example.com"))
-        users = result.scalars().all()
-
-        assert len(users) == 2
-        tenant_ids = {user.tenant_id for user in users}
-        assert tenant_ids == {"tenant-a", "tenant-b"}
-
-    async def test_registration_duplicate_username_same_tenant_fails(
-        self, test_client: AsyncClient, async_session: AsyncSession
-    ):
-        """Registration should still fail for duplicate username in SAME tenant."""
-        user_service = UserService(async_session)
-
-        # Create user 'john' in Tenant A
-        await user_service.create_user(
-            username="john",
-            email="john1@example.com",
-            password="SecurePass123!",
-            full_name="John First",
-            tenant_id="tenant-a",
-        )
-
-        await async_session.commit()
-
-        # Try to register 'john' again in Tenant A (should fail)
-        response = await test_client.post(
-            "/api/v1/auth/register",
-            json={
-                "username": "john",
-                "email": "john2@example.com",
-                "password": "SecurePass123!",
-                "full_name": "John Second",
-            },
-            headers={"X-Tenant-ID": "tenant-a"},
-        )
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert (
-            "already exists" in response.json()["detail"].lower()
-            or "failed" in response.json()["detail"].lower()
-        )
+        claims = jwt_service.verify_token(response.json()["access_token"], TokenType.ACCESS)
+        assert claims.get("tenant_id") == "tenant-login"
 
 
 @pytest.mark.asyncio

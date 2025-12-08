@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.models import Permission, PermissionCategory, Role, user_roles
 from dotmac.platform.auth.rbac_router import router
 from dotmac.platform.auth.rbac_service import RBACService
+from dotmac.platform.user_management.models import User
 
 
 @pytest_asyncio.fixture
@@ -70,6 +71,21 @@ async def admin_user_id(async_db_session: AsyncSession):
 
     # Add permissions to role using extend instead of append
     admin_role.permissions.extend(perms)
+
+    # Create the backing user to satisfy FK constraints on user_roles
+    admin_user = User(
+        id=user_id,
+        username="admin",
+        email="admin@example.com",
+        password_hash="hashed",
+        tenant_id="test-tenant",
+        is_active=True,
+        is_verified=True,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    async_db_session.add(admin_user)
+    await async_db_session.flush()  # Persist user before FK reference
 
     # Assign role to user using insert statement
     await async_db_session.execute(
@@ -395,6 +411,18 @@ class TestUserPermissionManagement:
         rbac = RBACService(async_db_session)
         role = await rbac.create_role(name="viewer", display_name="Viewer", permissions=[])
         user_id = uuid4()
+        # Create backing user record to satisfy FK constraints
+        target_user = User(
+            id=user_id,
+            username=f"target_user_{user_id.hex[:8]}",
+            email=f"target_{user_id.hex[:8]}@example.com",
+            password_hash="hashed",
+            tenant_id="test-tenant",
+            is_active=True,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        async_db_session.add(target_user)
         await async_db_session.commit()
 
         client = TestClient(app_with_router)
@@ -423,6 +451,19 @@ class TestUserPermissionManagement:
         """Test granting permission directly to user."""
         user_id = uuid4()
 
+        # Create backing user record to satisfy FK constraints
+        target_user = User(
+            id=user_id,
+            username=f"perm_user_{user_id.hex[:8]}",
+            email=f"perm_{user_id.hex[:8]}@example.com",
+            password_hash="hashed",
+            tenant_id="test-tenant",
+            is_active=True,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        async_db_session.add(target_user)
+
         # Create permission
         perm = Permission(
             name="special.feature",
@@ -449,6 +490,19 @@ class TestUserPermissionManagement:
     async def test_revoke_permission_from_user(self, app_with_router, async_db_session):
         """Test revoking permission from user."""
         user_id = uuid4()
+
+        # Create backing user record to satisfy FK constraints
+        target_user = User(
+            id=user_id,
+            username=f"revoke_user_{user_id.hex[:8]}",
+            email=f"revoke_{user_id.hex[:8]}@example.com",
+            password_hash="hashed",
+            tenant_id="test-tenant",
+            is_active=True,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        async_db_session.add(target_user)
 
         # Create and grant permission
         perm = Permission(

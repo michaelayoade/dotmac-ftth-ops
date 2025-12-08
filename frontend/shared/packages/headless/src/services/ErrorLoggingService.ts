@@ -4,9 +4,10 @@
  * Now includes persistent error queue for offline support
  */
 
-import { EnhancedISPError, type ErrorContext, ErrorCode } from "../utils/enhancedErrorHandling";
-import { getErrorQueue } from "./PersistentErrorQueue";
 import { createStandardError, type StandardErrorResponse } from "../types/error-contract";
+import { EnhancedISPError, type ErrorContext, ErrorCode } from "../utils/enhancedErrorHandling";
+
+import { getErrorQueue } from "./PersistentErrorQueue";
 
 // Structured log entry for enhanced error tracking
 export interface ErrorLogEntry {

@@ -1,6 +1,6 @@
+import { Button } from "@dotmac/primitives";
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useState, useCallback, useEffect } from "react";
-import { Button } from "@dotmac/primitives";
 
 // Mock WebSocket hook for demonstration
 interface UseWebSocketOptions {

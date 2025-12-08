@@ -387,8 +387,12 @@ export class ThemeConfigLoader {
     return theme;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static async loadFromAPI(options: any): Promise<BrandTheme> {
+  private static async loadFromAPI(options: {
+    apiEndpoint?: string;
+    tenantId?: string;
+    portalVariant?: PortalVariant;
+    fallbackConfig?: ThemeConfig;
+  }): Promise<BrandTheme> {
     if (!options.apiEndpoint) {
       throw new Error("API endpoint required for API theme loading");
     }
@@ -411,35 +415,43 @@ export class ThemeConfigLoader {
     }
 
     // Fallback to default
-    return generateThemeFromConfig(options.fallbackConfig || commonISPThemes.genericISP);
+    return generateThemeFromConfig(options.fallbackConfig ?? commonISPThemes.genericISP);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-  private static loadFromEnvironment(options: any): BrandTheme {
+  private static loadFromEnvironment(_options: {
+    tenantId?: string;
+    portalVariant?: PortalVariant;
+    fallbackConfig?: ThemeConfig;
+  }): BrandTheme {
+    const brandColor = process.env["REACT_APP_BRAND_COLOR"] || "#1e40af";
+    const brandName = process.env["REACT_APP_BRAND_NAME"] || "ISP Platform";
+    const accentColor = process.env["REACT_APP_ACCENT_COLOR"];
+    const logoUrl = process.env["REACT_APP_LOGO_URL"];
+    const fontFamily = process.env["REACT_APP_FONT_FAMILY"];
+    const customCss = process.env["REACT_APP_CUSTOM_CSS"];
+
     const config: ThemeConfig = {
-      brandColor: process.env["REACT_APP_BRAND_COLOR"] || "#1e40af",
-      brandName: process.env["REACT_APP_BRAND_NAME"] || "ISP Platform",
-      ...(process.env["REACT_APP_ACCENT_COLOR"]
-        ? { accentColor: process.env["REACT_APP_ACCENT_COLOR"] }
-        : {}),
-      ...(process.env["REACT_APP_LOGO_URL"] ? { logoUrl: process.env["REACT_APP_LOGO_URL"] } : {}),
-      ...(process.env["REACT_APP_FONT_FAMILY"]
-        ? { fontFamily: process.env["REACT_APP_FONT_FAMILY"] }
-        : {}),
-      ...(process.env["REACT_APP_CUSTOM_CSS"]
-        ? { customCss: process.env["REACT_APP_CUSTOM_CSS"] }
-        : {}),
+      brandColor,
+      brandName,
+      ...(accentColor ? { accentColor } : {}),
+      ...(logoUrl ? { logoUrl } : {}),
+      ...(fontFamily ? { fontFamily } : {}),
+      ...(customCss ? { customCss } : {}),
     };
 
     return generateThemeFromConfig(config);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static loadFromLocalConfig(options: any): BrandTheme {
+  private static loadFromLocalConfig(options: {
+    tenantId?: string;
+    portalVariant?: PortalVariant;
+    fallbackConfig?: ThemeConfig;
+  }): BrandTheme {
     // Try to load from local configuration file or use fallback
     const configName = options.tenantId || "default";
-    // eslint-disable-next-line no-restricted-globals
-    const storedConfig = localStorage.getItem(`theme-config-${configName}`);
+    const storedConfig = typeof window !== "undefined" && window.localStorage
+      ? window.localStorage.getItem(`theme-config-${configName}`)
+      : null;
 
     if (storedConfig) {
       try {
@@ -450,7 +462,7 @@ export class ThemeConfigLoader {
       }
     }
 
-    return generateThemeFromConfig(options.fallbackConfig || commonISPThemes.genericISP);
+    return generateThemeFromConfig(options.fallbackConfig ?? commonISPThemes.genericISP);
   }
 }
 

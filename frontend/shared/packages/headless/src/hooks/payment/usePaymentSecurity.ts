@@ -4,8 +4,9 @@
  */
 
 import { useCallback } from "react";
-import { useISPTenant } from "../useISPTenant";
+
 import { ispApiClient } from "../../api/isp-client";
+import { useISPTenant } from "../useISPTenant";
 
 export interface UsePaymentSecurityReturn {
   tokenizeCard: (cardData: any, processorId: string) => Promise<string>;
@@ -38,7 +39,7 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
         return response.data.token;
       } catch (error) {
         throw new Error(
-          "Tokenization failed: " + (error instanceof Error ? error.message : "Unknown error"),
+          `Tokenization failed: ${  error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     },
@@ -65,7 +66,7 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
         return response.data.encrypted_data;
       } catch (error) {
         throw new Error(
-          "Encryption failed: " + (error instanceof Error ? error.message : "Unknown error"),
+          `Encryption failed: ${  error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     },

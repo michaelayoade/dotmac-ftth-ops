@@ -1,6 +1,6 @@
 /**
  * Authentication utilities
- * Provides login, registration, and permission checking functionality
+ * Provides login and permission checking functionality
  */
 
 import { apiClient } from "./api/client";
@@ -22,12 +22,6 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterData {
-  email: string;
-  password: string;
-  name: string;
-}
-
 export interface AuthResponse {
   user: User;
   accessToken: string;
@@ -38,12 +32,6 @@ let currentUser: User | null = null;
 
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
   const response = await apiClient.post<AuthResponse>("/auth/login", credentials);
-  currentUser = response.data.user;
-  return response.data;
-}
-
-export async function register(data: RegisterData): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>("/auth/register", data);
   currentUser = response.data.user;
   return response.data;
 }

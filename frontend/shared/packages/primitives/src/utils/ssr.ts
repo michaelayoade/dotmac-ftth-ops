@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 /**
  * SSR utilities for safe client-side operations
  */
@@ -34,12 +33,15 @@ export const safeDocument = isBrowser ? document : undefined;
  * @param effect - Effect function to run only on client
  * @param deps - Dependencies array
  */
-export function useClientEffect(effect: React.EffectCallback, deps?: React.DependencyList) {
+export function useClientEffect(effect: React.EffectCallback, deps: React.DependencyList = []) {
+  // Store effect in a ref to avoid re-triggering on effect change
+  const effectRef = React.useRef(effect);
+  effectRef.current = effect;
+
   React.useEffect(() => {
     if (isBrowser) {
-      return effect();
+      return effectRef.current();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 
@@ -47,12 +49,15 @@ export function useClientEffect(effect: React.EffectCallback, deps?: React.Depen
  * Hook for layout effects that should only run on client
  * Uses useLayoutEffect for synchronous DOM mutations
  */
-export function useBrowserLayoutEffect(effect: React.EffectCallback, deps?: React.DependencyList) {
+export function useBrowserLayoutEffect(effect: React.EffectCallback, deps: React.DependencyList = []) {
+  // Store effect in a ref to avoid re-triggering on effect change
+  const effectRef = React.useRef(effect);
+  effectRef.current = effect;
+
   React.useLayoutEffect(() => {
     if (isBrowser) {
-      return effect();
+      return effectRef.current();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 
@@ -84,7 +89,7 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
     }
 
     try {
-      const item = localStorage.getItem(key);
+      const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch {
       return defaultValue;
@@ -98,7 +103,7 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
         setValue(valueToStore);
 
         if (isBrowser) {
-          localStorage.setItem(key, JSON.stringify(valueToStore));
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
         }
       } catch {
         // Silently fail if localStorage is not available
@@ -123,7 +128,7 @@ export function useSessionStorage<T>(key: string, defaultValue: T) {
     }
 
     try {
-      const item = sessionStorage.getItem(key);
+      const item = window.sessionStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch {
       return defaultValue;
@@ -137,7 +142,7 @@ export function useSessionStorage<T>(key: string, defaultValue: T) {
         setValue(valueToStore);
 
         if (isBrowser) {
-          sessionStorage.setItem(key, JSON.stringify(valueToStore));
+          window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
         }
       } catch {
         // Silently fail if sessionStorage is not available

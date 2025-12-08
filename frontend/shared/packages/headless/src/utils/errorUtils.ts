@@ -41,7 +41,7 @@ export class ISPError extends Error {
   public readonly id: string;
   public readonly category: ErrorCategory;
   public readonly severity: ErrorSeverity;
-  public readonly context?: string;
+  public readonly operationContext?: string;
   public readonly timestamp: Date;
   public readonly retryable: boolean;
   public readonly userMessage: string;
@@ -56,7 +56,7 @@ export class ISPError extends Error {
     this.id = params.id || generateErrorId();
     this.category = params.category || "unknown";
     this.severity = params.severity || "medium";
-    this.context = params.context;
+    this.operationContext = params.context;
     this.timestamp = params.timestamp || new Date();
     this.retryable = params.retryable ?? false;
     this.userMessage = params.userMessage || this.generateUserMessage();
@@ -93,7 +93,7 @@ export class ISPError extends Error {
       status: this.status,
       category: this.category,
       severity: this.severity,
-      context: this.context,
+      context: this.operationContext,
       timestamp: this.timestamp,
       retryable: this.retryable,
       userMessage: this.userMessage,

@@ -3,8 +3,9 @@
  * Handles support tickets, knowledge base, and customer assistance
  */
 
-import { BaseApiClient } from "./BaseApiClient";
 import type { PaginatedResponse, QueryParams } from "../types/api";
+
+import { BaseApiClient } from "./BaseApiClient";
 
 export interface SupportTicket {
   id: string;

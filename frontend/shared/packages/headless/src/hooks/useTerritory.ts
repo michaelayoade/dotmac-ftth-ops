@@ -13,9 +13,9 @@
  * - Route planning
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 // Types
 export interface Territory {

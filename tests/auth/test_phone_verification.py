@@ -91,7 +91,7 @@ async def test_request_phone_verification_sends_sms(
     monkeypatch.setattr(settings.features, "communications_enabled", True)
     monkeypatch.setattr(settings, "sms_from_number", "+19999999999")
     monkeypatch.setattr(
-        "dotmac.platform.auth.router.get_integration_async",
+        "dotmac.platform.auth.verification_router.get_integration_async",
         mock_get_integration_async,
     )
 

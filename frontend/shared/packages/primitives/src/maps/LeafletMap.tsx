@@ -219,6 +219,29 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     reactLeaflet: ReactLeafletModule;
   } | null>(null);
 
+  // All hooks must be called before any early returns
+  const handleZoomIn = useCallback(() => {
+    setMapZoom((prev) => Math.min(prev + 1, 18));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setMapZoom((prev) => Math.max(prev - 1, 1));
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setMapCenter(center);
+    setMapZoom(zoom);
+  }, [center, zoom]);
+
+  // Calculate bounds if provided - L might not be available yet
+  const mapBounds = useMemo(() => {
+    if (bounds && modules?.leaflet) {
+      const L = modules.leaflet;
+      return L.latLngBounds([bounds.south, bounds.west], [bounds.north, bounds.east]);
+    }
+    return undefined;
+  }, [bounds, modules?.leaflet]);
+
   useEffect(() => {
     let cancelled = false;
     if (modules || typeof window === "undefined") {
@@ -252,53 +275,21 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   }
 
   const { leaflet: L, reactLeaflet } = modules;
-  const { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, useMap } = reactLeaflet;
+  const { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, useMap, useMapEvents } =
+    reactLeaflet;
 
   const MapControllerComponent: React.FC<{ center: Coordinates; zoom: number }> = ({
-    center,
-    zoom,
+    center: centerProp,
+    zoom: zoomProp,
   }) => {
     const map = useMap();
 
     useEffect(() => {
-      map.setView([center.lat, center.lng], zoom);
-    }, [center, zoom, map]);
+      map.setView([centerProp.lat, centerProp.lng], zoomProp);
+    }, [centerProp, zoomProp, map]);
 
     return null;
   };
-
-  // Variant colors
-  const variantStyles = {
-    admin: { primary: "#3B82F6", accent: "#60A5FA" },
-    customer: { primary: "#10B981", accent: "#34D399" },
-    reseller: { primary: "#8B5CF6", accent: "#A78BFA" },
-    technician: { primary: "#EF4444", accent: "#F87171" },
-    management: { primary: "#F97316", accent: "#FB923C" },
-  };
-
-  const colors = variantStyles[variant];
-
-  // Handle map controls
-  const handleZoomIn = useCallback(() => {
-    setMapZoom((prev) => Math.min(prev + 1, 18));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setMapZoom((prev) => Math.max(prev - 1, 1));
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setMapCenter(center);
-    setMapZoom(zoom);
-  }, [center, zoom]);
-
-  // Calculate bounds if provided
-  const mapBounds = useMemo(() => {
-    if (bounds) {
-      return L.latLngBounds([bounds.south, bounds.west], [bounds.north, bounds.east]);
-    }
-    return undefined;
-  }, [bounds, L]);
 
   // Service area colors
   const getAreaColor = (area: ServiceArea): string => {
@@ -318,6 +309,19 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       emergency: "#EF4444",
     };
     return routeColors[route.type];
+  };
+
+  const MapClickHandler: React.FC<{ onMapClick?: (coords: Coordinates) => void }> = ({
+    onMapClick: handleMapClick,
+  }) => {
+    useMapEvents({
+      click: (event: any) =>
+        handleMapClick?.({
+          lat: event.latlng.lat,
+          lng: event.latlng.lng,
+        }),
+    });
+    return null;
   };
 
   if (loading) {
@@ -355,7 +359,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   }
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", className)} data-variant={variant}>
       {title && (
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
@@ -364,24 +368,25 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       <div className="relative rounded-lg overflow-hidden shadow-lg" style={{ height }}>
         <MapContainer
-          center={[mapCenter.lat, mapCenter.lng]}
+          {...({ center: [mapCenter.lat, mapCenter.lng] } as any)}
           zoom={mapZoom}
           {...(mapBounds ? { bounds: mapBounds } : {})}
           style={{ height: "100%", width: "100%" }}
           className="z-0"
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            {...({ attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' } as any)}
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
           <MapControllerComponent center={mapCenter} zoom={mapZoom} />
+          {onMapClick && <MapClickHandler onMapClick={onMapClick} />}
 
           {/* Render Service Areas */}
           {serviceAreas.map((area) => (
             <Polygon
               key={area.id}
-              positions={area.polygon.map((coord) => [coord.lat, coord.lng])}
+              positions={area.polygon.map((coord) => [coord.lat, coord.lng] as [number, number])}
               pathOptions={{
                 color: getAreaColor(area),
                 fillColor: getAreaColor(area),
@@ -410,7 +415,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           {routes.map((route) => (
             <Polyline
               key={route.id}
-              positions={route.waypoints.map((coord) => [coord.lat, coord.lng])}
+              positions={route.waypoints.map((coord) => [coord.lat, coord.lng] as [number, number])}
               pathOptions={{
                 color: getRouteColor(route),
                 weight: 4,
@@ -437,8 +442,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           {networkNodes.map((node) => (
             <Marker
               key={node.id}
-              position={[node.position.lat, node.position.lng]}
-              icon={createCustomIcon(L, "fiber", node.status)}
+              position={[node.position.lat, node.position.lng] as [number, number]}
+              {...({ icon: createCustomIcon(L, "fiber", node.status) } as any)}
               eventHandlers={{
                 click: () => onNodeClick?.(node),
               }}
@@ -477,8 +482,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           {markers.map((marker) => (
             <Marker
               key={marker.id}
-              position={[marker.position.lat, marker.position.lng]}
-              icon={createCustomIcon(L, marker.type, marker.status)}
+              position={[marker.position.lat, marker.position.lng] as [number, number]}
+              {...({ icon: createCustomIcon(L, marker.type, marker.status) } as any)}
               eventHandlers={{
                 click: () => {
                   onMarkerClick?.(marker);
